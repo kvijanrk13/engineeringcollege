@@ -221,6 +221,12 @@
             <div class="added-results-list" id="added-achievements-container" style="margin-top:20px;"></div>
         </div>
 
+        <div class="form-section">
+            <h3>About Yourself</h3>
+            <textarea id="about-yourself" rows="10" placeholder="Write about yourself (Max 3000 words)..."></textarea>
+            <div style="text-align:right; font-size:11px; color:#666;" id="about-word-count">0/3000 words</div>
+        </div>
+
         <div class="academic-year-section">
             <label>CURRENT ACADEMIC YEAR:</label>
             <select id="academic-year">
@@ -384,12 +390,6 @@
             {% endfor %}
         </div>
 
-        <div class="form-section">
-            <h3>About Yourself</h3>
-            <textarea id="about-yourself" rows="10" placeholder="Write about yourself (Max 3000 words)..."></textarea>
-            <div style="text-align:right; font-size:11px; color:#666;" id="about-word-count">0/3000 words</div>
-        </div>
-
     </div>
 
     <aside class="photo-sidebar">
@@ -414,29 +414,19 @@
         "Fourth Year": { "4-1": [{"code":"IT701PC","name":"INFORMATION SECURITY"},{"code":"IT702PC","name":"CLOUD COMPUTING"},{"code":"IT711PE","name":"HUMAN COMPUTER INTERACTION"},{"code":"IT712PE","name":"HIGH PERFORMANCE COMPUTING"},{"code":"IT713PE","name":"ARTIFICIAL INTELLIGENCE"},{"code":"IT714PE","name":"INFORMATION RETRIEVAL SYSTEMS"},{"code":"IT715PE","name":"AD-HOC & SENSOR NETWORKS"},{"code":"IT721PE","name":"NATURAL LANGUAGE PROCESSING"},{"code":"IT722PE","name":"DISTRIBUTED SYSTEMS"},{"code":"IT723PE","name":"AUGMENTED REALITY & VIRTUAL REALITY"},{"code":"IT724PE","name":"WEB SECURITY"},{"code":"IT725PE","name":"CYBER FORENSICS"},{"code":"CE721OE","name":"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},{"code":"CE722OE","name":"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},{"code":"CE723OE","name":"SOLID WASTE MANAGEMENT"},{"code":"CE724OE","name":"SMART CITIES"},{"code":"EE721OE","name":"UTILIZATION OF ELECTRIC ENERGY"},{"code":"EE722OE","name":"ENERGY STORAGE SYSTEMS"},{"code":"ME721OE","name":"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},{"code":"ME722OE","name":"INDUSTRIAL ENGINEERING & MANAGEMENT"},{"code":"EC721OE","name":"ELECTRONIC SENSORS"},{"code":"EC722OE","name":"ELECTRONICS FOR HEALTH CARE"},{"code":"EC723OE","name":"TELECOMMUNICATIONS FOR SOCIETY"},{"code":"CS721OE","name":"OPERATING SYSTEMS"},{"code":"CS722OE","name":"COMPUTER NETWORKS"},{"code":"IT721OE","name":"FULL STACK DEVELOPMENT"},{"code":"IT722OE","name":"SCRIPTING LANGUAGES"},{"code":"AM721OE","name":"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},{"code":"AM722OE","name":"AI APPLICATIONS"},{"code":"IT703PC","name":"INFORMATION SECURITY LAB"},{"code":"IT704PC","name":"CLOUD COMPUTING LAB"},{"code":"IT705PC","name":"PROJECT STAGE – I"}],"4-2":[{"code":"IT801PC","name":"ORGANIZATIONAL BEHAVIOR"},{"code":"IT811PE","name":"INTRUSION DETECTION SYSTEMS"},{"code":"IT812PE","name":"REAL TIME SYSTEMS"},{"code":"IT813PE","name":"BLOCK CHAIN TECHNOLOGY"},{"code":"IT814PE","name":"DEEP LEARNING"},{"code":"IT815PE","name":"SOFTWARE PROCESS & PROJECT MANAGEMENT"},{"code":"CE831OE","name":"ENERGY EFFICIENT BUILDINGS"},{"code":"CE832OE","name":"MULTI CRITERION DECISION MAKING"},{"code":"CE833OE","name":"ENVIRONMENTAL POLLUTION"},{"code":"EE831OE","name":"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},{"code":"EE832OE","name":"RELIABILITY ENGINEERING"},{"code":"ME831OE","name":"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},{"code":"ME832OE","name":"ENTREPRENEURSHIP DEVELOPMENT"},{"code":"EC831OE","name":"MEASURING INSTRUMENTS"},{"code":"EC832OE","name":"COMMUNICATION TECHNOLOGIES"},{"code":"EC833OE","name":"FUNDAMENTALS OF SOCIAL NETWORKS"},{"code":"CS831OE","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"CS832OE","name":"DATA ANALYTICS"},{"code":"IT831OE","name":"BIG DATA TECHNOLOGIES"},{"code":"IT832OE","name":"DEVOPS"},{"code":"AM831OE","name":"CHATBOTS"},{"code":"AM832OE","name":"EVOLUTIONARY COMPUTING"},{"code":"IT802PC","name":"PROJECT STAGE-II, INCLUDING SEMINAR"}] }
     };
 
-    const topicList = [
-        "ABSTRACT", "LITERATURE OBJECTIVES", "INTRODUCTION", "PROBLEM STATEMENT",
-        "EXISTING SYSTEM AND DRAWBACKS", "PROPOSED SYSTEM AND ADVANTAGES", "SYSTEM REQUIREMENTS",
-        "TEST CASES", "WORK PROGRAM", "RESULTS", "CONCLUSION", "REFERENCES",
-        "PROJECT REVIEW", "DOCUMENT PREPARATION", "DOCUMENTATION SUBMISSION",
-        "CERTIFICATE BY THE COMPANY", "FINAL REVIEW"
-    ];
+    const topicList = ["ABSTRACT", "LITERATURE OBJECTIVES", "INTRODUCTION", "PROBLEM STATEMENT", "EXISTING SYSTEM AND DRAWBACKS", "PROPOSED SYSTEM AND ADVANTAGES", "SYSTEM REQUIREMENTS", "TEST CASES", "WORK PROGRAM", "RESULTS", "CONCLUSION", "REFERENCES", "PROJECT REVIEW", "DOCUMENT PREPARATION", "DOCUMENTATION SUBMISSION", "CERTIFICATE BY THE COMPANY", "FINAL REVIEW"];
 
     let uploadedAchievements = [];
 
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. PHOTO UPLOAD ---
+        // 1. PHOTO UPLOAD
         try {
             const photoInput = document.getElementById('photo-upload-input');
             const chooseBtn = document.getElementById('choose-file-btn');
             const photoImg = document.getElementById('faculty-photo');
             const noPhotoMsg = document.getElementById('no-photo-message');
-
             if (chooseBtn && photoInput) {
-                chooseBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    photoInput.click();
-                });
+                chooseBtn.addEventListener('click', (e) => { e.preventDefault(); photoInput.click(); });
                 photoInput.addEventListener('change', function() {
                     if (this.files[0]) {
                         const reader = new FileReader();
@@ -451,34 +441,20 @@
             }
         } catch(e) { console.error("Photo Error", e); }
 
-        // --- 2. FACULTY ACHIEVEMENTS ---
+        // 2. ACHIEVEMENTS
         try {
-            // Word Count
-            const aboutText = document.getElementById('about-yourself');
-            if(aboutText) {
-                aboutText.addEventListener('input', function() {
-                    const words = this.value.trim().split(/\s+/).filter(w=>w).length;
-                    document.getElementById('about-word-count').textContent = `${words}/3000 words`;
-                });
-            }
-
             const achText = document.getElementById('achievements-text');
             if(achText) achText.addEventListener('input', function() { document.getElementById('char-count').textContent = `${this.value.length}/500`; });
 
-            // Browse
             const achBrowseBtn = document.getElementById('ach-browse-btn');
             const achFileInput = document.getElementById('ach-file-input');
             if(achBrowseBtn && achFileInput) {
-                achBrowseBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    achFileInput.click();
-                });
+                achBrowseBtn.addEventListener('click', (e) => { e.preventDefault(); achFileInput.click(); });
                 achFileInput.addEventListener('change', () => {
                     document.getElementById('ach-file-name').textContent = achFileInput.files[0] ? achFileInput.files[0].name : "No file selected";
                 });
             }
 
-            // Add Achievement
             const addAchBtn = document.getElementById('add-ach-btn');
             if(addAchBtn) {
                 addAchBtn.addEventListener('click', (e) => {
@@ -487,7 +463,6 @@
                     const from = document.getElementById('ach-from-date').value;
                     const to = document.getElementById('ach-to-date').value;
                     const file = document.getElementById('ach-file-input').files[0];
-
                     if(!desc) { alert("Enter Description"); return; }
 
                     const container = document.getElementById('added-achievements-container');
@@ -502,102 +477,89 @@
                         div.dataset.fileIndex = uploadedAchievements.length - 1;
                     }
 
-                    div.innerHTML = `
-                        <div>
-                            <strong>${desc}</strong><br>
-                            <small>${from} to ${to} ${file ? '| File: '+file.name : ''}</small>
-                        </div>
-                        <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>
-                    `;
+                    div.innerHTML = `<div><strong>${desc}</strong><br><small>${from} to ${to} ${file ? '| File: '+file.name : ''}</small></div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
                     container.appendChild(div);
-
                     document.getElementById('achievements-text').value = '';
                     document.getElementById('ach-file-input').value = '';
                     document.getElementById('ach-file-name').textContent = 'No file selected';
                 });
             }
-        } catch(e) { console.error("Achievement Error", e); }
+        } catch(e) { console.error("Achieve Error", e); }
 
-        // --- 3. SLOTS LOGIC ---
+        // 3. SLOTS
         for (let i = 1; i <= 8; i++) {
-            const loadBtn = document.getElementById(`load-btn-${i}`);
-            if(loadBtn) loadBtn.addEventListener('click', () => loadSubjectsForBlock(i));
+            try {
+                const loadBtn = document.getElementById(`load-btn-${i}`);
+                if(loadBtn) loadBtn.addEventListener('click', () => loadSubjectsForBlock(i));
 
-            // Percentage Calc
-            const app = document.getElementById(`res-appeared-${i}`);
-            const pass = document.getElementById(`res-passed-${i}`);
-            if(app && pass) {
-                const calc = () => {
-                    const a = parseFloat(app.value)||0, p = parseFloat(pass.value)||0;
-                    document.getElementById(`res-percentage-${i}`).value = a>0 ? ((p/a)*100).toFixed(2)+'%' : '0.00%';
-                };
-                app.addEventListener('input', calc);
-                pass.addEventListener('input', calc);
-            }
+                const app = document.getElementById(`res-appeared-${i}`);
+                const pass = document.getElementById(`res-passed-${i}`);
+                if(app && pass) {
+                    const calc = () => {
+                        const a = parseFloat(app.value)||0, p = parseFloat(pass.value)||0;
+                        document.getElementById(`res-percentage-${i}`).value = a>0 ? ((p/a)*100).toFixed(2)+'%' : '0.00%';
+                    };
+                    app.addEventListener('input', calc);
+                    pass.addEventListener('input', calc);
+                }
 
-            // Populate Topics
-            const topicGrid = document.getElementById(`topics-grid-${i}`);
-            if(topicGrid) {
-                topicList.forEach(t => {
-                    const div = document.createElement('div');
-                    div.className = 'topic-item';
-                    div.innerHTML = `<input type="checkbox" value="${t}" checked> ${t}`;
-                    topicGrid.appendChild(div);
-                });
-                const selAll = document.getElementById(`topic-select-all-${i}`);
-                if(selAll) selAll.addEventListener('change', function() { topicGrid.querySelectorAll('input').forEach(b => b.checked = this.checked); });
-            }
+                const topicGrid = document.getElementById(`topics-grid-${i}`);
+                if(topicGrid) {
+                    topicList.forEach(t => {
+                        const div = document.createElement('div');
+                        div.className = 'topic-item';
+                        div.innerHTML = `<input type="checkbox" value="${t}" checked> ${t}`;
+                        topicGrid.appendChild(div);
+                    });
+                    const selAll = document.getElementById(`topic-select-all-${i}`);
+                    if(selAll) selAll.addEventListener('change', function() { topicGrid.querySelectorAll('input').forEach(b => b.checked = this.checked); });
+                }
 
-            // Add Result
-            const addResBtn = document.getElementById(`btn-add-result-${i}`);
-            if(addResBtn) {
-                addResBtn.addEventListener('click', () => {
-                    const sub = document.getElementById(`res-subject-${i}`).value;
-                    const app = document.getElementById(`res-appeared-${i}`).value;
-                    if(!sub || !app) { alert("Fill data"); return; }
-                    const div = document.createElement('div');
-                    div.className = 'added-result-item';
-                    const pct = document.getElementById(`res-percentage-${i}`).value;
-                    // Format for parsing: SubjectName: App:X, Pass:Y, Fail:Z (P%)
-                    div.innerHTML = `<div><strong>${sub}</strong>: App:${app}, Pass:${document.getElementById(`res-passed-${i}`).value}, Fail:${document.getElementById(`res-failed-${i}`).value} (${pct})</div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
-                    document.getElementById(`added-results-container-${i}`).appendChild(div);
-                    document.getElementById(`res-subject-${i}`).value = '';
-                });
-            }
+                const addResBtn = document.getElementById(`btn-add-result-${i}`);
+                if(addResBtn) {
+                    addResBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const sub = document.getElementById(`res-subject-${i}`).value;
+                        const appVal = document.getElementById(`res-appeared-${i}`).value;
+                        if(!sub || !appVal) { alert("Fill data"); return; }
+                        const div = document.createElement('div');
+                        div.className = 'added-result-item';
+                        div.innerHTML = `<div><strong>${sub}</strong>: App:${appVal}, Pass:${document.getElementById(`res-passed-${i}`).value} (${document.getElementById(`res-percentage-${i}`).value})</div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
+                        document.getElementById(`added-results-container-${i}`).appendChild(div);
+                        document.getElementById(`res-subject-${i}`).value = '';
+                    });
+                }
 
-            // Add Batch
-            const addBatchBtn = document.getElementById(`btn-add-proj-batch-${i}`);
-            if(addBatchBtn) {
-                addBatchBtn.addEventListener('click', () => {
-                    const title = document.getElementById(`proj-title-${i}`).value;
-                    if(!title) { alert("Enter Title"); return; }
+                const addBatchBtn = document.getElementById(`btn-add-proj-batch-${i}`);
+                if(addBatchBtn) {
+                    addBatchBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const title = document.getElementById(`proj-title-${i}`).value;
+                        if(!title) { alert("Enter Title"); return; }
+                        let students = [];
+                        for(let k=1; k<=4; k++) {
+                            const n = document.getElementById(`proj-stud${k}-${i}`).value;
+                            const r = document.getElementById(`proj-roll${k}-${i}`).value;
+                            const m = document.getElementById(`proj-marks${k}-${i}`).value;
+                            if(n || r) students.push({name:n, roll:r, marks:m});
+                        }
+                        const batch = document.getElementById(`proj-batch-${i}`).value;
+                        const sup = document.getElementById(`proj-supervisor-${i}`).value;
+                        const status = document.getElementById(`status-approve-${i}`).checked ? "Approved" : "Pending";
+                        const topics = Array.from(document.querySelectorAll(`#topics-grid-${i} input:checked`)).map(c => c.value);
+                        const marks = document.getElementById(`proj-marks-${i}`).value;
 
-                    let students = [];
-                    for(let k=1; k<=4; k++) {
-                        const n = document.getElementById(`proj-stud${k}-${i}`).value;
-                        const r = document.getElementById(`proj-roll${k}-${i}`).value;
-                        const m = document.getElementById(`proj-marks${k}-${i}`).value;
-                        if(n || r) students.push({name:n, roll:r, marks:m});
-                    }
-
-                    const batch = document.getElementById(`proj-batch-${i}`).value;
-                    const sup = document.getElementById(`proj-supervisor-${i}`).value;
-                    const status = document.getElementById(`status-approve-${i}`).checked ? "Approved" : "Pending";
-                    const topics = Array.from(document.querySelectorAll(`#topics-grid-${i} input:checked`)).map(c => c.value);
-                    const marks = document.getElementById(`proj-marks-${i}`).value;
-
-                    const div = document.createElement('div');
-                    div.className = 'added-result-item';
-                    div.dataset.details = JSON.stringify({ batch, title, sup, students, status, topics, marks });
-                    div.innerHTML = `<div><strong>${title}</strong><br><small>Batch:${batch} | Students:${students.length}</small></div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
-                    document.getElementById(`added-projects-container-${i}`).appendChild(div);
-
-                    document.getElementById(`proj-title-${i}`).value = '';
-                });
-            }
+                        const div = document.createElement('div');
+                        div.className = 'added-result-item';
+                        div.dataset.details = JSON.stringify({ batch, title, sup, students, status, topics, marks });
+                        div.innerHTML = `<div><strong>${title}</strong><br><small>Batch:${batch} | Students:${students.length}</small></div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
+                        document.getElementById(`added-projects-container-${i}`).appendChild(div);
+                        document.getElementById(`proj-title-${i}`).value = '';
+                    });
+                }
+            } catch(e) { console.error("Slot Error", e); }
         }
 
-        // --- SUBJECT HELPER ---
         function loadSubjectsForBlock(i) {
             try {
                 const year = document.getElementById(`select-year-${i}`).value;
@@ -605,7 +567,6 @@
                 const container = document.getElementById(`subjects-container-${i}`);
                 container.innerHTML = '';
                 const list = itSubjects[year]?.[sem] || [];
-
                 if(list.length===0) container.innerHTML = '<p style="color:#999">No subjects</p>';
                 else {
                     list.forEach(sub => {
@@ -616,17 +577,18 @@
                     });
                     const selAll = document.getElementById(`select-all-${i}`);
                     if(selAll) {
-                         const newSel = selAll.cloneNode(true);
-                         selAll.parentNode.replaceChild(newSel, selAll);
-                         newSel.checked = true;
-                         newSel.addEventListener('change', function() { container.querySelectorAll('.subject-checkbox').forEach(b => b.checked = this.checked); });
+                        const newSel = selAll.cloneNode(true);
+                        selAll.parentNode.replaceChild(newSel, selAll);
+                        newSel.checked = true;
+                        newSel.addEventListener('change', function() { container.querySelectorAll('.subject-checkbox').forEach(b => b.checked = this.checked); });
                     }
                 }
             } catch(e) { console.error("Load Sub Error", e); }
         }
 
-        // --- PDF GENERATION & MERGE ---
-        document.getElementById('generate-pdf-btn').addEventListener('click', async () => {
+        // --- PDF ---
+        document.getElementById('generate-pdf-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
             const btn = document.getElementById('generate-pdf-btn');
             btn.innerHTML = 'Generating...';
             btn.disabled = true;
@@ -635,7 +597,6 @@
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF('p', 'mm', 'a4');
 
-                // --- 1. GENERATE MAIN REPORT ---
                 doc.setFont("helvetica", "bold"); doc.setFontSize(16);
                 doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, { align: "center" });
                 doc.setFontSize(11);
@@ -648,7 +609,6 @@
                 }
 
                 let y = 35;
-                // Basic Info
                 doc.autoTable({ startY: y, theme: 'plain', body: [
                     ['Employee Code', document.getElementById('employee-code').value],
                     ['Name', document.getElementById('staff-name').value],
@@ -656,7 +616,6 @@
                 ], styles: {fontSize:10} });
                 y = doc.lastAutoTable.finalY + 10;
 
-                // Personal
                 doc.setFont("helvetica", "bold"); doc.text("PERSONAL DETAILS", 14, y); y+=5;
                 doc.autoTable({ startY: y, theme: 'grid', body: [
                     ['JNTUH ID', document.getElementById('jntuh-id').value, 'AICTE ID', document.getElementById('aacte-id').value],
@@ -668,7 +627,6 @@
                 ], styles: {fontSize:8}, columnStyles:{0:{fontStyle:'bold'}, 2:{fontStyle:'bold'}, 4:{fontStyle:'bold'}} });
                 y = doc.lastAutoTable.finalY + 10;
 
-                // Education (Split Pct)
                 doc.setFont("helvetica", "bold"); doc.text("EDUCATIONAL QUALIFICATIONS", 14, y); y+=5;
                 doc.autoTable({ startY: y, head: [['Degree', 'Year', '% / CGPA', 'University']], body: [
                    ['UG', document.getElementById('ug-year').value, document.getElementById('ug-percentage').value, document.getElementById('ug-college').value],
@@ -676,33 +634,24 @@
                 ], styles: {fontSize:9} });
                 y = doc.lastAutoTable.finalY + 10;
 
-                // Subjects Table (Split Pass %)
                 doc.setFont("helvetica", "bold"); doc.text("SUBJECTS DEALT & RESULTS", 14, y); y+=5;
                 let resRows = [];
                 for(let i=1; i<=8; i++) {
                     const year = document.getElementById(`select-academic-year-${i}`).value;
                     const subjects = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`)).map(c => c.nextElementSibling.nextElementSibling.innerText).join('\n');
-
                     const resItems = document.querySelectorAll(`#added-results-container-${i} .added-result-item`);
                     let statsTxt = [], passTxt = [];
                     resItems.forEach(item => {
                          let text = item.innerText.replace('Delete','').trim();
-                         // Parse "Sub: App:X, Pass:Y, Fail:Z (P%)"
                          let match = text.match(/:\s*(App:.*Fail:\d+)\s*\((.*%)\)/);
-                         if(match) {
-                             statsTxt.push(match[1]);
-                             passTxt.push(match[2]);
-                         } else {
-                             statsTxt.push('-'); passTxt.push('-');
-                         }
+                         if(match) { statsTxt.push(match[1]); passTxt.push(match[2]); }
+                         else { statsTxt.push('-'); passTxt.push('-'); }
                     });
-
                     if(subjects || statsTxt.length) resRows.push([year, subjects, statsTxt.join('\n'), passTxt.join('\n')]);
                 }
                 doc.autoTable({ startY: y, head:[['Year','Subject','Stats','Pass %']], body: resRows.length?resRows:[['-','-','-','-']], styles:{fontSize:8} });
                 y = doc.lastAutoTable.finalY + 10;
 
-                // Projects Table (Split Marks)
                 if(y>220) { doc.addPage(); y=20; }
                 doc.text("PROJECTS HANDLED", 14, y); y+=5;
                 let projRows = [];
@@ -718,7 +667,6 @@
                 }
                 doc.autoTable({ startY: y, head:[['Year','Subject','Details','Students','Marks']], body: projRows.length?projRows:[['-','-','-','-']], styles:{fontSize:8} });
 
-                // Achievements List
                 y = doc.lastAutoTable.finalY + 10;
                 doc.text("FACULTY ACHIEVEMENTS", 14, y); y+=5;
                 let achRows = [];
@@ -737,7 +685,6 @@
                      doc.text(splitText, 14, y);
                 }
 
-                // --- 2. MERGE CERTIFICATES ---
                 const reportBytes = doc.output('arraybuffer');
                 const pdfDoc = await PDFLib.PDFDocument.load(reportBytes);
 
@@ -757,7 +704,6 @@
                     } catch (e) { console.error("Merge Error", e); }
                 }
 
-                // Download
                 const pdfBytes = await pdfDoc.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
@@ -771,10 +717,9 @@
             btn.disabled = false;
         });
 
-        document.getElementById('save-details-btn').onclick = () => alert("Details Saved!");
-        document.getElementById('clear-all-btn').onclick = () => { if(confirm("Clear all?")) location.reload(); };
+        document.getElementById('save-details-btn').addEventListener('click', (e) => { e.preventDefault(); alert("Details Saved!"); });
+        document.getElementById('clear-all-btn').addEventListener('click', (e) => { e.preventDefault(); if(confirm("Clear all?")) location.reload(); });
 
-        // Initialize Slot 1
         if(document.getElementById('load-btn-1')) loadSubjectsForBlock(1);
     });
 </script>
