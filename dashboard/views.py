@@ -1,5 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 import json
 
 # =========================================================
@@ -8,7 +12,8 @@ import json
 
 SYLLABUS_DATA = {
     # -------------------- FULL DATA UNCHANGED --------------------
-    # (Exactly as in pasted.txt — NOT MODIFIED)
+    # (Assuming the large dictionary from your previous code is here)
+    # ... [YOUR EXISTING SYLLABUS DATA DICTIONARY] ...
 }
 
 SEM_ORDER = ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"]
@@ -58,6 +63,12 @@ def index(request):
 
 
 def dashboard(request):
+    # This is your main dashboard view
+    return render(request, "dashboard/dashboard.html")
+
+
+# Alias for compatibility if needed based on your snippet
+def dashboard_view(request):
     return render(request, "dashboard/dashboard.html")
 
 
@@ -109,18 +120,32 @@ def gallery(request):
     return render(request, "dashboard/gallery.html")
 
 
-# ================= LOGIN =================
+# ================= LOGIN LOGIC (MERGED) =================
 
 def login_view(request):
+    # This handles the root URL ('/') logic
     if request.method == "POST":
+        # Check standard hardcoded credentials first
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
+
         if username == "7001" and password == "anrkitdept":
             request.session["logged_in"] = True
             request.session["username"] = username
             messages.success(request, "Login successful")
-            return redirect("dashboard:syllabus")
+            return redirect("dashboard:dashboard")  # Redirect to dashboard after login
+
+        # Optional: Add Django auth logic here if using User model
+        # user = authenticate(request, username=username, password=password)
+        # if user is not None:
+        #     login(request, user)
+        #     return redirect('dashboard:dashboard')
+
         messages.error(request, "Invalid credentials")
+
+    # If GET request or invalid login, show login page
+    # Note: Using 'dashboard/login.html' based on your folder structure,
+    # or just 'login.html' if it's in the root templates dir.
     return render(request, "dashboard/login.html")
 
 
@@ -152,14 +177,7 @@ def handler500(request):
     return render(request, "dashboard/500.html", status=500)
 
 
-# =========================================================
-# PDF DOWNLOAD FEATURE (MERGED WITHOUT MODIFYING ABOVE CODE)
-# =========================================================
-
-from django.http import HttpResponse
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-
+# ================= PDF DOWNLOAD FEATURE =================
 
 def download_faculty_pdf(request):
     response = HttpResponse(content_type='application/pdf')

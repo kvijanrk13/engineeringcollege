@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -195,21 +196,15 @@
 
     <div class="login-container">
         <div class="college-header">
-            <img src="/static/images/IT HEADER.png" alt="IT Department Header" class="header-image" onerror="this.style.display='none'">
+            <img src="{% static 'images/IT HEADER.png' %}" alt="IT Department Header" class="header-image" onerror="this.style.display='none'">
             <p class="department">INFORMATION TECHNOLOGY DEPARTMENT</p>
         </div>
 
         {% if messages %}
             {% for message in messages %}
-                {% if message.tags == 'error' %}
-                    <div class="error-message">
-                        ⚠ {{ message }}
-                    </div>
-                {% else %}
-                    <div class="success-message">
-                        ✅ {{ message }}
-                    </div>
-                {% endif %}
+                <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
 
