@@ -1,0 +1,192 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Exam Branch - IT Department{% endblock %}
+
+{% block content %}
+<style>
+    .exam-section {
+        background: rgba(0, 30, 0, 0.6);
+        padding: 25px;
+        border-radius: 10px;
+        border: 1px solid #00aa00;
+        margin-bottom: 25px;
+    }
+
+    .exam-header {
+        color: #00ff00;
+        margin: 20px 0 15px 0;
+        border-bottom: 2px solid #00ff00;
+        padding-bottom: 8px;
+    }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    .schedule-table th {
+        background: rgba(0, 60, 0, 0.8);
+        color: #00ff00;
+        padding: 12px;
+        text-align: left;
+        border: 1px solid #00aa00;
+    }
+
+    .schedule-table td {
+        padding: 12px;
+        border: 1px solid #00aa00;
+        color: #90ee90;
+    }
+
+    .schedule-table tr:nth-child(even) {
+        background: rgba(0, 40, 0, 0.4);
+    }
+
+    .important-notice {
+        background: rgba(255, 255, 0, 0.1);
+        border: 2px solid #ffff00;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        color: #ffff00;
+    }
+
+    .notice-title {
+        color: #ffff00;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .result-card {
+        background: rgba(0, 40, 0, 0.6);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #00aa00;
+        margin: 10px 0;
+    }
+
+    .result-semester {
+        color: #00ff00;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .download-link {
+        color: #00ff00;
+        text-decoration: none;
+        border: 1px solid #00ff00;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 8px;
+        transition: background 0.3s;
+    }
+
+    .download-link:hover {
+        background: rgba(0, 255, 0, 0.2);
+    }
+</style>
+
+<h1 style="color: #00ff00; margin-bottom: 20px; text-align: center;">Exam Branch</h1>
+
+<div class="important-notice">
+    <div class="notice-title">📢 Important Notice</div>
+    <p>End Semester Examinations for Odd Semester 2024 will commence from December 1, 2024. Hall tickets will be available for download from November 20, 2024.</p>
+</div>
+
+<div class="exam-section">
+    <h2 class="exam-header">Exam Schedule - Odd Semester 2024</h2>
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Time</th>
+                <th>Venue</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Dec 1, 2024</td>
+                <td>Data Structures</td>
+                <td>9:00 AM - 12:00 PM</td>
+                <td>IT Block - Hall A</td>
+            </tr>
+            <tr>
+                <td>Dec 3, 2024</td>
+                <td>Database Management Systems</td>
+                <td>9:00 AM - 12:00 PM</td>
+                <td>IT Block - Hall B</td>
+            </tr>
+            <tr>
+                <td>Dec 5, 2024</td>
+                <td>Computer Networks</td>
+                <td>2:00 PM - 5:00 PM</td>
+                <td>IT Block - Hall A</td>
+            </tr>
+            <tr>
+                <td>Dec 8, 2024</td>
+                <td>Operating Systems</td>
+                <td>9:00 AM - 12:00 PM</td>
+                <td>Main Building - Hall 1</td>
+            </tr>
+            <tr>
+                <td>Dec 10, 2024</td>
+                <td>Software Engineering</td>
+                <td>2:00 PM - 5:00 PM</td>
+                <td>IT Block - Hall C</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="exam-section">
+    <h2 class="exam-header">Results</h2>
+    <div class="result-card">
+        <div class="result-semester">Even Semester 2024 Results</div>
+        <div>Published on: July 15, 2024</div>
+        <a href="#" class="download-link">Download Result PDF</a>
+    </div>
+    <div class="result-card">
+        <div class="result-semester">Odd Semester 2023 Results</div>
+        <div>Published on: January 20, 2024</div>
+        <a href="#" class="download-link">Download Result PDF</a>
+    </div>
+</div>
+
+<div class="exam-section">
+    <h2 class="exam-header">Academic Calendar 2024-25</h2>
+    <table class="schedule-table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Odd Semester Classes Begin</td>
+                <td>August 1, 2024</td>
+                <td>November 30, 2024</td>
+            </tr>
+            <tr>
+                <td>Mid Semester Examinations</td>
+                <td>October 15, 2024</td>
+                <td>October 25, 2024</td>
+            </tr>
+            <tr>
+                <td>End Semester Examinations</td>
+                <td>December 1, 2024</td>
+                <td>December 20, 2024</td>
+            </tr>
+            <tr>
+                <td>Even Semester Classes Begin</td>
+                <td>January 15, 2025</td>
+                <td>April 30, 2025</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

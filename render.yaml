@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: engineeringcollege
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn engineeringcollege.wsgi:application"
+    plan: free

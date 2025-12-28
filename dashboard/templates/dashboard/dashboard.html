@@ -1,0 +1,35 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h1 class="mb-4">Academic Dashboard</h1>
+
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card p-4 text-center">
+        <h3>3</h3>
+        <p>Departments</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4 text-center">
+        <h3>8</h3>
+        <p>Semesters</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-4 text-center">
+        <h3>300+</h3>
+        <p>Subjects</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'dashboard:syllabus' %}" class="btn btn-primary">
+      View Complete Syllabus
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,781 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Faculty Details - ANURAG Engineering College{% endblock %}
+
+{% block content %}
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    /* Base Styles */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 20px auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; }
+    h3 { color: #2c3e50; border-left: 4px solid #3498db; padding-left: 10px; margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+
+    /* Header */
+    .page-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
+    .page-header h1 { color: white; border: none; margin: 0; }
+
+    /* Forms */
+    .form-section { background: #f8fafc; border: 1px solid #e1e5eb; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .form-label { font-weight: 600; font-size: 13px; color: #2c3e50; margin-bottom: 5px; display: block; text-transform: uppercase; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 14px; }
+
+    /* Achievements Grid */
+    .achievements-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .date-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .upload-box { display: flex; align-items: center; gap: 10px; background: #fff; padding: 8px; border: 1px dashed #bdc3c7; border-radius: 5px; }
+
+    /* Academic Year Global */
+    .academic-year-section { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bbdefb; display: flex; align-items: center; gap: 15px; font-weight: bold; color: #2c3e50; }
+    #academic-year { width: auto; min-width: 150px; }
+
+    /* Subject/Project Blocks */
+    .subject-selection-block { border: 1px solid #dfe6e9; background: white; padding: 20px; border-radius: 8px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .block-header { color: #3498db; font-weight: bold; border-bottom: 2px solid #f1f2f6; padding-bottom: 10px; margin-bottom: 15px; text-transform: uppercase; }
+
+    .subject-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px; }
+    .load-btn { background: #7f8c8d; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 23px; width: 100%; }
+    .load-btn:hover { background: #636e72; }
+
+    .select-all-container { background: #ecf0f1; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; align-items: center; }
+    .select-all-container input { width: auto; margin-right: 10px; transform: scale(1.2); cursor: pointer; }
+    .select-all-container label { cursor: pointer; font-weight: 600; }
+
+    .subject-list { background: #f8f9fa; padding: 15px; border: 1px solid #e1e5eb; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+    .subject-item { background: white; padding: 8px 12px; margin-bottom: 5px; border-radius: 4px; border-left: 3px solid #3498db; display: flex; align-items: center; gap: 10px; }
+    .subject-item input { width: auto; transform: scale(1.2); }
+    .subject-code { font-weight: bold; min-width: 80px; font-family: monospace; }
+
+    /* Result Analysis Section */
+    .result-section { background: #eef2f7; padding: 15px; margin-top: 20px; border-radius: 6px; border: 1px solid #cbd5e0; }
+    .result-title { font-weight: bold; color: #2c3e50; margin-bottom: 10px; border-bottom: 1px solid #cbd5e0; padding-bottom: 5px; }
+    .result-input-group { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+    .result-input-wrapper { flex: 1; min-width: 120px; }
+    .result-input-wrapper label { font-size: 11px; margin-bottom: 3px; font-weight: bold; color: #555; display: block; }
+    .add-result-btn, .add-project-batch-btn, .add-ach-btn { background: #e67e22; color: white; border: none; padding: 0 20px; height: 42px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .add-result-btn:hover, .add-project-batch-btn:hover, .add-ach-btn:hover { background: #d35400; }
+
+    .added-results-list { margin-top: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 4px; }
+    .added-result-item { padding: 12px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+    .added-result-item:last-child { border-bottom: none; }
+    .delete-btn { color: #e74c3c; cursor: pointer; margin-left: 10px; padding: 5px; background: #ffebee; border-radius: 4px; }
+
+    /* Project Grid Section */
+    .project-details-section { background: #fff8e1; padding: 15px; margin-top: 20px; border-radius: 6px; border: 1px solid #ffe082; }
+    .project-title { color: #d35400; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ffe082; padding-bottom: 5px; }
+
+    /* Project Input Layout */
+    .proj-row-1 { display: grid; grid-template-columns: 100px 2fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .proj-row-students { display: grid; grid-template-columns: 1fr 2fr 100px; gap: 10px; margin-bottom: 5px; align-items: center; }
+    .proj-row-status { margin: 15px 0; display: flex; gap: 20px; align-items: center; background: #fff3cd; padding: 10px; border-radius: 4px; }
+    .proj-status-opt { display: flex; align-items: center; gap: 5px; font-weight: bold; cursor: pointer; }
+    .proj-status-opt input { width: auto; margin: 0; }
+
+    /* Topics Grid */
+    .proj-topics-container { margin-top: 15px; border: 1px solid #fae588; padding: 10px; background: #fff; border-radius: 4px; }
+    .topics-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 8px; }
+    .topics-label { font-weight: bold; color: #555; font-size: 12px; margin: 0; }
+    .topics-select-all { font-size: 11px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .topics-select-all input { width: auto; margin: 0; transform: scale(1.1); }
+
+    .topics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+    .topic-item { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+    .topic-item input { width: auto; transform: scale(1.1); }
+
+    /* Educational Qual Splits */
+    .edu-header { color: #16a085; font-weight: bold; border-bottom: 2px solid #16a085; margin: 15px 0 10px; padding-bottom: 5px; }
+    .edu-row { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 15px; }
+
+    /* Buttons */
+    .controls { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
+    .button { flex: 1; padding: 12px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px; }
+    .button.save { background: #27ae60; }
+    .button.generate { background: #3498db; }
+    .button.clear { background: #e74c3c; }
+    .button.preview { background: #9b59b6; text-decoration: none; }
+
+    /* Photo */
+    .photo-sidebar { position: fixed; top: 100px; right: 20px; width: 250px; background: white; padding: 15px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; z-index: 1001; }
+    #faculty-photo { max-width: 100%; max-height: 200px; border-radius: 4px; margin-bottom: 10px; display: none; }
+
+    @media (max-width: 1200px) { .container { margin-right: 290px; } }
+    @media (max-width: 992px) {
+        .photo-sidebar { position: static; width: 100%; margin-bottom: 20px; }
+        .container { margin-right: 20px; }
+        .achievements-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="main-wrapper">
+    <div class="page-header">
+        <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+        <div class="department-name">INFORMATION TECHNOLOGY DEPARTMENT</div>
+    </div>
+
+    <div class="controls">
+        <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save Details</button>
+        <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
+        <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear All</button>
+    </div>
+
+    <div class="container">
+        <h1>Faculty Details Entry</h1>
+
+        <div class="form-section">
+            <h3>Basic Information</h3>
+            <div class="form-grid">
+                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" value="7001"></div>
+                <div><label class="form-label">Name of Staff</label><input type="text" id="staff-name" value="KAMBHAMPATI VIJAY KUMAR"></div>
+                <div><label class="form-label">Department</label><input type="text" id="department" value="INFORMATION TECHNOLOGY"></div>
+                <div><label class="form-label">Date of Joining</label><input type="date" id="joining-date" value="2010-12-10"></div>
+                <div><label class="form-label">Father Name</label><input type="text" id="father-name" value="KAMBHAMPATI KANAKA DURGA RAO"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Personal Details</h3>
+            <div class="form-grid">
+                <div><label class="form-label">JNTUH ID</label><input type="text" id="jntuh-id" value="15150406-114529"></div>
+                <div><label class="form-label">AICTE ID</label><input type="text" id="aacte-id" value="1-468376653"></div>
+                <div><label class="form-label">PAN</label><input type="text" id="pan" value="ARXPK1671R"></div>
+                <div><label class="form-label">AADHAR No</label><input type="text" id="aadhar" value="846452283847"></div>
+                <div><label class="form-label">Mobile No</label><input type="tel" id="mobile" value="9553122276"></div>
+                <div><label class="form-label">Mail ID</label><input type="email" id="email" value="hod.inf@anurag.ac.in"></div>
+                <div>
+                    <label class="form-label">Gender</label>
+                    <select id="gender"><option value="Male">Male</option><option value="Female">Female</option></select>
+                </div>
+                <div><label class="form-label">DOB</label><input type="date" id="dob" value="1984-05-24"></div>
+                <div><label class="form-label">State</label><input type="text" id="state" value="Telangana"></div>
+                <div><label class="form-label">Caste</label><input type="text" id="caste" value="BC-D"></div>
+                <div><label class="form-label">Sub-Caste</label><input type="text" id="sub-caste" value="MUNNURUKAPU"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Educational Qualifications</h3>
+
+            <div class="edu-header">UG (B.TECH)</div>
+            <div class="edu-row">
+                <div><label class="form-label">Year</label><input type="text" id="ug-year" value="2006"></div>
+                <div><label class="form-label">% / CGPA</label><input type="text" id="ug-percentage" value="55.6"></div>
+                <div><label class="form-label">University / College</label><input type="text" id="ug-college" value="SRI KAVITHA ENGG COLLEGE"></div>
+            </div>
+
+            <div class="edu-header">PG (M.TECH)</div>
+            <div class="edu-row">
+                <div><label class="form-label">Year</label><input type="text" id="pg-year" value="2010"></div>
+                <div><label class="form-label">% / CGPA</label><input type="text" id="pg-percentage" value="72.4"></div>
+                <div><label class="form-label">University / College</label><input type="text" id="pg-college" value="SRI KAVITHA ENGG COLLEGE"></div>
+            </div>
+
+            <div class="edu-header">Ph.D</div>
+            <div class="edu-row">
+                <div>
+                    <label class="form-label">Status</label>
+                    <select id="phd-degree"><option value="Ph.D (Pursuing)">Ph.D (Pursuing)</option><option value="Ph.D">Ph.D</option><option value="N/A">N/A</option></select>
+                </div>
+                <div><label class="form-label">Year</label><input type="text" id="phd-year" value="Pursuing"></div>
+                <div><label class="form-label">University</label><input type="text" id="phd-university" value="KLU VIJAYAWADA"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Experience & Address</h3>
+            <div class="form-grid">
+                <div><label class="form-label">Exp in Anurag</label><input type="text" id="exp-anurag" value="15 Years 0 Months 15 Days"></div>
+                <div><label class="form-label">Exp Other</label><input type="text" id="exp-other" value="1"></div>
+                <div style="grid-column: 1/-1"><label class="form-label">Address</label><input type="text" id="address" value="H.No:-6-35/12, Maruthi Nagar, Warangal Cross Road, Yedulapuram, Khammam"></div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3><i class="fas fa-trophy"></i> Faculty Achievements</h3>
+            <div class="achievements-grid">
+                <div>
+                    <label class="form-label">Achievements Description (Max 500 chars):</label>
+                    <textarea id="achievements-text" rows="5" maxlength="500" style="resize:vertical;" placeholder="Enter details of awards, recognitions, or major achievements..."></textarea>
+                    <div style="text-align:right; font-size:11px; color:#666;" id="char-count">0/500</div>
+                </div>
+                <div>
+                    <div class="date-row">
+                        <div style="flex:1"><label class="form-label">From:</label><input type="date" id="ach-from-date"></div>
+                        <div style="flex:1"><label class="form-label">To:</label><input type="date" id="ach-to-date"></div>
+                    </div>
+                    <label class="form-label">Upload Certificate:</label>
+                    <div class="upload-box">
+                        <button type="button" id="ach-browse-btn" class="load-btn" style="margin:0; width:auto; padding:5px 15px; font-size:12px; background:#34495e;">Browse</button>
+                        <span id="ach-file-name" style="font-size:12px; color:#666; margin-left:10px; overflow:hidden; text-overflow:ellipsis;">No file selected</span>
+                        <input type="file" id="ach-file-input" style="display:none;" accept=".pdf,.jpg,.png,.jpeg">
+                    </div>
+                    <button type="button" id="add-ach-btn" class="add-ach-btn" style="width:100%; margin-top:15px;">
+                        <i class="fas fa-plus"></i> ADD ACHIEVEMENT
+                    </button>
+                </div>
+            </div>
+            <div class="added-results-list" id="added-achievements-container" style="margin-top:20px;"></div>
+        </div>
+
+        <div class="academic-year-section">
+            <label>CURRENT ACADEMIC YEAR:</label>
+            <select id="academic-year">
+                <option value="2025-2026">2025-2026</option>
+                <option value="2024-2025" selected>2024-2025</option>
+                <option value="2023-2024">2023-2024</option>
+                <option value="2022-2023">2022-2023</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <h3>Subjects Dealt & Results (8 Slots)</h3>
+
+            {% for i in "12345678" %}
+            <div class="subject-selection-block" id="subject-block-{{ i }}">
+                <div class="block-header">Slot {{ i }}</div>
+
+                <div class="subject-controls">
+                    <div class="subject-control-group">
+                        <label>Academic Year</label>
+                        <select id="select-academic-year-{{ i }}">
+                            <option value="2025-2026">2025-2026</option>
+                            <option value="2024-2025" selected>2024-2025</option>
+                            <option value="2023-2024">2023-2024</option>
+                            <option value="2022-2023">2022-2023</option>
+                        </select>
+                    </div>
+                    <div class="subject-control-group">
+                        <label>Year</label>
+                        <select id="select-year-{{ i }}">
+                            <option value="First Year" {% if i == '1' %}selected{% endif %}>First Year</option>
+                            <option value="Second Year" {% if i == '2' %}selected{% endif %}>Second Year</option>
+                            <option value="Third Year" {% if i == '3' %}selected{% endif %}>Third Year</option>
+                            <option value="Fourth Year" {% if i == '4' %}selected{% endif %}>Fourth Year</option>
+                        </select>
+                    </div>
+                    <div class="subject-control-group">
+                        <label>Semester</label>
+                        <select id="select-semester-{{ i }}">
+                            <option value="1-1">1-1</option><option value="1-2">1-2</option>
+                            <option value="2-1">2-1</option><option value="2-2">2-2</option>
+                            <option value="3-1">3-1</option><option value="3-2">3-2</option>
+                            <option value="4-1">4-1</option><option value="4-2">4-2</option>
+                        </select>
+                    </div>
+                    <div><button type="button" class="load-btn" id="load-btn-{{ i }}">Load Subjects</button></div>
+                </div>
+
+                <div class="select-all-container">
+                    <input type="checkbox" id="select-all-{{ i }}"> <label for="select-all-{{ i }}">Select All in this Slot</label>
+                </div>
+                <div class="subject-list" id="subjects-container-{{ i }}">
+                    <p style="color:#999; text-align:center;">Click "Load Subjects" to populate</p>
+                </div>
+
+                <div class="result-section">
+                    <div class="result-title">Result Analysis</div>
+                    <div class="result-input-group">
+                        <div class="result-input-wrapper" style="flex:2"><label>Subject Name</label><input type="text" id="res-subject-{{ i }}"></div>
+                        <div class="result-input-wrapper"><label>Appeared</label><input type="number" id="res-appeared-{{ i }}" min="0"></div>
+                        <div class="result-input-wrapper"><label>Passed</label><input type="number" id="res-passed-{{ i }}" min="0"></div>
+                        <div class="result-input-wrapper"><label>Failed</label><input type="number" id="res-failed-{{ i }}" min="0"></div>
+                        <div class="result-input-wrapper"><label>Pass %</label><input type="text" id="res-percentage-{{ i }}" readonly></div>
+                        <button type="button" class="add-result-btn" id="btn-add-result-{{ i }}"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <div class="added-results-list" id="added-results-container-{{ i }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-section">
+            <h3>Projects Handled (8 Slots)</h3>
+
+            {% for i in "12345678" %}
+            <div class="subject-selection-block">
+                <div class="block-header">Project Slot {{ i }}</div>
+
+                <div class="subject-controls">
+                    <div class="subject-control-group">
+                        <label>Academic Year</label>
+                        <select id="proj-academic-year-{{ i }}">
+                            <option value="2025-2026">2025-2026</option>
+                            <option value="2024-2025" selected>2024-2025</option>
+                            <option value="2023-2024">2023-2024</option>
+                            <option value="2022-2023">2022-2023</option>
+                        </select>
+                    </div>
+                    <div class="subject-control-group" style="flex:2">
+                        <label>Project Subject</label>
+                        <select id="proj-subject-{{ i }}">
+                            <option value="">-- Select Subject --</option>
+                            <option value="IT409PW - REAL-TIME RESEARCH PROJECT">2-2: IT409PW - Real-Time Research Project</option>
+                            <option value="CS606PW - INDUSTRIAL ORIENTED MINI PROJECT">3-2: CS606PW - Mini Project / Big Data</option>
+                            <option value="IT705PC - PROJECT STAGE I">4-1: IT705PC - Project Stage I</option>
+                            <option value="IT802PC - PROJECT STAGE II">4-2: IT802PC - Project Stage II</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="project-details-section">
+                    <div class="project-title">Project Batch Details</div>
+
+                    <div class="proj-row-1">
+                        <div class="result-input-wrapper">
+                            <label>Batch No.</label><input type="text" id="proj-batch-{{ i }}" placeholder="e.g. B1">
+                        </div>
+                        <div class="result-input-wrapper">
+                            <label>Project Title</label><input type="text" id="proj-title-{{ i }}" placeholder="Title">
+                        </div>
+                        <div class="result-input-wrapper">
+                            <label>Supervisor</label><input type="text" id="proj-supervisor-{{ i }}" placeholder="Name">
+                        </div>
+                    </div>
+
+                    {% for k in "1234" %}
+                    <div class="proj-row-students">
+                        <div class="result-input-wrapper"><label>Roll No {{ k }}</label><input type="text" id="proj-roll{{ k }}-{{ i }}"></div>
+                        <div class="result-input-wrapper"><label>Student Name {{ k }}</label><input type="text" id="proj-stud{{ k }}-{{ i }}"></div>
+                        <div class="result-input-wrapper"><label>Marks (0-100)</label><input type="number" id="proj-marks{{ k }}-{{ i }}" min="0" max="100"></div>
+                    </div>
+                    {% endfor %}
+
+                    <div class="proj-row-status">
+                        <label>STATUS:</label>
+                        <div class="proj-status-opt">
+                            <input type="checkbox" id="status-approve-{{ i }}" name="status-{{ i }}" onclick="if(this.checked) document.getElementById('status-reject-{{ i }}').checked=false;"> Approve
+                        </div>
+                        <div class="proj-status-opt">
+                            <input type="checkbox" id="status-reject-{{ i }}" name="status-{{ i }}" onclick="if(this.checked) document.getElementById('status-approve-{{ i }}').checked=false;"> Reject
+                        </div>
+                    </div>
+
+                    <div class="proj-topics-container">
+                        <div class="topics-header">
+                            <span class="topics-label">TOPIC:</span>
+                            <label class="topics-select-all">
+                                <input type="checkbox" id="topic-select-all-{{ i }}" checked> Select All
+                            </label>
+                        </div>
+                        <div class="topics-grid" id="topics-grid-{{ i }}">
+                            </div>
+                    </div>
+
+                    <div class="result-input-group" style="margin-top: 15px;">
+                        <div class="result-input-wrapper">
+                            <label>Overall Batch Marks (0 - 100)</label>
+                            <input type="number" id="proj-marks-{{ i }}" min="0" max="100" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div style="margin-top:15px; text-align:right;">
+                        <button type="button" class="add-project-batch-btn" id="btn-add-proj-batch-{{ i }}">
+                            <i class="fas fa-plus"></i> ADD BATCH
+                        </button>
+                    </div>
+
+                    <div class="added-results-list" id="added-projects-container-{{ i }}"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-section">
+            <h3>About Yourself</h3>
+            <textarea id="about-yourself" rows="10" placeholder="Write about yourself (Max 3000 words)..."></textarea>
+            <div style="text-align:right; font-size:11px; color:#666;" id="about-word-count">0/3000 words</div>
+        </div>
+
+    </div>
+
+    <aside class="photo-sidebar">
+        <h3>Photo</h3>
+        <div class="photo-preview-container">
+            <img id="faculty-photo" src="" alt="Preview">
+            <p id="no-photo-message">No photo selected</p>
+        </div>
+        <div class="upload-controls">
+            <button type="button" id="choose-file-btn">Upload Photo</button>
+            <span id="file-name">No file chosen</span>
+            <input type="file" id="photo-upload-input" accept="image/*" style="display: none;">
+        </div>
+    </aside>
+</div>
+
+<script>
+    const itSubjects = {
+        "First Year": { "1-1": [{"code":"MA101BS","name":"MATRICES AND CALCULUS"},{"code":"AP102BS","name":"APPLIED PHYSICS"},{"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},{"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},{"code":"ME105ES","name":"ENGINEERING WORKSHOP"},{"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},{"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},{"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},{"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},{"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}],"1-2":[{"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},{"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},{"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},{"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},{"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},{"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},{"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},{"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},{"code":"CS209ES","name":"IT WORKSHOP"},{"code":"HS210MC","name":"CONSTITUTION OF INDIA"}] },
+        "Second Year": { "2-1": [{"code":"PS301BS","name":"PROBABILITY AND STATISTICS"},{"code":"EC302ES","name":"DIGITAL ELECTRONICS"},{"code":"CS303PC","name":"DATA STRUCTURES"},{"code":"CM304PC","name":"COMPUTER ORGANIZATION AND MICROPROCESSOR"},{"code":"IT305PC","name":"INTRODUCTION TO IOT"},{"code":"CS306PC","name":"DATA STRUCTURES LABORATORY"},{"code":"EC307ES","name":"DIGITAL ELECTRONICS LABORATORY"},{"code":"IT308PC","name":"INTERNET OF THINGS LABORATORY"},{"code":"HS309MC","name":"GENDER SENSITIZATION"},{"code":"CS308PC","name":"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}],"2-2":[{"code":"MB401HS","name":"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},{"code":"CS402PC","name":"DISCRETE MATHEMATICS"},{"code":"CS403PC","name":"OPERATING SYSTEMS"},{"code":"CS404PC","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT405PC","name":"JAVA PROGRAMMING"},{"code":"CS406PC","name":"OPERATING SYSTEMS LABORATORY"},{"code":"CS407PC","name":"DATABASE MANAGEMENT SYSTEMS LABORATORY"},{"code":"IT408PC","name":"JAVA PROGRAMMING LABORATORY"},{"code":"IT409PW","name":"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},{"code":"IT410PC","name":"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},{"code":"HS411MC","name":"INTELLECTUAL PROPERTY RIGHTS"}] },
+        "Third Year": { "3-1": [{"code":"CS501PC","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"IT502PC","name":"AUTOMATA AND COMPILER DESIGN"},{"code":"IT503PC","name":"EMBEDDED SYSTEMS"},{"code":"IT511PE","name":"FULL STACK DEVELOPMENT"},{"code":"IT512PE","name":"DATA MINING"},{"code":"CS513PE","name":"SCRIPTING LANGUAGES"},{"code":"IT514PE","name":"MOBILE APPLICATION DEVELOPMENT"},{"code":"IT515PE","name":"SOFTWARE TESTING METHODOLOGIES"},{"code":"AM515PE","name":"COMPUTER GRAPHICS"},{"code":"IT522PE","name":"QUANTUM COMPUTING"},{"code":"IT523PE","name":"ADVANCED OPERATING SYSTEMS"},{"code":"CS524PE","name":"DISTRIBUTED DATABASES"},{"code":"IT525PE","name":"PATTERN RECOGNITION"},{"code":"IT532PE","name":"DATA MINING LABORATORY"},{"code":"IT531PE","name":"FULL STACK DEVELOPMENT LABORATORY"},{"code":"IT533PE","name":"SCRIPTING LANGUAGES LABORATORY"},{"code":"IT534PE","name":"MOBILE APPLICATION DEVELOPMENT LABORATORY"},{"code":"IT535PE","name":"SOFTWARE TESTING METHODOLOGIES LABORATORY"},{"code":"IT504PC","name":"COMPILER DESIGN LABORATORY"},{"code":"IT505PC","name":"EMBEDDED SYSTEMS LABORATORY"},{"code":"CS507PC","name":"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}],"3-2":[{"code":"CS601PC","name":"MACHINE LEARNING"},{"code":"IT602PC","name":"SOFTWARE ENGINEERING"},{"code":"IT603PC","name":"DATA COMMUNICATIONS AND COMPUTER NETWORKS"},{"code":"IT611PE","name":"BIOMETRICS"},{"code":"IT612PE","name":"ADVANCED COMPUTER ARCHITECTURE"},{"code":"CS633PE","name":"DATA ANALYTICS"},{"code":"CS616PE","name":"IMAGE PROCESSING"},{"code":"CS617PE","name":"PRINCIPLES OF PROGRAMMING LANGUAGES"},{"code":"CE611OE","name":"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},{"code":"CE612OE","name":"BUILDING MANAGEMENT SYSTEMS"},{"code":"CE613OE","name":"ENVIRONMENTAL IMPACT ASSESSMENT"},{"code":"CE614OE","name":"HYDROGEOLOGY"},{"code":"EE611OE","name":"RENEWABLE ENERGY SOURCES"},{"code":"EE612OE","name":"FUNDAMENTAL OF ELECTRIC VEHICLES"},{"code":"ME611OE","name":"BASIC MECHANICAL ENGINEERING"},{"code":"ME612OE","name":"POWER PLANT ENGINEERING"},{"code":"EC611OE","name":"FUNDAMENTALS OF INTERNET OF THINGS"},{"code":"EC612OE","name":"PRINCIPLES OF SIGNAL PROCESSING"},{"code":"EC613OE","name":"DIGITAL ELECTRONICS FOR ENGINEERING"},{"code":"CS611OE","name":"DATA STRUCTURES"},{"code":"CS612OE","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT611OE","name":"JAVA PROGRAMMING"},{"code":"IT612OE","name":"SOFTWARE ENGINEERING"},{"code":"AM611OE","name":"FUNDAMENTALS OF AI"},{"code":"AM612OE","name":"MACHINE LEARNING BASICS"},{"code":"CS604PC","name":"MACHINE LEARNING LABORATORY"},{"code":"IT605PC","name":"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"},{"code":"AE606HS","name":"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},{"code":"CS606PW","name":"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATA SPARK)"},{"code":"ES607MC","name":"ENVIRONMENTAL SCIENCE"}] },
+        "Fourth Year": { "4-1": [{"code":"IT701PC","name":"INFORMATION SECURITY"},{"code":"IT702PC","name":"CLOUD COMPUTING"},{"code":"IT711PE","name":"HUMAN COMPUTER INTERACTION"},{"code":"IT712PE","name":"HIGH PERFORMANCE COMPUTING"},{"code":"IT713PE","name":"ARTIFICIAL INTELLIGENCE"},{"code":"IT714PE","name":"INFORMATION RETRIEVAL SYSTEMS"},{"code":"IT715PE","name":"AD-HOC & SENSOR NETWORKS"},{"code":"IT721PE","name":"NATURAL LANGUAGE PROCESSING"},{"code":"IT722PE","name":"DISTRIBUTED SYSTEMS"},{"code":"IT723PE","name":"AUGMENTED REALITY & VIRTUAL REALITY"},{"code":"IT724PE","name":"WEB SECURITY"},{"code":"IT725PE","name":"CYBER FORENSICS"},{"code":"CE721OE","name":"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},{"code":"CE722OE","name":"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},{"code":"CE723OE","name":"SOLID WASTE MANAGEMENT"},{"code":"CE724OE","name":"SMART CITIES"},{"code":"EE721OE","name":"UTILIZATION OF ELECTRIC ENERGY"},{"code":"EE722OE","name":"ENERGY STORAGE SYSTEMS"},{"code":"ME721OE","name":"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},{"code":"ME722OE","name":"INDUSTRIAL ENGINEERING & MANAGEMENT"},{"code":"EC721OE","name":"ELECTRONIC SENSORS"},{"code":"EC722OE","name":"ELECTRONICS FOR HEALTH CARE"},{"code":"EC723OE","name":"TELECOMMUNICATIONS FOR SOCIETY"},{"code":"CS721OE","name":"OPERATING SYSTEMS"},{"code":"CS722OE","name":"COMPUTER NETWORKS"},{"code":"IT721OE","name":"FULL STACK DEVELOPMENT"},{"code":"IT722OE","name":"SCRIPTING LANGUAGES"},{"code":"AM721OE","name":"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},{"code":"AM722OE","name":"AI APPLICATIONS"},{"code":"IT703PC","name":"INFORMATION SECURITY LAB"},{"code":"IT704PC","name":"CLOUD COMPUTING LAB"},{"code":"IT705PC","name":"PROJECT STAGE – I"}],"4-2":[{"code":"IT801PC","name":"ORGANIZATIONAL BEHAVIOR"},{"code":"IT811PE","name":"INTRUSION DETECTION SYSTEMS"},{"code":"IT812PE","name":"REAL TIME SYSTEMS"},{"code":"IT813PE","name":"BLOCK CHAIN TECHNOLOGY"},{"code":"IT814PE","name":"DEEP LEARNING"},{"code":"IT815PE","name":"SOFTWARE PROCESS & PROJECT MANAGEMENT"},{"code":"CE831OE","name":"ENERGY EFFICIENT BUILDINGS"},{"code":"CE832OE","name":"MULTI CRITERION DECISION MAKING"},{"code":"CE833OE","name":"ENVIRONMENTAL POLLUTION"},{"code":"EE831OE","name":"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},{"code":"EE832OE","name":"RELIABILITY ENGINEERING"},{"code":"ME831OE","name":"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},{"code":"ME832OE","name":"ENTREPRENEURSHIP DEVELOPMENT"},{"code":"EC831OE","name":"MEASURING INSTRUMENTS"},{"code":"EC832OE","name":"COMMUNICATION TECHNOLOGIES"},{"code":"EC833OE","name":"FUNDAMENTALS OF SOCIAL NETWORKS"},{"code":"CS831OE","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"CS832OE","name":"DATA ANALYTICS"},{"code":"IT831OE","name":"BIG DATA TECHNOLOGIES"},{"code":"IT832OE","name":"DEVOPS"},{"code":"AM831OE","name":"CHATBOTS"},{"code":"AM832OE","name":"EVOLUTIONARY COMPUTING"},{"code":"IT802PC","name":"PROJECT STAGE-II, INCLUDING SEMINAR"}] }
+    };
+
+    const topicList = [
+        "ABSTRACT", "LITERATURE OBJECTIVES", "INTRODUCTION", "PROBLEM STATEMENT",
+        "EXISTING SYSTEM AND DRAWBACKS", "PROPOSED SYSTEM AND ADVANTAGES", "SYSTEM REQUIREMENTS",
+        "TEST CASES", "WORK PROGRAM", "RESULTS", "CONCLUSION", "REFERENCES",
+        "PROJECT REVIEW", "DOCUMENT PREPARATION", "DOCUMENTATION SUBMISSION",
+        "CERTIFICATE BY THE COMPANY", "FINAL REVIEW"
+    ];
+
+    let uploadedAchievements = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. PHOTO UPLOAD ---
+        try {
+            const photoInput = document.getElementById('photo-upload-input');
+            const chooseBtn = document.getElementById('choose-file-btn');
+            const photoImg = document.getElementById('faculty-photo');
+            const noPhotoMsg = document.getElementById('no-photo-message');
+
+            if (chooseBtn && photoInput) {
+                chooseBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    photoInput.click();
+                });
+                photoInput.addEventListener('change', function() {
+                    if (this.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            photoImg.src = e.target.result;
+                            photoImg.style.display = 'block';
+                            noPhotoMsg.style.display = 'none';
+                        };
+                        reader.readAsDataURL(this.files[0]);
+                    }
+                });
+            }
+        } catch(e) { console.error("Photo Error", e); }
+
+        // --- 2. FACULTY ACHIEVEMENTS ---
+        try {
+            // Word Count
+            const aboutText = document.getElementById('about-yourself');
+            if(aboutText) {
+                aboutText.addEventListener('input', function() {
+                    const words = this.value.trim().split(/\s+/).filter(w=>w).length;
+                    document.getElementById('about-word-count').textContent = `${words}/3000 words`;
+                });
+            }
+
+            const achText = document.getElementById('achievements-text');
+            if(achText) achText.addEventListener('input', function() { document.getElementById('char-count').textContent = `${this.value.length}/500`; });
+
+            // Browse
+            const achBrowseBtn = document.getElementById('ach-browse-btn');
+            const achFileInput = document.getElementById('ach-file-input');
+            if(achBrowseBtn && achFileInput) {
+                achBrowseBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    achFileInput.click();
+                });
+                achFileInput.addEventListener('change', () => {
+                    document.getElementById('ach-file-name').textContent = achFileInput.files[0] ? achFileInput.files[0].name : "No file selected";
+                });
+            }
+
+            // Add Achievement
+            const addAchBtn = document.getElementById('add-ach-btn');
+            if(addAchBtn) {
+                addAchBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const desc = document.getElementById('achievements-text').value;
+                    const from = document.getElementById('ach-from-date').value;
+                    const to = document.getElementById('ach-to-date').value;
+                    const file = document.getElementById('ach-file-input').files[0];
+
+                    if(!desc) { alert("Enter Description"); return; }
+
+                    const container = document.getElementById('added-achievements-container');
+                    const div = document.createElement('div');
+                    div.className = 'added-result-item';
+                    div.dataset.desc = desc;
+                    div.dataset.from = from;
+                    div.dataset.to = to;
+
+                    if(file) {
+                        uploadedAchievements.push(file);
+                        div.dataset.fileIndex = uploadedAchievements.length - 1;
+                    }
+
+                    div.innerHTML = `
+                        <div>
+                            <strong>${desc}</strong><br>
+                            <small>${from} to ${to} ${file ? '| File: '+file.name : ''}</small>
+                        </div>
+                        <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>
+                    `;
+                    container.appendChild(div);
+
+                    document.getElementById('achievements-text').value = '';
+                    document.getElementById('ach-file-input').value = '';
+                    document.getElementById('ach-file-name').textContent = 'No file selected';
+                });
+            }
+        } catch(e) { console.error("Achievement Error", e); }
+
+        // --- 3. SLOTS LOGIC ---
+        for (let i = 1; i <= 8; i++) {
+            const loadBtn = document.getElementById(`load-btn-${i}`);
+            if(loadBtn) loadBtn.addEventListener('click', () => loadSubjectsForBlock(i));
+
+            // Percentage Calc
+            const app = document.getElementById(`res-appeared-${i}`);
+            const pass = document.getElementById(`res-passed-${i}`);
+            if(app && pass) {
+                const calc = () => {
+                    const a = parseFloat(app.value)||0, p = parseFloat(pass.value)||0;
+                    document.getElementById(`res-percentage-${i}`).value = a>0 ? ((p/a)*100).toFixed(2)+'%' : '0.00%';
+                };
+                app.addEventListener('input', calc);
+                pass.addEventListener('input', calc);
+            }
+
+            // Populate Topics
+            const topicGrid = document.getElementById(`topics-grid-${i}`);
+            if(topicGrid) {
+                topicList.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 'topic-item';
+                    div.innerHTML = `<input type="checkbox" value="${t}" checked> ${t}`;
+                    topicGrid.appendChild(div);
+                });
+                const selAll = document.getElementById(`topic-select-all-${i}`);
+                if(selAll) selAll.addEventListener('change', function() { topicGrid.querySelectorAll('input').forEach(b => b.checked = this.checked); });
+            }
+
+            // Add Result
+            const addResBtn = document.getElementById(`btn-add-result-${i}`);
+            if(addResBtn) {
+                addResBtn.addEventListener('click', () => {
+                    const sub = document.getElementById(`res-subject-${i}`).value;
+                    const app = document.getElementById(`res-appeared-${i}`).value;
+                    if(!sub || !app) { alert("Fill data"); return; }
+                    const div = document.createElement('div');
+                    div.className = 'added-result-item';
+                    const pct = document.getElementById(`res-percentage-${i}`).value;
+                    // Format for parsing: SubjectName: App:X, Pass:Y, Fail:Z (P%)
+                    div.innerHTML = `<div><strong>${sub}</strong>: App:${app}, Pass:${document.getElementById(`res-passed-${i}`).value}, Fail:${document.getElementById(`res-failed-${i}`).value} (${pct})</div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
+                    document.getElementById(`added-results-container-${i}`).appendChild(div);
+                    document.getElementById(`res-subject-${i}`).value = '';
+                });
+            }
+
+            // Add Batch
+            const addBatchBtn = document.getElementById(`btn-add-proj-batch-${i}`);
+            if(addBatchBtn) {
+                addBatchBtn.addEventListener('click', () => {
+                    const title = document.getElementById(`proj-title-${i}`).value;
+                    if(!title) { alert("Enter Title"); return; }
+
+                    let students = [];
+                    for(let k=1; k<=4; k++) {
+                        const n = document.getElementById(`proj-stud${k}-${i}`).value;
+                        const r = document.getElementById(`proj-roll${k}-${i}`).value;
+                        const m = document.getElementById(`proj-marks${k}-${i}`).value;
+                        if(n || r) students.push({name:n, roll:r, marks:m});
+                    }
+
+                    const batch = document.getElementById(`proj-batch-${i}`).value;
+                    const sup = document.getElementById(`proj-supervisor-${i}`).value;
+                    const status = document.getElementById(`status-approve-${i}`).checked ? "Approved" : "Pending";
+                    const topics = Array.from(document.querySelectorAll(`#topics-grid-${i} input:checked`)).map(c => c.value);
+                    const marks = document.getElementById(`proj-marks-${i}`).value;
+
+                    const div = document.createElement('div');
+                    div.className = 'added-result-item';
+                    div.dataset.details = JSON.stringify({ batch, title, sup, students, status, topics, marks });
+                    div.innerHTML = `<div><strong>${title}</strong><br><small>Batch:${batch} | Students:${students.length}</small></div> <i class="fas fa-trash delete-btn" onclick="this.parentElement.remove()"></i>`;
+                    document.getElementById(`added-projects-container-${i}`).appendChild(div);
+
+                    document.getElementById(`proj-title-${i}`).value = '';
+                });
+            }
+        }
+
+        // --- SUBJECT HELPER ---
+        function loadSubjectsForBlock(i) {
+            try {
+                const year = document.getElementById(`select-year-${i}`).value;
+                const sem = document.getElementById(`select-semester-${i}`).value;
+                const container = document.getElementById(`subjects-container-${i}`);
+                container.innerHTML = '';
+                const list = itSubjects[year]?.[sem] || [];
+
+                if(list.length===0) container.innerHTML = '<p style="color:#999">No subjects</p>';
+                else {
+                    list.forEach(sub => {
+                        const div = document.createElement('div');
+                        div.className = 'subject-item';
+                        div.innerHTML = `<input type="checkbox" class="subject-checkbox" checked> <span class="subject-code">${sub.code}</span> <span class="subject-name">${sub.name}</span>`;
+                        container.appendChild(div);
+                    });
+                    const selAll = document.getElementById(`select-all-${i}`);
+                    if(selAll) {
+                         const newSel = selAll.cloneNode(true);
+                         selAll.parentNode.replaceChild(newSel, selAll);
+                         newSel.checked = true;
+                         newSel.addEventListener('change', function() { container.querySelectorAll('.subject-checkbox').forEach(b => b.checked = this.checked); });
+                    }
+                }
+            } catch(e) { console.error("Load Sub Error", e); }
+        }
+
+        // --- PDF GENERATION & MERGE ---
+        document.getElementById('generate-pdf-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('generate-pdf-btn');
+            btn.innerHTML = 'Generating...';
+            btn.disabled = true;
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+
+                // --- 1. GENERATE MAIN REPORT ---
+                doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+                doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, { align: "center" });
+                doc.setFontSize(11);
+                doc.text("FACULTY DIRECTORY", 105, 22, { align: "center" });
+                doc.setLineWidth(0.5); doc.line(10, 25, 200, 25);
+
+                const photoImg = document.getElementById('faculty-photo');
+                if(photoImg.src.startsWith('data:image')) {
+                    try { doc.addImage(photoImg.src, 'JPEG', 160, 30, 30, 40); } catch(e){}
+                }
+
+                let y = 35;
+                // Basic Info
+                doc.autoTable({ startY: y, theme: 'plain', body: [
+                    ['Employee Code', document.getElementById('employee-code').value],
+                    ['Name', document.getElementById('staff-name').value],
+                    ['Department', document.getElementById('department').value]
+                ], styles: {fontSize:10} });
+                y = doc.lastAutoTable.finalY + 10;
+
+                // Personal
+                doc.setFont("helvetica", "bold"); doc.text("PERSONAL DETAILS", 14, y); y+=5;
+                doc.autoTable({ startY: y, theme: 'grid', body: [
+                    ['JNTUH ID', document.getElementById('jntuh-id').value, 'AICTE ID', document.getElementById('aacte-id').value],
+                    ['PAN', document.getElementById('pan').value, 'AADHAR', document.getElementById('aadhar').value],
+                    ['MOBILE', document.getElementById('mobile').value, 'EMAIL', document.getElementById('email').value],
+                    ['GENDER', document.getElementById('gender').value, 'DOB', document.getElementById('dob').value],
+                    ['STATE', document.getElementById('state').value, 'CASTE', document.getElementById('caste').value],
+                    ['SUB-CASTE', document.getElementById('sub-caste').value, '', '']
+                ], styles: {fontSize:8}, columnStyles:{0:{fontStyle:'bold'}, 2:{fontStyle:'bold'}, 4:{fontStyle:'bold'}} });
+                y = doc.lastAutoTable.finalY + 10;
+
+                // Education (Split Pct)
+                doc.setFont("helvetica", "bold"); doc.text("EDUCATIONAL QUALIFICATIONS", 14, y); y+=5;
+                doc.autoTable({ startY: y, head: [['Degree', 'Year', '% / CGPA', 'University']], body: [
+                   ['UG', document.getElementById('ug-year').value, document.getElementById('ug-percentage').value, document.getElementById('ug-college').value],
+                   ['PG', document.getElementById('pg-year').value, document.getElementById('pg-percentage').value, document.getElementById('pg-college').value]
+                ], styles: {fontSize:9} });
+                y = doc.lastAutoTable.finalY + 10;
+
+                // Subjects Table (Split Pass %)
+                doc.setFont("helvetica", "bold"); doc.text("SUBJECTS DEALT & RESULTS", 14, y); y+=5;
+                let resRows = [];
+                for(let i=1; i<=8; i++) {
+                    const year = document.getElementById(`select-academic-year-${i}`).value;
+                    const subjects = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`)).map(c => c.nextElementSibling.nextElementSibling.innerText).join('\n');
+
+                    const resItems = document.querySelectorAll(`#added-results-container-${i} .added-result-item`);
+                    let statsTxt = [], passTxt = [];
+                    resItems.forEach(item => {
+                         let text = item.innerText.replace('Delete','').trim();
+                         // Parse "Sub: App:X, Pass:Y, Fail:Z (P%)"
+                         let match = text.match(/:\s*(App:.*Fail:\d+)\s*\((.*%)\)/);
+                         if(match) {
+                             statsTxt.push(match[1]);
+                             passTxt.push(match[2]);
+                         } else {
+                             statsTxt.push('-'); passTxt.push('-');
+                         }
+                    });
+
+                    if(subjects || statsTxt.length) resRows.push([year, subjects, statsTxt.join('\n'), passTxt.join('\n')]);
+                }
+                doc.autoTable({ startY: y, head:[['Year','Subject','Stats','Pass %']], body: resRows.length?resRows:[['-','-','-','-']], styles:{fontSize:8} });
+                y = doc.lastAutoTable.finalY + 10;
+
+                // Projects Table (Split Marks)
+                if(y>220) { doc.addPage(); y=20; }
+                doc.text("PROJECTS HANDLED", 14, y); y+=5;
+                let projRows = [];
+                for(let i=1; i<=8; i++) {
+                    const year = document.getElementById(`proj-academic-year-${i}`).value;
+                    const items = document.querySelectorAll(`#added-projects-container-${i} .added-result-item`);
+                    items.forEach(item => {
+                        const d = JSON.parse(item.dataset.details);
+                        let studCol = d.students.map(s => `${s.name} (${s.roll})`).join('\n');
+                        let marksCol = d.students.map(s => s.marks || '-').join('\n');
+                        projRows.push([year, d.title, `Batch:${d.batch}\nSup:${d.sup}\nStatus:${d.status}`, studCol, marksCol]);
+                    });
+                }
+                doc.autoTable({ startY: y, head:[['Year','Subject','Details','Students','Marks']], body: projRows.length?projRows:[['-','-','-','-']], styles:{fontSize:8} });
+
+                // Achievements List
+                y = doc.lastAutoTable.finalY + 10;
+                doc.text("FACULTY ACHIEVEMENTS", 14, y); y+=5;
+                let achRows = [];
+                document.querySelectorAll('#added-achievements-container .added-result-item').forEach(item => {
+                    achRows.push([item.dataset.desc, `${item.dataset.from} - ${item.dataset.to}`]);
+                });
+                doc.autoTable({ startY: y, head:[['Description','Duration']], body: achRows, styles:{fontSize:8} });
+
+                // About Faculty
+                const aboutText = document.getElementById('about-yourself').value;
+                if(aboutText) {
+                     doc.addPage(); y=20;
+                     doc.text("ABOUT THE FACULTY", 14, y); y+=10;
+                     doc.setFontSize(11); doc.setFont('helvetica','normal');
+                     const splitText = doc.splitTextToSize(aboutText, 180);
+                     doc.text(splitText, 14, y);
+                }
+
+                // --- 2. MERGE CERTIFICATES ---
+                const reportBytes = doc.output('arraybuffer');
+                const pdfDoc = await PDFLib.PDFDocument.load(reportBytes);
+
+                for (const file of uploadedAchievements) {
+                    try {
+                        const fileBytes = await file.arrayBuffer();
+                        if (file.type === 'application/pdf') {
+                            const certPdf = await PDFLib.PDFDocument.load(fileBytes);
+                            const copiedPages = await pdfDoc.copyPages(certPdf, certPdf.getPageIndices());
+                            copiedPages.forEach((page) => pdfDoc.addPage(page));
+                        } else if (file.type.startsWith('image/')) {
+                            const image = file.type === 'image/png' ? await pdfDoc.embedPng(fileBytes) : await pdfDoc.embedJpg(fileBytes);
+                            const page = pdfDoc.addPage();
+                            const { width, height } = image.scale(0.5);
+                            page.drawImage(image, { x: 50, y: height, width, height });
+                        }
+                    } catch (e) { console.error("Merge Error", e); }
+                }
+
+                // Download
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Faculty_Report_Merged.pdf';
+                link.click();
+
+            } catch (e) { console.error("Gen Error", e); alert("Error generating PDF"); }
+
+            btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF';
+            btn.disabled = false;
+        });
+
+        document.getElementById('save-details-btn').onclick = () => alert("Details Saved!");
+        document.getElementById('clear-all-btn').onclick = () => { if(confirm("Clear all?")) location.reload(); };
+
+        // Initialize Slot 1
+        if(document.getElementById('load-btn-1')) loadSubjectsForBlock(1);
+    });
+</script>
+{% endblock %}

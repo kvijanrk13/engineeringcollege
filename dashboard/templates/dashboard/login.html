@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ANURAG ENGINEERING COLLEGE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background-color: #000;
+            color: #0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .matrix-char {
+            position: absolute;
+            color: #0f0;
+            font-size: 14px;
+            opacity: 0;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        .login-container {
+            background-color: rgba(0, 20, 0, 0.85);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(45deg, #0f0, #000, #0f0, #000, #0f0);
+            z-index: -1;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.3; }
+        }
+
+        .college-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #0f0;
+        }
+
+        .header-image {
+            max-width: 100%;
+            height: 120px;
+            margin-bottom: 15px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            padding: 10px;
+            background: linear-gradient(45deg, #001100, #003300, #001100);
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .department {
+            color: #0f0;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .login-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #0f0;
+            font-size: 16px;
+        }
+
+        .form-group input {
+            background-color: rgba(0, 30, 0, 0.7);
+            border: 1px solid #0a0;
+            border-radius: 5px;
+            padding: 12px 15px;
+            font-size: 16px;
+            color: #0f0;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0f0;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .login-btn {
+            background: linear-gradient(to bottom, #0a0, #050);
+            color: #000;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(to bottom, #0f0, #080);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+        }
+
+        .error-message {
+            color: #f00;
+            background-color: rgba(50, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #a00;
+            text-shadow: 0 0 5px #f00;
+        }
+
+        .success-message {
+            color: #0f0;
+            background-color: rgba(0, 50, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #0a0;
+            text-shadow: 0 0 5px #0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+
+    <div class="login-container">
+        <div class="college-header">
+            <img src="/static/images/IT HEADER.png" alt="IT Department Header" class="header-image" onerror="this.style.display='none'">
+            <p class="department">INFORMATION TECHNOLOGY DEPARTMENT</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    <div class="error-message">
+                        ⚠ {{ message }}
+                    </div>
+                {% else %}
+                    <div class="success-message">
+                        ✅ {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <form class="login-form" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="7001" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" value="anrkitdept" required readonly>
+            </div>
+
+            <button type="submit" class="login-btn">ACCESS SYSTEM</button>
+        </form>
+    </div>
+
+    <script>
+        // Matrix animation
+        const matrixBg = document.getElementById('matrixBg');
+        const chars = "01";
+
+        function createMatrix() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const columns = Math.floor(width / 20);
+
+            for (let i = 0; i < columns; i++) {
+                const delay = Math.random() * 5;
+                const duration = 5 + Math.random() * 10;
+
+                const column = document.createElement('div');
+                column.style.position = 'absolute';
+                column.style.top = '-50px';
+                column.style.left = `${i * 20}px`;
+                column.style.width = '2px';
+
+                // Create characters in the column
+                const charCount = Math.floor(height / 20) + 5;
+                for (let j = 0; j < charCount; j++) {
+                    const char = document.createElement('span');
+                    char.className = 'matrix-char';
+                    char.textContent = chars[Math.floor(Math.random() * chars.length)];
+                    char.style.position = 'absolute';
+                    char.style.top = `${j * 20}px`;
+                    char.style.opacity = `${0.1 + Math.random() * 0.9}`;
+                    char.style.fontSize = `${14 + Math.random() * 6}px`;
+                    char.style.animationDuration = `${duration}s`;
+                    char.style.animationDelay = `${delay + j * 0.1}s`;
+                    column.appendChild(char);
+                }
+
+                matrixBg.appendChild(column);
+            }
+        }
+
+        // Initialize matrix animation on page load
+        createMatrix();
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            matrixBg.innerHTML = '';
+            createMatrix();
+        });
+
+        // Remove readonly attribute on focus to allow copying (optional)
+        document.getElementById('username').addEventListener('focus', function() {
+            this.removeAttribute('readonly');
+            this.select();
+        });
+
+        document.getElementById('password').addEventListener('focus', function() {
+            this.removeAttribute('readonly');
+            this.select();
+        });
+
+        // Add back readonly on blur to maintain fixed values
+        document.getElementById('username').addEventListener('blur', function() {
+            this.setAttribute('readonly', true);
+        });
+
+        document.getElementById('password').addEventListener('blur', function() {
+            this.setAttribute('readonly', true);
+        });
+
+        // Auto-focus on username field
+        document.getElementById('username').focus();
+
+        // Add loading state to login button
+        document.querySelector('form').addEventListener('submit', function() {
+            const btn = this.querySelector('.login-btn');
+            btn.innerHTML = 'LOGGING IN...';
+            btn.disabled = true;
+        });
+    </script>
+</body>
+</html>

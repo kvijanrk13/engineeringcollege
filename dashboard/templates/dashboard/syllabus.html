@@ -1,0 +1,125 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Complete Syllabus & Comparison{% endblock %}
+
+{% block content %}
+<style>
+.dept-tab {
+  padding:10px 20px;
+  border:1px solid #ccc;
+  cursor:pointer;
+  font-weight:600;
+  margin-right:5px;
+  color:white;
+}
+.dept-tab.active {
+  background:#0d6efd;
+  color:#fff;
+}
+.sem {
+  background:#004000;   /* darker row bg */
+  font-weight:bold;
+  text-align:center;
+  color:white;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:20px;
+}
+td, th {
+  border:1px solid #ccc;
+  padding:6px;
+  font-size:14px;
+  color:white;          /* main text white */
+}
+th {
+  background:#006000;   /* header bg */
+  font-weight:bold;
+}
+.hide {
+  display:none;
+}
+.common-3 {
+  background:#0b5328;
+  color:white;
+}
+.common-2 {
+  background:#665500;
+  color:white;
+}
+h2, h4, h5 {
+  color:white;
+  margin-top:25px;
+}
+</style>
+
+<h2>Syllabus (IT, CSE, CSE-AI&ML)</h2>
+
+<!-- ========== BRANCH-WISE VIEW ========== -->
+<h4>Department-wise Syllabus</h4>
+
+<div class="mb-3">
+  <span class="dept-tab active" data-id="IT">IT</span>
+  <span class="dept-tab" data-id="CSE">CSE</span>
+  <span class="dept-tab" data-id="AIML">CSE (AI & ML)</span>
+</div>
+
+{% for dept, semesters in syllabus.items %}
+<div id="{{ dept }}" class="dept-content {% if dept != 'IT' %}hide{% endif %}">
+  <table>
+    {% for sem_key, subjects in semesters.items %}
+      <tr class="sem"><td colspan="2">Semester {{ sem_key }}</td></tr>
+      {% for s in subjects %}
+      <tr>
+        <td style="width:18%;">{{ s.code }}</td>
+        <td>{{ s.name }}</td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+  </table>
+</div>
+{% endfor %}
+
+<!-- ========== COMPARISON VIEW ========== -->
+<h4>Semester-wise Common Subjects (by Name)</h4>
+
+{% for block in comparison_by_sem %}
+  {% if block.rows %}
+    <h5>Semester {{ block.sem }}</h5>
+    <table>
+      <tr class="sem">
+        <th style="width:45%;">Subject Name</th>
+        <th style="width:18%;">IT</th>
+        <th style="width:18%;">CSE</th>
+        <th style="width:19%;">CSE (AI & ML)</th>
+      </tr>
+      {% for row in block.rows %}
+      <tr {% if row.common_count == 3 %}class="common-3"{% elif row.common_count == 2 %}class="common-2"{% endif %}>
+        <td>
+          {{ row.name }}
+          {% if row.common_count == 3 %}
+            <span style="background:#0f5132;color:white;padding:2px 6px;font-size:11px;border-radius:3px;">All 3</span>
+          {% elif row.common_count == 2 %}
+            <span style="background:#856404;color:white;padding:2px 6px;font-size:11px;border-radius:3px;">2 Depts</span>
+          {% endif %}
+        </td>
+        <td>{% if row.IT %}{{ row.IT.code }}{% else %}-{% endif %}</td>
+        <td>{% if row.CSE %}{{ row.CSE.code }}{% else %}-{% endif %}</td>
+        <td>{% if row.AIML %}{{ row.AIML.code }}{% else %}-{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endfor %}
+
+<script>
+document.querySelectorAll('.dept-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.dept-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dept-content').forEach(d => d.classList.add('hide'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.id).classList.remove('hide');
+  };
+});
+</script>
+{% endblock %}

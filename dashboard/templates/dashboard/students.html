@@ -1,0 +1,160 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Students - IT Department{% endblock %}
+
+{% block content %}
+<style>
+    .student-section {
+        background: rgba(0, 30, 0, 0.6);
+        padding: 25px;
+        border-radius: 10px;
+        border: 1px solid #00aa00;
+        margin-bottom: 25px;
+    }
+
+    .year-header {
+        color: #00ff00;
+        margin: 20px 0 15px 0;
+        border-bottom: 2px solid #00ff00;
+        padding-bottom: 8px;
+    }
+
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    .student-table th {
+        background: rgba(0, 60, 0, 0.8);
+        color: #00ff00;
+        padding: 12px;
+        text-align: left;
+        border: 1px solid #00aa00;
+    }
+
+    .student-table td {
+        padding: 10px 12px;
+        border: 1px solid #00aa00;
+        color: #90ee90;
+    }
+
+    .student-table tr:nth-child(even) {
+        background: rgba(0, 40, 0, 0.4);
+    }
+
+    .search-box {
+        background: rgba(0, 30, 0, 0.6);
+        border: 1px solid #00aa00;
+        color: #90ee90;
+        padding: 10px;
+        border-radius: 5px;
+        width: 300px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<h1 style="color: #00ff00; margin-bottom: 20px; text-align: center;">Student Management</h1>
+
+<input type="text" class="search-box" placeholder="Search students by name or roll number...">
+
+<div class="student-section">
+    <h2 class="year-header">Fourth Year Students</h2>
+    <table class="student-table">
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>CGPA</th>
+                <th>Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>IT2001</td>
+                <td>Amit Sharma</td>
+                <td>Information Technology</td>
+                <td>8.9</td>
+                <td>amit.sharma@ecollege.edu</td>
+            </tr>
+            <tr>
+                <td>IT2002</td>
+                <td>Priya Patel</td>
+                <td>Information Technology</td>
+                <td>9.2</td>
+                <td>priya.patel@ecollege.edu</td>
+            </tr>
+            <tr>
+                <td>IT2003</td>
+                <td>Rahul Kumar</td>
+                <td>Information Technology</td>
+                <td>8.7</td>
+                <td>rahul.kumar@ecollege.edu</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="student-section">
+    <h2 class="year-header">Third Year Students</h2>
+    <table class="student-table">
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>CGPA</th>
+                <th>Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>IT2101</td>
+                <td>Neha Gupta</td>
+                <td>Information Technology</td>
+                <td>8.5</td>
+                <td>neha.gupta@ecollege.edu</td>
+            </tr>
+            <tr>
+                <td>IT2102</td>
+                <td>Sanjay Singh</td>
+                <td>Information Technology</td>
+                <td>8.8</td>
+                <td>sanjay.singh@ecollege.edu</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="student-section">
+    <h2 class="year-header">Second Year Students</h2>
+    <table class="student-table">
+        <thead>
+            <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>CGPA</th>
+                <th>Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>IT2201</td>
+                <td>Anjali Mehta</td>
+                <td>Information Technology</td>
+                <td>9.0</td>
+                <td>anjali.mehta@ecollege.edu</td>
+            </tr>
+            <tr>
+                <td>IT2202</td>
+                <td>Vikram Reddy</td>
+                <td>Information Technology</td>
+                <td>8.6</td>
+                <td>vikram.reddy@ecollege.edu</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
