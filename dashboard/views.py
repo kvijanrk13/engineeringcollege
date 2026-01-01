@@ -6,6 +6,13 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 import json
 
+# ================== ADDED (Cloudinary upload support) ==================
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import cloudinary.uploader
+# ======================================================================
+
+
 # =========================================================
 # FULL SYLLABUS DATA
 # =========================================================
@@ -63,11 +70,9 @@ def index(request):
 
 
 def dashboard(request):
-    # This is your main dashboard view
     return render(request, "dashboard/dashboard.html")
 
 
-# Alias for compatibility if needed based on your snippet
 def dashboard_view(request):
     return render(request, "dashboard/dashboard.html")
 
@@ -123,9 +128,7 @@ def gallery(request):
 # ================= LOGIN LOGIC (MERGED) =================
 
 def login_view(request):
-    # This handles the root URL ('/') logic
     if request.method == "POST":
-        # Check standard hardcoded credentials first
         username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "").strip()
 
@@ -133,19 +136,10 @@ def login_view(request):
             request.session["logged_in"] = True
             request.session["username"] = username
             messages.success(request, "Login successful")
-            return redirect("dashboard:dashboard")  # Redirect to dashboard after login
-
-        # Optional: Add Django auth logic here if using User model
-        # user = authenticate(request, username=username, password=password)
-        # if user is not None:
-        #     login(request, user)
-        #     return redirect('dashboard:dashboard')
+            return redirect("dashboard:dashboard")
 
         messages.error(request, "Invalid credentials")
 
-    # If GET request or invalid login, show login page
-    # Note: Using 'dashboard/login.html' based on your folder structure,
-    # or just 'login.html' if it's in the root templates dir.
     return render(request, "dashboard/login.html")
 
 
@@ -194,7 +188,6 @@ def download_faculty_pdf(request):
     p.drawString(50, y, "Faculty Details Report")
     y -= 40
 
-    # Example data (replace with DB values)
     faculty_data = [
         ("Name", "Dr. ABC"),
         ("Department", "Information Technology"),
@@ -209,3 +202,17 @@ def download_faculty_pdf(request):
     p.save()
 
     return response
+
+
+# ================= CLOUDINARY PDF UPLOAD (MERGED) =================
+
+@csrf_exempt
+def upload_generated_pdf(request):
+    if request.method == 'POST' and request.FILES.get('pdf'):
+        result = cloudinary.uploader.upload(
+            request.FILES['pdf'],
+            resource_type='raw',
+            folder='faculty_pdfs'
+        )
+        return JsonResponse({'url': result['secure_url']})
+    return JsonResponse({'error': 'Invalid request'}, status=400)

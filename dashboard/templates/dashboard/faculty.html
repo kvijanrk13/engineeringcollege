@@ -11,14 +11,21 @@
 <style>
     /* Base Styles */
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; line-height: 1.6; color: #333; }
-    .container { max-width: 1200px; margin: 20px auto 20px 20px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-right: 320px; }
+
+    .container {
+        max-width: 1200px; margin: 20px auto 20px 20px;
+        background: white; padding: 30px; border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-right: 320px;
+    }
+
     h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; font-weight: 700; }
+    h3 { color: #34495e; border-left: 5px solid #3498db; padding-left: 15px; margin-top: 40px; margin-bottom: 20px; font-size: 1.25rem; font-weight: 600; }
 
     /* Form Elements */
     .form-section { background: #fff; border: 1px solid #e0e0e0; padding: 25px; border-radius: 8px; margin-bottom: 25px; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-    .form-label { font-weight: 600; font-size: 12px; color: #555; margin-bottom: 6px; display: block; text-transform: uppercase; }
-    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #dcdcdc; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+    .form-label { font-weight: 600; font-size: 12px; color: #555; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #dcdcdc; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
 
     /* Grids */
     .achievements-grid, .scm-grid, .mem-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
@@ -34,10 +41,10 @@
     .edu-spec-row { display: grid; grid-template-columns: 60px 120px 2fr 1fr 1fr 120px; gap: 10px; align-items: end; margin-bottom: 10px; }
 
     /* Buttons */
-    .add-btn, .mini-upload-btn, .load-btn { background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; }
+    .add-btn, .mini-upload-btn { background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; }
     .mini-upload-btn { background: #3498db; width: 100%; padding: 9px; }
     .mini-upload-btn.uploaded { background: #27ae60; }
-    .load-btn { background: #34495e; width: 100%; height: 42px; }
+    .load-btn { background: #34495e; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; height: 42px; }
 
     /* Subjects Section */
     .subject-selection-block { border: 1px solid #dfe6e9; padding: 20px; border-radius: 8px; margin-bottom: 25px; background: white; }
@@ -64,11 +71,13 @@
     #faculty-photo { width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; margin-bottom: 10px; display: none; }
 
     /* Controls */
-    .controls { display: flex; gap: 15px; margin: 40px auto; width: 100%; max-width: 1000px; justify-content: center; padding-bottom: 50px; }
-    .button { padding: 15px 30px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; flex: 1; max-width: 250px; text-align: center; }
+    .controls { display: flex; gap: 15px; margin: 40px auto; width: 100%; max-width: 1000px; justify-content: center; padding-bottom: 50px; flex-wrap: wrap; }
+    .button { padding: 15px 20px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; font-size: 15px; flex: 1; max-width: 220px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
     .button.save { background: #27ae60; }
     .button.preview { background: #f39c12; }
     .button.generate { background: #2980b9; }
+    .button.upload { background: #8e44ad; }
+    .button.upload:hover { background: #732d91; }
     .button.clear { background: #c0392b; }
 
     /* Modal */
@@ -172,7 +181,7 @@
             <h3>Faculty Achievements</h3>
             <div class="achievements-grid">
                 <div><label class="form-label">Description:</label><textarea id="achievements-text" rows="5"></textarea></div>
-                <div><div class="date-row"><input type="date" id="ach-from-date"><input type="date" id="ach-to-date"></div><div class="upload-box"><button id="ach-browse-btn" class="load-btn">Browse</button><input type="file" id="ach-file-input" hidden></div><button id="add-ach-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
+                <div><div class="date-row"><input type="date" id="ach-from-date"><input type="date" id="ach-to-date"></div><div class="upload-box"><button type="button" id="ach-browse-btn" class="load-btn">Browse</button><input type="file" id="ach-file-input" hidden></div><button type="button" id="add-ach-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
             </div>
             <div class="added-results-list" id="added-achievements-container"></div>
         </div>
@@ -186,8 +195,8 @@
                 <div><label class="form-label">Source</label><input type="text" id="pub-source"></div>
                 <div><label class="form-label">Year</label><input type="date" id="pub-date"></div>
                 <div><label class="form-label">DOI</label><input type="text" id="pub-doi"></div>
-                <div><label class="form-label">Upload</label><div class="upload-box"><button id="pub-browse-btn" class="load-btn">Browse</button><input type="file" id="pub-file-input" hidden></div></div>
-                <div><button id="add-pub-btn" class="add-btn" style="width:100%; margin-top:23px;">ADD</button></div>
+                <div><label class="form-label">Upload</label><div class="upload-box"><button type="button" id="pub-browse-btn" class="load-btn">Browse</button><input type="file" id="pub-file-input" hidden></div></div>
+                <div><button type="button" id="add-pub-btn" class="add-btn" style="width:100%; margin-top:23px;">ADD</button></div>
             </div>
             <div class="added-results-list" id="added-pub-container"></div>
         </div>
@@ -270,6 +279,7 @@
         <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save</button>
         <button type="button" class="button preview" id="preview-details-btn"><i class="fas fa-eye"></i> Preview</button>
         <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
+        <button type="button" class="button upload" id="upload-pdf-btn"><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
         <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear</button>
     </div>
 
@@ -299,17 +309,112 @@
     let savedData = null;
     const fmtDate = (d) => d ? d.split('-').reverse().join('-') : '';
 
+    // --- 2. SHARED PDF GENERATION FUNCTION ---
+    async function generateFinalPDFBlob() {
+        if(!savedData) { alert("Save details first!"); return null; }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(16); doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
+        doc.setFontSize(12); doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
+        doc.setLineWidth(0.5); doc.line(10, 25, 200, 25);
+
+        const img = document.getElementById('faculty-photo');
+        if(img.src.startsWith('data:')) try{ doc.addImage(img.src,'JPEG',150,30,35,45); }catch(e){}
+
+        // Basic Info
+        doc.autoTable({startY: 35, tableWidth: 140, theme:'plain', body:[
+            ['Code', savedData.basic.code], ['Name', savedData.basic.name],
+            ['Dept', savedData.basic.dept], ['Joined', savedData.basic.joined]
+        ]});
+        let y = Math.max(80, doc.lastAutoTable.finalY + 10);
+
+        // Personal
+        doc.text("PERSONAL DETAILS", 14, y); y+=5;
+        doc.autoTable({startY: y, theme:'grid', body:[
+           ['JNTUH ID', savedData.personal.jntuh, 'AICTE ID', savedData.personal.aicte],
+           ['PAN', savedData.personal.pan, 'AADHAR', savedData.personal.aadhar],
+           ['MOBILE', savedData.personal.mobile, 'EMAIL', savedData.personal.email],
+           ['ORCID', savedData.personal.orcid, 'APAAR', savedData.personal.apaar],
+           ['DOB', savedData.personal.dob, 'STATE', savedData.personal.state],
+           ['CASTE', savedData.personal.caste, 'SUB-CASTE', savedData.personal.subcaste]
+        ]});
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Education
+        doc.text("EDUCATIONAL QUALIFICATIONS", 14, y); y+=5;
+        doc.autoTable({startY: y, head:[['Degree','Year','%/CGPA','Specialization','Institute']], body: savedData.edu});
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Subjects
+        doc.text("SUBJECTS DEALT & RESULTS", 14, y); y+=5;
+        let subs = [];
+        for(let i=1; i<=4; i++) {
+            const s = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`)).map(c=>c.nextElementSibling.nextElementSibling.innerText).join('\n');
+            const r = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`)).map(d=>d.dataset.txt).join('\n\n');
+            const p = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`)).map(d=>d.dataset.pct).join('\n\n');
+            if(s||r) subs.push([document.getElementById(`select-academic-year-${i}`).value, s, r, p]);
+        }
+        doc.autoTable({startY: y, head:[['Year','Subject','Stats', 'Pass %']], body: subs});
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Projects
+        doc.addPage(); y=20;
+        doc.text("PROJECTS HANDLED", 14, y); y+=5;
+        let projRows = [];
+        document.querySelectorAll('[id^=added-projects] .added-result-item').forEach(p => {
+            if(p.dataset.students) projRows.push([p.dataset.title, p.dataset.batch, p.dataset.students, p.dataset.marks]);
+        });
+        doc.autoTable({startY: y, head:[['Title','Batch','Students','Marks']], body: projRows});
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Achievements
+        doc.text("FACULTY ACHIEVEMENTS", 14, y); y+=5;
+        doc.autoTable({startY: y, head:[['Description','Duration']], body: savedData.ach});
+        y = doc.lastAutoTable.finalY + 10;
+
+        // About (Last)
+        doc.text("ABOUT FACULTY", 14, y); y+=7;
+        doc.setFontSize(10);
+        doc.text(doc.splitTextToSize(savedData.about, 180), 14, y);
+
+        // Merge
+        const pdfBytes = doc.output('arraybuffer');
+        const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
+        const allFiles = [
+            uploaded.edu.ssc, uploaded.edu.inter, uploaded.edu.ug, uploaded.edu.pg, uploaded.edu.phd,
+            ...uploaded.mem, ...uploaded.scm, ...uploaded.pubs, ...uploaded.achievements
+        ];
+
+        for(const f of allFiles) {
+            if(!f) continue;
+            try {
+                const b = await f.arrayBuffer();
+                if(f.type === 'application/pdf') {
+                    const c = await PDFLib.PDFDocument.load(b);
+                    (await pdfDoc.copyPages(c, c.getPageIndices())).forEach(p => pdfDoc.addPage(p));
+                } else if(f.type.startsWith('image/')) {
+                    const i = f.type==='image/png'?await pdfDoc.embedPng(b):await pdfDoc.embedJpg(b);
+                    const p = pdfDoc.addPage();
+                    p.drawImage(i, {x:20, y:20, width:170, height:250});
+                }
+            } catch(e){}
+        }
+        return new Blob([await pdfDoc.save()], {type:'application/pdf'});
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         // --- 1. HELPERS & UPLOADS ---
         const bindFile = (btn, inp, cb) => {
-            document.getElementById(btn).addEventListener('click', (e) => { e.preventDefault(); document.getElementById(inp).click(); });
-            document.getElementById(inp).addEventListener('change', function() { cb(this.files[0]); });
+            document.getElementById(btn).onclick = (e) => { e.preventDefault(); document.getElementById(inp).click(); };
+            document.getElementById(inp).onchange = function() { cb(this.files[0]); };
         };
 
         bindFile('choose-file-btn', 'photo-upload-input', (f) => {
-            if(f) { const r = new FileReader(); r.onload=e=>{ document.getElementById('faculty-photo').src = e.target.result; document.getElementById('faculty-photo').style.display='block'; document.getElementById('no-photo-message').style.display='none'; }; r.readAsDataURL(f); }
+            if(f) { const r = new FileReader(); r.onload=e=>{ document.getElementById('faculty-photo').src=e.target.result; document.getElementById('faculty-photo').style.display='block'; document.getElementById('no-photo-message').style.display='none'; }; r.readAsDataURL(f); }
         });
-
         ['ssc','inter','ug','pg','phd'].forEach(lvl => {
             bindFile(`${lvl}-up-btn`, `${lvl}-file`, (f) => { if(f) { uploaded.edu[lvl]=f; document.getElementById(`${lvl}-up-btn`).innerText="Uploaded"; document.getElementById(`${lvl}-up-btn`).style.background="#27ae60"; } });
         });
@@ -317,7 +422,7 @@
             bindFile(`${t}-browse-btn`, `${t}-file-input`, (f) => { document.getElementById(`${t}-file-name`).innerText = f?f.name:'No file'; });
         });
 
-        // --- 2. LIST MANAGEMENT ---
+        // --- 2. LIST MGMT ---
         const addListItem = (id, html, file, arr) => {
             if(file) arr.push(file);
             document.getElementById(id).insertAdjacentHTML('beforeend', `<div class="added-result-item">${html}</div>`);
@@ -356,7 +461,7 @@
         document.getElementById('joining-date').onchange = calcExp;
         document.getElementById('joining-date').oninput = calcExp;
 
-        // --- 4. SLOTS (Subjects & Projects) ---
+        // --- 4. SLOTS ---
         for(let i=1; i<=4; i++) {
              document.getElementById(`load-btn-${i}`).onclick = (e) => {
                  e.preventDefault();
@@ -369,15 +474,14 @@
                  document.querySelectorAll(`#subjects-container-${i} .subject-checkbox`).forEach(cb => cb.checked = e.target.checked);
              };
 
-             // Result Logic
-             const calcRes = () => {
+             const calc = () => {
                  const a = parseFloat(document.getElementById(`res-appeared-${i}`).value)||0;
                  const p = parseFloat(document.getElementById(`res-passed-${i}`).value)||0;
                  document.getElementById(`res-failed-${i}`).value = (a>=p)?(a-p):0;
                  document.getElementById(`res-percentage-${i}`).value = a>0 ? ((p/a)*100).toFixed(2)+'%' : '0.00%';
              };
-             document.getElementById(`res-appeared-${i}`).oninput = calcRes;
-             document.getElementById(`res-passed-${i}`).oninput = calcRes;
+             document.getElementById(`res-appeared-${i}`).oninput = calc;
+             document.getElementById(`res-passed-${i}`).oninput = calc;
 
              document.getElementById(`btn-add-result-${i}`).onclick = (e) => {
                  e.preventDefault();
@@ -385,7 +489,6 @@
                  if(s) document.getElementById(`added-results-container-${i}`).insertAdjacentHTML('beforeend', `<div class="added-result-item" data-txt="App:${document.getElementById(`res-appeared-${i}`).value}, Pass:${document.getElementById(`res-passed-${i}`).value}, Fail:${document.getElementById(`res-failed-${i}`).value}" data-pct="${document.getElementById(`res-percentage-${i}`).value}"><b>${s}</b>: ${document.getElementById(`res-percentage-${i}`).value}</div>`);
              };
 
-             // Project Logic
              document.getElementById(`btn-add-proj-batch-${i}`).onclick = (e) => {
                  e.preventDefault();
                  const t = document.getElementById(`proj-title-${i}`).value;
@@ -412,7 +515,7 @@
             e.preventDefault();
             savedData = {
                 basic: { name: document.getElementById('staff-name').value, code: document.getElementById('employee-code').value, dept: document.getElementById('department').value, joined: fmtDate(document.getElementById('joining-date').value) },
-                personal: { jntuh: document.getElementById('jntuh-id').value, aicte: document.getElementById('aacte-id').value, pan: document.getElementById('pan').value, aadhar: document.getElementById('aadhar').value, mobile: document.getElementById('mobile').value, email: document.getElementById('email').value, orcid: document.getElementById('orcid-id').value, apaar: document.getElementById('apaar-id').value },
+                personal: { jntuh: document.getElementById('jntuh-id').value, aicte: document.getElementById('aacte-id').value, pan: document.getElementById('pan').value, aadhar: document.getElementById('aadhar').value, mobile: document.getElementById('mobile').value, email: document.getElementById('email').value, orcid: document.getElementById('orcid-id').value, apaar: document.getElementById('apaar-id').value, dob: fmtDate(document.getElementById('dob').value), state: document.getElementById('state').value, caste: document.getElementById('caste').value, subcaste: document.getElementById('sub-caste').value },
                 edu: [
                     ['SSC', document.getElementById('ssc-year').value, document.getElementById('ssc-percent').value, '-', document.getElementById('ssc-school').value],
                     ['Inter', document.getElementById('inter-year').value, document.getElementById('inter-percent').value, '-', document.getElementById('inter-college').value],
@@ -443,88 +546,55 @@
                     <table class="pdf-table"><tr><th>Mobile</th><td>${savedData.personal.mobile}</td><th>Email</th><td>${savedData.personal.email}</td></tr></table>
                     <div class="pdf-section-title">Education</div>
                     <table class="pdf-table"><tr><th>Level</th><th>Year</th><th>%</th><th>Spec</th><th>Institute</th></tr>${savedData.edu.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}</table>
+                    <div class="pdf-section-title">Achievements</div><ul>${savedData.ach.map(a => `<li>${a[0]} (${a[1]})</li>`).join('')}</ul>
                     <div class="pdf-section-title">About</div><div>${savedData.about}</div>
                 </div>`;
             modal.style.display = "block";
         };
 
-        // --- 6. PDF GENERATION ---
+        // --- 6. UPLOAD TO BACKEND ---
+        document.getElementById('upload-pdf-btn').onclick = async (e) => {
+            e.preventDefault();
+
+            const blob = await generateFinalPDFBlob();
+            if (!blob) return;
+
+            const formData = new FormData();
+            formData.append('pdf', blob, 'Faculty_Report.pdf');
+
+            try {
+                const response = await fetch('/upload-generated-pdf/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.url) {
+                    alert('PDF uploaded successfully to Cloudinary!');
+                    console.log('Cloudinary URL:', data.url);
+                } else {
+                    alert('Upload failed');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error uploading PDF');
+            }
+        };
+
+        // --- 7. DOWNLOAD ---
         document.getElementById('generate-pdf-btn').onclick = async (e) => {
             e.preventDefault();
-            if(!savedData) return alert("Save first!");
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-
-            doc.setFontSize(16); doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
-            doc.setFontSize(12); doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
-            doc.setLineWidth(0.5); doc.line(10, 25, 200, 25);
-            const img = document.getElementById('faculty-photo');
-            if(img.src.startsWith('data:')) try{ doc.addImage(img.src,'JPEG',150,30,35,45); }catch(e){}
-
-            // 1. Basic
-            doc.autoTable({startY: 35, tableWidth: 140, theme:'plain', body:[['Code', savedData.basic.code],['Name', savedData.basic.name],['Dept', savedData.basic.dept],['Joined', savedData.basic.joined]]});
-            let y = Math.max(80, doc.lastAutoTable.finalY+10);
-
-            // 2. Personal (No SSC/Inter)
-            doc.text("PERSONAL DETAILS", 14, y); y+=5;
-            doc.autoTable({startY: y, theme:'grid', body:[['JNTUH ID', savedData.personal.jntuh, 'AICTE ID', savedData.personal.aicte],['PAN', savedData.personal.pan, 'AADHAR', savedData.personal.aadhar],['MOBILE', savedData.personal.mobile, 'EMAIL', savedData.personal.email],['ORCID', savedData.personal.orcid, 'APAAR', savedData.personal.apaar]]});
-            y = doc.lastAutoTable.finalY + 10;
-
-            // 3. Edu
-            doc.text("EDUCATIONAL QUALIFICATIONS", 14, y); y+=5;
-            doc.autoTable({startY: y, head:[['Degree','Year','%/CGPA','Specialization','Institute']], body: savedData.edu});
-            y = doc.lastAutoTable.finalY + 10;
-
-            // 4. Subjects
-            doc.text("SUBJECTS DEALT & RESULTS", 14, y); y+=5;
-            let subs = [];
-            for(let i=1; i<=4; i++) {
-                const s = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`)).map(c=>c.nextElementSibling.nextElementSibling.innerText).join('\n');
-                const r = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`)).map(d=>d.dataset.txt).join('\n\n');
-                const p = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`)).map(d=>d.dataset.pct).join('\n\n');
-                if(s||r) subs.push([document.getElementById(`select-academic-year-${i}`).value, s, r, p]);
+            const blob = await generateFinalPDFBlob();
+            if(blob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Faculty_Report.pdf';
+                link.click();
             }
-            doc.autoTable({startY: y, head:[['Year','Subject','Stats', 'Pass %']], body: subs});
-            y = doc.lastAutoTable.finalY + 10;
-
-            // 5. Projects
-            doc.addPage(); y=20;
-            doc.text("PROJECTS HANDLED", 14, y); y+=5;
-            let projRows = [];
-            document.querySelectorAll('[id^=added-projects] .added-result-item').forEach(p => {
-                if(p.dataset.students) projRows.push([p.dataset.title, p.dataset.batch, p.dataset.students, p.dataset.marks]);
-            });
-            doc.autoTable({startY: y, head:[['Title','Batch','Students','Marks']], body: projRows});
-            y = doc.lastAutoTable.finalY + 10;
-
-            // 6. Achievements
-            doc.text("FACULTY ACHIEVEMENTS", 14, y); y+=5;
-            doc.autoTable({startY: y, head:[['Description','Duration']], body: savedData.ach});
-            y = doc.lastAutoTable.finalY + 10;
-
-            // 7. About (LAST)
-            doc.text("ABOUT FACULTY", 14, y); y+=7;
-            doc.setFontSize(10);
-            doc.text(doc.splitTextToSize(savedData.about, 180), 14, y);
-
-            // Merge
-            const pdfBytes = doc.output('arraybuffer');
-            const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
-            const allFiles = [uploaded.edu.ssc, uploaded.edu.inter, uploaded.edu.ug, uploaded.edu.pg, uploaded.edu.phd, ...uploaded.mem, ...uploaded.scm, ...uploaded.pubs, ...uploaded.achievements];
-            for(const f of allFiles) {
-                if(!f) continue;
-                try {
-                    const b = await f.arrayBuffer();
-                    if(f.type === 'application/pdf') { (await pdfDoc.copyPages(await PDFLib.PDFDocument.load(b), (await PDFLib.PDFDocument.load(b)).getPageIndices())).forEach(p=>pdfDoc.addPage(p)); }
-                    else if(f.type.startsWith('image/')) { const i = f.type==='image/png'?await pdfDoc.embedPng(b):await pdfDoc.embedJpg(b); const p = pdfDoc.addPage(); p.drawImage(i, {x:20, y:20, width:170, height:250}); }
-                } catch(e){}
-            }
-            const blob = new Blob([await pdfDoc.save()], {type:'application/pdf'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'Faculty_Report.pdf';
-            link.click();
         };
+
+        document.getElementById('clear-all-btn').onclick = () => location.reload();
     });
 </script>
 {% endblock %}

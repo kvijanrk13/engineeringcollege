@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import download_faculty_pdf
+from .views import download_faculty_pdf, upload_generated_pdf
 
 app_name = 'dashboard'
 
@@ -25,4 +25,7 @@ urlpatterns = [
 
     # --- PDF DOWNLOAD ---
     path('download-faculty-pdf/', download_faculty_pdf, name='download_faculty_pdf'),
+
+    # --- CLOUDINARY PDF UPLOAD (MERGED) ---
+    path('upload-generated-pdf/', upload_generated_pdf),
 ]

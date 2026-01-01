@@ -1,9 +1,16 @@
 """
 Django settings for engineeringcollege project.
 """
-
 import os
 from pathlib import Path
+import cloudinary
+
+# ==============================
+# Cloudinary URL (inserted)
+# ==============================
+os.environ['CLOUDINARY_URL'] = 'cloudinary://796293117737693:StgoTNd4fgLqHqW19csQ4fONAuk@dsndiruhe'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,8 +27,6 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.*']
 ALLOWED_HOSTS += ['.onrender.com']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -30,6 +35,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Cloudinary apps (merged)
+    'cloudinary',
+    'cloudinary_storage',
+
     'dashboard',  # Our main dashboard app
 ]
 
