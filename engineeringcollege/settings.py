@@ -6,10 +6,16 @@ from pathlib import Path
 import cloudinary
 
 # ==============================
-# Cloudinary URL (inserted)
+# Cloudinary configuration (UPDATED SAFELY)
 # ==============================
-os.environ['CLOUDINARY_URL'] = 'cloudinary://796293117737693:StgoTNd4fgLqHqW19csQ4fONAuk@dsndiruhe'
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+os.environ['CLOUDINARY_URL'] = os.environ.get(
+    'CLOUDINARY_URL',
+    'cloudinary://796293117737693:StgoTNd4fgLqHqW19csQ4fONAuk@dsndiruhe'
+)
+
+# ✅ UPDATED: Use RAW storage for PDF uploads
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+# ==============================
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,6 +31,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.*']
 ALLOWED_HOSTS += ['.onrender.com']
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Application definition
@@ -36,11 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Cloudinary apps (merged)
+    # Cloudinary apps
     'cloudinary',
     'cloudinary_storage',
 
-    'dashboard',  # Our main dashboard app
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -87,18 +94,10 @@ DATABASES = {
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internationalization
@@ -107,7 +106,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# Static files
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
@@ -130,7 +129,7 @@ COLLEGE_NAME = "ANURAG Engineering College"
 DEPARTMENT_NAME = "Information Technology"
 ACADEMIC_YEAR = "2024-25"
 
-# Login URL
+# Login URLs
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'

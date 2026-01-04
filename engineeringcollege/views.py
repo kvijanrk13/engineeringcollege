@@ -43,3 +43,13 @@ def api_college_stats(request):
         'placements': 85,  # percentage
     }
     return JsonResponse({'status': 'success', 'data': stats})
+
+
+# ================= CUSTOM ERROR HANDLERS (ADDED) =================
+
+def handler404(request, exception):
+    return render(request, "dashboard/404.html", status=404)
+
+
+def handler500(request):
+    return render(request, "dashboard/500.html", status=500)

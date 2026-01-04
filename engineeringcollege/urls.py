@@ -34,6 +34,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Error handlers
-handler404 = 'dashboard.views.handler404'
-handler500 = 'dashboard.views.handler500'
+# Error handlers (CORRECT PLACE)
+# Error handlers (FINAL & CORRECT)
+handler404 = 'engineeringcollege.views.handler404'
+handler500 = 'engineeringcollege.views.handler500'

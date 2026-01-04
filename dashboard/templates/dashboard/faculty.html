@@ -106,11 +106,6 @@
     </div>
 
     <div class="container">
-        <!-- DEBUG LINE: DO NOT REMOVE UNTIL VERIFIED ON PRODUCTION -->
-    <h2 style="color:red; text-align:center;">
-        PRODUCTION TEMPLATE UPDATED
-    </h2>
-
         <h1>Faculty Details Entry</h1>
 
         <div class="form-section">
@@ -168,7 +163,7 @@
             <h3>Faculty Membership Details</h3>
             <div class="mem-grid">
                 <div><label class="form-label">Details</label><input type="text" id="mem-text" placeholder="Name & ID"></div>
-                <div><label class="form-label">Upload</label><div class="upload-box"><button id="mem-browse-btn" class="load-btn">Browse</button><input type="file" id="mem-file-input" hidden></div><button id="add-mem-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
+                <div><label class="form-label">Upload</label><div class="upload-box"><button type="button" id="mem-browse-btn" class="load-btn">Browse</button><input type="file" id="mem-file-input" hidden></div><button type="button" id="add-mem-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
             </div>
             <div class="added-results-list" id="added-mem-container"></div>
         </div>
@@ -177,7 +172,7 @@
             <h3>Selection Committee Member (SCM)</h3>
             <div class="scm-grid">
                 <div><label class="form-label">Details</label><input type="text" id="scm-text" placeholder="Details..."></div>
-                <div><label class="form-label">Upload</label><div class="upload-box"><button id="scm-browse-btn" class="load-btn">Browse</button><input type="file" id="scm-file-input" hidden></div><button id="add-scm-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
+                <div><label class="form-label">Upload</label><div class="upload-box"><button type="button" id="scm-browse-btn" class="load-btn">Browse</button><input type="file" id="scm-file-input" hidden></div><button type="button" id="add-scm-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
             </div>
             <div class="added-results-list" id="added-scm-container"></div>
         </div>
@@ -413,8 +408,12 @@
     document.addEventListener('DOMContentLoaded', () => {
         // --- 1. HELPERS & UPLOADS ---
         const bindFile = (btn, inp, cb) => {
-            document.getElementById(btn).onclick = (e) => { e.preventDefault(); document.getElementById(inp).click(); };
-            document.getElementById(inp).onchange = function() { cb(this.files[0]); };
+            const btnEl = document.getElementById(btn);
+            const inpEl = document.getElementById(inp);
+            if(btnEl && inpEl) {
+                btnEl.onclick = (e) => { e.preventDefault(); inpEl.click(); };
+                inpEl.onchange = function() { cb(this.files[0]); };
+            }
         };
 
         bindFile('choose-file-btn', 'photo-upload-input', (f) => {
@@ -561,11 +560,32 @@
         document.getElementById('upload-pdf-btn').onclick = async (e) => {
             e.preventDefault();
 
+            const empIdInput = document.getElementById("employee-code");
+            if (!empIdInput) {
+                alert("Employee ID field not found");
+                return;
+            }
+
+            const empId = empIdInput.value.trim();
+
+            if (!empId) {
+                alert("Please enter Employee ID");
+                return;
+            }
+
+            // OPTIONAL: basic validation (recommended)
+            const validPattern = /^[A-Za-z0-9_-]+$/;
+            if (!validPattern.test(empId)) {
+                alert("Employee ID should contain only letters, numbers, _ or -");
+                return;
+            }
+
             const blob = await generateFinalPDFBlob();
             if (!blob) return;
 
             const formData = new FormData();
-            formData.append('pdf', blob, 'Faculty_Report.pdf');
+            // Use the Employee Code as the filename
+            formData.append('pdf', blob, `${empId}.pdf`);
 
             try {
                 const response = await fetch('/upload-generated-pdf/', {
@@ -576,7 +596,7 @@
                 const data = await response.json();
 
                 if (data.url) {
-                    alert('PDF uploaded successfully to Cloudinary!');
+                    alert(`PDF uploaded successfully as ${empId}.pdf`);
                     console.log('Cloudinary URL:', data.url);
                 } else {
                     alert('Upload failed');
@@ -590,11 +610,15 @@
         // --- 7. DOWNLOAD ---
         document.getElementById('generate-pdf-btn').onclick = async (e) => {
             e.preventDefault();
+
+            const empIdInput = document.getElementById("employee-code");
+            const empId = (empIdInput && empIdInput.value.trim()) ? empIdInput.value.trim() : 'Faculty_Report';
+
             const blob = await generateFinalPDFBlob();
             if(blob) {
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = 'Faculty_Report.pdf';
+                link.download = `${empId}.pdf`;
                 link.click();
             }
         };
