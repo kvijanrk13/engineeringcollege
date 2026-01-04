@@ -6,15 +6,14 @@ from pathlib import Path
 import cloudinary
 
 # ==============================
-# Cloudinary configuration (UPDATED SAFELY)
+# Cloudinary configuration (FINAL & SAFE)
 # ==============================
-os.environ['CLOUDINARY_URL'] = os.environ.get(
-    'CLOUDINARY_URL',
-    'cloudinary://796293117737693:StgoTNd4fgLqHqW19csQ4fONAuk@dsndiruhe'
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    secure=True
 )
-
-# ✅ UPDATED: Use RAW storage for PDF uploads
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
 # ==============================
 
 
@@ -22,14 +21,15 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-engineering-college-secret-key-2024-' + os.urandom(32).hex()
-SECRET_KEY = os.environ.get('SECRET_KEY', SECRET_KEY)
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-engineering-college-secret-key-2024'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 ALLOWED_HOSTS += ['.onrender.com']
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -43,9 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Cloudinary apps
+    # Cloudinary
     'cloudinary',
-    'cloudinary_storage',
 
     'dashboard',
 ]
@@ -66,9 +65,7 @@ ROOT_URLCONF = 'engineeringcollege.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            BASE_DIR / 'templates',
-        ],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -108,28 +105,19 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-]
+STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files
+# Media (local only – Cloudinary handles uploads)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Session settings
+# Sessions
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_COOKIE_AGE = 1209600
 
-# Custom settings
-COLLEGE_NAME = "ANURAG Engineering College"
-DEPARTMENT_NAME = "Information Technology"
-ACADEMIC_YEAR = "2024-25"
-
-# Login URLs
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'

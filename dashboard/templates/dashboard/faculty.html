@@ -111,7 +111,7 @@
         <div class="form-section">
             <h3>Basic Information</h3>
             <div class="form-grid">
-                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" placeholder="e.g. 7001"></div>
+                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" name="employee_code" placeholder="e.g. 7001"></div>
                 <div><label class="form-label">Name of Staff</label><input type="text" id="staff-name" placeholder="Full Name"></div>
                 <div><label class="form-label">Department</label><input type="text" id="department" placeholder="Department"></div>
                 <div><label class="form-label">Date of Joining</label><input type="date" id="joining-date"></div>
@@ -279,7 +279,7 @@
         <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save</button>
         <button type="button" class="button preview" id="preview-details-btn"><i class="fas fa-eye"></i> Preview</button>
         <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
-        <button type="button" class="button upload" id="upload-pdf-btn"><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
+        <button type="button" class="button upload" id="upload-pdf-btn" onclick="uploadPDF()"><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
         <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear</button>
     </div>
 
@@ -403,6 +403,43 @@
             } catch(e){}
         }
         return new Blob([await pdfDoc.save()], {type:'application/pdf'});
+    }
+
+    // --- UPLOAD FUNCTION ---
+    function uploadPDF() {
+        // We reuse the existing blob generation logic
+        generateFinalPDFBlob().then(blob => {
+            if (!blob) return;
+
+            const empIdInput = document.getElementById("employee-code");
+            const empId = (empIdInput && empIdInput.value.trim()) ? empIdInput.value.trim() : 'Faculty_Report';
+
+            if (!empId) {
+                alert("Please enter Employee Code");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("pdf", blob, `${empId}.pdf`);
+
+            fetch("/upload-generated-pdf/", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    alert(`PDF uploaded successfully as ${empId}.pdf`);
+                    console.log("Cloudinary URL:", data.url);
+                } else {
+                    alert("Upload failed");
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Upload failed");
+            });
+        });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -554,57 +591,6 @@
                     <div class="pdf-section-title">About</div><div>${savedData.about}</div>
                 </div>`;
             modal.style.display = "block";
-        };
-
-        // --- 6. UPLOAD TO BACKEND ---
-        document.getElementById('upload-pdf-btn').onclick = async (e) => {
-            e.preventDefault();
-
-            const empIdInput = document.getElementById("employee-code");
-            if (!empIdInput) {
-                alert("Employee ID field not found");
-                return;
-            }
-
-            const empId = empIdInput.value.trim();
-
-            if (!empId) {
-                alert("Please enter Employee ID");
-                return;
-            }
-
-            // OPTIONAL: basic validation (recommended)
-            const validPattern = /^[A-Za-z0-9_-]+$/;
-            if (!validPattern.test(empId)) {
-                alert("Employee ID should contain only letters, numbers, _ or -");
-                return;
-            }
-
-            const blob = await generateFinalPDFBlob();
-            if (!blob) return;
-
-            const formData = new FormData();
-            // Use the Employee Code as the filename
-            formData.append('pdf', blob, `${empId}.pdf`);
-
-            try {
-                const response = await fetch('/upload-generated-pdf/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (data.url) {
-                    alert(`PDF uploaded successfully as ${empId}.pdf`);
-                    console.log('Cloudinary URL:', data.url);
-                } else {
-                    alert('Upload failed');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Error uploading PDF');
-            }
         };
 
         // --- 7. DOWNLOAD ---
