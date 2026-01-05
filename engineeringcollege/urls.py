@@ -9,9 +9,6 @@ urlpatterns = [
 
     # Dashboard app
     path('', include('dashboard.urls')),
-
-    # Optional redirect
-    path('', RedirectView.as_view(url='/dashboard/', permanent=False)),
 ]
 
 if settings.DEBUG:
