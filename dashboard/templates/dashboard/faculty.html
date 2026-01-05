@@ -108,6 +108,7 @@
     </div>
 
     <form id="faculty-form" onsubmit="return false;">
+    {% csrf_token %}
 
     <div class="container">
         <h1>Faculty Details Entry</h1>
@@ -431,8 +432,15 @@
 
         const formData = new FormData();
         // 🔥 Key MUST be "pdf"
-        formData.append("pdf", pdfBlob, "faculty.pdf");
-        formData.append("employee_code", document.getElementById("employee-code").value);
+        const empCode = document.getElementById("employee-code").value.trim();
+if (!empCode) {
+    alert("Employee Code is required for upload");
+    return;
+}
+formData.append("pdf", pdfBlob, `${empCode}.pdf`);
+formData.append("employee_code", empCode);
+
+
 
         fetch("/upload-generated-pdf/", {
             method: "POST",

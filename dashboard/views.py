@@ -76,29 +76,30 @@ def download_faculty_pdf(request):
     return response
 
 
+# 🔥 UPDATED FUNCTION (ONLY THIS IS CHANGED)
 @csrf_exempt
 def upload_generated_pdf(request):
     if request.method == "POST" and request.FILES.get("pdf"):
         pdf_file = request.FILES["pdf"]
+        employee_code = request.POST.get("employee_code", "").strip()
 
-        # Use filename provided by frontend (e.g., 7001.pdf) or fallback
-        public_id = pdf_file.name.replace(".pdf", "") if pdf_file.name else "faculty_upload"
-
-        try:
-            upload_result = cloudinary.uploader.upload(
-                pdf_file,
-                resource_type="raw",
-                folder="faculty_pdfs",
-                public_id=public_id,
-                overwrite=True,
-                unique_filename=False
-            )
-            return JsonResponse({
-                "status": "success",
-                "url": upload_result["secure_url"],
-                "public_id": upload_result["public_id"]
-            })
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+        if not employee_code:
+            return JsonResponse({"error": "Employee code missing"}, status=400)
     else:
         return JsonResponse({"error": "No PDF received"}, status=400)
+
+    # 🔥 FORCE CLOUDINARY FILE NAME = EMPLOYEE CODE
+    upload_result = cloudinary.uploader.upload(
+        pdf_file,
+        resource_type="raw",
+        folder="faculty_pdfs",
+        public_id=employee_code,
+        overwrite=True,
+        unique_filename=False
+    )
+
+    return JsonResponse({
+        "status": "success",
+        "url": upload_result["secure_url"],
+        "public_id": upload_result["public_id"]
+    })
