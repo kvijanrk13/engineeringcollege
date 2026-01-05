@@ -35,7 +35,7 @@ def dashboard(request):
     return render(request, "dashboard/dashboard.html")
 
 
-def about(request):  # ✅ FIXED
+def about(request):
     return render(request, "dashboard/about.html")
 
 
@@ -63,10 +63,15 @@ def gallery(request):
 
 def login_view(request):
     if request.method == "POST":
-        if request.POST.get("username") == "7001" and request.POST.get("password") == "anrkitdept":
+        if (
+            request.POST.get("username") == "7001"
+            and request.POST.get("password") == "anrkitdept"
+        ):
             request.session["logged_in"] = True
             return redirect("dashboard:dashboard")
+
         messages.error(request, "Invalid credentials")
+
     return render(request, "dashboard/login.html")
 
 
@@ -98,6 +103,7 @@ def download_faculty_pdf(request):
     response["Content-Disposition"] = 'attachment; filename="Faculty_Report.pdf"'
 
     p = canvas.Canvas(response, pagesize=A4)
+    p.setFont("Helvetica", 11)
     p.drawString(50, 800, "ANURAG ENGINEERING COLLEGE")
     p.drawString(50, 770, "Faculty Details Report")
     p.showPage()
@@ -106,20 +112,45 @@ def download_faculty_pdf(request):
     return response
 
 
-# ================= CLOUDINARY PDF UPLOAD =================
+# ================= CLOUDINARY PDF UPLOAD (FIXED & SAFE) =================
 
 @csrf_exempt
 def upload_generated_pdf(request):
-    if request.method == "POST" and request.FILES.get("pdf"):
+    try:
+        if request.method != "POST":
+            return JsonResponse({"error": "Only POST allowed"}, status=405)
+
+        pdf = request.FILES.get("pdf")
         employee_code = request.POST.get("employee_code")
 
+        if not pdf:
+            return JsonResponse({"error": "PDF file not received"}, status=400)
+
+        if not employee_code:
+            return JsonResponse({"error": "Employee Code missing"}, status=400)
+
+        # Upload to Cloudinary as RAW (required for PDFs)
         result = cloudinary.uploader.upload(
-            request.FILES["pdf"],
+            pdf,
             resource_type="raw",
             public_id=f"faculty_pdfs/{employee_code}",
-            overwrite=True
+            overwrite=True,
         )
 
-        return JsonResponse({"url": result["secure_url"]})
+        return JsonResponse(
+            {
+                "success": True,
+                "url": result.get("secure_url"),
+                "public_id": result.get("public_id"),
+            }
+        )
 
-    return JsonResponse({"error": "Invalid request"}, status=400)
+    except Exception as e:
+        # IMPORTANT: This exposes the REAL error instead of silent 500
+        return JsonResponse(
+            {
+                "error": "Cloudinary upload failed",
+                "details": str(e),
+            },
+            status=500,
+        )
