@@ -4,7 +4,7 @@
 
 {% block content %}
 <style>
-    /* --- Matrix Background Setup --- */
+    /* --- 1. GLOBAL & MATRIX BACKGROUND --- */
     body {
         margin: 0;
         padding: 0;
@@ -20,185 +20,219 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: -1; /* Behind content */
+        z-index: -1; /* Behind everything */
     }
 
-    /* --- Dashboard Container --- */
-    .dashboard-container {
-        position: relative;
-        z-index: 1; /* Above canvas */
-        padding: 40px 20px;
-        min-height: 100vh;
+    /* --- 2. FIXING THE TOP NAVIGATION BAR --- */
+    /* This targets common navbar classes to force them into the theme */
+    .navbar, header, nav, .top-bar {
+        background-color: rgba(0, 20, 0, 0.95) !important;
+        border-bottom: 1px solid #0f0 !important;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
     }
 
-    h1.page-title {
-        text-align: center;
-        font-size: 2.5rem;
+    /* Style links like 'Faculty' and 'Logout' */
+    .navbar a, nav a, header a, a.nav-link {
+        color: #0f0 !important;
+        font-family: 'Courier New', monospace;
         font-weight: bold;
         text-transform: uppercase;
-        color: #fff;
-        text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
-        margin-bottom: 50px;
-        border-bottom: 2px solid #0f0;
-        display: inline-block;
-        padding-bottom: 10px;
+        text-decoration: none;
+        margin: 0 15px;
     }
 
-    .title-wrapper {
-        text-align: center;
+    .navbar a:hover, nav a:hover, header a:hover {
+        text-shadow: 0 0 10px #0f0;
+        color: #fff !important;
+    }
+
+    /* --- 3. DASHBOARD LAYOUT --- */
+    .dashboard-container {
+        position: relative;
+        z-index: 2; /* Sits above the matrix rain */
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center everything horizontally */
         width: 100%;
     }
 
-    /* --- Info Cards (The "Tabs") --- */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 30px;
-        margin-bottom: 50px;
+    /* --- 4. LETTER HEAD IMAGE SECTION --- */
+    .header-image-container {
+        width: 100%;
+        max-width: 1000px; /* Constrain width for better look */
+        background-color: #ffffff; /* WHITE background to make letterhead visible */
+        padding: 10px;
+        margin-top: 30px;
+        margin-bottom: 40px;
+        border-radius: 8px;
+        box-shadow: 0 0 25px rgba(0, 255, 0, 0.3); /* Green outer glow */
+        border: 2px solid #0f0;
+        text-align: center;
     }
 
-    .stat-card {
+    .letterhead-img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+    }
+
+    /* --- 5. PAGE TITLE --- */
+    .dashboard-title {
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        font-size: 2.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 50px;
+        text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+        border-bottom: 3px solid #0f0;
+        padding-bottom: 10px;
+        display: inline-block;
+        letter-spacing: 2px;
+    }
+
+    /* --- 6. STATS CARDS (Tabs) --- */
+    .stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        flex-wrap: wrap;
+        width: 100%;
+        max-width: 1200px;
+        margin-bottom: 60px;
+    }
+
+    .stat-box {
         background: rgba(0, 20, 0, 0.85); /* Semi-transparent black */
-        border: 1px solid #0f0;
-        border-radius: 10px;
-        padding: 30px;
+        border: 2px solid #0f0;
+        border-radius: 15px;
+        width: 300px;
+        padding: 40px 20px;
         text-align: center;
-        transition: all 0.3s ease;
         box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(4px);
         position: relative;
         overflow: hidden;
     }
 
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0 25px rgba(0, 255, 0, 0.6), inset 0 0 15px rgba(0, 255, 0, 0.3);
-        background: rgba(0, 40, 0, 0.9);
+    /* Hover Effect */
+    .stat-box:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.6), inset 0 0 10px rgba(0, 255, 0, 0.2);
+        background: rgba(0, 40, 0, 0.95);
+        border-color: #fff;
     }
 
-    /* Glitch effect line on cards */
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 2px;
-        background: #0f0;
-        animation: scanline 3s linear infinite;
-    }
-
-    @keyframes scanline {
-        0% { left: -100%; }
-        50% { left: 100%; }
-        100% { left: 100%; }
-    }
-
-    .stat-card h3 {
-        font-size: 3rem;
-        margin: 0;
+    .stat-number {
+        font-size: 4rem;
+        font-weight: 800;
         color: #fff;
-        text-shadow: 0 0 10px #0f0;
+        margin: 0;
+        text-shadow: 0 0 15px #0f0;
+        line-height: 1;
+        margin-bottom: 15px;
     }
 
-    .stat-card p {
-        font-size: 1.2rem;
-        margin-top: 10px;
-        text-transform: uppercase;
-        letter-spacing: 2px;
+    .stat-label {
+        font-size: 1.4rem;
         color: #0f0;
+        text-transform: uppercase;
+        letter-spacing: 3px;
         font-weight: bold;
     }
 
-    /* --- Action Buttons --- */
-    .action-section {
-        text-align: center;
-        margin-top: 40px;
-    }
-
-    .matrix-btn {
-        background: transparent;
-        color: #0f0;
-        border: 2px solid #0f0;
-        padding: 15px 30px;
-        font-size: 1.2rem;
-        font-family: 'Courier New', monospace;
-        font-weight: bold;
-        text-transform: uppercase;
-        cursor: pointer;
-        text-decoration: none;
-        transition: 0.3s;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    /* --- 7. ACTION BUTTON --- */
+    .syllabus-btn {
         display: inline-block;
+        padding: 18px 50px;
+        border: 2px solid #0f0;
+        color: #0f0;
+        font-size: 1.3rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        text-decoration: none;
+        background: rgba(0, 0, 0, 0.6);
+        transition: 0.3s ease;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        font-family: 'Courier New', monospace;
+        letter-spacing: 2px;
+        border-radius: 5px;
     }
 
-    .matrix-btn:hover {
+    .syllabus-btn:hover {
         background: #0f0;
         color: #000;
-        box-shadow: 0 0 20px #0f0;
+        box-shadow: 0 0 40px #0f0;
         text-decoration: none;
+        font-weight: 900;
     }
-
-    /* Fix links inherited from base.html if they are standard blue */
-    a { color: #0f0; text-decoration: none; }
-    a:hover { color: #fff; text-decoration: underline; }
 
 </style>
 
 <canvas id="matrix-canvas"></canvas>
 
-<div class="container-fluid dashboard-container">
+<div class="dashboard-container">
 
-    <div class="title-wrapper">
-        <h1 class="page-title">Academic Dashboard</h1>
+    <div class="header-image-container">
+        <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Department Letter Head" class="letterhead-img">
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>3</h3>
-            <p>Departments</p>
-        </div>
+    <h1 class="dashboard-title">Academic Dashboard</h1>
 
-        <div class="stat-card">
-            <h3>8</h3>
-            <p>Semesters</p>
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="stat-number">3</div>
+            <div class="stat-label">Departments</div>
         </div>
-
-        <div class="stat-card">
-            <h3>300+</h3>
-            <p>Subjects</p>
+        <div class="stat-box">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Semesters</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number">300+</div>
+            <div class="stat-label">Subjects</div>
         </div>
     </div>
 
-    <div class="action-section">
-        <a href="{% url 'dashboard:syllabus' %}" class="matrix-btn">
+    <div>
+        <a href="{% url 'dashboard:syllabus' %}" class="syllabus-btn">
             View Complete Syllabus
         </a>
     </div>
+
 </div>
 
 <script>
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Set canvas to full screen
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Resize canvas to full screen
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    // Matrix characters (Katakana + Numbers + Latin)
+    // Matrix characters
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
     const charArray = chars.split('');
 
     const fontSize = 16;
     const columns = canvas.width / fontSize;
 
-    // Array to track y-coordinate of each column
+    // Drops array
     const drops = [];
     for(let i = 0; i < columns; i++) {
         drops[i] = 1;
     }
 
     function draw() {
-        // Black background with slight opacity for trail effect
+        // Black bg with fade effect
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -209,23 +243,14 @@
             const text = charArray[Math.floor(Math.random() * charArray.length)];
             ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-            // Randomly reset drop to top
             if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                 drops[i] = 0;
             }
-
             drops[i]++;
         }
     }
 
-    // Run animation
     setInterval(draw, 33);
-
-    // Handle resize
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
 </script>
 
 {% endblock %}
