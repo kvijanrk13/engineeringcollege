@@ -79,6 +79,7 @@
     .button.upload { background: #8e44ad; }
     .button.upload:hover { background: #732d91; }
     .button.clear { background: #c0392b; }
+    .button:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; }
 
     /* Modal */
     .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(3px); }
@@ -105,13 +106,15 @@
         <div class="department-name">INFORMATION TECHNOLOGY DEPARTMENT</div>
     </div>
 
+    <form id="faculty-form" method="post" enctype="multipart/form-data" onsubmit="return false;">
+    {% csrf_token %}
     <div class="container">
         <h1>Faculty Details Entry</h1>
 
         <div class="form-section">
             <h3>Basic Information</h3>
             <div class="form-grid">
-                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" name="employee_code" placeholder="e.g. 7001"></div>
+                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" placeholder="Employee Code" required></div>
                 <div><label class="form-label">Name of Staff</label><input type="text" id="staff-name" placeholder="Full Name"></div>
                 <div><label class="form-label">Department</label><input type="text" id="department" placeholder="Department"></div>
                 <div><label class="form-label">Date of Joining</label><input type="date" id="joining-date"></div>
@@ -224,7 +227,7 @@
                         <div class="result-input-wrapper"><label>Pass</label><input type="number" id="res-passed-{{ i }}"></div>
                         <div class="result-input-wrapper"><label>Fail</label><input type="number" id="res-failed-{{ i }}"></div>
                         <div class="result-input-wrapper"><label>%</label><input type="text" id="res-percentage-{{ i }}" readonly></div>
-                        <button type="button" class="add-btn" id="btn-add-result-{{ i }}">+</button>
+                        <button type="button" class="add-result-btn" id="btn-add-result-{{ i }}">+</button>
                     </div>
                     <div class="added-results-list" id="added-results-container-{{ i }}"></div>
                 </div>
@@ -262,7 +265,7 @@
                         <div class="result-input-wrapper"><label>Marks</label><input type="number" id="proj-marks{{ k }}-{{ i }}"></div>
                     </div>
                     {% endfor %}
-                    <button type="button" class="add-btn" id="btn-add-proj-batch-{{ i }}" style="margin-top:10px;">ADD BATCH</button>
+                    <button type="button" class="add-project-batch-btn" id="btn-add-proj-batch-{{ i }}" style="margin-top:10px;">ADD BATCH</button>
                     <div class="added-results-list" id="added-projects-container-{{ i }}"></div>
                 </div>
             </div>
@@ -279,7 +282,7 @@
         <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save</button>
         <button type="button" class="button preview" id="preview-details-btn"><i class="fas fa-eye"></i> Preview</button>
         <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
-        <button type="button" class="button upload" id="upload-pdf-btn" onclick="uploadPDF()"><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
+        <button type="button" class="button upload" id="upload-pdf-btn" onclick="uploadPDF()" disabled><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
         <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear</button>
     </div>
 
@@ -295,9 +298,15 @@
             <div id="preview-content" class="preview-body"></div>
         </div>
     </div>
-</div>
+
+    </form> </div>
 
 <script>
+    function getCSRFToken() {
+    const el = document.querySelector('[name=csrfmiddlewaretoken]');
+    return el ? el.value : '';
+}
+
     const itSubjects = {
         "First Year": { "1-1": [{"code":"MA101BS","name":"MATRICES AND CALCULUS"},{"code":"AP102BS","name":"APPLIED PHYSICS"},{"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},{"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},{"code":"ME105ES","name":"ENGINEERING WORKSHOP"},{"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},{"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},{"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},{"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},{"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}],"1-2":[{"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},{"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},{"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},{"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},{"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},{"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},{"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},{"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},{"code":"CS209ES","name":"IT WORKSHOP"},{"code":"HS210MC","name":"CONSTITUTION OF INDIA"}] },
         "Second Year": { "2-1": [{"code":"PS301BS","name":"PROBABILITY AND STATISTICS"},{"code":"EC302ES","name":"DIGITAL ELECTRONICS"},{"code":"CS303PC","name":"DATA STRUCTURES"},{"code":"CM304PC","name":"COMPUTER ORGANIZATION AND MICROPROCESSOR"},{"code":"IT305PC","name":"INTRODUCTION TO IOT"},{"code":"CS306PC","name":"DATA STRUCTURES LABORATORY"},{"code":"EC307ES","name":"DIGITAL ELECTRONICS LABORATORY"},{"code":"IT308PC","name":"INTERNET OF THINGS LABORATORY"},{"code":"HS309MC","name":"GENDER SENSITIZATION"},{"code":"CS308PC","name":"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}],"2-2":[{"code":"MB401HS","name":"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},{"code":"CS402PC","name":"DISCRETE MATHEMATICS"},{"code":"CS403PC","name":"OPERATING SYSTEMS"},{"code":"CS404PC","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT405PC","name":"JAVA PROGRAMMING"},{"code":"CS406PC","name":"OPERATING SYSTEMS LABORATORY"},{"code":"CS407PC","name":"DATABASE MANAGEMENT SYSTEMS LABORATORY"},{"code":"IT408PC","name":"JAVA PROGRAMMING LABORATORY"},{"code":"IT409PW","name":"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},{"code":"IT410PC","name":"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},{"code":"HS411MC","name":"INTELLECTUAL PROPERTY RIGHTS"}] },
@@ -406,39 +415,59 @@
     }
 
     // --- UPLOAD FUNCTION ---
-    function uploadPDF() {
+    async function uploadPDF() {
+        // Safety check at top
+        if (!savedData) {
+            alert("Please save details before uploading");
+            return;
+        }
+
+        const empId = document.getElementById("employee-code").value.trim();
+
+        if (!empId) {
+            alert("Employee Code is required");
+            return;
+        }
+
         // We reuse the existing blob generation logic
-        generateFinalPDFBlob().then(blob => {
-            if (!blob) return;
+        const pdfBlob = await generateFinalPDFBlob();
+        if (!pdfBlob) {
+            alert("PDF generation failed");
+            return;
+        }
 
-            const empIdInput = document.getElementById("employee-code");
-            const empId = (empIdInput && empIdInput.value.trim()) ? empIdInput.value.trim() : 'Faculty_Report';
+        const formData = new FormData();
+        // Ensure form data key is "pdf"
+        formData.append("pdf", pdfBlob, `${empId}.pdf`);
 
-            if (!empId) {
-                alert("Please enter Employee Code");
-                return;
-            }
+        fetch("/upload-generated-pdf/", {
+    method: "POST",
+    credentials: "same-origin",   // ✅ REQUIRED
+    headers: {
+        "X-CSRFToken": getCSRFToken()
+    },
+    body: formData
+})
 
-            const formData = new FormData();
-            formData.append("pdf", blob, `${empId}.pdf`);
+        .then(async response => {
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Upload failed");
+    }
+    return response.json();
+})
+        .then(data => {
+    if (data.url) {
+        alert("Upload successful!");
+        console.log("Cloudinary URL:", data.url);
+    } else {
+        alert("Upload failed: " + (data.error || "Unknown error"));
+    }
+})
 
-            fetch("/upload-generated-pdf/", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.url) {
-                    alert(`PDF uploaded successfully as ${empId}.pdf`);
-                    console.log("Cloudinary URL:", data.url);
-                } else {
-                    alert("Upload failed");
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                alert("Upload failed");
-            });
+        .catch(error => {
+            console.error("Upload error:", error);
+            alert("Upload error");
         });
     }
 
@@ -567,6 +596,15 @@
                 ach: Array.from(document.querySelectorAll('#added-achievements-container .added-result-item')).map(a => [a.dataset.desc, a.dataset.range]),
                 about: document.getElementById('about-yourself').value
             };
+
+            // Enable upload button only after saving and validating employee code
+            const empCode = document.getElementById("employee-code").value.trim();
+            if (!empCode) {
+                alert("Employee Code is required before upload");
+                return;
+            }
+            document.getElementById("upload-pdf-btn").disabled = false;
+
             alert("Details Saved!");
         };
 

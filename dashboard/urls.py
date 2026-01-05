@@ -1,40 +1,16 @@
 from django.urls import path
-from dashboard.views import (
-    login_view,
-    dashboard,
-    index,
-    about,
-    faculty,
-    students,
-    library,
-    syllabus,
-    exambranch,
-    gallery,
-    logout_view,
-    download_faculty_pdf,
-    upload_generated_pdf,
-)
+from . import views
 
 app_name = "dashboard"
 
 urlpatterns = [
-    # Root → Login page
-    path("", login_view, name="login"),
+    path("", views.login_view, name="login"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("faculty/", views.faculty, name="faculty"),
+    path("logout/", views.logout_view, name="logout"),
 
-    path("dashboard/", dashboard, name="dashboard"),
-    path("index/", index, name="index"),
-    path("about/", about, name="about"),
-    path("faculty/", faculty, name="faculty"),
-    path("students/", students, name="students"),
-    path("library/", library, name="library"),
-    path("syllabus/", syllabus, name="syllabus"),
-    path("exambranch/", exambranch, name="exambranch"),
-    path("gallery/", gallery, name="gallery"),
+    path("download-faculty-pdf/", views.download_faculty_pdf, name="download_faculty_pdf"),
 
-    path("login/", login_view, name="login_explicit"),
-    path("logout/", logout_view, name="logout"),
-
-    # PDF features
-    path("download-faculty-pdf/", download_faculty_pdf),
-    path("upload-generated-pdf/", upload_generated_pdf),
+    # 🔴 REQUIRED ENDPOINT
+    path("upload-generated-pdf/", views.upload_generated_pdf, name="upload_generated_pdf"),
 ]
