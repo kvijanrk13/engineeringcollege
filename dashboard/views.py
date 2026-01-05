@@ -8,9 +8,30 @@ import cloudinary.uploader
 
 def login_view(request):
     if request.method == "POST":
-        if request.POST.get("username") == "7001" and request.POST.get("password") == "anrkitdept":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        # Define valid credentials
+        valid_users = {
+            "7001": "Cutieminni@2",
+            "5037": "anrkitdept",
+            "7003": "anrkitdept",
+            "7005": "anrkitdept",
+            "7007": "anrkitdept",
+            "7008": "anrkitdept",
+            "7010": "anrkitdept",
+            "7011": "anrkitdept",
+            "3003": "anrkitdept",
+        }
+
+        # Check credentials
+        if username in valid_users and valid_users[username] == password:
             request.session["logged_in"] = True
+            request.session["user_id"] = username
             return redirect("dashboard:dashboard")
+        else:
+            return render(request, "dashboard/login.html", {"error": "Invalid Credentials"})
+
     return render(request, "dashboard/login.html")
 
 
@@ -31,7 +52,7 @@ def faculty(request):
     return render(request, "dashboard/faculty.html")
 
 
-# ✅ NEW VIEW (REQUIRED TO FIX ERROR)
+# ✅ REQUIRED TO FIX NO REVERSE MATCH ERROR
 def syllabus(request):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
@@ -59,17 +80,25 @@ def download_faculty_pdf(request):
 def upload_generated_pdf(request):
     if request.method == "POST" and request.FILES.get("pdf"):
         pdf_file = request.FILES["pdf"]
+
+        # Use filename provided by frontend (e.g., 7001.pdf) or fallback
+        public_id = pdf_file.name.replace(".pdf", "") if pdf_file.name else "faculty_upload"
+
+        try:
+            upload_result = cloudinary.uploader.upload(
+                pdf_file,
+                resource_type="raw",
+                folder="faculty_pdfs",
+                public_id=public_id,
+                overwrite=True,
+                unique_filename=False
+            )
+            return JsonResponse({
+                "status": "success",
+                "url": upload_result["secure_url"],
+                "public_id": upload_result["public_id"]
+            })
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "No PDF received"}, status=400)
-
-    upload_result = cloudinary.uploader.upload(
-        pdf_file,
-        resource_type="raw",
-        folder="faculty_pdfs",
-        public_id=pdf_file.name.replace(".pdf", "")
-    )
-
-    return JsonResponse({
-        "url": upload_result["secure_url"],
-        "public_id": upload_result["public_id"]
-    })

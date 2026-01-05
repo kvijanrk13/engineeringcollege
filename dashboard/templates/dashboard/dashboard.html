@@ -1,35 +1,231 @@
 {% extends 'dashboard/base.html' %}
-{% block title %}Dashboard{% endblock %}
+{% load static %}
+{% block title %}Dashboard - ANURAG Engineering College{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-  <h1 class="mb-4">Academic Dashboard</h1>
+<style>
+    /* --- Matrix Background Setup --- */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace; /* Hacker font */
+        overflow-x: hidden;
+        background-color: #000; /* Fallback */
+        color: #0f0; /* Matrix Green Text */
+    }
 
-  <div class="row">
-    <div class="col-md-4">
-      <div class="card p-4 text-center">
-        <h3>3</h3>
-        <p>Departments</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card p-4 text-center">
-        <h3>8</h3>
-        <p>Semesters</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card p-4 text-center">
-        <h3>300+</h3>
-        <p>Subjects</p>
-      </div>
-    </div>
-  </div>
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1; /* Behind content */
+    }
 
-  <div class="mt-4">
-    <a href="#" class="btn btn-primary disabled">
-    View Complete Syllabus
-</a>
-  </div>
+    /* --- Dashboard Container --- */
+    .dashboard-container {
+        position: relative;
+        z-index: 1; /* Above canvas */
+        padding: 40px 20px;
+        min-height: 100vh;
+    }
+
+    h1.page-title {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #fff;
+        text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+        margin-bottom: 50px;
+        border-bottom: 2px solid #0f0;
+        display: inline-block;
+        padding-bottom: 10px;
+    }
+
+    .title-wrapper {
+        text-align: center;
+        width: 100%;
+    }
+
+    /* --- Info Cards (The "Tabs") --- */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        margin-bottom: 50px;
+    }
+
+    .stat-card {
+        background: rgba(0, 20, 0, 0.85); /* Semi-transparent black */
+        border: 1px solid #0f0;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 25px rgba(0, 255, 0, 0.6), inset 0 0 15px rgba(0, 255, 0, 0.3);
+        background: rgba(0, 40, 0, 0.9);
+    }
+
+    /* Glitch effect line on cards */
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: #0f0;
+        animation: scanline 3s linear infinite;
+    }
+
+    @keyframes scanline {
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
+    }
+
+    .stat-card h3 {
+        font-size: 3rem;
+        margin: 0;
+        color: #fff;
+        text-shadow: 0 0 10px #0f0;
+    }
+
+    .stat-card p {
+        font-size: 1.2rem;
+        margin-top: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #0f0;
+        font-weight: bold;
+    }
+
+    /* --- Action Buttons --- */
+    .action-section {
+        text-align: center;
+        margin-top: 40px;
+    }
+
+    .matrix-btn {
+        background: transparent;
+        color: #0f0;
+        border: 2px solid #0f0;
+        padding: 15px 30px;
+        font-size: 1.2rem;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.3s;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        display: inline-block;
+    }
+
+    .matrix-btn:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 20px #0f0;
+        text-decoration: none;
+    }
+
+    /* Fix links inherited from base.html if they are standard blue */
+    a { color: #0f0; text-decoration: none; }
+    a:hover { color: #fff; text-decoration: underline; }
+
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="container-fluid dashboard-container">
+
+    <div class="title-wrapper">
+        <h1 class="page-title">Academic Dashboard</h1>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>3</h3>
+            <p>Departments</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>8</h3>
+            <p>Semesters</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>300+</h3>
+            <p>Subjects</p>
+        </div>
+    </div>
+
+    <div class="action-section">
+        <a href="{% url 'dashboard:syllabus' %}" class="matrix-btn">
+            View Complete Syllabus
+        </a>
+    </div>
 </div>
+
+<script>
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set canvas to full screen
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Matrix characters (Katakana + Numbers + Latin)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const charArray = chars.split('');
+
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+
+    // Array to track y-coordinate of each column
+    const drops = [];
+    for(let i = 0; i < columns; i++) {
+        drops[i] = 1;
+    }
+
+    function draw() {
+        // Black background with slight opacity for trail effect
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#0f0'; // Green text
+        ctx.font = fontSize + 'px monospace';
+
+        for(let i = 0; i < drops.length; i++) {
+            const text = charArray[Math.floor(Math.random() * charArray.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            // Randomly reset drop to top
+            if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+
+            drops[i]++;
+        }
+    }
+
+    // Run animation
+    setInterval(draw, 33);
+
+    // Handle resize
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+
 {% endblock %}

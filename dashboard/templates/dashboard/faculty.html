@@ -79,6 +79,7 @@
     .button.upload { background: #8e44ad; }
     .button.upload:hover { background: #732d91; }
     .button.clear { background: #c0392b; }
+    /* DISABLED STATE for Upload Button */
     .button:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; }
 
     /* Modal */
@@ -106,15 +107,15 @@
         <div class="department-name">INFORMATION TECHNOLOGY DEPARTMENT</div>
     </div>
 
-    <form id="faculty-form" method="post" enctype="multipart/form-data" onsubmit="return false;">
-    {% csrf_token %}
+    <form id="faculty-form" onsubmit="return false;">
+
     <div class="container">
         <h1>Faculty Details Entry</h1>
 
         <div class="form-section">
             <h3>Basic Information</h3>
             <div class="form-grid">
-                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" placeholder="Employee Code" required></div>
+                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" name="employee_code" placeholder="e.g. 7001" required></div>
                 <div><label class="form-label">Name of Staff</label><input type="text" id="staff-name" placeholder="Full Name"></div>
                 <div><label class="form-label">Department</label><input type="text" id="department" placeholder="Department"></div>
                 <div><label class="form-label">Date of Joining</label><input type="date" id="joining-date"></div>
@@ -227,7 +228,7 @@
                         <div class="result-input-wrapper"><label>Pass</label><input type="number" id="res-passed-{{ i }}"></div>
                         <div class="result-input-wrapper"><label>Fail</label><input type="number" id="res-failed-{{ i }}"></div>
                         <div class="result-input-wrapper"><label>%</label><input type="text" id="res-percentage-{{ i }}" readonly></div>
-                        <button type="button" class="add-result-btn" id="btn-add-result-{{ i }}">+</button>
+                        <button type="button" class="add-btn" id="btn-add-result-{{ i }}">+</button>
                     </div>
                     <div class="added-results-list" id="added-results-container-{{ i }}"></div>
                 </div>
@@ -265,7 +266,7 @@
                         <div class="result-input-wrapper"><label>Marks</label><input type="number" id="proj-marks{{ k }}-{{ i }}"></div>
                     </div>
                     {% endfor %}
-                    <button type="button" class="add-project-batch-btn" id="btn-add-proj-batch-{{ i }}" style="margin-top:10px;">ADD BATCH</button>
+                    <button type="button" class="add-btn" id="btn-add-proj-batch-{{ i }}" style="margin-top:10px;">ADD BATCH</button>
                     <div class="added-results-list" id="added-projects-container-{{ i }}"></div>
                 </div>
             </div>
@@ -302,10 +303,10 @@
     </form> </div>
 
 <script>
+    // --- CSRF HELPER ---
     function getCSRFToken() {
-    const el = document.querySelector('[name=csrfmiddlewaretoken]');
-    return el ? el.value : '';
-}
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    }
 
     const itSubjects = {
         "First Year": { "1-1": [{"code":"MA101BS","name":"MATRICES AND CALCULUS"},{"code":"AP102BS","name":"APPLIED PHYSICS"},{"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},{"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},{"code":"ME105ES","name":"ENGINEERING WORKSHOP"},{"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},{"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},{"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},{"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},{"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}],"1-2":[{"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},{"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},{"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},{"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},{"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},{"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},{"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},{"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},{"code":"CS209ES","name":"IT WORKSHOP"},{"code":"HS210MC","name":"CONSTITUTION OF INDIA"}] },
@@ -416,20 +417,12 @@
 
     // --- UPLOAD FUNCTION ---
     async function uploadPDF() {
-        // Safety check at top
         if (!savedData) {
             alert("Please save details before uploading");
             return;
         }
 
-        const empId = document.getElementById("employee-code").value.trim();
-
-        if (!empId) {
-            alert("Employee Code is required");
-            return;
-        }
-
-        // We reuse the existing blob generation logic
+        // Generate PDF
         const pdfBlob = await generateFinalPDFBlob();
         if (!pdfBlob) {
             alert("PDF generation failed");
@@ -437,34 +430,26 @@
         }
 
         const formData = new FormData();
-        // Ensure form data key is "pdf"
-        formData.append("pdf", pdfBlob, `${empId}.pdf`);
+        // 🔥 Key MUST be "pdf"
+        formData.append("pdf", pdfBlob, "faculty.pdf");
+        formData.append("employee_code", document.getElementById("employee-code").value);
 
         fetch("/upload-generated-pdf/", {
-    method: "POST",
-    credentials: "same-origin",   // ✅ REQUIRED
-    headers: {
-        "X-CSRFToken": getCSRFToken()
-    },
-    body: formData
-})
-
-        .then(async response => {
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || "Upload failed");
-    }
-    return response.json();
-})
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCSRFToken() // Add CSRF token header
+            },
+            body: formData
+        })
+        .then(response => response.json())
         .then(data => {
-    if (data.url) {
-        alert("Upload successful!");
-        console.log("Cloudinary URL:", data.url);
-    } else {
-        alert("Upload failed: " + (data.error || "Unknown error"));
-    }
-})
-
+            if (data.status === "success") {
+                alert("Upload successful");
+                console.log("Cloudinary URL:", data.url);
+            } else {
+                alert("Upload failed: " + data.error);
+            }
+        })
         .catch(error => {
             console.error("Upload error:", error);
             alert("Upload error");
@@ -597,12 +582,14 @@
                 about: document.getElementById('about-yourself').value
             };
 
-            // Enable upload button only after saving and validating employee code
+            // Validate Employee Code
             const empCode = document.getElementById("employee-code").value.trim();
             if (!empCode) {
                 alert("Employee Code is required before upload");
                 return;
             }
+
+            // Enable upload button
             document.getElementById("upload-pdf-btn").disabled = false;
 
             alert("Details Saved!");
