@@ -11,6 +11,6 @@ urlpatterns = [
 
     path("download-faculty-pdf/", views.download_faculty_pdf, name="download_faculty_pdf"),
 
-    # 🔴 REQUIRED ENDPOINT
+    # REQUIRED ENDPOINT
     path("upload-generated-pdf/", views.upload_generated_pdf, name="upload_generated_pdf"),
 ]
