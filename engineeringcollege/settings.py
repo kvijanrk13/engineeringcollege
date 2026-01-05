@@ -27,7 +27,8 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True
+print("DEBUG VALUE =", DEBUG)
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -48,14 +49,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # ✅ REQUIRED for Cloudinary uploads
+    # Cloudinary
     'cloudinary',
     'cloudinary_storage',
 
     'dashboard',
 ]
 
-# ✅ REQUIRED for Cloudinary
+# REQUIRED for Cloudinary uploads
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
@@ -83,7 +84,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
 
-                # ⚠️ ENSURE THIS FILE EXISTS
+                # Context processor (USES SETTINGS BELOW)
                 'dashboard.context_processors.college_info',
             ],
         },
@@ -144,3 +145,10 @@ SESSION_COOKIE_AGE = 1209600
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+# =========================================================
+# ✅ REQUIRED BY dashboard.context_processors.college_info
+# =========================================================
+COLLEGE_NAME = "ANURAG Engineering College"
+DEPARTMENT_NAME = "Information Technology"
+ACADEMIC_YEAR = "2024-25"
