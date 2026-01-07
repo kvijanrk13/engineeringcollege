@@ -4,14 +4,14 @@
 
 {% block content %}
 <style>
-    /* --- 1. GLOBAL & MATRIX BACKGROUND --- */
+    /* Global Matrix Styling */
     body {
         margin: 0;
         padding: 0;
-        font-family: 'Courier New', monospace; /* Hacker font */
+        font-family: 'Courier New', monospace;
         overflow-x: hidden;
-        background-color: #000; /* Fallback */
-        color: #0f0; /* Matrix Green Text */
+        background-color: #000;
+        color: #0f0;
     }
 
     #matrix-canvas {
@@ -20,237 +20,219 @@
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: -1; /* Behind everything */
+        z-index: -1;
     }
 
-    /* --- 2. FIXING THE TOP NAVIGATION BAR --- */
-    /* This targets common navbar classes to force them into the theme */
-    .navbar, header, nav, .top-bar {
-        background-color: rgba(0, 20, 0, 0.95) !important;
-        border-bottom: 1px solid #0f0 !important;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-    }
-
-    /* Style links like 'Faculty' and 'Logout' */
-    .navbar a, nav a, header a, a.nav-link {
-        color: #0f0 !important;
-        font-family: 'Courier New', monospace;
-        font-weight: bold;
-        text-transform: uppercase;
-        text-decoration: none;
-        margin: 0 15px;
-    }
-
-    .navbar a:hover, nav a:hover, header a:hover {
-        text-shadow: 0 0 10px #0f0;
-        color: #fff !important;
-    }
-
-    /* --- 3. DASHBOARD LAYOUT --- */
+    /* Main Container Alignment */
     .dashboard-container {
         position: relative;
-        z-index: 2; /* Sits above the matrix rain */
+        z-index: 2;
         padding: 20px;
-        min-height: 100vh;
         display: flex;
         flex-direction: column;
-        align-items: center; /* Center everything horizontally */
+        align-items: center;
         width: 100%;
     }
 
-    /* --- 4. LETTER HEAD IMAGE SECTION --- */
-    .header-image-container {
+    /* 1. Borderless Table for Letterhead Visibility */
+    .letterhead-table {
         width: 100%;
-        max-width: 1000px; /* Constrain width for better look */
-        background-color: #ffffff; /* WHITE background to make letterhead visible */
-        padding: 10px;
-        margin-top: 30px;
-        margin-bottom: 40px;
+        max-width: 1100px;
+        background-color: #ffffff; /* Ensures image is visible */
+        border-collapse: collapse;
+        border: none;
+        margin-top: 10px;
         border-radius: 8px;
-        box-shadow: 0 0 25px rgba(0, 255, 0, 0.3); /* Green outer glow */
-        border: 2px solid #0f0;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+    }
+
+    .letterhead-table td {
+        padding: 10px;
         text-align: center;
+        border: none;
     }
 
     .letterhead-img {
         width: 100%;
-        height: auto;
-        display: block;
+        max-height: 150px;
         object-fit: contain;
+        display: block;
     }
 
-    /* --- 5. PAGE TITLE --- */
-    .dashboard-title {
+    /* 2. Dual Header Section */
+    .college-header {
+        font-size: 3.5rem;
+        font-weight: 900;
         color: #fff;
-        font-family: 'Courier New', monospace;
-        font-size: 2.8rem;
-        font-weight: bold;
+        text-shadow: 0 0 15px #0f0;
+        margin: 25px 0 0 0;
+        text-align: center;
         text-transform: uppercase;
-        margin-bottom: 50px;
-        text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
-        border-bottom: 3px solid #0f0;
-        padding-bottom: 10px;
-        display: inline-block;
+    }
+
+    .dept-header {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 5px 0 35px 0;
+        text-align: center;
+        text-transform: uppercase;
         letter-spacing: 2px;
     }
 
-    /* --- 6. STATS CARDS (Tabs) --- */
+    /* 3. High-Visibility Horizontal Tabs */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        background: rgba(0, 20, 0, 0.95);
+        padding: 20px;
+        border: 2px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin-bottom: 50px;
+        border-radius: 12px;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+    }
+
+    .nav-link-tab {
+        padding: 12px 24px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: 900;
+        text-transform: uppercase;
+        border: 2px solid #0f0;
+        transition: 0.3s;
+        font-size: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    .nav-link-tab:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 20px #0f0;
+    }
+
+    .nav-link-tab.active {
+        background: rgba(0, 255, 0, 0.3);
+        border-color: #fff;
+        color: #fff;
+    }
+
+    /* 4. Stats Content Layout */
     .stats-row {
         display: flex;
         justify-content: center;
-        gap: 40px;
+        gap: 30px;
         flex-wrap: wrap;
         width: 100%;
-        max-width: 1200px;
-        margin-bottom: 60px;
     }
 
     .stat-box {
-        background: rgba(0, 20, 0, 0.85); /* Semi-transparent black */
+        background: rgba(0, 10, 0, 0.85);
         border: 2px solid #0f0;
         border-radius: 15px;
-        width: 300px;
-        padding: 40px 20px;
+        width: 280px;
+        padding: 35px;
         text-align: center;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-        transition: all 0.3s ease;
-        backdrop-filter: blur(4px);
-        position: relative;
-        overflow: hidden;
+        transition: 0.3s;
+        box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
     }
 
-    /* Hover Effect */
     .stat-box:hover {
         transform: translateY(-10px);
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.6), inset 0 0 10px rgba(0, 255, 0, 0.2);
-        background: rgba(0, 40, 0, 0.95);
-        border-color: #fff;
+        box-shadow: 0 0 25px #0f0;
     }
 
     .stat-number {
         font-size: 4rem;
-        font-weight: 800;
+        font-weight: bold;
         color: #fff;
-        margin: 0;
-        text-shadow: 0 0 15px #0f0;
-        line-height: 1;
-        margin-bottom: 15px;
+        text-shadow: 0 0 10px #0f0;
+        display: block;
+        margin-bottom: 10px;
     }
 
     .stat-label {
-        font-size: 1.4rem;
-        color: #0f0;
+        font-size: 1.2rem;
         text-transform: uppercase;
-        letter-spacing: 3px;
-        font-weight: bold;
-    }
-
-    /* --- 7. ACTION BUTTON --- */
-    .syllabus-btn {
-        display: inline-block;
-        padding: 18px 50px;
-        border: 2px solid #0f0;
-        color: #0f0;
-        font-size: 1.3rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        text-decoration: none;
-        background: rgba(0, 0, 0, 0.6);
-        transition: 0.3s ease;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-        font-family: 'Courier New', monospace;
         letter-spacing: 2px;
-        border-radius: 5px;
+        font-weight: bold;
     }
-
-    .syllabus-btn:hover {
-        background: #0f0;
-        color: #000;
-        box-shadow: 0 0 40px #0f0;
-        text-decoration: none;
-        font-weight: 900;
-    }
-
 </style>
 
 <canvas id="matrix-canvas"></canvas>
 
 <div class="dashboard-container">
+    <table class="letterhead-table">
+        <tr>
+            <td>
+                <!-- Image from F:\IT DEPT DJANGO PROJECT\engineeringcollege\static\images\NEW LETTER HEAD.png -->
+                <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Anurag Letter Head" class="letterhead-img">
+            </td>
+        </tr>
+    </table>
 
-    <div class="header-image-container">
-        <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Department Letter Head" class="letterhead-img">
+    <h1 class="college-header">ANURAG ENGINEERING COLLEGE</h1>
+    <h2 class="dept-header">Information Technology Department</h2>
+
+    <div class="nav-tabs-container">
+        <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab active">Dashboard</a>
+        <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+        <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
+        <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+        <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
+        <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+        <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+        <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
     </div>
-
-    <h1 class="dashboard-title">Academic Dashboard</h1>
 
     <div class="stats-row">
         <div class="stat-box">
-            <div class="stat-number">3</div>
-            <div class="stat-label">Departments</div>
+            <span class="stat-number">3</span>
+            <span class="stat-label">Departments</span>
         </div>
         <div class="stat-box">
-            <div class="stat-number">8</div>
-            <div class="stat-label">Semesters</div>
+            <span class="stat-number">8</span>
+            <span class="stat-label">Semesters</span>
         </div>
         <div class="stat-box">
-            <div class="stat-number">300+</div>
-            <div class="stat-label">Subjects</div>
+            <span class="stat-number">300+</span>
+            <span class="stat-label">Subjects</span>
         </div>
     </div>
-
-    <div>
-        <a href="{% url 'dashboard:syllabus' %}" class="syllabus-btn">
-            View Complete Syllabus
-        </a>
-    </div>
-
 </div>
 
 <script>
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // Resize canvas to full screen
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    // Matrix characters
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
-    const charArray = chars.split('');
-
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
     const fontSize = 16;
     const columns = canvas.width / fontSize;
-
-    // Drops array
-    const drops = [];
-    for(let i = 0; i < columns; i++) {
-        drops[i] = 1;
-    }
+    const drops = Array(Math.floor(columns)).fill(1);
 
     function draw() {
-        // Black bg with fade effect
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#0f0'; // Green text
+        ctx.fillStyle = '#0f0';
         ctx.font = fontSize + 'px monospace';
-
-        for(let i = 0; i < drops.length; i++) {
-            const text = charArray[Math.floor(Math.random() * charArray.length)];
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
             ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-            if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                drops[i] = 0;
-            }
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
             drops[i]++;
         }
     }
-
     setInterval(draw, 33);
-</script>
 
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
 {% endblock %}

@@ -4,103 +4,151 @@
 
 {% block content %}
 <style>
-    /* Page Styling */
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #1a1a1a; }
-    .container { max-width: 1400px; margin: 20px auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    /* Global Matrix Styling to match Dashboard & Faculty */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        background-color: #000;
+        color: #0f0;
+    }
 
-    h1 { color: #0f172a; text-align: center; margin-bottom: 30px; border-bottom: 4px solid #1e293b; padding-bottom: 10px; font-weight: 800; }
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    /* 1. NEW LETTER HEAD SECTION */
+    .header-image-container {
+        width: 100%;
+        max-width: 1100px;
+        background-color: #ffffff;
+        padding: 10px;
+        margin: 20px auto;
+        border-radius: 8px;
+        border: 2px solid #0f0;
+        text-align: center;
+        display: block;
+    }
+
+    .letterhead-img {
+        width: 100%;
+        height: auto;
+        display: block;
+        object-fit: contain;
+    }
+
+    /* 2. DUAL HEADERS */
+    .college-header {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 15px #0f0;
+        margin: 10px 0 0 0;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .dept-header {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 5px 0 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    /* 3. HORIZONTAL NAVIGATION TABS */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(0, 20, 0, 0.9);
+        padding: 15px;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        border-radius: 8px;
+    }
+
+    .nav-link-tab {
+        padding: 12px 20px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #0f0;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .nav-link-tab:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
+    .nav-link-tab.active-page { background: rgba(0, 255, 0, 0.2); border-width: 2px; }
+
+    /* CONTENT CONTAINER (SYLLABUS) */
+    .container {
+        max-width: 1400px;
+        margin: 20px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        color: #1a1a1a; /* Dark text for readability on white background */
+    }
+
+    h1.syllabus-title { color: #0f172a; text-align: center; margin-bottom: 30px; border-bottom: 4px solid #1e293b; padding-bottom: 10px; font-weight: 800; font-family: 'Segoe UI', sans-serif; }
 
     /* Tab Grid Navigation */
-    .tab-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 30px;
-    }
-
-    .tab-btn {
-        padding: 15px;
-        background: #e2e8f0;
-        color: #334155;
-        border: none;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        border: 2px solid transparent;
-    }
-
-    .tab-btn:hover { background: #cbd5e1; }
-    .tab-btn.active {
-        background: #1e293b;
-        color: #ffffff;
-        border-color: #0f172a;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
+    .tab-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 30px; }
+    .tab-btn { padding: 15px; background: #e2e8f0; color: #334155; border: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+    .tab-btn.active { background: #1e293b; color: #ffffff; }
 
     /* Content Sections */
-    .tab-content { display: none; animation: fadeIn 0.5s; }
+    .tab-content { display: none; }
     .tab-content.active { display: block; }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* Semester Cards Grid */
-    .semester-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-        gap: 25px;
-    }
-
-    .sem-card {
-        background: #fff;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    }
-
-    .sem-header {
-        background: #334155;
-        color: #fff;
-        padding: 12px;
-        font-weight: 700;
-        text-align: center;
-        font-size: 1.2rem;
-        letter-spacing: 0.5px;
-    }
+    .semester-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; }
+    .sem-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .sem-header { background: #334155; color: #fff; padding: 12px; font-weight: 700; text-align: center; font-size: 1.2rem; }
 
     /* Tables */
     .std-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    .std-table th, .std-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; color: #0f172a; }
-    .std-table th { background-color: #f1f5f9; font-weight: 800; color: #1e293b; border-bottom: 2px solid #cbd5e1; }
-    .std-table tr:hover { background-color: #f8fafc; }
-
-    .code-col { width: 25%; font-family: 'Consolas', monospace; font-weight: 700; color: #b91c1c; /* Dark Red for codes */ }
+    .std-table th, .std-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .std-table th { background-color: #f1f5f9; font-weight: 800; color: #1e293b; }
+    .code-col { width: 25%; font-family: 'Consolas', monospace; font-weight: 700; color: #b91c1c; }
     .name-col { font-weight: 600; color: #1e293b; }
-
-    /* Common Subjects Table Specifics */
-    .common-table-wrapper { margin-top: 20px; }
-    .common-table th { background-color: #1e293b; color: white; }
-    .sem-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        background: #475569;
-        color: white;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: bold;
-    }
-
-    @media (max-width: 768px) {
-        .tab-grid { grid-template-columns: 1fr 1fr; }
-        .semester-grid { grid-template-columns: 1fr; }
-    }
+    .sem-badge { display: inline-block; padding: 4px 12px; background: #475569; color: white; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
 </style>
 
+<canvas id="matrix-canvas"></canvas>
+
+<div class="header-image-container">
+    <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Anurag Letter Head" class="letterhead-img">
+</div>
+
+<h1 class="college-header">ANURAG ENGINEERING COLLEGE</h1>
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab active-page">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+    <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
+    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
+</div>
+
 <div class="container">
-    <h1>Academic Syllabus & Comparison</h1>
+    <h1 class="syllabus-title">Academic Syllabus & Comparison</h1>
 
     <div class="tab-grid">
         <button class="tab-btn active" onclick="openTab('it')">IT</button>
@@ -130,8 +178,32 @@
 </div>
 
 <script>
+    /* Matrix Background Script */
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
     // ==========================================
-    // SYLLABUS DATA (1-1 to 4-2)
+    // SYLLABUS DATA & RENDERING LOGIC
     // ==========================================
     const syllabusData = {
         "1-1": {
@@ -178,11 +250,9 @@
 
     const semOrder = ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"];
 
-    // Function to render individual departments
     function renderDepartmentSyllabus(dept, containerId) {
         const container = document.getElementById(containerId);
         let html = '';
-
         semOrder.forEach(sem => {
             const subjects = syllabusData[sem][dept] || [];
             if (subjects.length > 0) {
@@ -202,75 +272,44 @@
         container.innerHTML = html;
     }
 
-    // Function to render common subjects comparison
     function renderCommonSubjects() {
         const container = document.getElementById('common-syllabus-container');
         let html = '<div class="common-table-wrapper"><table class="std-table common-table"><thead><tr><th>Year/Sem</th><th>Subject Name</th><th>Codes (IT / CSE / AIML)</th></tr></thead><tbody>';
-
         semOrder.forEach(sem => {
-            // Get all subjects
             const itSubs = syllabusData[sem]["IT"] || [];
             const cseSubs = syllabusData[sem]["CSE"] || [];
             const aimlSubs = syllabusData[sem]["AIML"] || [];
-
-            // Find common by name
             const common = [];
-
             itSubs.forEach(itSub => {
                 const name = itSub.name.trim().toUpperCase();
                 const cseMatch = cseSubs.find(s => s.name.trim().toUpperCase() === name);
                 const aimlMatch = aimlSubs.find(s => s.name.trim().toUpperCase() === name);
-
                 if (cseMatch && aimlMatch) {
-                    common.push({
-                        name: itSub.name,
-                        codes: `${itSub.code} / ${cseMatch.code} / ${aimlMatch.code}`
-                    });
+                    common.push({ name: itSub.name, codes: `${itSub.code} / ${cseMatch.code} / ${aimlMatch.code}` });
                 }
             });
-
             if (common.length > 0) {
                 common.forEach(sub => {
-                    html += `
-                        <tr>
-                            <td><span class="sem-badge">${sem}</span></td>
-                            <td class="name-col" style="color: #0f172a;">${sub.name}</td>
-                            <td class="code-col" style="font-size:0.85rem; color:#64748b;">${sub.codes}</td>
-                        </tr>
-                    `;
+                    html += `<tr><td><span class="sem-badge">${sem}</span></td><td class="name-col">${sub.name}</td><td class="code-col">${sub.codes}</td></tr>`;
                 });
             }
         });
-
         html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
-    // Toggle Sections (Tabs)
     function openTab(tabName) {
-        // Hide all tabs
         const contents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < contents.length; i++) {
-            contents[i].classList.remove("active");
-        }
-
-        // Deactivate all buttons
+        for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
         const btns = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < btns.length; i++) {
-            btns[i].classList.remove("active");
-        }
-
-        // Show specific tab and activate button
+        for (let i = 0; i < btns.length; i++) btns[i].classList.remove("active");
         document.getElementById(`tab-${tabName}`).classList.add("active");
-        // Find the button that called this and activate it (using event logic or index matching)
-        // Simple way: get by index since order is fixed
         if(tabName === 'it') btns[0].classList.add("active");
         if(tabName === 'cse') btns[1].classList.add("active");
         if(tabName === 'aiml') btns[2].classList.add("active");
         if(tabName === 'common') btns[3].classList.add("active");
     }
 
-    // Initialization
     document.addEventListener('DOMContentLoaded', () => {
         renderDepartmentSyllabus('IT', 'it-syllabus-container');
         renderDepartmentSyllabus('CSE', 'cse-syllabus-container');
