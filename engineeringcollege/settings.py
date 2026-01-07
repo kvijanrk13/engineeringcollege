@@ -6,20 +6,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================= CLOUDINARY CONFIG =================
 cloudinary.config(
-    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    cloud_name="dsndiruhe",
+    api_key="796293117737693",
+    api_secret="StgoTNd4fgLqHqW19csQ4fONAuk",
     secure=True
 )
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": "dsndiruhe",
+    "API_KEY": "796293117737693",
+    "API_SECRET": "StgoTNd4fgLqHqW19csQ4fONAuk",
+}
 
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 # =====================================================
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-engineering-college-secret-key-2024")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-engineering-college-secret-key-2024"
+)
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    ".onrender.com",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -29,9 +42,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
+    # Cloudinary
     "cloudinary",
     "cloudinary_storage",
 
+    # Local apps
     "dashboard",
 ]
 
@@ -72,6 +87,11 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+# ================= FILE UPLOAD SETTINGS =================
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+# =======================================================
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

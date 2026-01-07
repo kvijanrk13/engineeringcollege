@@ -1,0 +1,587 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Students Data - ANURAG Engineering College{% endblock %}
+
+{% block content %}
+<style>
+    /* Global Matrix Styling */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        background-color: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    /* Main Container */
+    .students-data-container {
+        position: relative;
+        z-index: 2;
+        padding: 20px;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Header */
+    .data-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .data-title {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 15px #0f0;
+        margin-bottom: 10px;
+    }
+
+    .data-subtitle {
+        font-size: 1.2rem;
+        color: #0f0;
+        margin-bottom: 30px;
+    }
+
+    /* Statistics */
+    .stats-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        background: rgba(0, 10, 0, 0.85);
+        border: 2px solid #0f0;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        min-width: 200px;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 0 10px #0f0;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        color: #0f0;
+        text-transform: uppercase;
+        margin-top: 10px;
+    }
+
+    /* Search Bar */
+    .search-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+    }
+
+    .search-form {
+        display: flex;
+        gap: 10px;
+        max-width: 600px;
+        width: 100%;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 12px 20px;
+        background: rgba(0, 20, 0, 0.9);
+        border: 2px solid #0f0;
+        border-radius: 8px;
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+    }
+
+    .search-input::placeholder {
+        color: #0a0;
+    }
+
+    .search-button {
+        padding: 12px 24px;
+        background: rgba(0, 30, 0, 0.9);
+        border: 2px solid #0f0;
+        border-radius: 8px;
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .search-button:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    /* Table Container */
+    .table-container {
+        background: rgba(0, 10, 0, 0.85);
+        border: 2px solid #0f0;
+        border-radius: 10px;
+        padding: 20px;
+        overflow-x: auto;
+        margin-bottom: 30px;
+    }
+
+    /* Students Table */
+    .students-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+    .students-table th {
+        background: rgba(0, 30, 0, 0.9);
+        color: #0f0;
+        padding: 15px;
+        text-align: left;
+        border-bottom: 2px solid #0f0;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .students-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+        color: #fff;
+    }
+
+    .students-table tr:hover {
+        background: rgba(0, 30, 0, 0.3);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 0.9rem;
+        transition: 0.3s;
+        border: 2px solid;
+        cursor: pointer;
+        font-family: 'Courier New', monospace;
+    }
+
+    .btn-view {
+        background: rgba(0, 20, 0, 0.8);
+        color: #0f0;
+        border-color: #0f0;
+    }
+
+    .btn-view:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    .btn-download {
+        background: rgba(0, 20, 0, 0.8);
+        color: #0f0;
+        border-color: #0f0;
+    }
+
+    .btn-download:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    .btn-delete {
+        background: rgba(60, 0, 0, 0.8);
+        color: #f00;
+        border-color: #f00;
+    }
+
+    .btn-delete:hover {
+        background: #f00;
+        color: #000;
+    }
+
+    /* No Data Message */
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #0f0;
+        font-size: 1.2rem;
+    }
+
+    /* Back Button */
+    .back-button {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .btn-back {
+        padding: 12px 30px;
+        background: rgba(0, 20, 0, 0.9);
+        border: 2px solid #0f0;
+        border-radius: 8px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        transition: 0.3s;
+        display: inline-block;
+    }
+
+    .btn-back:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    /* Messages Styling */
+    .messages-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        border: 2px solid;
+    }
+
+    .alert-success {
+        background: rgba(0, 30, 0, 0.9);
+        color: #0f0;
+        border-color: #0f0;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
+
+    .alert-error {
+        background: rgba(30, 0, 0, 0.9);
+        color: #f00;
+        border-color: #f00;
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+    }
+
+    /* Delete Confirmation Modal */
+    .delete-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .delete-modal-content {
+        background: rgba(0, 10, 0, 0.95);
+        border: 2px solid #f00;
+        border-radius: 10px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+    }
+
+    .delete-modal h3 {
+        color: #f00;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+    }
+
+    .delete-modal p {
+        color: #fff;
+        margin-bottom: 20px;
+    }
+
+    .modal-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn-confirm-delete {
+        padding: 10px 20px;
+        background: rgba(100, 0, 0, 0.9);
+        color: #fff;
+        border: 2px solid #f00;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .btn-confirm-delete:hover {
+        background: #f00;
+        color: #000;
+    }
+
+    .btn-cancel-delete {
+        padding: 10px 20px;
+        background: rgba(0, 20, 0, 0.9);
+        color: #0f0;
+        border: 2px solid #0f0;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+    .btn-cancel-delete:hover {
+        background: #0f0;
+        color: #000;
+    }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- Messages Display -->
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="delete-modal">
+    <div class="delete-modal-content">
+        <h3>⚠️ DELETE STUDENT RECORD</h3>
+        <p id="deleteMessage">Are you sure you want to delete this student record? This action cannot be undone.</p>
+        <div class="modal-buttons">
+            <button id="confirmDelete" class="btn-confirm-delete">DELETE PERMANENTLY</button>
+            <button id="cancelDelete" class="btn-cancel-delete">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<div class="students-data-container">
+    <div class="data-header">
+        <h1 class="data-title">STUDENTS DATA MANAGEMENT</h1>
+        <div class="data-subtitle">Total Registered Students: {{ total_students }}</div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <span class="stat-number">{{ total_students }}</span>
+            <span class="stat-label">Total Students</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ male_count }}</span>
+            <span class="stat-label">Male Students</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ female_count }}</span>
+            <span class="stat-label">Female Students</span>
+        </div>
+        {% if is_admin %}
+        <div class="stat-card" style="border-color: #f00;">
+            <span class="stat-number">ADMIN</span>
+            <span class="stat-label" style="color: #f00;">Delete Access</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search Form -->
+    <div class="search-container">
+        <form method="GET" action="{% url 'dashboard:students_data' %}" class="search-form">
+            <input type="text"
+                   name="search"
+                   class="search-input"
+                   placeholder="Search by Hall Ticket No, Name, or Email..."
+                   value="{{ search_query }}">
+            <button type="submit" class="search-button">SEARCH</button>
+            {% if search_query %}
+            <a href="{% url 'dashboard:students_data' %}" class="btn" style="background: rgba(60, 0, 0, 0.8); border-color: #f00; color: #f00;">
+                CLEAR
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Students Table -->
+    <div class="table-container">
+        {% if students %}
+        <table class="students-table">
+            <thead>
+                <tr>
+                    <th>HT No</th>
+                    <th>Student Name</th>
+                    <th>Father Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Year/Sem</th>
+                    <th>Registration Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.ht_no }}</td>
+                    <td>{{ student.student_name }}</td>
+                    <td>{{ student.father_name }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.student_phone }}</td>
+                    <td>{{ student.year }}/{{ student.sem }}</td>
+                    <td>{{ student.registration_date|date:"d-m-Y" }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'dashboard:view_pdf' student.id %}" class="btn btn-view">
+                                📄 View
+                            </a>
+                            <a href="{% url 'dashboard:download_pdf' student.id %}" class="btn btn-download">
+                                📥 Download
+                            </a>
+                            {% if is_admin %}
+                            <button class="btn btn-delete delete-btn"
+                                    data-student-id="{{ student.id }}"
+                                    data-student-name="{{ student.student_name }}"
+                                    data-ht-no="{{ student.ht_no }}">
+                                🗑️ Delete
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data">
+            {% if search_query %}
+            No students found matching "{{ search_query }}"
+            {% else %}
+            No students registered yet.
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Back to Dashboard -->
+    <div class="back-button">
+        <a href="{% url 'dashboard:dashboard' %}" class="btn-back">
+            ← BACK TO DASHBOARD
+        </a>
+    </div>
+</div>
+
+<script>
+    // Matrix animation
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(draw, 33);
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    // Delete functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteModal = document.getElementById('deleteModal');
+        const deleteMessage = document.getElementById('deleteMessage');
+        const confirmDeleteBtn = document.getElementById('confirmDelete');
+        const cancelDeleteBtn = document.getElementById('cancelDelete');
+        let studentToDelete = null;
+        let deleteUrl = '';
+
+        // Add click event to all delete buttons
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const studentId = this.getAttribute('data-student-id');
+                const studentName = this.getAttribute('data-student-name');
+                const htNo = this.getAttribute('data-ht-no');
+
+                studentToDelete = studentId;
+                deleteUrl = `{% url 'dashboard:delete_student' 0 %}`.replace('0', studentId);
+
+                deleteMessage.innerHTML = `Are you sure you want to delete <strong>${studentName}</strong> (HT No: ${htNo})?<br><br>This action cannot be undone and all associated data will be permanently deleted.`;
+                deleteModal.style.display = 'flex';
+            });
+        });
+
+        // Confirm delete
+        confirmDeleteBtn.addEventListener('click', function() {
+            if (studentToDelete && deleteUrl) {
+                window.location.href = deleteUrl;
+            }
+        });
+
+        // Cancel delete
+        cancelDeleteBtn.addEventListener('click', function() {
+            deleteModal.style.display = 'none';
+            studentToDelete = null;
+            deleteUrl = '';
+        });
+
+        // Close modal when clicking outside
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                deleteModal.style.display = 'none';
+                studentToDelete = null;
+                deleteUrl = '';
+            }
+        });
+
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelector('.messages-container');
+            if (messages) {
+                messages.style.opacity = '0';
+                messages.style.transition = 'opacity 1s';
+                setTimeout(() => messages.remove(), 1000);
+            }
+        }, 5000);
+    });
+</script>
+{% endblock %}

@@ -40,7 +40,7 @@
         max-width: 1100px;
         background-color: #ffffff; /* Ensures image is visible */
         border-collapse: collapse;
-        border: none;
+        border: none; /* Borderless table */
         margin-top: 10px;
         border-radius: 8px;
         overflow: hidden;
@@ -48,14 +48,14 @@
     }
 
     .letterhead-table td {
-        padding: 10px;
+        padding: 10px; /* Padding for internal spacing */
         text-align: center;
-        border: none;
+        border: none; /* Borderless cell */
     }
 
     .letterhead-img {
         width: 100%;
-        max-height: 150px;
+        max-height: 180px; /* Adjusted height for proper alignment */
         object-fit: contain;
         display: block;
     }
@@ -161,16 +161,92 @@
         letter-spacing: 2px;
         font-weight: bold;
     }
+
+    /* Messages Styling */
+    .messages-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        max-width: 400px;
+    }
+
+    .alert {
+        padding: 15px 20px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        border: 2px solid;
+    }
+
+    .alert-success {
+        background: rgba(0, 30, 0, 0.9);
+        color: #0f0;
+        border-color: #0f0;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
+
+    .alert-error {
+        background: rgba(30, 0, 0, 0.9);
+        color: #f00;
+        border-color: #f00;
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+    }
+
+    /* PDF Download Link in Messages */
+    .pdf-links {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .pdf-link {
+        padding: 8px 15px;
+        background: rgba(0, 20, 0, 0.8);
+        color: #0f0;
+        border: 1px solid #0f0;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+
+    .pdf-link:hover {
+        background: #0f0;
+        color: #000;
+    }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+        {% if message.tags == 'success' and request.session.student_id %}
+        <div class="pdf-links">
+            <a href="{% url 'dashboard:view_pdf' request.session.student_id %}" class="pdf-link">
+                📄 View Your PDF
+            </a>
+            <a href="{% url 'dashboard:download_pdf' request.session.student_id %}" class="pdf-link">
+                📥 Download PDF
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 <div class="dashboard-container">
     <table class="letterhead-table">
         <tr>
             <td>
-                <!-- Image from F:\IT DEPT DJANGO PROJECT\engineeringcollege\static\images\NEW LETTER HEAD.png -->
-                <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Anurag Letter Head" class="letterhead-img">
+                <img src="{% static 'images/NEW LETTER HEAD.png' %}"
+                     alt="ANURAG Engineering College Letterhead"
+                     class="letterhead-img">
             </td>
         </tr>
     </table>
@@ -182,7 +258,13 @@
         <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab active">Dashboard</a>
         <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
         <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
-        <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+
+        {% if request.session.is_faculty %}
+        <a href="{% url 'dashboard:students_data' %}" class="nav-link-tab">StudentsData</a>
+        {% else %}
+        <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Student Registration</a>
+        {% endif %}
+
         <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
         <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
         <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
@@ -195,12 +277,12 @@
             <span class="stat-label">Departments</span>
         </div>
         <div class="stat-box">
-            <span class="stat-number">8</span>
-            <span class="stat-label">Semesters</span>
+            <span class="stat-number">{% if total_students %}{{ total_students }}{% else %}0{% endif %}</span>
+            <span class="stat-label">Registered Students</span>
         </div>
         <div class="stat-box">
-            <span class="stat-number">300+</span>
-            <span class="stat-label">Subjects</span>
+            <span class="stat-number">8</span>
+            <span class="stat-label">Semesters</span>
         </div>
     </div>
 </div>
@@ -234,5 +316,15 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     });
+
+    // Auto-hide messages after 10 seconds
+    setTimeout(() => {
+        const messages = document.querySelector('.messages-container');
+        if (messages) {
+            messages.style.opacity = '0';
+            messages.style.transition = 'opacity 1s';
+            setTimeout(() => messages.remove(), 1000);
+        }
+    }, 10000);
 </script>
 {% endblock %}
