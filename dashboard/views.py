@@ -147,7 +147,8 @@ def generate_student_pdf(student):
     if student.photo:
         try:
             photo_url = cloudinary.CloudinaryImage(student.photo).build_url()
-            response = requests.get(photo_url)
+            response = requests.get(photo_url, timeout=10)
+
             if response.status_code == 200:
                 img = PILImage.open(BytesIO(response.content)).convert("RGB")
                 img.thumbnail((150, 180), PILImage.Resampling.LANCZOS)
@@ -283,8 +284,10 @@ def generate_simple_pdf(student):
     # Student Photo (if exists)
     if student.photo:
         try:
-            photo_url = student.photo.url
-            response = requests.get(photo_url)
+            photo_url = cloudinary.CloudinaryImage(student.photo).build_url()
+
+            response = requests.get(photo_url, timeout=10)
+
             if response.status_code == 200:
                 # Save image temporarily
                 img = PILImage.open(BytesIO(response.content))
@@ -325,17 +328,35 @@ def generate_simple_pdf(student):
     return buffer
 
 
-# ✅ STEP 3: Create a helper function to merge PDFs
+def image_to_pdf(image_bytes):
+    """Convert image bytes to a single-page PDF"""
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+
+    img = PILImage.open(BytesIO(image_bytes))
+    img.thumbnail((500, 700), PILImage.Resampling.LANCZOS)
+
+    img_buffer = BytesIO()
+    img.save(img_buffer, format="PNG")
+    img_buffer.seek(0)
+
+    c.drawImage(img_buffer, 50, 100, width=500, height=700, preserveAspectRatio=True)
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    return buffer
+
+
 def merge_student_certificates(student, main_pdf_buffer):
     writer = PdfWriter()
 
     # 1️⃣ Add main student PDF
     main_pdf_buffer.seek(0)
-    main_reader = PdfReader(main_pdf_buffer)
-    for page in main_reader.pages:
+    reader = PdfReader(main_pdf_buffer)
+    for page in reader.pages:
         writer.add_page(page)
 
-    # 2️⃣ Certificate fields (Cloudinary URLs)
     certificate_fields = [
         student.cert_achieve,
         student.cert_intern,
@@ -346,29 +367,32 @@ def merge_student_certificates(student, main_pdf_buffer):
         student.cert_national,
     ]
 
-    # 3️⃣ Download & append each certificate PDF
+    # 2️⃣ Process certificates
     for cert in certificate_fields:
-        if cert and hasattr(cert, "url"):
-            try:
-                cert_url = cert.url
+        if not cert or not hasattr(cert, "url"):
+            continue
 
-                # Only PDFs can be merged
-                if not cert_url.lower().endswith(".pdf"):
-                    continue
+        try:
+            response = requests.get(cert.url, timeout=10)
+            response.raise_for_status()
 
-                response = requests.get(cert_url, timeout=10)
-                response.raise_for_status()
-
-                cert_buffer = BytesIO(response.content)
-                cert_reader = PdfReader(cert_buffer)
-
+            # 🔹 PDF certificate
+            if cert.url.lower().endswith(".pdf"):
+                cert_reader = PdfReader(BytesIO(response.content))
                 for page in cert_reader.pages:
                     writer.add_page(page)
 
-            except Exception as e:
-                print("Certificate merge error:", e)
+            # 🔹 IMAGE certificate → convert to PDF
+            else:
+                img_pdf = image_to_pdf(response.content)
+                img_reader = PdfReader(img_pdf)
+                for page in img_reader.pages:
+                    writer.add_page(page)
 
-    # 4️⃣ Final merged PDF
+        except Exception as e:
+            print("Certificate merge error:", e)
+
+    # 3️⃣ Final merged PDF
     final_buffer = BytesIO()
     writer.write(final_buffer)
     final_buffer.seek(0)

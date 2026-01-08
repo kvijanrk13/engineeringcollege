@@ -1,5 +1,6 @@
 from django.db import models
 from cloudinary.models import CloudinaryField
+from datetime import datetime
 
 
 class Faculty(models.Model):
@@ -33,48 +34,49 @@ class Syllabus(models.Model):
 
 
 class StudentRegistration(models.Model):
+    # ================= BASIC INFO =================
     ht_no = models.CharField(max_length=20, unique=True)
     student_name = models.CharField(max_length=100)
-
     father_name = models.CharField(max_length=100)
     mother_name = models.CharField(max_length=100)
-
     gender = models.CharField(max_length=10)
-    dob = models.DateField(null=True, blank=True)
-    age = models.IntegerField(default=0)
-
+    dob = models.DateField(blank=True, null=True)
+    age = models.IntegerField()
     nationality = models.CharField(max_length=50, default="Indian")
     category = models.CharField(max_length=50)
     religion = models.CharField(max_length=50)
     blood_group = models.CharField(max_length=10)
-
     apaar_id = models.CharField(max_length=50, blank=True, null=True)
     aadhar = models.CharField(max_length=20)
-
     address = models.TextField()
-
     parent_phone = models.CharField(max_length=15)
     student_phone = models.CharField(max_length=15)
     email = models.EmailField()
-
     admission_type = models.CharField(max_length=50)
     other_admission_details = models.TextField(blank=True, null=True)
 
     year = models.IntegerField()
     sem = models.IntegerField()
 
+    # ================= ACADEMIC =================
     ssc_marks = models.FloatField(null=True, blank=True)
     inter_marks = models.FloatField(null=True, blank=True)
     cgpa = models.FloatField(null=True, blank=True)
+    rtrp_title = models.CharField(max_length=200, blank=True)
+    intern_title = models.CharField(max_length=200, blank=True)
+    final_project_title = models.CharField(max_length=200, blank=True)
+    other_training = models.TextField(blank=True, null=True)
 
-    rtrp_title = models.CharField(max_length=255, blank=True)
-    intern_title = models.CharField(max_length=255, blank=True)
-    final_project_title = models.CharField(max_length=255, blank=True)
 
-    # ✅ CLOUDINARY IMAGE
-    photo = CloudinaryField("image", blank=True, null=True)
+    # ================= MEDIA =================
+    # ✅ PHOTO → MUST be CloudinaryField
+    photo = CloudinaryField(
+        "student_photo",
+        blank=True,
+        null=True
+    )
 
-    # Certificates (optional – can be Cloudinary later)
+    # ✅ CERTIFICATES → FileField (Cloudinary storage)
     cert_achieve = models.FileField(upload_to="certificates/", blank=True, null=True)
     cert_intern = models.FileField(upload_to="certificates/", blank=True, null=True)
     cert_courses = models.FileField(upload_to="certificates/", blank=True, null=True)
@@ -83,15 +85,15 @@ class StudentRegistration(models.Model):
     cert_placement = models.FileField(upload_to="certificates/", blank=True, null=True)
     cert_national = models.FileField(upload_to="certificates/", blank=True, null=True)
 
-    other_training = models.TextField(blank=True, null=True)
-
-    # ✅ CLOUDINARY PDF URL
+    # ================= GENERATED PDF =================
     pdf_url = models.URLField(blank=True, null=True)
 
     registration_date = models.DateTimeField(auto_now_add=True)
 
+    # ================= HELPERS =================
     def get_pdf_filename(self):
-        return f"student_{self.ht_no}_{self.student_name.replace(' ', '_')}.pdf"
+        safe_name = self.student_name.replace(" ", "_")
+        return f"student_{self.ht_no}_{safe_name}.pdf"
 
     def __str__(self):
         return f"{self.ht_no} - {self.student_name}"
