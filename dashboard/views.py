@@ -6,15 +6,23 @@ from django.core.files.base import ContentFile
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.units import inch, cm
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as ReportLabImage
 from reportlab.lib import colors
-from io import BytesIO
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from pypdf import PdfWriter, PdfReader
+  # ✅ STEP 2: Import PdfMerger
+import io
 import os
 import traceback
 from datetime import datetime
 from .models import StudentRegistration
 import cloudinary.uploader
+import cloudinary
+import requests
+from PIL import Image as PILImage
+from io import BytesIO
 
 
 # --- AUTHENTICATION ---
@@ -93,7 +101,7 @@ def syllabus(request):
 
 # --- STUDENT REGISTRATION & PDF GENERATION ---
 def generate_student_pdf(student):
-    """Generate PDF for student registration"""
+    """Generate PDF for student registration with photo"""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter,
                             rightMargin=72, leftMargin=72,
@@ -102,27 +110,88 @@ def generate_student_pdf(student):
     story = []
     styles = getSampleStyleSheet()
 
+    # Create custom styles
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=24,
+        fontSize=18,
         alignment=1,
-        spaceAfter=30
+        spaceAfter=20,
+        textColor=colors.HexColor('#006400')
     )
-    story.append(Paragraph("ANURAG ENGINEERING COLLEGE", title_style))
-    story.append(Paragraph("INFORMATION TECHNOLOGY DEPARTMENT", styles['Heading2']))
-    story.append(Spacer(1, 20))
-    story.append(Paragraph("STUDENT REGISTRATION DETAILS", styles['Heading3']))
+
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Heading2'],
+        fontSize=14,
+        alignment=1,
+        spaceAfter=15,
+        textColor=colors.HexColor('#000080')
+    )
+
+    header_style = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Heading3'],
+        fontSize=12,
+        alignment=1,
+        spaceAfter=20,
+        textColor=colors.HexColor('#8B0000')
+    )
+
+    # Create a table for header with photo on right
+    header_data = []
+
+    # Try to get and add photo if exists
+    photo_cell = Spacer(1, 1)
+
+    if student.photo:
+        try:
+            photo_url = cloudinary.CloudinaryImage(student.photo).build_url()
+            response = requests.get(photo_url)
+            if response.status_code == 200:
+                img = PILImage.open(BytesIO(response.content)).convert("RGB")
+                img.thumbnail((150, 180), PILImage.Resampling.LANCZOS)
+
+                img_byte_arr = BytesIO()
+                img.save(img_byte_arr, format="JPEG")
+                img_byte_arr.seek(0)
+
+                photo_cell = ReportLabImage(
+                    img_byte_arr,
+                    width=1.5 * inch,
+                    height=1.8 * inch
+                )
+        except Exception as e:
+            print("Error processing photo:", e)
+
+    # Header table with photo on right
+    header_table_data = [
+        [Paragraph("ANURAG ENGINEERING COLLEGE", title_style), photo_cell],
+        [Paragraph("INFORMATION TECHNOLOGY DEPARTMENT", subtitle_style), ""],
+        [Paragraph("STUDENT REGISTRATION DETAILS", header_style), ""]
+    ]
+
+    header_table = Table(header_table_data, colWidths=[4 * inch, 2 * inch])
+    header_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('SPAN', (1, 0), (1, 2)),  # Span photo across 3 rows
+    ]))
+
+    story.append(header_table)
     story.append(Spacer(1, 30))
 
+    # Student Information Table
     student_data = [
         ["Hall Ticket Number:", student.ht_no or "N/A", "Student Name:", student.student_name or "N/A"],
         ["Father Name:", student.father_name or "N/A", "Mother Name:", student.mother_name or "N/A"],
         ["Gender:", student.gender or "N/A", "Date of Birth:", str(student.dob) if student.dob else "N/A"],
         ["Age:", str(student.age) if student.age else "N/A", "Nationality:", student.nationality or "N/A"],
         ["Category:", student.category or "N/A", "Religion:", student.religion or "N/A"],
-        ["Blood Group:", student.blood_group or "N/A", "Aadhar Number:", student.aadhar or "N/A"],
-        ["Address:", student.address or "N/A", "", ""],
+        ["Blood Group:", student.blood_group or "N/A", "APAAR ID:", student.apaar_id or "N/A"],
+        ["Aadhar Number:", student.aadhar or "N/A", "", ""],
+        ["Address:", Paragraph(student.address or "N/A", styles['Normal']), "", ""],
         ["Parent Phone:", student.parent_phone or "N/A", "Student Phone:", student.student_phone or "N/A"],
         ["Email:", student.email or "N/A", "Admission Type:", student.admission_type or "N/A"],
         ["Year:", str(student.year) if student.year else "N/A", "Semester:",
@@ -134,19 +203,24 @@ def generate_student_pdf(student):
 
     student_table = Table(student_data, colWidths=[1.5 * inch, 2 * inch, 1.5 * inch, 2 * inch])
     student_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#006400')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 10),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5F5')),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('SPAN', (0, 7), (3, 7)),  # Span address across all columns
     ]))
 
     story.append(student_table)
     story.append(Spacer(1, 20))
+
+    # Academic Performance Section
+    story.append(Paragraph("ACADEMIC PERFORMANCE", header_style))
+    story.append(Spacer(1, 10))
 
     academic_data = [
         ["SSC Marks (%)", str(student.ssc_marks) if student.ssc_marks else "N/A"],
@@ -159,24 +233,31 @@ def generate_student_pdf(student):
 
     academic_table = Table(academic_data, colWidths=[2.5 * inch, 4 * inch])
     academic_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8E8E8')),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
     ]))
 
     story.append(academic_table)
     story.append(Spacer(1, 20))
 
+    # Additional Training Section
     if student.other_training:
-        story.append(Paragraph("ADDITIONAL TRAINING", styles['Heading4']))
+        story.append(Paragraph("ADDITIONAL TRAINING", header_style))
         story.append(Spacer(1, 10))
         story.append(Paragraph(student.other_training, styles['Normal']))
         story.append(Spacer(1, 20))
 
+    # Footer
     story.append(Spacer(1, 40))
-    story.append(Paragraph("Generated on: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"), styles['Normal']))
-    story.append(Paragraph("This is an official document of ANURAG Engineering College", styles['Normal']))
+    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                           ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
+    story.append(Paragraph("This is an official document of ANURAG Engineering College",
+                           ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
+    story.append(Paragraph("Department of Information Technology",
+                           ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
 
     try:
         doc.build(story)
@@ -188,13 +269,36 @@ def generate_student_pdf(student):
 
 
 def generate_simple_pdf(student):
+    """Simple PDF generation fallback"""
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
+
+    # Header
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 750, "ANURAG ENGINEERING COLLEGE")
     p.setFont("Helvetica", 14)
     p.drawString(100, 730, "INFORMATION TECHNOLOGY DEPARTMENT")
     p.drawString(100, 710, "STUDENT REGISTRATION")
+
+    # Student Photo (if exists)
+    if student.photo:
+        try:
+            photo_url = student.photo.url
+            response = requests.get(photo_url)
+            if response.status_code == 200:
+                # Save image temporarily
+                img = PILImage.open(BytesIO(response.content))
+                img.thumbnail((100, 120), PILImage.Resampling.LANCZOS)
+                temp_img = BytesIO()
+                img.save(temp_img, format='JPEG')
+                temp_img.seek(0)
+
+                # Draw image on PDF
+                p.drawImage(temp_img, 450, 650, width=100, height=120)
+        except:
+            pass
+
+    # Student Information
     p.setFont("Helvetica", 12)
     p.drawString(100, 680, f"Hall Ticket No: {student.ht_no}")
     p.drawString(100, 660, f"Student Name: {student.student_name}")
@@ -203,14 +307,73 @@ def generate_simple_pdf(student):
     p.drawString(100, 600, f"Gender: {student.gender}")
     p.drawString(100, 580, f"Date of Birth: {student.dob}")
     p.drawString(100, 560, f"Age: {student.age}")
-    p.drawString(100, 540, f"Email: {student.email}")
-    p.drawString(100, 520, f"Phone: {student.student_phone}")
-    p.drawString(100, 500, f"Year: {student.year}, Sem: {student.sem}")
-    p.drawString(100, 480, f"Registration Date: {student.registration_date.strftime('%Y-%m-%d')}")
+    p.drawString(100, 540, f"APAAR ID: {student.apaar_id or 'N/A'}")
+    p.drawString(100, 520, f"Aadhar: {student.aadhar}")
+    p.drawString(100, 500, f"Email: {student.email}")
+    p.drawString(100, 480, f"Phone: {student.student_phone}")
+    p.drawString(100, 460, f"Year: {student.year}, Sem: {student.sem}")
+    p.drawString(100, 440, f"Registration Date: {student.registration_date.strftime('%Y-%m-%d')}")
+
+    # Footer
+    p.setFont("Helvetica", 10)
+    p.drawString(100, 100, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    p.drawString(100, 85, "Department of Information Technology, ANURAG Engineering College")
+
     p.showPage()
     p.save()
     buffer.seek(0)
     return buffer
+
+
+# ✅ STEP 3: Create a helper function to merge PDFs
+def merge_student_certificates(student, main_pdf_buffer):
+    writer = PdfWriter()
+
+    # 1️⃣ Add main student PDF
+    main_pdf_buffer.seek(0)
+    main_reader = PdfReader(main_pdf_buffer)
+    for page in main_reader.pages:
+        writer.add_page(page)
+
+    # 2️⃣ Certificate fields (Cloudinary URLs)
+    certificate_fields = [
+        student.cert_achieve,
+        student.cert_intern,
+        student.cert_courses,
+        student.cert_sdp,
+        student.cert_extra,
+        student.cert_placement,
+        student.cert_national,
+    ]
+
+    # 3️⃣ Download & append each certificate PDF
+    for cert in certificate_fields:
+        if cert and hasattr(cert, "url"):
+            try:
+                cert_url = cert.url
+
+                # Only PDFs can be merged
+                if not cert_url.lower().endswith(".pdf"):
+                    continue
+
+                response = requests.get(cert_url, timeout=10)
+                response.raise_for_status()
+
+                cert_buffer = BytesIO(response.content)
+                cert_reader = PdfReader(cert_buffer)
+
+                for page in cert_reader.pages:
+                    writer.add_page(page)
+
+            except Exception as e:
+                print("Certificate merge error:", e)
+
+    # 4️⃣ Final merged PDF
+    final_buffer = BytesIO()
+    writer.write(final_buffer)
+    final_buffer.seek(0)
+
+    return final_buffer
 
 
 def students(request):
@@ -226,6 +389,7 @@ def students(request):
                 messages.error(request, f'Student with Hall Ticket No {ht_no} already exists!')
                 return render(request, "dashboard/students.html")
 
+            # Create student object
             student = StudentRegistration(
                 ht_no=ht_no,
                 student_name=student_name,
@@ -238,6 +402,7 @@ def students(request):
                 category=request.POST.get('category', ''),
                 religion=request.POST.get('religion', ''),
                 blood_group=request.POST.get('blood_group', ''),
+                apaar_id=request.POST.get('apaar_id', '').strip(),
                 aadhar=request.POST.get('aadhar', '').strip(),
                 address=request.POST.get('address', ''),
                 parent_phone=request.POST.get('parent_phone', '').strip(),
@@ -253,7 +418,6 @@ def students(request):
                 rtrp_title=request.POST.get('rtrp_title', ''),
                 intern_title=request.POST.get('intern_title', ''),
                 final_project_title=request.POST.get('final_project_title', ''),
-                photo=request.FILES.get('photo'),
                 cert_achieve=request.FILES.get('cert_achieve'),
                 cert_intern=request.FILES.get('cert_intern'),
                 cert_courses=request.FILES.get('cert_courses'),
@@ -264,28 +428,54 @@ def students(request):
                 other_training=request.POST.get('other_training', '')
             )
 
+            # Handle photo upload to Cloudinary
+            if 'photo' in request.FILES:
+                photo_file = request.FILES['photo']
+                upload_result = cloudinary.uploader.upload(
+                    photo_file,
+                    folder="student_photos",
+                    public_id=f"{ht_no}_{student_name.replace(' ', '_')}",
+                    overwrite=True
+                )
+                student.photo = upload_result["public_id"]
+
+
+            # Save student first
             student.save()
 
             try:
-                pdf_buffer = generate_student_pdf(student)
+                # ✅ STEP 4: MODIFY PDF upload logic (VERY SMALL CHANGE)
+                # 🔴 CURRENT CODE
+                # pdf_buffer = generate_student_pdf(student)
+
+                # ✅ REPLACE WITH
+                base_pdf_buffer = generate_student_pdf(student)
+                pdf_buffer = merge_student_certificates(student, base_pdf_buffer)
+
                 pdf_filename = student.get_pdf_filename()
 
-                # ---------- CLOUDINARY PUBLIC PDF UPLOAD (FIX) ----------
+                # Upload PDF to Cloudinary
                 pdf_buffer.seek(0)
                 pdf_content = pdf_buffer.read()
                 content_file = ContentFile(pdf_content)
 
+                safe_id = pdf_filename.replace(".pdf", "").replace(" ", "_")
+
                 upload_result = cloudinary.uploader.upload(
                     content_file,
                     resource_type="raw",
+                    type="upload",
                     folder="student_pdfs",
-                    public_id=pdf_filename.replace(".pdf", ""),
-                    access_mode="public",
+                    public_id=safe_id,
                     overwrite=True,
+                    access_mode="public",
+                    use_filename=True,
+                    unique_filename=False
                 )
+
+                # Save PDF URL to student object
                 student.pdf_url = upload_result["secure_url"]
                 student.save()
-                # -------------------------------------------------------
 
                 request.session['student_id'] = student.id
                 request.session['last_ht_no'] = student.ht_no
@@ -294,12 +484,15 @@ def students(request):
                 return redirect('dashboard:view_pdf', student_id=student.id)
 
             except Exception as pdf_error:
+                print(f"PDF Generation Error: {pdf_error}")
+                traceback.print_exc()
                 student.save()
                 request.session['student_id'] = student.id
-                messages.warning(request, f'Registration saved but PDF generation failed.')
+                messages.warning(request, f'Registration saved but PDF generation failed. Please try again.')
                 return redirect('dashboard:students')
 
         except Exception as e:
+            print(f"Registration Error: {e}")
             traceback.print_exc()
             messages.error(request, f'Error submitting form: {str(e)}')
 
@@ -310,50 +503,36 @@ def view_pdf(request, student_id):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
 
-    try:
-        student = get_object_or_404(StudentRegistration, id=student_id)
+    student = get_object_or_404(StudentRegistration, id=student_id)
 
-        if request.session.get("user_id") == "anrkitstudent":
-            session_student_id = request.session.get('student_id')
-            if session_student_id != student_id:
-                messages.error(request, 'You can only view your own PDF')
-                return redirect('dashboard:students')
-
-        if student.pdf_url:
-            return redirect(student.pdf_url)
-        else:
-            messages.error(request, "PDF not available")
+    if request.session.get("user_id") == "anrkitstudent":
+        if request.session.get("student_id") != student_id:
+            messages.error(request, "You can only view your own PDF")
             return redirect("dashboard:students")
 
-    except Exception as e:
-        messages.error(request, f'Error viewing PDF: {str(e)}')
-        return redirect('dashboard:students')
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+
+    messages.error(request, "PDF not available")
+    return redirect("dashboard:students")
 
 
 def download_pdf(request, student_id):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
 
-    try:
-        student = get_object_or_404(StudentRegistration, id=student_id)
+    student = get_object_or_404(StudentRegistration, id=student_id)
 
-        if request.session.get("user_id") == "anrkitstudent":
-            session_student_id = request.session.get('student_id')
-            if session_student_id != student_id:
-                messages.error(request, 'You can only download your own PDF')
-                return redirect('dashboard:students')
-
-        if student.pdf_url:
-            response = redirect(student.pdf_url)
-            response["Content-Disposition"] = f'attachment; filename="{student.get_pdf_filename()}"'
-            return response
-        else:
-            messages.error(request, "PDF not available for download")
+    if request.session.get("user_id") == "anrkitstudent":
+        if request.session.get("student_id") != student_id:
+            messages.error(request, "You can only download your own PDF")
             return redirect("dashboard:students")
 
-    except Exception as e:
-        messages.error(request, f'Error downloading PDF: {str(e)}')
-        return redirect('dashboard:students')
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+
+    messages.error(request, "PDF not available")
+    return redirect("dashboard:students")
 
 
 def students_data(request):
@@ -452,11 +631,12 @@ def upload_generated_pdf(request):
         upload_result = cloudinary.uploader.upload(
             pdf_file,
             resource_type="raw",
+            type="upload",  # 🔥 REQUIRED
             folder="faculty_pdfs",
             public_id=employee_code,
             overwrite=True,
-            unique_filename=False,
-            access_mode="public"
+            unique_filename=False
         )
+
         return JsonResponse({"status": "success", "url": upload_result["secure_url"]})
     return JsonResponse({"error": "Invalid request"}, status=400)

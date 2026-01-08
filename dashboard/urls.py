@@ -15,7 +15,7 @@ urlpatterns = [
 
     # Student Registration & Data
     path("students/", views.students, name="students"),
-    path("students/data/", views.students_data, name="students_data"),
+    path("students-data/", views.students_data, name="students_data"),
     path("view-pdf/<int:student_id>/", views.view_pdf, name="view_pdf"),
     path("download-pdf/<int:student_id>/", views.download_pdf, name="download_pdf"),
     path("delete-student/<int:student_id>/", views.delete_student, name="delete_student"),

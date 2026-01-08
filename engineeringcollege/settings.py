@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import cloudinary
 
+# ✅ REQUIRED
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================= CLOUDINARY CONFIG =================
@@ -42,11 +43,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Cloudinary
     "cloudinary",
     "cloudinary_storage",
 
-    # Local apps
     "dashboard",
 ]
 
@@ -89,8 +88,8 @@ DATABASES = {
 }
 
 # ================= FILE UPLOAD SETTINGS =================
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 # =======================================================
 
 STATIC_URL = "/static/"

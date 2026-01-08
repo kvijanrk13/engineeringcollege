@@ -437,6 +437,7 @@
                     <th>HT No</th>
                     <th>Student Name</th>
                     <th>Father Name</th>
+                    <th>APAAR ID</th>
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Year/Sem</th>
@@ -450,6 +451,7 @@
                     <td>{{ student.ht_no }}</td>
                     <td>{{ student.student_name }}</td>
                     <td>{{ student.father_name }}</td>
+                    <td>{{ student.apaar_id|default:"N/A" }}</td>
                     <td>{{ student.email }}</td>
                     <td>{{ student.student_phone }}</td>
                     <td>{{ student.year }}/{{ student.sem }}</td>
