@@ -1,25 +1,47 @@
 import os
 from pathlib import Path
-import cloudinary
 
 # ✅ REQUIRED
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================= CLOUDINARY CONFIG =================
-cloudinary.config(
-    cloud_name="dsndiruhe",
-    api_key="796293117737693",
-    api_secret="StgoTNd4fgLqHqW19csQ4fONAuk",
-    secure=True
-)
+try:
+    import six
 
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": "dsndiruhe",
-    "API_KEY": "796293117737693",
-    "API_SECRET": "StgoTNd4fgLqHqW19csQ4fONAuk",
-}
+    print("✓ six module is available")
 
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+
+    # Cloudinary Configuration
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': 'dsndiruhe',
+        'API_KEY': '796293117737693',
+        'API_SECRET': 'StgoTNd4fgLqHqW19csQ4fONAuk',
+    }
+
+    # Configure Cloudinary
+    cloudinary.config(
+        cloud_name=CLOUDINARY_STORAGE['CLOUD_NAME'],
+        api_key=CLOUDINARY_STORAGE['API_KEY'],
+        api_secret=CLOUDINARY_STORAGE['API_SECRET'],
+        secure=True
+    )
+
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    print("✓ Cloudinary configured successfully")
+
+except ImportError as e:
+    print(f"⚠ Warning: Missing dependency - {e}")
+    print("⚠ Please run: pip install six cloudinary django-cloudinary-storage")
+    CLOUDINARY_STORAGE = {}
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+except Exception as e:
+    print(f"⚠ Warning: Cloudinary configuration failed - {e}")
+    CLOUDINARY_STORAGE = {}
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 # =====================================================
 
 SECRET_KEY = os.environ.get(
