@@ -12,6 +12,8 @@ from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from pypdf import PdfWriter, PdfReader
+# Using PdfWriter (PdfMerger removed in pypdf 5+)
+
   # ✅ STEP 2: Import PdfMerger
 import io
 import os
@@ -23,6 +25,24 @@ import cloudinary
 import requests
 from PIL import Image as PILImage
 from io import BytesIO
+
+
+# --- HELPER FUNCTION FOR CERTIFICATE UPLOADS ---
+def upload_cert_to_cloudinary(file):
+    if not file:
+        return None
+
+    result = cloudinary.uploader.upload(
+        file,
+        folder="certificates",
+        resource_type="auto",
+        type="upload",
+        access_mode="public",
+        overwrite=True
+    )
+
+    return result["secure_url"]
+
 
 
 # --- AUTHENTICATION ---
@@ -329,7 +349,6 @@ def generate_simple_pdf(student):
 
 
 def image_to_pdf(image_bytes):
-    """Convert image bytes to a single-page PDF"""
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
 
@@ -340,7 +359,7 @@ def image_to_pdf(image_bytes):
     img.save(img_buffer, format="PNG")
     img_buffer.seek(0)
 
-    c.drawImage(img_buffer, 50, 100, width=500, height=700, preserveAspectRatio=True)
+    c.drawImage(img_buffer, 50, 100, width=500, height=700)
     c.showPage()
     c.save()
 
@@ -351,13 +370,12 @@ def image_to_pdf(image_bytes):
 def merge_student_certificates(student, main_pdf_buffer):
     writer = PdfWriter()
 
-    # 1️⃣ Add main student PDF
     main_pdf_buffer.seek(0)
     reader = PdfReader(main_pdf_buffer)
     for page in reader.pages:
         writer.add_page(page)
 
-    certificate_fields = [
+    certificate_urls = [
         student.cert_achieve,
         student.cert_intern,
         student.cert_courses,
@@ -367,22 +385,18 @@ def merge_student_certificates(student, main_pdf_buffer):
         student.cert_national,
     ]
 
-    # 2️⃣ Process certificates
-    for cert in certificate_fields:
-        if not cert or not hasattr(cert, "url"):
+    for url in certificate_urls:
+        if not url:
             continue
 
         try:
-            response = requests.get(cert.url, timeout=10)
+            response = requests.get(url, timeout=20)
             response.raise_for_status()
 
-            # 🔹 PDF certificate
-            if cert.url.lower().endswith(".pdf"):
+            if url.lower().endswith(".pdf"):
                 cert_reader = PdfReader(BytesIO(response.content))
                 for page in cert_reader.pages:
                     writer.add_page(page)
-
-            # 🔹 IMAGE certificate → convert to PDF
             else:
                 img_pdf = image_to_pdf(response.content)
                 img_reader = PdfReader(img_pdf)
@@ -392,12 +406,13 @@ def merge_student_certificates(student, main_pdf_buffer):
         except Exception as e:
             print("Certificate merge error:", e)
 
-    # 3️⃣ Final merged PDF
     final_buffer = BytesIO()
     writer.write(final_buffer)
     final_buffer.seek(0)
 
     return final_buffer
+
+
 
 
 def students(request):
@@ -442,13 +457,6 @@ def students(request):
                 rtrp_title=request.POST.get('rtrp_title', ''),
                 intern_title=request.POST.get('intern_title', ''),
                 final_project_title=request.POST.get('final_project_title', ''),
-                cert_achieve=request.FILES.get('cert_achieve'),
-                cert_intern=request.FILES.get('cert_intern'),
-                cert_courses=request.FILES.get('cert_courses'),
-                cert_sdp=request.FILES.get('cert_sdp'),
-                cert_extra=request.FILES.get('cert_extra'),
-                cert_placement=request.FILES.get('cert_placement'),
-                cert_national=request.FILES.get('cert_national'),
                 other_training=request.POST.get('other_training', '')
             )
 
@@ -463,16 +471,20 @@ def students(request):
                 )
                 student.photo = upload_result["public_id"]
 
+            # Upload certificates to Cloudinary
+            student.cert_achieve = upload_cert_to_cloudinary(request.FILES.get('cert_achieve'))
+            student.cert_intern = upload_cert_to_cloudinary(request.FILES.get('cert_intern'))
+            student.cert_courses = upload_cert_to_cloudinary(request.FILES.get('cert_courses'))
+            student.cert_sdp = upload_cert_to_cloudinary(request.FILES.get('cert_sdp'))
+            student.cert_extra = upload_cert_to_cloudinary(request.FILES.get('cert_extra'))
+            student.cert_placement = upload_cert_to_cloudinary(request.FILES.get('cert_placement'))
+            student.cert_national = upload_cert_to_cloudinary(request.FILES.get('cert_national'))
 
             # Save student first
             student.save()
 
             try:
-                # ✅ STEP 4: MODIFY PDF upload logic (VERY SMALL CHANGE)
-                # 🔴 CURRENT CODE
-                # pdf_buffer = generate_student_pdf(student)
-
-                # ✅ REPLACE WITH
+                # Generate PDF with merged certificates
                 base_pdf_buffer = generate_student_pdf(student)
                 pdf_buffer = merge_student_certificates(student, base_pdf_buffer)
 

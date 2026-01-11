@@ -1,6 +1,5 @@
 from django.db import models
 from cloudinary.models import CloudinaryField
-from datetime import datetime
 
 
 class Faculty(models.Model):
@@ -34,6 +33,7 @@ class Syllabus(models.Model):
 
 
 class StudentRegistration(models.Model):
+
     # ================= BASIC INFO =================
     ht_no = models.CharField(max_length=20, unique=True)
     student_name = models.CharField(max_length=100)
@@ -67,30 +67,22 @@ class StudentRegistration(models.Model):
     final_project_title = models.CharField(max_length=200, blank=True)
     other_training = models.TextField(blank=True, null=True)
 
-
     # ================= MEDIA =================
-    # ✅ PHOTO → MUST be CloudinaryField
-    photo = CloudinaryField(
-        "student_photo",
-        blank=True,
-        null=True
-    )
+    photo = CloudinaryField("student_photo", blank=True, null=True)
 
-    # ✅ CERTIFICATES → FileField (Cloudinary storage)
-    cert_achieve = models.FileField(upload_to="certificates/", blank=True, null=True)
-    cert_intern = models.FileField(upload_to="certificates/", blank=True, null=True)
-    cert_courses = models.FileField(upload_to="certificates/", blank=True, null=True)
-    cert_sdp = models.FileField(upload_to="certificates/", blank=True, null=True)
-    cert_extra = models.FileField(upload_to="certificates/", blank=True, null=True)
-    cert_placement = models.FileField(upload_to="certificates/", blank=True, null=True)
-    cert_national = models.FileField(upload_to="certificates/", blank=True, null=True)
+    # 🔥 CERTIFICATES STORED AS PUBLIC URLs
+    cert_achieve = models.URLField(blank=True, null=True)
+    cert_intern = models.URLField(blank=True, null=True)
+    cert_courses = models.URLField(blank=True, null=True)
+    cert_sdp = models.URLField(blank=True, null=True)
+    cert_extra = models.URLField(blank=True, null=True)
+    cert_placement = models.URLField(blank=True, null=True)
+    cert_national = models.URLField(blank=True, null=True)
 
     # ================= GENERATED PDF =================
     pdf_url = models.URLField(blank=True, null=True)
-
     registration_date = models.DateTimeField(auto_now_add=True)
 
-    # ================= HELPERS =================
     def get_pdf_filename(self):
         safe_name = self.student_name.replace(" ", "_")
         return f"student_{self.ht_no}_{safe_name}.pdf"
