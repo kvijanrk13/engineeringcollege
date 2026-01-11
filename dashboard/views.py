@@ -34,29 +34,16 @@ except ImportError as e:
     print(f"⚠ Warning: Failed to import cloudinary_utils: {e}")
 
 
-    # Improved fallback function with Cloudinary authentication
-    def download_certificate_with_auth(public_id):
-        try:
-            print(f"Downloading certificate: {public_id}")
-
-            result = cloudinary.api.resource(
-                public_id,
-                resource_type="raw",
-                type="upload"
-            )
-
-            file_url = result["secure_url"]
-            response = requests.get(file_url, timeout=30)
-
-            if response.status_code == 200:
-                print("✓ Certificate downloaded successfully")
-                return BytesIO(response.content)
-
-            print("Download failed:", response.status_code)
+    # Helper function to read file bytes
+    def get_file_bytes(file):
+        if not file:
             return None
-
+        try:
+            # Reset file pointer to beginning
+            file.seek(0)
+            return BytesIO(file.read())
         except Exception as e:
-            print("Download error:", e)
+            print(f"Error reading file: {e}")
             return None
 
 
@@ -66,66 +53,19 @@ def upload_cert_to_cloudinary(file):
         return None
 
     try:
-        # Check if file is PDF or image
-        file_extension = file.name.lower().split('.')[-1]
-
-        if file_extension == 'pdf':
-            # Upload PDF as raw file with public access
-            result = cloudinary.uploader.upload(
-                file,
-                folder="certificates",
-                resource_type="raw",  # IMPORTANT: Use 'raw' for PDFs
-                type="upload",
-                access_mode="public",  # Make it publicly accessible
-                overwrite=True,
-                invalidate=True
-            )
-        else:
-            # Upload image as image with public access
-            result = cloudinary.uploader.upload(
-                file,
-                folder="certificates",
-                resource_type="image",
-                type="upload",
-                access_mode="public",  # Make it publicly accessible
-                overwrite=True,
-                invalidate=True
-            )
+        result = cloudinary.uploader.upload(
+            file,
+            folder="certificates",
+            resource_type="image",  # <-- IMPORTANT CHANGE
+            type="upload",
+            overwrite=True,
+            invalidate=True
+        )
 
         return result["public_id"]
 
     except Exception as e:
         print(f"Error uploading certificate to Cloudinary: {e}")
-
-        # If password-protected PDF error, try to save as image instead
-        if "Password-protected PDFs are not supported" in str(e):
-            try:
-                # Create a simple PDF placeholder
-                from reportlab.pdfgen import canvas
-                buffer = BytesIO()
-                c = canvas.Canvas(buffer, pagesize=A4)
-                c.drawString(100, 500, f"Certificate: {file.name}")
-                c.drawString(100, 480, "Note: Original PDF was password-protected")
-                c.drawString(100, 460, "Please provide unprotected version")
-                c.showPage()
-                c.save()
-                buffer.seek(0)
-
-                # Upload the placeholder with public access
-                result = cloudinary.uploader.upload(
-                    buffer,
-                    folder="certificates",
-                    resource_type="raw",
-                    type="upload",
-                    public_id=f"protected_{file.name.split('.')[0]}",
-                    access_mode="public",
-                    overwrite=True,
-                    invalidate=True
-                )
-                return result["secure_url"]
-            except Exception as e2:
-                print(f"Failed to create placeholder: {e2}")
-
         return None
 
 
@@ -462,7 +402,10 @@ def image_to_pdf(image_bytes):
     return buffer
 
 
-def merge_student_certificates(student, main_pdf_buffer):
+def merge_student_certificates(student, main_pdf_buffer, certificate_files):
+    """
+    Merge student certificates using local file objects
+    """
     writer = PdfWriter()
 
     main_pdf_buffer.seek(0)
@@ -470,58 +413,59 @@ def merge_student_certificates(student, main_pdf_buffer):
     for page in reader.pages:
         writer.add_page(page)
 
-    certificate_ids = [
-        student.cert_achieve,
-        student.cert_intern,
-        student.cert_courses,
-        student.cert_sdp,
-        student.cert_extra,
-        student.cert_placement,
-        student.cert_national,
-    ]
-
     successful_merges = 0
     failed_merges = 0
 
-    for public_id in certificate_ids:
-        if not public_id:
+    # Process each certificate file
+    for field_name, file in certificate_files.items():
+        if not file:
             continue
 
-        print(f"\nProcessing certificate: {public_id}")
-
-        pdf_content = download_certificate_with_auth(public_id)
-
-        if not pdf_content:
-            print("✗ Failed to download certificate")
-            failed_merges += 1
-            continue
+        print(f"\nProcessing certificate: {field_name}")
 
         try:
-            cert_reader = PdfReader(pdf_content)
-            for page in cert_reader.pages:
-                writer.add_page(page)
+            # Get file bytes
+            pdf_content = get_file_bytes(file)
 
-            successful_merges += 1
-            print("✓ Successfully added PDF certificate")
+            if not pdf_content:
+                print("✗ Failed to read certificate file")
+                failed_merges += 1
+                continue
 
-        except Exception as pdf_error:
-            print("Not a PDF, trying as image:", pdf_error)
+            # Try to process as PDF first
             try:
                 pdf_content.seek(0)
-                img_bytes = pdf_content.read()
-
-                img_pdf = image_to_pdf(img_bytes)
-                img_reader = PdfReader(img_pdf)
-
-                for page in img_reader.pages:
+                cert_reader = PdfReader(pdf_content)
+                for page in cert_reader.pages:
                     writer.add_page(page)
-
                 successful_merges += 1
-                print("✓ Successfully added image certificate")
+                print(f"✓ Successfully added PDF certificate: {field_name}")
 
-            except Exception as img_error:
-                print("✗ Failed to process image:", img_error)
-                failed_merges += 1
+            except Exception as pdf_error:
+                print(f"Not a PDF, trying as image: {pdf_error}")
+                # Try to process as image
+                try:
+                    pdf_content.seek(0)
+                    img_bytes = pdf_content.read()
+
+                    if img_bytes:
+                        img_pdf = image_to_pdf(img_bytes)
+                        img_reader = PdfReader(img_pdf)
+                        for page in img_reader.pages:
+                            writer.add_page(page)
+                        successful_merges += 1
+                        print(f"✓ Successfully added image certificate: {field_name}")
+                    else:
+                        failed_merges += 1
+                        print(f"✗ Empty file for: {field_name}")
+
+                except Exception as img_error:
+                    failed_merges += 1
+                    print(f"✗ Failed to process as image: {img_error}")
+
+        except Exception as e:
+            failed_merges += 1
+            print(f"Certificate merge error for {field_name}: {e}")
 
     final_buffer = BytesIO()
     writer.write(final_buffer)
@@ -530,6 +474,11 @@ def merge_student_certificates(student, main_pdf_buffer):
     print("\nCertificate Merge Summary:")
     print(f"✓ Successfully merged: {successful_merges}")
     print(f"✗ Failed to merge: {failed_merges}")
+
+    if successful_merges > 0:
+        print("✓ Certificate merging completed successfully")
+    else:
+        print("✗ No certificates were successfully merged")
 
     return final_buffer
 
@@ -592,16 +541,7 @@ def students(request):
                 )
                 student.photo = upload_result["public_id"]
 
-            # Upload certificates to Cloudinary with public access
-            student.cert_achieve = upload_cert_to_cloudinary(request.FILES.get('cert_achieve'))
-            student.cert_intern = upload_cert_to_cloudinary(request.FILES.get('cert_intern'))
-            student.cert_courses = upload_cert_to_cloudinary(request.FILES.get('cert_courses'))
-            student.cert_sdp = upload_cert_to_cloudinary(request.FILES.get('cert_sdp'))
-            student.cert_extra = upload_cert_to_cloudinary(request.FILES.get('cert_extra'))
-            student.cert_placement = upload_cert_to_cloudinary(request.FILES.get('cert_placement'))
-            student.cert_national = upload_cert_to_cloudinary(request.FILES.get('cert_national'))
-
-            # Save student first
+            # Save student first (without certificates)
             student.save()
 
             try:
@@ -610,8 +550,22 @@ def students(request):
                 print("Generating PDF for student:", student.student_name)
                 print("=" * 50)
 
+                # Get certificate files
+                certificate_files = {
+                    'cert_achieve': request.FILES.get('cert_achieve'),
+                    'cert_intern': request.FILES.get('cert_intern'),
+                    'cert_courses': request.FILES.get('cert_courses'),
+                    'cert_sdp': request.FILES.get('cert_sdp'),
+                    'cert_extra': request.FILES.get('cert_extra'),
+                    'cert_placement': request.FILES.get('cert_placement'),
+                    'cert_national': request.FILES.get('cert_national'),
+                }
+
+                # Generate base PDF
                 base_pdf_buffer = generate_student_pdf(student)
-                pdf_buffer = merge_student_certificates(student, base_pdf_buffer)
+
+                # Merge certificates
+                pdf_buffer = merge_student_certificates(student, base_pdf_buffer, certificate_files)
 
                 pdf_filename = student.get_pdf_filename()
 
