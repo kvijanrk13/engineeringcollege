@@ -243,7 +243,35 @@
                     <small style="color: #666; font-size: 0.8rem;">Max size: 2MB, Formats: JPG, PNG</small>
                 </div>
 
-                <div class="section-title">IV. ACHIEVEMENTS & UPLOADS (Optional)</div>
+                <!-- NEW SECTION: ACADEMIC PERFORMANCE -->
+                <div class="section-title">III. ACADEMIC PERFORMANCE</div>
+                <div class="form-group">
+                    <label>SSC Marks (%) *</label>
+                    <input type="number" name="ssc_marks" min="0" max="100" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Intermediate Marks (%) *</label>
+                    <input type="number" name="inter_marks" min="0" max="100" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Current CGPA *</label>
+                    <input type="number" name="cgpa" min="0" max="10" step="0.01" required>
+                </div>
+                <div class="form-group full-width">
+                    <label>RTRP Project Title</label>
+                    <input type="text" name="rtrp_title" placeholder="Enter RTRP project title if any">
+                </div>
+                <div class="form-group full-width">
+                    <label>Internship Title</label>
+                    <input type="text" name="intern_title" placeholder="Enter internship title if any">
+                </div>
+                <div class="form-group full-width">
+                    <label>Final Project Title</label>
+                    <input type="text" name="final_project_title" placeholder="Enter final year project title if any">
+                </div>
+
+                <!-- Updated from IV to V -->
+                <div class="section-title">V. ACHIEVEMENTS & UPLOADS (Optional)</div>
                 <div class="form-group"><label>Achievements Certificate</label><input type="file" name="cert_achieve" accept=".pdf,image/*"></div>
                 <div class="form-group"><label>Internship Certificate</label><input type="file" name="cert_intern" accept=".pdf,image/*"></div>
                 <div class="form-group"><label>Courses Completed Certificate</label><input type="file" name="cert_courses" accept=".pdf,image/*"></div>
