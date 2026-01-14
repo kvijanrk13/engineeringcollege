@@ -15,8 +15,83 @@
         box-shadow: 0 0 30px rgba(0, 255, 0, 0.5); border: 3px solid #0f0;
     }
 
-    .form-header { text-align: center; border-bottom: 4px solid #0f0; margin-bottom: 35px; padding-bottom: 15px; }
-    .form-header h1 { font-size: 2.5rem; color: #000; margin: 0; font-weight: 800; }
+    /* ENHANCED HEADER STYLES */
+    .form-header {
+        text-align: center;
+        border-bottom: 4px solid #0f0;
+        margin-bottom: 35px;
+        padding-bottom: 15px;
+        position: relative;
+    }
+
+    .college-title {
+        font-size: 2.8rem !important;
+        color: #000000 !important;
+        margin: 0;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        text-shadow: 2px 2px 0px #0f0;
+        line-height: 1.2;
+    }
+
+    .department-title {
+        font-size: 2rem !important;
+        color: #000000 !important;
+        margin: 5px 0 15px 0;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+
+    .form-title {
+        font-size: 2rem;
+        color: #000;
+        margin: 20px 0 10px 0;
+        font-weight: 800;
+        background: linear-gradient(90deg, #000, #0a0, #000);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .logout-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #000;
+        color: #0f0;
+        padding: 8px 20px;
+        text-decoration: none;
+        border: 2px solid #0f0;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        z-index: 10;
+    }
+
+    .logout-btn:hover {
+        background: #0f0;
+        color: #000;
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    }
+
+    .header-note {
+        background: #000;
+        color: #0f0;
+        padding: 8px 15px;
+        border-radius: 5px;
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 0.9rem;
+        border: 1px solid #0f0;
+    }
 
     .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
     .full-width { grid-column: span 2; }
@@ -27,16 +102,38 @@
     label { font-weight: 900; margin-bottom: 8px; color: #333; text-transform: uppercase; font-size: 0.85rem; }
     input, select, textarea {
         padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 1rem;
-        transition: 0.3s;
+        transition: 0.3s; word-wrap: break-word; overflow-wrap: break-word;
     }
-    input:focus { border-color: #0f0; outline: none; box-shadow: 0 0 8px rgba(0, 255, 0, 0.3); }
+    input:focus, select:focus, textarea:focus {
+        border-color: #0f0;
+        outline: none;
+        box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+    }
+
+    /* Style for wrapped content */
+    input[type="text"], input[type="tel"], input[type="email"], input[type="number"], textarea {
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    textarea {
+        min-height: 80px;
+        resize: vertical;
+        overflow-y: auto;
+    }
 
     .submit-btn {
         grid-column: span 2; padding: 20px; background: #000; color: #0f0;
         font-weight: 900; border: 3px solid #0f0; cursor: pointer;
         text-transform: uppercase; font-size: 1.2rem; letter-spacing: 2px; margin-top: 30px;
+        transition: all 0.3s;
     }
-    .submit-btn:hover { background: #0f0; color: #000; }
+    .submit-btn:hover {
+        background: #0f0;
+        color: #000;
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+    }
 
     .hidden-input { display: none; margin-top: 10px; }
 
@@ -93,6 +190,155 @@
         background: #0f0;
         color: #000;
     }
+
+    /* Error styling for validation */
+    .error-input {
+        border-color: #f00 !important;
+        box-shadow: 0 0 5px rgba(255, 0, 0, 0.3) !important;
+    }
+
+    .error-message {
+        color: #f00;
+        font-size: 0.8rem;
+        margin-top: 5px;
+        display: none;
+    }
+
+    /* Enhanced Address Field Styling */
+    .address-field-container {
+        position: relative;
+        background: #f9f9f9;
+        border: 2px solid #0a0;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .address-field-container label {
+        background: #000;
+        color: #0f0;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+
+    .address-textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 12px;
+        border: 2px solid #ccc;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        background: white;
+        color: #000;
+    }
+
+    .address-textarea:focus {
+        border-color: #0f0;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+        outline: none;
+    }
+
+    /* PDF-specific styles */
+    @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            overflow: visible !important;
+        }
+
+        /* Force address to be visible */
+        .address-textarea,
+        textarea[name="address"],
+        [name="address"] {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            color: #000000 !important;
+            background-color: white !important;
+            border: 1px solid #000 !important;
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            font-size: 12pt !important;
+            line-height: 1.5 !important;
+            height: auto !important;
+            min-height: 100px !important;
+        }
+
+        /* Hide logout button in print/PDF */
+        .logout-btn {
+            display: none !important;
+        }
+    }
+
+    /* Preview area for address */
+    .address-preview {
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-top: 10px;
+        border-radius: 4px;
+        min-height: 60px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        display: none;
+    }
+
+    .address-preview-label {
+        font-size: 0.8rem;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    /* TASK Field Styling */
+    .task-field-container {
+        background: #f0f8ff;
+        border: 2px solid #0066cc;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .task-field-container label {
+        background: #0066cc;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+
+    /* Responsive adjustments for header */
+    @media (max-width: 768px) {
+        .college-title {
+            font-size: 2rem !important;
+        }
+
+        .department-title {
+            font-size: 1.5rem !important;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+        }
+
+        .logout-btn {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        .form-header {
+            text-align: center;
+        }
+    }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
@@ -120,12 +366,29 @@
 
 <div class="registration-container">
     <div class="form-card">
+        <!-- ENHANCED HEADER WITH LOGOUT -->
         <div class="form-header">
-            <h1>STUDENTS REGISTRATION FORM</h1>
-            <p>ANURAG ENGINEERING COLLEGE - IT DEPARTMENT</p>
-            <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
-                After submission, a PDF will be generated with filename: <strong>student_{HT_NO}_{NAME}.pdf</strong>
-            </p>
+            <!-- Logout Button -->
+            <a href="{% url 'dashboard:logout' %}" class="logout-btn">
+                🚪 Logout
+            </a>
+
+            <!-- College and Department Titles -->
+            <h1 class="college-title">ANURAG ENGINEERING COLLEGE</h1>
+            <h2 class="department-title">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+            <!-- Form Title -->
+            <h3 class="form-title">STUDENTS REGISTRATION FORM</h3>
+
+            <!-- Instructions -->
+            <div style="margin-top: 15px;">
+                <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">
+                    After submission, a PDF will be generated with filename: <strong>student_{HT_NO}_{NAME}.pdf</strong>
+                </p>
+                <div class="header-note">
+                    <strong>⚠ IMPORTANT:</strong> Ensure address field is filled completely. It will appear in the generated PDF.
+                </div>
+            </div>
         </div>
 
         <form method="POST" enctype="multipart/form-data" id="registrationForm">
@@ -135,7 +398,11 @@
 
                 <div class="form-group">
                     <label>Hall Ticket Number *</label>
-                    <input type="text" name="ht_no" required>
+                    <input type="text" name="ht_no" id="ht_no" required
+                           oninput="this.value = this.value.toUpperCase()"
+                           pattern="[A-Z0-9]+"
+                           title="Hall Ticket Number must be in uppercase letters and numbers only">
+                    <div class="error-message" id="ht_no_error"></div>
                     <small style="color: #666; font-size: 0.8rem;">PDF will be saved as: student_HTNO_NAME.pdf</small>
                 </div>
                 <div class="form-group">
@@ -160,7 +427,11 @@
                 </div>
                 <div class="form-group">
                     <label>Date of Birth *</label>
-                    <input type="date" id="dob" name="dob" onchange="calculateAge()" required>
+                    <input type="text" id="dob" name="dob"
+                           pattern="(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}"
+                           placeholder="DD-MM-YYYY"
+                           title="Date must be in DD-MM-YYYY format" required>
+                    <div class="error-message" id="dob_error"></div>
                 </div>
                 <div class="form-group">
                     <label>Age (Auto-calculated) *</label>
@@ -194,24 +465,83 @@
                     <input type="text" name="apaar_id" placeholder="810-009-646-074"
                            pattern="\d{3}-\d{3}-\d{3}-\d{3}" title="Format: 000-000-000-000">
                 </div>
-                <div class="form-group full-width">
-                    <label>Address *</label>
-                    <textarea name="address" rows="3" required></textarea>
+
+                <!-- ENHANCED ADDRESS FIELD -->
+                <div class="form-group full-width address-field-container">
+                    <label>ADDRESS * (Will appear in PDF)</label>
+                    <textarea name="address" id="address_field" class="address-textarea"
+                              rows="4" placeholder="Enter complete address including street, city, state, pincode..."
+                              required
+                              oninput="updateAddressPreview()"></textarea>
+                    <div class="error-message" id="address_error"></div>
+
+                    <!-- Address Preview -->
+                    <div class="address-preview-label">Address Preview (as it will appear in PDF):</div>
+                    <div class="address-preview" id="address_preview">
+                        No address entered yet.
+                    </div>
+
+                    <small style="color: #666; font-size: 0.8rem; margin-top: 10px; display: block;">
+                        <strong>Format:</strong> House No, Street, Village/Town, City, District, State, Pincode
+                    </small>
                 </div>
 
                 <div class="section-title">II. CONTACT & ACADEMIC STATUS</div>
                 <div class="form-group">
                     <label>Parent Contact Number *</label>
-                    <input type="tel" name="parent_phone" pattern="[0-9]{10}" required>
+                    <input type="tel" name="parent_phone" id="parent_phone"
+                           pattern="[0-9]{10}"
+                           title="10-digit phone number required" required>
+                    <div class="error-message" id="parent_phone_error"></div>
                 </div>
                 <div class="form-group">
                     <label>Student Contact Number *</label>
-                    <input type="tel" name="student_phone" pattern="[0-9]{10}" required>
+                    <input type="tel" name="student_phone" id="student_phone"
+                           pattern="[0-9]{10}"
+                           title="10-digit phone number required" required>
+                    <div class="error-message" id="student_phone_error"></div>
                 </div>
                 <div class="form-group">
                     <label>Email ID *</label>
                     <input type="email" name="email" required>
                 </div>
+
+                <!-- NEW FIELD: TASK REGISTRATION -->
+                <div class="form-group full-width task-field-container">
+                    <label>ARE YOU REGISTERED WITH TASK (Telangana Academy for Skill and Knowledge) *</label>
+                    <select name="task_registered" id="task_registered" onchange="toggleTaskUsername()" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <input type="text" name="task_username" id="task_username"
+                           class="hidden-input"
+                           placeholder="Enter TASK Username (e.g., t23enit00310)"
+                           pattern="[a-zA-Z0-9]+"
+                           title="TASK Username should contain only letters and numbers">
+                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
+                        <strong>Note:</strong> If Yes, please enter your TASK Username (example: t23enit00310)
+                    </small>
+                </div>
+
+                <!-- NEW FIELD: CSI REGISTRATION -->
+                <div class="form-group full-width task-field-container">
+                    <label>ARE YOU REGISTERED WITH CSI (Computer Society of India) *</label>
+                    <select name="csi_registered" id="csi_registered" onchange="toggleCsiMembershipId()" required>
+                        <option value="">Select Option</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <input type="text" name="csi_membership_id" id="csi_membership_id"
+                           class="hidden-input"
+                           placeholder="Enter CSI Membership ID (e.g., CSI123456)"
+                           pattern="[a-zA-Z0-9]+"
+                           title="CSI Membership ID should contain only letters and numbers">
+                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
+                        <strong>Note:</strong> If Yes, please enter your CSI Membership ID (example: CSI123456)
+                    </small>
+                </div>
+
                 <div class="form-group">
                     <label>Admission Type *</label>
                     <select name="admission_type" id="admission_type" onchange="toggleOtherAdmission()" required>
@@ -223,6 +553,16 @@
                     </select>
                     <input type="text" name="other_admission_details" id="other_admission_input" class="hidden-input" placeholder="Please specify admission type">
                 </div>
+
+                <!-- NEW FIELD: EAMCET/EAPCET RANK -->
+                <div class="form-group">
+                    <label>EAMCET/EAPCET Rank</label>
+                    <input type="number" name="eamcet_rank" id="eamcet_rank"
+                           min="1" max="200000"
+                           step="1"
+                           placeholder="Enter rank (1 to 200000)">
+                </div>
+
                 <div class="form-group">
                     <label>Current Year *</label>
                     <select name="year" required>
@@ -243,7 +583,6 @@
                     <small style="color: #666; font-size: 0.8rem;">Max size: 2MB, Formats: JPG, PNG</small>
                 </div>
 
-                <!-- NEW SECTION: ACADEMIC PERFORMANCE -->
                 <div class="section-title">III. ACADEMIC PERFORMANCE</div>
                 <div class="form-group">
                     <label>SSC Marks (%) *</label>
@@ -270,8 +609,7 @@
                     <input type="text" name="final_project_title" placeholder="Enter final year project title if any">
                 </div>
 
-                <!-- Updated from IV to V -->
-                <div class="section-title">V. ACHIEVEMENTS & UPLOADS (Optional)</div>
+                <div class="section-title">IV. ACHIEVEMENTS & UPLOADS (Optional)</div>
                 <div class="form-group"><label>Achievements Certificate</label><input type="file" name="cert_achieve" accept=".pdf,image/*"></div>
                 <div class="form-group"><label>Internship Certificate</label><input type="file" name="cert_intern" accept=".pdf,image/*"></div>
                 <div class="form-group"><label>Courses Completed Certificate</label><input type="file" name="cert_courses" accept=".pdf,image/*"></div>
@@ -281,7 +619,7 @@
                 <div class="form-group"><label>National Exam Certificate</label><input type="file" name="cert_national" accept=".pdf,image/*"></div>
                 <div class="form-group full-width">
                     <label>Any Training Attended beyond Academics</label>
-                    <textarea name="other_training" rows="2"></textarea>
+                    <textarea name="other_training" rows="2" style="word-wrap: break-word; overflow-wrap: break-word;"></textarea>
                 </div>
 
                 <button type="submit" class="submit-btn" id="submitBtn">
@@ -291,6 +629,9 @@
                 <div class="form-group full-width" style="text-align: center; margin-top: 20px;">
                     <p style="color: #666; font-size: 0.9rem;">
                         <strong>Note:</strong> After submission, a PDF will be automatically generated with your Hall Ticket Number as part of the filename.
+                    </p>
+                    <p style="color: #d00; font-size: 0.9rem; background: #ffe6e6; padding: 8px; border-radius: 4px;">
+                        <strong>IMPORTANT:</strong> Verify all information, especially address and TASK registration, before submission as it cannot be edited later.
                     </p>
                 </div>
             </div>
@@ -321,16 +662,74 @@
     }
     setInterval(draw, 33);
 
-    // Age Calculation
+    // Age Calculation for DD-MM-YYYY format
     function calculateAge() {
         const dobValue = document.getElementById('dob').value;
+        const errorElement = document.getElementById('dob_error');
+
+        // Validate DD-MM-YYYY format
+        const dobPattern = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
+
         if (dobValue) {
-            const dob = new Date(dobValue);
+            if (!dobPattern.test(dobValue)) {
+                errorElement.textContent = "Please enter date in DD-MM-YYYY format";
+                errorElement.style.display = 'block';
+                document.getElementById('dob').classList.add('error-input');
+                document.getElementById('age').value = '';
+                return;
+            }
+
+            // Parse the date
+            const parts = dobValue.split('-');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed in JavaScript
+            const year = parseInt(parts[2], 10);
+
+            const dob = new Date(year, month, day);
             const today = new Date();
+
+            // Validate if date is valid
+            if (dob.getDate() !== day || dob.getMonth() !== month || dob.getFullYear() !== year) {
+                errorElement.textContent = "Invalid date. Please check the day, month, and year.";
+                errorElement.style.display = 'block';
+                document.getElementById('dob').classList.add('error-input');
+                document.getElementById('age').value = '';
+                return;
+            }
+
+            // Validate if date is not in the future
+            if (dob > today) {
+                errorElement.textContent = "Date of birth cannot be in the future";
+                errorElement.style.display = 'block';
+                document.getElementById('dob').classList.add('error-input');
+                document.getElementById('age').value = '';
+                return;
+            }
+
+            // Calculate age
             let age = today.getFullYear() - dob.getFullYear();
             const m = today.getMonth() - dob.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            // Validate if age is reasonable (between 15 and 100)
+            if (age < 15 || age > 100) {
+                errorElement.textContent = "Age must be between 15 and 100 years";
+                errorElement.style.display = 'block';
+                document.getElementById('dob').classList.add('error-input');
+                document.getElementById('age').value = '';
+                return;
+            }
+
+            // Clear error and set age
+            errorElement.style.display = 'none';
+            document.getElementById('dob').classList.remove('error-input');
             document.getElementById('age').value = age;
+        } else {
+            errorElement.style.display = 'none';
+            document.getElementById('dob').classList.remove('error-input');
+            document.getElementById('age').value = '';
         }
     }
 
@@ -347,31 +746,381 @@
         }
     }
 
+    // TASK Registration Toggle
+    function toggleTaskUsername() {
+        const select = document.getElementById('task_registered');
+        const input = document.getElementById('task_username');
+        const errorElement = document.getElementById('task_username_error');
+
+        if (select.value === 'Yes') {
+            input.style.display = 'block';
+            input.setAttribute('required', 'true');
+            input.focus();
+        } else {
+            input.style.display = 'none';
+            input.removeAttribute('required');
+            input.value = '';
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        }
+    }
+
+    // Validate TASK Username
+    function validateTaskUsername() {
+        const taskSelect = document.getElementById('task_registered');
+        const taskInput = document.getElementById('task_username');
+
+        if (taskSelect.value === 'Yes' && taskInput.style.display !== 'none') {
+            const username = taskInput.value.trim();
+
+            if (!username) {
+                // Create error element if it doesn't exist
+                let errorElement = document.getElementById('task_username_error');
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'error-message';
+                    errorElement.id = 'task_username_error';
+                    taskInput.parentNode.appendChild(errorElement);
+                }
+                errorElement.textContent = "TASK Username is required when 'Yes' is selected";
+                errorElement.style.display = 'block';
+                taskInput.classList.add('error-input');
+                return false;
+            }
+
+            // Validate format (alphanumeric only)
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                let errorElement = document.getElementById('task_username_error');
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'error-message';
+                    errorElement.id = 'task_username_error';
+                    taskInput.parentNode.appendChild(errorElement);
+                }
+                errorElement.textContent = "TASK Username should contain only letters and numbers";
+                errorElement.style.display = 'block';
+                taskInput.classList.add('error-input');
+                return false;
+            }
+
+            // Clear error if exists
+            const errorElement = document.getElementById('task_username_error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            taskInput.classList.remove('error-input');
+        }
+
+        return true;
+    }
+
+    // CSI Registration Toggle
+    function toggleCsiMembershipId() {
+        const select = document.getElementById('csi_registered');
+        const input = document.getElementById('csi_membership_id');
+        const errorElement = document.getElementById('csi_membership_id_error');
+
+        if (select.value === 'Yes') {
+            input.style.display = 'block';
+            input.setAttribute('required', 'true');
+            input.focus();
+        } else {
+            input.style.display = 'none';
+            input.removeAttribute('required');
+            input.value = '';
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        }
+    }
+
+    // Validate CSI Membership ID
+    function validateCsiMembershipId() {
+        const csiSelect = document.getElementById('csi_registered');
+        const csiInput = document.getElementById('csi_membership_id');
+
+        if (csiSelect.value === 'Yes' && csiInput.style.display !== 'none') {
+            const membershipId = csiInput.value.trim();
+
+            if (!membershipId) {
+                // Create error element if it doesn't exist
+                let errorElement = document.getElementById('csi_membership_id_error');
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'error-message';
+                    errorElement.id = 'csi_membership_id_error';
+                    csiInput.parentNode.appendChild(errorElement);
+                }
+                errorElement.textContent = "CSI Membership ID is required when 'Yes' is selected";
+                errorElement.style.display = 'block';
+                csiInput.classList.add('error-input');
+                return false;
+            }
+
+            // Validate format (alphanumeric only)
+            if (!/^[a-zA-Z0-9]+$/.test(membershipId)) {
+                let errorElement = document.getElementById('csi_membership_id_error');
+                if (!errorElement) {
+                    errorElement = document.createElement('div');
+                    errorElement.className = 'error-message';
+                    errorElement.id = 'csi_membership_id_error';
+                    csiInput.parentNode.appendChild(errorElement);
+                }
+                errorElement.textContent = "CSI Membership ID should contain only letters and numbers";
+                errorElement.style.display = 'block';
+                csiInput.classList.add('error-input');
+                return false;
+            }
+
+            // Clear error if exists
+            const errorElement = document.getElementById('csi_membership_id_error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+            csiInput.classList.remove('error-input');
+        }
+
+        return true;
+    }
+
+    // Address Preview Function
+    function updateAddressPreview() {
+        const addressField = document.getElementById('address_field');
+        const preview = document.getElementById('address_preview');
+        const addressText = addressField.value.trim();
+
+        if (addressText) {
+            preview.textContent = addressText;
+            preview.style.display = 'block';
+            preview.style.borderColor = '#0a0';
+            preview.style.background = '#f0fff0';
+        } else {
+            preview.textContent = 'No address entered yet.';
+            preview.style.display = 'block';
+            preview.style.borderColor = '#ccc';
+            preview.style.background = '#fff';
+        }
+    }
+
+    // Validate Address Field
+    function validateAddress() {
+        const addressField = document.getElementById('address_field');
+        const errorElement = document.getElementById('address_error');
+        const addressValue = addressField.value.trim();
+
+        if (!addressValue) {
+            errorElement.textContent = "Address is required";
+            errorElement.style.display = 'block';
+            addressField.classList.add('error-input');
+            addressField.style.borderColor = '#f00';
+            addressField.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
+            return false;
+        }
+
+        // Check minimum length
+        if (addressValue.length < 10) {
+            errorElement.textContent = "Address is too short. Please provide complete address.";
+            errorElement.style.display = 'block';
+            addressField.classList.add('error-input');
+            addressField.style.borderColor = '#f00';
+            addressField.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
+            return false;
+        }
+
+        errorElement.style.display = 'none';
+        addressField.classList.remove('error-input');
+        addressField.style.borderColor = '#0a0';
+        addressField.style.boxShadow = '0 0 5px rgba(0, 255, 0, 0.3)';
+        return true;
+    }
+
+    // Validate Hall Ticket Number format
+    function validateHTNo() {
+        const htNoInput = document.getElementById('ht_no');
+        const errorElement = document.getElementById('ht_no_error');
+        const htNoValue = htNoInput.value.trim();
+
+        if (!htNoValue) {
+            errorElement.textContent = "Hall Ticket Number is required";
+            errorElement.style.display = 'block';
+            htNoInput.classList.add('error-input');
+            return false;
+        }
+
+        // Check if all characters are uppercase or numbers
+        if (!/^[A-Z0-9]+$/.test(htNoValue)) {
+            errorElement.textContent = "Only uppercase letters and numbers allowed";
+            errorElement.style.display = 'block';
+            htNoInput.classList.add('error-input');
+            return false;
+        }
+
+        // Check minimum length (example: at least 6 characters)
+        if (htNoValue.length < 6) {
+            errorElement.textContent = "Hall Ticket Number is too short";
+            errorElement.style.display = 'block';
+            htNoInput.classList.add('error-input');
+            return false;
+        }
+
+        errorElement.style.display = 'none';
+        htNoInput.classList.remove('error-input');
+        return true;
+    }
+
+    // Validate phone numbers are not the same
+    function validatePhoneNumbers() {
+        const parentPhone = document.getElementById('parent_phone').value.trim();
+        const studentPhone = document.getElementById('student_phone').value.trim();
+        const parentError = document.getElementById('parent_phone_error');
+        const studentError = document.getElementById('student_phone_error');
+
+        // Clear previous errors
+        parentError.style.display = 'none';
+        studentError.style.display = 'none';
+        document.getElementById('parent_phone').classList.remove('error-input');
+        document.getElementById('student_phone').classList.remove('error-input');
+
+        let isValid = true;
+
+        // Check if phone numbers are the same
+        if (parentPhone && studentPhone && parentPhone === studentPhone) {
+            parentError.textContent = "Parent and Student phone numbers cannot be the same";
+            studentError.textContent = "Parent and Student phone numbers cannot be the same";
+            parentError.style.display = 'block';
+            studentError.style.display = 'block';
+            document.getElementById('parent_phone').classList.add('error-input');
+            document.getElementById('student_phone').classList.add('error-input');
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
     // Form submission handling
     document.getElementById('registrationForm').addEventListener('submit', function(e) {
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.innerHTML = '🔄 Generating PDF...';
         submitBtn.disabled = true;
 
-        // Validate required fields
-        const requiredFields = this.querySelectorAll('[required]');
+        // Validate all fields
         let isValid = true;
 
+        // Validate Hall Ticket Number
+        if (!validateHTNo()) {
+            isValid = false;
+        }
+
+        // Validate Address
+        if (!validateAddress()) {
+            isValid = false;
+        }
+
+        // Validate TASK Registration
+        if (!validateTaskUsername()) {
+            isValid = false;
+        }
+
+        // Validate CSI Registration
+        if (!validateCsiMembershipId()) {
+            isValid = false;
+        }
+
+        // Validate Date of Birth format
+        const dobValue = document.getElementById('dob').value;
+        const dobPattern = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
+        if (!dobPattern.test(dobValue)) {
+            document.getElementById('dob_error').textContent = "Date must be in DD-MM-YYYY format";
+            document.getElementById('dob_error').style.display = 'block';
+            document.getElementById('dob').classList.add('error-input');
+            isValid = false;
+        } else {
+            // Trigger age calculation to validate date
+            calculateAge();
+            if (!document.getElementById('age').value) {
+                isValid = false;
+            }
+        }
+
+        // Validate phone numbers are not the same
+        if (!validatePhoneNumbers()) {
+            isValid = false;
+        }
+
+        // Validate required fields
+        const requiredFields = this.querySelectorAll('[required]');
         requiredFields.forEach(field => {
             if (!field.value.trim()) {
                 isValid = false;
                 field.style.borderColor = '#f00';
+                field.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
             } else {
                 field.style.borderColor = '#ccc';
+                field.style.boxShadow = 'none';
             }
         });
 
+        // Validate EAMCET rank if provided
+        const eamcetRank = document.getElementById('eamcet_rank').value;
+        if (eamcetRank) {
+            const rank = parseInt(eamcetRank);
+            if (rank < 1 || rank > 200000) {
+                alert('EAMCET/EAPCET Rank must be between 1 and 200,000');
+                isValid = false;
+            }
+        }
+
         if (!isValid) {
             e.preventDefault();
-            alert('Please fill all required fields marked with *');
+            alert('Please fix all errors before submitting');
             submitBtn.innerHTML = '📄 Submit & Generate PDF';
             submitBtn.disabled = false;
+
+            // Scroll to first error
+            const firstError = document.querySelector('.error-input');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        } else {
+            // Show confirmation for address
+            const addressValue = document.getElementById('address_field').value.trim();
+            if (addressValue) {
+                console.log('Address being submitted:', addressValue);
+                // Add a hidden field to ensure address is captured
+                const hiddenAddress = document.createElement('input');
+                hiddenAddress.type = 'hidden';
+                hiddenAddress.name = 'address_confirm';
+                hiddenAddress.value = addressValue;
+                this.appendChild(hiddenAddress);
+            }
         }
+    });
+
+    // Real-time validation
+    document.getElementById('ht_no').addEventListener('input', validateHTNo);
+    document.getElementById('dob').addEventListener('blur', calculateAge);
+    document.getElementById('parent_phone').addEventListener('blur', validatePhoneNumbers);
+    document.getElementById('student_phone').addEventListener('blur', validatePhoneNumbers);
+    document.getElementById('address_field').addEventListener('input', function() {
+        updateAddressPreview();
+        validateAddress();
+    });
+    document.getElementById('task_registered').addEventListener('change', function() {
+        toggleTaskUsername();
+        validateTaskUsername();
+    });
+    document.getElementById('task_username').addEventListener('input', validateTaskUsername);
+    document.getElementById('csi_registered').addEventListener('change', function() {
+        toggleCsiMembershipId();
+        validateCsiMembershipId();
+    });
+    document.getElementById('csi_membership_id').addEventListener('input', validateCsiMembershipId);
+
+    // Auto-capitalize Hall Ticket Number as user types
+    document.getElementById('ht_no').addEventListener('input', function(e) {
+        this.value = this.value.toUpperCase();
     });
 
     // Auto-hide messages after 10 seconds
@@ -389,5 +1138,13 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     });
+
+    // Initialize age calculation if DOB is pre-filled
+    if (document.getElementById('dob').value) {
+        calculateAge();
+    }
+
+    // Initialize address preview
+    updateAddressPreview();
 </script>
 {% endblock %}

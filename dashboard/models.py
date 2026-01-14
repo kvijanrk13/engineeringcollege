@@ -33,7 +33,6 @@ class Syllabus(models.Model):
 
 
 class StudentRegistration(models.Model):
-
     # ================= BASIC INFO =================
     ht_no = models.CharField(max_length=20, unique=True)
     student_name = models.CharField(max_length=100)
@@ -49,11 +48,23 @@ class StudentRegistration(models.Model):
     apaar_id = models.CharField(max_length=50, blank=True, null=True)
     aadhar = models.CharField(max_length=20)
     address = models.TextField()
+
+    # TASK Registration Fields
+    task_registered = models.CharField(max_length=3, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
+    task_username = models.CharField(max_length=50, blank=True, null=True)
+
+    # CSI Registration Fields
+    csi_registered = models.CharField(max_length=3, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
+    csi_membership_id = models.CharField(max_length=50, blank=True, null=True)
+
     parent_phone = models.CharField(max_length=15)
     student_phone = models.CharField(max_length=15)
     email = models.EmailField()
     admission_type = models.CharField(max_length=50)
     other_admission_details = models.TextField(blank=True, null=True)
+
+    # New field: EAMCET/EAPCET Rank
+    eamcet_rank = models.IntegerField(null=True, blank=True)
 
     year = models.IntegerField()
     sem = models.IntegerField()

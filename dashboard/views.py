@@ -24,6 +24,7 @@ import requests
 from PIL import Image as PILImage
 from io import BytesIO
 import tempfile
+import html
 
 # Add this after the other imports
 try:
@@ -145,11 +146,13 @@ def syllabus(request):
 
 # --- STUDENT REGISTRATION & PDF GENERATION ---
 def generate_student_pdf(student):
-    """Generate PDF for student registration with photo"""
+    """Generate PDF for student registration with photo - INCLUDES TASK AND CSI REGISTRATION"""
     buffer = BytesIO()
+
+    # Use A4 with proper margins
     doc = SimpleDocTemplate(buffer, pagesize=letter,
-                            rightMargin=72, leftMargin=72,
-                            topMargin=72, bottomMargin=72)
+                            rightMargin=0.75 * inch, leftMargin=0.75 * inch,
+                            topMargin=0.75 * inch, bottomMargin=0.75 * inch)
 
     story = []
     styles = getSampleStyleSheet()
@@ -180,6 +183,22 @@ def generate_student_pdf(student):
         alignment=1,
         spaceAfter=20,
         textColor=colors.HexColor('#8B0000')
+    )
+
+    # Create a special style for address to ensure visibility
+    address_style = ParagraphStyle(
+        'AddressStyle',
+        parent=styles['Normal'],
+        fontSize=11,
+        leading=14,
+        textColor=colors.black,
+        wordWrap='CJK',  # Force word wrapping
+        spaceAfter=12,
+        borderPadding=10,
+        backColor=colors.white,
+        borderColor=colors.black,
+        borderWidth=1,
+        borderRadius=3
     )
 
     # Create a table for header with photo on right
@@ -233,7 +252,24 @@ def generate_student_pdf(student):
     story.append(header_table)
     story.append(Spacer(1, 30))
 
-    # Student Information Table
+    # Debug address value
+    print(f"DEBUG: Student address value: '{student.address}'")
+    print(f"DEBUG: TASK Registered: {student.task_registered}")
+    print(f"DEBUG: TASK Username: {student.task_username}")
+    print(f"DEBUG: CSI Registered: {student.csi_registered}")
+    print(f"DEBUG: CSI Membership ID: {student.csi_membership_id}")
+
+    # Prepare address text - ensure it's not empty
+    address_text = student.address or "ADDRESS NOT PROVIDED"
+
+    # If address is empty or None, use placeholder
+    if not address_text or address_text.strip() == "":
+        address_text = "ADDRESS NOT PROVIDED"
+
+    # Create address paragraph with proper styling
+    address_para = Paragraph(f"<b>Address:</b><br/>{html.escape(address_text)}", address_style)
+
+    # Student Information Table - INCLUDES TASK AND CSI REGISTRATION
     student_data = [
         ["Hall Ticket Number:", student.ht_no or "N/A", "Student Name:", student.student_name or "N/A"],
         ["Father Name:", student.father_name or "N/A", "Mother Name:", student.mother_name or "N/A"],
@@ -241,19 +277,36 @@ def generate_student_pdf(student):
         ["Age:", str(student.age) if student.age else "N/A", "Nationality:", student.nationality or "N/A"],
         ["Category:", student.category or "N/A", "Religion:", student.religion or "N/A"],
         ["Blood Group:", student.blood_group or "N/A", "APAAR ID:", student.apaar_id or "N/A"],
-        ["Aadhar Number:", student.aadhar or "N/A", "", ""],
-        ["Address:", Paragraph(student.address or "N/A", styles['Normal']), "", ""],
+        ["Aadhar Number:", student.aadhar or "N/A", "EAMCET Rank:",
+         str(student.eamcet_rank) if student.eamcet_rank else "N/A"],
+        ["TASK Registered:", student.task_registered or "N/A", "", ""],
+    ]
+
+    # Add TASK Username if registered
+    if student.task_registered == "Yes" and student.task_username:
+        student_data.append(["TASK Username:", student.task_username or "N/A", "", ""])
+
+    # Add CSI Registration
+    student_data.append(["CSI Registered:", student.csi_registered or "N/A", "", ""])
+
+    # Add CSI Membership ID if registered
+    if student.csi_registered == "Yes" and student.csi_membership_id:
+        student_data.append(["CSI Membership ID:", student.csi_membership_id or "N/A", "", ""])
+
+    student_data.extend([
         ["Parent Phone:", student.parent_phone or "N/A", "Student Phone:", student.student_phone or "N/A"],
         ["Email:", student.email or "N/A", "Admission Type:", student.admission_type or "N/A"],
         ["Year:", str(student.year) if student.year else "N/A", "Semester:",
          str(student.sem) if student.sem else "N/A"],
-    ]
+    ])
 
     if student.other_admission_details:
         student_data.append(["Admission Details:", student.other_admission_details, "", ""])
 
     student_table = Table(student_data, colWidths=[1.5 * inch, 2 * inch, 1.5 * inch, 2 * inch])
-    student_table.setStyle(TableStyle([
+
+    # Create table style
+    table_style = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#006400')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -263,10 +316,57 @@ def generate_student_pdf(student):
         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5F5')),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('SPAN', (0, 7), (3, 7)),  # Span address across all columns
-    ]))
+    ]
+
+    # Span TASK Registered row (row index 7)
+    table_style.append(('SPAN', (0, 7), (3, 7)))
+
+    current_row = 7
+
+    # Span TASK Username row if present
+    if student.task_registered == "Yes" and student.task_username:
+        current_row += 1  # Move to TASK Username row (row index 8)
+        table_style.append(('SPAN', (0, current_row), (3, current_row)))
+
+    # CSI Registered row
+    current_row += 1  # Move to CSI Registered row
+    table_style.append(('SPAN', (0, current_row), (3, current_row)))
+
+    # Span CSI Membership ID row if present
+    if student.csi_registered == "Yes" and student.csi_membership_id:
+        current_row += 1  # Move to CSI Membership ID row
+        table_style.append(('SPAN', (0, current_row), (3, current_row)))
+
+    student_table.setStyle(TableStyle(table_style))
 
     story.append(student_table)
+    story.append(Spacer(1, 15))
+
+    # Add Address as a separate section for better visibility
+    story.append(Paragraph("ADDRESS DETAILS", header_style))
+    story.append(Spacer(1, 10))
+
+    # Create a separate table for address
+    address_table_data = [
+        ["Address:", address_para]
+    ]
+
+    address_table = Table(address_table_data, colWidths=[1.5 * inch, 5.5 * inch])
+    address_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#E8E8E8')),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('WORDWRAP', (1, 0), (1, 0), True),  # Enable word wrapping for address
+        ('BACKGROUND', (1, 0), (1, 0), colors.white),  # White background for address
+    ]))
+
+    story.append(address_table)
     story.append(Spacer(1, 20))
 
     # Academic Performance Section
@@ -303,7 +403,7 @@ def generate_student_pdf(student):
 
     # Footer
     story.append(Spacer(1, 40))
-    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
                            ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
     story.append(Paragraph("This is an official document of ANURAG Engineering College",
                            ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
@@ -313,14 +413,16 @@ def generate_student_pdf(student):
     try:
         doc.build(story)
         buffer.seek(0)
+        print("✓ PDF generated successfully with TASK and CSI registration details")
         return buffer
     except Exception as e:
         print(f"PDF generation error: {e}")
+        traceback.print_exc()
         return generate_simple_pdf(student)
 
 
 def generate_simple_pdf(student):
-    """Simple PDF generation fallback"""
+    """Simple PDF generation fallback with TASK and CSI registration"""
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
 
@@ -356,7 +458,7 @@ def generate_simple_pdf(student):
         except:
             pass
 
-    # Student Information
+    # Student Information - INCLUDES TASK REGISTRATION
     p.setFont("Helvetica", 12)
     p.drawString(100, 680, f"Hall Ticket No: {student.ht_no}")
     p.drawString(100, 660, f"Student Name: {student.student_name}")
@@ -367,14 +469,47 @@ def generate_simple_pdf(student):
     p.drawString(100, 560, f"Age: {student.age}")
     p.drawString(100, 540, f"APAAR ID: {student.apaar_id or 'N/A'}")
     p.drawString(100, 520, f"Aadhar: {student.aadhar}")
-    p.drawString(100, 500, f"Email: {student.email}")
-    p.drawString(100, 480, f"Phone: {student.student_phone}")
-    p.drawString(100, 460, f"Year: {student.year}, Sem: {student.sem}")
-    p.drawString(100, 440, f"Registration Date: {student.registration_date.strftime('%Y-%m-%d')}")
+
+    # TASK Registration Details
+    p.drawString(100, 500, f"TASK Registered: {student.task_registered or 'N/A'}")
+    if student.task_registered == "Yes" and student.task_username:
+        p.drawString(100, 480, f"TASK Username: {student.task_username}")
+        y_position = 460
+    else:
+        y_position = 480
+
+    # CSI Registration Details
+    p.drawString(100, y_position, f"CSI Registered: {student.csi_registered or 'N/A'}")
+    y_position -= 20
+    if student.csi_registered == "Yes" and student.csi_membership_id:
+        p.drawString(100, y_position, f"CSI Membership ID: {student.csi_membership_id}")
+        y_position -= 20
+
+    # ADDRESS FIELD - PROMINENTLY DISPLAYED
+    p.drawString(100, y_position, "ADDRESS:")
+    if student.address:
+        # Handle multi-line address
+        address_lines = student.address.split('\n')
+        y_position -= 20
+        for i, line in enumerate(address_lines[:4]):  # Show first 4 lines
+            if line.strip():
+                p.drawString(120, y_position, line.strip())
+                y_position -= 20
+    else:
+        p.drawString(120, y_position - 20, "ADDRESS NOT PROVIDED")
+        y_position -= 40
+
+    p.drawString(100, y_position, f"Email: {student.email}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Phone: {student.student_phone}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Year: {student.year}, Sem: {student.sem}")
+    y_position -= 20
+    p.drawString(100, y_position, f"Registration Date: {student.registration_date.strftime('%d-%m-%Y')}")
 
     # Footer
     p.setFont("Helvetica", 10)
-    p.drawString(100, 100, f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    p.drawString(100, 100, f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
     p.drawString(100, 85, "Department of Information Technology, ANURAG Engineering College")
 
     p.showPage()
@@ -489,21 +624,94 @@ def students(request):
 
     if request.method == "POST":
         try:
-            ht_no = request.POST.get('ht_no', '').strip()
+            ht_no = request.POST.get('ht_no', '').strip().upper()  # Convert to uppercase
             student_name = request.POST.get('student_name', '').strip()
+
+            # Check if phone numbers are the same
+            parent_phone = request.POST.get('parent_phone', '').strip()
+            student_phone = request.POST.get('student_phone', '').strip()
+
+            if parent_phone == student_phone:
+                messages.error(request, 'Parent Phone Number and Student Phone Number cannot be the same!')
+                return render(request, "dashboard/students.html")
 
             if StudentRegistration.objects.filter(ht_no=ht_no).exists():
                 messages.error(request, f'Student with Hall Ticket No {ht_no} already exists!')
                 return render(request, "dashboard/students.html")
 
-            # Create student object
+            # Parse date from DD-MM-YYYY to YYYY-MM-DD
+            dob_str = request.POST.get('dob', '')
+            dob = None
+            if dob_str:
+                try:
+                    # Convert DD-MM-YYYY to YYYY-MM-DD
+                    day, month, year = map(int, dob_str.split('-'))
+                    dob = f"{year:04d}-{month:02d}-{day:02d}"
+                except ValueError:
+                    messages.error(request, 'Invalid date format. Please use DD-MM-YYYY format.')
+                    return render(request, "dashboard/students.html")
+
+            # Validate EAMCET rank
+            eamcet_rank_str = request.POST.get('eamcet_rank', '').strip()
+            eamcet_rank = None
+            if eamcet_rank_str:
+                try:
+                    eamcet_rank = int(eamcet_rank_str)
+                    if eamcet_rank < 1 or eamcet_rank > 200000:
+                        messages.error(request, 'EAMCET/EAPCET Rank must be between 1 and 200,000')
+                        return render(request, "dashboard/students.html")
+                except ValueError:
+                    messages.error(request, 'Invalid EAMCET/EAPCET Rank. Please enter a valid number.')
+                    return render(request, "dashboard/students.html")
+
+            # Get TASK registration details
+            task_registered = request.POST.get('task_registered', '').strip()
+            task_username = request.POST.get('task_username', '').strip()
+
+            # Validate TASK registration
+            if task_registered == "Yes" and not task_username:
+                messages.error(request, 'TASK Username is required when "Yes" is selected for TASK registration!')
+                return render(request, "dashboard/students.html")
+
+            # Validate TASK username format if provided
+            if task_username and not task_username.isalnum():
+                messages.error(request, 'TASK Username should contain only letters and numbers!')
+                return render(request, "dashboard/students.html")
+
+            # Get CSI registration details
+            csi_registered = request.POST.get('csi_registered', '').strip()
+            csi_membership_id = request.POST.get('csi_membership_id', '').strip()
+
+            # Validate CSI registration
+            if csi_registered == "Yes" and not csi_membership_id:
+                messages.error(request, 'CSI Membership ID is required when "Yes" is selected for CSI registration!')
+                return render(request, "dashboard/students.html")
+
+            # Validate CSI membership ID format if provided
+            if csi_membership_id and not csi_membership_id.isalnum():
+                messages.error(request, 'CSI Membership ID should contain only letters and numbers!')
+                return render(request, "dashboard/students.html")
+
+            # IMPORTANT: Get address with proper handling
+            address = request.POST.get('address', '').strip()
+            print(f"DEBUG: Received address from form: '{address}'")
+            print(f"DEBUG: TASK Registered: {task_registered}")
+            print(f"DEBUG: TASK Username: {task_username}")
+            print(f"DEBUG: CSI Registered: {csi_registered}")
+            print(f"DEBUG: CSI Membership ID: {csi_membership_id}")
+
+            if not address:
+                messages.error(request, 'Address is required! Please enter your complete address.')
+                return render(request, "dashboard/students.html")
+
+            # Create student object with address and TASK/CSI details
             student = StudentRegistration(
                 ht_no=ht_no,
                 student_name=student_name,
                 father_name=request.POST.get('father_name', '').strip(),
                 mother_name=request.POST.get('mother_name', '').strip(),
                 gender=request.POST.get('gender', ''),
-                dob=request.POST.get('dob'),
+                dob=dob,
                 age=int(request.POST.get('age', 0)) if request.POST.get('age') else 0,
                 nationality=request.POST.get('nationality', 'Indian'),
                 category=request.POST.get('category', ''),
@@ -511,12 +719,17 @@ def students(request):
                 blood_group=request.POST.get('blood_group', ''),
                 apaar_id=request.POST.get('apaar_id', '').strip(),
                 aadhar=request.POST.get('aadhar', '').strip(),
-                address=request.POST.get('address', ''),
-                parent_phone=request.POST.get('parent_phone', '').strip(),
-                student_phone=request.POST.get('student_phone', '').strip(),
+                address=address,
+                task_registered=task_registered,
+                task_username=task_username if task_registered == "Yes" else '',
+                csi_registered=csi_registered,
+                csi_membership_id=csi_membership_id if csi_registered == "Yes" else '',
+                parent_phone=parent_phone,
+                student_phone=student_phone,
                 email=request.POST.get('email', '').strip(),
                 admission_type=request.POST.get('admission_type', ''),
                 other_admission_details=request.POST.get('other_admission_details', ''),
+                eamcet_rank=eamcet_rank,
                 year=int(request.POST.get('year', 1)) if request.POST.get('year') else 1,
                 sem=int(request.POST.get('sem', 1)) if request.POST.get('sem') else 1,
                 ssc_marks=float(request.POST.get('ssc_marks')) if request.POST.get('ssc_marks') else None,
@@ -543,12 +756,22 @@ def students(request):
 
             # Save student first (without certificates)
             student.save()
+            print(f"DEBUG: Student saved with TASK registration: {task_registered}")
+            print(f"DEBUG: Student saved with TASK username: {task_username}")
+            print(f"DEBUG: Student saved with CSI registration: {csi_registered}")
+            print(f"DEBUG: Student saved with CSI membership ID: {csi_membership_id}")
 
             try:
                 # Generate PDF with merged certificates
-                print("\n" + "=" * 50)
+                print("\n" + "=" * 60)
                 print("Generating PDF for student:", student.student_name)
-                print("=" * 50)
+                print("Hall Ticket No:", student.ht_no)
+                print("Address to be included in PDF:", student.address)
+                print("TASK Registered:", student.task_registered)
+                print("TASK Username:", student.task_username)
+                print("CSI Registered:", student.csi_registered)
+                print("CSI Membership ID:", student.csi_membership_id)
+                print("=" * 60)
 
                 # Get certificate files
                 certificate_files = {
@@ -596,7 +819,8 @@ def students(request):
                 request.session['student_id'] = student.id
                 request.session['last_ht_no'] = student.ht_no
 
-                messages.success(request, f'Registration submitted successfully! PDF generated.')
+                messages.success(request,
+                                 f'Registration submitted successfully! PDF generated with TASK and CSI details.')
                 return redirect('dashboard:view_pdf', student_id=student.id)
 
             except Exception as pdf_error:
