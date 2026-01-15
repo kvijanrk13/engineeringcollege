@@ -1,35 +1,151 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Dashboard{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ANURAG Engineering College{% endblock %}</title>
+    <style>
+        .global-header-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background-color: #000;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        .letterhead-table {
+            width: 100%;
+            max-width: 1100px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+        }
+
+        .letterhead-table td {
+            padding: 10px;
+            text-align: center;
+            position: relative;
+        }
+
+        .letterhead-img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            background-color: #000;
+            border-bottom: 1px solid #0f0;
+            padding: 0.5rem;
+        }
+        .navbar-brand {
+            color: #0f0 !important;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        /* Canvas overlay container */
+        .overlay-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+
+    <!-- JavaScript solution: Paint white rectangle over text -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function hideItDeptPortal() {
+            const img = document.querySelector('.letterhead-img');
+            const td = document.querySelector('.letterhead-table td');
+
+            if (!img || !td) return;
+
+            // Create canvas overlay
+            const canvas = document.createElement('canvas');
+            canvas.className = 'overlay-canvas';
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '100';
+            canvas.style.pointerEvents = 'none';
+
+            td.style.position = 'relative';
+            td.appendChild(canvas);
+
+            // Draw white rectangle over IT DEPT PORTAL text
+            function drawOverlay() {
+                const rect = img.getBoundingClientRect();
+                const containerRect = td.getBoundingClientRect();
+
+                canvas.width = containerRect.width;
+                canvas.height = containerRect.height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+
+                // Position of IT DEPT PORTAL text (adjust these values)
+                const textTop = 10; // pixels from top of image
+                const textHeight = 35; // height of text area
+                const textWidth = 300; // width of text area
+                const textLeft = (containerRect.width - textWidth) / 2;
+
+                ctx.fillRect(textLeft, textTop, textWidth, textHeight);
+
+                // Try different positions if needed
+                console.log('Drawing overlay at:', textLeft, textTop, textWidth, textHeight);
+            }
+
+            if (img.complete) {
+                drawOverlay();
+            } else {
+                img.addEventListener('load', drawOverlay);
+            }
+
+            // Redraw on resize
+            window.addEventListener('resize', drawOverlay);
+        }
+
+        // Run after a short delay to ensure DOM is ready
+        setTimeout(hideItDeptPortal, 100);
+    });
+    </script>
 
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-<!-- ================= NAVBAR ================= -->
+<div class="global-header-container">
+    <table class="letterhead-table">
+        <tr>
+            <td>
+                <img src="{% static 'images/NEW LETTER HEAD.png' %}"
+                     alt="ANURAG Engineering College Letterhead"
+                     class="letterhead-img">
+            </td>
+        </tr>
+    </table>
+</div>
+
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid">
-
-        <!-- SAFE HOME LINK (NO index reference anywhere) -->
-        <a class="navbar-brand" href="/dashboard/">
-            <i class="fas fa-university me-2"></i>
-            {{ college_name|default:"ANURAG ENGINEERING COLLEGE" }}
-            -
-            {{ department_name|default:"INFORMATION TECHNOLOGY" }}
+        <a class="navbar-brand" href="{% url 'dashboard:dashboard' %}">
+            <i class="fas fa-university me-2"></i> IT DEPT PORTAL
         </a>
-
-        <div class="navbar-nav ms-auto">
-            {% if request.session.logged_in %}
-                <a class="nav-link" href="{% url 'dashboard:faculty' %}">Faculty</a>
-                <a class="nav-link" href="{% url 'dashboard:logout' %}">Logout</a>
-            {% endif %}
-        </div>
-
     </div>
 </nav>
-<!-- ======================================== -->
 
 {% block content %}{% endblock %}
 

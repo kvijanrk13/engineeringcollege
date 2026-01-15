@@ -15,7 +15,7 @@ from pypdf import PdfWriter, PdfReader
 import io
 import os
 import traceback
-from datetime import datetime
+from datetime import datetime, date
 from .models import StudentRegistration
 import cloudinary.uploader
 import cloudinary
@@ -35,12 +35,10 @@ except ImportError as e:
     print(f"⚠ Warning: Failed to import cloudinary_utils: {e}")
 
 
-    # Helper function to read file bytes
     def get_file_bytes(file):
         if not file:
             return None
         try:
-            # Reset file pointer to beginning
             file.seek(0)
             return BytesIO(file.read())
         except Exception as e:
@@ -48,58 +46,43 @@ except ImportError as e:
             return None
 
 
-# --- HELPER FUNCTION FOR CERTIFICATE UPLOADS ---
 def upload_cert_to_cloudinary(file):
     if not file:
         return None
-
     try:
         result = cloudinary.uploader.upload(
             file,
             folder="certificates",
-            resource_type="image",  # <-- IMPORTANT CHANGE
+            resource_type="image",
             type="upload",
             overwrite=True,
             invalidate=True
         )
-
         return result["public_id"]
-
     except Exception as e:
         print(f"Error uploading certificate to Cloudinary: {e}")
         return None
 
 
-# --- AUTHENTICATION ---
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
-
         valid_users = {
-            "7001": "Cutieminni@2",
-            "5037": "anrkitdept",
-            "7003": "anrkitdept",
-            "7005": "anrkitdept",
-            "7007": "anrkitdept",
-            "7008": "anrkitdept",
-            "7010": "anrkitdept",
-            "7011": "anrkitdept",
-            "3003": "anrkitdept",
+            "7001": "Cutieminni@2", "5037": "anrkitdept", "7003": "anrkitdept",
+            "7005": "anrkitdept", "7007": "anrkitdept", "7008": "anrkitdept",
+            "7010": "anrkitdept", "7011": "anrkitdept", "3003": "anrkitdept",
             "anrkitstudent": "anrkitstudent",
         }
-
         if username in valid_users and valid_users[username] == password:
             request.session["logged_in"] = True
             request.session["user_id"] = username
             request.session["is_faculty"] = username != "anrkitstudent"
-
             if username == "anrkitstudent":
                 return redirect("dashboard:students")
             return redirect("dashboard:dashboard")
         else:
             return render(request, "dashboard/login.html", {"error": "Invalid Credentials"})
-
     return render(request, "dashboard/login.html")
 
 
@@ -108,205 +91,115 @@ def logout_view(request):
     return redirect("dashboard:login")
 
 
-# --- MAIN NAVIGATION PAGES ---
 def dashboard(request):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
-
     if request.session.get("user_id") == "anrkitstudent":
         return redirect("dashboard:students")
-
     total_students = StudentRegistration.objects.count()
-
-    context = {
-        'total_students': total_students,
-    }
+    context = {'total_students': total_students}
     return render(request, "dashboard/dashboard.html", context)
 
 
 def faculty(request):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
-
     if request.session.get("user_id") == "anrkitstudent":
         return redirect("dashboard:students")
-
     return render(request, "dashboard/faculty.html")
 
 
 def syllabus(request):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
-
     if request.session.get("user_id") == "anrkitstudent":
         return redirect("dashboard:students")
-
     return render(request, "dashboard/syllabus.html")
 
 
-# --- STUDENT REGISTRATION & PDF GENERATION ---
 def generate_student_pdf(student):
     """Generate PDF for student registration with photo - INCLUDES TASK AND CSI REGISTRATION"""
     buffer = BytesIO()
-
-    # Use A4 with proper margins
     doc = SimpleDocTemplate(buffer, pagesize=letter,
                             rightMargin=0.75 * inch, leftMargin=0.75 * inch,
                             topMargin=0.75 * inch, bottomMargin=0.75 * inch)
-
     story = []
     styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=18, alignment=1, spaceAfter=20,
+                                 textColor=colors.HexColor('#006400'))
+    subtitle_style = ParagraphStyle('CustomSubtitle', parent=styles['Heading2'], fontSize=14, alignment=1,
+                                    spaceAfter=15, textColor=colors.HexColor('#000080'))
+    header_style = ParagraphStyle('HeaderStyle', parent=styles['Heading3'], fontSize=12, alignment=1, spaceAfter=20,
+                                  textColor=colors.HexColor('#8B0000'))
+    address_style = ParagraphStyle('AddressStyle', parent=styles['Normal'], fontSize=11, leading=14,
+                                   textColor=colors.black, wordWrap='CJK', spaceAfter=12, borderPadding=10,
+                                   backColor=colors.white, borderColor=colors.black, borderWidth=1, borderRadius=3)
 
-    # Create custom styles
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        alignment=1,
-        spaceAfter=20,
-        textColor=colors.HexColor('#006400')
-    )
-
-    subtitle_style = ParagraphStyle(
-        'CustomSubtitle',
-        parent=styles['Heading2'],
-        fontSize=14,
-        alignment=1,
-        spaceAfter=15,
-        textColor=colors.HexColor('#000080')
-    )
-
-    header_style = ParagraphStyle(
-        'HeaderStyle',
-        parent=styles['Heading3'],
-        fontSize=12,
-        alignment=1,
-        spaceAfter=20,
-        textColor=colors.HexColor('#8B0000')
-    )
-
-    # Create a special style for address to ensure visibility
-    address_style = ParagraphStyle(
-        'AddressStyle',
-        parent=styles['Normal'],
-        fontSize=11,
-        leading=14,
-        textColor=colors.black,
-        wordWrap='CJK',  # Force word wrapping
-        spaceAfter=12,
-        borderPadding=10,
-        backColor=colors.white,
-        borderColor=colors.black,
-        borderWidth=1,
-        borderRadius=3
-    )
-
-    # Create a table for header with photo on right
-    header_data = []
-
-    # Try to get and add photo if exists
     photo_cell = Spacer(1, 1)
-
     if student.photo:
         try:
-            # Generate signed URL for photo
-            photo_url = cloudinary.utils.cloudinary_url(
-                student.photo,
-                secure=True,
-                sign_url=True
-            )[0]
-
+            photo_url = cloudinary.utils.cloudinary_url(student.photo, secure=True, sign_url=True)[0]
             response = requests.get(photo_url, timeout=10)
-
             if response.status_code == 200:
                 img = PILImage.open(BytesIO(response.content)).convert("RGB")
                 img.thumbnail((150, 180), PILImage.Resampling.LANCZOS)
-
                 img_byte_arr = BytesIO()
                 img.save(img_byte_arr, format="JPEG")
                 img_byte_arr.seek(0)
-
-                photo_cell = ReportLabImage(
-                    img_byte_arr,
-                    width=1.5 * inch,
-                    height=1.8 * inch
-                )
+                photo_cell = ReportLabImage(img_byte_arr, width=1.5 * inch, height=1.8 * inch)
         except Exception as e:
             print("Error processing photo:", e)
 
-    # Header table with photo on right
     header_table_data = [
         [Paragraph("ANURAG ENGINEERING COLLEGE", title_style), photo_cell],
         [Paragraph("INFORMATION TECHNOLOGY DEPARTMENT", subtitle_style), ""],
         [Paragraph("STUDENT REGISTRATION DETAILS", header_style), ""]
     ]
-
     header_table = Table(header_table_data, colWidths=[4 * inch, 2 * inch])
-    header_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('SPAN', (1, 0), (1, 2)),  # Span photo across 3 rows
-    ]))
-
+    header_table.setStyle(TableStyle(
+        [('ALIGN', (0, 0), (0, -1), 'LEFT'), ('ALIGN', (1, 0), (1, 0), 'CENTER'), ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+         ('SPAN', (1, 0), (1, 2))]))
     story.append(header_table)
     story.append(Spacer(1, 30))
 
-    # Debug address value
-    print(f"DEBUG: Student address value: '{student.address}'")
-    print(f"DEBUG: TASK Registered: {student.task_registered}")
-    print(f"DEBUG: TASK Username: {student.task_username}")
-    print(f"DEBUG: CSI Registered: {student.csi_registered}")
-    print(f"DEBUG: CSI Membership ID: {student.csi_membership_id}")
-
-    # Prepare address text - ensure it's not empty
     address_text = student.address or "ADDRESS NOT PROVIDED"
-
-    # If address is empty or None, use placeholder
-    if not address_text or address_text.strip() == "":
-        address_text = "ADDRESS NOT PROVIDED"
-
-    # Create address paragraph with proper styling
     address_para = Paragraph(f"<b>Address:</b><br/>{html.escape(address_text)}", address_style)
 
-    # Student Information Table - INCLUDES TASK AND CSI REGISTRATION
+    if student.dob:
+        if isinstance(student.dob, (date, datetime)):
+            formatted_dob = student.dob.strftime('%d-%m-%Y')
+        else:
+            try:
+                formatted_dob = datetime.strptime(str(student.dob), '%Y-%m-%d').strftime('%d-%m-%Y')
+            except:
+                formatted_dob = str(student.dob)
+    else:
+        formatted_dob = "N/A"
+
     student_data = [
         ["Hall Ticket Number:", student.ht_no or "N/A", "Student Name:", student.student_name or "N/A"],
         ["Father Name:", student.father_name or "N/A", "Mother Name:", student.mother_name or "N/A"],
-        ["Gender:", student.gender or "N/A", "Date of Birth:", str(student.dob) if student.dob else "N/A"],
+        ["Gender:", student.gender or "N/A", "Date of Birth:", formatted_dob],
         ["Age:", str(student.age) if student.age else "N/A", "Nationality:", student.nationality or "N/A"],
         ["Category:", student.category or "N/A", "Religion:", student.religion or "N/A"],
         ["Blood Group:", student.blood_group or "N/A", "APAAR ID:", student.apaar_id or "N/A"],
         ["Aadhar Number:", student.aadhar or "N/A", "EAMCET Rank:",
          str(student.eamcet_rank) if student.eamcet_rank else "N/A"],
-        ["TASK Registered:", student.task_registered or "N/A", "", ""],
-    ]
-
-    # Add TASK Username if registered
-    if student.task_registered == "Yes" and student.task_username:
-        student_data.append(["TASK Username:", student.task_username or "N/A", "", ""])
-
-    # Add CSI Registration
-    student_data.append(["CSI Registered:", student.csi_registered or "N/A", "", ""])
-
-    # Add CSI Membership ID if registered
-    if student.csi_registered == "Yes" and student.csi_membership_id:
-        student_data.append(["CSI Membership ID:", student.csi_membership_id or "N/A", "", ""])
-
-    student_data.extend([
+        ["TASK Registered:", student.task_registered or "N/A", "TASK Username:",
+         student.task_username if student.task_registered == "Yes" else "N/A"],
+        ["CSI Registered:", student.csi_registered or "N/A", "CSI Membership ID:",
+         student.csi_membership_id if student.csi_registered == "Yes" else "N/A"],
         ["Parent Phone:", student.parent_phone or "N/A", "Student Phone:", student.student_phone or "N/A"],
         ["Email:", student.email or "N/A", "Admission Type:", student.admission_type or "N/A"],
         ["Year:", str(student.year) if student.year else "N/A", "Semester:",
          str(student.sem) if student.sem else "N/A"],
-    ])
+    ]
 
     if student.other_admission_details:
         student_data.append(["Admission Details:", student.other_admission_details, "", ""])
 
     student_table = Table(student_data, colWidths=[1.5 * inch, 2 * inch, 1.5 * inch, 2 * inch])
-
-    # Create table style
-    table_style = [
+    student_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#006400')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -316,203 +209,66 @@ def generate_student_pdf(student):
         ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#F5F5F5')),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]
-
-    # Span TASK Registered row (row index 7)
-    table_style.append(('SPAN', (0, 7), (3, 7)))
-
-    current_row = 7
-
-    # Span TASK Username row if present
-    if student.task_registered == "Yes" and student.task_username:
-        current_row += 1  # Move to TASK Username row (row index 8)
-        table_style.append(('SPAN', (0, current_row), (3, current_row)))
-
-    # CSI Registered row
-    current_row += 1  # Move to CSI Registered row
-    table_style.append(('SPAN', (0, current_row), (3, current_row)))
-
-    # Span CSI Membership ID row if present
-    if student.csi_registered == "Yes" and student.csi_membership_id:
-        current_row += 1  # Move to CSI Membership ID row
-        table_style.append(('SPAN', (0, current_row), (3, current_row)))
-
-    student_table.setStyle(TableStyle(table_style))
-
+    ]))
     story.append(student_table)
     story.append(Spacer(1, 15))
 
-    # Add Address as a separate section for better visibility
     story.append(Paragraph("ADDRESS DETAILS", header_style))
     story.append(Spacer(1, 10))
-
-    # Create a separate table for address
-    address_table_data = [
-        ["Address:", address_para]
-    ]
-
-    address_table = Table(address_table_data, colWidths=[1.5 * inch, 5.5 * inch])
-    address_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#E8E8E8')),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-        ('TOPPADDING', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-        ('WORDWRAP', (1, 0), (1, 0), True),  # Enable word wrapping for address
-        ('BACKGROUND', (1, 0), (1, 0), colors.white),  # White background for address
-    ]))
-
+    address_table = Table([["Address:", address_para]], colWidths=[1.5 * inch, 5.5 * inch])
+    address_table.setStyle(TableStyle(
+        [('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#E8E8E8')), ('GRID', (0, 0), (-1, -1), 1, colors.black),
+         ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+         ('LEFTPADDING', (0, 0), (-1, -1), 10), ('TOPPADDING', (0, 0), (-1, -1), 10),
+         ('BACKGROUND', (1, 0), (1, 0), colors.white)]))
     story.append(address_table)
     story.append(Spacer(1, 20))
 
-    # Academic Performance Section
     story.append(Paragraph("ACADEMIC PERFORMANCE", header_style))
-    story.append(Spacer(1, 10))
-
     academic_data = [
         ["SSC Marks (%)", str(student.ssc_marks) if student.ssc_marks else "N/A"],
         ["Inter Marks (%)", str(student.inter_marks) if student.inter_marks else "N/A"],
         ["Current CGPA", str(student.cgpa) if student.cgpa else "N/A"],
-        ["RTRP Project Title", student.rtrp_title if student.rtrp_title else "N/A"],
-        ["Internship Title", student.intern_title if student.intern_title else "N/A"],
-        ["Final Project Title", student.final_project_title if student.final_project_title else "N/A"],
+        ["RTRP Project Title", student.rtrp_title or "N/A"],
+        ["Internship Title", student.intern_title or "N/A"],
+        ["Final Project Title", student.final_project_title or "N/A"],
     ]
-
     academic_table = Table(academic_data, colWidths=[2.5 * inch, 4 * inch])
-    academic_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8E8E8')),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-    ]))
-
+    academic_table.setStyle(TableStyle(
+        [('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8E8E8')), ('GRID', (0, 0), (-1, -1), 1, colors.black),
+         ('ALIGN', (0, 0), (-1, -1), 'LEFT'), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+         ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold')]))
     story.append(academic_table)
     story.append(Spacer(1, 20))
 
-    # Additional Training Section
     if student.other_training:
-        story.append(Paragraph("ADDITIONAL TRAINING", header_style))
         story.append(Spacer(1, 10))
         story.append(Paragraph(student.other_training, styles['Normal']))
         story.append(Spacer(1, 20))
 
-    # Footer
     story.append(Spacer(1, 40))
     story.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
                            ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
     story.append(Paragraph("This is an official document of ANURAG Engineering College",
                            ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
-    story.append(Paragraph("Department of Information Technology",
-                           ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, alignment=1)))
 
     try:
         doc.build(story)
         buffer.seek(0)
-        print("✓ PDF generated successfully with TASK and CSI registration details")
         return buffer
     except Exception as e:
-        print(f"PDF generation error: {e}")
         traceback.print_exc()
         return generate_simple_pdf(student)
 
 
 def generate_simple_pdf(student):
-    """Simple PDF generation fallback with TASK and CSI registration"""
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
-
-    # Header
     p.setFont("Helvetica-Bold", 16)
     p.drawString(100, 750, "ANURAG ENGINEERING COLLEGE")
-    p.setFont("Helvetica", 14)
-    p.drawString(100, 730, "INFORMATION TECHNOLOGY DEPARTMENT")
-    p.drawString(100, 710, "STUDENT REGISTRATION")
-
-    # Student Photo (if exists)
-    if student.photo:
-        try:
-            # Generate signed URL for photo
-            photo_url = cloudinary.utils.cloudinary_url(
-                student.photo,
-                secure=True,
-                sign_url=True
-            )[0]
-
-            response = requests.get(photo_url, timeout=10)
-
-            if response.status_code == 200:
-                # Save image temporarily
-                img = PILImage.open(BytesIO(response.content))
-                img.thumbnail((100, 120), PILImage.Resampling.LANCZOS)
-                temp_img = BytesIO()
-                img.save(temp_img, format='JPEG')
-                temp_img.seek(0)
-
-                # Draw image on PDF
-                p.drawImage(temp_img, 450, 650, width=100, height=120)
-        except:
-            pass
-
-    # Student Information - INCLUDES TASK REGISTRATION
     p.setFont("Helvetica", 12)
-    p.drawString(100, 680, f"Hall Ticket No: {student.ht_no}")
-    p.drawString(100, 660, f"Student Name: {student.student_name}")
-    p.drawString(100, 640, f"Father Name: {student.father_name}")
-    p.drawString(100, 620, f"Mother Name: {student.mother_name}")
-    p.drawString(100, 600, f"Gender: {student.gender}")
-    p.drawString(100, 580, f"Date of Birth: {student.dob}")
-    p.drawString(100, 560, f"Age: {student.age}")
-    p.drawString(100, 540, f"APAAR ID: {student.apaar_id or 'N/A'}")
-    p.drawString(100, 520, f"Aadhar: {student.aadhar}")
-
-    # TASK Registration Details
-    p.drawString(100, 500, f"TASK Registered: {student.task_registered or 'N/A'}")
-    if student.task_registered == "Yes" and student.task_username:
-        p.drawString(100, 480, f"TASK Username: {student.task_username}")
-        y_position = 460
-    else:
-        y_position = 480
-
-    # CSI Registration Details
-    p.drawString(100, y_position, f"CSI Registered: {student.csi_registered or 'N/A'}")
-    y_position -= 20
-    if student.csi_registered == "Yes" and student.csi_membership_id:
-        p.drawString(100, y_position, f"CSI Membership ID: {student.csi_membership_id}")
-        y_position -= 20
-
-    # ADDRESS FIELD - PROMINENTLY DISPLAYED
-    p.drawString(100, y_position, "ADDRESS:")
-    if student.address:
-        # Handle multi-line address
-        address_lines = student.address.split('\n')
-        y_position -= 20
-        for i, line in enumerate(address_lines[:4]):  # Show first 4 lines
-            if line.strip():
-                p.drawString(120, y_position, line.strip())
-                y_position -= 20
-    else:
-        p.drawString(120, y_position - 20, "ADDRESS NOT PROVIDED")
-        y_position -= 40
-
-    p.drawString(100, y_position, f"Email: {student.email}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Phone: {student.student_phone}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Year: {student.year}, Sem: {student.sem}")
-    y_position -= 20
-    p.drawString(100, y_position, f"Registration Date: {student.registration_date.strftime('%d-%m-%Y')}")
-
-    # Footer
-    p.setFont("Helvetica", 10)
-    p.drawString(100, 100, f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}")
-    p.drawString(100, 85, "Department of Information Technology, ANURAG Engineering College")
-
-    p.showPage()
+    p.drawString(100, 700, f"HT No: {student.ht_no}")
+    p.drawString(100, 680, f"Name: {student.student_name}")
     p.save()
     buffer.seek(0)
     return buffer
@@ -521,414 +277,185 @@ def generate_simple_pdf(student):
 def image_to_pdf(image_bytes):
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
-
     img = PILImage.open(BytesIO(image_bytes))
     img.thumbnail((500, 700), PILImage.Resampling.LANCZOS)
-
     img_buffer = BytesIO()
     img.save(img_buffer, format="PNG")
     img_buffer.seek(0)
-
     c.drawImage(img_buffer, 50, 100, width=500, height=700)
     c.showPage()
     c.save()
-
     buffer.seek(0)
     return buffer
 
 
 def merge_student_certificates(student, main_pdf_buffer, certificate_files):
-    """
-    Merge student certificates using local file objects
-    """
     writer = PdfWriter()
-
     main_pdf_buffer.seek(0)
     reader = PdfReader(main_pdf_buffer)
     for page in reader.pages:
         writer.add_page(page)
-
     successful_merges = 0
-    failed_merges = 0
-
-    # Process each certificate file
     for field_name, file in certificate_files.items():
-        if not file:
-            continue
-
-        print(f"\nProcessing certificate: {field_name}")
-
+        if not file: continue
         try:
-            # Get file bytes
-            pdf_content = get_file_bytes(file)
-
-            if not pdf_content:
-                print("✗ Failed to read certificate file")
-                failed_merges += 1
-                continue
-
-            # Try to process as PDF first
+            file.seek(0)
+            pdf_content = BytesIO(file.read())
             try:
                 pdf_content.seek(0)
                 cert_reader = PdfReader(pdf_content)
-                for page in cert_reader.pages:
-                    writer.add_page(page)
+                for page in cert_reader.pages: writer.add_page(page)
                 successful_merges += 1
-                print(f"✓ Successfully added PDF certificate: {field_name}")
-
-            except Exception as pdf_error:
-                print(f"Not a PDF, trying as image: {pdf_error}")
-                # Try to process as image
-                try:
-                    pdf_content.seek(0)
-                    img_bytes = pdf_content.read()
-
-                    if img_bytes:
-                        img_pdf = image_to_pdf(img_bytes)
-                        img_reader = PdfReader(img_pdf)
-                        for page in img_reader.pages:
-                            writer.add_page(page)
-                        successful_merges += 1
-                        print(f"✓ Successfully added image certificate: {field_name}")
-                    else:
-                        failed_merges += 1
-                        print(f"✗ Empty file for: {field_name}")
-
-                except Exception as img_error:
-                    failed_merges += 1
-                    print(f"✗ Failed to process as image: {img_error}")
-
+            except:
+                pdf_content.seek(0)
+                img_bytes = pdf_content.read()
+                if img_bytes:
+                    img_pdf = image_to_pdf(img_bytes)
+                    img_reader = PdfReader(img_pdf)
+                    for page in img_reader.pages: writer.add_page(page)
+                    successful_merges += 1
         except Exception as e:
-            failed_merges += 1
-            print(f"Certificate merge error for {field_name}: {e}")
-
+            print(f"Merge error for {field_name}: {e}")
     final_buffer = BytesIO()
     writer.write(final_buffer)
     final_buffer.seek(0)
-
-    print("\nCertificate Merge Summary:")
-    print(f"✓ Successfully merged: {successful_merges}")
-    print(f"✗ Failed to merge: {failed_merges}")
-
-    if successful_merges > 0:
-        print("✓ Certificate merging completed successfully")
-    else:
-        print("✗ No certificates were successfully merged")
-
     return final_buffer
 
 
 def students(request):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
-
     if request.method == "POST":
         try:
-            ht_no = request.POST.get('ht_no', '').strip().upper()  # Convert to uppercase
-            student_name = request.POST.get('student_name', '').strip()
+            if 'photo' not in request.FILES:
+                messages.error(request, 'Please upload a student photo. PDF generation cannot proceed without a photo.')
+                return render(request, "dashboard/students.html")
 
-            # Check if phone numbers are the same
+            ht_no = request.POST.get('ht_no', '').strip().upper()
+            student_name = request.POST.get('student_name', '').strip()
             parent_phone = request.POST.get('parent_phone', '').strip()
             student_phone = request.POST.get('student_phone', '').strip()
-
             if parent_phone == student_phone:
                 messages.error(request, 'Parent Phone Number and Student Phone Number cannot be the same!')
                 return render(request, "dashboard/students.html")
-
             if StudentRegistration.objects.filter(ht_no=ht_no).exists():
                 messages.error(request, f'Student with Hall Ticket No {ht_no} already exists!')
                 return render(request, "dashboard/students.html")
-
-            # Parse date from DD-MM-YYYY to YYYY-MM-DD
             dob_str = request.POST.get('dob', '')
             dob = None
             if dob_str:
                 try:
-                    # Convert DD-MM-YYYY to YYYY-MM-DD
                     day, month, year = map(int, dob_str.split('-'))
                     dob = f"{year:04d}-{month:02d}-{day:02d}"
-                except ValueError:
-                    messages.error(request, 'Invalid date format. Please use DD-MM-YYYY format.')
+                except:
+                    messages.error(request, 'Invalid date format. Use DD-MM-YYYY.')
                     return render(request, "dashboard/students.html")
 
-            # Validate EAMCET rank
-            eamcet_rank_str = request.POST.get('eamcet_rank', '').strip()
-            eamcet_rank = None
-            if eamcet_rank_str:
-                try:
-                    eamcet_rank = int(eamcet_rank_str)
-                    if eamcet_rank < 1 or eamcet_rank > 200000:
-                        messages.error(request, 'EAMCET/EAPCET Rank must be between 1 and 200,000')
-                        return render(request, "dashboard/students.html")
-                except ValueError:
-                    messages.error(request, 'Invalid EAMCET/EAPCET Rank. Please enter a valid number.')
-                    return render(request, "dashboard/students.html")
+            task_reg = request.POST.get('task_registered', '').strip()
+            task_user = request.POST.get('task_username', '').strip()
+            csi_reg = request.POST.get('csi_registered', '').strip()
+            csi_id = request.POST.get('csi_membership_id', '').strip()
 
-            # Get TASK registration details
-            task_registered = request.POST.get('task_registered', '').strip()
-            task_username = request.POST.get('task_username', '').strip()
-
-            # Validate TASK registration
-            if task_registered == "Yes" and not task_username:
-                messages.error(request, 'TASK Username is required when "Yes" is selected for TASK registration!')
-                return render(request, "dashboard/students.html")
-
-            # Validate TASK username format if provided
-            if task_username and not task_username.isalnum():
-                messages.error(request, 'TASK Username should contain only letters and numbers!')
-                return render(request, "dashboard/students.html")
-
-            # Get CSI registration details
-            csi_registered = request.POST.get('csi_registered', '').strip()
-            csi_membership_id = request.POST.get('csi_membership_id', '').strip()
-
-            # Validate CSI registration
-            if csi_registered == "Yes" and not csi_membership_id:
-                messages.error(request, 'CSI Membership ID is required when "Yes" is selected for CSI registration!')
-                return render(request, "dashboard/students.html")
-
-            # Validate CSI membership ID format if provided
-            if csi_membership_id and not csi_membership_id.isalnum():
-                messages.error(request, 'CSI Membership ID should contain only letters and numbers!')
-                return render(request, "dashboard/students.html")
-
-            # IMPORTANT: Get address with proper handling
-            address = request.POST.get('address', '').strip()
-            print(f"DEBUG: Received address from form: '{address}'")
-            print(f"DEBUG: TASK Registered: {task_registered}")
-            print(f"DEBUG: TASK Username: {task_username}")
-            print(f"DEBUG: CSI Registered: {csi_registered}")
-            print(f"DEBUG: CSI Membership ID: {csi_membership_id}")
-
-            if not address:
-                messages.error(request, 'Address is required! Please enter your complete address.')
-                return render(request, "dashboard/students.html")
-
-            # Create student object with address and TASK/CSI details
             student = StudentRegistration(
-                ht_no=ht_no,
-                student_name=student_name,
+                ht_no=ht_no, student_name=student_name,
                 father_name=request.POST.get('father_name', '').strip(),
                 mother_name=request.POST.get('mother_name', '').strip(),
-                gender=request.POST.get('gender', ''),
-                dob=dob,
+                gender=request.POST.get('gender', ''), dob=dob,
                 age=int(request.POST.get('age', 0)) if request.POST.get('age') else 0,
                 nationality=request.POST.get('nationality', 'Indian'),
-                category=request.POST.get('category', ''),
-                religion=request.POST.get('religion', ''),
-                blood_group=request.POST.get('blood_group', ''),
-                apaar_id=request.POST.get('apaar_id', '').strip(),
-                aadhar=request.POST.get('aadhar', '').strip(),
-                address=address,
-                task_registered=task_registered,
-                task_username=task_username if task_registered == "Yes" else '',
-                csi_registered=csi_registered,
-                csi_membership_id=csi_membership_id if csi_registered == "Yes" else '',
-                parent_phone=parent_phone,
-                student_phone=student_phone,
-                email=request.POST.get('email', '').strip(),
+                category=request.POST.get('category', ''), religion=request.POST.get('religion', ''),
+                blood_group=request.POST.get('blood_group', ''), apaar_id=request.POST.get('apaar_id', '').strip(),
+                aadhar=request.POST.get('aadhar', '').strip(), address=request.POST.get('address', '').strip(),
+                task_registered=task_reg, task_username=task_user if task_reg == "Yes" else '',
+                csi_registered=csi_reg, csi_membership_id=csi_id if csi_reg == "Yes" else '',
+                parent_phone=parent_phone, student_phone=student_phone, email=request.POST.get('email', '').strip(),
                 admission_type=request.POST.get('admission_type', ''),
-                other_admission_details=request.POST.get('other_admission_details', ''),
-                eamcet_rank=eamcet_rank,
-                year=int(request.POST.get('year', 1)) if request.POST.get('year') else 1,
-                sem=int(request.POST.get('sem', 1)) if request.POST.get('sem') else 1,
-                ssc_marks=float(request.POST.get('ssc_marks')) if request.POST.get('ssc_marks') else None,
-                inter_marks=float(request.POST.get('inter_marks')) if request.POST.get('inter_marks') else None,
-                cgpa=float(request.POST.get('cgpa')) if request.POST.get('cgpa') else None,
-                rtrp_title=request.POST.get('rtrp_title', ''),
-                intern_title=request.POST.get('intern_title', ''),
+                eamcet_rank=request.POST.get('eamcet_rank') or None,
+                year=int(request.POST.get('year', 1)), sem=int(request.POST.get('sem', 1)),
+                ssc_marks=float(request.POST.get('ssc_marks', 0)) if request.POST.get('ssc_marks') else None,
+                inter_marks=float(request.POST.get('inter_marks', 0)) if request.POST.get('inter_marks') else None,
+                cgpa=float(request.POST.get('cgpa', 0)) if request.POST.get('cgpa') else None,
+                rtrp_title=request.POST.get('rtrp_title', ''), intern_title=request.POST.get('intern_title', ''),
                 final_project_title=request.POST.get('final_project_title', ''),
                 other_training=request.POST.get('other_training', '')
             )
 
-            # Handle photo upload to Cloudinary
-            if 'photo' in request.FILES:
-                photo_file = request.FILES['photo']
-                upload_result = cloudinary.uploader.upload(
-                    photo_file,
-                    folder="student_photos",
-                    public_id=f"{ht_no}_{student_name.replace(' ', '_')}",
-                    overwrite=True,
-                    access_mode="public",  # Make it publicly accessible
-                    invalidate=True
-                )
-                student.photo = upload_result["public_id"]
+            # Upload photo
+            upload_result = cloudinary.uploader.upload(
+                request.FILES['photo'],
+                folder="student_photos",
+                public_id=f"{ht_no}",
+                overwrite=True,
+                access_mode="public"
+            )
+            student.photo = upload_result["public_id"]
 
-            # Save student first (without certificates)
             student.save()
-            print(f"DEBUG: Student saved with TASK registration: {task_registered}")
-            print(f"DEBUG: Student saved with TASK username: {task_username}")
-            print(f"DEBUG: Student saved with CSI registration: {csi_registered}")
-            print(f"DEBUG: Student saved with CSI membership ID: {csi_membership_id}")
 
-            try:
-                # Generate PDF with merged certificates
-                print("\n" + "=" * 60)
-                print("Generating PDF for student:", student.student_name)
-                print("Hall Ticket No:", student.ht_no)
-                print("Address to be included in PDF:", student.address)
-                print("TASK Registered:", student.task_registered)
-                print("TASK Username:", student.task_username)
-                print("CSI Registered:", student.csi_registered)
-                print("CSI Membership ID:", student.csi_membership_id)
-                print("=" * 60)
+            certificate_files = {k: request.FILES.get(k) for k in
+                                 ['cert_achieve', 'cert_intern', 'cert_courses', 'cert_sdp', 'cert_extra',
+                                  'cert_placement', 'cert_national']}
+            base_pdf = generate_student_pdf(student)
+            pdf_buffer = merge_student_certificates(student, base_pdf, certificate_files)
 
-                # Get certificate files
-                certificate_files = {
-                    'cert_achieve': request.FILES.get('cert_achieve'),
-                    'cert_intern': request.FILES.get('cert_intern'),
-                    'cert_courses': request.FILES.get('cert_courses'),
-                    'cert_sdp': request.FILES.get('cert_sdp'),
-                    'cert_extra': request.FILES.get('cert_extra'),
-                    'cert_placement': request.FILES.get('cert_placement'),
-                    'cert_national': request.FILES.get('cert_national'),
-                }
-
-                # Generate base PDF
-                base_pdf_buffer = generate_student_pdf(student)
-
-                # Merge certificates
-                pdf_buffer = merge_student_certificates(student, base_pdf_buffer, certificate_files)
-
-                pdf_filename = student.get_pdf_filename()
-
-                # Upload PDF to Cloudinary
-                pdf_buffer.seek(0)
-                pdf_content = pdf_buffer.read()
-                content_file = ContentFile(pdf_content)
-
-                safe_id = pdf_filename.replace(".pdf", "").replace(" ", "_")
-
-                upload_result = cloudinary.uploader.upload(
-                    content_file,
-                    resource_type="raw",
-                    type="upload",
-                    folder="student_pdfs",
-                    public_id=safe_id,
-                    overwrite=True,
-                    access_mode="public",  # Make it publicly accessible
-                    invalidate=True,
-                    use_filename=True,
-                    unique_filename=False
-                )
-
-                # Save PDF URL to student object
-                student.pdf_url = upload_result["secure_url"]
-                student.save()
-
-                request.session['student_id'] = student.id
-                request.session['last_ht_no'] = student.ht_no
-
-                messages.success(request,
-                                 f'Registration submitted successfully! PDF generated with TASK and CSI details.')
-                return redirect('dashboard:view_pdf', student_id=student.id)
-
-            except Exception as pdf_error:
-                print(f"PDF Generation Error: {pdf_error}")
-                traceback.print_exc()
-                student.save()
-                request.session['student_id'] = student.id
-                messages.warning(request, f'Registration saved but PDF generation failed. Please try again.')
-                return redirect('dashboard:students')
-
+            upload_result = cloudinary.uploader.upload(ContentFile(pdf_buffer.read()), resource_type="raw",
+                                                       folder="student_pdfs", public_id=f"student_{ht_no}",
+                                                       overwrite=True, access_mode="public")
+            student.pdf_url = upload_result["secure_url"]
+            student.save()
+            request.session['student_id'] = student.id
+            messages.success(request, 'Registration Successful!')
+            return redirect('dashboard:view_pdf', student_id=student.id)
         except Exception as e:
-            print(f"Registration Error: {e}")
             traceback.print_exc()
-            messages.error(request, f'Error submitting form: {str(e)}')
-
+            messages.error(request, f'Error: {str(e)}')
     return render(request, "dashboard/students.html")
 
 
 def view_pdf(request, student_id):
-    if not request.session.get("logged_in"):
-        return redirect("dashboard:login")
-
     student = get_object_or_404(StudentRegistration, id=student_id)
-
-    if request.session.get("user_id") == "anrkitstudent":
-        if request.session.get("student_id") != student_id:
-            messages.error(request, "You can only view your own PDF")
-            return redirect("dashboard:students")
-
-    if student.pdf_url:
-        return redirect(student.pdf_url)
-
-    messages.error(request, "PDF not available")
+    if student.pdf_url: return redirect(student.pdf_url)
     return redirect("dashboard:students")
 
 
 def download_pdf(request, student_id):
-    if not request.session.get("logged_in"):
-        return redirect("dashboard:login")
-
     student = get_object_or_404(StudentRegistration, id=student_id)
-
-    if request.session.get("user_id") == "anrkitstudent":
-        if request.session.get("student_id") != student_id:
-            messages.error(request, "You can only download your own PDF")
-            return redirect("dashboard:students")
-
-    if student.pdf_url:
-        return redirect(student.pdf_url)
-
-    messages.error(request, "PDF not available")
+    if student.pdf_url: return redirect(student.pdf_url)
     return redirect("dashboard:students")
 
 
 def students_data(request):
-    if not request.session.get("logged_in"):
-        return redirect("dashboard:login")
+    if not request.session.get("logged_in") or request.session.get("user_id") != "7001":
+        messages.error(request, "Unauthorized access!")
+        return redirect("dashboard:dashboard")
 
-    if request.session.get("user_id") == "anrkitstudent":
-        return redirect("dashboard:students")
+    if not request.session.get("portal_verified"):
+        if request.method == "POST":
+            secondary_pass = request.POST.get("portal_password")
+            if secondary_pass == "Cutieminni@2":
+                request.session["portal_verified"] = True
+            else:
+                messages.error(request, "Incorrect Portal Password!")
+                return redirect("dashboard:dashboard")
+        else:
+            return redirect("dashboard:dashboard")
 
     students = StudentRegistration.objects.all().order_by('-registration_date')
-
-    search_query = request.GET.get('search', '')
-    if search_query:
-        students = students.filter(
-            ht_no__icontains=search_query
-        ) | students.filter(
-            student_name__icontains=search_query
-        ) | students.filter(
-            email__icontains=search_query
-        )
-
-    total_students = students.count()
     male_count = students.filter(gender='Male').count()
     female_count = students.filter(gender='Female').count()
 
-    is_admin = request.session.get("user_id") == "7001"
-
-    context = {
+    return render(request, "dashboard/students_data.html", {
         'students': students,
-        'search_query': search_query,
-        'total_students': total_students,
+        'total_students': students.count(),
         'male_count': male_count,
         'female_count': female_count,
-        'is_admin': is_admin,
-    }
-    return render(request, "dashboard/students_data.html", context)
+        'is_admin': True
+    })
 
 
 def delete_student(request, student_id):
-    if not request.session.get("logged_in"):
-        return redirect("dashboard:login")
-
-    if request.session.get("user_id") != "7001":
-        messages.error(request, 'You do not have permission to delete student data.')
-        return redirect('dashboard:students_data')
-
-    try:
-        student = get_object_or_404(StudentRegistration, id=student_id)
-        student_name = student.student_name
-        ht_no = student.ht_no
-        student.delete()
-        messages.success(request, f'Student {student_name} (HT No: {ht_no}) deleted.')
-
-    except Exception as e:
-        messages.error(request, f'Error deleting student: {str(e)}')
-
+    if request.session.get("user_id") == "7001":
+        get_object_or_404(StudentRegistration, id=student_id).delete()
     return redirect('dashboard:students_data')
 
 
@@ -939,6 +466,12 @@ def exambranch(request):
 
 
 def laboratory(request):
+    if not request.session.get("logged_in"):
+        return redirect("dashboard:login")
+    return render(request, "dashboard/dashboard.html")
+
+
+def library(request):
     if not request.session.get("logged_in"):
         return redirect("dashboard:login")
     return render(request, "dashboard/dashboard.html")
@@ -963,22 +496,8 @@ def download_faculty_pdf(request):
 @csrf_exempt
 def upload_generated_pdf(request):
     if request.method == "POST" and request.FILES.get("pdf"):
-        pdf_file = request.FILES["pdf"]
-        employee_code = request.POST.get("employee_code", "").strip()
-        if not employee_code:
-            return JsonResponse({"error": "Employee code missing"}, status=400)
-
-        upload_result = cloudinary.uploader.upload(
-            pdf_file,
-            resource_type="raw",
-            type="upload",
-            folder="faculty_pdfs",
-            public_id=employee_code,
-            overwrite=True,
-            access_mode="public",  # Make it publicly accessible
-            invalidate=True,
-            unique_filename=False
-        )
-
-        return JsonResponse({"status": "success", "url": upload_result["secure_url"]})
+        res = cloudinary.uploader.upload(request.FILES["pdf"], resource_type="raw", folder="faculty_pdfs",
+                                         public_id=request.POST.get("employee_code", ""), overwrite=True,
+                                         access_mode="public")
+        return JsonResponse({"status": "success", "url": res["secure_url"]})
     return JsonResponse({"error": "Invalid request"}, status=400)

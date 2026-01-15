@@ -24,29 +24,6 @@
         position: relative;
     }
 
-    .college-title {
-        font-size: 2.8rem !important;
-        color: #000000 !important;
-        margin: 0;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        text-shadow: 2px 2px 0px #0f0;
-        line-height: 1.2;
-    }
-
-    .department-title {
-        font-size: 2rem !important;
-        color: #000000 !important;
-        margin: 5px 0 15px 0;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        border-bottom: 2px solid #000;
-        padding-bottom: 10px;
-        display: inline-block;
-    }
-
     .form-title {
         font-size: 2rem;
         color: #000;
@@ -315,14 +292,6 @@
 
     /* Responsive adjustments for header */
     @media (max-width: 768px) {
-        .college-title {
-            font-size: 2rem !important;
-        }
-
-        .department-title {
-            font-size: 1.5rem !important;
-        }
-
         .form-title {
             font-size: 1.5rem;
         }
@@ -343,7 +312,6 @@
 
 <canvas id="matrix-canvas"></canvas>
 
-<!-- Messages Display -->
 {% if messages %}
 <div class="messages">
     {% for message in messages %}
@@ -366,21 +334,14 @@
 
 <div class="registration-container">
     <div class="form-card">
-        <!-- ENHANCED HEADER WITH LOGOUT -->
         <div class="form-header">
-            <!-- Logout Button -->
             <a href="{% url 'dashboard:logout' %}" class="logout-btn">
                 🚪 Logout
             </a>
 
-            <!-- College and Department Titles -->
-            <h1 class="college-title">ANURAG ENGINEERING COLLEGE</h1>
-            <h2 class="department-title">INFORMATION TECHNOLOGY DEPARTMENT</h2>
-
-            <!-- Form Title -->
+            <!-- Removed the college and department titles here -->
             <h3 class="form-title">STUDENTS REGISTRATION FORM</h3>
 
-            <!-- Instructions -->
             <div style="margin-top: 15px;">
                 <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">
                     After submission, a PDF will be generated with filename: <strong>student_{HT_NO}_{NAME}.pdf</strong>
@@ -466,7 +427,6 @@
                            pattern="\d{3}-\d{3}-\d{3}-\d{3}" title="Format: 000-000-000-000">
                 </div>
 
-                <!-- ENHANCED ADDRESS FIELD -->
                 <div class="form-group full-width address-field-container">
                     <label>ADDRESS * (Will appear in PDF)</label>
                     <textarea name="address" id="address_field" class="address-textarea"
@@ -475,7 +435,6 @@
                               oninput="updateAddressPreview()"></textarea>
                     <div class="error-message" id="address_error"></div>
 
-                    <!-- Address Preview -->
                     <div class="address-preview-label">Address Preview (as it will appear in PDF):</div>
                     <div class="address-preview" id="address_preview">
                         No address entered yet.
@@ -506,7 +465,6 @@
                     <input type="email" name="email" required>
                 </div>
 
-                <!-- NEW FIELD: TASK REGISTRATION -->
                 <div class="form-group full-width task-field-container">
                     <label>ARE YOU REGISTERED WITH TASK (Telangana Academy for Skill and Knowledge) *</label>
                     <select name="task_registered" id="task_registered" onchange="toggleTaskUsername()" required>
@@ -524,7 +482,6 @@
                     </small>
                 </div>
 
-                <!-- NEW FIELD: CSI REGISTRATION -->
                 <div class="form-group full-width task-field-container">
                     <label>ARE YOU REGISTERED WITH CSI (Computer Society of India) *</label>
                     <select name="csi_registered" id="csi_registered" onchange="toggleCsiMembershipId()" required>
@@ -554,7 +511,6 @@
                     <input type="text" name="other_admission_details" id="other_admission_input" class="hidden-input" placeholder="Please specify admission type">
                 </div>
 
-                <!-- NEW FIELD: EAMCET/EAPCET RANK -->
                 <div class="form-group">
                     <label>EAMCET/EAPCET Rank</label>
                     <input type="number" name="eamcet_rank" id="eamcet_rank"
@@ -577,10 +533,11 @@
                         <option value="1">1</option><option value="2">2</option>
                     </select>
                 </div>
+
                 <div class="form-group full-width">
-                    <label>Upload Latest Photo</label>
-                    <input type="file" name="photo" accept="image/*">
-                    <small style="color: #666; font-size: 0.8rem;">Max size: 2MB, Formats: JPG, PNG</small>
+                    <label>Upload Latest Photo *</label>
+                    <input type="file" name="photo" id="photo_input" accept="image/*" required>
+                    <small style="color: #666; font-size: 0.8rem;">Max size: 2MB, Formats: JPG, PNG (Required for PDF Generation)</small>
                 </div>
 
                 <div class="section-title">III. ACADEMIC PERFORMANCE</div>

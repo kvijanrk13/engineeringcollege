@@ -23,45 +23,57 @@
         z-index: -1;
     }
 
-    /* 1. NEW LETTER HEAD SECTION */
-    .header-image-container {
+    /* 1. SINGLE HEADER IMAGE SECTION - Fixed to hide IT DEPT PORTAL */
+    .header-container {
+        text-align: center;
+        margin: 20px auto 30px auto;
         width: 100%;
         max-width: 1100px;
-        background-color: #ffffff;
-        padding: 10px;
-        margin: 20px auto;
-        border-radius: 8px;
-        border: 2px solid #0f0;
-        text-align: center;
-        display: block;
     }
 
     .letterhead-img {
         width: 100%;
         height: auto;
-        display: block;
+        max-height: 180px;
         object-fit: contain;
+        display: block;
+        margin: 0 auto;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 8px;
+        border: 2px solid #0f0;
+        position: relative;
     }
 
-    /* 2. DUAL HEADERS */
-    .college-header {
-        font-size: 3.5rem;
-        font-weight: 900;
-        color: #fff;
-        text-shadow: 0 0 15px #0f0;
-        margin: 10px 0 0 0;
-        text-align: center;
-        text-transform: uppercase;
+    /* Overlay to hide "IT DEPT PORTAL" text from the image */
+    .letterhead-img-container {
+        position: relative;
+        display: inline-block;
+        width: 100%;
     }
 
+    .letterhead-img-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 20%;
+        background-color: #ffffff;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    /* 2. DEPARTMENT HEADER */
     .dept-header {
-        font-size: 2.2rem;
+        font-size: 2.5rem;
         font-weight: 700;
         color: #0f0;
-        margin: 5px 0 30px 0;
+        margin: 15px 0 30px 0;
         text-align: center;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     }
 
     /* 3. HORIZONTAL NAVIGATION TABS */
@@ -104,37 +116,138 @@
         color: #1a1a1a; /* Dark text for readability on white background */
     }
 
-    h1.syllabus-title { color: #0f172a; text-align: center; margin-bottom: 30px; border-bottom: 4px solid #1e293b; padding-bottom: 10px; font-weight: 800; font-family: 'Segoe UI', sans-serif; }
+    h1.syllabus-title {
+        color: #0f172a;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 4px solid #1e293b;
+        padding-bottom: 10px;
+        font-weight: 800;
+        font-family: 'Segoe UI', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
     /* Tab Grid Navigation */
-    .tab-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 30px; }
-    .tab-btn { padding: 15px; background: #e2e8f0; color: #334155; border: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-    .tab-btn.active { background: #1e293b; color: #ffffff; }
+    .tab-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    .tab-btn {
+        padding: 15px;
+        background: #e2e8f0;
+        color: #334155;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .tab-btn:hover { background: #cbd5e1; }
+    .tab-btn.active {
+        background: #1e293b;
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
 
     /* Content Sections */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .semester-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; }
-    .sem-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .sem-header { background: #334155; color: #fff; padding: 12px; font-weight: 700; text-align: center; font-size: 1.2rem; }
+    .semester-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 25px;
+    }
+    .sem-card {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .sem-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+    .sem-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        padding: 12px;
+        font-weight: 700;
+        text-align: center;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
     /* Tables */
-    .std-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-    .std-table th, .std-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    .std-table th { background-color: #f1f5f9; font-weight: 800; color: #1e293b; }
-    .code-col { width: 25%; font-family: 'Consolas', monospace; font-weight: 700; color: #b91c1c; }
-    .name-col { font-weight: 600; color: #1e293b; }
-    .sem-badge { display: inline-block; padding: 4px 12px; background: #475569; color: white; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+    .std-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+    .std-table th, .std-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .std-table th {
+        background-color: #f1f5f9;
+        font-weight: 800;
+        color: #1e293b;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    .std-table tr:hover { background-color: #f8fafc; }
+    .code-col {
+        width: 25%;
+        font-family: 'Consolas', monospace;
+        font-weight: 700;
+        color: #b91c1c;
+    }
+    .name-col {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .sem-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #475569;
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    /* Common Subjects Table */
+    .common-table-wrapper {
+        overflow-x: auto;
+    }
+    .common-table {
+        min-width: 800px;
+    }
+    .common-table th:nth-child(1) { width: 15%; }
+    .common-table th:nth-child(2) { width: 60%; }
+    .common-table th:nth-child(3) { width: 25%; }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
 
-<div class="header-image-container">
-    <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Anurag Letter Head" class="letterhead-img">
+<!-- SINGLE HEADER IMAGE (No duplicate) -->
+<div class="header-container">
+    <div class="letterhead-img-container">
+        <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Anurag Engineering College" class="letterhead-img">
+    </div>
+    <h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
 </div>
-
-<h1 class="college-header">ANURAG ENGINEERING COLLEGE</h1>
-<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
 
 <div class="nav-tabs-container">
     <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
@@ -171,7 +284,7 @@
 
     <div id="tab-common" class="tab-content">
         <div class="sem-card">
-            <div class="sem-header" style="background: #0f172a;">Subjects Common to All Departments (IT, CSE, AIML)</div>
+            <div class="sem-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">Subjects Common to All Departments (IT, CSE, AIML)</div>
             <div id="common-syllabus-container"></div>
         </div>
     </div>
@@ -275,10 +388,14 @@
     function renderCommonSubjects() {
         const container = document.getElementById('common-syllabus-container');
         let html = '<div class="common-table-wrapper"><table class="std-table common-table"><thead><tr><th>Year/Sem</th><th>Subject Name</th><th>Codes (IT / CSE / AIML)</th></tr></thead><tbody>';
+
+        let hasCommonSubjects = false;
+
         semOrder.forEach(sem => {
             const itSubs = syllabusData[sem]["IT"] || [];
             const cseSubs = syllabusData[sem]["CSE"] || [];
             const aimlSubs = syllabusData[sem]["AIML"] || [];
+
             const common = [];
             itSubs.forEach(itSub => {
                 const name = itSub.name.trim().toUpperCase();
@@ -288,22 +405,36 @@
                     common.push({ name: itSub.name, codes: `${itSub.code} / ${cseMatch.code} / ${aimlMatch.code}` });
                 }
             });
+
             if (common.length > 0) {
+                hasCommonSubjects = true;
                 common.forEach(sub => {
                     html += `<tr><td><span class="sem-badge">${sem}</span></td><td class="name-col">${sub.name}</td><td class="code-col">${sub.codes}</td></tr>`;
                 });
             }
         });
+
+        if (!hasCommonSubjects) {
+            html += `<tr><td colspan="3" style="text-align: center; padding: 40px; color: #64748b; font-style: italic;">No common subjects found across all three departments.</td></tr>`;
+        }
+
         html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
     function openTab(tabName) {
         const contents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < contents.length; i++) contents[i].classList.remove("active");
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
+        }
+
         const btns = document.getElementsByClassName("tab-btn");
-        for (let i = 0; i < btns.length; i++) btns[i].classList.remove("active");
+        for (let i = 0; i < btns.length; i++) {
+            btns[i].classList.remove("active");
+        }
+
         document.getElementById(`tab-${tabName}`).classList.add("active");
+
         if(tabName === 'it') btns[0].classList.add("active");
         if(tabName === 'cse') btns[1].classList.add("active");
         if(tabName === 'aiml') btns[2].classList.add("active");
@@ -315,6 +446,11 @@
         renderDepartmentSyllabus('CSE', 'cse-syllabus-container');
         renderDepartmentSyllabus('AIML', 'aiml-syllabus-container');
         renderCommonSubjects();
+    });
+
+    window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     });
 </script>
 {% endblock %}

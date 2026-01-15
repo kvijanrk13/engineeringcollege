@@ -23,6 +23,7 @@ urlpatterns = [
     # Other Tabs
     path("exambranch/", views.exambranch, name="exambranch"),
     path("laboratory/", views.laboratory, name="laboratory"),
+    path("library/", views.library, name="library"), # 🔥 ADDED
     path("gallery/", views.gallery, name="gallery"),
 
     # Utilities
