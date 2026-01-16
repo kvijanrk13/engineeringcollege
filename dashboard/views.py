@@ -496,8 +496,27 @@ def download_faculty_pdf(request):
 @csrf_exempt
 def upload_generated_pdf(request):
     if request.method == "POST" and request.FILES.get("pdf"):
-        res = cloudinary.uploader.upload(request.FILES["pdf"], resource_type="raw", folder="faculty_pdfs",
-                                         public_id=request.POST.get("employee_code", ""), overwrite=True,
-                                         access_mode="public")
-        return JsonResponse({"status": "success", "url": res["secure_url"]})
-    return JsonResponse({"error": "Invalid request"}, status=400)
+        try:
+            file = request.FILES["pdf"]
+            employee_code = request.POST.get("employee_code", "faculty")
+
+            result = cloudinary.uploader.upload(
+                file,
+                resource_type="raw",
+                folder="faculty_pdfs",
+                public_id=employee_code,
+                format="pdf",
+                overwrite=True,
+                access_mode="public"
+            )
+
+            return JsonResponse({
+                "status": "success",
+                "url": result["secure_url"]
+            })
+
+        except Exception as e:
+            print(f"Upload error: {e}")
+            return JsonResponse({"status": "error", "error": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "error": "No file received"}, status=400)

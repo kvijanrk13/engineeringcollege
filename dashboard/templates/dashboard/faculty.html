@@ -71,7 +71,7 @@
         max-width: 1200px; margin: 20px auto 20px 20px;
         background: white; padding: 30px; border-radius: 10px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-right: 320px;
-        color: #333; /* Ensuring form text is readable on white */
+        color: #333;
     }
 
     h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; font-weight: 700; }
@@ -100,7 +100,7 @@
     .add-btn, .mini-upload-btn { background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; }
     .mini-upload-btn { background: #3498db; width: 100%; padding: 9px; }
     .mini-upload-btn.uploaded { background: #27ae60; }
-    .load-btn { background: #34495e; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; height: 42px; }
+    .load-btn { background: #34495e; color: white; border: none; padding: 10px; border-radius=5px; cursor: pointer; width: 100%; font-weight: bold; height: 42px; }
 
     /* Subjects Section */
     .subject-selection-block { border: 1px solid #dfe6e9; padding: 20px; border-radius: 8px; margin-bottom: 25px; background: white; }
@@ -135,7 +135,6 @@
     .button.upload { background: #8e44ad; }
     .button.upload:hover { background: #732d91; }
     .button.clear { background: #c0392b; }
-    /* DISABLED STATE for Upload Button */
     .button:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; }
 
     /* Modal */
@@ -154,12 +153,51 @@
     .pdf-photo-box img { width: 100%; height: 100%; object-fit: cover; }
     .clearfix::after { content: ""; clear: both; display: table; }
 
+    /* Subjects Dealt Section */
+    .subjects-dealt-container {
+        background: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .subject-item-dealt {
+        padding: 8px 10px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        margin-bottom: 5px;
+        border-radius: 3px;
+        transition: background 0.2s;
+    }
+
+    .subject-item-dealt:hover {
+        background: #f8f9fa;
+    }
+
+    .subject-item-dealt .remove-subject-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 3px 8px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background 0.2s;
+    }
+
+    .subject-item-dealt .remove-subject-btn:hover {
+        background: #c0392b;
+    }
+
     @media (max-width: 1200px) { .container { margin-right: 20px; } .photo-sidebar { position: static; width: 100%; margin: 0 0 20px 0; } .controls { flex-direction: column; } .pub-grid, .edu-spec-row, .edu-basics-row { grid-template-columns: 1fr; } .subject-controls { grid-template-columns: 1fr 1fr; } }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
 
-<!-- Navigation Tabs Only (Removed header-branding) -->
+<!-- Navigation Tabs -->
 <div class="nav-tabs-container">
     <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
     <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab active">Faculty</a>
@@ -339,6 +377,20 @@
             {% endfor %}
         </div>
 
+        <!-- New SUBJECTS DEALT Section -->
+        <div class="form-section">
+            <h3>Subjects Dealt</h3>
+            <div class="subjects-dealt-container">
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="subject-input" placeholder="Enter subject name (e.g., Data Structures)" style="flex: 1; padding: 10px;">
+                    <button type="button" id="add-subject-btn" class="add-btn" style="width: 100px;">+ ADD</button>
+                </div>
+                <div class="subject-list-container" id="subjects-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 5px; padding: 10px; background: #f9f9f9;">
+                    <!-- Subjects will appear here -->
+                </div>
+            </div>
+        </div>
+
         <div class="form-section">
             <h3>About Yourself</h3>
             <textarea id="about-yourself" rows="5"></textarea>
@@ -349,7 +401,7 @@
         <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save</button>
         <button type="button" class="button preview" id="preview-details-btn"><i class="fas fa-eye"></i> Preview</button>
         <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
-        <button type="button" class="button upload" id="upload-pdf-btn" onclick="uploadPDF()" disabled><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
+        <button type="button" class="button upload" id="upload-pdf-btn" disabled><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
         <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear</button>
     </div>
 
@@ -366,10 +418,11 @@
         </div>
     </div>
 
-    </form> </div>
+    </form>
+</div>
 
 <script>
-    /* Matrix Background Logic for consistent UI */
+    // Matrix Background
     const matrixCanvas = document.getElementById('matrix-canvas');
     const ctx = matrixCanvas.getContext('2d');
     matrixCanvas.width = window.innerWidth;
@@ -394,94 +447,354 @@
     }
     setInterval(drawMatrix, 33);
 
-    // --- CSRF HELPER ---
+    // --- Global Variables ---
+    let uploaded = {
+        achievements: [], scm: [], pubs: [],
+        edu: { ssc: null, inter: null, ug: null, pg: null, phd: null },
+        mem: []
+    };
+    let savedData = null;
+    let subjectsDealt = [];
+    const fmtDate = (d) => d ? d.split('-').reverse().join('-') : '';
+
+    // --- CSRF Helper ---
     function getCSRFToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
     }
 
+    // --- IT Subjects Data ---
     const itSubjects = {
-        "First Year": { "1-1": [{"code":"MA101BS","name":"MATRICES AND CALCULUS"},{"code":"AP102BS","name":"APPLIED PHYSICS"},{"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},{"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},{"code:"ME105ES","name":"ENGINEERING WORKSHOP"},{"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},{"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},{"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},{"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},{"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}],"1-2":[{"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},{"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},{"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},{"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},{"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},{"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},{"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},{"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},{"code":"CS209ES","name":"IT WORKSHOP"},{"code":"HS210MC","name":"CONSTITUTION OF INDIA"}] },
-        "Second Year": { "2-1": [{"code":"PS301BS","name":"PROBABILITY AND STATISTICS"},{"code":"EC302ES","name":"DIGITAL ELECTRONICS"},{"code":"CS303PC","name":"DATA STRUCTURES"},{"code":"CM304PC","name":"COMPUTER ORGANIZATION AND MICROPROCESSOR"},{"code":"IT305PC","name":"INTRODUCTION TO IOT"},{"code":"CS306PC","name":"DATA STRUCTURES LABORATORY"},{"code":"EC307ES","name":"DIGITAL ELECTRONICS LABORATORY"},{"code":"IT308PC","name":"INTERNET OF THINGS LABORATORY"},{"code":"HS309MC","name":"GENDER SENSITIZATION"},{"code":"CS308PC","name":"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}],"2-2":[{"code":"MB401HS","name":"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},{"code":"CS402PC","name":"DISCRETE MATHEMATICS"},{"code":"CS403PC","name":"OPERATING SYSTEMS"},{"code":"CS404PC","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT405PC","name":"JAVA PROGRAMMING"},{"code":"CS406PC","name":"OPERATING SYSTEMS LABORATORY"},{"code":"CS407PC","name":"DATABASE MANAGEMENT SYSTEMS LABORATORY"},{"code":"IT408PC","name":"JAVA PROGRAMMING LABORATORY"},{"code":"IT409PW","name":"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},{"code":"IT410PC","name":"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},{"code":"HS411MC","name":"INTELLECTUAL PROPERTY RIGHTS"}] },
-        "Third Year": { "3-1": [{"code":"CS501PC","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"IT502PC","name":"AUTOMATA AND COMPILER DESIGN"},{"code":"IT503PC","name":"EMBEDDED SYSTEMS"},{"code":"IT511PE","name":"FULL STACK DEVELOPMENT"},{"code":"IT512PE","name":"DATA MINING"},{"code":"CS513PE","name":"SCRIPTING LANGUAGES"},{"code":"IT514PE","name":"MOBILE APPLICATION DEVELOPMENT"},{"code":"IT515PE","name":"SOFTWARE TESTING METHODOLOGIES"},{"code":"AM515PE","name":"COMPUTER GRAPHICS"},{"code":"IT522PE","name":"QUANTUM COMPUTING"},{"code":"IT523PE","name":"ADVANCED OPERATING SYSTEMS"},{"code":"CS524PE","name":"DISTRIBUTED DATABASES"},{"code":"IT525PE","name":"PATTERN RECOGNITION"},{"code":"IT532PE","name":"DATA MINING LABORATORY"},{"code":"IT531PE","name":"FULL STACK DEVELOPMENT LABORATORY"},{"code":"IT533PE","name":"SCRIPTING LANGUAGES LABORATORY"},{"code":"IT534PE","name":"MOBILE APPLICATION DEVELOPMENT LABORATORY"},{"code":"IT535PE","name":"SOFTWARE TESTING METHODOLOGIES LABORATORY"},{"code":"IT504PC","name":"COMPILER DESIGN LABORATORY"},{"code":"IT505PC","name":"EMBEDDED SYSTEMS LABORATORY"},{"code":"CS507PC","name":"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}],"3-2":[{"code":"CS601PC","name":"MACHINE LEARNING"},{"code":"IT602PC","name":"SOFTWARE ENGINEERING"},{"code":"IT603PC","name":"DATA COMMUNICATIONS AND COMPUTER NETWORKS"},{"code":"IT611PE","name":"BIOMETRICS"},{"code":"IT612PE","name":"ADVANCED COMPUTER ARCHITECTURE"},{"code":"CS633PE","name":"DATA ANALYTICS"},{"code":"CS616PE","name":"IMAGE PROCESSING"},{"code":"CS617PE","name":"PRINCIPLES OF PROGRAMMING LANGUAGES"},{"code":"CE611OE","name":"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},{"code":"CE612OE","name":"BUILDING MANAGEMENT SYSTEMS"},{"code":"CE613OE","name":"ENVIRONMENTAL IMPACT ASSESSMENT"},{"code":"CE614OE","name":"HYDROGEOLOGY"},{"code":"EE611OE","name":"RENEWABLE ENERGY SOURCES"},{"code":"EE612OE","name":"FUNDAMENTAL OF ELECTRIC VEHICLES"},{"code":"ME611OE","name":"BASIC MECHANICAL ENGINEERING"},{"code":"ME612OE","name":"POWER PLANT ENGINEERING"},{"code":"EC611OE","name":"FUNDAMENTALS OF INTERNET OF THINGS"},{"code":"EC612OE","name":"PRINCIPLES OF SIGNAL PROCESSING"},{"code":"EC613OE","name":"DIGITAL ELECTRONICS FOR ENGINEERING"},{"code":"CS611OE","name":"DATA STRUCTURES"},{"code":"CS612OE","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT611OE","name":"JAVA PROGRAMMING"},{"code":"IT612OE","name":"SOFTWARE ENGINEERING"},{"code":"AM611OE","name":"FUNDAMENTALS OF AI"},{"code":"AM612OE","name":"MACHINE LEARNING BASICS"},{"code":"CS604PC","name":"MACHINE LEARNING LABORATORY"},{"code":"IT605PC","name":"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"},{"code":"AE606HS","name":"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},{"code":"CS606PW","name":"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATA SPARK)"},{"code":"ES607MC","name":"ENVIRONMENTAL SCIENCE"}] },
-        "Fourth Year": { "4-1": [{"code":"IT701PC","name":"INFORMATION SECURITY"},{"code":"IT702PC","name":"CLOUD COMPUTING"},{"code":"IT711PE","name":"HUMAN COMPUTER INTERACTION"},{"code":"IT712PE","name":"HIGH PERFORMANCE COMPUTING"},{"code":"IT713PE","name":"ARTIFICIAL INTELLIGENCE"},{"code":"IT714PE","name":"INFORMATION RETRIEVAL SYSTEMS"},{"code":"IT715PE","name":"AD-HOC & SENSOR NETWORKS"},{"code":"IT721PE","name":"NATURAL LANGUAGE PROCESSING"},{"code":"IT722PE","name":"DISTRIBUTED SYSTEMS"},{"code":"IT723PE","name":"AUGMENTED REALITY & VIRTUAL REALITY"},{"code":"IT724PE","name":"WEB SECURITY"},{"code":"IT725PE","name":"CYBER FORENSICS"},{"code":"CE721OE","name":"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},{"code":"CE722OE","name":"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},{"code":"CE723OE","name":"SOLID WASTE MANAGEMENT"},{"code":"CE724OE","name":"SMART CITIES"},{"code":"EE721OE","name":"UTILIZATION OF ELECTRIC ENERGY"},{"code":"EE722OE","name":"ENERGY STORAGE SYSTEMS"},{"code":"ME721OE","name":"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},{"code":"ME722OE","name":"INDUSTRIAL ENGINEERING & MANAGEMENT"},{"code":"EC721OE","name":"ELECTRONIC SENSORS"},{"code":"EC722OE","name":"ELECTRONICS FOR HEALTH CARE"},{"code":"EC723OE","name":"TELECOMMUNICATIONS FOR SOCIETY"},{"code":"CS721OE","name":"OPERATING SYSTEMS"},{"code":"CS722OE","name":"COMPUTER NETWORKS"},{"code":"IT721OE","name":"FULL STACK DEVELOPMENT"},{"code":"IT722OE","name":"SCRIPTING LANGUAGES"},{"code":"AM721OE","name":"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},{"code":"AM722OE","name":"AI APPLICATIONS"},{"code":"IT703PC","name":"INFORMATION SECURITY LAB"},{"code":"IT704PC","name":"CLOUD COMPUTING LAB"},{"code":"IT705PC","name":"PROJECT STAGE – I"}],"4-2":[{"code":"IT801PC","name":"ORGANIZATIONAL BEHAVIOR"},{"code":"IT811PE","name":"INTRUSION DETECTION SYSTEMS"},{"code":"IT812PE","name":"REAL TIME SYSTEMS"},{"code":"IT813PE","name":"BLOCK CHAIN TECHNOLOGY"},{"code":"IT814PE","name":"DEEP LEARNING"},{"code":"IT815PE","name":"SOFTWARE PROCESS & PROJECT MANAGEMENT"},{"code":"CE831OE","name":"ENERGY EFFICIENT BUILDINGS"},{"code":"CE832OE","name":"MULTI CRITERION DECISION MAKING"},{"code":"CE833OE","name":"ENVIRONMENTAL POLLUTION"},{"code":"EE831OE","name":"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},{"code":"EE832OE","name":"RELIABILITY ENGINEERING"},{"code":"ME831OE","name":"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},{"code":"ME832OE","name":"ENTREPRENEURSHIP DEVELOPMENT"},{"code":"EC831OE","name":"MEASURING INSTRUMENTS"},{"code":"EC832OE","name":"COMMUNICATION TECHNOLOGIES"},{"code":"EC833OE","name":"FUNDAMENTALS OF SOCIAL NETWORKS"},{"code":"CS831OE","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"CS832OE","name":"DATA ANALYTICS"},{"code":"IT831OE","name":"BIG DATA TECHNOLOGIES"},{"code":"IT832OE","name":"DEVOPS"},{"code":"AM831OE","name":"CHATBOTS"},{"code":"AM832OE","name":"EVOLUTIONARY COMPUTING"},{"code":"IT802PC","name":"PROJECT STAGE-II, INCLUDING SEMINAR"}] }
+        "First Year": {
+            "1-1": [
+                {"code":"MA101BS","name":"MATRICES AND CALCULUS"},
+                {"code":"AP102BS","name":"APPLIED PHYSICS"},
+                {"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},
+                {"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},
+                {"code":"ME105ES","name":"ENGINEERING WORKSHOP"},
+                {"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
+                {"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},
+                {"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
+                {"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
+                {"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}
+            ],
+            "1-2":[
+                {"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
+                {"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},
+                {"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},
+                {"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},
+                {"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},
+                {"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},
+                {"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},
+                {"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},
+                {"code":"CS209ES","name":"IT WORKSHOP"},
+                {"code":"HS210MC","name":"CONSTITUTION OF INDIA"}
+            ]
+        },
+        "Second Year": {
+            "2-1": [
+                {"code":"PS301BS","name":"PROBABILITY AND STATISTICS"},
+                {"code":"EC302ES","name":"DIGITAL ELECTRONICS"},
+                {"code":"CS303PC","name":"DATA STRUCTURES"},
+                {"code":"CM304PC","name":"COMPUTER ORGANIZATION AND MICROPROCESSOR"},
+                {"code":"IT305PC","name":"INTRODUCTION TO IOT"},
+                {"code":"CS306PC","name":"DATA STRUCTURES LABORATORY"},
+                {"code":"EC307ES","name":"DIGITAL ELECTRONICS LABORATORY"},
+                {"code":"IT308PC","name":"INTERNET OF THINGS LABORATORY"},
+                {"code":"HS309MC","name":"GENDER SENSITIZATION"},
+                {"code":"CS308PC","name":"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}
+            ],
+            "2-2":[
+                {"code":"MB401HS","name":"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
+                {"code":"CS402PC","name":"DISCRETE MATHEMATICS"},
+                {"code":"CS403PC","name":"OPERATING SYSTEMS"},
+                {"code":"CS404PC","name":"DATABASE MANAGEMENT SYSTEMS"},
+                {"code":"IT405PC","name":"JAVA PROGRAMMING"},
+                {"code":"CS406PC","name":"OPERATING SYSTEMS LABORATORY"},
+                {"code":"CS407PC","name":"DATABASE MANAGEMENT SYSTEMS LABORATORY"},
+                {"code":"IT408PC","name":"JAVA PROGRAMMING LABORATORY"},
+                {"code":"IT409PW","name":"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
+                {"code":"IT410PC","name":"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},
+                {"code":"HS411MC","name":"INTELLECTUAL PROPERTY RIGHTS"}
+            ]
+        },
+        "Third Year": {
+            "3-1": [
+                {"code":"CS501PC","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {"code":"IT502PC","name":"AUTOMATA AND COMPILER DESIGN"},
+                {"code":"IT503PC","name":"EMBEDDED SYSTEMS"},
+                {"code":"IT511PE","name":"FULL STACK DEVELOPMENT"},
+                {"code":"IT512PE","name":"DATA MINING"},
+                {"code":"CS513PE","name":"SCRIPTING LANGUAGES"},
+                {"code":"IT514PE","name":"MOBILE APPLICATION DEVELOPMENT"},
+                {"code":"IT515PE","name":"SOFTWARE TESTING METHODOLOGIES"},
+                {"code":"AM515PE","name":"COMPUTER GRAPHICS"},
+                {"code":"IT522PE","name":"QUANTUM COMPUTING"},
+                {"code":"IT523PE","name":"ADVANCED OPERATING SYSTEMS"},
+                {"code":"CS524PE","name":"DISTRIBUTED DATABASES"},
+                {"code":"IT525PE","name":"PATTERN RECOGNITION"},
+                {"code":"IT532PE","name":"DATA MINING LABORATORY"},
+                {"code":"IT531PE","name":"FULL STACK DEVELOPMENT LABORATORY"},
+                {"code":"IT533PE","name":"SCRIPTING LANGUAGES LABORATORY"},
+                {"code":"IT534PE","name":"MOBILE APPLICATION DEVELOPMENT LABORATORY"},
+                {"code":"IT535PE","name":"SOFTWARE TESTING METHODOLOGIES LABORATORY"},
+                {"code":"IT504PC","name":"COMPILER DESIGN LABORATORY"},
+                {"code":"IT505PC","name":"EMBEDDED SYSTEMS LABORATORY"},
+                {"code":"CS507PC","name":"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}
+            ],
+            "3-2":[
+                {"code":"CS601PC","name":"MACHINE LEARNING"},
+                {"code":"IT602PC","name":"SOFTWARE ENGINEERING"},
+                {"code":"IT603PC","name":"DATA COMMUNICATIONS AND COMPUTER NETWORKS"},
+                {"code":"IT611PE","name":"BIOMETRICS"},
+                {"code":"IT612PE","name":"ADVANCED COMPUTER ARCHITECTURE"},
+                {"code":"CS633PE","name":"DATA ANALYTICS"},
+                {"code":"CS616PE","name":"IMAGE PROCESSING"},
+                {"code":"CS617PE","name":"PRINCIPLES OF PROGRAMMING LANGUAGES"},
+                {"code":"CE611OE","name":"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},
+                {"code":"CE612OE","name":"BUILDING MANAGEMENT SYSTEMS"},
+                {"code":"CE613OE","name":"ENVIRONMENTAL IMPACT ASSESSMENT"},
+                {"code":"CE614OE","name":"HYDROGEOLOGY"},
+                {"code":"EE611OE","name":"RENEWABLE ENERGY SOURCES"},
+                {"code":"EE612OE","name":"FUNDAMENTAL OF ELECTRIC VEHICLES"},
+                {"code":"ME611OE","name":"BASIC MECHANICAL ENGINEERING"},
+                {"code":"ME612OE","name":"POWER PLANT ENGINEERING"},
+                {"code":"EC611OE","name":"FUNDAMENTALS OF INTERNET OF THINGS"},
+                {"code":"EC612OE","name":"PRINCIPLES OF SIGNAL PROCESSING"},
+                {"code":"EC613OE","name":"DIGITAL ELECTRONICS FOR ENGINEERING"},
+                {"code":"CS611OE","name":"DATA STRUCTURES"},
+                {"code":"CS612OE","name":"DATABASE MANAGEMENT SYSTEMS"},
+                {"code":"IT611OE","name":"JAVA PROGRAMMING"},
+                {"code":"IT612OE","name":"SOFTWARE ENGINEERING"},
+                {"code":"AM611OE","name":"FUNDAMENTALS OF AI"},
+                {"code":"AM612OE","name":"MACHINE LEARNING BASICS"},
+                {"code":"CS604PC","name":"MACHINE LEARNING LABORATORY"},
+                {"code":"IT605PC","name":"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"},
+                {"code":"AE606HS","name":"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},
+                {"code":"CS606PW","name":"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATA SPARK)"},
+                {"code":"ES607MC","name":"ENVIRONMENTAL SCIENCE"}
+            ]
+        },
+        "Fourth Year": {
+            "4-1": [
+                {"code":"IT701PC","name":"INFORMATION SECURITY"},
+                {"code":"IT702PC","name":"CLOUD COMPUTING"},
+                {"code":"IT711PE","name":"HUMAN COMPUTER INTERACTION"},
+                {"code":"IT712PE","name":"HIGH PERFORMANCE COMPUTING"},
+                {"code":"IT713PE","name":"ARTIFICIAL INTELLIGENCE"},
+                {"code":"IT714PE","name":"INFORMATION RETRIEVAL SYSTEMS"},
+                {"code":"IT715PE","name":"AD-HOC & SENSOR NETWORKS"},
+                {"code":"IT721PE","name":"NATURAL LANGUAGE PROCESSING"},
+                {"code":"IT722PE","name":"DISTRIBUTED SYSTEMS"},
+                {"code":"IT723PE","name":"AUGMENTED REALITY & VIRTUAL REALITY"},
+                {"code":"IT724PE","name":"WEB SECURITY"},
+                {"code":"IT725PE","name":"CYBER FORENSICS"},
+                {"code":"CE721OE","name":"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},
+                {"code":"CE722OE","name":"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},
+                {"code":"CE723OE","name":"SOLID WASTE MANAGEMENT"},
+                {"code":"CE724OE","name":"SMART CITIES"},
+                {"code":"EE721OE","name":"UTILIZATION OF ELECTRIC ENERGY"},
+                {"code":"EE722OE","name":"ENERGY STORAGE SYSTEMS"},
+                {"code":"ME721OE","name":"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},
+                {"code":"ME722OE","name":"INDUSTRIAL ENGINEERING & MANAGEMENT"},
+                {"code":"EC721OE","name":"ELECTRONIC SENSORS"},
+                {"code":"EC722OE","name":"ELECTRONICS FOR HEALTH CARE"},
+                {"code":"EC723OE","name":"TELECOMMUNICATIONS FOR SOCIETY"},
+                {"code":"CS721OE","name":"OPERATING SYSTEMS"},
+                {"code":"CS722OE","name":"COMPUTER NETWORKS"},
+                {"code":"IT721OE","name":"FULL STACK DEVELOPMENT"},
+                {"code":"IT722OE","name":"SCRIPTING LANGUAGES"},
+                {"code":"AM721OE","name":"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},
+                {"code":"AM722OE","name":"AI APPLICATIONS"},
+                {"code":"IT703PC","name":"INFORMATION SECURITY LAB"},
+                {"code":"IT704PC","name":"CLOUD COMPUTING LAB"},
+                {"code":"IT705PC","name":"PROJECT STAGE – I"}
+            ],
+            "4-2":[
+                {"code":"IT801PC","name":"ORGANIZATIONAL BEHAVIOR"},
+                {"code":"IT811PE","name":"INTRUSION DETECTION SYSTEMS"},
+                {"code":"IT812PE","name":"REAL TIME SYSTEMS"},
+                {"code":"IT813PE","name":"BLOCK CHAIN TECHNOLOGY"},
+                {"code":"IT814PE","name":"DEEP LEARNING"},
+                {"code":"IT815PE","name":"SOFTWARE PROCESS & PROJECT MANAGEMENT"},
+                {"code":"CE831OE","name":"ENERGY EFFICIENT BUILDINGS"},
+                {"code":"CE832OE","name":"MULTI CRITERION DECISION MAKING"},
+                {"code":"CE833OE","name":"ENVIRONMENTAL POLLUTION"},
+                {"code":"EE831OE","name":"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},
+                {"code":"EE832OE","name":"RELIABILITY ENGINEERING"},
+                {"code":"ME831OE","name":"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},
+                {"code":"ME832OE","name":"ENTREPRENEURSHIP DEVELOPMENT"},
+                {"code":"EC831OE","name":"MEASURING INSTRUMENTS"},
+                {"code":"EC832OE","name":"COMMUNICATION TECHNOLOGIES"},
+                {"code":"EC833OE","name":"FUNDAMENTALS OF SOCIAL NETWORKS"},
+                {"code":"CS831OE","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {"code":"CS832OE","name":"DATA ANALYTICS"},
+                {"code":"IT831OE","name":"BIG DATA TECHNOLOGIES"},
+                {"code":"IT832OE","name":"DEVOPS"},
+                {"code":"AM831OE","name":"CHATBOTS"},
+                {"code":"AM832OE","name":"EVOLUTIONARY COMPUTING"},
+                {"code":"IT802PC","name":"PROJECT STAGE-II, INCLUDING SEMINAR"}
+            ]
+        }
     };
 
-    let uploaded = { achievements:[], scm:[], pubs:[], edu:{ssc:null, inter:null, ug:null, pg:null, phd:null}, mem:[] };
-    let savedData = null;
-    const fmtDate = (d) => d ? d.split('-').reverse().join('-') : '';
-
-    // --- 2. SHARED PDF GENERATION FUNCTION ---
+    // --- PDF Generation Function ---
     async function generateFinalPDFBlob() {
-        if(!savedData) { alert("Save details first!"); return null; }
+        if(!savedData) {
+            alert("Please save details first!");
+            return null;
+        }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
         // Header
-        doc.setFontSize(16); doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
-        doc.setFontSize(12); doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
-        doc.setLineWidth(0.5); doc.line(10, 25, 200, 25);
+        doc.setFontSize(16);
+        doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
+        doc.setFontSize(12);
+        doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
+        doc.setLineWidth(0.5);
+        doc.line(10, 25, 200, 25);
 
+        // Photo
         const img = document.getElementById('faculty-photo');
-        if(img.src.startsWith('data:')) try{ doc.addImage(img.src,'JPEG',150,30,35,45); }catch(e){}
+        if(img.src.startsWith('data:')) {
+            try {
+                doc.addImage(img.src,'JPEG',150,30,35,45);
+            } catch(e){}
+        }
 
         // Basic Info
-        doc.autoTable({startY: 35, tableWidth: 140, theme:'plain', body:[
-            ['Code', savedData.basic.code], ['Name', savedData.basic.name],
-            ['Dept', savedData.basic.dept], ['Joined', savedData.basic.joined]
-        ]});
+        doc.autoTable({
+            startY: 35,
+            tableWidth: 140,
+            theme:'plain',
+            body:[
+                ['Code', savedData.basic.code],
+                ['Name', savedData.basic.name],
+                ['Dept', savedData.basic.dept],
+                ['Joined', savedData.basic.joined]
+            ]
+        });
         let y = Math.max(80, doc.lastAutoTable.finalY + 10);
 
-        // Personal
-        doc.text("PERSONAL DETAILS", 14, y); y+=5;
-        doc.autoTable({startY: y, theme:'grid', body:[
-           ['JNTUH ID', savedData.personal.jntuh, 'AICTE ID', savedData.personal.aicte],
-           ['PAN', savedData.personal.pan, 'AADHAR', savedData.personal.aadhar],
-           ['MOBILE', savedData.personal.mobile, 'EMAIL', savedData.personal.email],
-           ['ORCID', savedData.personal.orcid, 'APAAR', savedData.personal.apaar],
-           ['DOB', savedData.personal.dob, 'STATE', savedData.personal.state],
-           ['CASTE', savedData.personal.caste, 'SUB-CASTE', savedData.personal.subcaste]
-        ]});
+        // Personal Details
+        doc.text("PERSONAL DETAILS", 14, y);
+        y += 5;
+        doc.autoTable({
+            startY: y,
+            theme:'grid',
+            body:[
+               ['JNTUH ID', savedData.personal.jntuh, 'AICTE ID', savedData.personal.aicte],
+               ['PAN', savedData.personal.pan, 'AADHAR', savedData.personal.aadhar],
+               ['MOBILE', savedData.personal.mobile, 'EMAIL', savedData.personal.email],
+               ['ORCID', savedData.personal.orcid, 'APAAR', savedData.personal.apaar],
+               ['DOB', savedData.personal.dob, 'STATE', savedData.personal.state],
+               ['CASTE', savedData.personal.caste, 'SUB-CASTE', savedData.personal.subcaste]
+            ]
+        });
         y = doc.lastAutoTable.finalY + 10;
 
         // Education
-        doc.text("EDUCATIONAL QUALIFICATIONS", 14, y); y+=5;
-        doc.autoTable({startY: y, head:[['Degree','Year','%/CGPA','Specialization','Institute']], body: savedData.edu});
+        doc.text("EDUCATIONAL QUALIFICATIONS", 14, y);
+        y += 5;
+        doc.autoTable({
+            startY: y,
+            head:[['Degree','Year','%/CGPA','Specialization','Institute']],
+            body: savedData.edu
+        });
         y = doc.lastAutoTable.finalY + 10;
 
-        // Subjects
-        doc.text("SUBJECTS DEALT & RESULTS", 14, y); y+=5;
-        let subs = [];
-        for(let i=1; i<=4; i++) {
-            const s = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`)).map(c=>c.nextElementSibling.nextElementSibling.innerText).join('\n');
-            const r = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`)).map(d=>d.dataset.txt).join('\n\n');
-            const p = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`)).map(d=>d.dataset.pct).join('\n\n');
-            if(s||r) subs.push([document.getElementById(`select-academic-year-${i}`).value, s, r, p]);
+        // Subjects Dealt
+        if (subjectsDealt.length > 0) {
+            doc.text("SUBJECTS DEALT", 14, y);
+            y += 5;
+
+            const subjectRows = subjectsDealt.map((subject, index) => [
+                String(index + 1),
+                subject
+            ]);
+
+            doc.autoTable({
+                startY: y,
+                head: [['S.No', 'Subject Name']],
+                body: subjectRows,
+                theme: 'grid',
+                headStyles: { fillColor: [52, 73, 94] },
+                styles: { fontSize: 10 }
+            });
+            y = doc.lastAutoTable.finalY + 10;
         }
-        doc.autoTable({startY: y, head:[['Year','Subject','Stats', 'Pass %']], body: subs});
+
+        // Subjects Dealt & Results
+        doc.text("SUBJECTS DEALT & RESULTS", 14, y);
+        y += 5;
+        let subs = [];
+        for(let i = 1; i <= 4; i++) {
+            const s = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`))
+                .map(c => c.nextElementSibling.nextElementSibling.innerText)
+                .join('\n');
+            const r = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`))
+                .map(d => d.dataset.txt)
+                .join('\n\n');
+            const p = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`))
+                .map(d => d.dataset.pct)
+                .join('\n\n');
+            if(s || r) {
+                subs.push([
+                    document.getElementById(`select-academic-year-${i}`).value,
+                    s,
+                    r,
+                    p
+                ]);
+            }
+        }
+        doc.autoTable({
+            startY: y,
+            head:[['Year','Subject','Stats', 'Pass %']],
+            body: subs
+        });
         y = doc.lastAutoTable.finalY + 10;
 
         // Projects
-        doc.addPage(); y=20;
-        doc.text("PROJECTS HANDLED", 14, y); y+=5;
+        doc.addPage();
+        y = 20;
+        doc.text("PROJECTS HANDLED", 14, y);
+        y += 5;
         let projRows = [];
         document.querySelectorAll('[id^=added-projects] .added-result-item').forEach(p => {
-            if(p.dataset.students) projRows.push([p.dataset.title, p.dataset.batch, p.dataset.students, p.dataset.marks]);
+            if(p.dataset.students) {
+                projRows.push([
+                    p.dataset.title,
+                    p.dataset.batch,
+                    p.dataset.students,
+                    p.dataset.marks
+                ]);
+            }
         });
-        doc.autoTable({startY: y, head:[['Title','Batch','Students','Marks']], body: projRows});
+        doc.autoTable({
+            startY: y,
+            head:[['Title','Batch','Students','Marks']],
+            body: projRows
+        });
         y = doc.lastAutoTable.finalY + 10;
 
         // Achievements
-        doc.text("FACULTY ACHIEVEMENTS", 14, y); y+=5;
-        doc.autoTable({startY: y, head:[['Description','Duration']], body: savedData.ach});
+        doc.text("FACULTY ACHIEVEMENTS", 14, y);
+        y += 5;
+        doc.autoTable({
+            startY: y,
+            head:[['Description','Duration']],
+            body: savedData.ach
+        });
         y = doc.lastAutoTable.finalY + 10;
 
-        // About (Last)
-        doc.text("ABOUT FACULTY", 14, y); y+=7;
+        // About Faculty
+        doc.text("ABOUT FACULTY", 14, y);
+        y += 7;
         doc.setFontSize(10);
         doc.text(doc.splitTextToSize(savedData.about, 180), 14, y);
 
-        // Merge
+        // Merge certificates
         const pdfBytes = doc.output('arraybuffer');
         const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
         const allFiles = [
@@ -497,19 +810,27 @@
                     const c = await PDFLib.PDFDocument.load(b);
                     (await pdfDoc.copyPages(c, c.getPageIndices())).forEach(p => pdfDoc.addPage(p));
                 } else if(f.type.startsWith('image/')) {
-                    const i = f.type==='image/png'?await pdfDoc.embedPng(b):await pdfDoc.embedJpg(b);
+                    const i = f.type === 'image/png' ? await pdfDoc.embedPng(b) : await pdfDoc.embedJpg(b);
                     const p = pdfDoc.addPage();
-                    p.drawImage(i, {x:20, y:20, width:170, height:250});
+                    p.drawImage(i, {x: 20, y: 20, width: 170, height: 250});
                 }
             } catch(e){}
         }
         return new Blob([await pdfDoc.save()], {type:'application/pdf'});
     }
 
-    // --- UPLOAD FUNCTION ---
+    // --- Upload Function ---
     async function uploadPDF() {
+        console.log("Upload button clicked");
+
         if (!savedData) {
             alert("Please save details before uploading");
+            return;
+        }
+
+        const empCode = document.getElementById("employee-code").value.trim();
+        if (!empCode) {
+            alert("Employee Code is required for upload");
             return;
         }
 
@@ -521,154 +842,370 @@
         }
 
         const formData = new FormData();
-        // 🔥 Key MUST be "pdf"
-        const empCode = document.getElementById("employee-code").value.trim();
-        if (!empCode) {
-            alert("Employee Code is required for upload");
-            return;
-        }
         formData.append("pdf", pdfBlob, `${empCode}.pdf`);
         formData.append("employee_code", empCode);
 
-        fetch("/upload-generated-pdf/", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": getCSRFToken() // Add CSRF token header
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
+        console.log("Sending PDF to server...");
+
+        try {
+            const response = await fetch("/upload-generated-pdf/", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
             if (data.status === "success") {
-                alert("Upload successful");
+                alert("Upload successful!");
                 console.log("Cloudinary URL:", data.url);
             } else {
                 alert("Upload failed: " + data.error);
             }
-        })
-        .catch(error => {
+
+        } catch (error) {
             console.error("Upload error:", error);
-            alert("Upload error");
-        });
+            alert("Upload failed. Check console for details.");
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- 1. HELPERS & UPLOADS ---
-        const bindFile = (btn, inp, cb) => {
-            const btnEl = document.getElementById(btn);
-            const inpEl = document.getElementById(inp);
-            if(btnEl && inpEl) {
-                btnEl.onclick = (e) => { e.preventDefault(); inpEl.click(); };
-                inpEl.onchange = function() { cb(this.files[0]); };
-            }
-        };
+    // --- Main Initialization ---
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Photo Upload ---
+        const photoInput = document.getElementById('photo-upload-input');
+        const chooseFileBtn = document.getElementById('choose-file-btn');
+        const facultyPhoto = document.getElementById('faculty-photo');
+        const noPhotoMessage = document.getElementById('no-photo-message');
 
-        bindFile('choose-file-btn', 'photo-upload-input', (f) => {
-            if(f) { const r = new FileReader(); r.onload=e=>{ document.getElementById('faculty-photo').src=e.target.result; document.getElementById('faculty-photo').style.display='block'; document.getElementById('no-photo-message').style.display='none'; }; r.readAsDataURL(f); }
+        chooseFileBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            photoInput.click();
         });
-        ['ssc','inter','ug','pg','phd'].forEach(lvl => {
-            bindFile(`${lvl}-up-btn`, `${lvl}-file`, (f) => { if(f) { uploaded.edu[lvl]=f; document.getElementById(`${lvl}-up-btn`).innerText="Uploaded"; document.getElementById(`${lvl}-up-btn`).style.background="#27ae60"; } });
+
+        photoInput.addEventListener('change', function() {
+            if(this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    facultyPhoto.src = e.target.result;
+                    facultyPhoto.style.display = 'block';
+                    noPhotoMessage.style.display = 'none';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
         });
-        ['scm','ach','pub','mem'].forEach(t => {
-            bindFile(`${t}-browse-btn`, `${t}-file-input`, (f) => {
-                 // Note: corrected from snippet to include element check if needed
+
+        // --- 2. Education File Uploads ---
+        const educationLevels = ['ssc', 'inter', 'ug', 'pg', 'phd'];
+        educationLevels.forEach(level => {
+            const upBtn = document.getElementById(`${level}-up-btn`);
+            const fileInput = document.getElementById(`${level}-file`);
+
+            upBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                if(this.files && this.files[0]) {
+                    uploaded.edu[level] = this.files[0];
+                    upBtn.innerText = "Uploaded";
+                    upBtn.classList.add('uploaded');
+                }
             });
         });
 
-        // --- 2. LIST MGMT ---
-        const addListItem = (id, html, file, arr) => {
-            if(file) arr.push(file);
-            document.getElementById(id).insertAdjacentHTML('beforeend', `<div class="added-result-item">${html}</div>`);
-        };
+        // --- 3. Experience Calculation ---
+        const joiningDate = document.getElementById('joining-date');
+        const expAnurag = document.getElementById('exp-anurag');
 
-        document.getElementById('add-scm-btn').onclick = (e) => { e.preventDefault(); const t = document.getElementById('scm-text').value; if(t) addListItem('added-scm-container', `<b>${t}</b>`, document.getElementById('scm-file-input').files[0], uploaded.scm); document.getElementById('scm-text').value=''; };
-        document.getElementById('add-mem-btn').onclick = (e) => { e.preventDefault(); const t = document.getElementById('mem-text').value; if(t) addListItem('added-mem-container', `<b>${t}</b>`, document.getElementById('mem-file-input').files[0], uploaded.mem); document.getElementById('mem-text').value=''; };
-        document.getElementById('add-ach-btn').onclick = (e) => {
-            e.preventDefault();
-            const d = document.getElementById('achievements-text').value;
-            const r = `${fmtDate(document.getElementById('ach-from-date').value)} to ${fmtDate(document.getElementById('ach-to-date').value)}`;
-            if(d) {
-                const f = document.getElementById('ach-file-input').files[0];
-                if(f) uploaded.achievements.push(f);
-                document.getElementById('added-achievements-container').insertAdjacentHTML('beforeend', `<div class="added-result-item" data-desc="${d}" data-range="${r}"><b>${d}</b> <small>(${r})</small></div>`);
-            }
-            document.getElementById('achievements-text').value='';
-        };
-        document.getElementById('add-pub-btn').onclick = (e) => {
-            e.preventDefault();
-            const t = document.getElementById('pub-title').value;
-            if(t) addListItem('added-pub-container', `<b>[${document.getElementById('pub-type').value}] ${t}</b> (${fmtDate(document.getElementById('pub-date').value)})`, document.getElementById('pub-file-input').files[0], uploaded.pubs);
-            document.getElementById('pub-title').value='';
-        };
-
-        // --- 3. EXP CALC ---
-        const calcExp = () => {
-            const val = document.getElementById('joining-date').value;
+        function calculateExperience() {
+            const val = joiningDate.value;
             if(!val) return;
-            const d1 = new Date(val), d2 = new Date();
-            let y=d2.getFullYear()-d1.getFullYear(), m=d2.getMonth()-d1.getMonth(), d=d2.getDate()-d1.getDate();
-            if(d<0){ m--; d+=new Date(d2.getFullYear(),d2.getMonth(),0).getDate(); }
-            if(m<0){ y--; m+=12; }
-            document.getElementById('exp-anurag').value = `${y}Y ${m}M ${d}D`;
-        };
-        document.getElementById('joining-date').onchange = calcExp;
-        document.getElementById('joining-date').oninput = calcExp;
 
-        // --- 4. SLOTS ---
-        for(let i=1; i<=4; i++) {
-             document.getElementById(`load-btn-${i}`).onclick = (e) => {
-                 e.preventDefault();
-                 const c = document.getElementById(`subjects-container-${i}`);
-                 c.innerHTML = '';
-                 const y = document.getElementById(`select-year-${i}`).value, s = document.getElementById(`select-semester-${i}`).value;
-                 (itSubjects[y]?.[s]||[]).forEach(sub => c.insertAdjacentHTML('beforeend', `<div class="subject-item"><input type="checkbox" class="subject-checkbox" checked> <span class="subject-code">${sub.code}</span> <span class="subject-name">${sub.name}</span></div>`));
-             };
-             document.getElementById(`select-all-${i}`).onchange = (e) => {
-                 document.querySelectorAll(`#subjects-container-${i} .subject-checkbox`).forEach(cb => cb.checked = e.target.checked);
-             };
+            const d1 = new Date(val);
+            const d2 = new Date();
 
-             const calc = () => {
-                 const a = parseFloat(document.getElementById(`res-appeared-${i}`).value)||0;
-                 const p = parseFloat(document.getElementById(`res-passed-${i}`).value)||0;
-                 document.getElementById(`res-failed-${i}`).value = (a>=p)?(a-p):0;
-                 document.getElementById(`res-percentage-${i}`).value = a>0 ? ((p/a)*100).toFixed(2)+'%' : '0.00%';
-             };
-             document.getElementById(`res-appeared-${i}`).oninput = calc;
-             document.getElementById(`res-passed-${i}`).oninput = calc;
+            let years = d2.getFullYear() - d1.getFullYear();
+            let months = d2.getMonth() - d1.getMonth();
+            let days = d2.getDate() - d1.getDate();
 
-             document.getElementById(`btn-add-result-${i}`).onclick = (e) => {
-                 e.preventDefault();
-                 const s = document.getElementById(`res-subject-${i}`).value;
-                 if(s) document.getElementById(`added-results-container-${i}`).insertAdjacentHTML('beforeend', `<div class="added-result-item" data-txt="App:${document.getElementById(`res-appeared-${i}`).value}, Pass:${document.getElementById(`res-passed-${i}`).value}, Fail:${document.getElementById(`res-failed-${i}`).value}" data-pct="${document.getElementById(`res-percentage-${i}`).value}"><b>${s}</b>: ${document.getElementById(`res-percentage-${i}`).value}</div>`);
-             };
+            if(days < 0) {
+                months--;
+                days += new Date(d2.getFullYear(), d2.getMonth(), 0).getDate();
+            }
+            if(months < 0) {
+                years--;
+                months += 12;
+            }
 
-             document.getElementById(`btn-add-proj-batch-${i}`).onclick = (e) => {
-                 e.preventDefault();
-                 const t = document.getElementById(`proj-title-${i}`).value;
-                 let students = [], marks = [];
-                 for(let k=1; k<=4; k++) {
-                     let n = document.getElementById(`proj-stud${k}-${i}`).value, r = document.getElementById(`proj-roll${k}-{{ i }}`).value, m = document.getElementById(`proj-marks${k}-{{ i }}`).value;
-                     if(n || r) { students.push(`${n} (${r})`); marks.push(m || '-'); }
-                 }
-                 if(t) {
-                     const div = document.createElement('div');
-                     div.className = 'added-result-item';
-                     div.dataset.title = t;
-                     div.dataset.batch = document.getElementById(`proj-batch-${i}`).value;
-                     div.dataset.students = students.join('\n');
-                     div.dataset.marks = marks.join('\n');
-                     div.innerHTML = `<b>${t}</b> (${div.dataset.batch})<br><small>${students.join(', ')}</small>`;
-                     document.getElementById(`added-projects-container-${i}`).appendChild(div);
-                 }
-             };
+            expAnurag.value = `${years}Y ${months}M ${days}D`;
         }
 
-        // --- 5. SAVE & PREVIEW ---
-        document.getElementById('save-details-btn').onclick = (e) => {
+        joiningDate.addEventListener('change', calculateExperience);
+        joiningDate.addEventListener('input', calculateExperience);
+
+        // --- 4. File Upload Binders ---
+        function bindFileUpload(btnId, inputId, callback) {
+            const btn = document.getElementById(btnId);
+            const input = document.getElementById(inputId);
+
+            if(btn && input) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    input.click();
+                });
+
+                input.addEventListener('change', function() {
+                    if(this.files && this.files[0]) {
+                        callback(this.files[0]);
+                    }
+                });
+            }
+        }
+
+        // Bind file uploads for certificates
+        bindFileUpload('mem-browse-btn', 'mem-file-input', function(file) {
+            // File will be handled when ADD button is clicked
+        });
+
+        bindFileUpload('scm-browse-btn', 'scm-file-input', function(file) {
+            // File will be handled when ADD button is clicked
+        });
+
+        bindFileUpload('ach-browse-btn', 'ach-file-input', function(file) {
+            // File will be handled when ADD button is clicked
+        });
+
+        bindFileUpload('pub-browse-btn', 'pub-file-input', function(file) {
+            // File will be handled when ADD button is clicked
+        });
+
+        // --- 5. Add Item Functions ---
+        function addListItem(containerId, html, file, array) {
+            if(file) array.push(file);
+            const container = document.getElementById(containerId);
+            if(container) {
+                container.insertAdjacentHTML('beforeend', `<div class="added-result-item">${html}</div>`);
+            }
+        }
+
+        // Membership ADD
+        document.getElementById('add-mem-btn').addEventListener('click', function(e) {
             e.preventDefault();
+            const text = document.getElementById('mem-text').value;
+            if(text) {
+                const file = document.getElementById('mem-file-input').files[0];
+                addListItem('added-mem-container', `<b>${text}</b>`, file, uploaded.mem);
+                document.getElementById('mem-text').value = '';
+            }
+        });
+
+        // SCM ADD
+        document.getElementById('add-scm-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = document.getElementById('scm-text').value;
+            if(text) {
+                const file = document.getElementById('scm-file-input').files[0];
+                addListItem('added-scm-container', `<b>${text}</b>`, file, uploaded.scm);
+                document.getElementById('scm-text').value = '';
+            }
+        });
+
+        // Achievements ADD
+        document.getElementById('add-ach-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const desc = document.getElementById('achievements-text').value;
+            const fromDate = document.getElementById('ach-from-date').value;
+            const toDate = document.getElementById('ach-to-date').value;
+            const range = `${fmtDate(fromDate)} to ${fmtDate(toDate)}`;
+
+            if(desc) {
+                const file = document.getElementById('ach-file-input').files[0];
+                if(file) uploaded.achievements.push(file);
+
+                const container = document.getElementById('added-achievements-container');
+                container.insertAdjacentHTML('beforeend',
+                    `<div class="added-result-item" data-desc="${desc}" data-range="${range}">
+                        <b>${desc}</b> <small>(${range})</small>
+                    </div>`);
+
+                document.getElementById('achievements-text').value = '';
+            }
+        });
+
+        // Publications ADD
+        document.getElementById('add-pub-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('pub-title').value;
+            if(title) {
+                const type = document.getElementById('pub-type').value;
+                const date = document.getElementById('pub-date').value;
+                const file = document.getElementById('pub-file-input').files[0];
+
+                addListItem('added-pub-container',
+                    `<b>[${type}] ${title}</b> (${fmtDate(date)})`,
+                    file, uploaded.pubs);
+
+                document.getElementById('pub-title').value = '';
+            }
+        });
+
+        // --- 6. Subjects Dealt Functionality ---
+        document.getElementById('add-subject-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const subjectInput = document.getElementById('subject-input');
+            const subject = subjectInput.value.trim();
+
+            if (subject) {
+                subjectsDealt.push(subject);
+
+                // Add to display list
+                const subjectItem = document.createElement('div');
+                subjectItem.className = 'subject-item-dealt';
+                subjectItem.style.cssText = 'padding: 8px 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; margin-bottom: 5px; border-radius: 3px;';
+                subjectItem.innerHTML = `
+                    <span>${subject}</span>
+                    <button type="button" class="remove-subject-btn" style="background: #e74c3c; color: white; border: none; border-radius: 3px; padding: 3px 8px; cursor: pointer; font-size: 12px;">Remove</button>
+                `;
+
+                document.getElementById('subjects-list').appendChild(subjectItem);
+                subjectInput.value = '';
+
+                // Add remove functionality
+                subjectItem.querySelector('.remove-subject-btn').addEventListener('click', function() {
+                    const index = subjectsDealt.indexOf(subject);
+                    if (index > -1) {
+                        subjectsDealt.splice(index, 1);
+                    }
+                    subjectItem.remove();
+                });
+            }
+        });
+
+        // Enter key to add subject
+        document.getElementById('subject-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('add-subject-btn').click();
+            }
+        });
+
+        // --- 7. Subjects Slots (1-4) ---
+        for(let i = 1; i <= 4; i++) {
+            // Load Subjects Button
+            document.getElementById(`load-btn-${i}`).addEventListener('click', function(e) {
+                e.preventDefault();
+                const container = document.getElementById(`subjects-container-${i}`);
+                container.innerHTML = '';
+
+                const year = document.getElementById(`select-year-${i}`).value;
+                const semester = document.getElementById(`select-semester-${i}`).value;
+
+                if(itSubjects[year] && itSubjects[year][semester]) {
+                    itSubjects[year][semester].forEach(subject => {
+                        container.insertAdjacentHTML('beforeend',
+                            `<div class="subject-item">
+                                <input type="checkbox" class="subject-checkbox" checked>
+                                <span class="subject-code">${subject.code}</span>
+                                <span class="subject-name">${subject.name}</span>
+                            </div>`);
+                    });
+                }
+            });
+
+            // Select All Checkbox
+            document.getElementById(`select-all-${i}`).addEventListener('change', function(e) {
+                const checkboxes = document.querySelectorAll(`#subjects-container-${i} .subject-checkbox`);
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+            });
+
+            // Percentage Calculation
+            function calculatePercentage(slot) {
+                const appeared = parseFloat(document.getElementById(`res-appeared-${slot}`).value) || 0;
+                const passed = parseFloat(document.getElementById(`res-passed-${slot}`).value) || 0;
+
+                document.getElementById(`res-failed-${slot}`).value = (appeared >= passed) ? (appeared - passed) : 0;
+                document.getElementById(`res-percentage-${slot}`).value = appeared > 0 ?
+                    ((passed / appeared) * 100).toFixed(2) + '%' : '0.00%';
+            }
+
+            document.getElementById(`res-appeared-${i}`).addEventListener('input', () => calculatePercentage(i));
+            document.getElementById(`res-passed-${i}`).addEventListener('input', () => calculatePercentage(i));
+
+            // Add Result Button
+            document.getElementById(`btn-add-result-${i}`).addEventListener('click', function(e) {
+                e.preventDefault();
+                const subject = document.getElementById(`res-subject-${i}`).value;
+                if(subject) {
+                    const appeared = document.getElementById(`res-appeared-${i}`).value;
+                    const passed = document.getElementById(`res-passed-${i}`).value;
+                    const failed = document.getElementById(`res-failed-${i}`).value;
+                    const percentage = document.getElementById(`res-percentage-${i}`).value;
+
+                    document.getElementById(`added-results-container-${i}`).insertAdjacentHTML('beforeend',
+                        `<div class="added-result-item" data-txt="App:${appeared}, Pass:${passed}, Fail:${failed}" data-pct="${percentage}">
+                            <b>${subject}</b>: ${percentage}
+                        </div>`);
+                }
+            });
+
+            // Add Project Batch Button
+            document.getElementById(`btn-add-proj-batch-${i}`).addEventListener('click', function(e) {
+                e.preventDefault();
+                const title = document.getElementById(`proj-title-${i}`).value;
+                if(title) {
+                    let students = [], marks = [];
+                    for(let k = 1; k <= 4; k++) {
+                        const name = document.getElementById(`proj-stud${k}-${i}`).value;
+                        const roll = document.getElementById(`proj-roll${k}-${i}`).value;
+                        const mark = document.getElementById(`proj-marks${k}-${i}`).value;
+
+                        if(name || roll) {
+                            students.push(`${name} (${roll})`);
+                            marks.push(mark || '-');
+                        }
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = 'added-result-item';
+                    div.dataset.title = title;
+                    div.dataset.batch = document.getElementById(`proj-batch-${i}`).value;
+                    div.dataset.students = students.join('\n');
+                    div.dataset.marks = marks.join('\n');
+                    div.innerHTML = `<b>${title}</b> (${div.dataset.batch})<br><small>${students.join(', ')}</small>`;
+
+                    document.getElementById(`added-projects-container-${i}`).appendChild(div);
+                }
+            });
+        }
+
+        // --- 8. Save Details Button ---
+        document.getElementById('save-details-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+
             savedData = {
-                basic: { name: document.getElementById('staff-name').value, code: document.getElementById('employee-code').value, dept: document.getElementById('department').value, joined: fmtDate(document.getElementById('joining-date').value) },
-                personal: { jntuh: document.getElementById('jntuh-id').value, aicte: document.getElementById('aacte-id').value, pan: document.getElementById('pan').value, aadhar: document.getElementById('aadhar').value, mobile: document.getElementById('mobile').value, email: document.getElementById('email').value, orcid: document.getElementById('orcid-id').value, apaar: document.getElementById('apaar-id').value, dob: fmtDate(document.getElementById('dob').value), state: document.getElementById('state').value, caste: document.getElementById('caste').value, subcaste: document.getElementById('sub-caste').value },
+                basic: {
+                    name: document.getElementById('staff-name').value,
+                    code: document.getElementById('employee-code').value,
+                    dept: document.getElementById('department').value,
+                    joined: fmtDate(document.getElementById('joining-date').value)
+                },
+                personal: {
+                    jntuh: document.getElementById('jntuh-id').value,
+                    aicte: document.getElementById('aacte-id').value,
+                    pan: document.getElementById('pan').value,
+                    aadhar: document.getElementById('aadhar').value,
+                    mobile: document.getElementById('mobile').value,
+                    email: document.getElementById('email').value,
+                    orcid: document.getElementById('orcid-id').value,
+                    apaar: document.getElementById('apaar-id').value,
+                    dob: fmtDate(document.getElementById('dob').value),
+                    state: document.getElementById('state').value,
+                    caste: document.getElementById('caste').value,
+                    subcaste: document.getElementById('sub-caste').value
+                },
                 edu: [
                     ['SSC', document.getElementById('ssc-year').value, document.getElementById('ssc-percent').value, '-', document.getElementById('ssc-school').value],
                     ['Inter', document.getElementById('inter-year').value, document.getElementById('inter-percent').value, '-', document.getElementById('inter-college').value],
@@ -676,8 +1213,10 @@
                     ['PG', document.getElementById('pg-year').value, document.getElementById('pg-percentage').value, document.getElementById('pg-spec').value, document.getElementById('pg-college').value],
                     ['PhD', document.getElementById('phd-year').value, '-', document.getElementById('phd-spec').value, document.getElementById('phd-university').value]
                 ],
-                ach: Array.from(document.querySelectorAll('#added-achievements-container .added-result-item')).map(a => [a.dataset.desc, a.dataset.range]),
-                about: document.getElementById('about-yourself').value
+                ach: Array.from(document.querySelectorAll('#added-achievements-container .added-result-item'))
+                    .map(a => [a.dataset.desc, a.dataset.range]),
+                about: document.getElementById('about-yourself').value,
+                subjects: subjectsDealt
             };
 
             // Validate Employee Code
@@ -690,49 +1229,111 @@
             // Enable upload button
             document.getElementById("upload-pdf-btn").disabled = false;
 
-            alert("Details Saved!");
-        };
+            alert("Details Saved Successfully!");
+        });
 
+        // --- 9. Preview Button ---
         const modal = document.getElementById('preview-modal');
-        document.querySelector('.close-modal').onclick = () => modal.style.display = "none";
-        document.getElementById('preview-details-btn').onclick = (e) => {
+        const closeModal = document.querySelector('.close-modal');
+
+        closeModal.addEventListener('click', function() {
+            modal.style.display = "none";
+        });
+
+        document.getElementById('preview-details-btn').addEventListener('click', function(e) {
             e.preventDefault();
-            if(!savedData) return alert("Save first!");
+            if(!savedData) {
+                alert("Please save details first!");
+                return;
+            }
+
             const img = document.getElementById('faculty-photo').src;
-            const photoHtml = img.startsWith('data:') ? `<div class="pdf-photo-box"><img src="${img}"></div>` : '';
+            const photoHtml = img.startsWith('data:') ?
+                `<div class="pdf-photo-box"><img src="${img}"></div>` : '';
+
             document.getElementById('preview-content').innerHTML = `
                 <div class="clearfix">
                     ${photoHtml}
-                    <div class="pdf-header"><div class="pdf-title">ANURAG ENGINEERING COLLEGE</div><div class="pdf-subtitle">FACULTY DIRECTORY</div></div>
+                    <div class="pdf-header">
+                        <div class="pdf-title">ANURAG ENGINEERING COLLEGE</div>
+                        <div class="pdf-subtitle">FACULTY DIRECTORY</div>
+                    </div>
                     <div class="pdf-section-title">Basic Info</div>
-                    <table class="pdf-table"><tr><th>Code</th><td>${savedData.basic.code}</td><th>Name</th><td>${savedData.basic.name}</td></tr><tr><th>Dept</th><td>${savedData.basic.dept}</td><th>Joined</th><td>${savedData.basic.joined}</td></tr></table>
+                    <table class="pdf-table">
+                        <tr><th>Code</th><td>${savedData.basic.code}</td><th>Name</th><td>${savedData.basic.name}</td></tr>
+                        <tr><th>Dept</th><td>${savedData.basic.dept}</td><th>Joined</th><td>${savedData.basic.joined}</td></tr>
+                    </table>
                     <div class="pdf-section-title">Personal Details</div>
-                    <table class="pdf-table"><tr><th>Mobile</th><td>${savedData.personal.mobile}</td><th>Email</th><td>${savedData.personal.email}</td></tr></table>
+                    <table class="pdf-table">
+                        <tr><th>Mobile</th><td>${savedData.personal.mobile}</td><th>Email</th><td>${savedData.personal.email}</td></tr>
+                    </table>
                     <div class="pdf-section-title">Education</div>
-                    <table class="pdf-table"><tr><th>Level</th><th>Year</th><th>%</th><th>Spec</th><th>Institute</th></tr>${savedData.edu.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join('')}</table>
-                    <div class="pdf-section-title">Achievements</div><ul>${savedData.ach.map(a => `<li>${a[0]} (${a[1]})</li>`).join('')}</ul>
-                    <div class="pdf-section-title">About</div><div>${savedData.about}</div>
+                    <table class="pdf-table">
+                        <tr><th>Level</th><th>Year</th><th>%</th><th>Spec</th><th>Institute</th></tr>
+                        ${savedData.edu.map(r =>
+                            `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`
+                        ).join('')}
+                    </table>
+                    <div class="pdf-section-title">Subjects Dealt</div>
+                    <table class="pdf-table">
+                        <tr><th>S.No</th><th>Subject Name</th></tr>
+                        ${savedData.subjects ? savedData.subjects.map((subj, idx) =>
+                            `<tr><td>${idx+1}</td><td>${subj}</td></tr>`
+                        ).join('') : '<tr><td colspan="2">No subjects added</td></tr>'}
+                    </table>
+                    <div class="pdf-section-title">Achievements</div>
+                    <ul>${savedData.ach.map(a => `<li>${a[0]} (${a[1]})</li>`).join('')}</ul>
+                    <div class="pdf-section-title">About</div>
+                    <div>${savedData.about}</div>
                 </div>`;
-            modal.style.display = "block";
-        };
 
-        // --- 7. DOWNLOAD ---
-        document.getElementById('generate-pdf-btn').onclick = async (e) => {
+            modal.style.display = "block";
+        });
+
+        // --- 10. Generate PDF Button ---
+        document.getElementById('generate-pdf-btn').addEventListener('click', async function(e) {
             e.preventDefault();
 
-            const empIdInput = document.getElementById("employee-code");
-            const empId = (empIdInput && empIdInput.value.trim()) ? empIdInput.value.trim() : 'Faculty_Report';
-
-            const blob = await generateFinalPDFBlob();
-            if(blob) {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `${empId}.pdf`;
-                link.click();
+            if(!savedData) {
+                alert("Please save details first!");
+                return;
             }
-        };
 
-        document.getElementById('clear-all-btn').onclick = () => location.reload();
+            const empIdInput = document.getElementById("employee-code");
+            const empId = empIdInput && empIdInput.value.trim() ? empIdInput.value.trim() : 'Faculty_Report';
+
+            try {
+                const blob = await generateFinalPDFBlob();
+                if(blob) {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${empId}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } catch(error) {
+                console.error("PDF generation error:", error);
+                alert("Error generating PDF. Please try again.");
+            }
+        });
+
+        // --- 11. Clear Button ---
+        document.getElementById('clear-all-btn').addEventListener('click', function() {
+            if(confirm("Are you sure you want to clear all data?")) {
+                location.reload();
+            }
+        });
+
+        // --- 12. Upload PDF Button ---
+        document.getElementById('upload-pdf-btn').addEventListener('click', uploadPDF);
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
     });
 </script>
 {% endblock %}
