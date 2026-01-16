@@ -2,6 +2,9 @@
 {% load static %}
 {% block title %}Syllabus & Common Subjects - ANURAG Engineering College{% endblock %}
 
+<!-- Add this block to override body class -->
+{% block body_class %}syllabus-page{% endblock %}
+
 {% block content %}
 <style>
     /* Global Matrix Styling to match Dashboard & Faculty */
@@ -21,47 +24,6 @@
         width: 100%;
         height: 100%;
         z-index: -1;
-    }
-
-    /* 1. SINGLE HEADER IMAGE SECTION - Fixed to hide IT DEPT PORTAL */
-    .header-container {
-        text-align: center;
-        margin: 20px auto 30px auto;
-        width: 100%;
-        max-width: 1100px;
-    }
-
-    .letterhead-img {
-        width: 100%;
-        height: auto;
-        max-height: 180px;
-        object-fit: contain;
-        display: block;
-        margin: 0 auto;
-        background-color: #ffffff;
-        padding: 10px;
-        border-radius: 8px;
-        border: 2px solid #0f0;
-        position: relative;
-    }
-
-    /* Overlay to hide "IT DEPT PORTAL" text from the image */
-    .letterhead-img-container {
-        position: relative;
-        display: inline-block;
-        width: 100%;
-    }
-
-    .letterhead-img-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 20%;
-        background-color: #ffffff;
-        z-index: 2;
-        pointer-events: none;
     }
 
     /* 2. DEPARTMENT HEADER */
@@ -241,13 +203,8 @@
 
 <canvas id="matrix-canvas"></canvas>
 
-<!-- SINGLE HEADER IMAGE (No duplicate) -->
-<div class="header-container">
-    <div class="letterhead-img-container">
-        <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="Anurag Engineering College" class="letterhead-img">
-    </div>
-    <h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
-</div>
+<!-- DEPARTMENT HEADER AND NAVIGATION TABS ONLY (No duplicate header image) -->
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
 
 <div class="nav-tabs-container">
     <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>

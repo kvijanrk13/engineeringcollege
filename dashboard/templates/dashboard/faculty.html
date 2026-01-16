@@ -28,25 +28,20 @@
         z-index: -1;
     }
 
-    /* Professional Header Section */
-    .header-branding {
-        background: rgba(0, 20, 0, 0.9);
-        border-bottom: 2px solid #0f0;
-        padding: 20px;
-        text-align: center;
-        margin-bottom: 30px;
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-    }
-    .college-name-header { font-size: 3rem; font-weight: 900; color: #fff; text-shadow: 0 0 10px #0f0; margin: 0; }
-    .dept-name-header { font-size: 2rem; color: #0f0; margin: 5px 0 15px 0; text-transform: uppercase; letter-spacing: 2px; }
-
     /* Horizontal Navigation Tabs */
     .nav-tabs-container {
         display: flex;
         justify-content: center;
         flex-wrap: wrap;
         gap: 10px;
-        margin-bottom: 30px;
+        background: rgba(0, 20, 0, 0.9);
+        padding: 20px;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 20px auto 40px auto;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
     }
 
     .nav-link-tab {
@@ -164,20 +159,16 @@
 
 <canvas id="matrix-canvas"></canvas>
 
-<div class="header-branding">
-    <h1 class="college-name-header">ANURAG ENGINEERING COLLEGE</h1>
-    <h2 class="dept-name-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
-
-    <div class="nav-tabs-container">
-        <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
-        <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab active">Faculty</a>
-        <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
-        <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
-        <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
-        <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
-        <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
-        <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
-    </div>
+<!-- Navigation Tabs Only (Removed header-branding) -->
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab active">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+    <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
+    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
 </div>
 
 <div class="main-wrapper">
@@ -409,7 +400,7 @@
     }
 
     const itSubjects = {
-        "First Year": { "1-1": [{"code":"MA101BS","name":"MATRICES AND CALCULUS"},{"code":"AP102BS","name":"APPLIED PHYSICS"},{"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},{"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},{"code":"ME105ES","name":"ENGINEERING WORKSHOP"},{"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},{"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},{"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},{"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},{"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}],"1-2":[{"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},{"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},{"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},{"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},{"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},{"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},{"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},{"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},{"code":"CS209ES","name":"IT WORKSHOP"},{"code":"HS210MC","name":"CONSTITUTION OF INDIA"}] },
+        "First Year": { "1-1": [{"code":"MA101BS","name":"MATRICES AND CALCULUS"},{"code":"AP102BS","name":"APPLIED PHYSICS"},{"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},{"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},{"code:"ME105ES","name":"ENGINEERING WORKSHOP"},{"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},{"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},{"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},{"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},{"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}],"1-2":[{"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},{"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},{"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},{"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},{"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},{"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},{"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},{"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},{"code":"CS209ES","name":"IT WORKSHOP"},{"code":"HS210MC","name":"CONSTITUTION OF INDIA"}] },
         "Second Year": { "2-1": [{"code":"PS301BS","name":"PROBABILITY AND STATISTICS"},{"code":"EC302ES","name":"DIGITAL ELECTRONICS"},{"code":"CS303PC","name":"DATA STRUCTURES"},{"code":"CM304PC","name":"COMPUTER ORGANIZATION AND MICROPROCESSOR"},{"code":"IT305PC","name":"INTRODUCTION TO IOT"},{"code":"CS306PC","name":"DATA STRUCTURES LABORATORY"},{"code":"EC307ES","name":"DIGITAL ELECTRONICS LABORATORY"},{"code":"IT308PC","name":"INTERNET OF THINGS LABORATORY"},{"code":"HS309MC","name":"GENDER SENSITIZATION"},{"code":"CS308PC","name":"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}],"2-2":[{"code":"MB401HS","name":"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},{"code":"CS402PC","name":"DISCRETE MATHEMATICS"},{"code":"CS403PC","name":"OPERATING SYSTEMS"},{"code":"CS404PC","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT405PC","name":"JAVA PROGRAMMING"},{"code":"CS406PC","name":"OPERATING SYSTEMS LABORATORY"},{"code":"CS407PC","name":"DATABASE MANAGEMENT SYSTEMS LABORATORY"},{"code":"IT408PC","name":"JAVA PROGRAMMING LABORATORY"},{"code":"IT409PW","name":"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},{"code":"IT410PC","name":"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},{"code":"HS411MC","name":"INTELLECTUAL PROPERTY RIGHTS"}] },
         "Third Year": { "3-1": [{"code":"CS501PC","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"IT502PC","name":"AUTOMATA AND COMPILER DESIGN"},{"code":"IT503PC","name":"EMBEDDED SYSTEMS"},{"code":"IT511PE","name":"FULL STACK DEVELOPMENT"},{"code":"IT512PE","name":"DATA MINING"},{"code":"CS513PE","name":"SCRIPTING LANGUAGES"},{"code":"IT514PE","name":"MOBILE APPLICATION DEVELOPMENT"},{"code":"IT515PE","name":"SOFTWARE TESTING METHODOLOGIES"},{"code":"AM515PE","name":"COMPUTER GRAPHICS"},{"code":"IT522PE","name":"QUANTUM COMPUTING"},{"code":"IT523PE","name":"ADVANCED OPERATING SYSTEMS"},{"code":"CS524PE","name":"DISTRIBUTED DATABASES"},{"code":"IT525PE","name":"PATTERN RECOGNITION"},{"code":"IT532PE","name":"DATA MINING LABORATORY"},{"code":"IT531PE","name":"FULL STACK DEVELOPMENT LABORATORY"},{"code":"IT533PE","name":"SCRIPTING LANGUAGES LABORATORY"},{"code":"IT534PE","name":"MOBILE APPLICATION DEVELOPMENT LABORATORY"},{"code":"IT535PE","name":"SOFTWARE TESTING METHODOLOGIES LABORATORY"},{"code":"IT504PC","name":"COMPILER DESIGN LABORATORY"},{"code":"IT505PC","name":"EMBEDDED SYSTEMS LABORATORY"},{"code":"CS507PC","name":"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}],"3-2":[{"code":"CS601PC","name":"MACHINE LEARNING"},{"code":"IT602PC","name":"SOFTWARE ENGINEERING"},{"code":"IT603PC","name":"DATA COMMUNICATIONS AND COMPUTER NETWORKS"},{"code":"IT611PE","name":"BIOMETRICS"},{"code":"IT612PE","name":"ADVANCED COMPUTER ARCHITECTURE"},{"code":"CS633PE","name":"DATA ANALYTICS"},{"code":"CS616PE","name":"IMAGE PROCESSING"},{"code":"CS617PE","name":"PRINCIPLES OF PROGRAMMING LANGUAGES"},{"code":"CE611OE","name":"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},{"code":"CE612OE","name":"BUILDING MANAGEMENT SYSTEMS"},{"code":"CE613OE","name":"ENVIRONMENTAL IMPACT ASSESSMENT"},{"code":"CE614OE","name":"HYDROGEOLOGY"},{"code":"EE611OE","name":"RENEWABLE ENERGY SOURCES"},{"code":"EE612OE","name":"FUNDAMENTAL OF ELECTRIC VEHICLES"},{"code":"ME611OE","name":"BASIC MECHANICAL ENGINEERING"},{"code":"ME612OE","name":"POWER PLANT ENGINEERING"},{"code":"EC611OE","name":"FUNDAMENTALS OF INTERNET OF THINGS"},{"code":"EC612OE","name":"PRINCIPLES OF SIGNAL PROCESSING"},{"code":"EC613OE","name":"DIGITAL ELECTRONICS FOR ENGINEERING"},{"code":"CS611OE","name":"DATA STRUCTURES"},{"code":"CS612OE","name":"DATABASE MANAGEMENT SYSTEMS"},{"code":"IT611OE","name":"JAVA PROGRAMMING"},{"code":"IT612OE","name":"SOFTWARE ENGINEERING"},{"code":"AM611OE","name":"FUNDAMENTALS OF AI"},{"code":"AM612OE","name":"MACHINE LEARNING BASICS"},{"code":"CS604PC","name":"MACHINE LEARNING LABORATORY"},{"code":"IT605PC","name":"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"},{"code":"AE606HS","name":"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},{"code":"CS606PW","name":"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATA SPARK)"},{"code":"ES607MC","name":"ENVIRONMENTAL SCIENCE"}] },
         "Fourth Year": { "4-1": [{"code":"IT701PC","name":"INFORMATION SECURITY"},{"code":"IT702PC","name":"CLOUD COMPUTING"},{"code":"IT711PE","name":"HUMAN COMPUTER INTERACTION"},{"code":"IT712PE","name":"HIGH PERFORMANCE COMPUTING"},{"code":"IT713PE","name":"ARTIFICIAL INTELLIGENCE"},{"code":"IT714PE","name":"INFORMATION RETRIEVAL SYSTEMS"},{"code":"IT715PE","name":"AD-HOC & SENSOR NETWORKS"},{"code":"IT721PE","name":"NATURAL LANGUAGE PROCESSING"},{"code":"IT722PE","name":"DISTRIBUTED SYSTEMS"},{"code":"IT723PE","name":"AUGMENTED REALITY & VIRTUAL REALITY"},{"code":"IT724PE","name":"WEB SECURITY"},{"code":"IT725PE","name":"CYBER FORENSICS"},{"code":"CE721OE","name":"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},{"code":"CE722OE","name":"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},{"code":"CE723OE","name":"SOLID WASTE MANAGEMENT"},{"code":"CE724OE","name":"SMART CITIES"},{"code":"EE721OE","name":"UTILIZATION OF ELECTRIC ENERGY"},{"code":"EE722OE","name":"ENERGY STORAGE SYSTEMS"},{"code":"ME721OE","name":"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},{"code":"ME722OE","name":"INDUSTRIAL ENGINEERING & MANAGEMENT"},{"code":"EC721OE","name":"ELECTRONIC SENSORS"},{"code":"EC722OE","name":"ELECTRONICS FOR HEALTH CARE"},{"code":"EC723OE","name":"TELECOMMUNICATIONS FOR SOCIETY"},{"code":"CS721OE","name":"OPERATING SYSTEMS"},{"code":"CS722OE","name":"COMPUTER NETWORKS"},{"code":"IT721OE","name":"FULL STACK DEVELOPMENT"},{"code":"IT722OE","name":"SCRIPTING LANGUAGES"},{"code":"AM721OE","name":"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},{"code":"AM722OE","name":"AI APPLICATIONS"},{"code":"IT703PC","name":"INFORMATION SECURITY LAB"},{"code":"IT704PC","name":"CLOUD COMPUTING LAB"},{"code":"IT705PC","name":"PROJECT STAGE – I"}],"4-2":[{"code":"IT801PC","name":"ORGANIZATIONAL BEHAVIOR"},{"code":"IT811PE","name":"INTRUSION DETECTION SYSTEMS"},{"code":"IT812PE","name":"REAL TIME SYSTEMS"},{"code":"IT813PE","name":"BLOCK CHAIN TECHNOLOGY"},{"code":"IT814PE","name":"DEEP LEARNING"},{"code":"IT815PE","name":"SOFTWARE PROCESS & PROJECT MANAGEMENT"},{"code":"CE831OE","name":"ENERGY EFFICIENT BUILDINGS"},{"code":"CE832OE","name":"MULTI CRITERION DECISION MAKING"},{"code":"CE833OE","name":"ENVIRONMENTAL POLLUTION"},{"code":"EE831OE","name":"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},{"code":"EE832OE","name":"RELIABILITY ENGINEERING"},{"code":"ME831OE","name":"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},{"code":"ME832OE","name":"ENTREPRENEURSHIP DEVELOPMENT"},{"code":"EC831OE","name":"MEASURING INSTRUMENTS"},{"code":"EC832OE","name":"COMMUNICATION TECHNOLOGIES"},{"code":"EC833OE","name":"FUNDAMENTALS OF SOCIAL NETWORKS"},{"code":"CS831OE","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},{"code":"CS832OE","name":"DATA ANALYTICS"},{"code":"IT831OE","name":"BIG DATA TECHNOLOGIES"},{"code":"IT832OE","name":"DEVOPS"},{"code":"AM831OE","name":"CHATBOTS"},{"code":"AM832OE","name":"EVOLUTIONARY COMPUTING"},{"code":"IT802PC","name":"PROJECT STAGE-II, INCLUDING SEMINAR"}] }
@@ -656,7 +647,7 @@
                  const t = document.getElementById(`proj-title-${i}`).value;
                  let students = [], marks = [];
                  for(let k=1; k<=4; k++) {
-                     let n = document.getElementById(`proj-stud${k}-${i}`).value, r = document.getElementById(`proj-roll${k}-${i}`).value, m = document.getElementById(`proj-marks${k}-${i}`).value;
+                     let n = document.getElementById(`proj-stud${k}-${i}`).value, r = document.getElementById(`proj-roll${k}-{{ i }}`).value, m = document.getElementById(`proj-marks${k}-{{ i }}`).value;
                      if(n || r) { students.push(`${n} (${r})`); marks.push(m || '-'); }
                  }
                  if(t) {
