@@ -49,13 +49,13 @@ class StudentRegistration(models.Model):
     aadhar = models.CharField(max_length=20)
     address = models.TextField()
 
-    # TASK Registration Fields
-    task_registered = models.CharField(max_length=3, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
-    task_username = models.CharField(max_length=50, blank=True, null=True)
+    # TASK Registration Fields - UPDATED to match requirements
+    task_registered = models.CharField(max_length=10, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
+    task_username = models.CharField(max_length=100, blank=True, null=True)
 
-    # CSI Registration Fields
-    csi_registered = models.CharField(max_length=3, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
-    csi_membership_id = models.CharField(max_length=50, blank=True, null=True)
+    # CSI Registration Fields - UPDATED to match requirements
+    csi_registered = models.CharField(max_length=10, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
+    csi_membership_id = models.CharField(max_length=100, blank=True, null=True)
 
     parent_phone = models.CharField(max_length=15)
     student_phone = models.CharField(max_length=15)
