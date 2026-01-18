@@ -100,7 +100,7 @@
     .add-btn, .mini-upload-btn { background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; }
     .mini-upload-btn { background: #3498db; width: 100%; padding: 9px; }
     .mini-upload-btn.uploaded { background: #27ae60; }
-    .load-btn { background: #34495e; color: white; border: none; padding: 10px; border-radius=5px; cursor: pointer; width: 100%; font-weight: bold; height: 42px; }
+    .load-btn { background: #34495e; color: white; border: none; padding: 10px; border-radius:5px; cursor: pointer; width: 100%; font-weight: bold; height: 42px; }
 
     /* Subjects Section */
     .subject-selection-block { border: 1px solid #dfe6e9; padding: 20px; border-radius: 8px; margin-bottom: 25px; background: white; }
@@ -192,10 +192,155 @@
         background: #c0392b;
     }
 
-    @media (max-width: 1200px) { .container { margin-right: 20px; } .photo-sidebar { position: static; width: 100%; margin: 0 0 20px 0; } .controls { flex-direction: column; } .pub-grid, .edu-spec-row, .edu-basics-row { grid-template-columns: 1fr; } .subject-controls { grid-template-columns: 1fr 1fr; } }
+    /* Error Modal Styles */
+    .error-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 2001;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .error-modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .error-modal h1 {
+        color: #e74c3c;
+        border-bottom: 2px solid #e74c3c;
+        text-align: left;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .error-modal h3 {
+        color: #2c3e50;
+        border-left: 4px solid #3498db;
+        padding-left: 15px;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    .error-modal table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 15px 0;
+        background: white;
+    }
+
+    .error-modal th {
+        background: #2c3e50;
+        color: white;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .error-modal td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .error-modal tr:hover {
+        background: #f1f8ff;
+    }
+
+    .error-message {
+        background: #ffeaea;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 20px 0;
+        color: #721c24;
+    }
+
+    .btn-ok {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 12px 40px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 20px;
+        width: 100%;
+        transition: background 0.3s;
+    }
+
+    .btn-ok:hover {
+        background: #2980b9;
+    }
+
+    /* Photo Section Styles */
+    .photo-section {
+        text-align: center;
+        padding: 30px;
+        border: 2px dashed #3498db;
+        border-radius: 10px;
+        background: #f8fdff;
+        margin-bottom: 20px;
+    }
+
+    .photo-placeholder {
+        margin-bottom: 20px;
+    }
+
+    .photo-icon {
+        font-size: 64px;
+        margin-bottom: 15px;
+        color: #3498db;
+    }
+
+    .photo-section p {
+        font-size: 18px;
+        color: #555;
+    }
+
+    @media (max-width: 1200px) {
+        .container {
+            margin-right: 20px;
+        }
+        .photo-sidebar {
+            position: static;
+            width: 100%;
+            margin: 0 0 20px 0;
+        }
+        .controls {
+            flex-direction: column;
+        }
+        .pub-grid, .edu-spec-row, .edu-basics-row {
+            grid-template-columns: 1fr;
+        }
+        .subject-controls {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
+
+<!-- Error Modal/Dialog (Initially hidden) -->
+<div class="error-modal" id="error-modal">
+  <div class="error-modal-content">
+    <div class="error-message">
+      <strong>Error</strong><br>
+      <span id="error-detail">An error occurred. Please try again.</span>
+    </div>
+    <button class="btn-ok" onclick="hideErrorModal()">OK</button>
+  </div>
+</div>
 
 <!-- Navigation Tabs -->
 <div class="nav-tabs-container">
@@ -219,9 +364,9 @@
         <div class="form-section">
             <h3>Basic Information</h3>
             <div class="form-grid">
-                <div><label class="form-label">Employee Code</label><input type="text" id="employee-code" name="employee_code" placeholder="e.g. 7001" required></div>
-                <div><label class="form-label">Name of Staff</label><input type="text" id="staff-name" placeholder="Full Name"></div>
-                <div><label class="form-label">Department</label><input type="text" id="department" placeholder="Department"></div>
+                <div><label class="form-label">Employee Code *</label><input type="text" id="employee-code" name="employee_code" placeholder="e.g. 7001" required></div>
+                <div><label class="form-label">Name of Staff *</label><input type="text" id="staff-name" placeholder="Full Name" required></div>
+                <div><label class="form-label">Department *</label><input type="text" id="department" placeholder="Department" required></div>
                 <div><label class="form-label">Date of Joining</label><input type="date" id="joining-date"></div>
                 <div><label class="form-label">Father Name</label><input type="text" id="father-name" placeholder="Father Name"></div>
             </div>
@@ -236,8 +381,8 @@
                 <div><label class="form-label">AADHAR No</label><input type="text" id="aadhar"></div>
                 <div><label class="form-label">ORCID ID</label><input type="text" id="orcid-id" maxlength="19" placeholder="0000-0000-0000-0000"></div>
                 <div><label class="form-label">APAAR ID</label><input type="text" id="apaar-id" maxlength="15" placeholder="000-000-000-000"></div>
-                <div><label class="form-label">Mobile No</label><input type="tel" id="mobile"></div>
-                <div><label class="form-label">Mail ID</label><input type="email" id="email"></div>
+                <div><label class="form-label">Mobile No *</label><input type="tel" id="mobile" required></div>
+                <div><label class="form-label">Mail ID *</label><input type="email" id="email" required></div>
                 <div><label class="form-label">Gender</label><select id="gender"><option>Male</option><option>Female</option></select></div>
                 <div><label class="form-label">DOB</label><input type="date" id="dob"></div>
                 <div><label class="form-label">State</label><input type="text" id="state"></div>
@@ -377,7 +522,7 @@
             {% endfor %}
         </div>
 
-        <!-- New SUBJECTS DEALT Section -->
+        <!-- Subjects Dealt Section -->
         <div class="form-section">
             <h3>Subjects Dealt</h3>
             <div class="subjects-dealt-container">
@@ -393,22 +538,28 @@
 
         <div class="form-section">
             <h3>About Yourself</h3>
-            <textarea id="about-yourself" rows="5"></textarea>
+            <textarea id="about-yourself" rows="5" placeholder="Write about your experience, achievements, and any other relevant information..."></textarea>
         </div>
     </div>
 
     <div class="controls">
-        <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save</button>
+        <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save Details</button>
         <button type="button" class="button preview" id="preview-details-btn"><i class="fas fa-eye"></i> Preview</button>
         <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
         <button type="button" class="button upload" id="upload-pdf-btn" disabled><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
-        <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear</button>
+        <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear All</button>
     </div>
 
     <aside class="photo-sidebar">
-        <h3>Photo</h3>
-        <div class="photo-preview-container"><img id="faculty-photo" src="" alt="Preview"><p id="no-photo-message">No photo</p></div>
-        <div class="upload-controls"><button type="button" id="choose-file-btn" class="load-btn">Upload Photo</button><input type="file" id="photo-upload-input" style="display:none;"></div>
+        <h3>Photo Preview</h3>
+        <div class="photo-preview-container">
+            <img id="faculty-photo" src="" alt="Preview">
+            <p id="no-photo-message">No photo selected</p>
+        </div>
+        <div class="upload-controls">
+            <button type="button" id="choose-file-btn" class="load-btn">Choose Photo</button>
+            <input type="file" id="photo-upload-input" style="display:none;" accept="image/*">
+        </div>
     </aside>
 
     <div id="preview-modal" class="modal">
@@ -446,6 +597,28 @@
         }
     }
     setInterval(drawMatrix, 33);
+
+    // --- Error Modal Functions ---
+    function showErrorModal(message) {
+        const modal = document.getElementById('error-modal');
+        const detailElement = document.getElementById('error-detail');
+        if (message) {
+            detailElement.textContent = message;
+        }
+        modal.style.display = 'flex';
+    }
+
+    function hideErrorModal() {
+        document.getElementById('error-modal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('error-modal');
+        if (event.target === modal) {
+            hideErrorModal();
+        }
+    });
 
     // --- Global Variables ---
     let uploaded = {
@@ -637,264 +810,50 @@
         }
     };
 
-    // --- PDF Generation Function ---
-    async function generateFinalPDFBlob() {
-        if(!savedData) {
-            alert("Please save details first!");
-            return null;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Header
-        doc.setFontSize(16);
-        doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
-        doc.setFontSize(12);
-        doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
-        doc.setLineWidth(0.5);
-        doc.line(10, 25, 200, 25);
-
-        // Photo
-        const img = document.getElementById('faculty-photo');
-        if(img.src.startsWith('data:')) {
-            try {
-                doc.addImage(img.src,'JPEG',150,30,35,45);
-            } catch(e){}
-        }
-
-        // Basic Info
-        doc.autoTable({
-            startY: 35,
-            tableWidth: 140,
-            theme:'plain',
-            body:[
-                ['Code', savedData.basic.code],
-                ['Name', savedData.basic.name],
-                ['Dept', savedData.basic.dept],
-                ['Joined', savedData.basic.joined]
-            ]
-        });
-        let y = Math.max(80, doc.lastAutoTable.finalY + 10);
-
-        // Personal Details
-        doc.text("PERSONAL DETAILS", 14, y);
-        y += 5;
-        doc.autoTable({
-            startY: y,
-            theme:'grid',
-            body:[
-               ['JNTUH ID', savedData.personal.jntuh, 'AICTE ID', savedData.personal.aicte],
-               ['PAN', savedData.personal.pan, 'AADHAR', savedData.personal.aadhar],
-               ['MOBILE', savedData.personal.mobile, 'EMAIL', savedData.personal.email],
-               ['ORCID', savedData.personal.orcid, 'APAAR', savedData.personal.apaar],
-               ['DOB', savedData.personal.dob, 'STATE', savedData.personal.state],
-               ['CASTE', savedData.personal.caste, 'SUB-CASTE', savedData.personal.subcaste]
-            ]
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // Education
-        doc.text("EDUCATIONAL QUALIFICATIONS", 14, y);
-        y += 5;
-        doc.autoTable({
-            startY: y,
-            head:[['Degree','Year','%/CGPA','Specialization','Institute']],
-            body: savedData.edu
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // Subjects Dealt
-        if (subjectsDealt.length > 0) {
-            doc.text("SUBJECTS DEALT", 14, y);
-            y += 5;
-
-            const subjectRows = subjectsDealt.map((subject, index) => [
-                String(index + 1),
-                subject
-            ]);
-
-            doc.autoTable({
-                startY: y,
-                head: [['S.No', 'Subject Name']],
-                body: subjectRows,
-                theme: 'grid',
-                headStyles: { fillColor: [52, 73, 94] },
-                styles: { fontSize: 10 }
-            });
-            y = doc.lastAutoTable.finalY + 10;
-        }
-
-        // Subjects Dealt & Results
-        doc.text("SUBJECTS DEALT & RESULTS", 14, y);
-        y += 5;
-        let subs = [];
-        for(let i = 1; i <= 4; i++) {
-            const s = Array.from(document.querySelectorAll(`#subjects-container-${i} .subject-checkbox:checked`))
-                .map(c => c.nextElementSibling.nextElementSibling.innerText)
-                .join('\n');
-            const r = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`))
-                .map(d => d.dataset.txt)
-                .join('\n\n');
-            const p = Array.from(document.querySelectorAll(`#added-results-container-${i} .added-result-item`))
-                .map(d => d.dataset.pct)
-                .join('\n\n');
-            if(s || r) {
-                subs.push([
-                    document.getElementById(`select-academic-year-${i}`).value,
-                    s,
-                    r,
-                    p
-                ]);
-            }
-        }
-        doc.autoTable({
-            startY: y,
-            head:[['Year','Subject','Stats', 'Pass %']],
-            body: subs
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // Projects
-        doc.addPage();
-        y = 20;
-        doc.text("PROJECTS HANDLED", 14, y);
-        y += 5;
-        let projRows = [];
-        document.querySelectorAll('[id^=added-projects] .added-result-item').forEach(p => {
-            if(p.dataset.students) {
-                projRows.push([
-                    p.dataset.title,
-                    p.dataset.batch,
-                    p.dataset.students,
-                    p.dataset.marks
-                ]);
-            }
-        });
-        doc.autoTable({
-            startY: y,
-            head:[['Title','Batch','Students','Marks']],
-            body: projRows
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // Achievements
-        doc.text("FACULTY ACHIEVEMENTS", 14, y);
-        y += 5;
-        doc.autoTable({
-            startY: y,
-            head:[['Description','Duration']],
-            body: savedData.ach
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // About Faculty
-        doc.text("ABOUT FACULTY", 14, y);
-        y += 7;
-        doc.setFontSize(10);
-        doc.text(doc.splitTextToSize(savedData.about, 180), 14, y);
-
-        // Merge certificates
-        const pdfBytes = doc.output('arraybuffer');
-        const pdfDoc = await PDFLib.PDFDocument.load(pdfBytes);
-        const allFiles = [
-            uploaded.edu.ssc, uploaded.edu.inter, uploaded.edu.ug, uploaded.edu.pg, uploaded.edu.phd,
-            ...uploaded.mem, ...uploaded.scm, ...uploaded.pubs, ...uploaded.achievements
-        ];
-
-        for(const f of allFiles) {
-            if(!f) continue;
-            try {
-                const b = await f.arrayBuffer();
-                if(f.type === 'application/pdf') {
-                    const c = await PDFLib.PDFDocument.load(b);
-                    (await pdfDoc.copyPages(c, c.getPageIndices())).forEach(p => pdfDoc.addPage(p));
-                } else if(f.type.startsWith('image/')) {
-                    const i = f.type === 'image/png' ? await pdfDoc.embedPng(b) : await pdfDoc.embedJpg(b);
-                    const p = pdfDoc.addPage();
-                    p.drawImage(i, {x: 20, y: 20, width: 170, height: 250});
-                }
-            } catch(e){}
-        }
-        return new Blob([await pdfDoc.save()], {type:'application/pdf'});
-    }
-
-    // --- Upload Function ---
-    async function uploadPDF() {
-        console.log("Upload button clicked");
-
-        if (!savedData) {
-            alert("Please save details before uploading");
-            return;
-        }
-
-        const empCode = document.getElementById("employee-code").value.trim();
-        if (!empCode) {
-            alert("Employee Code is required for upload");
-            return;
-        }
-
-        // Generate PDF
-        const pdfBlob = await generateFinalPDFBlob();
-        if (!pdfBlob) {
-            alert("PDF generation failed");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("pdf", pdfBlob, `${empCode}.pdf`);
-        formData.append("employee_code", empCode);
-
-        console.log("Sending PDF to server...");
-
-        try {
-            const response = await fetch("/upload-generated-pdf/", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.status === "success") {
-                alert("Upload successful!");
-                console.log("Cloudinary URL:", data.url);
-            } else {
-                alert("Upload failed: " + data.error);
-            }
-
-        } catch (error) {
-            console.error("Upload error:", error);
-            alert("Upload failed. Check console for details.");
-        }
-    }
-
     // --- Main Initialization ---
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. Photo Upload ---
+        // --- 1. Photo Upload (using sidebar upload) ---
         const photoInput = document.getElementById('photo-upload-input');
         const chooseFileBtn = document.getElementById('choose-file-btn');
         const facultyPhoto = document.getElementById('faculty-photo');
         const noPhotoMessage = document.getElementById('no-photo-message');
 
-        chooseFileBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            photoInput.click();
-        });
+        if (chooseFileBtn) {
+            chooseFileBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                photoInput.click();
+            });
+        }
 
-        photoInput.addEventListener('change', function() {
-            if(this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    facultyPhoto.src = e.target.result;
-                    facultyPhoto.style.display = 'block';
-                    noPhotoMessage.style.display = 'none';
-                };
-                reader.readAsDataURL(this.files[0]);
-            }
-        });
+        if (photoInput) {
+            photoInput.addEventListener('change', async function() {
+                if(this.files && this.files[0]) {
+                    // Check file size (max 5MB)
+                    if (this.files[0].size > 5 * 1024 * 1024) {
+                        showErrorModal("Photo size should be less than 5MB");
+                        return;
+                    }
+
+                    // Check file type
+                    if (!this.files[0].type.match('image.*')) {
+                        showErrorModal("Please select a valid image file (JPG, PNG, etc.)");
+                        return;
+                    }
+
+                    // Display preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        facultyPhoto.src = e.target.result;
+                        facultyPhoto.style.display = 'block';
+                        noPhotoMessage.style.display = 'none';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+
+                    // Upload photo to server
+                    await uploadFacultyPhoto();
+                }
+            });
+        }
 
         // --- 2. Education File Uploads ---
         const educationLevels = ['ssc', 'inter', 'ug', 'pg', 'phd'];
@@ -902,18 +861,20 @@
             const upBtn = document.getElementById(`${level}-up-btn`);
             const fileInput = document.getElementById(`${level}-file`);
 
-            upBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                fileInput.click();
-            });
+            if (upBtn && fileInput) {
+                upBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    fileInput.click();
+                });
 
-            fileInput.addEventListener('change', function() {
-                if(this.files && this.files[0]) {
-                    uploaded.edu[level] = this.files[0];
-                    upBtn.innerText = "Uploaded";
-                    upBtn.classList.add('uploaded');
-                }
-            });
+                fileInput.addEventListener('change', function() {
+                    if(this.files && this.files[0]) {
+                        uploaded.edu[level] = this.files[0];
+                        upBtn.innerText = "Uploaded";
+                        upBtn.classList.add('uploaded');
+                    }
+                });
+            }
         });
 
         // --- 3. Experience Calculation ---
@@ -943,8 +904,10 @@
             expAnurag.value = `${years}Y ${months}M ${days}D`;
         }
 
-        joiningDate.addEventListener('change', calculateExperience);
-        joiningDate.addEventListener('input', calculateExperience);
+        if (joiningDate && expAnurag) {
+            joiningDate.addEventListener('change', calculateExperience);
+            joiningDate.addEventListener('input', calculateExperience);
+        }
 
         // --- 4. File Upload Binders ---
         function bindFileUpload(btnId, inputId, callback) {
@@ -992,348 +955,904 @@
         }
 
         // Membership ADD
-        document.getElementById('add-mem-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const text = document.getElementById('mem-text').value;
-            if(text) {
-                const file = document.getElementById('mem-file-input').files[0];
-                addListItem('added-mem-container', `<b>${text}</b>`, file, uploaded.mem);
-                document.getElementById('mem-text').value = '';
-            }
-        });
-
-        // SCM ADD
-        document.getElementById('add-scm-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const text = document.getElementById('scm-text').value;
-            if(text) {
-                const file = document.getElementById('scm-file-input').files[0];
-                addListItem('added-scm-container', `<b>${text}</b>`, file, uploaded.scm);
-                document.getElementById('scm-text').value = '';
-            }
-        });
-
-        // Achievements ADD
-        document.getElementById('add-ach-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const desc = document.getElementById('achievements-text').value;
-            const fromDate = document.getElementById('ach-from-date').value;
-            const toDate = document.getElementById('ach-to-date').value;
-            const range = `${fmtDate(fromDate)} to ${fmtDate(toDate)}`;
-
-            if(desc) {
-                const file = document.getElementById('ach-file-input').files[0];
-                if(file) uploaded.achievements.push(file);
-
-                const container = document.getElementById('added-achievements-container');
-                container.insertAdjacentHTML('beforeend',
-                    `<div class="added-result-item" data-desc="${desc}" data-range="${range}">
-                        <b>${desc}</b> <small>(${range})</small>
-                    </div>`);
-
-                document.getElementById('achievements-text').value = '';
-            }
-        });
-
-        // Publications ADD
-        document.getElementById('add-pub-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const title = document.getElementById('pub-title').value;
-            if(title) {
-                const type = document.getElementById('pub-type').value;
-                const date = document.getElementById('pub-date').value;
-                const file = document.getElementById('pub-file-input').files[0];
-
-                addListItem('added-pub-container',
-                    `<b>[${type}] ${title}</b> (${fmtDate(date)})`,
-                    file, uploaded.pubs);
-
-                document.getElementById('pub-title').value = '';
-            }
-        });
-
-        // --- 6. Subjects Dealt Functionality ---
-        document.getElementById('add-subject-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            const subjectInput = document.getElementById('subject-input');
-            const subject = subjectInput.value.trim();
-
-            if (subject) {
-                subjectsDealt.push(subject);
-
-                // Add to display list
-                const subjectItem = document.createElement('div');
-                subjectItem.className = 'subject-item-dealt';
-                subjectItem.style.cssText = 'padding: 8px 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; margin-bottom: 5px; border-radius: 3px;';
-                subjectItem.innerHTML = `
-                    <span>${subject}</span>
-                    <button type="button" class="remove-subject-btn" style="background: #e74c3c; color: white; border: none; border-radius: 3px; padding: 3px 8px; cursor: pointer; font-size: 12px;">Remove</button>
-                `;
-
-                document.getElementById('subjects-list').appendChild(subjectItem);
-                subjectInput.value = '';
-
-                // Add remove functionality
-                subjectItem.querySelector('.remove-subject-btn').addEventListener('click', function() {
-                    const index = subjectsDealt.indexOf(subject);
-                    if (index > -1) {
-                        subjectsDealt.splice(index, 1);
-                    }
-                    subjectItem.remove();
-                });
-            }
-        });
-
-        // Enter key to add subject
-        document.getElementById('subject-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+        const addMemBtn = document.getElementById('add-mem-btn');
+        if (addMemBtn) {
+            addMemBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                document.getElementById('add-subject-btn').click();
-            }
-        });
-
-        // --- 7. Subjects Slots (1-4) ---
-        for(let i = 1; i <= 4; i++) {
-            // Load Subjects Button
-            document.getElementById(`load-btn-${i}`).addEventListener('click', function(e) {
-                e.preventDefault();
-                const container = document.getElementById(`subjects-container-${i}`);
-                container.innerHTML = '';
-
-                const year = document.getElementById(`select-year-${i}`).value;
-                const semester = document.getElementById(`select-semester-${i}`).value;
-
-                if(itSubjects[year] && itSubjects[year][semester]) {
-                    itSubjects[year][semester].forEach(subject => {
-                        container.insertAdjacentHTML('beforeend',
-                            `<div class="subject-item">
-                                <input type="checkbox" class="subject-checkbox" checked>
-                                <span class="subject-code">${subject.code}</span>
-                                <span class="subject-name">${subject.name}</span>
-                            </div>`);
-                    });
-                }
-            });
-
-            // Select All Checkbox
-            document.getElementById(`select-all-${i}`).addEventListener('change', function(e) {
-                const checkboxes = document.querySelectorAll(`#subjects-container-${i} .subject-checkbox`);
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
-            });
-
-            // Percentage Calculation
-            function calculatePercentage(slot) {
-                const appeared = parseFloat(document.getElementById(`res-appeared-${slot}`).value) || 0;
-                const passed = parseFloat(document.getElementById(`res-passed-${slot}`).value) || 0;
-
-                document.getElementById(`res-failed-${slot}`).value = (appeared >= passed) ? (appeared - passed) : 0;
-                document.getElementById(`res-percentage-${slot}`).value = appeared > 0 ?
-                    ((passed / appeared) * 100).toFixed(2) + '%' : '0.00%';
-            }
-
-            document.getElementById(`res-appeared-${i}`).addEventListener('input', () => calculatePercentage(i));
-            document.getElementById(`res-passed-${i}`).addEventListener('input', () => calculatePercentage(i));
-
-            // Add Result Button
-            document.getElementById(`btn-add-result-${i}`).addEventListener('click', function(e) {
-                e.preventDefault();
-                const subject = document.getElementById(`res-subject-${i}`).value;
-                if(subject) {
-                    const appeared = document.getElementById(`res-appeared-${i}`).value;
-                    const passed = document.getElementById(`res-passed-${i}`).value;
-                    const failed = document.getElementById(`res-failed-${i}`).value;
-                    const percentage = document.getElementById(`res-percentage-${i}`).value;
-
-                    document.getElementById(`added-results-container-${i}`).insertAdjacentHTML('beforeend',
-                        `<div class="added-result-item" data-txt="App:${appeared}, Pass:${passed}, Fail:${failed}" data-pct="${percentage}">
-                            <b>${subject}</b>: ${percentage}
-                        </div>`);
-                }
-            });
-
-            // Add Project Batch Button
-            document.getElementById(`btn-add-proj-batch-${i}`).addEventListener('click', function(e) {
-                e.preventDefault();
-                const title = document.getElementById(`proj-title-${i}`).value;
-                if(title) {
-                    let students = [], marks = [];
-                    for(let k = 1; k <= 4; k++) {
-                        const name = document.getElementById(`proj-stud${k}-${i}`).value;
-                        const roll = document.getElementById(`proj-roll${k}-${i}`).value;
-                        const mark = document.getElementById(`proj-marks${k}-${i}`).value;
-
-                        if(name || roll) {
-                            students.push(`${name} (${roll})`);
-                            marks.push(mark || '-');
-                        }
-                    }
-
-                    const div = document.createElement('div');
-                    div.className = 'added-result-item';
-                    div.dataset.title = title;
-                    div.dataset.batch = document.getElementById(`proj-batch-${i}`).value;
-                    div.dataset.students = students.join('\n');
-                    div.dataset.marks = marks.join('\n');
-                    div.innerHTML = `<b>${title}</b> (${div.dataset.batch})<br><small>${students.join(', ')}</small>`;
-
-                    document.getElementById(`added-projects-container-${i}`).appendChild(div);
+                const text = document.getElementById('mem-text').value;
+                if(text) {
+                    const file = document.getElementById('mem-file-input').files[0];
+                    addListItem('added-mem-container', `<b>${text}</b>`, file, uploaded.mem);
+                    document.getElementById('mem-text').value = '';
                 }
             });
         }
 
-        // --- 8. Save Details Button ---
-        document.getElementById('save-details-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-
-            savedData = {
-                basic: {
-                    name: document.getElementById('staff-name').value,
-                    code: document.getElementById('employee-code').value,
-                    dept: document.getElementById('department').value,
-                    joined: fmtDate(document.getElementById('joining-date').value)
-                },
-                personal: {
-                    jntuh: document.getElementById('jntuh-id').value,
-                    aicte: document.getElementById('aacte-id').value,
-                    pan: document.getElementById('pan').value,
-                    aadhar: document.getElementById('aadhar').value,
-                    mobile: document.getElementById('mobile').value,
-                    email: document.getElementById('email').value,
-                    orcid: document.getElementById('orcid-id').value,
-                    apaar: document.getElementById('apaar-id').value,
-                    dob: fmtDate(document.getElementById('dob').value),
-                    state: document.getElementById('state').value,
-                    caste: document.getElementById('caste').value,
-                    subcaste: document.getElementById('sub-caste').value
-                },
-                edu: [
-                    ['SSC', document.getElementById('ssc-year').value, document.getElementById('ssc-percent').value, '-', document.getElementById('ssc-school').value],
-                    ['Inter', document.getElementById('inter-year').value, document.getElementById('inter-percent').value, '-', document.getElementById('inter-college').value],
-                    ['UG', document.getElementById('ug-year').value, document.getElementById('ug-percentage').value, document.getElementById('ug-spec').value, document.getElementById('ug-college').value],
-                    ['PG', document.getElementById('pg-year').value, document.getElementById('pg-percentage').value, document.getElementById('pg-spec').value, document.getElementById('pg-college').value],
-                    ['PhD', document.getElementById('phd-year').value, '-', document.getElementById('phd-spec').value, document.getElementById('phd-university').value]
-                ],
-                ach: Array.from(document.querySelectorAll('#added-achievements-container .added-result-item'))
-                    .map(a => [a.dataset.desc, a.dataset.range]),
-                about: document.getElementById('about-yourself').value,
-                subjects: subjectsDealt
-            };
-
-            // Validate Employee Code
-            const empCode = document.getElementById("employee-code").value.trim();
-            if (!empCode) {
-                alert("Employee Code is required before upload");
-                return;
-            }
-
-            // Enable upload button
-            document.getElementById("upload-pdf-btn").disabled = false;
-
-            alert("Details Saved Successfully!");
-        });
-
-        // --- 9. Preview Button ---
-        const modal = document.getElementById('preview-modal');
-        const closeModal = document.querySelector('.close-modal');
-
-        closeModal.addEventListener('click', function() {
-            modal.style.display = "none";
-        });
-
-        document.getElementById('preview-details-btn').addEventListener('click', function(e) {
-            e.preventDefault();
-            if(!savedData) {
-                alert("Please save details first!");
-                return;
-            }
-
-            const img = document.getElementById('faculty-photo').src;
-            const photoHtml = img.startsWith('data:') ?
-                `<div class="pdf-photo-box"><img src="${img}"></div>` : '';
-
-            document.getElementById('preview-content').innerHTML = `
-                <div class="clearfix">
-                    ${photoHtml}
-                    <div class="pdf-header">
-                        <div class="pdf-title">ANURAG ENGINEERING COLLEGE</div>
-                        <div class="pdf-subtitle">FACULTY DIRECTORY</div>
-                    </div>
-                    <div class="pdf-section-title">Basic Info</div>
-                    <table class="pdf-table">
-                        <tr><th>Code</th><td>${savedData.basic.code}</td><th>Name</th><td>${savedData.basic.name}</td></tr>
-                        <tr><th>Dept</th><td>${savedData.basic.dept}</td><th>Joined</th><td>${savedData.basic.joined}</td></tr>
-                    </table>
-                    <div class="pdf-section-title">Personal Details</div>
-                    <table class="pdf-table">
-                        <tr><th>Mobile</th><td>${savedData.personal.mobile}</td><th>Email</th><td>${savedData.personal.email}</td></tr>
-                    </table>
-                    <div class="pdf-section-title">Education</div>
-                    <table class="pdf-table">
-                        <tr><th>Level</th><th>Year</th><th>%</th><th>Spec</th><th>Institute</th></tr>
-                        ${savedData.edu.map(r =>
-                            `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`
-                        ).join('')}
-                    </table>
-                    <div class="pdf-section-title">Subjects Dealt</div>
-                    <table class="pdf-table">
-                        <tr><th>S.No</th><th>Subject Name</th></tr>
-                        ${savedData.subjects ? savedData.subjects.map((subj, idx) =>
-                            `<tr><td>${idx+1}</td><td>${subj}</td></tr>`
-                        ).join('') : '<tr><td colspan="2">No subjects added</td></tr>'}
-                    </table>
-                    <div class="pdf-section-title">Achievements</div>
-                    <ul>${savedData.ach.map(a => `<li>${a[0]} (${a[1]})</li>`).join('')}</ul>
-                    <div class="pdf-section-title">About</div>
-                    <div>${savedData.about}</div>
-                </div>`;
-
-            modal.style.display = "block";
-        });
-
-        // --- 10. Generate PDF Button ---
-        document.getElementById('generate-pdf-btn').addEventListener('click', async function(e) {
-            e.preventDefault();
-
-            if(!savedData) {
-                alert("Please save details first!");
-                return;
-            }
-
-            const empIdInput = document.getElementById("employee-code");
-            const empId = empIdInput && empIdInput.value.trim() ? empIdInput.value.trim() : 'Faculty_Report';
-
-            try {
-                const blob = await generateFinalPDFBlob();
-                if(blob) {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `${empId}.pdf`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+        // SCM ADD
+        const addScmBtn = document.getElementById('add-scm-btn');
+        if (addScmBtn) {
+            addScmBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const text = document.getElementById('scm-text').value;
+                if(text) {
+                    const file = document.getElementById('scm-file-input').files[0];
+                    addListItem('added-scm-container', `<b>${text}</b>`, file, uploaded.scm);
+                    document.getElementById('scm-text').value = '';
                 }
-            } catch(error) {
-                console.error("PDF generation error:", error);
-                alert("Error generating PDF. Please try again.");
+            });
+        }
+
+        // Achievements ADD
+        const addAchBtn = document.getElementById('add-ach-btn');
+        if (addAchBtn) {
+            addAchBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const text = document.getElementById('achievements-text').value;
+                const fromDate = document.getElementById('ach-from-date').value;
+                const toDate = document.getElementById('ach-to-date').value;
+                if(text) {
+                    const file = document.getElementById('ach-file-input').files[0];
+                    const duration = fromDate ? `From: ${fromDate}` : '';
+                    const duration2 = toDate ? ` To: ${toDate}` : '';
+                    addListItem('added-achievements-container',
+                        `<b>${text}</b><br><small>${duration}${duration2}</small>`,
+                        file, uploaded.achievements);
+                    document.getElementById('achievements-text').value = '';
+                    document.getElementById('ach-from-date').value = '';
+                    document.getElementById('ach-to-date').value = '';
+                }
+            });
+        }
+
+        // Publications ADD
+        const addPubBtn = document.getElementById('add-pub-btn');
+        if (addPubBtn) {
+            addPubBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const type = document.getElementById('pub-type').value;
+                const title = document.getElementById('pub-title').value;
+                const authors = document.getElementById('pub-authors').value;
+                const source = document.getElementById('pub-source').value;
+                const year = document.getElementById('pub-date').value;
+                const doi = document.getElementById('pub-doi').value;
+
+                if(title && authors) {
+                    const file = document.getElementById('pub-file-input').files[0];
+                    const html = `<b>${type}: ${title}</b><br>Authors: ${authors}<br>Source: ${source}<br>Year: ${year}${doi ? '<br>DOI: ' + doi : ''}`;
+                    addListItem('added-pub-container', html, file, uploaded.pubs);
+
+                    // Clear inputs
+                    document.getElementById('pub-title').value = '';
+                    document.getElementById('pub-authors').value = '';
+                    document.getElementById('pub-source').value = '';
+                    document.getElementById('pub-date').value = '';
+                    document.getElementById('pub-doi').value = '';
+                }
+            });
+        }
+
+        // --- 6. Load Subjects for Each Slot ---
+        function loadSubjects(slot) {
+            const year = document.getElementById(`select-year-${slot}`).value;
+            const sem = document.getElementById(`select-semester-${slot}`).value;
+            const container = document.getElementById(`subjects-container-${slot}`);
+
+            if (!itSubjects[year] || !itSubjects[year][sem]) {
+                container.innerHTML = '<div class="subject-item">No subjects found for this selection.</div>';
+                return;
+            }
+
+            const subjects = itSubjects[year][sem];
+            container.innerHTML = ''; // Clear previous
+
+            subjects.forEach(subject => {
+                const div = document.createElement('div');
+                div.className = 'subject-item';
+                div.innerHTML = `
+                    <input type="checkbox" class="subject-checkbox" id="subj-${subject.code}-${slot}" data-code="${subject.code}">
+                    <label class="subject-code" for="subj-${subject.code}-${slot}">${subject.code}</label>
+                    <label class="subject-name" for="subj-${subject.code}-${slot}">${subject.name}</label>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Setup Select All checkboxes
+        function setupSelectAll(slot) {
+            const selectAll = document.getElementById(`select-all-${slot}`);
+            const container = document.getElementById(`subjects-container-${slot}`);
+
+            if (selectAll && container) {
+                selectAll.addEventListener('change', function() {
+                    const checkboxes = container.querySelectorAll('.subject-checkbox');
+                    checkboxes.forEach(cb => {
+                        cb.checked = selectAll.checked;
+                    });
+                });
+            }
+        }
+
+        // Setup Load Subjects buttons
+        for (let i = 1; i <= 4; i++) {
+            const loadBtn = document.getElementById(`load-btn-${i}`);
+            if (loadBtn) {
+                loadBtn.addEventListener('click', function() {
+                    loadSubjects(i);
+                });
+            }
+            setupSelectAll(i);
+        }
+
+        // --- 7. Results Calculation and Addition ---
+        function calculatePercentage(appeared, passed) {
+            if (!appeared || appeared == 0) return '0';
+            const pct = (passed / appeared * 100).toFixed(2);
+            return pct + '%';
+        }
+
+        // Setup result addition for each slot
+        for (let i = 1; i <= 4; i++) {
+            const addBtn = document.getElementById(`btn-add-result-${i}`);
+            if (addBtn) {
+                addBtn.addEventListener('click', function() {
+                    addResult(i);
+                });
+            }
+        }
+
+        function addResult(slot) {
+            const subject = document.getElementById(`res-subject-${slot}`).value;
+            const classes = document.getElementById(`res-classes-${slot}`).value;
+            const appeared = document.getElementById(`res-appeared-${slot}`).value;
+            const passed = document.getElementById(`res-passed-${slot}`).value;
+            const failed = document.getElementById(`res-failed-${slot}`).value;
+            const percentage = calculatePercentage(appeared, passed);
+
+            if (!subject || !classes || !appeared || !passed || !failed) {
+                showErrorModal('Please fill all fields for result');
+                return;
+            }
+
+            const resultText = `${subject} | Classes: ${classes} | Appeared: ${appeared} | Passed: ${passed} | Failed: ${failed} | %: ${percentage}`;
+
+            const resultItem = document.createElement('div');
+            resultItem.className = 'added-result-item';
+            resultItem.dataset.txt = resultText;
+            resultItem.dataset.pct = percentage;
+            resultItem.innerHTML = `
+                <span>${resultText}</span>
+                <button class="remove-result-btn" data-slot="${slot}">X</button>
+            `;
+
+            document.getElementById(`added-results-container-${slot}`).appendChild(resultItem);
+
+            // Clear inputs
+            document.getElementById(`res-subject-${slot}`).value = '';
+            document.getElementById(`res-classes-${slot}`).value = '';
+            document.getElementById(`res-appeared-${slot}`).value = '';
+            document.getElementById(`res-passed-${slot}`).value = '';
+            document.getElementById(`res-failed-${slot}`).value = '';
+            document.getElementById(`res-percentage-${slot}`).value = '';
+        }
+
+        // --- 8. Project Batch Addition ---
+        for (let i = 1; i <= 4; i++) {
+            const addBatchBtn = document.getElementById(`btn-add-proj-batch-${i}`);
+            if (addBatchBtn) {
+                addBatchBtn.addEventListener('click', function() {
+                    addProjectBatch(i);
+                });
+            }
+        }
+
+        function addProjectBatch(slot) {
+            const academicYear = document.getElementById(`proj-academic-year-${slot}`).value;
+            const subject = document.getElementById(`proj-subject-${slot}`).value;
+            const batch = document.getElementById(`proj-batch-${slot}`).value;
+            const title = document.getElementById(`proj-title-${slot}`).value;
+            const supervisor = document.getElementById(`proj-supervisor-${slot}`).value;
+
+            let students = '';
+            let marks = '';
+            let totalMarks = 0;
+            let studentCount = 0;
+
+            for (let k = 1; k <= 4; k++) {
+                const roll = document.getElementById(`proj-roll${k}-${slot}`).value;
+                const name = document.getElementById(`proj-stud${k}-${slot}`).value;
+                const mark = document.getElementById(`proj-marks${k}-${slot}`).value;
+                if (roll && name) {
+                    students += `${roll}: ${name}, `;
+                    marks += `${mark}, `;
+                    totalMarks += parseInt(mark) || 0;
+                    studentCount++;
+                }
+            }
+
+            if (!batch || !title || !supervisor) {
+                showErrorModal('Please fill at least Batch, Title, and Supervisor');
+                return;
+            }
+
+            const avgMarks = studentCount > 0 ? totalMarks / studentCount : 0;
+            const projectText = `AY: ${academicYear} | Subject: ${subject} | Batch: ${batch} | Title: ${title} | Supervisor: ${supervisor} | Students: ${students} | Avg Marks: ${avgMarks.toFixed(2)}`;
+
+            const projectItem = document.createElement('div');
+            projectItem.className = 'added-result-item';
+            projectItem.dataset.title = title;
+            projectItem.dataset.batch = batch;
+            projectItem.dataset.students = students;
+            projectItem.dataset.marks = avgMarks.toFixed(2);
+            projectItem.innerHTML = `
+                <span>${projectText}</span>
+                <button class="remove-project-btn" data-slot="${slot}">X</button>
+            `;
+
+            document.getElementById(`added-projects-container-${slot}`).appendChild(projectItem);
+
+            // Clear inputs
+            document.getElementById(`proj-batch-${slot}`).value = '';
+            document.getElementById(`proj-title-${slot}`).value = '';
+            document.getElementById(`proj-supervisor-${slot}`).value = '';
+            for (let k = 1; k <= 4; k++) {
+                document.getElementById(`proj-roll${k}-${slot}`).value = '';
+                document.getElementById(`proj-stud${k}-${slot}`).value = '';
+                document.getElementById(`proj-marks${k}-${slot}`).value = '';
+            }
+        }
+
+        // --- 9. Subjects Dealt Management ---
+        const addSubjectBtn = document.getElementById('add-subject-btn');
+        if (addSubjectBtn) {
+            addSubjectBtn.addEventListener('click', function() {
+                const subjectInput = document.getElementById('subject-input');
+                const subject = subjectInput.value.trim();
+
+                if (!subject) {
+                    showErrorModal('Please enter a subject');
+                    return;
+                }
+
+                subjectsDealt.push(subject);
+
+                // Update the display
+                const subjectItem = document.createElement('div');
+                subjectItem.className = 'subject-item-dealt';
+                subjectItem.innerHTML = `
+                    <span>${subject}</span>
+                    <button class="remove-subject-btn" data-subject="${subject}">Remove</button>
+                `;
+
+                document.getElementById('subjects-list').appendChild(subjectItem);
+
+                // Clear input
+                subjectInput.value = '';
+            });
+        }
+
+        // Remove subject from dealt list
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-subject-btn')) {
+                const subject = e.target.getAttribute('data-subject');
+                subjectsDealt = subjectsDealt.filter(s => s !== subject);
+                e.target.parentElement.remove();
+            }
+
+            // Remove result item
+            if (e.target.classList.contains('remove-result-btn')) {
+                e.target.parentElement.remove();
+            }
+
+            // Remove project item
+            if (e.target.classList.contains('remove-project-btn')) {
+                e.target.parentElement.remove();
             }
         });
 
-        // --- 11. Clear Button ---
-        document.getElementById('clear-all-btn').addEventListener('click', function() {
-            if(confirm("Are you sure you want to clear all data?")) {
-                location.reload();
-            }
-        });
+        // --- 10. Main Control Buttons ---
+        const saveDetailsBtn = document.getElementById('save-details-btn');
+        if (saveDetailsBtn) {
+            saveDetailsBtn.addEventListener('click', async function() {
+                await saveFacultyDetails();
+            });
+        }
 
-        // --- 12. Upload PDF Button ---
-        document.getElementById('upload-pdf-btn').addEventListener('click', uploadPDF);
+        const previewDetailsBtn = document.getElementById('preview-details-btn');
+        if (previewDetailsBtn) {
+            previewDetailsBtn.addEventListener('click', function() {
+                // Simple preview implementation
+                const previewContent = document.getElementById('preview-content');
+                previewContent.innerHTML = `
+                    <div class="pdf-header">
+                        <h2>ANURAG ENGINEERING COLLEGE</h2>
+                        <h3>FACULTY DIRECTORY</h3>
+                    </div>
+                    <div class="clearfix">
+                        <div class="pdf-photo-box">
+                            <img src="${document.getElementById('faculty-photo').src || ''}" alt="Faculty Photo">
+                        </div>
+                        <div>
+                            <p><strong>Employee Code:</strong> ${document.getElementById('employee-code').value}</p>
+                            <p><strong>Name:</strong> ${document.getElementById('staff-name').value}</p>
+                            <p><strong>Department:</strong> ${document.getElementById('department').value}</p>
+                            <p><strong>Date of Joining:</strong> ${document.getElementById('joining-date').value}</p>
+                        </div>
+                    </div>
+                    <p>This is a preview. The actual PDF will contain all saved details.</p>
+                `;
+                document.getElementById('preview-modal').style.display = 'block';
+            });
+        }
+
+        const generatePdfBtn = document.getElementById('generate-pdf-btn');
+        if (generatePdfBtn) {
+            generatePdfBtn.addEventListener('click', async function() {
+                const pdfBlob = await generateFinalPDFBlob();
+                if (pdfBlob) {
+                    const url = URL.createObjectURL(pdfBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `faculty_${document.getElementById('employee-code').value || 'details'}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            });
+        }
+
+        const uploadPdfBtn = document.getElementById('upload-pdf-btn');
+        if (uploadPdfBtn) {
+            uploadPdfBtn.addEventListener('click', uploadPDF);
+        }
+
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all data?')) {
+                    document.getElementById('faculty-form').reset();
+                    // Clear all dynamically added items
+                    document.querySelectorAll('.added-results-list').forEach(container => {
+                        container.innerHTML = '';
+                    });
+                    document.getElementById('subjects-list').innerHTML = '';
+                    subjectsDealt = [];
+                    // Reset uploaded files
+                    uploaded = {
+                        achievements: [], scm: [], pubs: [],
+                        edu: { ssc: null, inter: null, ug: null, pg: null, phd: null },
+                        mem: []
+                    };
+                    // Reset photo
+                    document.getElementById('faculty-photo').src = '';
+                    document.getElementById('faculty-photo').style.display = 'none';
+                    document.getElementById('no-photo-message').style.display = 'block';
+                    document.getElementById('upload-pdf-btn').disabled = true;
+                }
+            });
+        }
+
+        // Close modal when clicking X
+        const closeModal = document.querySelector('.close-modal');
+        if (closeModal) {
+            closeModal.addEventListener('click', function() {
+                document.getElementById('preview-modal').style.display = 'none';
+            });
+        }
 
         // Close modal when clicking outside
         window.addEventListener('click', function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
+            if (event.target === document.getElementById('preview-modal')) {
+                document.getElementById('preview-modal').style.display = 'none';
             }
         });
+
+        // --- 11. Real-time Percentage Calculation for Results ---
+        for (let i = 1; i <= 4; i++) {
+            const appearedInput = document.getElementById(`res-appeared-${i}`);
+            const passedInput = document.getElementById(`res-passed-${i}`);
+            const percentageInput = document.getElementById(`res-percentage-${i}`);
+
+            if (appearedInput && passedInput && percentageInput) {
+                function updatePercentage() {
+                    const appeared = parseInt(appearedInput.value) || 0;
+                    const passed = parseInt(passedInput.value) || 0;
+                    const failed = appeared - passed;
+
+                    const failedInput = document.getElementById(`res-failed-${i}`);
+                    if (failedInput) {
+                        failedInput.value = failed >= 0 ? failed : '';
+                    }
+
+                    if (appeared > 0) {
+                        const pct = (passed / appeared * 100).toFixed(2);
+                        percentageInput.value = pct + '%';
+                    } else {
+                        percentageInput.value = '';
+                    }
+                }
+
+                appearedInput.addEventListener('input', updatePercentage);
+                passedInput.addEventListener('input', updatePercentage);
+            }
+        }
+
+        // --- 12. Format Input Masks ---
+        const orcidInput = document.getElementById('orcid-id');
+        if (orcidInput) {
+            orcidInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 16) value = value.substring(0, 16);
+                let formatted = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 4 === 0) formatted += '-';
+                    formatted += value[i];
+                }
+                e.target.value = formatted;
+            });
+        }
+
+        const apaarInput = document.getElementById('apaar-id');
+        if (apaarInput) {
+            apaarInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 12) value = value.substring(0, 12);
+                let formatted = '';
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 3 === 0) formatted += '-';
+                    formatted += value[i];
+                }
+                e.target.value = formatted;
+            });
+        }
+
+        // --- 13. Auto-fill for demonstration ---
+        function demoAutoFill() {
+            // Only auto-fill if all fields are empty
+            if (document.getElementById('employee-code').value) return;
+
+            document.getElementById('employee-code').value = '7001';
+            document.getElementById('staff-name').value = 'Dr. John Smith';
+            document.getElementById('department').value = 'Information Technology';
+            document.getElementById('joining-date').value = '2018-06-15';
+            document.getElementById('father-name').value = 'Robert Smith';
+            document.getElementById('jntuh-id').value = 'JNTUH2024001';
+            document.getElementById('aacte-id').value = 'AICTE2024001';
+            document.getElementById('pan').value = 'ABCDE1234F';
+            document.getElementById('aadhar').value = '123456789012';
+            document.getElementById('orcid-id').value = '0000-0001-2345-6789';
+            document.getElementById('apaar-id').value = '123-456-789-012';
+            document.getElementById('mobile').value = '9876543210';
+            document.getElementById('email').value = 'john.smith@anurag.edu.in';
+            document.getElementById('gender').value = 'Male';
+            document.getElementById('dob').value = '1985-03-20';
+            document.getElementById('state').value = 'Telangana';
+            document.getElementById('caste').value = 'OC';
+            document.getElementById('sub-caste').value = '';
+            document.getElementById('ssc-school').value = 'St. Mary\'s High School';
+            document.getElementById('ssc-year').value = '2000';
+            document.getElementById('ssc-percent').value = '92.5';
+            document.getElementById('inter-college').value = 'Narayana Junior College';
+            document.getElementById('inter-year').value = '2002';
+            document.getElementById('inter-percent').value = '94.2';
+            document.getElementById('ug-college').value = 'JNTUH College of Engineering';
+            document.getElementById('ug-year').value = '2006';
+            document.getElementById('ug-percentage').value = '85.6';
+            document.getElementById('ug-spec').value = 'Computer Science';
+            document.getElementById('pg-college').value = 'IIT Delhi';
+            document.getElementById('pg-year').value = '2008';
+            document.getElementById('pg-percentage').value = '88.9';
+            document.getElementById('pg-spec').value = 'Information Technology';
+            document.getElementById('phd-university').value = 'JNTU Hyderabad';
+            document.getElementById('phd-year').value = '2015';
+            document.getElementById('phd-spec').value = 'Machine Learning';
+            document.getElementById('exp-other').value = '2 Years';
+            document.getElementById('address').value = 'H.No: 1-2-3, Street, Hyderabad, Telangana';
+            document.getElementById('about-yourself').value = 'Dedicated faculty with 15+ years of experience in teaching and research. Published 25+ papers in reputed journals.';
+
+            // Auto-calculate experience
+            calculateExperience();
+
+            // Add some demo subjects dealt
+            const demoSubjects = ['Data Structures', 'Database Management Systems', 'Machine Learning', 'Cloud Computing'];
+            demoSubjects.forEach(subject => {
+                subjectsDealt.push(subject);
+                const subjectItem = document.createElement('div');
+                subjectItem.className = 'subject-item-dealt';
+                subjectItem.innerHTML = `
+                    <span>${subject}</span>
+                    <button class="remove-subject-btn" data-subject="${subject}">Remove</button>
+                `;
+                document.getElementById('subjects-list').appendChild(subjectItem);
+            });
+        }
+
+        // Auto-fill for demo purposes (remove in production)
+        setTimeout(demoAutoFill, 500);
     });
+
+    // --- Save Faculty Details Function (UPDATED) ---
+    async function saveFacultyDetails() {
+        console.log("Saving faculty details...");
+
+        // Validate required fields first
+        const employeeCode = document.getElementById('employee-code').value.trim();
+        const staffName = document.getElementById('staff-name').value.trim();
+        const department = document.getElementById('department').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const mobile = document.getElementById('mobile').value.trim();
+
+        if (!employeeCode) {
+            showErrorModal('Employee Code is required!');
+            return;
+        }
+        if (!staffName) {
+            showErrorModal('Staff Name is required!');
+            return;
+        }
+        if (!department) {
+            showErrorModal('Department is required!');
+            return;
+        }
+        if (!email) {
+            showErrorModal('Email is required!');
+            return;
+        }
+        if (!mobile) {
+            showErrorModal('Mobile Number is required!');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showErrorModal('Please enter a valid email address!');
+            return;
+        }
+
+        // Validate mobile number (10 digits)
+        const mobileRegex = /^[0-9]{10}$/;
+        if (!mobileRegex.test(mobile)) {
+            showErrorModal('Please enter a valid 10-digit mobile number!');
+            return;
+        }
+
+        // Collect all form data
+        const formData = {
+            employee_code: employeeCode,
+            staff_name: staffName,
+            department: department,
+            email: email,
+            mobile: mobile,
+            joining_date: document.getElementById("joining-date").value,
+            father_name: document.getElementById("father-name").value.trim(),
+            jntuh_id: document.getElementById("jntuh-id").value.trim(),
+            aicte_id: document.getElementById("aacte-id").value.trim(),
+            pan: document.getElementById("pan").value.trim(),
+            aadhar: document.getElementById("aadhar").value.trim(),
+            orcid_id: document.getElementById("orcid-id").value.trim(),
+            apaar_id: document.getElementById("apaar-id").value.trim(),
+            gender: document.getElementById("gender").value,
+            dob: document.getElementById("dob").value,
+            state: document.getElementById("state").value.trim(),
+            caste: document.getElementById("caste").value.trim(),
+            sub_caste: document.getElementById("sub-caste").value.trim(),
+            ssc_school: document.getElementById("ssc-school").value.trim(),
+            ssc_year: document.getElementById("ssc-year").value.trim(),
+            ssc_percent: parseFloat(document.getElementById("ssc-percent").value) || null,
+            inter_college: document.getElementById("inter-college").value.trim(),
+            inter_year: document.getElementById("inter-year").value.trim(),
+            inter_percent: parseFloat(document.getElementById("inter-percent").value) || null,
+            ug_college: document.getElementById("ug-college").value.trim(),
+            ug_year: document.getElementById("ug-year").value.trim(),
+            ug_percentage: parseFloat(document.getElementById("ug-percentage").value) || null,
+            ug_spec: document.getElementById("ug-spec").value.trim(),
+            pg_college: document.getElementById("pg-college").value.trim(),
+            pg_year: document.getElementById("pg-year").value.trim(),
+            pg_percentage: parseFloat(document.getElementById("pg-percentage").value) || null,
+            pg_spec: document.getElementById("pg-spec").value.trim(),
+            phd_university: document.getElementById("phd-university").value.trim(),
+            phd_year: document.getElementById("phd-year").value.trim(),
+            phd_degree: document.getElementById("phd-degree").value,
+            phd_spec: document.getElementById("phd-spec").value.trim(),
+            exp_anurag: document.getElementById("exp-anurag").value.trim(),
+            exp_other: document.getElementById("exp-other").value.trim(),
+            address: document.getElementById("address").value.trim(),
+            about_yourself: document.getElementById("about-yourself").value.trim(),
+            subjects_dealt: subjectsDealt.join(', ')
+        };
+
+        console.log("Saving faculty data:", formData);
+
+        try {
+            const response = await fetch("{% url 'dashboard:save_faculty_details' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            console.log("Save response:", data);
+
+            if (data.status === "success") {
+                // Show success message
+                const errorDetail = document.getElementById('error-detail');
+                errorDetail.textContent = "Faculty details saved successfully and transferred to Exam Branch!";
+                errorDetail.style.color = "#27ae60";
+                showErrorModal("Faculty details saved successfully and transferred to Exam Branch!");
+
+                console.log("Faculty ID:", data.faculty_id);
+                document.getElementById("upload-pdf-btn").disabled = false;
+
+                // Store the saved data for PDF generation
+                savedData = formData;
+                savedData.id = data.faculty_id;
+
+                setTimeout(() => {
+                    hideErrorModal();
+                    errorDetail.style.color = "";
+                    errorDetail.textContent = "An error occurred. Please try again.";
+
+                    // Redirect to Exam Branch after successful save
+                    window.location.href = "{% url 'dashboard:exambranch' %}";
+                }, 2000);
+            } else {
+                showErrorModal("Error: " + (data.message || "Unknown error"));
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            showErrorModal("Error saving faculty details. Please check your connection and try again.");
+        }
+    }
+
+    // --- Upload Faculty Photo Function ---
+    async function uploadFacultyPhoto() {
+        const photoInput = document.getElementById('photo-upload-input');
+        const employeeCode = document.getElementById('employee-code').value.trim();
+
+        if (!employeeCode) {
+            showErrorModal("Please enter Employee Code first!");
+            return;
+        }
+
+        if (!photoInput.files || !photoInput.files[0]) {
+            showErrorModal("Please select a photo first!");
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (photoInput.files[0].size > 5 * 1024 * 1024) {
+            showErrorModal("Photo size should be less than 5MB");
+            return;
+        }
+
+        // Validate file type
+        if (!photoInput.files[0].type.match('image.*')) {
+            showErrorModal("Please select a valid image file (JPG, PNG, etc.)");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("photo", photoInput.files[0]);
+        formData.append("employee_code", employeeCode);
+
+        try {
+            const response = await fetch("{% url 'dashboard:upload_faculty_photo' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.status === "success") {
+                console.log("Photo uploaded successfully!");
+                console.log("Photo URL:", data.url);
+                // Show success message
+                const errorDetail = document.getElementById('error-detail');
+                errorDetail.textContent = "Photo uploaded successfully!";
+                errorDetail.style.color = "#27ae60";
+                showErrorModal("Photo uploaded successfully!");
+                setTimeout(() => {
+                    hideErrorModal();
+                    errorDetail.style.color = "";
+                    errorDetail.textContent = "An error occurred. Please try again.";
+                }, 2000);
+            } else {
+                showErrorModal("Error uploading photo: " + (data.error || "Unknown error"));
+            }
+        } catch (error) {
+            console.error("Photo upload error:", error);
+            showErrorModal("Error uploading photo. Please try again.");
+        }
+    }
+
+    // --- Upload PDF Function ---
+    async function uploadPDF() {
+        console.log("Upload button clicked");
+
+        if (!savedData) {
+            showErrorModal("Please save details before uploading");
+            return;
+        }
+
+        const empCode = document.getElementById("employee-code").value.trim();
+        if (!empCode) {
+            showErrorModal("Employee Code is required for upload");
+            return;
+        }
+
+        // Generate PDF
+        const pdfBlob = await generateFinalPDFBlob();
+        if (!pdfBlob) {
+            showErrorModal("PDF generation failed");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("pdf", pdfBlob, `${empCode}.pdf`);
+        formData.append("employee_code", empCode);
+        formData.append("faculty_name", document.getElementById("staff-name").value.trim());
+
+        console.log("Sending PDF to server...");
+
+        try {
+            const response = await fetch("{% url 'dashboard:upload_faculty_pdf' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.status === "success") {
+                alert("Upload successful! PDF saved to Exam Branch.");
+                console.log("Cloudinary URL:", data.url);
+            } else {
+                showErrorModal("Upload failed: " + (data.error || "Unknown error"));
+            }
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            showErrorModal("Upload failed. Please check your internet connection.");
+        }
+    }
+
+    // --- PDF Generation Function ---
+    async function generateFinalPDFBlob() {
+        // Collect data for PDF
+        const basicData = {
+            code: document.getElementById('employee-code').value,
+            name: document.getElementById('staff-name').value,
+            dept: document.getElementById('department').value,
+            joined: document.getElementById('joining-date').value
+        };
+
+        const personalData = {
+            jntuh: document.getElementById('jntuh-id').value,
+            aicte: document.getElementById('aacte-id').value,
+            pan: document.getElementById('pan').value,
+            aadhar: document.getElementById('aadhar').value,
+            mobile: document.getElementById('mobile').value,
+            email: document.getElementById('email').value,
+            orcid: document.getElementById('orcid-id').value,
+            apaar: document.getElementById('apaar-id').value,
+            dob: document.getElementById('dob').value,
+            state: document.getElementById('state').value,
+            caste: document.getElementById('caste').value,
+            subcaste: document.getElementById('sub-caste').value
+        };
+
+        const educationData = [
+            ['SSC', document.getElementById('ssc-year').value, document.getElementById('ssc-percent').value, '', document.getElementById('ssc-school').value],
+            ['Inter', document.getElementById('inter-year').value, document.getElementById('inter-percent').value, '', document.getElementById('inter-college').value],
+            ['B.Tech', document.getElementById('ug-year').value, document.getElementById('ug-percentage').value, document.getElementById('ug-spec').value, document.getElementById('ug-college').value],
+            ['M.Tech', document.getElementById('pg-year').value, document.getElementById('pg-percentage').value, document.getElementById('pg-spec').value, document.getElementById('pg-college').value],
+            ['Ph.D', document.getElementById('phd-year').value, '', document.getElementById('phd-spec').value, document.getElementById('phd-university').value]
+        ];
+
+        const aboutText = document.getElementById('about-yourself').value;
+
+        // Create PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(16);
+        doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
+        doc.setFontSize(12);
+        doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
+        doc.setLineWidth(0.5);
+        doc.line(10, 25, 200, 25);
+
+        // Photo
+        const img = document.getElementById('faculty-photo');
+        if(img && img.src.startsWith('data:')) {
+            try {
+                doc.addImage(img.src,'JPEG',150,30,35,45);
+            } catch(e){}
+        }
+
+        // Basic Info
+        doc.autoTable({
+            startY: 35,
+            tableWidth: 140,
+            theme:'plain',
+            body:[
+                ['Code', basicData.code],
+                ['Name', basicData.name],
+                ['Dept', basicData.dept],
+                ['Joined', basicData.joined]
+            ]
+        });
+
+        let y = Math.max(80, doc.lastAutoTable.finalY + 10);
+
+        // Personal Details
+        doc.text("PERSONAL DETAILS", 14, y);
+        y += 5;
+        doc.autoTable({
+            startY: y,
+            theme:'grid',
+            body:[
+               ['JNTUH ID', personalData.jntuh, 'AICTE ID', personalData.aicte],
+               ['PAN', personalData.pan, 'AADHAR', personalData.aadhar],
+               ['MOBILE', personalData.mobile, 'EMAIL', personalData.email],
+               ['ORCID', personalData.orcid, 'APAAR', personalData.apaar],
+               ['DOB', personalData.dob, 'STATE', personalData.state],
+               ['CASTE', personalData.caste, 'SUB-CASTE', personalData.subcaste]
+            ]
+        });
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Education
+        doc.text("EDUCATIONAL QUALIFICATIONS", 14, y);
+        y += 5;
+        doc.autoTable({
+            startY: y,
+            head:[['Degree','Year','%/CGPA','Specialization','Institute']],
+            body: educationData
+        });
+        y = doc.lastAutoTable.finalY + 10;
+
+        // Subjects Dealt
+        if (subjectsDealt.length > 0) {
+            doc.text("SUBJECTS DEALT", 14, y);
+            y += 5;
+
+            const subjectRows = subjectsDealt.map((subject, index) => [
+                String(index + 1),
+                subject
+            ]);
+
+            doc.autoTable({
+                startY: y,
+                head: [['S.No', 'Subject Name']],
+                body: subjectRows,
+                theme: 'grid',
+                headStyles: { fillColor: [52, 73, 94] },
+                styles: { fontSize: 10 }
+            });
+            y = doc.lastAutoTable.finalY + 10;
+        }
+
+        // About Faculty
+        doc.text("ABOUT FACULTY", 14, y);
+        y += 7;
+        doc.setFontSize(10);
+        const splitText = doc.splitTextToSize(aboutText, 180);
+        doc.text(splitText, 14, y);
+
+        // Convert to blob
+        const pdfBytes = doc.output('arraybuffer');
+        return new Blob([pdfBytes], {type:'application/pdf'});
+    }
 </script>
 {% endblock %}

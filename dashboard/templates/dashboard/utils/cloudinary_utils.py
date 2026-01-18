@@ -1,9 +1,12 @@
 # dashboard/utils/cloudinary_utils.py
+import cloudinary
+import cloudinary.uploader
 import cloudinary.utils
 import re
 import requests
 from io import BytesIO
 import traceback
+from django.conf import settings
 
 
 def extract_public_id_from_url(url):
@@ -103,4 +106,20 @@ def download_certificate_with_auth(url):
     except Exception as e:
         print(f"Unexpected error for {url}: {e}")
         traceback.print_exc()
+        return None
+
+
+def upload_to_cloudinary(file, folder="faculty_pdfs"):
+    """
+    Upload a file to Cloudinary
+    """
+    try:
+        result = cloudinary.uploader.upload(
+            file,
+            folder=folder,
+            resource_type="auto"
+        )
+        return result['secure_url']
+    except Exception as e:
+        print(f"Cloudinary upload error: {e}")
         return None

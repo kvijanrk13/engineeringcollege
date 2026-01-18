@@ -100,3 +100,118 @@ class StudentRegistration(models.Model):
 
     def __str__(self):
         return f"{self.ht_no} - {self.student_name}"
+
+
+# NEW MODEL FOR FACULTY REGISTRATION
+class FacultyRegistration(models.Model):
+    # ================= BASIC INFORMATION =================
+    employee_code = models.CharField(max_length=20, unique=True)
+    staff_name = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=15)
+    mobile = models.CharField(max_length=15, blank=True, null=True)
+    department = models.CharField(max_length=100)
+    date_of_joining = models.DateField(blank=True, null=True)
+    joining_date = models.DateField(blank=True, null=True)
+
+    # ================= PERSONAL DETAILS =================
+    father_name = models.CharField(max_length=100, blank=True, null=True)
+    jntuh_id = models.CharField(max_length=50, blank=True, null=True)
+    aicte_id = models.CharField(max_length=50, blank=True, null=True)
+    pan = models.CharField(max_length=20, blank=True, null=True)
+    aadhar = models.CharField(max_length=20, blank=True, null=True)
+    orcid_id = models.CharField(max_length=50, blank=True, null=True)
+    apaar_id = models.CharField(max_length=50, blank=True, null=True)
+    gender = models.CharField(max_length=10, blank=True, null=True)
+    dob = models.DateField(blank=True, null=True)
+    state = models.CharField(max_length=50, blank=True, null=True)
+    caste = models.CharField(max_length=50, blank=True, null=True)
+    sub_caste = models.CharField(max_length=50, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+
+    # ================= ACADEMIC DETAILS =================
+    admission_type = models.CharField(max_length=50, blank=True, null=True)
+    other_admission_details = models.TextField(blank=True, null=True)
+    eamcet_rank = models.IntegerField(null=True, blank=True)
+    year = models.IntegerField(null=True, blank=True)
+    sem = models.IntegerField(null=True, blank=True)
+
+    # ================= EDUCATIONAL QUALIFICATIONS =================
+    ssc_school = models.CharField(max_length=200, blank=True, null=True)
+    ssc_year = models.CharField(max_length=10, blank=True, null=True)
+    ssc_percent = models.FloatField(blank=True, null=True)
+    ssc_marks = models.FloatField(null=True, blank=True)
+
+    inter_college = models.CharField(max_length=200, blank=True, null=True)
+    inter_year = models.CharField(max_length=10, blank=True, null=True)
+    inter_percent = models.FloatField(blank=True, null=True)
+    inter_marks = models.FloatField(null=True, blank=True)
+
+    ug_college = models.CharField(max_length=200, blank=True, null=True)
+    ug_year = models.CharField(max_length=10, blank=True, null=True)
+    ug_percentage = models.FloatField(blank=True, null=True)
+    ug_spec = models.CharField(max_length=100, blank=True, null=True)
+
+    pg_college = models.CharField(max_length=200, blank=True, null=True)
+    pg_year = models.CharField(max_length=10, blank=True, null=True)
+    pg_percentage = models.FloatField(blank=True, null=True)
+    pg_spec = models.CharField(max_length=100, blank=True, null=True)
+
+    phd_university = models.CharField(max_length=200, blank=True, null=True)
+    phd_year = models.CharField(max_length=10, blank=True, null=True)
+    phd_degree = models.CharField(max_length=50, blank=True, null=True)
+    phd_spec = models.CharField(max_length=100, blank=True, null=True)
+
+    # ================= EXPERIENCE =================
+    exp_anurag = models.CharField(max_length=50, blank=True, null=True)
+    exp_other = models.CharField(max_length=50, blank=True, null=True)
+
+    # ================= SUBJECTS DEALT =================
+    subjects_dealt = models.TextField(blank=True, null=True, help_text="Store subjects as comma-separated values")
+
+    # ================= ADDITIONAL ACADEMIC FIELDS =================
+    cgpa = models.FloatField(null=True, blank=True)
+    rtrp_title = models.CharField(max_length=200, blank=True, null=True)
+    intern_title = models.CharField(max_length=200, blank=True, null=True)
+    final_project_title = models.CharField(max_length=200, blank=True, null=True)
+    other_training = models.TextField(blank=True, null=True)
+
+    # ================= PHOTO =================
+    photo = CloudinaryField("faculty_photo", blank=True, null=True)
+
+    # ================= GENERATED PDF =================
+    pdf_url = models.URLField(blank=True, null=True)
+    pdf_public_id = models.CharField(max_length=255, blank=True, null=True)
+
+    # ================= TIMESTAMPS =================
+    registration_date = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # ================= ADDITIONAL FIELDS =================
+    about_yourself = models.TextField(blank=True, null=True)
+    faculty_achievements = models.TextField(blank=True, null=True)
+    publications = models.TextField(blank=True, null=True)
+
+    def get_subjects_list(self):
+        """Parse subjects_dealt string into a list"""
+        if not self.subjects_dealt:
+            return []
+        return [subject.strip() for subject in self.subjects_dealt.split(',') if subject.strip()]
+
+    def get_photo_url(self):
+        """Get the Cloudinary URL for the faculty photo"""
+        if self.photo:
+            try:
+                import cloudinary.utils
+                return cloudinary.utils.cloudinary_url(self.photo, secure=True)[0]
+            except:
+                return None
+        return None
+
+    def get_pdf_filename(self):
+        safe_name = self.name.replace(" ", "_")
+        return f"faculty_{self.employee_code}_{safe_name}.pdf"
+
+    def __str__(self):
+        return f"{self.employee_code} - {self.name}"

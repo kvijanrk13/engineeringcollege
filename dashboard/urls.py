@@ -20,10 +20,16 @@ urlpatterns = [
     path("download-pdf/<int:student_id>/", views.download_pdf, name="download_pdf"),
     path("delete-student/<int:student_id>/", views.delete_student, name="delete_student"),
 
+    # Faculty Registration & Management
+    path("save-faculty-details/", views.save_faculty_details, name="save_faculty_details"),
+    path("upload-faculty-photo/", views.upload_faculty_photo, name="upload_faculty_photo"),
+    path("upload-faculty-pdf/", views.upload_faculty_pdf, name="upload_faculty_pdf"),
+    path("delete-faculty/<int:faculty_id>/", views.delete_faculty, name="delete_faculty"),
+
     # Other Tabs
     path("exambranch/", views.exambranch, name="exambranch"),
     path("laboratory/", views.laboratory, name="laboratory"),
-    path("library/", views.library, name="library"), # 🔥 ADDED
+    path("library/", views.library, name="library"),
     path("gallery/", views.gallery, name="gallery"),
 
     # Utilities

@@ -57,6 +57,7 @@ ALLOWED_HOSTS = [
     ".onrender.com",
 ]
 
+# engineeringcollege/settings.py
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -68,7 +69,7 @@ INSTALLED_APPS = [
     "cloudinary",
     "cloudinary_storage",
 
-    "dashboard",
+    "dashboard", # ✅ Registered Dashboard App
 ]
 
 MIDDLEWARE = [
@@ -118,7 +119,6 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # 🔥 FIX: Added STATICFILES_DIRS to prevent IndexError in urls.py
-# This tells Django to look for the 'static' folder in your project root
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
