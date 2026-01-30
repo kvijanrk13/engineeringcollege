@@ -1,0 +1,364 @@
+<!-- templates/errors/404.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 - Page Not Found | Anurag Engineering College{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+    }
+
+    .error-card {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        padding: 40px;
+        text-align: center;
+        border: 2px solid #2196f3;
+    }
+
+    .error-icon {
+        font-size: 80px;
+        color: #2196f3;
+        margin-bottom: 20px;
+    }
+
+    .error-code {
+        font-size: 72px;
+        font-weight: 800;
+        color: #2196f3;
+        line-height: 1;
+        margin-bottom: 10px;
+        font-family: 'Arial Black', sans-serif;
+    }
+
+    .error-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #343a40;
+        margin-bottom: 15px;
+    }
+
+    .error-message {
+        color: #6c757d;
+        font-size: 18px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .missing-resource {
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        padding: 15px;
+        margin: 20px 0;
+        text-align: left;
+        border-left: 4px solid #2196f3;
+    }
+
+    .resource-info {
+        list-style-type: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+
+    .resource-info li {
+        padding: 5px 0;
+        border-bottom: 1px dashed #dee2e6;
+    }
+
+    .resource-info li:last-child {
+        border-bottom: none;
+    }
+
+    .resource-info i {
+        width: 20px;
+        color: #2196f3;
+    }
+
+    .error-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .btn-notfound {
+        padding: 12px 25px;
+        font-weight: 600;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-notfound:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .search-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .search-box {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .suggested-links {
+        margin-top: 20px;
+    }
+
+    .suggested-links .list-group-item {
+        border: none;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+    }
+
+    .suggested-links .list-group-item:hover {
+        background-color: #f8f9fa;
+        padding-left: 25px;
+    }
+
+    @media (max-width: 768px) {
+        .error-container {
+            padding: 20px;
+        }
+
+        .error-card {
+            padding: 25px;
+        }
+
+        .error-code {
+            font-size: 60px;
+        }
+
+        .error-title {
+            font-size: 20px;
+        }
+
+        .error-message {
+            font-size: 16px;
+        }
+
+        .error-actions {
+            flex-direction: column;
+        }
+
+        .btn-notfound {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="error-card">
+                    <div class="error-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+
+                    <h1 class="error-code">404</h1>
+
+                    <h2 class="error-title">Page Not Found</h2>
+
+                    <p class="error-message">
+                        The page you are looking for might have been removed,
+                        had its name changed, or is temporarily unavailable.
+                    </p>
+
+                    <div class="missing-resource">
+                        <h5><i class="fas fa-search-location me-2"></i>Missing Resource</h5>
+
+                        <ul class="resource-info mt-3">
+                            <li>
+                                <i class="fas fa-link me-2"></i>
+                                <strong>Requested URL:</strong>
+                                <code class="text-break">{{ request.path }}</code>
+                            </li>
+
+                            <li>
+                                <i class="fas fa-calendar me-2"></i>
+                                <strong>Time:</strong>
+                                <span id="current-time">{{ now|date:"DATETIME_FORMAT" }}</span>
+                            </li>
+
+                            {% if exception %}
+                            <li>
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Details:</strong>
+                                <span class="text-info">{{ exception|escape }}</span>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <div class="error-actions">
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-primary btn-notfound">
+                            <i class="fas fa-home"></i> Go to Homepage
+                        </a>
+
+                        <button onclick="history.back()" class="btn btn-outline-primary btn-notfound">
+                            <i class="fas fa-arrow-left"></i> Go Back
+                        </button>
+
+                        <a href="{% url 'dashboard:dashboard' %}" class="btn btn-outline-info btn-notfound">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+
+                        <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-outline-success btn-notfound">
+                            <i class="fas fa-users"></i> Faculty Directory
+                        </a>
+                    </div>
+
+                    <div class="search-section">
+                        <h6><i class="fas fa-search me-2"></i>Find What You're Looking For</h6>
+
+                        <div class="search-box">
+                            <div class="input-group mb-3">
+                                <input type="text"
+                                       class="form-control"
+                                       id="siteSearch"
+                                       placeholder="Search the site...">
+                                <button class="btn btn-outline-primary" type="button" onclick="performSearch()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="suggested-links">
+                            <p class="text-muted mb-2">Suggested Pages:</p>
+                            <div class="list-group">
+                                <a href="{% url 'dashboard:exambranch' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-file-alt me-2"></i> Exam Branch
+                                </a>
+                                <a href="{% url 'dashboard:reports_dashboard' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-chart-bar me-2"></i> Reports & Analytics
+                                </a>
+                                <a href="{% url 'dashboard:login' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-sign-in-alt me-2"></i> Login
+                                </a>
+                                <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                                    <i class="fas fa-cog me-2"></i> Admin Panel
+                                </a>
+                            </div>
+                        </div>
+
+                        <p class="mt-3 mb-0 text-center">
+                            <small class="text-muted">
+                                <i class="fas fa-envelope me-1"></i>
+                                Can't find what you need?
+                                <a href="mailto:webmaster@anurag.ac.in">Contact webmaster</a>
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set current time
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+
+        document.getElementById('current-time').textContent = timeString;
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Search functionality
+    function performSearch() {
+        const searchTerm = document.getElementById('siteSearch').value.trim();
+        if (searchTerm) {
+            // Redirect to faculty list with search
+            window.location.href = "{% url 'dashboard:faculty_list' %}?search=" + encodeURIComponent(searchTerm);
+        } else {
+            document.getElementById('siteSearch').focus();
+        }
+    }
+
+    // Allow Enter key to trigger search
+    document.getElementById('siteSearch').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+
+    // Log 404 error
+    console.log(`404 Error: Page not found - ${window.location.pathname}`);
+    console.log(`Referrer: ${document.referrer || 'Direct access'}`);
+
+    // Suggest similar pages based on URL
+    const path = window.location.pathname.toLowerCase();
+
+    // Create suggestion based on path keywords
+    let suggestion = null;
+    const suggestions = {
+        'faculty': "{% url 'dashboard:faculty_list' %}",
+        'dashboard': "{% url 'dashboard:dashboard' %}",
+        'exam': "{% url 'dashboard:exambranch' %}",
+        'report': "{% url 'dashboard:reports_dashboard' %}",
+        'admin': "{% url 'admin:index' %}",
+        'login': "{% url 'dashboard:login' %}",
+    };
+
+    for (const [keyword, url] of Object.entries(suggestions)) {
+        if (path.includes(keyword)) {
+            suggestion = { keyword, url };
+            break;
+        }
+    }
+
+    if (suggestion) {
+        const suggestionDiv = document.createElement('div');
+        suggestionDiv.className = 'alert alert-info mt-3';
+        suggestionDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Looking for <strong>${suggestion.keyword}</strong> related pages?
+                </span>
+                <a href="${suggestion.url}" class="btn btn-sm btn-info">
+                    Go There <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        `;
+
+        document.querySelector('.suggested-links').prepend(suggestionDiv);
+    }
+</script>
+{% endblock %}

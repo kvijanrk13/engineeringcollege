@@ -1,159 +1,38 @@
-<!-- base.html (updated) -->
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ANURAG Engineering College{% endblock %}</title>
-    <style>
-        /* Add this new style */
-        .syllabus-page .global-header-container {
-            display: none !important;
-        }
 
-        .global-header-container {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            background-color: #000;
-            padding: 10px 0;
-            position: relative;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        .letterhead-table {
-            width: 100%;
-            max-width: 1100px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
-        }
-
-        .letterhead-table td {
-            padding: 10px;
-            text-align: center;
-            position: relative;
-        }
-
-        .letterhead-img {
-            width: 100%;
-            max-height: 180px;
-            object-fit: contain;
-            display: block;
-            margin: 0 auto;
-        }
-
-        /* Navbar styling */
-        .navbar {
-            background-color: #000;
-            border-bottom: 1px solid #0f0;
-            padding: 0.5rem;
-        }
-        .navbar-brand {
-            color: #0f0 !important;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-        }
-
-        /* Canvas overlay container */
-        .overlay-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            pointer-events: none;
-        }
-    </style>
-
-    <!-- JavaScript solution: Paint white rectangle over text -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        function hideItDeptPortal() {
-            const img = document.querySelector('.letterhead-img');
-            const td = document.querySelector('.letterhead-table td');
-
-            if (!img || !td) return;
-
-            // Create canvas overlay
-            const canvas = document.createElement('canvas');
-            canvas.className = 'overlay-canvas';
-            canvas.style.position = 'absolute';
-            canvas.style.top = '0';
-            canvas.style.left = '0';
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            canvas.style.zIndex = '100';
-            canvas.style.pointerEvents = 'none';
-
-            td.style.position = 'relative';
-            td.appendChild(canvas);
-
-            // Draw white rectangle over IT DEPT PORTAL text
-            function drawOverlay() {
-                const rect = img.getBoundingClientRect();
-                const containerRect = td.getBoundingClientRect();
-
-                canvas.width = containerRect.width;
-                canvas.height = containerRect.height;
-
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#ffffff';
-
-                // Position of IT DEPT PORTAL text (adjust these values)
-                const textTop = 10; // pixels from top of image
-                const textHeight = 35; // height of text area
-                const textWidth = 300; // width of text area
-                const textLeft = (containerRect.width - textWidth) / 2;
-
-                ctx.fillRect(textLeft, textTop, textWidth, textHeight);
-
-                // Try different positions if needed
-                console.log('Drawing overlay at:', textLeft, textTop, textWidth, textHeight);
-            }
-
-            if (img.complete) {
-                drawOverlay();
-            } else {
-                img.addEventListener('load', drawOverlay);
-            }
-
-            // Redraw on resize
-            window.addEventListener('resize', drawOverlay);
-        }
-
-        // Run after a short delay to ensure DOM is ready
-        setTimeout(hideItDeptPortal, 100);
-    });
-    </script>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     {% block extra_css %}{% endblock %}
 </head>
-<body {% block body_class %}{% endblock %}>
+<body>
 
-<div class="global-header-container">
-    <table class="letterhead-table">
-        <tr>
-            <td>
-                <img src="{% static 'images/NEW LETTER HEAD.png' %}"
-                     alt="ANURAG Engineering College Letterhead"
-                     class="letterhead-img">
-            </td>
-        </tr>
-    </table>
-</div>
-
-<nav class="navbar navbar-expand-lg navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'dashboard:dashboard' %}">
-            <i class="fas fa-university me-2"></i> IT DEPT PORTAL
-        </a>
+<nav class="navbar navbar-dark bg-dark px-4">
+    <div class="ms-auto">
+        <span class="navbar-text text-success fw-bold">
+            Welcome 7001
+        </span>
     </div>
 </nav>
 
-{% block content %}{% endblock %}
+<div class="container-fluid mt-4">
 
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

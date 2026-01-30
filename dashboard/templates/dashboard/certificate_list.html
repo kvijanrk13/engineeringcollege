@@ -1,0 +1,45 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Certificates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Faculty Certificates</h2>
+
+    {% if certificates %}
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Faculty</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Issued Date</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cert in certificates %}
+                <tr>
+                    <td>{{ cert.certificate_id }}</td>
+                    <td>{{ cert.faculty.name }}</td>
+                    <td>{{ cert.title }}</td>
+                    <td>{{ cert.certificate_type }}</td>
+                    <td>{{ cert.issued_date }}</td>
+                    <td>
+                        {% if cert.certificate_file %}
+                            <a href="{{ cert.certificate_file.url }}" target="_blank">View</a>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No certificates found.</p>
+    {% endif %}
+</div>
+{% endblock %}

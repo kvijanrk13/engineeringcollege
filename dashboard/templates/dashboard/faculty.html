@@ -1,1858 +1,1539 @@
+<!-- faculty/dashboard/templates/faculty.html -->
 {% extends 'dashboard/base.html' %}
 {% load static %}
-{% block title %}Faculty Details - ANURAG Engineering College{% endblock %}
 
-{% block content %}
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% block title %}{{ faculty.staff_name }} - Faculty Details | Anurag Engineering College{% endblock %}
 
+{% block extra_css %}
 <style>
-    /* Global Matrix Styling to match Dashboard */
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Courier New', monospace;
-        overflow-x: hidden;
-        background-color: #000;
-        color: #0f0;
+    /* Faculty Details Page Styles */
+    .faculty-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
     }
 
-    #matrix-canvas {
-        position: fixed;
+    .faculty-header::before {
+        content: '';
+        position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/pattern.png" %}');
+        opacity: 0.1;
     }
 
-    /* Horizontal Navigation Tabs */
-    .nav-tabs-container {
+    .faculty-photo {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 5px solid white;
+        object-fit: cover;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .faculty-photo-placeholder {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 5px solid white;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         display: flex;
+        align-items: center;
         justify-content: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        background: rgba(0, 20, 0, 0.9);
-        padding: 20px;
-        border: 1px solid #0f0;
-        width: 100%;
-        max-width: 1200px;
-        margin: 20px auto 40px auto;
-        border-radius: 8px;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        color: white;
+        font-size: 60px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
 
-    .nav-link-tab {
-        padding: 12px 20px;
-        color: #0f0;
-        text-decoration: none;
-        font-weight: bold;
-        text-transform: uppercase;
-        border: 1px solid #0f0;
-        transition: 0.3s;
+    .faculty-basic-info h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .faculty-designation {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 15px;
+    }
+
+    .badge-status {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
         font-size: 0.9rem;
     }
 
-    .nav-link-tab:hover {
-        background: #0f0;
-        color: #000;
-        box-shadow: 0 0 15px #0f0;
+    /* Info Cards */
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #eef1f6;
+        transition: transform 0.3s ease;
     }
 
-    .nav-link-tab.active {
-        background: rgba(0, 255, 0, 0.2);
-        border-width: 2px;
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
-    /* Base Styles for the Form Container */
-    .container {
-        max-width: 1200px; margin: 20px auto 20px 20px;
-        background: white; padding: 30px; border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.08); margin-right: 320px;
-        color: #333;
+    .info-card h5 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+        font-weight: 600;
     }
 
-    h1 { color: #2c3e50; text-align: center; border-bottom: 3px solid #3498db; padding-bottom: 15px; margin-bottom: 30px; font-weight: 700; }
-    h3 { color: #34495e; border-left: 5px solid #3498db; padding-left: 15px; margin-top: 40px; margin-bottom: 20px; font-size: 1.25rem; font-weight: 600; }
+    .info-item {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #ecf0f1;
+    }
 
-    /* Form Elements */
-    .form-section { background: #fff; border: 1px solid #e0e0e0; padding: 25px; border-radius: 8px; margin-bottom: 25px; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-    .form-label { font-weight: 600; font-size: 12px; color: #555; margin-bottom: 6px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #dcdcdc; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+    .info-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
 
-    /* Grids */
-    .achievements-grid, .scm-grid, .mem-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-    .pub-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-    .pub-full { grid-column: 1 / -1; }
-    .pub-half { grid-column: span 2; }
-    .date-row { display: flex; gap: 10px; }
-    .upload-box { display: flex; align-items: center; gap: 10px; background: #f9f9f9; padding: 8px; border: 1px dashed #bdc3c7; border-radius: 5px; }
+    .info-label {
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-    /* Education */
-    .edu-header { background: #eef7fb; color: #2980b9; font-weight: bold; padding: 8px 12px; border-radius: 4px; margin: 20px 0 10px; border-left: 4px solid #2980b9; }
-    .edu-basics-row { display: grid; grid-template-columns: 60px 3fr 1fr 1fr 120px; gap: 10px; align-items: end; margin-bottom: 10px; }
-    .edu-spec-row { display: grid; grid-template-columns: 60px 120px 2fr 1fr 1fr 120px; gap: 10px; align-items: end; margin-bottom: 10px; }
+    .info-value {
+        color: #2c3e50;
+        padding-left: 26px;
+    }
 
-    /* Buttons */
-    .add-btn, .mini-upload-btn { background: #e67e22; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center; }
-    .mini-upload-btn { background: #3498db; width: 100%; padding: 9px; }
-    .mini-upload-btn.uploaded { background: #27ae60; }
-    .load-btn { background: #34495e; color: white; border: none; padding: 10px; border-radius:5px; cursor: pointer; width: 100%; font-weight: bold; height: 42px; }
+    .info-icon {
+        color: #3498db;
+        width: 18px;
+    }
 
     /* Subjects Section */
-    .subject-selection-block { border: 1px solid #dfe6e9; padding: 20px; border-radius: 8px; margin-bottom: 25px; background: white; }
-    .block-header { background: #ecf0f1; padding: 10px; font-weight: bold; color: #2c3e50; border-radius: 4px; margin-bottom: 15px; }
-    .subject-controls { display: grid; grid-template-columns: 1fr 1fr 1fr 100px; gap: 15px; margin-bottom: 15px; align-items: end; }
-    .select-all-container { background: #f1f8ff; padding: 8px 12px; border: 1px solid #e1e5eb; display: flex; align-items: center; gap: 10px; }
-    .subject-list { max-height: 300px; overflow-y: auto; border: 1px solid #e1e5eb; margin-bottom: 15px; background: #fff; }
-    .subject-item { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f0f0f0; gap: 15px; }
-    .subject-item input { width: 18px; height: 18px; margin: 0; cursor: pointer; flex-shrink: 0; }
-    .subject-code { font-family: monospace; font-weight: bold; color: #8e44ad; width: 90px; flex-shrink: 0; }
-    .subject-name { font-weight: 500; color: #2c3e50; font-size: 13px; }
-
-    /* Results & Projects */
-    .result-section, .project-details-section { background: #fdfdfd; padding: 15px; border: 1px solid #e0e0e0; border-radius: 6px; }
-    .result-input-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 10px; }
-    .result-input-wrapper { flex: 1; min-width: 80px; }
-    .proj-row-1 { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    .proj-row-students { display: grid; grid-template-columns: 120px 1fr 80px; gap: 10px; margin-bottom: 5px; }
-    .added-results-list { margin-top: 10px; }
-    .added-result-item { background: #f8f9fa; padding: 10px; border-left: 3px solid #2ecc71; margin-bottom: 5px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-
-    /* Photo Sidebar */
-    .photo-sidebar { position: fixed; top: 180px; right: 30px; width: 280px; background: white; padding: 20px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; z-index: 100; color: #333; }
-    #faculty-photo { width: 100%; max-height: 250px; object-fit: contain; border: 1px solid #eee; border-radius: 4px; margin-bottom: 10px; display: none; }
-
-    /* Controls */
-    .controls { display: flex; gap: 15px; margin: 40px auto; width: 100%; max-width: 1000px; justify-content: center; padding-bottom: 50px; flex-wrap: wrap; }
-    .button { padding: 15px 20px; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; font-size: 15px; flex: 1; max-width: 220px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .button.save { background: #27ae60; }
-    .button.preview { background: #f39c12; }
-    .button.generate { background: #2980b9; }
-    .button.upload { background: #8e44ad; }
-    .button.upload:hover { background: #732d91; }
-    .button.clear { background: #c0392b; }
-    .button:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; }
-
-    /* Modal */
-    .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(3px); }
-    .modal-content { background-color: #fefefe; margin: 3% auto; border: 1px solid #888; width: 85%; max-width: 900px; border-radius: 8px; }
-    .modal-header { background: #2c3e50; padding: 15px; color: white; display: flex; justify-content: space-between; border-radius: 8px 8px 0 0; }
-    .preview-body { padding: 40px; background: white; color: #000; font-family: 'Times New Roman', serif; max-height: 80vh; overflow-y: auto; }
-
-    /* PDF Sim */
-    .pdf-header { text-align: center; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-    .pdf-section-title { font-size: 13px; font-weight: bold; margin-top: 15px; text-transform: uppercase; border-bottom: 1px solid #ccc; }
-    .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px; }
-    .pdf-table th, .pdf-table td { border: 1px solid #000; padding: 6px; text-align: left; vertical-align: top; }
-    .pdf-table th { background-color: #f0f0f0; }
-    .pdf-photo-box { float: right; width: 100px; height: 120px; border: 1px solid #000; margin-left: 15px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-    .pdf-photo-box img { width: 100%; height: 100%; object-fit: cover; }
-    .clearfix::after { content: ""; clear: both; display: table; }
-
-    /* Subjects Dealt Section */
-    .subjects-dealt-container {
-        background: #fff;
-        padding: 15px;
-        border-radius: 5px;
-        border: 1px solid #e0e0e0;
+    .subject-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 8px 15px;
+        border-radius: 20px;
+        margin: 5px;
+        display: inline-block;
+        font-size: 0.9rem;
+        border: 1px solid #bbdefb;
     }
 
-    .subject-item-dealt {
-        padding: 8px 10px;
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: white;
-        margin-bottom: 5px;
-        border-radius: 3px;
-        transition: background 0.2s;
-    }
-
-    .subject-item-dealt:hover {
+    /* Action Buttons */
+    .action-section {
         background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        border: 1px solid #e9ecef;
     }
 
-    .subject-item-dealt .remove-subject-btn {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        border-radius: 3px;
-        padding: 3px 8px;
-        cursor: pointer;
-        font-size: 12px;
-        transition: background 0.2s;
-    }
-
-    .subject-item-dealt .remove-subject-btn:hover {
-        background: #c0392b;
-    }
-
-    /* Error Modal Styles */
-    .error-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 2001;
-        display: none;
+    .btn-action-large {
+        padding: 15px 25px;
+        font-weight: 600;
+        border-radius: 8px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-    }
-
-    .error-modal-content {
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        width: 90%;
-        max-width: 600px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-
-    .error-modal h1 {
-        color: #e74c3c;
-        border-bottom: 2px solid #e74c3c;
-        text-align: left;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
-
-    .error-modal h3 {
-        color: #2c3e50;
-        border-left: 4px solid #3498db;
-        padding-left: 15px;
-        margin-top: 20px;
-        margin-bottom: 10px;
-    }
-
-    .error-modal table {
+        gap: 10px;
+        transition: all 0.3s ease;
         width: 100%;
-        border-collapse: collapse;
-        margin: 15px 0;
-        background: white;
-    }
-
-    .error-modal th {
-        background: #2c3e50;
-        color: white;
-        padding: 12px;
-        text-align: left;
-    }
-
-    .error-modal td {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .error-modal tr:hover {
-        background: #f1f8ff;
-    }
-
-    .error-message {
-        background: #ffeaea;
-        border: 1px solid #f5c6cb;
-        border-radius: 5px;
-        padding: 15px;
-        margin: 20px 0;
-        color: #721c24;
-    }
-
-    .btn-ok {
-        background: #3498db;
-        color: white;
-        border: none;
-        padding: 12px 40px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
-        margin-top: 20px;
-        width: 100%;
-        transition: background 0.3s;
-    }
-
-    .btn-ok:hover {
-        background: #2980b9;
-    }
-
-    /* Photo Section Styles */
-    .photo-section {
-        text-align: center;
-        padding: 30px;
-        border: 2px dashed #3498db;
-        border-radius: 10px;
-        background: #f8fdff;
-        margin-bottom: 20px;
-    }
-
-    .photo-placeholder {
-        margin-bottom: 20px;
-    }
-
-    .photo-icon {
-        font-size: 64px;
         margin-bottom: 15px;
-        color: #3498db;
+        border: none;
     }
 
-    .photo-section p {
-        font-size: 18px;
-        color: #555;
+    .btn-action-large:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 7px 20px rgba(0,0,0,0.15);
     }
 
-    @media (max-width: 1200px) {
-        .container {
-            margin-right: 20px;
+    .btn-generate-pdf {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .btn-upload-cloudinary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .btn-preview-pdf {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .btn-merge-certificates {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+    }
+
+    .btn-download-pdf {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        color: white;
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-available {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-uploading {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+
+    /* Certificate Section */
+    .certificate-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #3498db;
+        transition: all 0.3s ease;
+    }
+
+    .certificate-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Progress Bar */
+    .upload-progress {
+        height: 25px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    /* Modal Styles */
+    .pdf-preview-modal .modal-dialog {
+        max-width: 90%;
+    }
+
+    .pdf-preview-iframe {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .faculty-header {
+            padding: 20px;
+            text-align: center;
         }
-        .photo-sidebar {
-            position: static;
-            width: 100%;
-            margin: 0 0 20px 0;
+
+        .faculty-photo, .faculty-photo-placeholder {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
         }
-        .controls {
-            flex-direction: column;
+
+        .faculty-basic-info h1 {
+            font-size: 1.8rem;
         }
-        .pub-grid, .edu-spec-row, .edu-basics-row {
-            grid-template-columns: 1fr;
+
+        .info-card {
+            padding: 20px;
         }
-        .subject-controls {
-            grid-template-columns: 1fr 1fr;
+
+        .btn-action-large {
+            padding: 12px 20px;
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Animation for loading */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .loading {
+        animation: pulse 1.5s infinite;
+    }
+
+    /* Timeline for Education */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #3498db;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -25px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #3498db;
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #3498db;
+    }
+
+    .timeline-content h6 {
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .timeline-content p {
+        color: #7f8c8d;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Print Styles */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .info-card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+
+        .action-section {
+            display: none;
         }
     }
 </style>
+{% endblock %}
 
-<canvas id="matrix-canvas"></canvas>
-
-<!-- Error Modal/Dialog (Initially hidden) -->
-<div class="error-modal" id="error-modal">
-  <div class="error-modal-content">
-    <div class="error-message">
-      <strong>Error</strong><br>
-      <span id="error-detail">An error occurred. Please try again.</span>
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Faculty Selector Dropdown -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users me-2"></i>Select Faculty
+                    </h5>
+                    <select class="form-select" id="facultySelector" onchange="changeFaculty(this.value)">
+                        <option value="">Select a faculty member...</option>
+                        {% for f in faculties %}
+                        <option value="{{ f.id }}" {% if f.id == faculty.id %}selected{% endif %}>
+                            {{ f.employee_code }} - {{ f.staff_name }} ({{ f.department }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>Quick Actions
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" onclick="generateFacultyPDF({{ faculty.id }})">
+                            <i class="fas fa-file-pdf me-1"></i> Generate PDF
+                        </button>
+                        <button class="btn btn-success btn-sm" onclick="uploadToCloudinary({{ faculty.id }})">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Upload to Cloudinary
+                        </button>
+                        <a href="?id={{ faculty.id }}&print=1" target="_blank" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-print me-1"></i> Print
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <button class="btn-ok" onclick="hideErrorModal()">OK</button>
-  </div>
-</div>
 
-<!-- Navigation Tabs -->
-<div class="nav-tabs-container">
-    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
-    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab active">Faculty</a>
-    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
-    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
-    <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
-    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
-    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
-    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
-</div>
-
-<div class="main-wrapper">
-    <form id="faculty-form" onsubmit="return false;">
-    {% csrf_token %}
-
-    <div class="container">
-        <h1>Faculty Details Entry</h1>
-
-        <div class="form-section">
-            <h3>Basic Information</h3>
-            <div class="form-grid">
-                <div><label class="form-label">Employee Code *</label><input type="text" id="employee-code" name="employee_code" placeholder="e.g. 7001" required></div>
-                <div><label class="form-label">Name of Staff *</label><input type="text" id="staff-name" placeholder="Full Name" required></div>
-                <div><label class="form-label">Department *</label><input type="text" id="department" placeholder="Department" required></div>
-                <div><label class="form-label">Date of Joining</label><input type="date" id="joining-date"></div>
-                <div><label class="form-label">Father Name</label><input type="text" id="father-name" placeholder="Father Name"></div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3>Personal Details</h3>
-            <div class="form-grid">
-                <div><label class="form-label">JNTUH ID</label><input type="text" id="jntuh-id"></div>
-                <div><label class="form-label">AICTE ID</label><input type="text" id="aacte-id"></div>
-                <div><label class="form-label">PAN</label><input type="text" id="pan"></div>
-                <div><label class="form-label">AADHAR No</label><input type="text" id="aadhar"></div>
-                <div><label class="form-label">ORCID ID</label><input type="text" id="orcid-id" maxlength="19" placeholder="0000-0000-0000-0000"></div>
-                <div><label class="form-label">APAAR ID</label><input type="text" id="apaar-id" maxlength="15" placeholder="000-000-000-000"></div>
-                <div><label class="form-label">Mobile No *</label><input type="tel" id="mobile" required></div>
-                <div><label class="form-label">Mail ID *</label><input type="email" id="email" required></div>
-                <div><label class="form-label">Gender</label><select id="gender"><option>Male</option><option>Female</option></select></div>
-                <div><label class="form-label">DOB</label><input type="date" id="dob"></div>
-                <div><label class="form-label">State</label><input type="text" id="state"></div>
-                <div><label class="form-label">Caste</label><input type="text" id="caste"></div>
-                <div><label class="form-label">Sub-Caste</label><input type="text" id="sub-caste"></div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3>Educational Qualifications</h3>
-            <div class="edu-basics-row"><label class="form-label">SSC</label><input type="text" id="ssc-school" placeholder="School"><input type="text" id="ssc-year" placeholder="Year"><input type="text" id="ssc-percent" placeholder="%"><button type="button" class="mini-upload-btn" id="ssc-up-btn">Upload</button><input type="file" id="ssc-file" hidden accept="image/*,.pdf"></div>
-            <div class="edu-basics-row"><label class="form-label">Inter</label><input type="text" id="inter-college" placeholder="College"><input type="text" id="inter-year" placeholder="Year"><input type="text" id="inter-percent" placeholder="%"><button type="button" class="mini-upload-btn" id="inter-up-btn">Upload</button><input type="file" id="inter-file" hidden accept="image/*,.pdf"></div>
-            <div class="edu-header">UG (B.TECH)</div>
-            <div class="edu-spec-row"><label>B.Tech</label><input type="text" id="ug-college" placeholder="College"><input type="text" id="ug-year" placeholder="Year"><input type="text" id="ug-percentage" placeholder="%"><input type="text" id="ug-spec" placeholder="Spec"><button type="button" class="mini-upload-btn" id="ug-up-btn">Upload</button><input type="file" id="ug-file" hidden accept="image/*,.pdf"></div>
-            <div class="edu-header">PG (M.TECH)</div>
-            <div class="edu-spec-row"><label>M.Tech</label><input type="text" id="pg-college" placeholder="College"><input type="text" id="pg-year" placeholder="Year"><input type="text" id="pg-percentage" placeholder="%"><input type="text" id="pg-spec" placeholder="Spec"><button type="button" class="mini-upload-btn" id="pg-up-btn">Upload</button><input type="file" id="pg-file" hidden accept="image/*,.pdf"></div>
-            <div class="edu-header">Ph.D</div>
-            <div class="edu-spec-row"><label>Ph.D</label><input type="text" id="phd-university" placeholder="Univ"><input type="text" id="phd-year" placeholder="Year"><select id="phd-degree"><option>Awarded</option><option>Pursuing</option></select><input type="text" id="phd-spec" placeholder="Spec"><button type="button" class="mini-upload-btn" id="phd-up-btn">Upload</button><input type="file" id="phd-file" hidden accept="image/*,.pdf"></div>
-        </div>
-
-        <div class="form-section">
-            <h3>Experience & Address</h3>
-            <div class="form-grid">
-                <div><label class="form-label">Exp in Anurag</label><input type="text" id="exp-anurag" placeholder="Auto-calculated" readonly style="background:#e9ecef"></div>
-                <div><label class="form-label">Exp Other</label><input type="text" id="exp-other"></div>
-                <div style="grid-column: 1/-1"><label class="form-label">Address</label><input type="text" id="address"></div>
-            </div>
-        </div>
-
-        <div class="form-section">
-            <h3>Faculty Membership Details</h3>
-            <div class="mem-grid">
-                <div><label class="form-label">Details</label><input type="text" id="mem-text" placeholder="Name & ID"></div>
-                <div><label class="form-label">Upload</label><div class="upload-box"><button type="button" id="mem-browse-btn" class="load-btn">Browse</button><input type="file" id="mem-file-input" hidden></div><button type="button" id="add-mem-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
-            </div>
-            <div class="added-results-list" id="added-mem-container"></div>
-        </div>
-
-        <div class="form-section">
-            <h3>Selection Committee Member (SCM)</h3>
-            <div class="scm-grid">
-                <div><label class="form-label">Details</label><input type="text" id="scm-text" placeholder="Details..."></div>
-                <div><label class="form-label">Upload</label><div class="upload-box"><button type="button" id="scm-browse-btn" class="load-btn">Browse</button><input type="file" id="scm-file-input" hidden></div><button type="button" id="add-scm-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
-            </div>
-            <div class="added-results-list" id="added-scm-container"></div>
-        </div>
-
-        <div class="form-section">
-            <h3>Faculty Achievements</h3>
-            <div class="achievements-grid">
-                <div><label class="form-label">Description:</label><textarea id="achievements-text" rows="5"></textarea></div>
-                <div><div class="date-row"><input type="date" id="ach-from-date"><input type="date" id="ach-to-date"></div><div class="upload-box"><button type="button" id="ach-browse-btn" class="load-btn">Browse</button><input type="file" id="ach-file-input" hidden></div><button type="button" id="add-ach-btn" class="add-btn" style="width:100%; margin-top:15px;">ADD</button></div>
-            </div>
-            <div class="added-results-list" id="added-achievements-container"></div>
-        </div>
-
-        <div class="form-section">
-            <h3>Publications</h3>
-            <div class="pub-grid">
-                <div><label class="form-label">Type</label><select id="pub-type"><option>Journal</option><option>Conference</option><option>Book</option><option>Patent</option></select></div>
-                <div class="pub-full"><label class="form-label">Title</label><input type="text" id="pub-title"></div>
-                <div class="pub-full"><label class="form-label">Authors</label><input type="text" id="pub-authors"></div>
-                <div><label class="form-label">Source</label><input type="text" id="pub-source"></div>
-                <div><label class="form-label">Year</label><input type="date" id="pub-date"></div>
-                <div><label class="form-label">DOI</label><input type="text" id="pub-doi"></div>
-                <div><label class="form-label">Upload</label><div class="upload-box"><button type="button" id="pub-browse-btn" class="load-btn">Browse</button><input type="file" id="pub-file-input" hidden></div></div>
-                <div><button type="button" id="add-pub-btn" class="add-btn" style="width:100%; margin-top:23px;">ADD</button></div>
-            </div>
-            <div class="added-results-list" id="added-pub-container"></div>
-        </div>
-
-        <div class="form-section">
-            <h3>Subjects Dealt & Results (4 Slots)</h3>
-            {% for i in "1234" %}
-            <div class="subject-selection-block">
-                <div class="block-header">Slot {{ i }}</div>
-                <div class="subject-controls">
-                    <div><label>AY</label><select id="select-academic-year-{{ i }}"><option>2022-2023</option><option>2023-2024</option><option>2024-2025</option><option>2025-2026</option></select></div>
-                    <div><label>Year</label><select id="select-year-{{ i }}"><option value="First Year">First Year</option><option value="Second Year">Second Year</option><option value="Third Year">Third Year</option><option value="Fourth Year">Fourth Year</option></select></div>
-                    <div><label>Sem</label><select id="select-semester-{{ i }}"><option>1-1</option><option>1-2</option><option>2-1</option><option>2-2</option><option>3-1</option><option>3-2</option><option>4-1</option><option>4-2</option></select></div>
-                    <button type="button" class="load-btn" id="load-btn-{{ i }}">Load Subjects</button>
+    <!-- Faculty Header -->
+    <div class="faculty-header">
+        <div class="row align-items-center">
+            <div class="col-lg-2 col-md-3 text-center">
+                <!-- Always show placeholder (cloudinary_photo_url field doesn't exist) -->
+                <div class="faculty-photo-placeholder">
+                    <i class="fas fa-user"></i>
                 </div>
 
-                <div class="select-all-container"><input type="checkbox" id="select-all-{{ i }}"><label for="select-all-{{ i }}">Select All</label></div>
-                <div class="subject-list" id="subjects-container-{{ i }}"></div>
-
-                <div class="result-section">
-                    <div class="result-input-group">
-                        <div class="result-input-wrapper" style="flex:2"><label>Subject</label><input type="text" id="res-subject-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Classes</label><input type="number" id="res-classes-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>App</label><input type="number" id="res-appeared-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Pass</label><input type="number" id="res-passed-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Fail</label><input type="number" id="res-failed-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>%</label><input type="text" id="res-percentage-{{ i }}" readonly></div>
-                        <button type="button" class="add-btn" id="btn-add-result-{{ i }}">+</button>
-                    </div>
-                    <div class="added-results-list" id="added-results-container-{{ i }}"></div>
+                <!-- Photo Upload Button -->
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-light" onclick="uploadPhoto()">
+                        <i class="fas fa-camera me-1"></i> Change Photo
+                    </button>
                 </div>
             </div>
-            {% endfor %}
-        </div>
 
-        <div class="form-section">
-            <h3>Projects Handled (4 Slots)</h3>
-            {% for i in "1234" %}
-            <div class="subject-selection-block">
-                <div class="block-header">Project Slot {{ i }}</div>
-                <div class="subject-controls">
-                    <div><label>AY</label><select id="proj-academic-year-{{ i }}"><option>2022-2023</option><option>2023-2024</option><option>2024-2025</option><option>2025-2026</option></select></div>
-                    <div style="flex:2"><label>Subject</label>
-                        <select id="proj-subject-{{ i }}">
-                            <option value="">-- Select --</option>
-                            <option>2-2: IT409PW - Real-time Research Project</option>
-                            <option>3-2: CS606PW - Internship/Mini Project</option>
-                            <option>4-1: IT705PC - Project Stage I</option>
-                            <option>4-2: IT802PC - Project Stage II</option>
-                        </select>
+            <div class="col-lg-10 col-md-9 faculty-basic-info">
+                <h1>{{ faculty.staff_name }}</h1>
+                <div class="faculty-designation">
+                    <i class="fas fa-briefcase me-2"></i>
+                    {{ faculty.department }}
+                    <!-- REMOVED: HOD logic (about_yourself field doesn't exist) -->
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-id-card me-3"></i>
+                            <strong>Employee Code:</strong>
+                            <span class="ms-2">{{ faculty.employee_code }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar-alt me-3"></i>
+                            <strong>Joining Date:</strong>
+                            <span class="ms-2">{{ faculty.joining_date|date:"d M Y" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock me-3"></i>
+                            <strong>Experience:</strong>
+                            <span class="ms-2">{{ experience }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope me-3"></i>
+                            <strong>Email:</strong>
+                            <a href="mailto:{{ faculty.email }}" class="ms-2 text-white">{{ faculty.email }}</a>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone me-3"></i>
+                            <strong>Mobile:</strong>
+                            <a href="tel:{{ faculty.mobile }}" class="ms-2 text-white">{{ faculty.mobile }}</a>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-3"></i>
+                            <strong>PDF Status:</strong>
+                            <span class="ms-2 status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                {% if cloudinary_status.has_pdf %}
+                                <i class="fas fa-check-circle"></i> Available on Cloudinary
+                                {% else %}
+                                <i class="fas fa-clock"></i> Not Uploaded
+                                {% endif %}
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div class="project-details-section">
-                    <div class="proj-row-1">
-                        <div class="result-input-wrapper"><label>Batch</label><input type="text" id="proj-batch-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Title</label><input type="text" id="proj-title-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Supervisor</label><input type="text" id="proj-supervisor-{{ i }}"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column: Personal Details -->
+        <div class="col-lg-6">
+            <!-- Personal Information -->
+            <div class="info-card">
+                <h5><i class="fas fa-user-circle me-2"></i> Personal Information</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user info-icon"></i> Full Name
                     </div>
-                    {% for k in "1234" %}
-                    <div class="proj-row-students">
-                        <div class="result-input-wrapper"><label>Roll {{ k }}</label><input type="text" id="proj-roll{{ k }}-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Name {{ k }}</label><input type="text" id="proj-stud{{ k }}-{{ i }}"></div>
-                        <div class="result-input-wrapper"><label>Marks</label><input type="number" id="proj-marks{{ k }}-{{ i }}"></div>
+                    <div class="info-value">{{ faculty.staff_name }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-badge info-icon"></i> Employee Code
+                    </div>
+                    <div class="info-value">{{ faculty.employee_code }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-birthday-cake info-icon"></i> Date of Birth
+                    </div>
+                    <div class="info-value">{{ faculty.dob|date:"d M Y" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-venus-mars info-icon"></i> Gender
+                    </div>
+                    <div class="info-value">{{ faculty.gender }}</div>
+                </div>
+
+                <!-- REMOVED: Father's Name field (doesn't exist) -->
+                <!--
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user-friends info-icon"></i> Father's Name
+                    </div>
+                    <div class="info-value">{{ faculty.father_name|default:"Not specified" }}</div>
+                </div>
+                -->
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-map-marker-alt info-icon"></i> Address
+                    </div>
+                    <div class="info-value">{{ faculty.address|default:"Not specified" }}</div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="info-card">
+                <h5><i class="fas fa-address-book me-2"></i> Contact Information</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-envelope info-icon"></i> Email
+                    </div>
+                    <div class="info-value">
+                        <a href="mailto:{{ faculty.email }}">{{ faculty.email }}</a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-phone info-icon"></i> Mobile
+                    </div>
+                    <div class="info-value">
+                        <a href="tel:{{ faculty.mobile }}">{{ faculty.mobile }}</a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-alt info-icon"></i> Joining Date
+                    </div>
+                    <div class="info-value">{{ faculty.joining_date|date:"d M Y" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-building info-icon"></i> Department
+                    </div>
+                    <div class="info-value">{{ faculty.department }}</div>
+                </div>
+            </div>
+
+            <!-- REMOVED: Official IDs Section (fields don't exist) -->
+            <!--
+            <div class="info-card">
+                <h5><i class="fas fa-id-card me-2"></i> Official IDs</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-university info-icon"></i> JNTUH ID
+                    </div>
+                    <div class="info-value">{{ faculty.jntuh_id|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-graduation-cap info-icon"></i> AICTE ID
+                    </div>
+                    <div class="info-value">{{ faculty.aicte_id|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-credit-card info-icon"></i> PAN Number
+                    </div>
+                    <div class="info-value">{{ faculty.pan|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-address-card info-icon"></i> Aadhar Number
+                    </div>
+                    <div class="info-value">{{ faculty.aadhar|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user-tie info-icon"></i> ORCID ID
+                    </div>
+                    <div class="info-value">{{ faculty.orcid_id|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-card-alt info-icon"></i> APAAR ID
+                    </div>
+                    <div class="info-value">{{ faculty.apaar_id|default:"Not specified" }}</div>
+                </div>
+            </div>
+            -->
+        </div>
+
+        <!-- Right Column: Educational Details -->
+        <div class="col-lg-6">
+            <!-- Educational Qualifications -->
+            <div class="info-card">
+                <h5><i class="fas fa-graduation-cap me-2"></i> Educational Qualifications</h5>
+
+                <div class="timeline">
+                    <!-- SSC -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Secondary School Certificate (SSC)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.ssc_year }} |
+                                <strong>Percentage:</strong> {{ faculty.ssc_percent }}%<br>
+                                <strong>School:</strong> {{ faculty.ssc_school }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Intermediate -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Intermediate</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.inter_year }} |
+                                <strong>Percentage:</strong> {{ faculty.inter_percent }}%<br>
+                                <strong>College:</strong> {{ faculty.inter_college }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- UG -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Bachelor of Technology (B.Tech)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.ug_year }} |
+                                <strong>Percentage:</strong> {{ faculty.ug_percentage }}%<br>
+                                <strong>College:</strong> {{ faculty.ug_college }}<br>
+                                <strong>Specialization:</strong> {{ faculty.ug_spec }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PG -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Master of Technology (M.Tech)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.pg_year }} |
+                                <strong>Percentage:</strong> {{ faculty.pg_percentage }}%<br>
+                                <strong>College:</strong> {{ faculty.pg_college }}<br>
+                                <strong>Specialization:</strong> {{ faculty.pg_spec }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PhD -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Doctor of Philosophy (Ph.D)</h6>
+                            <p>
+                                <strong>Status:</strong> {{ faculty.phd_degree }}<br>
+                                <strong>University:</strong> {{ faculty.phd_university|default:"Not specified" }}<br>
+                                <strong>Specialization:</strong> {{ faculty.phd_spec|default:"Not specified" }}
+                                {% if faculty.phd_year %}
+                                <br><strong>Year:</strong> {{ faculty.phd_year }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REMOVED: Experience Section (exp_anurag and exp_other fields don't exist) -->
+            <!--
+            <div class="info-card">
+                <h5><i class="fas fa-briefcase me-2"></i> Professional Experience</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-building info-icon"></i> Experience at Anurag
+                    </div>
+                    <div class="info-value">{{ faculty.exp_anurag|default:"Calculating..." }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-industry info-icon"></i> Other Experience
+                    </div>
+                    <div class="info-value">{{ faculty.exp_other|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-chart-line info-icon"></i> Total Experience
+                    </div>
+                    <div class="info-value">{{ experience }}</div>
+                </div>
+            </div>
+            -->
+
+            <!-- Subjects Dealt -->
+            <div class="info-card">
+                <h5><i class="fas fa-book me-2"></i> Subjects Dealt</h5>
+
+                <div class="mt-3">
+                    {% if subjects %}
+                        {% for subject in subjects %}
+                        <span class="subject-badge">{{ subject }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No subjects specified</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <div class="info-label">
+                        <i class="fas fa-list info-icon"></i> Complete List
+                    </div>
+                    <div class="info-value">{{ faculty.subjects_dealt|default:"Not specified" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- REMOVED: About Faculty Section (about_yourself field doesn't exist) -->
+    <!--
+    <div class="row">
+        <div class="col-12">
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle me-2"></i> About Faculty</h5>
+
+                <div class="mt-3">
+                    {% if faculty.about_yourself %}
+                    <div class="bg-light p-4 rounded">
+                        {{ faculty.about_yourself|linebreaks }}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No information provided</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    -->
+
+    <!-- Certificates Section (if available) -->
+    {% if certificates %}
+    <div class="row" id="certificates">
+        <div class="col-12">
+            <div class="info-card">
+                <h5><i class="fas fa-certificate me-2"></i> Certificates ({{ certificates.count }})</h5>
+
+                <div class="row mt-3">
+                    {% for certificate in certificates %}
+                    <div class="col-md-6 mb-3">
+                        <div class="certificate-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ certificate.certificate_type }}</h6>
+                                    <p class="text-muted mb-1">
+                                        <small>
+                                            <i class="fas fa-university me-1"></i>
+                                            {{ certificate.issued_by }}
+                                        </small>
+                                    </p>
+                                    <p class="mb-1">
+                                        <small>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Issued: {{ certificate.issue_date|date:"d M Y" }}
+                                        </small>
+                                    </p>
+                                    {% if certificate.expiry_date %}
+                                    <p class="mb-0">
+                                        <small>
+                                            <i class="fas fa-calendar-times me-1"></i>
+                                            Expires: {{ certificate.expiry_date|date:"d M Y" }}
+                                        </small>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <span class="badge {% if certificate.is_verified %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if certificate.is_verified %}Verified{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+
+                            {% if certificate.description %}
+                            <p class="mt-2 mb-0 text-muted small">{{ certificate.description }}</p>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
-                    <button type="button" class="add-btn" id="btn-add-proj-batch-{{ i }}" style="margin-top:10px;">ADD BATCH</button>
-                    <div class="added-results-list" id="added-projects-container-{{ i }}"></div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- Subjects Dealt Section -->
-        <div class="form-section">
-            <h3>Subjects Dealt</h3>
-            <div class="subjects-dealt-container">
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" id="subject-input" placeholder="Enter subject name (e.g., Data Structures)" style="flex: 1; padding: 10px;">
-                    <button type="button" id="add-subject-btn" class="add-btn" style="width: 100px;">+ ADD</button>
-                </div>
-                <div class="subject-list-container" id="subjects-list" style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 5px; padding: 10px; background: #f9f9f9;">
-                    <!-- Subjects will appear here -->
                 </div>
             </div>
         </div>
+    </div>
+    {% endif %}
 
-        <div class="form-section">
-            <h3>About Yourself</h3>
-            <textarea id="about-yourself" rows="5" placeholder="Write about your experience, achievements, and any other relevant information..."></textarea>
+    <!-- Action Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="action-section no-print">
+                <h4 class="mb-4 text-center">
+                    <i class="fas fa-cogs me-2"></i> PDF Management & Actions
+                </h4>
+
+                <!-- Status Indicators -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">PDF Status</h6>
+                                <div id="pdfStatusIndicator" class="status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                    {% if cloudinary_status.has_pdf %}
+                                    <i class="fas fa-check-circle"></i> Available on Cloudinary
+                                    {% else %}
+                                    <i class="fas fa-clock"></i> Not Uploaded
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-cloud fa-2x text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Cloudinary Status</h6>
+                                <div id="cloudinaryStatusIndicator" class="status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                    {% if cloudinary_status.has_pdf %}
+                                    <i class="fas fa-check-circle"></i> Connected & Synced
+                                    {% else %}
+                                    <i class="fas fa-exclamation-triangle"></i> Not Connected
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Progress (Hidden by default) -->
+                <div class="upload-progress mb-4" style="display: none;" id="uploadProgressContainer">
+                    <div class="progress-text mb-2 d-flex justify-content-between">
+                        <span id="uploadStatus">Uploading to Cloudinary...</span>
+                        <span id="uploadPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons Grid -->
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-generate-pdf"
+                                onclick="generateFacultyPDF({{ faculty.id }})"
+                                id="generatePDFBtn">
+                            <i class="fas fa-file-pdf"></i> Generate PDF
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-upload-cloudinary"
+                                onclick="uploadToCloudinary({{ faculty.id }})"
+                                id="uploadCloudBtn"
+                                {% if cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            {% if cloudinary_status.has_pdf %}
+                            Already Uploaded
+                            {% else %}
+                            Upload to Cloudinary
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-preview-pdf"
+                                onclick="previewPDF({{ faculty.id }})"
+                                id="previewPDFBtn"
+                                {% if not cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-eye"></i> Preview PDF
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'dashboard:download_faculty_pdf' faculty.id %}"
+                           class="btn btn-action-large btn-download-pdf"
+                           id="downloadPDFBtn"
+                           {% if not cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Secondary Actions -->
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-primary w-100"
+                                onclick="window.open('?id={{ faculty.id }}&print=1', '_blank')">
+                            <i class="fas fa-print me-2"></i> Print Profile
+                        </button>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-warning w-100"
+                                onclick="openEditModal({{ faculty.id }})">
+                            <i class="fas fa-edit me-2"></i> Edit Details
+                        </button>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        {% if certificates %}
+                        <button class="btn btn-action-large btn-merge-certificates w-100"
+                                onclick="mergeCertificates({{ faculty.id }})">
+                            <i class="fas fa-file-archive"></i> Merge Certificates
+                        </button>
+                        {% else %}
+                        <button class="btn btn-outline-secondary w-100" disabled>
+                            <i class="fas fa-file-archive me-2"></i> No Certificates
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="text-center">
+                            <small class="text-muted">Quick Links:</small>
+                            <div class="mt-2">
+                                <button onclick="viewCertificates({{ faculty.id }})" class="btn btn-sm btn-outline-info mx-1">
+                                    <i class="fas fa-certificate"></i> Manage Certificates
+                                </button>
+                                <button onclick="syncToCloudinary({{ faculty.id }})" class="btn btn-sm btn-outline-primary mx-1">
+                                    <i class="fas fa-sync-alt"></i> Sync to Cloudinary
+                                </button>
+                                <button onclick="mergeCertificates({{ faculty.id }})" class="btn btn-sm btn-outline-dark mx-1">
+                                    <i class="fas fa-file-pdf"></i> Merge PDFs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="controls">
-        <button type="button" class="button save" id="save-details-btn"><i class="fas fa-save"></i> Save Details</button>
-        <button type="button" class="button preview" id="preview-details-btn"><i class="fas fa-eye"></i> Preview</button>
-        <button type="button" class="button generate" id="generate-pdf-btn"><i class="fas fa-file-pdf"></i> Generate PDF</button>
-        <button type="button" class="button upload" id="upload-pdf-btn" disabled><i class="fas fa-cloud-upload-alt"></i> Upload to Cloud</button>
-        <button type="button" class="button clear" id="clear-all-btn"><i class="fas fa-trash"></i> Clear All</button>
-    </div>
-
-    <aside class="photo-sidebar">
-        <h3>Photo Preview</h3>
-        <div class="photo-preview-container">
-            <img id="faculty-photo" src="" alt="Preview">
-            <p id="no-photo-message">No photo selected</p>
-        </div>
-        <div class="upload-controls">
-            <button type="button" id="choose-file-btn" class="load-btn">Choose Photo</button>
-            <input type="file" id="photo-upload-input" style="display:none;" accept="image/*">
-        </div>
-    </aside>
-
-    <div id="preview-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><h2>PREVIEW</h2><span class="close-modal">&times;</span></div>
-            <div id="preview-content" class="preview-body"></div>
-        </div>
-    </div>
-
-    </form>
 </div>
 
+<!-- PDF Preview Modal -->
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                    PDF Preview - {{ faculty.staff_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5" id="pdfLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading PDF...</span>
+                    </div>
+                    <p class="mt-3">Loading PDF preview...</p>
+                </div>
+                <iframe id="pdfPreviewFrame" class="pdf-preview-iframe" style="display: none;"></iframe>
+                <div id="pdfError" class="alert alert-danger text-center py-4" style="display: none;">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>Unable to load PDF preview</h5>
+                    <p id="errorMessage" class="mb-0">Please try generating the PDF first.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="modalDownloadLink" target="_blank">
+                    <i class="fas fa-download me-1"></i> Download PDF
+                </a>
+                <button type="button" class="btn btn-success" onclick="printPDF()">
+                    <i class="fas fa-print me-1"></i> Print PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Upload Modal -->
+<div class="modal fade" id="photoUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Faculty Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="photoUploadForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="employee_code" value="{{ faculty.employee_code }}">
+
+                    <div class="mb-3">
+                        <label for="photoFile" class="form-label">Select Photo</label>
+                        <input class="form-control" type="file" id="photoFile" name="photo" accept="image/*" required>
+                        <div class="form-text">
+                            Recommended: Square photo, minimum 300x300 pixels, JPG or PNG format.
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <img id="photoPreview" src="#" alt="Preview" class="img-fluid rounded" style="max-height: 200px; display: none;">
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The photo will be uploaded to Cloudinary and displayed on the faculty profile.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitPhoto()">
+                    <i class="fas fa-upload me-1"></i> Upload Photo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Merge Certificates Modal -->
+<div class="modal fade" id="mergeCertificatesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-archive me-2"></i>
+                    Merge Certificates with PDF
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="mergeStatus">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Merging certificates...</span>
+                        </div>
+                        <p class="mt-3" id="mergeMessage">Merging certificates with faculty PDF...</p>
+                    </div>
+                </div>
+                <div id="mergeResult" style="display: none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="resultMessage">Certificates merged successfully!</span>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-primary" id="downloadMergedBtn" target="_blank">
+                            <i class="fas fa-download me-1"></i> Download Merged PDF
+                        </a>
+                    </div>
+                </div>
+                <div id="mergeError" style="display: none;">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage">Error merging certificates. Please try again.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-    // Matrix Background
-    const matrixCanvas = document.getElementById('matrix-canvas');
-    const ctx = matrixCanvas.getContext('2d');
-    matrixCanvas.width = window.innerWidth;
-    matrixCanvas.height = window.innerHeight;
-
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
-    const fontSize = 16;
-    const columns = matrixCanvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
-
-    function drawMatrix() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = fontSize + 'px monospace';
-        for (let i = 0; i < drops.length; i++) {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
+    // CSRF Token for AJAX requests
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
         }
-    }
-    setInterval(drawMatrix, 33);
-
-    // --- Error Modal Functions ---
-    function showErrorModal(message) {
-        const modal = document.getElementById('error-modal');
-        const detailElement = document.getElementById('error-detail');
-        if (message) {
-            detailElement.textContent = message;
-        }
-        modal.style.display = 'flex';
+        return cookieValue;
     }
 
-    function hideErrorModal() {
-        document.getElementById('error-modal').style.display = 'none';
+    const csrftoken = getCookie('csrftoken');
+
+    // Change Faculty Function
+    function changeFaculty(facultyId) {
+        if (facultyId) {
+            window.location.href = `?id=${facultyId}`;
+        }
     }
 
-    // Close modal when clicking outside
-    document.addEventListener('click', function(event) {
-        const modal = document.getElementById('error-modal');
-        if (event.target === modal) {
-            hideErrorModal();
-        }
-    });
+    // Generate PDF Function
+    function generateFacultyPDF(facultyId) {
+        const button = document.getElementById('generatePDFBtn');
+        const originalHTML = button.innerHTML;
 
-    // --- Global Variables ---
-    let uploaded = {
-        achievements: [], scm: [], pubs: [],
-        edu: { ssc: null, inter: null, ug: null, pg: null, phd: null },
-        mem: []
-    };
-    let savedData = null;
-    let subjectsDealt = [];
-    const fmtDate = (d) => d ? d.split('-').reverse().join('-') : '';
+        // Disable button and show loading
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
 
-    // --- CSRF Helper ---
-    function getCSRFToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        // Open PDF generation in new tab
+        const pdfWindow = window.open(`/dashboard/faculty/${facultyId}/generate-pdf/`, '_blank');
+
+        // Re-enable button after 5 seconds
+        setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+
+            // Show success message
+            showToast('success', 'PDF generation started in new tab');
+
+            // Check PDF status after generation
+            setTimeout(checkPDFStatus, 3000, facultyId);
+        }, 5000);
     }
 
-    // --- IT Subjects Data ---
-    const itSubjects = {
-        "First Year": {
-            "1-1": [
-                {"code":"MA101BS","name":"MATRICES AND CALCULUS"},
-                {"code":"AP102BS","name":"APPLIED PHYSICS"},
-                {"code":"CS103ES","name":"PROGRAMMING FOR PROBLEM SOLVING"},
-                {"code":"EN104HS","name":"ENGLISH FOR SKILL ENHANCEMENT"},
-                {"code":"ME105ES","name":"ENGINEERING WORKSHOP"},
-                {"code":"CS106ES","name":"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
-                {"code":"AP107BS","name":"APPLIED PHYSICS LABORATORY"},
-                {"code":"EN108HS","name":"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
-                {"code":"CS109ES","name":"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
-                {"code":"ES110MC","name":"ENVIRONMENTAL SCIENCE"}
-            ],
-            "1-2":[
-                {"code":"MA201BS","name":"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
-                {"code":"CH202BS","name":"ENGINEERING CHEMISTRY"},
-                {"code":"EG203ES","name":"COMPUTER AIDED ENGINEERING GRAPHICS"},
-                {"code":"EE204ES","name":"BASIC ELECTRICAL ENGINEERING"},
-                {"code":"EC205ES","name":"ELECTRONIC DEVICES AND CIRCUITS"},
-                {"code":"CH206BS","name":"ENGINEERING CHEMISTRY LABORATORY"},
-                {"code":"CS207ES","name":"PYTHON PROGRAMMING LABORATORY"},
-                {"code":"EE208ES","name":"BASIC ELECTRICAL ENGINEERING LABORATORY"},
-                {"code":"CS209ES","name":"IT WORKSHOP"},
-                {"code":"HS210MC","name":"CONSTITUTION OF INDIA"}
-            ]
-        },
-        "Second Year": {
-            "2-1": [
-                {"code":"PS301BS","name":"PROBABILITY AND STATISTICS"},
-                {"code":"EC302ES","name":"DIGITAL ELECTRONICS"},
-                {"code":"CS303PC","name":"DATA STRUCTURES"},
-                {"code":"CM304PC","name":"COMPUTER ORGANIZATION AND MICROPROCESSOR"},
-                {"code":"IT305PC","name":"INTRODUCTION TO IOT"},
-                {"code":"CS306PC","name":"DATA STRUCTURES LABORATORY"},
-                {"code":"EC307ES","name":"DIGITAL ELECTRONICS LABORATORY"},
-                {"code":"IT308PC","name":"INTERNET OF THINGS LABORATORY"},
-                {"code":"HS309MC","name":"GENDER SENSITIZATION"},
-                {"code":"CS308PC","name":"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}
-            ],
-            "2-2":[
-                {"code":"MB401HS","name":"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
-                {"code":"CS402PC","name":"DISCRETE MATHEMATICS"},
-                {"code":"CS403PC","name":"OPERATING SYSTEMS"},
-                {"code":"CS404PC","name":"DATABASE MANAGEMENT SYSTEMS"},
-                {"code":"IT405PC","name":"JAVA PROGRAMMING"},
-                {"code":"CS406PC","name":"OPERATING SYSTEMS LABORATORY"},
-                {"code":"CS407PC","name":"DATABASE MANAGEMENT SYSTEMS LABORATORY"},
-                {"code":"IT408PC","name":"JAVA PROGRAMMING LABORATORY"},
-                {"code":"IT409PW","name":"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
-                {"code":"IT410PC","name":"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},
-                {"code":"HS411MC","name":"INTELLECTUAL PROPERTY RIGHTS"}
-            ]
-        },
-        "Third Year": {
-            "3-1": [
-                {"code":"CS501PC","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},
-                {"code":"IT502PC","name":"AUTOMATA AND COMPILER DESIGN"},
-                {"code":"IT503PC","name":"EMBEDDED SYSTEMS"},
-                {"code":"IT511PE","name":"FULL STACK DEVELOPMENT"},
-                {"code":"IT512PE","name":"DATA MINING"},
-                {"code":"CS513PE","name":"SCRIPTING LANGUAGES"},
-                {"code":"IT514PE","name":"MOBILE APPLICATION DEVELOPMENT"},
-                {"code":"IT515PE","name":"SOFTWARE TESTING METHODOLOGIES"},
-                {"code":"AM515PE","name":"COMPUTER GRAPHICS"},
-                {"code":"IT522PE","name":"QUANTUM COMPUTING"},
-                {"code":"IT523PE","name":"ADVANCED OPERATING SYSTEMS"},
-                {"code":"CS524PE","name":"DISTRIBUTED DATABASES"},
-                {"code":"IT525PE","name":"PATTERN RECOGNITION"},
-                {"code":"IT532PE","name":"DATA MINING LABORATORY"},
-                {"code":"IT531PE","name":"FULL STACK DEVELOPMENT LABORATORY"},
-                {"code":"IT533PE","name":"SCRIPTING LANGUAGES LABORATORY"},
-                {"code":"IT534PE","name":"MOBILE APPLICATION DEVELOPMENT LABORATORY"},
-                {"code":"IT535PE","name":"SOFTWARE TESTING METHODOLOGIES LABORATORY"},
-                {"code":"IT504PC","name":"COMPILER DESIGN LABORATORY"},
-                {"code":"IT505PC","name":"EMBEDDED SYSTEMS LABORATORY"},
-                {"code":"CS507PC","name":"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}
-            ],
-            "3-2":[
-                {"code":"CS601PC","name":"MACHINE LEARNING"},
-                {"code":"IT602PC","name":"SOFTWARE ENGINEERING"},
-                {"code":"IT603PC","name":"DATA COMMUNICATIONS AND COMPUTER NETWORKS"},
-                {"code":"IT611PE","name":"BIOMETRICS"},
-                {"code":"IT612PE","name":"ADVANCED COMPUTER ARCHITECTURE"},
-                {"code":"CS633PE","name":"DATA ANALYTICS"},
-                {"code":"CS616PE","name":"IMAGE PROCESSING"},
-                {"code":"CS617PE","name":"PRINCIPLES OF PROGRAMMING LANGUAGES"},
-                {"code":"CE611OE","name":"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},
-                {"code":"CE612OE","name":"BUILDING MANAGEMENT SYSTEMS"},
-                {"code":"CE613OE","name":"ENVIRONMENTAL IMPACT ASSESSMENT"},
-                {"code":"CE614OE","name":"HYDROGEOLOGY"},
-                {"code":"EE611OE","name":"RENEWABLE ENERGY SOURCES"},
-                {"code":"EE612OE","name":"FUNDAMENTAL OF ELECTRIC VEHICLES"},
-                {"code":"ME611OE","name":"BASIC MECHANICAL ENGINEERING"},
-                {"code":"ME612OE","name":"POWER PLANT ENGINEERING"},
-                {"code":"EC611OE","name":"FUNDAMENTALS OF INTERNET OF THINGS"},
-                {"code":"EC612OE","name":"PRINCIPLES OF SIGNAL PROCESSING"},
-                {"code":"EC613OE","name":"DIGITAL ELECTRONICS FOR ENGINEERING"},
-                {"code":"CS611OE","name":"DATA STRUCTURES"},
-                {"code":"CS612OE","name":"DATABASE MANAGEMENT SYSTEMS"},
-                {"code":"IT611OE","name":"JAVA PROGRAMMING"},
-                {"code":"IT612OE","name":"SOFTWARE ENGINEERING"},
-                {"code":"AM611OE","name":"FUNDAMENTALS OF AI"},
-                {"code":"AM612OE","name":"MACHINE LEARNING BASICS"},
-                {"code":"CS604PC","name":"MACHINE LEARNING LABORATORY"},
-                {"code":"IT605PC","name":"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"},
-                {"code":"AE606HS","name":"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},
-                {"code":"CS606PW","name":"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATA SPARK)"},
-                {"code":"ES607MC","name":"ENVIRONMENTAL SCIENCE"}
-            ]
-        },
-        "Fourth Year": {
-            "4-1": [
-                {"code":"IT701PC","name":"INFORMATION SECURITY"},
-                {"code":"IT702PC","name":"CLOUD COMPUTING"},
-                {"code":"IT711PE","name":"HUMAN COMPUTER INTERACTION"},
-                {"code":"IT712PE","name":"HIGH PERFORMANCE COMPUTING"},
-                {"code":"IT713PE","name":"ARTIFICIAL INTELLIGENCE"},
-                {"code":"IT714PE","name":"INFORMATION RETRIEVAL SYSTEMS"},
-                {"code":"IT715PE","name":"AD-HOC & SENSOR NETWORKS"},
-                {"code":"IT721PE","name":"NATURAL LANGUAGE PROCESSING"},
-                {"code":"IT722PE","name":"DISTRIBUTED SYSTEMS"},
-                {"code":"IT723PE","name":"AUGMENTED REALITY & VIRTUAL REALITY"},
-                {"code":"IT724PE","name":"WEB SECURITY"},
-                {"code":"IT725PE","name":"CYBER FORENSICS"},
-                {"code":"CE721OE","name":"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},
-                {"code":"CE722OE","name":"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},
-                {"code":"CE723OE","name":"SOLID WASTE MANAGEMENT"},
-                {"code":"CE724OE","name":"SMART CITIES"},
-                {"code":"EE721OE","name":"UTILIZATION OF ELECTRIC ENERGY"},
-                {"code":"EE722OE","name":"ENERGY STORAGE SYSTEMS"},
-                {"code":"ME721OE","name":"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},
-                {"code":"ME722OE","name":"INDUSTRIAL ENGINEERING & MANAGEMENT"},
-                {"code":"EC721OE","name":"ELECTRONIC SENSORS"},
-                {"code":"EC722OE","name":"ELECTRONICS FOR HEALTH CARE"},
-                {"code":"EC723OE","name":"TELECOMMUNICATIONS FOR SOCIETY"},
-                {"code":"CS721OE","name":"OPERATING SYSTEMS"},
-                {"code":"CS722OE","name":"COMPUTER NETWORKS"},
-                {"code":"IT721OE","name":"FULL STACK DEVELOPMENT"},
-                {"code":"IT722OE","name":"SCRIPTING LANGUAGES"},
-                {"code":"AM721OE","name":"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},
-                {"code":"AM722OE","name":"AI APPLICATIONS"},
-                {"code":"IT703PC","name":"INFORMATION SECURITY LAB"},
-                {"code":"IT704PC","name":"CLOUD COMPUTING LAB"},
-                {"code":"IT705PC","name":"PROJECT STAGE – I"}
-            ],
-            "4-2":[
-                {"code":"IT801PC","name":"ORGANIZATIONAL BEHAVIOR"},
-                {"code":"IT811PE","name":"INTRUSION DETECTION SYSTEMS"},
-                {"code":"IT812PE","name":"REAL TIME SYSTEMS"},
-                {"code":"IT813PE","name":"BLOCK CHAIN TECHNOLOGY"},
-                {"code":"IT814PE","name":"DEEP LEARNING"},
-                {"code":"IT815PE","name":"SOFTWARE PROCESS & PROJECT MANAGEMENT"},
-                {"code":"CE831OE","name":"ENERGY EFFICIENT BUILDINGS"},
-                {"code":"CE832OE","name":"MULTI CRITERION DECISION MAKING"},
-                {"code":"CE833OE","name":"ENVIRONMENTAL POLLUTION"},
-                {"code":"EE831OE","name":"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},
-                {"code":"EE832OE","name":"RELIABILITY ENGINEERING"},
-                {"code":"ME831OE","name":"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},
-                {"code":"ME832OE","name":"ENTREPRENEURSHIP DEVELOPMENT"},
-                {"code":"EC831OE","name":"MEASURING INSTRUMENTS"},
-                {"code":"EC832OE","name":"COMMUNICATION TECHNOLOGIES"},
-                {"code":"EC833OE","name":"FUNDAMENTALS OF SOCIAL NETWORKS"},
-                {"code":"CS831OE","name":"DESIGN AND ANALYSIS OF ALGORITHMS"},
-                {"code":"CS832OE","name":"DATA ANALYTICS"},
-                {"code":"IT831OE","name":"BIG DATA TECHNOLOGIES"},
-                {"code":"IT832OE","name":"DEVOPS"},
-                {"code":"AM831OE","name":"CHATBOTS"},
-                {"code":"AM832OE","name":"EVOLUTIONARY COMPUTING"},
-                {"code":"IT802PC","name":"PROJECT STAGE-II, INCLUDING SEMINAR"}
-            ]
-        }
-    };
+    // Upload to Cloudinary Function
+    function uploadToCloudinary(facultyId) {
+        const button = document.getElementById('uploadCloudBtn');
+        const progressContainer = document.getElementById('uploadProgressContainer');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadPercentage = document.getElementById('uploadPercentage');
 
-    // --- Main Initialization ---
+        // Show progress bar
+        progressContainer.style.display = 'block';
+
+        // Update button state
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+
+        // Simulate progress (in real implementation, this would be from actual upload progress)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            if (progress <= 90) {
+                progressBar.style.width = `${progress}%`;
+                uploadPercentage.textContent = `${progress}%`;
+
+                if (progress === 30) uploadStatus.textContent = 'Generating PDF...';
+                else if (progress === 60) uploadStatus.textContent = 'Uploading to Cloudinary...';
+                else if (progress === 90) uploadStatus.textContent = 'Finalizing upload...';
+            }
+        }, 500);
+
+        // Make AJAX request
+        fetch(`/dashboard/faculty/${facultyId}/upload-cloudinary/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+
+            if (data.success) {
+                // Complete progress
+                progressBar.style.width = '100%';
+                uploadPercentage.textContent = '100%';
+                uploadStatus.textContent = 'Upload completed!';
+
+                // Update UI
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+
+                    button.innerHTML = '<i class="fas fa-check"></i> Uploaded to Cloudinary';
+                    button.classList.remove('btn-upload-cloudinary');
+                    button.classList.add('btn-success');
+
+                    // Enable preview and download buttons
+                    document.getElementById('previewPDFBtn').disabled = false;
+                    document.getElementById('downloadPDFBtn').disabled = false;
+
+                    // Update status indicators
+                    document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
+                    document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
+
+                    document.getElementById('cloudinaryStatusIndicator').className = 'status-indicator status-available';
+                    document.getElementById('cloudinaryStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Connected & Synced';
+
+                    // Update download link
+                    document.getElementById('downloadPDFBtn').href = data.pdf_url;
+                    document.getElementById('modalDownloadLink').href = data.pdf_url;
+
+                    showToast('success', data.message || 'PDF uploaded to Cloudinary successfully!');
+                }, 1000);
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+
+            // Show error
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-danger');
+            uploadStatus.textContent = 'Upload failed!';
+
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload to Cloudinary';
+
+                showToast('error', `Upload failed: ${error.message}`);
+            }, 2000);
+        });
+    }
+
+    // Preview PDF Function
+    function previewPDF(facultyId) {
+        const modal = new bootstrap.Modal(document.getElementById('pdfPreviewModal'));
+        const frame = document.getElementById('pdfPreviewFrame');
+        const loading = document.getElementById('pdfLoading');
+        const errorDiv = document.getElementById('pdfError');
+        const downloadLink = document.getElementById('modalDownloadLink');
+
+        // Show loading, hide frame and error
+        loading.style.display = 'block';
+        frame.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        // Fetch PDF URL
+        fetch(`/dashboard/faculty/${facultyId}/preview-pdf/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.pdf_url) {
+                    // Hide loading, show frame
+                    loading.style.display = 'none';
+                    frame.style.display = 'block';
+                    frame.src = data.pdf_url;
+
+                    // Set download link
+                    downloadLink.href = data.pdf_url;
+
+                    modal.show();
+                } else {
+                    throw new Error(data.error || 'PDF not available');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+                modal.show();
+            });
+    }
+
+    // Check PDF Status
+    function checkPDFStatus(facultyId) {
+        fetch(`/dashboard/ajax/check-pdf-status/${facultyId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const status = data.status;
+                    if (status.has_cloudinary_pdf) {
+                        // PDF is available on Cloudinary
+                        document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
+                        document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
+
+                        // Enable buttons
+                        document.getElementById('previewPDFBtn').disabled = false;
+                        document.getElementById('downloadPDFBtn').disabled = false;
+                        document.getElementById('uploadCloudBtn').disabled = true;
+                        document.getElementById('uploadCloudBtn').innerHTML = '<i class="fas fa-check"></i> Already Uploaded';
+
+                        // Update download link
+                        document.getElementById('downloadPDFBtn').href = status.cloudinary_url;
+
+                        showToast('success', 'PDF is now available on Cloudinary!');
+                    }
+                }
+            })
+            .catch(error => console.error('Error checking PDF status:', error));
+    }
+
+    // Upload Photo Function
+    function uploadPhoto() {
+        const modal = new bootstrap.Modal(document.getElementById('photoUploadModal'));
+        modal.show();
+
+        // Preview image when selected
+        document.getElementById('photoFile').addEventListener('change', function() {
+            const preview = document.getElementById('photoPreview');
+            const file = this.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Submit Photo Function
+    function submitPhoto() {
+        const form = document.getElementById('photoUploadForm');
+        const formData = new FormData(form);
+
+        // Show loading
+        const button = document.querySelector('#photoUploadModal .btn-primary');
+        const originalHTML = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+
+        fetch('/dashboard/upload-faculty-photo/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update photo in header
+                const photoImg = document.getElementById('facultyPhoto');
+                if (photoImg) {
+                    photoImg.src = data.photo_url;
+                } else {
+                    // Replace placeholder with actual photo
+                    const placeholder = document.querySelector('.faculty-photo-placeholder');
+                    if (placeholder) {
+                        placeholder.outerHTML = `<img src="${data.photo_url}" alt="{{ faculty.staff_name }}" class="faculty-photo" id="facultyPhoto">`;
+                    }
+                }
+
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('photoUploadModal')).hide();
+
+                showToast('success', 'Photo uploaded successfully!');
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
+        })
+        .catch(error => {
+            showToast('error', `Photo upload failed: ${error.message}`);
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+        });
+    }
+
+    // Merge Certificates Function
+    function mergeCertificates(facultyId) {
+        const modal = new bootstrap.Modal(document.getElementById('mergeCertificatesModal'));
+        modal.show();
+
+        fetch(`/dashboard/faculty/${facultyId}/merge-certificates-with-pdf/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const mergeStatus = document.getElementById('mergeStatus');
+            const mergeResult = document.getElementById('mergeResult');
+            const mergeError = document.getElementById('mergeError');
+
+            mergeStatus.style.display = 'none';
+
+            if (data.success) {
+                mergeResult.style.display = 'block';
+                document.getElementById('resultMessage').textContent = data.message;
+                document.getElementById('downloadMergedBtn').href = data.merged_url;
+            } else {
+                mergeError.style.display = 'block';
+                document.getElementById('errorMessage').textContent = data.error;
+            }
+        })
+        .catch(error => {
+            document.getElementById('mergeStatus').style.display = 'none';
+            document.getElementById('mergeError').style.display = 'block';
+            document.getElementById('errorMessage').textContent = error.message;
+        });
+    }
+
+    // Print PDF Function
+    function printPDF() {
+        const frame = document.getElementById('pdfPreviewFrame');
+        if (frame && frame.contentWindow) {
+            frame.contentWindow.print();
+        }
+    }
+
+    // Open edit modal function
+    function openEditModal(facultyId) {
+        // Show a modal with edit form
+        showToast('info', 'Edit functionality will be implemented via modal/AJAX. Faculty ID: ' + facultyId);
+        // In real implementation, you would:
+        // 1. Fetch faculty data via AJAX
+        // 2. Populate a modal form
+        // 3. Handle form submission via AJAX
+    }
+
+    // View certificates function
+    function viewCertificates(facultyId) {
+        // Open certificates in a modal or navigate to certificates section
+        window.location.href = `?id=${facultyId}#certificates`;
+    }
+
+    // Sync to Cloudinary function
+    function syncToCloudinary(facultyId) {
+        fetch(`/dashboard/faculty/${facultyId}/sync-to-cloudinary/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Synced to Cloudinary successfully!');
+                // Reload the page to show updated status
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('error', data.error || 'Sync failed');
+            }
+        })
+        .catch(error => {
+            showToast('error', 'Network error: ' + error.message);
+        });
+    }
+
+    // Toast Notification Function
+    function showToast(type, message) {
+        // Create toast container if not exists
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.position = 'fixed';
+            toastContainer.style.top = '20px';
+            toastContainer.style.right = '20px';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Show toast
+        const bsToast = new bootstrap.Toast(toast, {
+            delay: 3000,
+            autohide: true
+        });
+        bsToast.show();
+
+        // Remove toast after hide
+        toast.addEventListener('hidden.bs.toast', function () {
+            toast.remove();
+        });
+    }
+
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. Photo Upload (using sidebar upload) ---
-        const photoInput = document.getElementById('photo-upload-input');
-        const chooseFileBtn = document.getElementById('choose-file-btn');
-        const facultyPhoto = document.getElementById('faculty-photo');
-        const noPhotoMessage = document.getElementById('no-photo-message');
-
-        if (chooseFileBtn) {
-            chooseFileBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                photoInput.click();
-            });
+        // Check if we should auto-generate PDF
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('generate') === 'true') {
+            generateFacultyPDF({{ faculty.id }});
         }
 
-        if (photoInput) {
-            photoInput.addEventListener('change', async function() {
-                if(this.files && this.files[0]) {
-                    // Check file size (max 5MB)
-                    if (this.files[0].size > 5 * 1024 * 1024) {
-                        showErrorModal("Photo size should be less than 5MB");
-                        return;
-                    }
-
-                    // Check file type
-                    if (!this.files[0].type.match('image.*')) {
-                        showErrorModal("Please select a valid image file (JPG, PNG, etc.)");
-                        return;
-                    }
-
-                    // Display preview
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        facultyPhoto.src = e.target.result;
-                        facultyPhoto.style.display = 'block';
-                        noPhotoMessage.style.display = 'none';
-                    };
-                    reader.readAsDataURL(this.files[0]);
-
-                    // Upload photo to server
-                    await uploadFacultyPhoto();
-                }
-            });
+        // Check if we should auto-upload to Cloudinary
+        if (urlParams.get('upload') === 'true' && !{{ cloudinary_status.has_pdf|yesno:"true,false" }}) {
+            uploadToCloudinary({{ faculty.id }});
         }
 
-        // --- 2. Education File Uploads ---
-        const educationLevels = ['ssc', 'inter', 'ug', 'pg', 'phd'];
-        educationLevels.forEach(level => {
-            const upBtn = document.getElementById(`${level}-up-btn`);
-            const fileInput = document.getElementById(`${level}-file`);
-
-            if (upBtn && fileInput) {
-                upBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    fileInput.click();
-                });
-
-                fileInput.addEventListener('change', function() {
-                    if(this.files && this.files[0]) {
-                        uploaded.edu[level] = this.files[0];
-                        upBtn.innerText = "Uploaded";
-                        upBtn.classList.add('uploaded');
-                    }
-                });
-            }
-        });
-
-        // --- 3. Experience Calculation ---
-        const joiningDate = document.getElementById('joining-date');
-        const expAnurag = document.getElementById('exp-anurag');
-
-        function calculateExperience() {
-            const val = joiningDate.value;
-            if(!val) return;
-
-            const d1 = new Date(val);
-            const d2 = new Date();
-
-            let years = d2.getFullYear() - d1.getFullYear();
-            let months = d2.getMonth() - d1.getMonth();
-            let days = d2.getDate() - d1.getDate();
-
-            if(days < 0) {
-                months--;
-                days += new Date(d2.getFullYear(), d2.getMonth(), 0).getDate();
-            }
-            if(months < 0) {
-                years--;
-                months += 12;
-            }
-
-            expAnurag.value = `${years}Y ${months}M ${days}D`;
+        // Check PDF status on load
+        if (!{{ cloudinary_status.has_pdf|yesno:"true,false" }}) {
+            // Check if PDF was recently generated
+            setTimeout(() => checkPDFStatus({{ faculty.id }}), 2000);
         }
 
-        if (joiningDate && expAnurag) {
-            joiningDate.addEventListener('change', calculateExperience);
-            joiningDate.addEventListener('input', calculateExperience);
+        // Add print functionality if print parameter exists
+        if (urlParams.get('print') === '1') {
+            window.print();
         }
-
-        // --- 4. File Upload Binders ---
-        function bindFileUpload(btnId, inputId, callback) {
-            const btn = document.getElementById(btnId);
-            const input = document.getElementById(inputId);
-
-            if(btn && input) {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    input.click();
-                });
-
-                input.addEventListener('change', function() {
-                    if(this.files && this.files[0]) {
-                        callback(this.files[0]);
-                    }
-                });
-            }
-        }
-
-        // Bind file uploads for certificates
-        bindFileUpload('mem-browse-btn', 'mem-file-input', function(file) {
-            // File will be handled when ADD button is clicked
-        });
-
-        bindFileUpload('scm-browse-btn', 'scm-file-input', function(file) {
-            // File will be handled when ADD button is clicked
-        });
-
-        bindFileUpload('ach-browse-btn', 'ach-file-input', function(file) {
-            // File will be handled when ADD button is clicked
-        });
-
-        bindFileUpload('pub-browse-btn', 'pub-file-input', function(file) {
-            // File will be handled when ADD button is clicked
-        });
-
-        // --- 5. Add Item Functions ---
-        function addListItem(containerId, html, file, array) {
-            if(file) array.push(file);
-            const container = document.getElementById(containerId);
-            if(container) {
-                container.insertAdjacentHTML('beforeend', `<div class="added-result-item">${html}</div>`);
-            }
-        }
-
-        // Membership ADD
-        const addMemBtn = document.getElementById('add-mem-btn');
-        if (addMemBtn) {
-            addMemBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const text = document.getElementById('mem-text').value;
-                if(text) {
-                    const file = document.getElementById('mem-file-input').files[0];
-                    addListItem('added-mem-container', `<b>${text}</b>`, file, uploaded.mem);
-                    document.getElementById('mem-text').value = '';
-                }
-            });
-        }
-
-        // SCM ADD
-        const addScmBtn = document.getElementById('add-scm-btn');
-        if (addScmBtn) {
-            addScmBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const text = document.getElementById('scm-text').value;
-                if(text) {
-                    const file = document.getElementById('scm-file-input').files[0];
-                    addListItem('added-scm-container', `<b>${text}</b>`, file, uploaded.scm);
-                    document.getElementById('scm-text').value = '';
-                }
-            });
-        }
-
-        // Achievements ADD
-        const addAchBtn = document.getElementById('add-ach-btn');
-        if (addAchBtn) {
-            addAchBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const text = document.getElementById('achievements-text').value;
-                const fromDate = document.getElementById('ach-from-date').value;
-                const toDate = document.getElementById('ach-to-date').value;
-                if(text) {
-                    const file = document.getElementById('ach-file-input').files[0];
-                    const duration = fromDate ? `From: ${fromDate}` : '';
-                    const duration2 = toDate ? ` To: ${toDate}` : '';
-                    addListItem('added-achievements-container',
-                        `<b>${text}</b><br><small>${duration}${duration2}</small>`,
-                        file, uploaded.achievements);
-                    document.getElementById('achievements-text').value = '';
-                    document.getElementById('ach-from-date').value = '';
-                    document.getElementById('ach-to-date').value = '';
-                }
-            });
-        }
-
-        // Publications ADD
-        const addPubBtn = document.getElementById('add-pub-btn');
-        if (addPubBtn) {
-            addPubBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const type = document.getElementById('pub-type').value;
-                const title = document.getElementById('pub-title').value;
-                const authors = document.getElementById('pub-authors').value;
-                const source = document.getElementById('pub-source').value;
-                const year = document.getElementById('pub-date').value;
-                const doi = document.getElementById('pub-doi').value;
-
-                if(title && authors) {
-                    const file = document.getElementById('pub-file-input').files[0];
-                    const html = `<b>${type}: ${title}</b><br>Authors: ${authors}<br>Source: ${source}<br>Year: ${year}${doi ? '<br>DOI: ' + doi : ''}`;
-                    addListItem('added-pub-container', html, file, uploaded.pubs);
-
-                    // Clear inputs
-                    document.getElementById('pub-title').value = '';
-                    document.getElementById('pub-authors').value = '';
-                    document.getElementById('pub-source').value = '';
-                    document.getElementById('pub-date').value = '';
-                    document.getElementById('pub-doi').value = '';
-                }
-            });
-        }
-
-        // --- 6. Load Subjects for Each Slot ---
-        function loadSubjects(slot) {
-            const year = document.getElementById(`select-year-${slot}`).value;
-            const sem = document.getElementById(`select-semester-${slot}`).value;
-            const container = document.getElementById(`subjects-container-${slot}`);
-
-            if (!itSubjects[year] || !itSubjects[year][sem]) {
-                container.innerHTML = '<div class="subject-item">No subjects found for this selection.</div>';
-                return;
-            }
-
-            const subjects = itSubjects[year][sem];
-            container.innerHTML = ''; // Clear previous
-
-            subjects.forEach(subject => {
-                const div = document.createElement('div');
-                div.className = 'subject-item';
-                div.innerHTML = `
-                    <input type="checkbox" class="subject-checkbox" id="subj-${subject.code}-${slot}" data-code="${subject.code}">
-                    <label class="subject-code" for="subj-${subject.code}-${slot}">${subject.code}</label>
-                    <label class="subject-name" for="subj-${subject.code}-${slot}">${subject.name}</label>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // Setup Select All checkboxes
-        function setupSelectAll(slot) {
-            const selectAll = document.getElementById(`select-all-${slot}`);
-            const container = document.getElementById(`subjects-container-${slot}`);
-
-            if (selectAll && container) {
-                selectAll.addEventListener('change', function() {
-                    const checkboxes = container.querySelectorAll('.subject-checkbox');
-                    checkboxes.forEach(cb => {
-                        cb.checked = selectAll.checked;
-                    });
-                });
-            }
-        }
-
-        // Setup Load Subjects buttons
-        for (let i = 1; i <= 4; i++) {
-            const loadBtn = document.getElementById(`load-btn-${i}`);
-            if (loadBtn) {
-                loadBtn.addEventListener('click', function() {
-                    loadSubjects(i);
-                });
-            }
-            setupSelectAll(i);
-        }
-
-        // --- 7. Results Calculation and Addition ---
-        function calculatePercentage(appeared, passed) {
-            if (!appeared || appeared == 0) return '0';
-            const pct = (passed / appeared * 100).toFixed(2);
-            return pct + '%';
-        }
-
-        // Setup result addition for each slot
-        for (let i = 1; i <= 4; i++) {
-            const addBtn = document.getElementById(`btn-add-result-${i}`);
-            if (addBtn) {
-                addBtn.addEventListener('click', function() {
-                    addResult(i);
-                });
-            }
-        }
-
-        function addResult(slot) {
-            const subject = document.getElementById(`res-subject-${slot}`).value;
-            const classes = document.getElementById(`res-classes-${slot}`).value;
-            const appeared = document.getElementById(`res-appeared-${slot}`).value;
-            const passed = document.getElementById(`res-passed-${slot}`).value;
-            const failed = document.getElementById(`res-failed-${slot}`).value;
-            const percentage = calculatePercentage(appeared, passed);
-
-            if (!subject || !classes || !appeared || !passed || !failed) {
-                showErrorModal('Please fill all fields for result');
-                return;
-            }
-
-            const resultText = `${subject} | Classes: ${classes} | Appeared: ${appeared} | Passed: ${passed} | Failed: ${failed} | %: ${percentage}`;
-
-            const resultItem = document.createElement('div');
-            resultItem.className = 'added-result-item';
-            resultItem.dataset.txt = resultText;
-            resultItem.dataset.pct = percentage;
-            resultItem.innerHTML = `
-                <span>${resultText}</span>
-                <button class="remove-result-btn" data-slot="${slot}">X</button>
-            `;
-
-            document.getElementById(`added-results-container-${slot}`).appendChild(resultItem);
-
-            // Clear inputs
-            document.getElementById(`res-subject-${slot}`).value = '';
-            document.getElementById(`res-classes-${slot}`).value = '';
-            document.getElementById(`res-appeared-${slot}`).value = '';
-            document.getElementById(`res-passed-${slot}`).value = '';
-            document.getElementById(`res-failed-${slot}`).value = '';
-            document.getElementById(`res-percentage-${slot}`).value = '';
-        }
-
-        // --- 8. Project Batch Addition ---
-        for (let i = 1; i <= 4; i++) {
-            const addBatchBtn = document.getElementById(`btn-add-proj-batch-${i}`);
-            if (addBatchBtn) {
-                addBatchBtn.addEventListener('click', function() {
-                    addProjectBatch(i);
-                });
-            }
-        }
-
-        function addProjectBatch(slot) {
-            const academicYear = document.getElementById(`proj-academic-year-${slot}`).value;
-            const subject = document.getElementById(`proj-subject-${slot}`).value;
-            const batch = document.getElementById(`proj-batch-${slot}`).value;
-            const title = document.getElementById(`proj-title-${slot}`).value;
-            const supervisor = document.getElementById(`proj-supervisor-${slot}`).value;
-
-            let students = '';
-            let marks = '';
-            let totalMarks = 0;
-            let studentCount = 0;
-
-            for (let k = 1; k <= 4; k++) {
-                const roll = document.getElementById(`proj-roll${k}-${slot}`).value;
-                const name = document.getElementById(`proj-stud${k}-${slot}`).value;
-                const mark = document.getElementById(`proj-marks${k}-${slot}`).value;
-                if (roll && name) {
-                    students += `${roll}: ${name}, `;
-                    marks += `${mark}, `;
-                    totalMarks += parseInt(mark) || 0;
-                    studentCount++;
-                }
-            }
-
-            if (!batch || !title || !supervisor) {
-                showErrorModal('Please fill at least Batch, Title, and Supervisor');
-                return;
-            }
-
-            const avgMarks = studentCount > 0 ? totalMarks / studentCount : 0;
-            const projectText = `AY: ${academicYear} | Subject: ${subject} | Batch: ${batch} | Title: ${title} | Supervisor: ${supervisor} | Students: ${students} | Avg Marks: ${avgMarks.toFixed(2)}`;
-
-            const projectItem = document.createElement('div');
-            projectItem.className = 'added-result-item';
-            projectItem.dataset.title = title;
-            projectItem.dataset.batch = batch;
-            projectItem.dataset.students = students;
-            projectItem.dataset.marks = avgMarks.toFixed(2);
-            projectItem.innerHTML = `
-                <span>${projectText}</span>
-                <button class="remove-project-btn" data-slot="${slot}">X</button>
-            `;
-
-            document.getElementById(`added-projects-container-${slot}`).appendChild(projectItem);
-
-            // Clear inputs
-            document.getElementById(`proj-batch-${slot}`).value = '';
-            document.getElementById(`proj-title-${slot}`).value = '';
-            document.getElementById(`proj-supervisor-${slot}`).value = '';
-            for (let k = 1; k <= 4; k++) {
-                document.getElementById(`proj-roll${k}-${slot}`).value = '';
-                document.getElementById(`proj-stud${k}-${slot}`).value = '';
-                document.getElementById(`proj-marks${k}-${slot}`).value = '';
-            }
-        }
-
-        // --- 9. Subjects Dealt Management ---
-        const addSubjectBtn = document.getElementById('add-subject-btn');
-        if (addSubjectBtn) {
-            addSubjectBtn.addEventListener('click', function() {
-                const subjectInput = document.getElementById('subject-input');
-                const subject = subjectInput.value.trim();
-
-                if (!subject) {
-                    showErrorModal('Please enter a subject');
-                    return;
-                }
-
-                subjectsDealt.push(subject);
-
-                // Update the display
-                const subjectItem = document.createElement('div');
-                subjectItem.className = 'subject-item-dealt';
-                subjectItem.innerHTML = `
-                    <span>${subject}</span>
-                    <button class="remove-subject-btn" data-subject="${subject}">Remove</button>
-                `;
-
-                document.getElementById('subjects-list').appendChild(subjectItem);
-
-                // Clear input
-                subjectInput.value = '';
-            });
-        }
-
-        // Remove subject from dealt list
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-subject-btn')) {
-                const subject = e.target.getAttribute('data-subject');
-                subjectsDealt = subjectsDealt.filter(s => s !== subject);
-                e.target.parentElement.remove();
-            }
-
-            // Remove result item
-            if (e.target.classList.contains('remove-result-btn')) {
-                e.target.parentElement.remove();
-            }
-
-            // Remove project item
-            if (e.target.classList.contains('remove-project-btn')) {
-                e.target.parentElement.remove();
-            }
-        });
-
-        // --- 10. Main Control Buttons ---
-        const saveDetailsBtn = document.getElementById('save-details-btn');
-        if (saveDetailsBtn) {
-            saveDetailsBtn.addEventListener('click', async function() {
-                await saveFacultyDetails();
-            });
-        }
-
-        const previewDetailsBtn = document.getElementById('preview-details-btn');
-        if (previewDetailsBtn) {
-            previewDetailsBtn.addEventListener('click', function() {
-                // Simple preview implementation
-                const previewContent = document.getElementById('preview-content');
-                previewContent.innerHTML = `
-                    <div class="pdf-header">
-                        <h2>ANURAG ENGINEERING COLLEGE</h2>
-                        <h3>FACULTY DIRECTORY</h3>
-                    </div>
-                    <div class="clearfix">
-                        <div class="pdf-photo-box">
-                            <img src="${document.getElementById('faculty-photo').src || ''}" alt="Faculty Photo">
-                        </div>
-                        <div>
-                            <p><strong>Employee Code:</strong> ${document.getElementById('employee-code').value}</p>
-                            <p><strong>Name:</strong> ${document.getElementById('staff-name').value}</p>
-                            <p><strong>Department:</strong> ${document.getElementById('department').value}</p>
-                            <p><strong>Date of Joining:</strong> ${document.getElementById('joining-date').value}</p>
-                        </div>
-                    </div>
-                    <p>This is a preview. The actual PDF will contain all saved details.</p>
-                `;
-                document.getElementById('preview-modal').style.display = 'block';
-            });
-        }
-
-        const generatePdfBtn = document.getElementById('generate-pdf-btn');
-        if (generatePdfBtn) {
-            generatePdfBtn.addEventListener('click', async function() {
-                const pdfBlob = await generateFinalPDFBlob();
-                if (pdfBlob) {
-                    const url = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `faculty_${document.getElementById('employee-code').value || 'details'}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            });
-        }
-
-        const uploadPdfBtn = document.getElementById('upload-pdf-btn');
-        if (uploadPdfBtn) {
-            uploadPdfBtn.addEventListener('click', uploadPDF);
-        }
-
-        const clearAllBtn = document.getElementById('clear-all-btn');
-        if (clearAllBtn) {
-            clearAllBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to clear all data?')) {
-                    document.getElementById('faculty-form').reset();
-                    // Clear all dynamically added items
-                    document.querySelectorAll('.added-results-list').forEach(container => {
-                        container.innerHTML = '';
-                    });
-                    document.getElementById('subjects-list').innerHTML = '';
-                    subjectsDealt = [];
-                    // Reset uploaded files
-                    uploaded = {
-                        achievements: [], scm: [], pubs: [],
-                        edu: { ssc: null, inter: null, ug: null, pg: null, phd: null },
-                        mem: []
-                    };
-                    // Reset photo
-                    document.getElementById('faculty-photo').src = '';
-                    document.getElementById('faculty-photo').style.display = 'none';
-                    document.getElementById('no-photo-message').style.display = 'block';
-                    document.getElementById('upload-pdf-btn').disabled = true;
-                }
-            });
-        }
-
-        // Close modal when clicking X
-        const closeModal = document.querySelector('.close-modal');
-        if (closeModal) {
-            closeModal.addEventListener('click', function() {
-                document.getElementById('preview-modal').style.display = 'none';
-            });
-        }
-
-        // Close modal when clicking outside
-        window.addEventListener('click', function(event) {
-            if (event.target === document.getElementById('preview-modal')) {
-                document.getElementById('preview-modal').style.display = 'none';
-            }
-        });
-
-        // --- 11. Real-time Percentage Calculation for Results ---
-        for (let i = 1; i <= 4; i++) {
-            const appearedInput = document.getElementById(`res-appeared-${i}`);
-            const passedInput = document.getElementById(`res-passed-${i}`);
-            const percentageInput = document.getElementById(`res-percentage-${i}`);
-
-            if (appearedInput && passedInput && percentageInput) {
-                function updatePercentage() {
-                    const appeared = parseInt(appearedInput.value) || 0;
-                    const passed = parseInt(passedInput.value) || 0;
-                    const failed = appeared - passed;
-
-                    const failedInput = document.getElementById(`res-failed-${i}`);
-                    if (failedInput) {
-                        failedInput.value = failed >= 0 ? failed : '';
-                    }
-
-                    if (appeared > 0) {
-                        const pct = (passed / appeared * 100).toFixed(2);
-                        percentageInput.value = pct + '%';
-                    } else {
-                        percentageInput.value = '';
-                    }
-                }
-
-                appearedInput.addEventListener('input', updatePercentage);
-                passedInput.addEventListener('input', updatePercentage);
-            }
-        }
-
-        // --- 12. Format Input Masks ---
-        const orcidInput = document.getElementById('orcid-id');
-        if (orcidInput) {
-            orcidInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 16) value = value.substring(0, 16);
-                let formatted = '';
-                for (let i = 0; i < value.length; i++) {
-                    if (i > 0 && i % 4 === 0) formatted += '-';
-                    formatted += value[i];
-                }
-                e.target.value = formatted;
-            });
-        }
-
-        const apaarInput = document.getElementById('apaar-id');
-        if (apaarInput) {
-            apaarInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 12) value = value.substring(0, 12);
-                let formatted = '';
-                for (let i = 0; i < value.length; i++) {
-                    if (i > 0 && i % 3 === 0) formatted += '-';
-                    formatted += value[i];
-                }
-                e.target.value = formatted;
-            });
-        }
-
-        // --- 13. Auto-fill for demonstration ---
-        function demoAutoFill() {
-            // Only auto-fill if all fields are empty
-            if (document.getElementById('employee-code').value) return;
-
-            document.getElementById('employee-code').value = '7001';
-            document.getElementById('staff-name').value = 'Dr. John Smith';
-            document.getElementById('department').value = 'Information Technology';
-            document.getElementById('joining-date').value = '2018-06-15';
-            document.getElementById('father-name').value = 'Robert Smith';
-            document.getElementById('jntuh-id').value = 'JNTUH2024001';
-            document.getElementById('aacte-id').value = 'AICTE2024001';
-            document.getElementById('pan').value = 'ABCDE1234F';
-            document.getElementById('aadhar').value = '123456789012';
-            document.getElementById('orcid-id').value = '0000-0001-2345-6789';
-            document.getElementById('apaar-id').value = '123-456-789-012';
-            document.getElementById('mobile').value = '9876543210';
-            document.getElementById('email').value = 'john.smith@anurag.edu.in';
-            document.getElementById('gender').value = 'Male';
-            document.getElementById('dob').value = '1985-03-20';
-            document.getElementById('state').value = 'Telangana';
-            document.getElementById('caste').value = 'OC';
-            document.getElementById('sub-caste').value = '';
-            document.getElementById('ssc-school').value = 'St. Mary\'s High School';
-            document.getElementById('ssc-year').value = '2000';
-            document.getElementById('ssc-percent').value = '92.5';
-            document.getElementById('inter-college').value = 'Narayana Junior College';
-            document.getElementById('inter-year').value = '2002';
-            document.getElementById('inter-percent').value = '94.2';
-            document.getElementById('ug-college').value = 'JNTUH College of Engineering';
-            document.getElementById('ug-year').value = '2006';
-            document.getElementById('ug-percentage').value = '85.6';
-            document.getElementById('ug-spec').value = 'Computer Science';
-            document.getElementById('pg-college').value = 'IIT Delhi';
-            document.getElementById('pg-year').value = '2008';
-            document.getElementById('pg-percentage').value = '88.9';
-            document.getElementById('pg-spec').value = 'Information Technology';
-            document.getElementById('phd-university').value = 'JNTU Hyderabad';
-            document.getElementById('phd-year').value = '2015';
-            document.getElementById('phd-spec').value = 'Machine Learning';
-            document.getElementById('exp-other').value = '2 Years';
-            document.getElementById('address').value = 'H.No: 1-2-3, Street, Hyderabad, Telangana';
-            document.getElementById('about-yourself').value = 'Dedicated faculty with 15+ years of experience in teaching and research. Published 25+ papers in reputed journals.';
-
-            // Auto-calculate experience
-            calculateExperience();
-
-            // Add some demo subjects dealt
-            const demoSubjects = ['Data Structures', 'Database Management Systems', 'Machine Learning', 'Cloud Computing'];
-            demoSubjects.forEach(subject => {
-                subjectsDealt.push(subject);
-                const subjectItem = document.createElement('div');
-                subjectItem.className = 'subject-item-dealt';
-                subjectItem.innerHTML = `
-                    <span>${subject}</span>
-                    <button class="remove-subject-btn" data-subject="${subject}">Remove</button>
-                `;
-                document.getElementById('subjects-list').appendChild(subjectItem);
-            });
-        }
-
-        // Auto-fill for demo purposes (remove in production)
-        setTimeout(demoAutoFill, 500);
     });
-
-    // --- Save Faculty Details Function (UPDATED) ---
-    async function saveFacultyDetails() {
-        console.log("Saving faculty details...");
-
-        // Validate required fields first
-        const employeeCode = document.getElementById('employee-code').value.trim();
-        const staffName = document.getElementById('staff-name').value.trim();
-        const department = document.getElementById('department').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const mobile = document.getElementById('mobile').value.trim();
-
-        if (!employeeCode) {
-            showErrorModal('Employee Code is required!');
-            return;
-        }
-        if (!staffName) {
-            showErrorModal('Staff Name is required!');
-            return;
-        }
-        if (!department) {
-            showErrorModal('Department is required!');
-            return;
-        }
-        if (!email) {
-            showErrorModal('Email is required!');
-            return;
-        }
-        if (!mobile) {
-            showErrorModal('Mobile Number is required!');
-            return;
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            showErrorModal('Please enter a valid email address!');
-            return;
-        }
-
-        // Validate mobile number (10 digits)
-        const mobileRegex = /^[0-9]{10}$/;
-        if (!mobileRegex.test(mobile)) {
-            showErrorModal('Please enter a valid 10-digit mobile number!');
-            return;
-        }
-
-        // Collect all form data
-        const formData = {
-            employee_code: employeeCode,
-            staff_name: staffName,
-            department: department,
-            email: email,
-            mobile: mobile,
-            joining_date: document.getElementById("joining-date").value,
-            father_name: document.getElementById("father-name").value.trim(),
-            jntuh_id: document.getElementById("jntuh-id").value.trim(),
-            aicte_id: document.getElementById("aacte-id").value.trim(),
-            pan: document.getElementById("pan").value.trim(),
-            aadhar: document.getElementById("aadhar").value.trim(),
-            orcid_id: document.getElementById("orcid-id").value.trim(),
-            apaar_id: document.getElementById("apaar-id").value.trim(),
-            gender: document.getElementById("gender").value,
-            dob: document.getElementById("dob").value,
-            state: document.getElementById("state").value.trim(),
-            caste: document.getElementById("caste").value.trim(),
-            sub_caste: document.getElementById("sub-caste").value.trim(),
-            ssc_school: document.getElementById("ssc-school").value.trim(),
-            ssc_year: document.getElementById("ssc-year").value.trim(),
-            ssc_percent: parseFloat(document.getElementById("ssc-percent").value) || null,
-            inter_college: document.getElementById("inter-college").value.trim(),
-            inter_year: document.getElementById("inter-year").value.trim(),
-            inter_percent: parseFloat(document.getElementById("inter-percent").value) || null,
-            ug_college: document.getElementById("ug-college").value.trim(),
-            ug_year: document.getElementById("ug-year").value.trim(),
-            ug_percentage: parseFloat(document.getElementById("ug-percentage").value) || null,
-            ug_spec: document.getElementById("ug-spec").value.trim(),
-            pg_college: document.getElementById("pg-college").value.trim(),
-            pg_year: document.getElementById("pg-year").value.trim(),
-            pg_percentage: parseFloat(document.getElementById("pg-percentage").value) || null,
-            pg_spec: document.getElementById("pg-spec").value.trim(),
-            phd_university: document.getElementById("phd-university").value.trim(),
-            phd_year: document.getElementById("phd-year").value.trim(),
-            phd_degree: document.getElementById("phd-degree").value,
-            phd_spec: document.getElementById("phd-spec").value.trim(),
-            exp_anurag: document.getElementById("exp-anurag").value.trim(),
-            exp_other: document.getElementById("exp-other").value.trim(),
-            address: document.getElementById("address").value.trim(),
-            about_yourself: document.getElementById("about-yourself").value.trim(),
-            subjects_dealt: subjectsDealt.join(', ')
-        };
-
-        console.log("Saving faculty data:", formData);
-
-        try {
-            const response = await fetch("{% url 'dashboard:save_faculty_details' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-            console.log("Save response:", data);
-
-            if (data.status === "success") {
-                // Show success message
-                const errorDetail = document.getElementById('error-detail');
-                errorDetail.textContent = "Faculty details saved successfully and transferred to Exam Branch!";
-                errorDetail.style.color = "#27ae60";
-                showErrorModal("Faculty details saved successfully and transferred to Exam Branch!");
-
-                console.log("Faculty ID:", data.faculty_id);
-                document.getElementById("upload-pdf-btn").disabled = false;
-
-                // Store the saved data for PDF generation
-                savedData = formData;
-                savedData.id = data.faculty_id;
-
-                setTimeout(() => {
-                    hideErrorModal();
-                    errorDetail.style.color = "";
-                    errorDetail.textContent = "An error occurred. Please try again.";
-
-                    // Redirect to Exam Branch after successful save
-                    window.location.href = "{% url 'dashboard:exambranch' %}";
-                }, 2000);
-            } else {
-                showErrorModal("Error: " + (data.message || "Unknown error"));
-            }
-        } catch (error) {
-            console.error("Save error:", error);
-            showErrorModal("Error saving faculty details. Please check your connection and try again.");
-        }
-    }
-
-    // --- Upload Faculty Photo Function ---
-    async function uploadFacultyPhoto() {
-        const photoInput = document.getElementById('photo-upload-input');
-        const employeeCode = document.getElementById('employee-code').value.trim();
-
-        if (!employeeCode) {
-            showErrorModal("Please enter Employee Code first!");
-            return;
-        }
-
-        if (!photoInput.files || !photoInput.files[0]) {
-            showErrorModal("Please select a photo first!");
-            return;
-        }
-
-        // Validate file size (max 5MB)
-        if (photoInput.files[0].size > 5 * 1024 * 1024) {
-            showErrorModal("Photo size should be less than 5MB");
-            return;
-        }
-
-        // Validate file type
-        if (!photoInput.files[0].type.match('image.*')) {
-            showErrorModal("Please select a valid image file (JPG, PNG, etc.)");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("photo", photoInput.files[0]);
-        formData.append("employee_code", employeeCode);
-
-        try {
-            const response = await fetch("{% url 'dashboard:upload_faculty_photo' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.status === "success") {
-                console.log("Photo uploaded successfully!");
-                console.log("Photo URL:", data.url);
-                // Show success message
-                const errorDetail = document.getElementById('error-detail');
-                errorDetail.textContent = "Photo uploaded successfully!";
-                errorDetail.style.color = "#27ae60";
-                showErrorModal("Photo uploaded successfully!");
-                setTimeout(() => {
-                    hideErrorModal();
-                    errorDetail.style.color = "";
-                    errorDetail.textContent = "An error occurred. Please try again.";
-                }, 2000);
-            } else {
-                showErrorModal("Error uploading photo: " + (data.error || "Unknown error"));
-            }
-        } catch (error) {
-            console.error("Photo upload error:", error);
-            showErrorModal("Error uploading photo. Please try again.");
-        }
-    }
-
-    // --- Upload PDF Function ---
-    async function uploadPDF() {
-        console.log("Upload button clicked");
-
-        if (!savedData) {
-            showErrorModal("Please save details before uploading");
-            return;
-        }
-
-        const empCode = document.getElementById("employee-code").value.trim();
-        if (!empCode) {
-            showErrorModal("Employee Code is required for upload");
-            return;
-        }
-
-        // Generate PDF
-        const pdfBlob = await generateFinalPDFBlob();
-        if (!pdfBlob) {
-            showErrorModal("PDF generation failed");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("pdf", pdfBlob, `${empCode}.pdf`);
-        formData.append("employee_code", empCode);
-        formData.append("faculty_name", document.getElementById("staff-name").value.trim());
-
-        console.log("Sending PDF to server...");
-
-        try {
-            const response = await fetch("{% url 'dashboard:upload_faculty_pdf' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": getCSRFToken()
-                },
-                body: formData
-            });
-
-            const data = await response.json();
-
-            if (data.status === "success") {
-                alert("Upload successful! PDF saved to Exam Branch.");
-                console.log("Cloudinary URL:", data.url);
-            } else {
-                showErrorModal("Upload failed: " + (data.error || "Unknown error"));
-            }
-
-        } catch (error) {
-            console.error("Upload error:", error);
-            showErrorModal("Upload failed. Please check your internet connection.");
-        }
-    }
-
-    // --- PDF Generation Function ---
-    async function generateFinalPDFBlob() {
-        // Collect data for PDF
-        const basicData = {
-            code: document.getElementById('employee-code').value,
-            name: document.getElementById('staff-name').value,
-            dept: document.getElementById('department').value,
-            joined: document.getElementById('joining-date').value
-        };
-
-        const personalData = {
-            jntuh: document.getElementById('jntuh-id').value,
-            aicte: document.getElementById('aacte-id').value,
-            pan: document.getElementById('pan').value,
-            aadhar: document.getElementById('aadhar').value,
-            mobile: document.getElementById('mobile').value,
-            email: document.getElementById('email').value,
-            orcid: document.getElementById('orcid-id').value,
-            apaar: document.getElementById('apaar-id').value,
-            dob: document.getElementById('dob').value,
-            state: document.getElementById('state').value,
-            caste: document.getElementById('caste').value,
-            subcaste: document.getElementById('sub-caste').value
-        };
-
-        const educationData = [
-            ['SSC', document.getElementById('ssc-year').value, document.getElementById('ssc-percent').value, '', document.getElementById('ssc-school').value],
-            ['Inter', document.getElementById('inter-year').value, document.getElementById('inter-percent').value, '', document.getElementById('inter-college').value],
-            ['B.Tech', document.getElementById('ug-year').value, document.getElementById('ug-percentage').value, document.getElementById('ug-spec').value, document.getElementById('ug-college').value],
-            ['M.Tech', document.getElementById('pg-year').value, document.getElementById('pg-percentage').value, document.getElementById('pg-spec').value, document.getElementById('pg-college').value],
-            ['Ph.D', document.getElementById('phd-year').value, '', document.getElementById('phd-spec').value, document.getElementById('phd-university').value]
-        ];
-
-        const aboutText = document.getElementById('about-yourself').value;
-
-        // Create PDF
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Header
-        doc.setFontSize(16);
-        doc.text("ANURAG ENGINEERING COLLEGE", 105, 15, {align:'center'});
-        doc.setFontSize(12);
-        doc.text("FACULTY DIRECTORY", 105, 22, {align:'center'});
-        doc.setLineWidth(0.5);
-        doc.line(10, 25, 200, 25);
-
-        // Photo
-        const img = document.getElementById('faculty-photo');
-        if(img && img.src.startsWith('data:')) {
-            try {
-                doc.addImage(img.src,'JPEG',150,30,35,45);
-            } catch(e){}
-        }
-
-        // Basic Info
-        doc.autoTable({
-            startY: 35,
-            tableWidth: 140,
-            theme:'plain',
-            body:[
-                ['Code', basicData.code],
-                ['Name', basicData.name],
-                ['Dept', basicData.dept],
-                ['Joined', basicData.joined]
-            ]
-        });
-
-        let y = Math.max(80, doc.lastAutoTable.finalY + 10);
-
-        // Personal Details
-        doc.text("PERSONAL DETAILS", 14, y);
-        y += 5;
-        doc.autoTable({
-            startY: y,
-            theme:'grid',
-            body:[
-               ['JNTUH ID', personalData.jntuh, 'AICTE ID', personalData.aicte],
-               ['PAN', personalData.pan, 'AADHAR', personalData.aadhar],
-               ['MOBILE', personalData.mobile, 'EMAIL', personalData.email],
-               ['ORCID', personalData.orcid, 'APAAR', personalData.apaar],
-               ['DOB', personalData.dob, 'STATE', personalData.state],
-               ['CASTE', personalData.caste, 'SUB-CASTE', personalData.subcaste]
-            ]
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // Education
-        doc.text("EDUCATIONAL QUALIFICATIONS", 14, y);
-        y += 5;
-        doc.autoTable({
-            startY: y,
-            head:[['Degree','Year','%/CGPA','Specialization','Institute']],
-            body: educationData
-        });
-        y = doc.lastAutoTable.finalY + 10;
-
-        // Subjects Dealt
-        if (subjectsDealt.length > 0) {
-            doc.text("SUBJECTS DEALT", 14, y);
-            y += 5;
-
-            const subjectRows = subjectsDealt.map((subject, index) => [
-                String(index + 1),
-                subject
-            ]);
-
-            doc.autoTable({
-                startY: y,
-                head: [['S.No', 'Subject Name']],
-                body: subjectRows,
-                theme: 'grid',
-                headStyles: { fillColor: [52, 73, 94] },
-                styles: { fontSize: 10 }
-            });
-            y = doc.lastAutoTable.finalY + 10;
-        }
-
-        // About Faculty
-        doc.text("ABOUT FACULTY", 14, y);
-        y += 7;
-        doc.setFontSize(10);
-        const splitText = doc.splitTextToSize(aboutText, 180);
-        doc.text(splitText, 14, y);
-
-        // Convert to blob
-        const pdfBytes = doc.output('arraybuffer');
-        return new Blob([pdfBytes], {type:'application/pdf'});
-    }
 </script>
 {% endblock %}

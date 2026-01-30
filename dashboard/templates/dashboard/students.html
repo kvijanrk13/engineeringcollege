@@ -3,6 +3,14 @@
 {% block title %}STUDENTS REGISTRATION FORM{% endblock %}
 
 {% block content %}
+{% if pdf_mode %}
+<style>
+    body { background:#fff!important; color:#000!important; font-family:Arial!important; }
+    canvas, .logout-btn, button, .messages { display:none!important; }
+    input, textarea, select { border:none!important; background:transparent!important; }
+</style>
+{% endif %}
+
 <style>
     body { margin: 0; padding: 0; font-family: 'Courier New', monospace; background-color: #000; color: #0f0; overflow-x: hidden; }
     #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
@@ -23,6 +31,14 @@
         padding-bottom: 15px;
         position: relative;
     }
+
+    {% if pdf_mode %}
+    .form-header img {
+        width: 120px;
+        border: 1px solid #000;
+        margin-bottom: 20px;
+    }
+    {% endif %}
 
     .form-title {
         font-size: 2rem;
@@ -335,9 +351,15 @@
 <div class="registration-container">
     <div class="form-card">
         <div class="form-header">
+            {% if not pdf_mode %}
             <a href="{% url 'dashboard:logout' %}" class="logout-btn">
                 🚪 Logout
             </a>
+            {% endif %}
+
+            {% if pdf_mode %}
+            <img src="{{ photo_url }}" style="width:120px;border:1px solid #000;margin-bottom:20px;">
+            {% endif %}
 
             <!-- Removed the college and department titles here -->
             <h3 class="form-title">STUDENTS REGISTRATION FORM</h3>
@@ -579,10 +601,13 @@
                     <textarea name="other_training" rows="2" style="word-wrap: break-word; overflow-wrap: break-word;"></textarea>
                 </div>
 
+                {% if not pdf_mode %}
                 <button type="submit" class="submit-btn" id="submitBtn">
                     📄 Submit & Generate PDF
                 </button>
+                {% endif %}
 
+                {% if not pdf_mode %}
                 <div class="form-group full-width" style="text-align: center; margin-top: 20px;">
                     <p style="color: #666; font-size: 0.9rem;">
                         <strong>Note:</strong> After submission, a PDF will be automatically generated with your Hall Ticket Number as part of the filename.
@@ -591,11 +616,13 @@
                         <strong>IMPORTANT:</strong> Verify all information, especially address and TASK registration, before submission as it cannot be edited later.
                     </p>
                 </div>
+                {% endif %}
             </div>
         </form>
     </div>
 </div>
 
+{% if not pdf_mode %}
 <script>
     // Matrix Animation
     const canvas = document.getElementById('matrix-canvas');
@@ -1104,4 +1131,5 @@
     // Initialize address preview
     updateAddressPreview();
 </script>
+{% endif %}
 {% endblock %}

@@ -1,134 +1,459 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
-{% block title %}Students Data - ANURAG Engineering College{% endblock %}
+{% block title %}STUDENTS DATA{% endblock %}
 
 {% block content %}
-{% if request.session.user_id == "7001" and request.session.portal_verified %}
 <style>
-    body { margin: 0; padding: 0; font-family: 'Courier New', monospace; overflow-x: hidden; background-color: #000; color: #0f0; }
-    #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-    .students-data-container { position: relative; z-index: 2; padding: 20px; width: 100%; max-width: 1400px; margin: 0 auto; }
-    .data-header { text-align: center; margin-bottom: 30px; }
-    .data-title { font-size: 2.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px #0f0; margin-bottom: 10px; }
-    .data-subtitle { font-size: 1.2rem; color: #0f0; margin-bottom: 30px; }
-    .stats-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
-    .stat-card { background: rgba(0, 10, 0, 0.85); border: 2px solid #0f0; border-radius: 10px; padding: 20px; text-align: center; min-width: 200px; }
-    .stat-number { font-size: 2.5rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px #0f0; display: block; }
-    .stat-label { font-size: 1rem; color: #0f0; text-transform: uppercase; margin-top: 10px; }
-    .table-container { background: rgba(0, 10, 0, 0.85); border: 2px solid #0f0; border-radius: 10px; padding: 20px; overflow-x: auto; margin-bottom: 30px; }
-    .students-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-    .students-table th { background: rgba(0, 30, 0, 0.9); color: #0f0; padding: 15px; text-align: left; border-bottom: 2px solid #0f0; font-weight: bold; text-transform: uppercase; }
-    .students-table td { padding: 12px 15px; border-bottom: 1px solid rgba(0, 255, 0, 0.2); color: #fff; }
-    .students-table tr:hover { background: rgba(0, 30, 0, 0.3); }
-    .btn { padding: 8px 16px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 0.9rem; transition: 0.3s; border: 2px solid; cursor: pointer; font-family: 'Courier New', monospace; display: inline-block; }
-    .action-buttons { display: flex; gap: 10px; }
-    /* Photo column styling */
-    .students-table th:nth-child(6),
-    .students-table td:nth-child(6) {
-        width: 80px;
-        text-align: center;
+    body {
+        font-family: 'Courier New', monospace;
+        background-color: #000;
+        color: #0f0;
+        margin: 0;
+        padding: 20px;
     }
-    /* Document column styling */
-    .students-table th:nth-child(7),
-    .students-table td:nth-child(7) {
-        width: 220px;
+
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 20px;
+        border-radius: 10px;
+        border: 2px solid #0f0;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #0f0;
+    }
+
+    .header h1 {
+        color: #0f0;
+        font-size: 2.5rem;
+        margin: 0;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    .header p {
+        color: #0a0;
+        font-size: 1.1rem;
+        margin-top: 10px;
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: rgba(0, 30, 0, 0.7);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #0f0;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+    }
+
+    .stat-card h3 {
+        color: #0f0;
+        margin: 0 0 10px 0;
+        font-size: 1.2rem;
+    }
+
+    .stat-card .number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #0f0;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.7);
+    }
+
+    .table-container {
+        overflow-x: auto;
+        margin-top: 20px;
+        border: 1px solid #0f0;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.8);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+    th {
+        background: rgba(0, 30, 0, 0.9);
+        color: #0f0;
+        padding: 15px;
+        text-align: left;
+        border-bottom: 2px solid #0f0;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+    }
+
+    td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #0a0;
+        color: #0f0;
+        vertical-align: middle;
+    }
+
+    tr:hover {
+        background: rgba(0, 50, 0, 0.3);
+    }
+
+    .student-photo {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        border: 1px solid #0f0;
+        object-fit: cover;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-view {
+        background: #0066cc;
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: #0052a3;
+        transform: scale(1.05);
+    }
+
+    .btn-download {
+        background: #00cc66;
+        color: white;
+    }
+
+    .btn-download:hover {
+        background: #00b359;
+        transform: scale(1.05);
+    }
+
+    .btn-back {
+        background: #666;
+        color: white;
+        padding: 10px 20px;
+        margin-top: 20px;
+        display: inline-block;
+    }
+
+    .btn-back:hover {
+        background: #555;
+        transform: scale(1.05);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #f00;
+        font-size: 1.2rem;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        padding: 8px 16px;
+        background: rgba(0, 30, 0, 0.7);
+        color: #0f0;
+        border: 1px solid #0f0;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .page-btn:hover {
+        background: rgba(0, 50, 0, 0.9);
+        transform: scale(1.05);
+    }
+
+    .page-btn.active {
+        background: #0f0;
+        color: #000;
+        font-weight: bold;
+    }
+
+    .search-box {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .search-box input {
+        flex: 1;
+        min-width: 200px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid #0f0;
+        color: #0f0;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    .search-box button {
+        padding: 10px 20px;
+        background: #0f0;
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+    .search-box button:hover {
+        background: #0a0;
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 10px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+        }
+
+        .stats-container {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 
-<canvas id="matrix-canvas"></canvas>
-
-<div class="students-data-container">
-    <div class="data-header">
-        <h1 class="data-title">SECURE DATA MANAGEMENT</h1>
-        <div class="data-subtitle">Admin Verification Successful | Total Students: {{ total_students }}</div>
+<div class="container">
+    <div class="header">
+        <h1>📊 STUDENTS REGISTRATION DATA</h1>
+        <p>Total Registered Students: {{ total_students }}</p>
+        <div style="margin-top: 15px;">
+            <a href="{% url 'dashboard:students' %}" class="btn btn-back">
+                ← Register New Student
+            </a>
+        </div>
     </div>
 
     <div class="stats-container">
-        <div class="stat-card"><span class="stat-number">{{ total_students }}</span><span class="stat-label">Total Students</span></div>
-        <div class="stat-card"><span class="stat-number">{{ male_count }}</span><span class="stat-label">Male Students</span></div>
-        <div class="stat-card"><span class="stat-number">{{ female_count }}</span><span class="stat-label">Female Students</span></div>
+        <div class="stat-card">
+            <h3>Total Students</h3>
+            <div class="number">{{ total_students }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Male Students</h3>
+            <div class="number">{{ male_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Female Students</h3>
+            <div class="number">{{ female_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>PDFs Generated</h3>
+            <div class="number">{{ students|length }}</div>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by Hall Ticket, Name, Email...">
+        <button onclick="searchTable()">🔍 Search</button>
+        <button onclick="clearSearch()">🔄 Clear</button>
     </div>
 
     <div class="table-container">
-        <table class="students-table">
+        {% if students %}
+        <table id="studentsTable">
             <thead>
                 <tr>
-                    <th>HT No</th>
+                    <th>#</th>
+                    <th>Photo</th>
+                    <th>Hall Ticket No</th>
                     <th>Student Name</th>
-                    <th>APAAR ID</th>
+                    <th>Year</th>
+                    <th>Sem</th>
                     <th>Email</th>
                     <th>Phone</th>
-                    <th>Photo</th>
-                    <th>Document</th>
+                    <th>Registered On</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for student in students %}
                 <tr>
-                    <td>{{ student.ht_no }}</td>
-                    <td>{{ student.student_name }}</td>
-                    <td>{{ student.apaar_id|default:"N/A" }}</td>
-                    <td>{{ student.email }}</td>
-                    <td>{{ student.student_phone }}</td>
+                    <td>{{ forloop.counter }}</td>
                     <td>
                         {% if student.photo %}
-                        <img src="https://res.cloudinary.com/dsndiruhe/image/upload/c_fill,h_60,w_60/{{ student.photo }}"
+                        <img src="https://res.cloudinary.com/{{ CLOUDINARY_CLOUD_NAME }}/image/upload/{{ student.photo }}"
                              alt="{{ student.student_name }}"
-                             style="border-radius: 4px; border: 1px solid #0f0;">
+                             class="student-photo">
                         {% else %}
-                        <span style="color: #ccc; font-size: 0.8rem;">No photo</span>
+                        <div class="student-photo" style="background:#333;color:#0f0;display:flex;align-items:center;justify-content:center;">
+                            No Photo
+                        </div>
                         {% endif %}
                     </td>
+                    <td><strong>{{ student.ht_no }}</strong></td>
+                    <td>{{ student.student_name }}</td>
+                    <td>{{ student.year }}</td>
+                    <td>{{ student.sem }}</td>
+                    <td>{{ student.email }}</td>
+                    <td>{{ student.student_phone }}</td>
+                    <td>{{ student.created_at|date:"d-M-Y H:i" }}</td>
                     <td>
                         <div class="action-buttons">
-                            <a href="{% url 'dashboard:view_pdf' student.id %}" class="btn" style="background: rgba(0, 20, 0, 0.8); color: #0f0; border-color: #0f0;">📄 View</a>
-                            <a href="{% url 'dashboard:download_pdf' student.id %}" class="btn" style="background: rgba(0, 20, 0, 0.8); color: #0f0; border-color: #0f0;">📥 Download</a>
-                            <a href="{% url 'dashboard:delete_student' student.id %}" class="btn" style="background: rgba(60, 0, 0, 0.8); color: #f00; border-color: #f00;" onclick="return confirm('Are you sure you want to delete this record?')">🗑</a>
+                            {% if student.pdf_url %}
+                            <a href="{{ student.pdf_url }}" target="_blank" class="btn btn-view">
+                                👁️ View PDF
+                            </a>
+                            <a href="{{ student.pdf_url }}" download class="btn btn-download">
+                                ⬇️ Download PDF
+                            </a>
+                            {% else %}
+                            <span style="color:#f00;">PDF Not Generated</span>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <div class="no-data">
+            <p>⚠️ No students registered yet.</p>
+            <a href="{% url 'dashboard:students' %}" class="btn btn-back" style="margin-top:20px;">
+                📝 Register First Student
+            </a>
+        </div>
+        {% endif %}
     </div>
 
-    <div class="back-button" style="text-align:center;">
-        <a href="{% url 'dashboard:dashboard' %}" class="btn" style="background:#0f0; color:#000; border-color:#0f0; padding:12px 30px;">← BACK TO DASHBOARD</a>
+    {% if students.has_other_pages %}
+    <div class="pagination">
+        {% if students.has_previous %}
+        <a href="?page=1" class="page-btn">First</a>
+        <a href="?page={{ students.previous_page_number }}" class="page-btn">Previous</a>
+        {% endif %}
+
+        {% for num in students.paginator.page_range %}
+            {% if students.number == num %}
+            <span class="page-btn active">{{ num }}</span>
+            {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+            <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if students.has_next %}
+        <a href="?page={{ students.next_page_number }}" class="page-btn">Next</a>
+        <a href="?page={{ students.paginator.num_pages }}" class="page-btn">Last</a>
+        {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <script>
-    const canvas = document.getElementById('matrix-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const chars = '01';
-    const drops = Array(Math.floor(canvas.width / 16)).fill(1);
-    function draw() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = '16px monospace';
-        drops.forEach((y, i) => {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * 16, y * 16);
-            if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        });
-    }
-    setInterval(draw, 33);
+    function searchTable() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById('studentsTable');
+        const tr = table.getElementsByTagName('tr');
 
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td');
+            let found = false;
+
+            for (let j = 0; j < td.length; j++) {
+                const cell = td[j];
+                if (cell) {
+                    if (cell.textContent.toUpperCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (found) {
+                tr[i].style.display = '';
+            } else {
+                tr[i].style.display = 'none';
+            }
+        }
+    }
+
+    function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        searchTable();
+    }
+
+    // Auto-search on input
+    document.getElementById('searchInput').addEventListener('keyup', searchTable);
+
+    // Auto-hide messages after 5 seconds
+    setTimeout(() => {
+        const messages = document.querySelector('.messages');
+        if (messages) {
+            messages.style.opacity = '0';
+            messages.style.transition = 'opacity 1s';
+            setTimeout(() => messages.remove(), 1000);
+        }
+    }, 5000);
+
+    // Add confirmation for PDF download
+    document.querySelectorAll('.btn-download').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const studentName = this.closest('tr').querySelector('td:nth-child(4)').textContent;
+            const htNo = this.closest('tr').querySelector('td:nth-child(3)').textContent;
+            if (!confirm(`Download PDF for ${studentName} (${htNo})?`)) {
+                e.preventDefault();
+            }
+        });
     });
 </script>
 
-{% else %}
-<script>window.location.href = "{% url 'dashboard:dashboard' %}";</script>
-<div style="text-align:center; padding:100px; color:#f00; background:#000; height:100vh;">
-    <h1>403 - VERIFICATION REQUIRED</h1>
-    <p>Please enter the secondary password via the Dashboard to access this tab.</p>
-</div>
-{% endif %}
 {% endblock %}
