@@ -1,7 +1,7 @@
 services:
   - type: web
-    name: engineeringcollege
+    name: anrkitdept
     env: python
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn engineeringcollege.wsgi:application"
-    plan: free
+    pythonVersion: 3.11.9
+    buildCommand: ./build.sh
+    startCommand: gunicorn engineeringcollege.wsgi:application
