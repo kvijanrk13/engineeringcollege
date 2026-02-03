@@ -3,7 +3,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 # =========================
-# STUDENT MODEL
+# STUDENT MODEL (UPDATED)
 # =========================
 
 class Student(models.Model):
@@ -43,12 +43,30 @@ class Student(models.Model):
     rtrp_title = models.CharField(max_length=300, blank=True, null=True)
     intern_title = models.CharField(max_length=300, blank=True, null=True)
     final_project_title = models.CharField(max_length=300, blank=True, null=True)
+
+    # Other training is a TextField, not a FileField
     other_training = models.TextField(blank=True, null=True)
 
-    photo = models.CharField(max_length=255, blank=True, null=True)  # Cloudinary public_id
-    pdf_url = models.URLField(blank=True, null=True)
+    # =========================
+    # CRITICAL FIX: Added Certificate Fields as FileFields
+    # =========================
+    achievement_certificate = models.FileField(upload_to="certificates/", blank=True, null=True)
+    internship_certificate = models.FileField(upload_to="certificates/", blank=True, null=True)
+    courses_certificate = models.FileField(upload_to="certificates/", blank=True, null=True)
+    sdp_certificate = models.FileField(upload_to="certificates/", blank=True, null=True)
+    extra_certificate = models.FileField(upload_to="certificates/", blank=True, null=True)
+    placement_offer = models.FileField(upload_to="certificates/", blank=True, null=True)
+    national_exam_certificate = models.FileField(upload_to="certificates/", blank=True, null=True)
+
+    # =========================
+    # CLOUDINARY URL FIELDS
+    # =========================
+    photo = models.URLField(max_length=500, blank=True, null=True)  # Cloudinary URL for photo
+    pdf_url = models.URLField(blank=True, null=True)  # Cloudinary URL for PDF
 
     created_at = models.DateTimeField(auto_now_add=True)
+    pdf_generated = models.BooleanField(default=False)
+    pdf_generation_time = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.ht_no} - {self.student_name}"
@@ -58,7 +76,7 @@ class Student(models.Model):
 
 
 # =========================
-# FACULTY MODEL
+# FACULTY MODEL (Keep as is)
 # =========================
 
 class Faculty(models.Model):
@@ -88,15 +106,9 @@ class Faculty(models.Model):
     sub_caste = models.CharField(max_length=50, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
 
-    # =========================
-    # CLOUDINARY FIELDS (NEW)
-    # =========================
     cloudinary_pdf_url = models.URLField(blank=True, null=True)
     cloudinary_photo_url = models.URLField(blank=True, null=True)
 
-    # =========================
-    # SSC
-    # =========================
     ssc_school = models.CharField(max_length=200, blank=True, null=True)
     ssc_year = models.CharField(max_length=4, blank=True, null=True)
     ssc_percent = models.DecimalField(
@@ -107,9 +119,6 @@ class Faculty(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)]
     )
 
-    # =========================
-    # INTER
-    # =========================
     inter_college = models.CharField(max_length=200, blank=True, null=True)
     inter_year = models.CharField(max_length=4, blank=True, null=True)
     inter_percent = models.DecimalField(
@@ -120,9 +129,6 @@ class Faculty(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)]
     )
 
-    # =========================
-    # UG
-    # =========================
     ug_college = models.CharField(max_length=200, blank=True, null=True)
     ug_year = models.CharField(max_length=4, blank=True, null=True)
     ug_percentage = models.DecimalField(
@@ -134,9 +140,6 @@ class Faculty(models.Model):
     )
     ug_spec = models.CharField(max_length=100, blank=True, null=True)
 
-    # =========================
-    # PG
-    # =========================
     pg_college = models.CharField(max_length=200, blank=True, null=True)
     pg_year = models.CharField(max_length=4, blank=True, null=True)
     pg_percentage = models.DecimalField(
@@ -148,9 +151,6 @@ class Faculty(models.Model):
     )
     pg_spec = models.CharField(max_length=100, blank=True, null=True)
 
-    # =========================
-    # PhD
-    # =========================
     phd_university = models.CharField(max_length=200, blank=True, null=True)
     phd_year = models.CharField(max_length=4, blank=True, null=True)
     phd_degree = models.CharField(
@@ -179,7 +179,7 @@ class Faculty(models.Model):
 
 
 # =========================
-# CERTIFICATE MODEL
+# CERTIFICATE MODEL (For Faculty)
 # =========================
 
 class Certificate(models.Model):

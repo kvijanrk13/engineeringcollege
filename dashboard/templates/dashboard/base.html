@@ -13,13 +13,15 @@
 </head>
 <body>
 
+{% if not single_pdf %}
 <nav class="navbar navbar-dark bg-dark px-4">
     <div class="ms-auto">
         <span class="navbar-text text-success fw-bold">
-            Welcome 7001
+            Welcome {{ user.username }}
         </span>
     </div>
 </nav>
+{% endif %}
 
 <div class="container-fluid mt-4">
 

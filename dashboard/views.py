@@ -3,6 +3,8 @@ import os
 import json
 import tempfile
 import logging
+import time
+import uuid
 from datetime import datetime, date, timedelta
 from io import BytesIO
 from typing import Dict, List, Optional, Any
@@ -27,8 +29,8 @@ import cloudinary.uploader
 import cloudinary.api
 
 # Add these imports for students
-#from weasyprint import HTML
-import tempfile
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 
 from .models import Faculty, Certificate, FacultyLog, CloudinaryUpload, Student
 from .forms import FacultyForm, CertificateForm, LoginForm, BulkUploadForm
@@ -53,6 +55,190 @@ except ImportError:
     psutil = None
 
 
+# ==================== STUDENT AUTHENTICATION - COMPLETE FIXED FUNCTIONS ====================
+
+def student_login(request):
+    """Dedicated student login with hardcoded credentials"""
+    # If already logged in, redirect to students page
+    if request.session.get('student_logged_in'):
+        return redirect('dashboard:students')
+
+    error = None
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        # Hardcoded student credentials
+        if username == 'anrkitstudent' and password == 'anrkitstudent':
+            request.session['student_logged_in'] = True
+            request.session['student_username'] = username
+            messages.success(request, 'Student login successful!')
+            return redirect('dashboard:students')
+        else:
+            error = 'Invalid student username or password'
+
+    # Render login template with student context
+    return render(request, 'dashboard/login.html', {
+        'student_login': True,
+        'error': error,
+        'title': 'Student Login'
+    })
+
+
+def student_logout(request):
+    """Logout student by clearing session"""
+    if 'student_logged_in' in request.session:
+        del request.session['student_logged_in']
+    if 'student_username' in request.session:
+        del request.session['student_username']
+
+    messages.success(request, 'Student logged out successfully.')
+    return redirect('dashboard:student_login')
+
+
+# ==================== FIXED STUDENTS VIEW ====================
+
+def students(request):
+    """Student registration form - protected by student login"""
+    # Check if student is logged in via session
+    if not request.session.get('student_logged_in'):
+        return redirect('dashboard:student_login')
+
+    # Your existing student registration logic here
+    if request.method == "POST":
+        try:
+            # Upload photo to Cloudinary if provided
+            photo_url = None
+
+            if 'photo' in request.FILES:
+                photo_upload = cloudinary.uploader.upload(
+                    request.FILES["photo"],
+                    folder="students/photos",
+                    transformation=[
+                        {'width': 300, 'height': 300, 'crop': 'fill'},
+                        {'quality': 'auto:good'}
+                    ]
+                )
+                photo_url = photo_upload["secure_url"]
+
+            # Parse date string (DD-MM-YYYY) to Date object
+            dob_str = request.POST.get("dob")
+            dob = None
+            if dob_str:
+                try:
+                    day, month, year = map(int, dob_str.split('-'))
+                    dob = date(year, month, day)
+                except:
+                    dob = None
+
+            # Create student record
+            student_data = {
+                "ht_no": request.POST["ht_no"],
+                "student_name": request.POST["student_name"],
+                "father_name": request.POST["father_name"],
+                "mother_name": request.POST["mother_name"],
+                "gender": request.POST["gender"],
+                "dob": dob,
+                "age": request.POST.get("age"),
+                "nationality": request.POST.get("nationality", "Indian"),
+                "category": request.POST["category"],
+                "religion": request.POST.get("religion"),
+                "blood_group": request.POST.get("blood_group"),
+                "aadhar": request.POST["aadhar"],
+                "apaar_id": request.POST.get("apaar_id"),
+                "address": request.POST["address"],
+                "parent_phone": request.POST["parent_phone"],
+                "student_phone": request.POST["student_phone"],
+                "email": request.POST["email"],
+                "task_registered": request.POST.get("task_registered"),
+                "task_username": request.POST.get("task_username"),
+                "csi_registered": request.POST.get("csi_registered"),
+                "csi_membership_id": request.POST.get("csi_membership_id"),
+                "admission_type": request.POST.get("admission_type"),
+                "eamcet_rank": request.POST.get("eamcet_rank"),
+                "other_admission_details": request.POST.get("other_admission_details"),
+                "year": request.POST["year"],
+                "sem": request.POST["sem"],
+                "ssc_marks": request.POST["ssc_marks"],
+                "inter_marks": request.POST["inter_marks"],
+                "cgpa": request.POST["cgpa"],
+                "rtrp_title": request.POST.get("rtrp_title"),
+                "intern_title": request.POST.get("intern_title"),
+                "final_project_title": request.POST.get("final_project_title"),
+                "other_training": request.POST.get("other_training"),
+            }
+
+            # If photo was uploaded to Cloudinary, save URL
+            if photo_url:
+                student_data["photo"] = photo_url
+
+            # Handle certificate file uploads
+            certificate_mapping = {
+                'achievement_certificate': 'cert_achieve',
+                'internship_certificate': 'cert_intern',
+                'courses_certificate': 'cert_courses',
+                'sdp_certificate': 'cert_sdp',
+                'extra_certificate': 'cert_extra',
+                'placement_offer': 'cert_placement',
+                'national_exam_certificate': 'cert_national'
+            }
+
+            # Check if student already exists
+            student, created = Student.objects.update_or_create(
+                ht_no=request.POST["ht_no"],
+                defaults=student_data
+            )
+
+            # Save certificate files
+            for model_field, form_field in certificate_mapping.items():
+                if form_field in request.FILES:
+                    file_obj = request.FILES[form_field]
+                    setattr(student, model_field, file_obj)
+
+            student.save()
+
+            messages.success(request,
+                             f"Student {student.student_name} {'registered' if created else 'updated'} successfully!")
+            return redirect("dashboard:students_data")
+
+        except Exception as e:
+            logger.error(f"Error in student registration: {str(e)}")
+            messages.error(request, f"Error registering student: {str(e)}")
+
+    return render(request, "dashboard/students.html", {
+        'title': 'Student Registration'
+    })
+
+
+# ==================== FIXED STUDENTS_DATA VIEW ====================
+
+def students_data(request):
+    """Display student data - protected by student login"""
+
+    # Check if student is logged in via session
+    if not request.session.get('student_logged_in'):
+        return redirect('dashboard:student_login')
+
+    # ✅ LOGGED IN → SHOW ACTUAL DATA
+    students = Student.objects.all().order_by("-created_at")
+
+    total_students = students.count()
+    male_count = students.filter(gender="Male").count()
+    female_count = students.filter(gender="Female").count()
+    pdf_generated_count = students.exclude(pdf_url__isnull=True).exclude(pdf_url='').count()
+
+    return render(request, "dashboard/students_data.html", {
+        "students": students,
+        "total_students": total_students,
+        "male_count": male_count,
+        "female_count": female_count,
+        "pdf_generated_count": pdf_generated_count,
+        "single_pdf": False,  # Web view mode
+        "title": "Students Data"
+    })
+
+
 # ==================== HOME & AUTHENTICATION ====================
 
 def home(request):
@@ -66,10 +252,11 @@ def home(request):
 
 
 def login_view(request):
-    """Login view - Merged from first code snippet"""
+    """Admin login view - Fixed"""
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
 
+    error = None
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -80,15 +267,20 @@ def login_view(request):
             login(request, user)
             return redirect('dashboard:dashboard')
         else:
-            messages.error(request, "Invalid username or password")
+            error = "Invalid admin username or password"
 
-    return render(request, "login.html", {'title': 'Login'})
+    # FIXED: Use the same template as student_login
+    return render(request, "dashboard/login.html", {
+        'title': 'Admin Login',
+        'student_login': False,
+        'error': error
+    })
 
 
 def logout_view(request):
+    """Admin logout"""
     logout(request)
     return redirect('dashboard:login')
-
 
 # ==================== DASHBOARD ====================
 
@@ -3078,7 +3270,6 @@ def faculty_reminders(request):
     })
 
 
-@login_required
 @csrf_exempt
 def faculty_api_webhook(request):
     """Webhook for external systems to update faculty data"""
@@ -3315,6 +3506,220 @@ def faculty_search_advanced_api(request):
     })
 
 
+# ==================== STUDENT VIEWS - FIXED VERSION ====================
+
+@login_required
+def generate_student_pdf(request, student_id):
+    """Generate PDF for a student with certificate merging - FIXED VERSION"""
+    from django.template.loader import render_to_string
+    from django.utils.timezone import now
+    import pdfkit
+    import tempfile
+    import os
+    from PyPDF2 import PdfMerger
+    import requests
+
+    try:
+        student = get_object_or_404(Student, id=student_id)
+
+        # CRITICAL FIX: Safe photo handling - student.photo is a URL string
+        photo_path = None
+        if student.photo:
+            if isinstance(student.photo, str) and student.photo.startswith("http"):
+                photo_path = student.photo
+            elif hasattr(student.photo, 'url'):
+                photo_path = request.build_absolute_uri(student.photo.url)
+            else:
+                photo_path = student.photo
+        else:
+            # Default image if no photo
+            photo_path = request.build_absolute_uri('/static/images/default-student.png')
+
+        # Create context for PDF template
+        context = {
+            "student": student,
+            "photo_path": photo_path,
+            "single_pdf": True,  # This triggers PDF layout in template
+            "now": now(),
+        }
+
+        # Render HTML for main student PDF
+        html = render_to_string(
+            "dashboard/students_data.html",
+            context,
+            request=request
+        )
+
+        # Create temporary file for main PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_main:
+            tmp_main_path = tmp_main.name
+
+            # Generate PDF using pdfkit
+            pdfkit_config = pdfkit.configuration(wkhtmltopdf=settings.WKHTMLTOPDF_PATH)
+
+            options = {
+                'page-size': 'A4',
+                'margin-top': '0.5in',
+                'margin-right': '0.5in',
+                'margin-bottom': '0.5in',
+                'margin-left': '0.5in',
+                'encoding': "UTF-8",
+                'enable-local-file-access': '',
+                'quiet': '',
+            }
+
+            pdfkit.from_string(
+                html,
+                tmp_main_path,
+                configuration=pdfkit_config,
+                options=options
+            )
+
+        # =========================
+        # CRITICAL FIX: Use actual certificate fields from Student model
+        # =========================
+        certificate_fields = [
+            student.achievement_certificate,
+            student.internship_certificate,
+            student.courses_certificate,
+            student.sdp_certificate,
+            student.extra_certificate,
+            student.placement_offer,
+            student.national_exam_certificate,
+        ]
+
+        # Filter out None values
+        certificate_files = [cert for cert in certificate_fields if cert]
+
+        if certificate_files:
+            try:
+                merger = PdfMerger()
+
+                # Add main student PDF
+                merger.append(tmp_main_path)
+
+                # Add certificate files
+                certificates_added = 0
+                for cert in certificate_files:
+                    try:
+                        # Check if file exists on disk
+                        if hasattr(cert, 'path') and os.path.exists(cert.path):
+                            merger.append(cert.path)
+                            certificates_added += 1
+                        elif hasattr(cert, 'url'):
+                            # If it's a FileField with URL
+                            file_url = request.build_absolute_uri(cert.url)
+                            response = requests.get(file_url)
+                            if response.status_code == 200:
+                                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_cert:
+                                    temp_cert.write(response.content)
+                                    temp_cert_path = temp_cert.name
+                                merger.append(temp_cert_path)
+                                certificates_added += 1
+                                os.unlink(temp_cert_path)
+                    except Exception as e:
+                        logger.error(
+                            f"Error adding certificate {cert.name if hasattr(cert, 'name') else 'unknown'}: {e}")
+
+                # Create final merged PDF
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_final:
+                    tmp_final_path = tmp_final.name
+                    merger.write(tmp_final_path)
+                    merger.close()
+
+                logger.info(f"PDF generated with {certificates_added} certificates added")
+
+                # Upload merged PDF to Cloudinary
+                with open(tmp_final_path, 'rb') as pdf_file:
+                    upload = cloudinary.uploader.upload(
+                        pdf_file,
+                        resource_type="raw",
+                        folder="students/pdfs",
+                        public_id=f"student_{student.ht_no}_{student.student_name.replace(' ', '_')}",
+                        overwrite=True
+                    )
+
+                # Clean up final temp file
+                os.unlink(tmp_final_path)
+
+            except Exception as e:
+                logger.error(f"Error merging certificates: {str(e)}")
+                # Upload main PDF without certificates
+                with open(tmp_main_path, 'rb') as pdf_file:
+                    upload = cloudinary.uploader.upload(
+                        pdf_file,
+                        resource_type="raw",
+                        folder="students/pdfs",
+                        public_id=f"student_{student.ht_no}_{student.student_name.replace(' ', '_')}",
+                        overwrite=True
+                    )
+        else:
+            # Upload main PDF without certificates
+            with open(tmp_main_path, 'rb') as pdf_file:
+                upload = cloudinary.uploader.upload(
+                    pdf_file,
+                    resource_type="raw",
+                    folder="students/pdfs",
+                    public_id=f"student_{student.ht_no}_{student.student_name.replace(' ', '_')}",
+                    overwrite=True
+                )
+
+        # Update student record with PDF URL
+        student.pdf_url = upload["secure_url"]
+        student.pdf_generated = True
+        student.pdf_generation_time = datetime.now()
+        student.save()
+
+        # Clean up main temp file
+        os.unlink(tmp_main_path)
+
+        messages.success(request, f"✅ PDF generated for {student.student_name}")
+        return redirect("dashboard:students_data")
+
+    except Exception as e:
+        logger.error(f"Error in generate_student_pdf: {str(e)}")
+        messages.error(request, f"Error generating PDF: {str(e)}")
+        return redirect("dashboard:students_data")
+
+
+@login_required
+def delete_student(request, student_id):
+    """Delete a student"""
+    try:
+        student = Student.objects.get(id=student_id)
+        student_name = student.student_name
+        student.delete()
+        messages.success(request, f'Student {student_name} deleted successfully!')
+    except Student.DoesNotExist:
+        messages.error(request, 'Student not found!')
+    except Exception as e:
+        messages.error(request, f'Error deleting student: {str(e)}')
+
+    return redirect("dashboard:students_data")
+
+
+@login_required
+def view_pdf(request, student_id):
+    """View student PDF"""
+    student = get_object_or_404(Student, id=student_id)
+    if not student.pdf_url:
+        messages.error(request, "PDF not generated yet.")
+        return redirect("dashboard:students_data")
+    return redirect(student.pdf_url)
+
+
+@login_required
+def download_pdf(request, student_id):
+    """Download student PDF"""
+    student = get_object_or_404(Student, id=student_id)
+
+    if not student.pdf_url:
+        messages.error(request, "PDF not generated yet.")
+        return redirect("dashboard:students_data")
+
+    return redirect(student.pdf_url)
+
+
 # ==================== TESTING ROUTES (development only) ====================
 
 if settings.DEBUG:
@@ -3344,124 +3749,6 @@ if settings.DEBUG:
         else:
             return JsonResponse({'success': False, 'error': 'No faculty found'})
 
+# ==================== SYSTEM STATUS FUNCTIONS ====================
 
-# ==================== NEW STUDENTS VIEWS ====================
-
-@login_required
-def students(request):
-    if request.method == "POST":
-        try:
-            # Upload photo to Cloudinary
-            photo_upload = cloudinary.uploader.upload(
-                request.FILES["photo"],
-                folder="students/photos"
-            )
-
-            # Parse date string (DD-MM-YYYY) to Date object
-            dob_str = request.POST.get("dob")
-            dob = None
-            if dob_str:
-                try:
-                    day, month, year = map(int, dob_str.split('-'))
-                    dob = date(year, month, day)
-                except:
-                    dob = None
-
-            # Create student record
-            student = Student.objects.create(
-                ht_no=request.POST["ht_no"],
-                student_name=request.POST["student_name"],
-                father_name=request.POST["father_name"],
-                mother_name=request.POST["mother_name"],
-                gender=request.POST["gender"],
-                dob=dob,
-                age=request.POST.get("age"),
-                nationality=request.POST.get("nationality", "Indian"),
-                category=request.POST["category"],
-                religion=request.POST.get("religion"),
-                blood_group=request.POST.get("blood_group"),
-                aadhar=request.POST["aadhar"],
-                apaar_id=request.POST.get("apaar_id"),
-                address=request.POST["address"],
-                parent_phone=request.POST["parent_phone"],
-                student_phone=request.POST["student_phone"],
-                email=request.POST["email"],
-                task_registered=request.POST.get("task_registered"),
-                task_username=request.POST.get("task_username"),
-                csi_registered=request.POST.get("csi_registered"),
-                csi_membership_id=request.POST.get("csi_membership_id"),
-                admission_type=request.POST.get("admission_type"),
-                other_admission_details=request.POST.get("other_admission_details"),
-                eamcet_rank=request.POST.get("eamcet_rank"),
-                year=request.POST["year"],
-                sem=request.POST["sem"],
-                ssc_marks=request.POST["ssc_marks"],
-                inter_marks=request.POST["inter_marks"],
-                cgpa=request.POST["cgpa"],
-                rtrp_title=request.POST.get("rtrp_title"),
-                intern_title=request.POST.get("intern_title"),
-                final_project_title=request.POST.get("final_project_title"),
-                other_training=request.POST.get("other_training"),
-                photo=photo_upload["public_id"]
-            )
-
-            # Render students.html as PDF
-            html = render_to_string(
-                "dashboard/students.html",
-                {
-                    "student": student,
-                    "pdf_mode": True,
-                    "photo_url": photo_upload["secure_url"]
-                }
-            )
-
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as pdf:
-                HTML(string=html).write_pdf(pdf.name)
-
-                pdf_upload = cloudinary.uploader.upload(
-                    pdf.name,
-                    resource_type="raw",
-                    folder="students/pdfs",
-                    public_id=f"student_{student.ht_no}"
-                )
-
-            student.pdf_url = pdf_upload["secure_url"]
-            student.save()
-
-            # Store student ID in session for success message
-            request.session['student_id'] = student.id
-
-            messages.success(request,
-                             f"Student {student.student_name} registered successfully! PDF generated and uploaded to Cloudinary.")
-            return redirect("dashboard:students_data")
-
-        except Exception as e:
-            logger.error(f"Error in student registration: {str(e)}")
-            messages.error(request, f"Error registering student: {str(e)}")
-            return redirect("dashboard:students")
-
-    return render(request, "dashboard/students.html")
-
-
-@login_required
-def students_data(request):
-    students = Student.objects.all().order_by("-created_at")
-
-    return render(request, "dashboard/students_data.html", {
-        "students": students,
-        "total_students": students.count(),
-        "male_count": students.filter(gender='Male').count(),
-        "female_count": students.filter(gender='Female').count()
-    })
-
-
-@login_required
-def view_pdf(request, student_id):
-    student = get_object_or_404(Student, id=student_id)
-    return redirect(student.pdf_url)
-
-
-@login_required
-def download_pdf(request, student_id):
-    student = get_object_or_404(Student, id=student_id)
-    return redirect(student.pdf_url)
+# ==================== END OF FILE ====================

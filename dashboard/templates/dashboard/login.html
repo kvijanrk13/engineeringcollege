@@ -4,24 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - ANURAG ENGINEERING COLLEGE</title>
+    <title>
+        {% if student_login %}
+            Student Login - ANURAG ENGINEERING COLLEGE
+        {% else %}
+            Login - ANURAG ENGINEERING COLLEGE
+        {% endif %}
+    </title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
         body { background-color: #000; color: #0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow: hidden; position: relative; }
-        .matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
-        .matrix-char { position: absolute; color: #0f0; font-size: 14px; opacity: 0; animation: fall linear infinite; }
-        @keyframes fall { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(100vh); opacity: 0; } }
-        .login-container { background-color: rgba(0, 20, 0, 0.85); border: 2px solid #0f0; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); width: 100%; max-width: 450px; padding: 30px; position: relative; z-index: 1; }
+
+        /* Matrix Canvas Styling */
+        #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        .login-container { background-color: rgba(0, 20, 0, 0.9); border: 2px solid #0f0; border-radius: 10px; box-shadow: 0 0 25px rgba(0, 255, 0, 0.3); width: 100%; max-width: 450px; padding: 30px; position: relative; z-index: 1; }
         .college-header { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #0f0; padding-bottom: 20px; }
 
-        /* 🔥 THE FIX: Explicit styling for the static image */
         .header-image {
             width: 100%;
             max-width: 400px;
             height: auto;
             display: block;
             margin: 0 auto 15px auto;
-            background: #FFFFFF; /* High contrast for the logo */
+            background: #FFFFFF;
             border: 2px solid #0f0;
             border-radius: 5px;
             padding: 5px;
@@ -31,59 +37,285 @@
         .login-form { margin-top: 20px; }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #0f0; }
-        .form-group input { background-color: rgba(0, 30, 0, 0.7); border: 1px solid #0a0; border-radius: 5px; padding: 12px 15px; color: #0f0; width: 100%; }
-        .login-btn { background: linear-gradient(to bottom, #0a0, #050); color: #000; border: none; padding: 14px; width: 100%; border-radius: 5px; font-weight: 600; cursor: pointer; text-transform: uppercase; }
-        .error-message { color: #f00; background-color: rgba(50, 0, 0, 0.5); padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #a00; }
+        .form-group input { background-color: rgba(0, 30, 0, 0.7); border: 1px solid #0a0; border-radius: 5px; padding: 12px 15px; color: #0f0; width: 100%; outline: none; }
+        .form-group input:focus { border-color: #0f0; box-shadow: 0 0 10px #0f0; }
+        .login-btn {
+            background: linear-gradient(to bottom, #0a0, #050);
+            color: #000;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+            margin-bottom: 15px;
+        }
+        .login-btn:hover { background: #0f0; box-shadow: 0 0 20px #0f0; }
+
+        /* Error/Success Messages */
+        .error-message {
+            color: #f00;
+            background-color: rgba(50, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #a00;
+            text-align: center;
+        }
+
+        .success-message {
+            color: #0f0;
+            background-color: rgba(0, 50, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #0a0;
+            text-align: center;
+        }
+
+        /* Login Type Switcher */
+        .login-switch {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #0a0;
+        }
+
+        .login-switch a {
+            color: #0f0;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            padding: 8px 15px;
+            border: 1px solid #0a0;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .login-switch a:hover {
+            background: #0a0;
+            color: #000;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        /* Student Login Specific */
+        .student-credential-note {
+            background-color: rgba(0, 40, 0, 0.7);
+            border: 1px solid #0a0;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #0f0;
+        }
+
+        .student-credential-note strong {
+            color: #0f0;
+            display: block;
+            margin: 5px 0;
+            font-size: 1.1rem;
+        }
+
+        .login-type-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #000;
+            color: #0f0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid #0f0;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* Messages Styling */
+        .messages {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            border: 2px solid;
+        }
+
+        .alert-success {
+            background: rgba(0, 30, 0, 0.95);
+            color: #0f0;
+            border-color: #0f0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+
+        .alert-error {
+            background: rgba(30, 0, 0, 0.95);
+            color: #f00;
+            border-color: #f00;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .header-image {
+                max-width: 300px;
+            }
+
+            .login-type-badge {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-bottom: 15px;
+                display: inline-block;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="matrix-bg" id="matrixBg"></div>
+    <canvas id="matrix-canvas"></canvas>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="login-container">
+        {% if student_login %}
+            <div class="login-type-badge">STUDENT LOGIN</div>
+        {% else %}
+            <div class="login-type-badge">ADMIN LOGIN</div>
+        {% endif %}
+
         <div class="college-header">
             <img src="{% static 'images/IT HEADER.png' %}" alt="ANURAG IT HEADER" class="header-image">
             <p class="department">INFORMATION TECHNOLOGY DEPARTMENT</p>
         </div>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="error-message">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+        {% if student_login %}
+            <h4 class="text-center mb-3" style="color: #0f0;">Student Login Portal</h4>
 
-        <form class="login-form" method="POST" action="{% url 'dashboard:login' %}">
-            {% csrf_token %}
-            <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" required>
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
             </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
+            {% endif %}
+
+            <div class="student-credential-note">
+                <strong>Student Credentials:</strong><br>
+                Username: <strong>anrkitstudent</strong><br>
+                Password: <strong>anrkitstudent</strong>
             </div>
-            <button type="submit" class="login-btn">ACCESS SYSTEM</button>
-        </form>
+
+            <form class="login-form" method="POST" action="{% url 'dashboard:student_login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Student Username</label>
+                    <input type="text" name="username" required placeholder="Enter student username" value="anrkitstudent">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required placeholder="Enter password" value="anrkitstudent">
+                </div>
+                <button type="submit" class="login-btn">ACCESS STUDENT PORTAL</button>
+            </form>
+
+            <div class="login-switch">
+                <p style="color: #0a0; margin-bottom: 10px;">Are you an Admin?</p>
+                <a href="{% url 'dashboard:login' %}">Switch to Admin Login →</a>
+            </div>
+
+        {% else %}
+            <h4 class="text-center mb-3" style="color: #0f0;">Admin Login Portal</h4>
+
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form class="login-form" method="POST" action="{% url 'dashboard:login' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" required placeholder="Enter admin username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="login-btn">ACCESS SYSTEM</button>
+            </form>
+
+            <div class="login-switch">
+                <p style="color: #0a0; margin-bottom: 10px;">Are you a Student?</p>
+                <a href="{% url 'dashboard:student_login' %}">Switch to Student Login →</a>
+            </div>
+        {% endif %}
     </div>
 
     <script>
-        const matrixBg = document.getElementById('matrixBg');
-        function createMatrix() {
-            const columns = Math.floor(window.innerWidth / 20);
-            for (let i = 0; i < columns; i++) {
-                const column = document.createElement('div');
-                column.style.position = 'absolute';
-                column.style.left = `${i * 20}px`;
-                for (let j = 0; j < 20; j++) {
-                    const char = document.createElement('span');
-                    char.className = 'matrix-char';
-                    char.textContent = Math.floor(Math.random() * 2);
-                    char.style.animationDuration = `${5 + Math.random() * 10}s`;
-                    char.style.animationDelay = `${Math.random() * 5}s`;
-                    column.appendChild(char);
-                }
-                matrixBg.appendChild(column);
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+        const fontSize = 16;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = Array(columns).fill(1);
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0f0';
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
             }
         }
-        createMatrix();
+        setInterval(draw, 33);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            const messages = document.querySelector('.messages');
+            if (messages) {
+                messages.style.transition = 'opacity 1s';
+                messages.style.opacity = '0';
+                setTimeout(() => messages.style.display = 'none', 1000);
+            }
+        }, 5000);
+
+        // Auto-focus on username field
+        document.querySelector('input[name="username"]')?.focus();
     </script>
 </body>
 </html>
