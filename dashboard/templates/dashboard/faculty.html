@@ -1,12 +1,595 @@
-<!-- faculty/dashboard/templates/faculty.html -->
-{% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}{{ faculty.staff_name }} - Faculty Details | Anurag Engineering College{% endblock %}
+{% if pdf_mode %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Profile - {{ faculty.staff_name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2c3e50;
+        }
+
+        .college-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .college-address {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 20px 0;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            background-color: #ecf0f1;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+        }
+
+        .info-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #2c3e50;
+            width: 40%;
+        }
+
+        .photo-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .faculty-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3498db;
+        }
+
+        .signature-section {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #2c3e50;
+        }
+
+        .signature-box {
+            width: 300px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+        }
+
+        .print-date {
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        /* Table styles for educational details */
+        .info-table th {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        /* Certificate styles */
+        .certificate-item {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #bbdefb;
+        }
+
+        /* Print-specific styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Enhanced styles from first version */
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 15px;
+        }
+
+        .pdf-header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .university-name {
+            color: #3498db;
+            font-size: 18px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .generation-info {
+            color: #7f8c8d;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .profile-section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: inline-block;
+            width: 180px;
+            font-size: 11px;
+        }
+
+        .info-value {
+            color: #333;
+            display: inline-block;
+            font-size: 11px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .data-table th {
+            background-color: #34495e;
+            color: white;
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .data-table td {
+            padding: 7px 10px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .signature-line {
+            width: 250px;
+            height: 1px;
+            border-top: 1px solid #333;
+            margin: 40px auto 5px;
+        }
+
+        .signature-label {
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(0, 0, 0, 0.1);
+            z-index: -1;
+            font-weight: bold;
+        }
+
+        .barcode {
+            margin-top: 10px;
+            text-align: center;
+            font-family: 'Libre Barcode 128', cursive;
+            font-size: 20px;
+        }
+
+        .clearfix {
+            clear: both;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Watermark for confidentiality -->
+    <div class="watermark">ANURAG ENGINEERING COLLEGE</div>
+
+    <div class="print-date">
+        Generated on: {{ current_date|date:"d M Y h:i A" }}
+    </div>
+
+    <!-- Enhanced Header -->
+    <div class="pdf-header">
+        <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+        <div class="college-address">Anurag Nagar, Hyderabad, Telangana</div>
+        <h1>FACULTY PROFILE REPORT</h1>
+        <div class="generation-info">
+            Report ID: FAC-{{ faculty.id }}-{{ current_date|date:"YmdHis" }} |
+            Status: OFFICIAL DOCUMENT |
+            Employee Code: {{ faculty.employee_code }}
+        </div>
+    </div>
+
+    <!-- Photo Section -->
+    <div class="photo-container">
+        {% if faculty.photo %}
+            <img src="{{ faculty.photo.url }}" alt="{{ faculty.staff_name }}" class="faculty-photo">
+        {% elif faculty.cloudinary_photo_url %}
+            <img src="{{ faculty.cloudinary_photo_url }}" alt="{{ faculty.staff_name }}" class="faculty-photo">
+        {% else %}
+            <div style="width: 150px; height: 150px; border-radius: 50%; background: #ecf0f1; border: 3px solid #3498db; display: inline-flex; align-items: center; justify-content: center; color: #7f8c8d;">
+                No Photo
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Personal Information Section -->
+    <div class="profile-section no-break">
+        <div class="section-title">1. PERSONAL INFORMATION</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Employee Code</td>
+                <td>{{ faculty.employee_code }}</td>
+            </tr>
+            <tr>
+                <td class="label">Full Name</td>
+                <td>{{ faculty.staff_name|upper }}</td>
+            </tr>
+            <tr>
+                <td class="label">Date of Birth</td>
+                <td>{{ faculty.dob|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Gender</td>
+                <td>{{ faculty.gender }}</td>
+            </tr>
+            <tr>
+                <td class="label">Email</td>
+                <td>{{ faculty.email }}</td>
+            </tr>
+            <tr>
+                <td class="label">Mobile</td>
+                <td>{{ faculty.mobile }}</td>
+            </tr>
+            <tr>
+                <td class="label">Address</td>
+                <td>{{ faculty.address }}</td>
+            </tr>
+            {% if faculty.father_name %}
+            <tr>
+                <td class="label">Father's Name</td>
+                <td>{{ faculty.father_name }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.state %}
+            <tr>
+                <td class="label">State</td>
+                <td>{{ faculty.state }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.aadhar %}
+            <tr>
+                <td class="label">Aadhar Number</td>
+                <td>{{ faculty.aadhar }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.pan %}
+            <tr>
+                <td class="label">PAN Number</td>
+                <td>{{ faculty.pan }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Professional Information Section -->
+    <div class="profile-section no-break">
+        <div class="section-title">2. PROFESSIONAL INFORMATION</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Department</td>
+                <td>{{ faculty.department }}</td>
+            </tr>
+            <tr>
+                <td class="label">Joining Date</td>
+                <td>{{ faculty.joining_date|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Total Experience</td>
+                <td>{{ experience }}</td>
+            </tr>
+            <tr>
+                <td class="label">Experience (Anurag)</td>
+                <td>{{ faculty.exp_anurag|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Experience (Other)</td>
+                <td>{{ faculty.exp_other|default:"N/A" }}</td>
+            </tr>
+            {% if faculty.jntuh_id %}
+            <tr>
+                <td class="label">JNTUH ID</td>
+                <td>{{ faculty.jntuh_id }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.aicte_id %}
+            <tr>
+                <td class="label">AICTE ID</td>
+                <td>{{ faculty.aicte_id }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label">Current Status</td>
+                <td class="text-bold" style="color: green;">ACTIVE</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Educational Qualifications -->
+    <div class="profile-section no-break">
+        <div class="section-title">3. EDUCATIONAL QUALIFICATIONS</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Degree</th>
+                    <th>Year</th>
+                    <th>Percentage</th>
+                    <th>Institution</th>
+                    <th>Specialization</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if faculty.ssc_year %}
+                <tr>
+                    <td>SSC</td>
+                    <td>{{ faculty.ssc_year }}</td>
+                    <td>{{ faculty.ssc_percent }}%</td>
+                    <td>{{ faculty.ssc_school }}</td>
+                    <td>-</td>
+                </tr>
+                {% endif %}
+
+                {% if faculty.inter_year %}
+                <tr>
+                    <td>Intermediate</td>
+                    <td>{{ faculty.inter_year }}</td>
+                    <td>{{ faculty.inter_percent }}%</td>
+                    <td>{{ faculty.inter_college }}</td>
+                    <td>-</td>
+                </tr>
+                {% endif %}
+
+                {% if faculty.ug_year %}
+                <tr>
+                    <td>B.Tech</td>
+                    <td>{{ faculty.ug_year }}</td>
+                    <td>{{ faculty.ug_percentage }}%</td>
+                    <td>{{ faculty.ug_college }}</td>
+                    <td>{{ faculty.ug_spec|default:"-" }}</td>
+                </tr>
+                {% endif %}
+
+                {% if faculty.pg_year %}
+                <tr>
+                    <td>M.Tech</td>
+                    <td>{{ faculty.pg_year }}</td>
+                    <td>{{ faculty.pg_percentage }}%</td>
+                    <td>{{ faculty.pg_college }}</td>
+                    <td>{{ faculty.pg_spec|default:"-" }}</td>
+                </tr>
+                {% endif %}
+
+                {% if faculty.phd_degree %}
+                <tr>
+                    <td>Ph.D</td>
+                    <td>{{ faculty.phd_year|default:"-" }}</td>
+                    <td>-</td>
+                    <td>{{ faculty.phd_university|default:"-" }}</td>
+                    <td>{{ faculty.phd_spec|default:"-" }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Subjects Dealt -->
+    <div class="profile-section">
+        <div class="section-title">4. SUBJECTS DEALT</div>
+        <div style="padding: 10px;">
+            {% if faculty.subjects_dealt %}
+                {% for subject in faculty.subjects_dealt.split|slice:":10" %}
+                <div class="certificate-item">{{ subject }}</div>
+                {% endfor %}
+                {% if faculty.subjects_dealt.split|length > 10 %}
+                <p>And {{ faculty.subjects_dealt.split|length|add:"-10" }} more subjects...</p>
+                {% endif %}
+            {% else %}
+                <p>No subjects specified</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Research & Publications -->
+    <div class="profile-section">
+        <div class="section-title">5. RESEARCH & PUBLICATIONS</div>
+        <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #eee;">
+            {% if faculty.about_yourself %}
+                {{ faculty.about_yourself }}
+            {% else %}
+                <div style="text-align: center; color: #888; font-style: italic;">
+                    Research and publication data not available in the system
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Verification & Signatures -->
+    <div class="profile-section">
+        <div class="section-title">6. VERIFICATION & AUTHORIZATION</div>
+
+        <div style="margin: 30px 0; text-align: center; font-size: 11px; color: #555;">
+            This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
+        </div>
+
+        <div class="signature-section">
+            <div style="display: flex; justify-content: space-between;">
+                <!-- Faculty Signature -->
+                <div class="signature-box">
+                    <div style="height: 60px;"></div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">
+                        {{ faculty.staff_name }}<br>
+                        Faculty Member<br>
+                        Date: _________________
+                    </div>
+                </div>
+
+                <!-- HOD Signature -->
+                <div class="signature-box">
+                    <div style="height: 60px;"></div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">
+                        Head of Department<br>
+                        {{ faculty.department }}<br>
+                        Date: _________________
+                    </div>
+                </div>
+            </div>
+
+            <!-- Principal Signature -->
+            <div style="text-align: center; margin-top: 60px;">
+                <div style="width: 300px; height: 1px; border-top: 2px solid #333; margin: 0 auto 5px;"></div>
+                <div class="signature-label">
+                    Principal<br>
+                    Anurag Engineering College<br>
+                    Date: _________________
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barcode -->
+    <div class="barcode text-center">
+        *ANURAG-FAC-{{ faculty.employee_code }}-{{ current_date|date:"Ymd" }}*
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>This document is system generated. For verification, please contact the college administration.</p>
+        <p>ANURAG ENGINEERING COLLEGE | Email: info@anurag.ac.in | Phone: +91-XXX-XXXXXXX</p>
+        <p>Page 1 of 1 | © {{ current_date|date:"Y" }} Anurag Engineering College</p>
+    </div>
+</body>
+</html>
+
+{% else %}
+
+<!-- ===== NORMAL DASHBOARD MODE ===== -->
+{% extends "dashboard/base.html" %}
+{% block title %}Faculty Profile | {{ faculty.staff_name|default:"Faculty Dashboard" }}{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* Faculty Details Page Styles */
+    /* ===== ENHANCED STYLES FROM BOTH VERSIONS ===== */
+
+    /* Profile Header Styles */
     .faculty-header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 15px;
@@ -25,8 +608,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('{% static "images/pattern.png" %}');
-        opacity: 0.1;
+        background: rgba(0,0,0,0.1);
     }
 
     .faculty-photo {
@@ -80,6 +662,7 @@
         box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         border: 1px solid #eef1f6;
         transition: transform 0.3s ease;
+        border-left: 4px solid #3498db;
     }
 
     .info-card:hover {
@@ -126,16 +709,54 @@
         width: 18px;
     }
 
+    /* Statistics Cards */
+    .stat-card {
+        transition: transform 0.3s;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+
+    .border-left-primary {
+        border-left: 4px solid #4e73df;
+    }
+
+    .border-left-success {
+        border-left: 4px solid #1cc88a;
+    }
+
+    .border-left-info {
+        border-left: 4px solid #36b9cc;
+    }
+
+    .border-left-warning {
+        border-left: 4px solid #f6c23e;
+    }
+
     /* Subjects Section */
     .subject-badge {
-        background: #e3f2fd;
-        color: #1976d2;
-        padding: 8px 15px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
         border-radius: 20px;
+        padding: 8px 15px;
         margin: 5px;
         display: inline-block;
-        font-size: 0.9rem;
-        border: 1px solid #bbdefb;
+        transition: all 0.3s;
+    }
+
+    .subject-badge:hover {
+        background: #e3f2fd;
+        border-color: #3498db;
+        transform: scale(1.05);
     }
 
     /* Action Buttons */
@@ -217,21 +838,6 @@
         color: #0c5460;
     }
 
-    /* Certificate Section */
-    .certificate-card {
-        background: white;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-left: 4px solid #3498db;
-        transition: all 0.3s ease;
-    }
-
-    .certificate-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-
     /* Progress Bar */
     .upload-progress {
         height: 25px;
@@ -250,44 +856,6 @@
         height: 600px;
         border: 1px solid #dee2e6;
         border-radius: 5px;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .faculty-header {
-            padding: 20px;
-            text-align: center;
-        }
-
-        .faculty-photo, .faculty-photo-placeholder {
-            width: 150px;
-            height: 150px;
-            margin: 0 auto 20px;
-        }
-
-        .faculty-basic-info h1 {
-            font-size: 1.8rem;
-        }
-
-        .info-card {
-            padding: 20px;
-        }
-
-        .btn-action-large {
-            padding: 12px 20px;
-            font-size: 0.9rem;
-        }
-    }
-
-    /* Animation for loading */
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
-    }
-
-    .loading {
-        animation: pulse 1.5s infinite;
     }
 
     /* Timeline for Education */
@@ -339,6 +907,41 @@
         font-size: 0.9rem;
     }
 
+    /* Profile Completion */
+    .profile-completion {
+        height: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .profile-completion-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: 5px;
+    }
+
+    /* Contact Info */
+    .contact-info li {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .contact-info li:last-child {
+        border-bottom: none;
+    }
+
+    /* Animation for loading */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .loading {
+        animation: pulse 1.5s infinite;
+    }
+
     /* Print Styles */
     @media print {
         .no-print {
@@ -355,11 +958,302 @@
             display: none;
         }
     }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .faculty-header {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .faculty-photo, .faculty-photo-placeholder {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+        }
+
+        .faculty-basic-info h1 {
+            font-size: 1.8rem;
+        }
+
+        .info-card {
+            padding: 20px;
+        }
+
+        .btn-action-large {
+            padding: 12px 20px;
+            font-size: 0.9rem;
+        }
+
+        .timeline {
+            padding-left: 20px;
+        }
+
+        .timeline-item::before {
+            left: -28px;
+        }
+    }
+
+    /* Analytics Page Styles */
+    .chart-pie {
+        position: relative;
+        height: 200px;
+    }
+
+    .dataTable-wrapper {
+        overflow-x: auto;
+    }
+
+    /* Faculty Selector */
+    #facultySelector {
+        border: 2px solid #e3e6f0;
+        border-radius: 0.35rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    #facultySelector:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+        z-index: 9999;
+    }
+
+    /* Faculty Analytics Cards */
+    .analytics-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .analytics-card .h5 {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    /* Certificate Cards */
+    .certificate-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #3498db;
+        transition: all 0.3s ease;
+    }
+
+    .certificate-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
+    {% if is_analytics %}
+    <!-- ==================== FACULTY ANALYTICS PAGE ==================== -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h1 class="h2">Faculty Analytics</h1>
+                <p class="text-muted">Comprehensive analytics and insights about faculty members</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Faculty
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_faculty }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                PhD Completed
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ qualification_stats.phd_completed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                PhD Pursuing
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ qualification_stats.phd_pursuing }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                PG Only
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ qualification_stats.pg_only }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book-reader fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Distribution -->
+    <div class="row mb-4">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Department-wise Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in departments %}
+                                <tr>
+                                    <td>{{ dept.department }}</td>
+                                    <td>{{ dept.count }}</td>
+                                    <td>{{ dept.percentage|floatformat:2 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No department data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Experience Distribution -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Experience Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="experiencePieChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-primary"></i> 0-5 Years
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-success"></i> 5-10 Years
+                        </span>
+                        <span class="mr-2">
+                            <i class="fas fa-circle text-info"></i> 10+ Years
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Faculty -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Faculty Members</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Employee Code</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Mobile</th>
+                                    <th>Joining Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for faculty in faculties %}
+                                <tr>
+                                    <td>{{ faculty.employee_code }}</td>
+                                    <td>{{ faculty.staff_name }}</td>
+                                    <td>{{ faculty.department }}</td>
+                                    <td>{{ faculty.email }}</td>
+                                    <td>{{ faculty.mobile }}</td>
+                                    <td>{{ faculty.joining_date|date:"d M Y" }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ faculty.is_active|yesno:'success,danger' }}">
+                                            {{ faculty.is_active|yesno:"Active,Inactive" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="?id={{ faculty.id }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No faculty members found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- ==================== SINGLE FACULTY PAGE ==================== -->
     <!-- Faculty Selector Dropdown -->
     <div class="row mb-4">
         <div class="col-md-6">
@@ -386,14 +1280,20 @@
                         <i class="fas fa-info-circle me-2"></i>Quick Actions
                     </h5>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-primary btn-sm" onclick="generateFacultyPDF({{ faculty.id }})">
+                        <!-- Generate PDF button -->
+                        <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
+                           class="btn btn-success btn-sm"
+                           target="_blank">
                             <i class="fas fa-file-pdf me-1"></i> Generate PDF
-                        </button>
-                        <button class="btn btn-success btn-sm" onclick="uploadToCloudinary({{ faculty.id }})">
+                        </a>
+                        <button class="btn btn-primary btn-sm" onclick="uploadToCloudinary({{ faculty.id }})">
                             <i class="fas fa-cloud-upload-alt me-1"></i> Upload to Cloudinary
                         </button>
                         <a href="?id={{ faculty.id }}&print=1" target="_blank" class="btn btn-secondary btn-sm">
                             <i class="fas fa-print me-1"></i> Print
+                        </a>
+                        <a href="{% url 'dashboard:faculty_analytics' %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-chart-bar me-1"></i> Analytics
                         </a>
                     </div>
                 </div>
@@ -405,10 +1305,15 @@
     <div class="faculty-header">
         <div class="row align-items-center">
             <div class="col-lg-2 col-md-3 text-center">
-                <!-- Always show placeholder (cloudinary_photo_url field doesn't exist) -->
-                <div class="faculty-photo-placeholder">
-                    <i class="fas fa-user"></i>
-                </div>
+                {% if faculty.photo %}
+                    <img src="{{ faculty.photo.url }}" alt="{{ faculty.staff_name }}" class="faculty-photo" id="facultyPhoto">
+                {% elif faculty.cloudinary_photo_url %}
+                    <img src="{{ faculty.cloudinary_photo_url }}" alt="{{ faculty.staff_name }}" class="faculty-photo" id="facultyPhoto">
+                {% else %}
+                    <div class="faculty-photo-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
 
                 <!-- Photo Upload Button -->
                 <div class="mt-3">
@@ -423,7 +1328,6 @@
                 <div class="faculty-designation">
                     <i class="fas fa-briefcase me-2"></i>
                     {{ faculty.department }}
-                    <!-- REMOVED: HOD logic (about_yourself field doesn't exist) -->
                 </div>
 
                 <div class="row mt-3">
@@ -473,7 +1377,103 @@
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Years Experience
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ faculty.joining_date|timesince:current_date|slice:":2"|add:"+ years" }}
+                            </div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span>Since {{ faculty.joining_date|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt stat-icon text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Highest Qualification
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ faculty.phd_degree|default:"M.Tech" }}
+                            </div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span>{{ faculty.pg_spec|default:faculty.ug_spec }}</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap stat-icon text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Contact
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ faculty.mobile }}
+                            </div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span>{{ faculty.email }}</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-phone stat-icon text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Profile Complete
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                85%
+                            </div>
+                            <div class="mt-2">
+                                <div class="profile-completion">
+                                    <div class="profile-completion-bar" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-pie stat-icon text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Left Column: Personal Details -->
         <div class="col-lg-6">
@@ -509,22 +1509,21 @@
                     <div class="info-value">{{ faculty.gender }}</div>
                 </div>
 
-                <!-- REMOVED: Father's Name field (doesn't exist) -->
-                <!--
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-user-friends info-icon"></i> Father's Name
-                    </div>
-                    <div class="info-value">{{ faculty.father_name|default:"Not specified" }}</div>
-                </div>
-                -->
-
                 <div class="info-item">
                     <div class="info-label">
                         <i class="fas fa-map-marker-alt info-icon"></i> Address
                     </div>
                     <div class="info-value">{{ faculty.address|default:"Not specified" }}</div>
                 </div>
+
+                {% if faculty.father_name %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user-friends info-icon"></i> Father's Name
+                    </div>
+                    <div class="info-value">{{ faculty.father_name }}</div>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Contact Information -->
@@ -551,67 +1550,29 @@
 
                 <div class="info-item">
                     <div class="info-label">
-                        <i class="fas fa-calendar-alt info-icon"></i> Joining Date
-                    </div>
-                    <div class="info-value">{{ faculty.joining_date|date:"d M Y" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
                         <i class="fas fa-building info-icon"></i> Department
                     </div>
                     <div class="info-value">{{ faculty.department }}</div>
                 </div>
+
+                {% if faculty.jntuh_id %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-card info-icon"></i> JNTUH ID
+                    </div>
+                    <div class="info-value">{{ faculty.jntuh_id }}</div>
+                </div>
+                {% endif %}
+
+                {% if faculty.aicte_id %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-card info-icon"></i> AICTE ID
+                    </div>
+                    <div class="info-value">{{ faculty.aicte_id }}</div>
+                </div>
+                {% endif %}
             </div>
-
-            <!-- REMOVED: Official IDs Section (fields don't exist) -->
-            <!--
-            <div class="info-card">
-                <h5><i class="fas fa-id-card me-2"></i> Official IDs</h5>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-university info-icon"></i> JNTUH ID
-                    </div>
-                    <div class="info-value">{{ faculty.jntuh_id|default:"Not specified" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-graduation-cap info-icon"></i> AICTE ID
-                    </div>
-                    <div class="info-value">{{ faculty.aicte_id|default:"Not specified" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-credit-card info-icon"></i> PAN Number
-                    </div>
-                    <div class="info-value">{{ faculty.pan|default:"Not specified" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-address-card info-icon"></i> Aadhar Number
-                    </div>
-                    <div class="info-value">{{ faculty.aadhar|default:"Not specified" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-user-tie info-icon"></i> ORCID ID
-                    </div>
-                    <div class="info-value">{{ faculty.orcid_id|default:"Not specified" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-id-card-alt info-icon"></i> APAAR ID
-                    </div>
-                    <div class="info-value">{{ faculty.apaar_id|default:"Not specified" }}</div>
-                </div>
-            </div>
-            -->
         </div>
 
         <!-- Right Column: Educational Details -->
@@ -622,6 +1583,7 @@
 
                 <div class="timeline">
                     <!-- SSC -->
+                    {% if faculty.ssc_year %}
                     <div class="timeline-item">
                         <div class="timeline-content">
                             <h6>Secondary School Certificate (SSC)</h6>
@@ -632,8 +1594,10 @@
                             </p>
                         </div>
                     </div>
+                    {% endif %}
 
                     <!-- Intermediate -->
+                    {% if faculty.inter_year %}
                     <div class="timeline-item">
                         <div class="timeline-content">
                             <h6>Intermediate</h6>
@@ -644,8 +1608,10 @@
                             </p>
                         </div>
                     </div>
+                    {% endif %}
 
                     <!-- UG -->
+                    {% if faculty.ug_year %}
                     <div class="timeline-item">
                         <div class="timeline-content">
                             <h6>Bachelor of Technology (B.Tech)</h6>
@@ -657,8 +1623,10 @@
                             </p>
                         </div>
                     </div>
+                    {% endif %}
 
                     <!-- PG -->
+                    {% if faculty.pg_year %}
                     <div class="timeline-item">
                         <div class="timeline-content">
                             <h6>Master of Technology (M.Tech)</h6>
@@ -670,8 +1638,10 @@
                             </p>
                         </div>
                     </div>
+                    {% endif %}
 
                     <!-- PhD -->
+                    {% if faculty.phd_degree %}
                     <div class="timeline-item">
                         <div class="timeline-content">
                             <h6>Doctor of Philosophy (Ph.D)</h6>
@@ -685,133 +1655,29 @@
                             </p>
                         </div>
                     </div>
+                    {% endif %}
                 </div>
             </div>
-
-            <!-- REMOVED: Experience Section (exp_anurag and exp_other fields don't exist) -->
-            <!--
-            <div class="info-card">
-                <h5><i class="fas fa-briefcase me-2"></i> Professional Experience</h5>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-building info-icon"></i> Experience at Anurag
-                    </div>
-                    <div class="info-value">{{ faculty.exp_anurag|default:"Calculating..." }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-industry info-icon"></i> Other Experience
-                    </div>
-                    <div class="info-value">{{ faculty.exp_other|default:"Not specified" }}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">
-                        <i class="fas fa-chart-line info-icon"></i> Total Experience
-                    </div>
-                    <div class="info-value">{{ experience }}</div>
-                </div>
-            </div>
-            -->
 
             <!-- Subjects Dealt -->
             <div class="info-card">
                 <h5><i class="fas fa-book me-2"></i> Subjects Dealt</h5>
 
                 <div class="mt-3">
-                    {% if subjects %}
-                        {% for subject in subjects %}
+                    {% if faculty.subjects_dealt %}
+                        {% for subject in faculty.subjects_dealt.split|slice:":10" %}
                         <span class="subject-badge">{{ subject }}</span>
                         {% endfor %}
+                        {% if faculty.subjects_dealt.split|length > 10 %}
+                        <p class="text-muted mt-2">And {{ faculty.subjects_dealt.split|length|add:"-10" }} more subjects...</p>
+                        {% endif %}
                     {% else %}
                         <p class="text-muted">No subjects specified</p>
                     {% endif %}
                 </div>
-
-                <div class="mt-3">
-                    <div class="info-label">
-                        <i class="fas fa-list info-icon"></i> Complete List
-                    </div>
-                    <div class="info-value">{{ faculty.subjects_dealt|default:"Not specified" }}</div>
-                </div>
             </div>
         </div>
     </div>
-
-    <!-- REMOVED: About Faculty Section (about_yourself field doesn't exist) -->
-    <!--
-    <div class="row">
-        <div class="col-12">
-            <div class="info-card">
-                <h5><i class="fas fa-info-circle me-2"></i> About Faculty</h5>
-
-                <div class="mt-3">
-                    {% if faculty.about_yourself %}
-                    <div class="bg-light p-4 rounded">
-                        {{ faculty.about_yourself|linebreaks }}
-                    </div>
-                    {% else %}
-                    <p class="text-muted">No information provided</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    -->
-
-    <!-- Certificates Section (if available) -->
-    {% if certificates %}
-    <div class="row" id="certificates">
-        <div class="col-12">
-            <div class="info-card">
-                <h5><i class="fas fa-certificate me-2"></i> Certificates ({{ certificates.count }})</h5>
-
-                <div class="row mt-3">
-                    {% for certificate in certificates %}
-                    <div class="col-md-6 mb-3">
-                        <div class="certificate-card">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h6 class="mb-1">{{ certificate.certificate_type }}</h6>
-                                    <p class="text-muted mb-1">
-                                        <small>
-                                            <i class="fas fa-university me-1"></i>
-                                            {{ certificate.issued_by }}
-                                        </small>
-                                    </p>
-                                    <p class="mb-1">
-                                        <small>
-                                            <i class="fas fa-calendar me-1"></i>
-                                            Issued: {{ certificate.issue_date|date:"d M Y" }}
-                                        </small>
-                                    </p>
-                                    {% if certificate.expiry_date %}
-                                    <p class="mb-0">
-                                        <small>
-                                            <i class="fas fa-calendar-times me-1"></i>
-                                            Expires: {{ certificate.expiry_date|date:"d M Y" }}
-                                        </small>
-                                    </p>
-                                    {% endif %}
-                                </div>
-                                <span class="badge {% if certificate.is_verified %}bg-success{% else %}bg-warning{% endif %}">
-                                    {% if certificate.is_verified %}Verified{% else %}Pending{% endif %}
-                                </span>
-                            </div>
-
-                            {% if certificate.description %}
-                            <p class="mt-2 mb-0 text-muted small">{{ certificate.description }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Action Section -->
     <div class="row">
@@ -875,11 +1741,13 @@
                 <!-- Action Buttons Grid -->
                 <div class="row">
                     <div class="col-lg-3 col-md-6 mb-3">
-                        <button class="btn btn-action-large btn-generate-pdf"
-                                onclick="generateFacultyPDF({{ faculty.id }})"
-                                id="generatePDFBtn">
+                        <!-- Generate PDF button -->
+                        <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
+                           class="btn btn-action-large btn-generate-pdf"
+                           target="_blank"
+                           id="generatePDFBtn">
                             <i class="fas fa-file-pdf"></i> Generate PDF
-                        </button>
+                        </a>
                     </div>
 
                     <div class="col-lg-3 col-md-6 mb-3">
@@ -944,29 +1812,10 @@
                         {% endif %}
                     </div>
                 </div>
-
-                <!-- Quick Links -->
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="text-center">
-                            <small class="text-muted">Quick Links:</small>
-                            <div class="mt-2">
-                                <button onclick="viewCertificates({{ faculty.id }})" class="btn btn-sm btn-outline-info mx-1">
-                                    <i class="fas fa-certificate"></i> Manage Certificates
-                                </button>
-                                <button onclick="syncToCloudinary({{ faculty.id }})" class="btn btn-sm btn-outline-primary mx-1">
-                                    <i class="fas fa-sync-alt"></i> Sync to Cloudinary
-                                </button>
-                                <button onclick="mergeCertificates({{ faculty.id }})" class="btn btn-sm btn-outline-dark mx-1">
-                                    <i class="fas fa-file-pdf"></i> Merge PDFs
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- PDF Preview Modal -->
@@ -1006,95 +1855,10 @@
         </div>
     </div>
 </div>
-
-<!-- Photo Upload Modal -->
-<div class="modal fade" id="photoUploadModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Upload Faculty Photo</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="photoUploadForm" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <input type="hidden" name="employee_code" value="{{ faculty.employee_code }}">
-
-                    <div class="mb-3">
-                        <label for="photoFile" class="form-label">Select Photo</label>
-                        <input class="form-control" type="file" id="photoFile" name="photo" accept="image/*" required>
-                        <div class="form-text">
-                            Recommended: Square photo, minimum 300x300 pixels, JPG or PNG format.
-                        </div>
-                    </div>
-
-                    <div class="text-center mb-3">
-                        <img id="photoPreview" src="#" alt="Preview" class="img-fluid rounded" style="max-height: 200px; display: none;">
-                    </div>
-
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        The photo will be uploaded to Cloudinary and displayed on the faculty profile.
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitPhoto()">
-                    <i class="fas fa-upload me-1"></i> Upload Photo
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Merge Certificates Modal -->
-<div class="modal fade" id="mergeCertificatesModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-file-archive me-2"></i>
-                    Merge Certificates with PDF
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div id="mergeStatus">
-                    <div class="text-center py-3">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Merging certificates...</span>
-                        </div>
-                        <p class="mt-3" id="mergeMessage">Merging certificates with faculty PDF...</p>
-                    </div>
-                </div>
-                <div id="mergeResult" style="display: none;">
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>
-                        <span id="resultMessage">Certificates merged successfully!</span>
-                    </div>
-                    <div class="text-center mt-3">
-                        <a href="#" class="btn btn-primary" id="downloadMergedBtn" target="_blank">
-                            <i class="fas fa-download me-1"></i> Download Merged PDF
-                        </a>
-                    </div>
-                </div>
-                <div id="mergeError" style="display: none;">
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <span id="errorMessage">Error merging certificates. Please try again.</span>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // CSRF Token for AJAX requests
     function getCookie(name) {
@@ -1114,6 +1878,59 @@
 
     const csrftoken = getCookie('csrftoken');
 
+    {% if is_analytics %}
+    // Experience Pie Chart for Analytics
+    var ctx = document.getElementById("experiencePieChart");
+    if (ctx) {
+        var experiencePieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ["0-5 Years", "5-10 Years", "10+ Years"],
+                datasets: [{
+                    data: [
+                        {{ experience_stats.0_5 }},
+                        {{ experience_stats.5_10 }},
+                        {{ experience_stats.10_plus }}
+                    ],
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'],
+                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf'],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10,
+                },
+                legend: {
+                    display: false
+                },
+                cutoutPercentage: 80,
+            },
+        });
+    }
+
+    // Initialize DataTable for faculty list
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            pageLength: 10,
+            responsive: true,
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search faculty..."
+            }
+        });
+    });
+    {% endif %}
+
+    {% if faculty %}
     // Change Faculty Function
     function changeFaculty(facultyId) {
         if (facultyId) {
@@ -1126,22 +1943,17 @@
         const button = document.getElementById('generatePDFBtn');
         const originalHTML = button.innerHTML;
 
-        // Disable button and show loading
         button.disabled = true;
         button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
 
-        // Open PDF generation in new tab
-        const pdfWindow = window.open(`/dashboard/faculty/${facultyId}/generate-pdf/`, '_blank');
+        const pdfWindow = window.open(`{% url 'dashboard:generate_faculty_pdf' 0 %}`.replace('0', facultyId), '_blank');
 
-        // Re-enable button after 5 seconds
         setTimeout(() => {
             button.disabled = false;
             button.innerHTML = originalHTML;
 
-            // Show success message
             showToast('success', 'PDF generation started in new tab');
 
-            // Check PDF status after generation
             setTimeout(checkPDFStatus, 3000, facultyId);
         }, 5000);
     }
@@ -1154,14 +1966,11 @@
         const uploadStatus = document.getElementById('uploadStatus');
         const uploadPercentage = document.getElementById('uploadPercentage');
 
-        // Show progress bar
         progressContainer.style.display = 'block';
 
-        // Update button state
         button.disabled = true;
         button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
 
-        // Simulate progress (in real implementation, this would be from actual upload progress)
         let progress = 0;
         const progressInterval = setInterval(() => {
             progress += 10;
@@ -1175,8 +1984,7 @@
             }
         }, 500);
 
-        // Make AJAX request
-        fetch(`/dashboard/faculty/${facultyId}/upload-cloudinary/`, {
+        fetch(`{% url 'dashboard:upload_faculty_to_cloudinary' 0 %}`.replace('0', facultyId), {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrftoken,
@@ -1188,12 +1996,10 @@
             clearInterval(progressInterval);
 
             if (data.success) {
-                // Complete progress
                 progressBar.style.width = '100%';
                 uploadPercentage.textContent = '100%';
                 uploadStatus.textContent = 'Upload completed!';
 
-                // Update UI
                 setTimeout(() => {
                     progressContainer.style.display = 'none';
 
@@ -1201,20 +2007,19 @@
                     button.classList.remove('btn-upload-cloudinary');
                     button.classList.add('btn-success');
 
-                    // Enable preview and download buttons
                     document.getElementById('previewPDFBtn').disabled = false;
                     document.getElementById('downloadPDFBtn').disabled = false;
 
-                    // Update status indicators
                     document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
                     document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
 
                     document.getElementById('cloudinaryStatusIndicator').className = 'status-indicator status-available';
                     document.getElementById('cloudinaryStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Connected & Synced';
 
-                    // Update download link
-                    document.getElementById('downloadPDFBtn').href = data.pdf_url;
-                    document.getElementById('modalDownloadLink').href = data.pdf_url;
+                    if (data.pdf_url) {
+                        document.getElementById('downloadPDFBtn').href = data.pdf_url;
+                        document.getElementById('modalDownloadLink').href = data.pdf_url;
+                    }
 
                     showToast('success', data.message || 'PDF uploaded to Cloudinary successfully!');
                 }, 1000);
@@ -1225,7 +2030,6 @@
         .catch(error => {
             clearInterval(progressInterval);
 
-            // Show error
             progressBar.style.width = '100%';
             progressBar.classList.remove('progress-bar-animated');
             progressBar.classList.add('bg-danger');
@@ -1249,27 +2053,23 @@
         const errorDiv = document.getElementById('pdfError');
         const downloadLink = document.getElementById('modalDownloadLink');
 
-        // Show loading, hide frame and error
         loading.style.display = 'block';
         frame.style.display = 'none';
         errorDiv.style.display = 'none';
 
-        // Fetch PDF URL
-        fetch(`/dashboard/faculty/${facultyId}/preview-pdf/`)
+        fetch(`{% url 'dashboard:ajax_check_pdf_status' 0 %}`.replace('0', facultyId))
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.pdf_url) {
-                    // Hide loading, show frame
+                if (data.success && data.status.cloudinary_url) {
                     loading.style.display = 'none';
                     frame.style.display = 'block';
-                    frame.src = data.pdf_url;
+                    frame.src = data.status.cloudinary_url;
 
-                    // Set download link
-                    downloadLink.href = data.pdf_url;
+                    downloadLink.href = data.status.cloudinary_url;
 
                     modal.show();
                 } else {
-                    throw new Error(data.error || 'PDF not available');
+                    throw new Error('PDF not available');
                 }
             })
             .catch(error => {
@@ -1282,23 +2082,20 @@
 
     // Check PDF Status
     function checkPDFStatus(facultyId) {
-        fetch(`/dashboard/ajax/check-pdf-status/${facultyId}/`)
+        fetch(`{% url 'dashboard:ajax_check_pdf_status' 0 %}`.replace('0', facultyId))
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     const status = data.status;
                     if (status.has_cloudinary_pdf) {
-                        // PDF is available on Cloudinary
                         document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
                         document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
 
-                        // Enable buttons
                         document.getElementById('previewPDFBtn').disabled = false;
                         document.getElementById('downloadPDFBtn').disabled = false;
                         document.getElementById('uploadCloudBtn').disabled = true;
                         document.getElementById('uploadCloudBtn').innerHTML = '<i class="fas fa-check"></i> Already Uploaded';
 
-                        // Update download link
                         document.getElementById('downloadPDFBtn').href = status.cloudinary_url;
 
                         showToast('success', 'PDF is now available on Cloudinary!');
@@ -1308,111 +2105,9 @@
             .catch(error => console.error('Error checking PDF status:', error));
     }
 
-    // Upload Photo Function
-    function uploadPhoto() {
-        const modal = new bootstrap.Modal(document.getElementById('photoUploadModal'));
-        modal.show();
-
-        // Preview image when selected
-        document.getElementById('photoFile').addEventListener('change', function() {
-            const preview = document.getElementById('photoPreview');
-            const file = this.files[0];
-
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    // Submit Photo Function
-    function submitPhoto() {
-        const form = document.getElementById('photoUploadForm');
-        const formData = new FormData(form);
-
-        // Show loading
-        const button = document.querySelector('#photoUploadModal .btn-primary');
-        const originalHTML = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
-
-        fetch('/dashboard/upload-faculty-photo/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update photo in header
-                const photoImg = document.getElementById('facultyPhoto');
-                if (photoImg) {
-                    photoImg.src = data.photo_url;
-                } else {
-                    // Replace placeholder with actual photo
-                    const placeholder = document.querySelector('.faculty-photo-placeholder');
-                    if (placeholder) {
-                        placeholder.outerHTML = `<img src="${data.photo_url}" alt="{{ faculty.staff_name }}" class="faculty-photo" id="facultyPhoto">`;
-                    }
-                }
-
-                // Close modal
-                bootstrap.Modal.getInstance(document.getElementById('photoUploadModal')).hide();
-
-                showToast('success', 'Photo uploaded successfully!');
-            } else {
-                throw new Error(data.error || 'Upload failed');
-            }
-        })
-        .catch(error => {
-            showToast('error', `Photo upload failed: ${error.message}`);
-        })
-        .finally(() => {
-            button.disabled = false;
-            button.innerHTML = originalHTML;
-        });
-    }
-
     // Merge Certificates Function
     function mergeCertificates(facultyId) {
-        const modal = new bootstrap.Modal(document.getElementById('mergeCertificatesModal'));
-        modal.show();
-
-        fetch(`/dashboard/faculty/${facultyId}/merge-certificates-with-pdf/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const mergeStatus = document.getElementById('mergeStatus');
-            const mergeResult = document.getElementById('mergeResult');
-            const mergeError = document.getElementById('mergeError');
-
-            mergeStatus.style.display = 'none';
-
-            if (data.success) {
-                mergeResult.style.display = 'block';
-                document.getElementById('resultMessage').textContent = data.message;
-                document.getElementById('downloadMergedBtn').href = data.merged_url;
-            } else {
-                mergeError.style.display = 'block';
-                document.getElementById('errorMessage').textContent = data.error;
-            }
-        })
-        .catch(error => {
-            document.getElementById('mergeStatus').style.display = 'none';
-            document.getElementById('mergeError').style.display = 'block';
-            document.getElementById('errorMessage').textContent = error.message;
-        });
+        showToast('info', 'Merge certificates functionality will be implemented');
     }
 
     // Print PDF Function
@@ -1425,47 +2120,16 @@
 
     // Open edit modal function
     function openEditModal(facultyId) {
-        // Show a modal with edit form
         showToast('info', 'Edit functionality will be implemented via modal/AJAX. Faculty ID: ' + facultyId);
-        // In real implementation, you would:
-        // 1. Fetch faculty data via AJAX
-        // 2. Populate a modal form
-        // 3. Handle form submission via AJAX
     }
 
-    // View certificates function
-    function viewCertificates(facultyId) {
-        // Open certificates in a modal or navigate to certificates section
-        window.location.href = `?id=${facultyId}#certificates`;
-    }
-
-    // Sync to Cloudinary function
-    function syncToCloudinary(facultyId) {
-        fetch(`/dashboard/faculty/${facultyId}/sync-to-cloudinary/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast('success', 'Synced to Cloudinary successfully!');
-                // Reload the page to show updated status
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast('error', data.error || 'Sync failed');
-            }
-        })
-        .catch(error => {
-            showToast('error', 'Network error: ' + error.message);
-        });
+    // Upload photo function
+    function uploadPhoto() {
+        showToast('info', 'Photo upload functionality will be implemented');
     }
 
     // Toast Notification Function
     function showToast(type, message) {
-        // Create toast container if not exists
         let toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) {
             toastContainer = document.createElement('div');
@@ -1477,7 +2141,6 @@
             document.body.appendChild(toastContainer);
         }
 
-        // Create toast
         const toastId = 'toast-' + Date.now();
         const toast = document.createElement('div');
         toast.id = toastId;
@@ -1498,14 +2161,12 @@
 
         toastContainer.appendChild(toast);
 
-        // Show toast
         const bsToast = new bootstrap.Toast(toast, {
             delay: 3000,
             autohide: true
         });
         bsToast.show();
 
-        // Remove toast after hide
         toast.addEventListener('hidden.bs.toast', function () {
             toast.remove();
         });
@@ -1513,27 +2174,30 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if we should auto-generate PDF
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('generate') === 'true') {
             generateFacultyPDF({{ faculty.id }});
         }
 
-        // Check if we should auto-upload to Cloudinary
         if (urlParams.get('upload') === 'true' && !{{ cloudinary_status.has_pdf|yesno:"true,false" }}) {
             uploadToCloudinary({{ faculty.id }});
         }
 
-        // Check PDF status on load
         if (!{{ cloudinary_status.has_pdf|yesno:"true,false" }}) {
-            // Check if PDF was recently generated
             setTimeout(() => checkPDFStatus({{ faculty.id }}), 2000);
         }
 
-        // Add print functionality if print parameter exists
         if (urlParams.get('print') === '1') {
             window.print();
         }
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
     });
+    {% endif %}
 </script>
 {% endblock %}
+{% endif %}

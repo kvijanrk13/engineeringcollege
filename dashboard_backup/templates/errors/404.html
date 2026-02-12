@@ -1,0 +1,61 @@
+<!-- templates/errors/404.html -->
+{% extends 'base.html' %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1>Oops!</h1>
+                <h2>404 Not Found</h2>
+                <div class="error-details">
+                    <p>Sorry, the page you requested was not found.</p>
+                    {% if exception %}
+                    <p class="text-muted">{{ exception }}</p>
+                    {% endif %}
+                </div>
+                <div class="error-actions mt-4">
+                    <a href="{% url 'faculty:home' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Take Me Home
+                    </a>
+                    <a href="{% url 'faculty:dashboard' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- templates/errors/500.html -->
+{% extends 'base.html' %}
+
+{% block title %}500 - Server Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="error-template">
+                <h1>Oops!</h1>
+                <h2>500 Server Error</h2>
+                <div class="error-details">
+                    <p>Something went wrong on our end. Please try again later.</p>
+                    <p class="text-muted">If the problem persists, contact the system administrator.</p>
+                </div>
+                <div class="error-actions mt-4">
+                    <a href="{% url 'faculty:home' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home"></i> Home Page
+                    </a>
+                    <button onclick="history.back()" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

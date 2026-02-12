@@ -1,0 +1,1450 @@
+<!-- faculty/dashboard/templates/faculty/detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ faculty.staff_name }} - Faculty Details | Anurag Engineering College{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Faculty Details Page Styles */
+    .faculty-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .faculty-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('{% static "images/pattern.png" %}');
+        opacity: 0.1;
+    }
+
+    .faculty-photo {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 5px solid white;
+        object-fit: cover;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .faculty-photo-placeholder {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 5px solid white;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 60px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .faculty-basic-info h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .faculty-designation {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 15px;
+    }
+
+    .badge-status {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #eef1f6;
+        transition: transform 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .info-card h5 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+        font-weight: 600;
+    }
+
+    .info-item {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #ecf0f1;
+    }
+
+    .info-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-value {
+        color: #2c3e50;
+        padding-left: 26px;
+    }
+
+    .info-icon {
+        color: #3498db;
+        width: 18px;
+    }
+
+    /* Subjects Section */
+    .subject-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 8px 15px;
+        border-radius: 20px;
+        margin: 5px;
+        display: inline-block;
+        font-size: 0.9rem;
+        border: 1px solid #bbdefb;
+    }
+
+    /* Action Buttons */
+    .action-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        border: 1px solid #e9ecef;
+    }
+
+    .btn-action-large {
+        padding: 15px 25px;
+        font-weight: 600;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 15px;
+        border: none;
+    }
+
+    .btn-action-large:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 7px 20px rgba(0,0,0,0.15);
+    }
+
+    .btn-generate-pdf {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .btn-upload-cloudinary {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+    }
+
+    .btn-preview-pdf {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        color: white;
+    }
+
+    .btn-merge-certificates {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        color: white;
+    }
+
+    .btn-download-pdf {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        color: white;
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status-available {
+        background-color: #d4edda;
+        color: #155724;
+    }
+
+    .status-pending {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+
+    .status-uploading {
+        background-color: #d1ecf1;
+        color: #0c5460;
+    }
+
+    /* Certificate Section */
+    .certificate-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #3498db;
+        transition: all 0.3s ease;
+    }
+
+    .certificate-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Progress Bar */
+    .upload-progress {
+        height: 25px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    /* Modal Styles */
+    .pdf-preview-modal .modal-dialog {
+        max-width: 90%;
+    }
+
+    .pdf-preview-iframe {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .faculty-header {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .faculty-photo, .faculty-photo-placeholder {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+        }
+
+        .faculty-basic-info h1 {
+            font-size: 1.8rem;
+        }
+
+        .info-card {
+            padding: 20px;
+        }
+
+        .btn-action-large {
+            padding: 12px 20px;
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Animation for loading */
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .loading {
+        animation: pulse 1.5s infinite;
+    }
+
+    /* Timeline for Education */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #3498db;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -25px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #3498db;
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #3498db;
+    }
+
+    .timeline-content h6 {
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .timeline-content p {
+        color: #7f8c8d;
+        margin-bottom: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Print Styles */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .info-card {
+            box-shadow: none;
+            border: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+
+        .action-section {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Faculty Header -->
+    <div class="faculty-header">
+        <div class="row align-items-center">
+            <div class="col-lg-2 col-md-3 text-center">
+                {% if faculty.cloudinary_photo_url %}
+                <img src="{{ faculty.cloudinary_photo_url }}"
+                     alt="{{ faculty.staff_name }}"
+                     class="faculty-photo"
+                     id="facultyPhoto">
+                {% else %}
+                <div class="faculty-photo-placeholder">
+                    <i class="fas fa-user"></i>
+                </div>
+                {% endif %}
+
+                <!-- Photo Upload Button -->
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-light" onclick="uploadPhoto()">
+                        <i class="fas fa-camera me-1"></i> Change Photo
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-10 col-md-9 faculty-basic-info">
+                <h1>{{ faculty.staff_name }}</h1>
+                <div class="faculty-designation">
+                    <i class="fas fa-briefcase me-2"></i>
+                    {{ faculty.department }}
+                    {% if 'HOD' in faculty.about_yourself %}
+                    <span class="badge bg-warning ms-2">Head of Department</span>
+                    {% endif %}
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-id-card me-3"></i>
+                            <strong>Employee Code:</strong>
+                            <span class="ms-2">{{ faculty.employee_code }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar-alt me-3"></i>
+                            <strong>Joining Date:</strong>
+                            <span class="ms-2">{{ faculty.joining_date|date:"d M Y" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock me-3"></i>
+                            <strong>Experience:</strong>
+                            <span class="ms-2">{{ experience }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope me-3"></i>
+                            <strong>Email:</strong>
+                            <a href="mailto:{{ faculty.email }}" class="ms-2 text-white">{{ faculty.email }}</a>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone me-3"></i>
+                            <strong>Mobile:</strong>
+                            <a href="tel:{{ faculty.mobile }}" class="ms-2 text-white">{{ faculty.mobile }}</a>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-3"></i>
+                            <strong>PDF Status:</strong>
+                            <span class="ms-2 status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                {% if cloudinary_status.has_pdf %}
+                                <i class="fas fa-check-circle"></i> Available on Cloudinary
+                                {% else %}
+                                <i class="fas fa-clock"></i> Not Uploaded
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column: Personal Details -->
+        <div class="col-lg-6">
+            <!-- Personal Information -->
+            <div class="info-card">
+                <h5><i class="fas fa-user-circle me-2"></i> Personal Information</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user info-icon"></i> Full Name
+                    </div>
+                    <div class="info-value">{{ faculty.staff_name }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-badge info-icon"></i> Employee Code
+                    </div>
+                    <div class="info-value">{{ faculty.employee_code }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-birthday-cake info-icon"></i> Date of Birth
+                    </div>
+                    <div class="info-value">{{ faculty.dob|date:"d M Y" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-venus-mars info-icon"></i> Gender
+                    </div>
+                    <div class="info-value">{{ faculty.gender }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user-friends info-icon"></i> Father's Name
+                    </div>
+                    <div class="info-value">{{ faculty.father_name|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-map-marker-alt info-icon"></i> Address
+                    </div>
+                    <div class="info-value">{{ faculty.address|default:"Not specified" }}</div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="info-card">
+                <h5><i class="fas fa-address-book me-2"></i> Contact Information</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-envelope info-icon"></i> Email
+                    </div>
+                    <div class="info-value">
+                        <a href="mailto:{{ faculty.email }}">{{ faculty.email }}</a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-phone info-icon"></i> Mobile
+                    </div>
+                    <div class="info-value">
+                        <a href="tel:{{ faculty.mobile }}">{{ faculty.mobile }}</a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar-alt info-icon"></i> Joining Date
+                    </div>
+                    <div class="info-value">{{ faculty.joining_date|date:"d M Y" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-building info-icon"></i> Department
+                    </div>
+                    <div class="info-value">{{ faculty.department }}</div>
+                </div>
+            </div>
+
+            <!-- Official IDs -->
+            <div class="info-card">
+                <h5><i class="fas fa-id-card me-2"></i> Official IDs</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-university info-icon"></i> JNTUH ID
+                    </div>
+                    <div class="info-value">{{ faculty.jntuh_id|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-graduation-cap info-icon"></i> AICTE ID
+                    </div>
+                    <div class="info-value">{{ faculty.aicte_id|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-credit-card info-icon"></i> PAN Number
+                    </div>
+                    <div class="info-value">{{ faculty.pan|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-address-card info-icon"></i> Aadhar Number
+                    </div>
+                    <div class="info-value">{{ faculty.aadhar|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-user-tie info-icon"></i> ORCID ID
+                    </div>
+                    <div class="info-value">{{ faculty.orcid_id|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-id-card-alt info-icon"></i> APAAR ID
+                    </div>
+                    <div class="info-value">{{ faculty.apaar_id|default:"Not specified" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Educational Details -->
+        <div class="col-lg-6">
+            <!-- Educational Qualifications -->
+            <div class="info-card">
+                <h5><i class="fas fa-graduation-cap me-2"></i> Educational Qualifications</h5>
+
+                <div class="timeline">
+                    <!-- SSC -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Secondary School Certificate (SSC)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.ssc_year }} |
+                                <strong>Percentage:</strong> {{ faculty.ssc_percent }}%<br>
+                                <strong>School:</strong> {{ faculty.ssc_school }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Intermediate -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Intermediate</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.inter_year }} |
+                                <strong>Percentage:</strong> {{ faculty.inter_percent }}%<br>
+                                <strong>College:</strong> {{ faculty.inter_college }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- UG -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Bachelor of Technology (B.Tech)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.ug_year }} |
+                                <strong>Percentage:</strong> {{ faculty.ug_percentage }}%<br>
+                                <strong>College:</strong> {{ faculty.ug_college }}<br>
+                                <strong>Specialization:</strong> {{ faculty.ug_spec }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PG -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Master of Technology (M.Tech)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.pg_year }} |
+                                <strong>Percentage:</strong> {{ faculty.pg_percentage }}%<br>
+                                <strong>College:</strong> {{ faculty.pg_college }}<br>
+                                <strong>Specialization:</strong> {{ faculty.pg_spec }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PhD -->
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Doctor of Philosophy (Ph.D)</h6>
+                            <p>
+                                <strong>Status:</strong> {{ faculty.phd_degree }}<br>
+                                <strong>University:</strong> {{ faculty.phd_university|default:"Not specified" }}<br>
+                                <strong>Specialization:</strong> {{ faculty.phd_spec|default:"Not specified" }}
+                                {% if faculty.phd_year %}
+                                <br><strong>Year:</strong> {{ faculty.phd_year }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Experience -->
+            <div class="info-card">
+                <h5><i class="fas fa-briefcase me-2"></i> Professional Experience</h5>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-building info-icon"></i> Experience at Anurag
+                    </div>
+                    <div class="info-value">{{ faculty.exp_anurag|default:"Calculating..." }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-industry info-icon"></i> Other Experience
+                    </div>
+                    <div class="info-value">{{ faculty.exp_other|default:"Not specified" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-chart-line info-icon"></i> Total Experience
+                    </div>
+                    <div class="info-value">{{ experience }}</div>
+                </div>
+            </div>
+
+            <!-- Subjects Dealt -->
+            <div class="info-card">
+                <h5><i class="fas fa-book me-2"></i> Subjects Dealt</h5>
+
+                <div class="mt-3">
+                    {% if subjects %}
+                        {% for subject in subjects %}
+                        <span class="subject-badge">{{ subject }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No subjects specified</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <div class="info-label">
+                        <i class="fas fa-list info-icon"></i> Complete List
+                    </div>
+                    <div class="info-value">{{ faculty.subjects_dealt|default:"Not specified" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Faculty Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle me-2"></i> About Faculty</h5>
+
+                <div class="mt-3">
+                    {% if faculty.about_yourself %}
+                    <div class="bg-light p-4 rounded">
+                        {{ faculty.about_yourself|linebreaks }}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No information provided</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificates Section (if available) -->
+    {% if certificates %}
+    <div class="row">
+        <div class="col-12">
+            <div class="info-card">
+                <h5><i class="fas fa-certificate me-2"></i> Certificates ({{ certificates.count }})</h5>
+
+                <div class="row mt-3">
+                    {% for certificate in certificates %}
+                    <div class="col-md-6 mb-3">
+                        <div class="certificate-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ certificate.certificate_type }}</h6>
+                                    <p class="text-muted mb-1">
+                                        <small>
+                                            <i class="fas fa-university me-1"></i>
+                                            {{ certificate.issued_by }}
+                                        </small>
+                                    </p>
+                                    <p class="mb-1">
+                                        <small>
+                                            <i class="fas fa-calendar me-1"></i>
+                                            Issued: {{ certificate.issue_date|date:"d M Y" }}
+                                        </small>
+                                    </p>
+                                    {% if certificate.expiry_date %}
+                                    <p class="mb-0">
+                                        <small>
+                                            <i class="fas fa-calendar-times me-1"></i>
+                                            Expires: {{ certificate.expiry_date|date:"d M Y" }}
+                                        </small>
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                <span class="badge {% if certificate.is_verified %}bg-success{% else %}bg-warning{% endif %}">
+                                    {% if certificate.is_verified %}Verified{% else %}Pending{% endif %}
+                                </span>
+                            </div>
+
+                            {% if certificate.description %}
+                            <p class="mt-2 mb-0 text-muted small">{{ certificate.description }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="action-section no-print">
+                <h4 class="mb-4 text-center">
+                    <i class="fas fa-cogs me-2"></i> PDF Management & Actions
+                </h4>
+
+                <!-- Status Indicators -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">PDF Status</h6>
+                                <div id="pdfStatusIndicator" class="status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                    {% if cloudinary_status.has_pdf %}
+                                    <i class="fas fa-check-circle"></i> Available on Cloudinary
+                                    {% else %}
+                                    <i class="fas fa-clock"></i> Not Uploaded
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-cloud fa-2x text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Cloudinary Status</h6>
+                                <div id="cloudinaryStatusIndicator" class="status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                    {% if cloudinary_status.has_pdf %}
+                                    <i class="fas fa-check-circle"></i> Connected & Synced
+                                    {% else %}
+                                    <i class="fas fa-exclamation-triangle"></i> Not Connected
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Progress (Hidden by default) -->
+                <div class="upload-progress mb-4" style="display: none;" id="uploadProgressContainer">
+                    <div class="progress-text mb-2 d-flex justify-content-between">
+                        <span id="uploadStatus">Uploading to Cloudinary...</span>
+                        <span id="uploadPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons Grid -->
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-generate-pdf"
+                                onclick="generateFacultyPDF({{ faculty.id }})"
+                                id="generatePDFBtn">
+                            <i class="fas fa-file-pdf"></i> Generate PDF
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-upload-cloudinary"
+                                onclick="uploadToCloudinary({{ faculty.id }})"
+                                id="uploadCloudBtn"
+                                {% if cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            {% if cloudinary_status.has_pdf %}
+                            Already Uploaded
+                            {% else %}
+                            Upload to Cloudinary
+                            {% endif %}
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-preview-pdf"
+                                onclick="previewPDF({{ faculty.id }})"
+                                id="previewPDFBtn"
+                                {% if not cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-eye"></i> Preview PDF
+                        </button>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'faculty:download_faculty_pdf' faculty.id %}"
+                           class="btn btn-action-large btn-download-pdf"
+                           id="downloadPDFBtn"
+                           {% if not cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Secondary Actions -->
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-primary w-100"
+                                onclick="window.open('{% url 'faculty:faculty_detail' faculty.id %}?print=1', '_blank')">
+                            <i class="fas fa-print me-2"></i> Print Profile
+                        </button>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <a href="{% url 'faculty:edit_faculty' faculty.id %}"
+                           class="btn btn-outline-warning w-100">
+                            <i class="fas fa-edit me-2"></i> Edit Details
+                        </a>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        {% if certificates %}
+                        <button class="btn btn-action-large btn-merge-certificates w-100"
+                                onclick="mergeCertificates({{ faculty.id }})">
+                            <i class="fas fa-file-archive"></i> Merge Certificates
+                        </button>
+                        {% else %}
+                        <button class="btn btn-outline-secondary w-100" disabled>
+                            <i class="fas fa-file-archive me-2"></i> No Certificates
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="text-center">
+                            <small class="text-muted">Quick Links:</small>
+                            <div class="mt-2">
+                                <a href="{% url 'faculty:view_certificates' faculty.id %}" class="btn btn-sm btn-outline-info mx-1">
+                                    <i class="fas fa-certificate"></i> Manage Certificates
+                                </a>
+                                <a href="{% url 'faculty:sync_to_cloudinary' faculty.id %}" class="btn btn-sm btn-outline-primary mx-1">
+                                    <i class="fas fa-sync-alt"></i> Sync to Cloudinary
+                                </a>
+                                <a href="{% url 'faculty:merge_certificates' faculty.id %}" class="btn btn-sm btn-outline-dark mx-1">
+                                    <i class="fas fa-file-pdf"></i> Merge PDFs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDF Preview Modal -->
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                    PDF Preview - {{ faculty.staff_name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5" id="pdfLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading PDF...</span>
+                    </div>
+                    <p class="mt-3">Loading PDF preview...</p>
+                </div>
+                <iframe id="pdfPreviewFrame" class="pdf-preview-iframe" style="display: none;"></iframe>
+                <div id="pdfError" class="alert alert-danger text-center py-4" style="display: none;">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>Unable to load PDF preview</h5>
+                    <p id="errorMessage" class="mb-0">Please try generating the PDF first.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="modalDownloadLink" target="_blank">
+                    <i class="fas fa-download me-1"></i> Download PDF
+                </a>
+                <button type="button" class="btn btn-success" onclick="printPDF()">
+                    <i class="fas fa-print me-1"></i> Print PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Photo Upload Modal -->
+<div class="modal fade" id="photoUploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Faculty Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="photoUploadForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="employee_code" value="{{ faculty.employee_code }}">
+
+                    <div class="mb-3">
+                        <label for="photoFile" class="form-label">Select Photo</label>
+                        <input class="form-control" type="file" id="photoFile" name="photo" accept="image/*" required>
+                        <div class="form-text">
+                            Recommended: Square photo, minimum 300x300 pixels, JPG or PNG format.
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <img id="photoPreview" src="#" alt="Preview" class="img-fluid rounded" style="max-height: 200px; display: none;">
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The photo will be uploaded to Cloudinary and displayed on the faculty profile.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitPhoto()">
+                    <i class="fas fa-upload me-1"></i> Upload Photo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Merge Certificates Modal -->
+<div class="modal fade" id="mergeCertificatesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-archive me-2"></i>
+                    Merge Certificates with PDF
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="mergeStatus">
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Merging certificates...</span>
+                        </div>
+                        <p class="mt-3" id="mergeMessage">Merging certificates with faculty PDF...</p>
+                    </div>
+                </div>
+                <div id="mergeResult" style="display: none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="resultMessage">Certificates merged successfully!</span>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-primary" id="downloadMergedBtn" target="_blank">
+                            <i class="fas fa-download me-1"></i> Download Merged PDF
+                        </a>
+                    </div>
+                </div>
+                <div id="mergeError" style="display: none;">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage">Error merging certificates. Please try again.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // CSRF Token for AJAX requests
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    // Generate PDF Function
+    function generateFacultyPDF(facultyId) {
+        const button = document.getElementById('generatePDFBtn');
+        const originalHTML = button.innerHTML;
+
+        // Disable button and show loading
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
+
+        // Open PDF generation in new tab
+        const pdfWindow = window.open(`/generate-faculty-pdf/${facultyId}/`, '_blank');
+
+        // Re-enable button after 5 seconds
+        setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+
+            // Show success message
+            showToast('success', 'PDF generation started in new tab');
+
+            // Check PDF status after generation
+            setTimeout(checkPDFStatus, 3000, facultyId);
+        }, 5000);
+    }
+
+    // Upload to Cloudinary Function
+    function uploadToCloudinary(facultyId) {
+        const button = document.getElementById('uploadCloudBtn');
+        const progressContainer = document.getElementById('uploadProgressContainer');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const uploadPercentage = document.getElementById('uploadPercentage');
+
+        // Show progress bar
+        progressContainer.style.display = 'block';
+
+        // Update button state
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+
+        // Simulate progress (in real implementation, this would be from actual upload progress)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += 10;
+            if (progress <= 90) {
+                progressBar.style.width = `${progress}%`;
+                uploadPercentage.textContent = `${progress}%`;
+
+                if (progress === 30) uploadStatus.textContent = 'Generating PDF...';
+                else if (progress === 60) uploadStatus.textContent = 'Uploading to Cloudinary...';
+                else if (progress === 90) uploadStatus.textContent = 'Finalizing upload...';
+            }
+        }, 500);
+
+        // Make AJAX request
+        fetch(`/upload-faculty-to-cloudinary/${facultyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            clearInterval(progressInterval);
+
+            if (data.success) {
+                // Complete progress
+                progressBar.style.width = '100%';
+                uploadPercentage.textContent = '100%';
+                uploadStatus.textContent = 'Upload completed!';
+
+                // Update UI
+                setTimeout(() => {
+                    progressContainer.style.display = 'none';
+
+                    button.innerHTML = '<i class="fas fa-check"></i> Uploaded to Cloudinary';
+                    button.classList.remove('btn-upload-cloudinary');
+                    button.classList.add('btn-success');
+
+                    // Enable preview and download buttons
+                    document.getElementById('previewPDFBtn').disabled = false;
+                    document.getElementById('downloadPDFBtn').disabled = false;
+
+                    // Update status indicators
+                    document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
+                    document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
+
+                    document.getElementById('cloudinaryStatusIndicator').className = 'status-indicator status-available';
+                    document.getElementById('cloudinaryStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Connected & Synced';
+
+                    // Update download link
+                    document.getElementById('downloadPDFBtn').href = data.pdf_url;
+                    document.getElementById('modalDownloadLink').href = data.pdf_url;
+
+                    showToast('success', data.message || 'PDF uploaded to Cloudinary successfully!');
+                }, 1000);
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
+        })
+        .catch(error => {
+            clearInterval(progressInterval);
+
+            // Show error
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-danger');
+            uploadStatus.textContent = 'Upload failed!';
+
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload to Cloudinary';
+
+                showToast('error', `Upload failed: ${error.message}`);
+            }, 2000);
+        });
+    }
+
+    // Preview PDF Function
+    function previewPDF(facultyId) {
+        const modal = new bootstrap.Modal(document.getElementById('pdfPreviewModal'));
+        const frame = document.getElementById('pdfPreviewFrame');
+        const loading = document.getElementById('pdfLoading');
+        const errorDiv = document.getElementById('pdfError');
+        const downloadLink = document.getElementById('modalDownloadLink');
+
+        // Show loading, hide frame and error
+        loading.style.display = 'block';
+        frame.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        // Fetch PDF URL
+        fetch(`/preview-faculty-pdf/${facultyId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.pdf_url) {
+                    // Hide loading, show frame
+                    loading.style.display = 'none';
+                    frame.style.display = 'block';
+                    frame.src = data.pdf_url;
+
+                    // Set download link
+                    downloadLink.href = data.pdf_url;
+
+                    modal.show();
+                } else {
+                    throw new Error(data.error || 'PDF not available');
+                }
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+                modal.show();
+            });
+    }
+
+    // Check PDF Status
+    function checkPDFStatus(facultyId) {
+        fetch(`/ajax/check-pdf-status/${facultyId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const status = data.status;
+                    if (status.has_cloudinary_pdf) {
+                        // PDF is available on Cloudinary
+                        document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
+                        document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
+
+                        // Enable buttons
+                        document.getElementById('previewPDFBtn').disabled = false;
+                        document.getElementById('downloadPDFBtn').disabled = false;
+                        document.getElementById('uploadCloudBtn').disabled = true;
+                        document.getElementById('uploadCloudBtn').innerHTML = '<i class="fas fa-check"></i> Already Uploaded';
+
+                        // Update download link
+                        document.getElementById('downloadPDFBtn').href = status.cloudinary_url;
+
+                        showToast('success', 'PDF is now available on Cloudinary!');
+                    }
+                }
+            })
+            .catch(error => console.error('Error checking PDF status:', error));
+    }
+
+    // Upload Photo Function
+    function uploadPhoto() {
+        const modal = new bootstrap.Modal(document.getElementById('photoUploadModal'));
+        modal.show();
+
+        // Preview image when selected
+        document.getElementById('photoFile').addEventListener('change', function() {
+            const preview = document.getElementById('photoPreview');
+            const file = this.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Submit Photo Function
+    function submitPhoto() {
+        const form = document.getElementById('photoUploadForm');
+        const formData = new FormData(form);
+
+        // Show loading
+        const button = document.querySelector('#photoUploadModal .btn-primary');
+        const originalHTML = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+
+        fetch('/upload-faculty-photo/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update photo in header
+                const photoImg = document.getElementById('facultyPhoto');
+                if (photoImg) {
+                    photoImg.src = data.photo_url;
+                } else {
+                    // Replace placeholder with actual photo
+                    const placeholder = document.querySelector('.faculty-photo-placeholder');
+                    if (placeholder) {
+                        placeholder.outerHTML = `<img src="${data.photo_url}" alt="{{ faculty.staff_name }}" class="faculty-photo" id="facultyPhoto">`;
+                    }
+                }
+
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('photoUploadModal')).hide();
+
+                showToast('success', 'Photo uploaded successfully!');
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
+        })
+        .catch(error => {
+            showToast('error', `Photo upload failed: ${error.message}`);
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+        });
+    }
+
+    // Merge Certificates Function
+    function mergeCertificates(facultyId) {
+        const modal = new bootstrap.Modal(document.getElementById('mergeCertificatesModal'));
+        modal.show();
+
+        fetch(`/merge-certificates-with-pdf/${facultyId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const mergeStatus = document.getElementById('mergeStatus');
+            const mergeResult = document.getElementById('mergeResult');
+            const mergeError = document.getElementById('mergeError');
+
+            mergeStatus.style.display = 'none';
+
+            if (data.success) {
+                mergeResult.style.display = 'block';
+                document.getElementById('resultMessage').textContent = data.message;
+                document.getElementById('downloadMergedBtn').href = data.merged_url;
+            } else {
+                mergeError.style.display = 'block';
+                document.getElementById('errorMessage').textContent = data.error;
+            }
+        })
+        .catch(error => {
+            document.getElementById('mergeStatus').style.display = 'none';
+            document.getElementById('mergeError').style.display = 'block';
+            document.getElementById('errorMessage').textContent = error.message;
+        });
+    }
+
+    // Print PDF Function
+    function printPDF() {
+        const frame = document.getElementById('pdfPreviewFrame');
+        if (frame && frame.contentWindow) {
+            frame.contentWindow.print();
+        }
+    }
+
+    // Toast Notification Function
+    function showToast(type, message) {
+        // Create toast container if not exists
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.position = 'fixed';
+            toastContainer.style.top = '20px';
+            toastContainer.style.right = '20px';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Show toast
+        const bsToast = new bootstrap.Toast(toast, {
+            delay: 3000,
+            autohide: true
+        });
+        bsToast.show();
+
+        // Remove toast after hide
+        toast.addEventListener('hidden.bs.toast', function () {
+            toast.remove();
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if we should auto-generate PDF
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('generate') === 'true') {
+            generateFacultyPDF({{ faculty.id }});
+        }
+
+        // Check if we should auto-upload to Cloudinary
+        if (urlParams.get('upload') === 'true' && !{{ cloudinary_status.has_pdf|yesno:"true,false" }}) {
+            uploadToCloudinary({{ faculty.id }});
+        }
+
+        // Check PDF status on load
+        if (!{{ cloudinary_status.has_pdf|yesno:"true,false" }}) {
+            // Check if PDF was recently generated
+            setTimeout(() => checkPDFStatus({{ faculty.id }}), 2000);
+        }
+
+        // Add print functionality if print parameter exists
+        if (urlParams.get('print') === '1') {
+            window.print();
+        }
+    });
+</script>
+{% endblock %}

@@ -4,21 +4,20 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    # Root → redirect to dashboard home (NOT login)
+    path('', RedirectView.as_view(pattern_name='dashboard:dashboard', permanent=False), name='home'),
 
-    # Dashboard app (root)
-    path("", include(("dashboard.urls", "dashboard"), namespace="dashboard")),
+    # Dashboard app
+    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
+
+    # Django admin
+    path('admin/', admin.site.urls),
 ]
 
-# ✅ Serve static & media in development - CRITICAL FOR STUDENT PHOTOS
+# Static & media during development
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
-# ✅ Also serve media in production if needed (adjust as per your deployment)
-if not settings.DEBUG:
-    # You might want to configure your web server (nginx/apache) to serve media files
-    # For now, we'll also add this for safety
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

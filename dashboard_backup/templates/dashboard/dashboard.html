@@ -1,0 +1,103 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Dashboard - ANURAG Engineering College{% endblock %}
+
+{% block content %}
+<style>
+    /* Global Matrix Styling */
+    body { margin: 0; padding: 0; font-family: 'Courier New', monospace; overflow-x: hidden; background-color: #000; color: #0f0; }
+    #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    .dashboard-container { position: relative; z-index: 2; padding: 20px; display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .nav-tabs-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; background: rgba(0, 20, 0, 0.95); padding: 20px; border: 2px solid #0f0; width: 100%; max-width: 1200px; margin-bottom: 50px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 255, 0, 0.2); }
+    .nav-link-tab { padding: 12px 24px; color: #0f0; text-decoration: none; font-weight: 900; text-transform: uppercase; border: 2px solid #0f0; transition: 0.3s; font-size: 1rem; background: rgba(0, 0, 0, 0.8); cursor: pointer; }
+    .nav-link-tab:hover { background: #0f0; color: #000; box-shadow: 0 0 20px #0f0; }
+    .nav-link-tab.active { background: rgba(0, 255, 0, 0.3); border-color: #fff; color: #fff; }
+    .stats-row { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; width: 100%; }
+    .stat-box { background: rgba(0, 10, 0, 0.85); border: 2px solid #0f0; border-radius: 15px; width: 280px; padding: 35px; text-align: center; transition: 0.3s; box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1); }
+    .stat-box:hover { transform: translateY(-10px); box-shadow: 0 0 25px #0f0; }
+    .stat-number { font-size: 4rem; font-weight: bold; color: #fff; text-shadow: 0 0 10px #0f0; display: block; margin-bottom: 10px; }
+    .stat-label { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; }
+    .messages-container { position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 400px; }
+    .alert { padding: 15px 20px; margin-bottom: 10px; border-radius: 8px; font-weight: bold; border: 2px solid; }
+    .alert-success { background: rgba(0, 30, 0, 0.9); color: #0f0; border-color: #0f0; box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+    .alert-error { background: rgba(30, 0, 0, 0.9); color: #f00; border-color: #f00; box-shadow: 0 0 15px rgba(255, 0, 0, 0.5); }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="dashboard-container">
+    <div class="nav-tabs-container">
+        <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab active">Dashboard</a>
+        <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+        <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
+
+        {% if request.session.user_id == "7001" %}
+        <form id="portalForm" method="POST" action="{% url 'dashboard:students_data' %}" style="display:none;">
+            {% csrf_token %}
+            <input type="hidden" name="portal_password" id="portal_password_input">
+        </form>
+        <a href="#" onclick="verifyPortalAccess(event)" class="nav-link-tab">StudentsData</a>
+        {% endif %}
+
+        {% if request.session.user_id == "anrkitstudent" %}
+        <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Student Registration</a>
+        {% endif %}
+
+        <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
+        <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+        <a href="{% url 'dashboard:library' %}" class="nav-link-tab">Library</a> <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+        <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box"><span class="stat-number">3</span><span class="stat-label">Departments</span></div>
+        <div class="stat-box"><span class="stat-number">{{ total_students|default:0 }}</span><span class="stat-label">Registered Students</span></div>
+        <div class="stat-box"><span class="stat-number">8</span><span class="stat-label">Semesters</span></div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+    const fontSize = 16;
+    const drops = Array(Math.floor(canvas.width / fontSize)).fill(1);
+
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(draw, 33);
+
+    function verifyPortalAccess(e) {
+        e.preventDefault();
+        const pass = prompt("SECURITY CHECK: Enter Portal Password to view Student Data");
+        if (pass === "Cutieminni@2") {
+            document.getElementById('portal_password_input').value = pass;
+            document.getElementById('portalForm').submit();
+        } else if (pass != null) {
+            alert("ACCESS DENIED: Invalid Password");
+        }
+    }
+</script>
+{% endblock %}

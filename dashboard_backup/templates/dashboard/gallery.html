@@ -1,0 +1,135 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Gallery - IT Department{% endblock %}
+
+{% block content %}
+<style>
+    .gallery-section {
+        background: rgba(0, 30, 0, 0.6);
+        padding: 25px;
+        border-radius: 10px;
+        border: 1px solid #00aa00;
+        margin-bottom: 25px;
+    }
+
+    .gallery-category {
+        color: #00ff00;
+        margin: 20px 0 15px 0;
+        border-bottom: 2px solid #00ff00;
+        padding-bottom: 8px;
+    }
+
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 15px;
+    }
+
+    .gallery-item {
+        background: rgba(0, 40, 0, 0.4);
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #00aa00;
+        transition: transform 0.3s;
+    }
+
+    .gallery-item:hover {
+        transform: scale(1.02);
+        border-color: #00ff00;
+        box-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
+    }
+
+    .gallery-image {
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(45deg, #003300, #006600);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #00ff00;
+        font-size: 1.2em;
+    }
+
+    .gallery-caption {
+        padding: 15px;
+        color: #90ee90;
+        text-align: center;
+    }
+
+    .event-highlight {
+        background: rgba(0, 60, 0, 0.6);
+        padding: 20px;
+        border-radius: 8px;
+        border: 2px solid #00ff00;
+        margin-bottom: 25px;
+    }
+
+    .event-title {
+        color: #00ff00;
+        font-size: 1.3em;
+        margin-bottom: 10px;
+    }
+</style>
+
+<h1 style="color: #00ff00; margin-bottom: 20px; text-align: center;">College Gallery</h1>
+
+<div class="event-highlight">
+    <div class="event-title">🚀 Annual Tech Fest 2024 - "InnovateX"</div>
+    <p>Join us for the biggest technical festival of the year featuring coding competitions, workshops, and guest lectures from industry experts.</p>
+</div>
+
+<div class="gallery-section">
+    <h2 class="gallery-category">Campus Infrastructure</h2>
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <div class="gallery-image">IT Department Building</div>
+            <div class="gallery-caption">Modern IT Department Building</div>
+        </div>
+        <div class="gallery-item">
+            <div class="gallery-image">Computer Labs</div>
+            <div class="gallery-caption">State-of-the-art Computer Laboratories</div>
+        </div>
+        <div class="gallery-item">
+            <div class="gallery-image">Library</div>
+            <div class="gallery-caption">Digital Library with 15,000+ Books</div>
+        </div>
+    </div>
+</div>
+
+<div class="gallery-section">
+    <h2 class="gallery-category">Student Activities</h2>
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <div class="gallery-image">Hackathon 2024</div>
+            <div class="gallery-caption">Annual Coding Hackathon Winners</div>
+        </div>
+        <div class="gallery-item">
+            <div class="gallery-image">Workshop</div>
+            <div class="gallery-caption">AI & Machine Learning Workshop</div>
+        </div>
+        <div class="gallery-item">
+            <div class="gallery-image">Seminar</div>
+            <div class="gallery-caption">Guest Lecture by Industry Expert</div>
+        </div>
+    </div>
+</div>
+
+<div class="gallery-section">
+    <h2 class="gallery-category">Achievements</h2>
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <div class="gallery-image">Placements 2024</div>
+            <div class="gallery-caption">98% Placement Record</div>
+        </div>
+        <div class="gallery-item">
+            <div class="gallery-image">Research Paper</div>
+            <div class="gallery-caption">Students Research Publication</div>
+        </div>
+        <div class="gallery-item">
+            <div class="gallery-image">Sports</div>
+            <div class="gallery-caption">Inter-College Sports Champions</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

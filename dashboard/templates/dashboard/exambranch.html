@@ -2,7 +2,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Exam Branch - Faculty Management | Anurag Engineering College{% endblock %}
+{% block title %}
+    {% if view_mode == 'list' %}
+        Exam Branch - Faculty List | Anurag Engineering College
+    {% else %}
+        Exam Branch - Faculty Management | Anurag Engineering College
+    {% endif %}
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -181,6 +187,20 @@
         border-radius: 5px;
     }
 
+    /* List View Specific Styles */
+    .coverage-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .coverage-card .stats-number {
+        color: white;
+    }
+
+    .coverage-card .stats-label {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .stats-card {
@@ -238,6 +258,38 @@
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
+
+    /* View Toggle Styles */
+    .view-toggle {
+        display: flex;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        max-width: 300px;
+    }
+
+    .view-toggle-btn {
+        flex: 1;
+        padding: 10px 20px;
+        background: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .view-toggle-btn:hover {
+        background: #f8f9fa;
+    }
+
+    .view-toggle-btn.active {
+        background: #0d6efd;
+        color: white;
+    }
+
+    .view-toggle-btn:first-child {
+        border-right: 1px solid #dee2e6;
+    }
 </style>
 {% endblock %}
 
@@ -250,25 +302,197 @@
                 <div>
                     <h1 class="h3 mb-0 text-gray-800">
                         <i class="fas fa-file-alt text-primary me-2"></i>
-                        Exam Branch - Faculty Management
+                        {% if view_mode == 'list' %}
+                            Exam Branch - Faculty List
+                        {% else %}
+                            Exam Branch - Faculty Management
+                        {% endif %}
                     </h1>
-                    <p class="text-muted mb-0">Manage faculty PDFs, certificates, and downloads</p>
+                    <p class="text-muted mb-0">
+                        {% if view_mode == 'list' %}
+                            View and download faculty PDFs
+                        {% else %}
+                            Manage faculty PDFs, certificates, and downloads
+                        {% endif %}
+                    </p>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary no-print" onclick="printPage()">
-                        <i class="fas fa-print me-1"></i> Print Report
-                    </button>
-                    <a href="{% url 'faculty:generate_exam_branch_report' %}?format=excel" class="btn btn-success no-print">
-                        <i class="fas fa-file-excel me-1"></i> Export Excel
-                    </a>
-                    <a href="{% url 'faculty:generate_exam_branch_report' %}?format=pdf" class="btn btn-danger no-print">
-                        <i class="fas fa-file-pdf me-1"></i> Export PDF
-                    </a>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- View Toggle -->
+                    <div class="view-toggle no-print">
+                        <a href="{% url 'dashboard:exam_branch' %}?view=dashboard"
+                           class="view-toggle-btn {% if view_mode == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                        </a>
+                        <a href="{% url 'dashboard:exam_branch' %}?view=list"
+                           class="view-toggle-btn {% if view_mode == 'list' %}active{% endif %}">
+                            <i class="fas fa-list me-1"></i> List View
+                        </a>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary no-print" onclick="printPage()">
+                            <i class="fas fa-print me-1"></i> Print Report
+                        </button>
+                        <a href="{% url 'dashboard:exam_branch_generate_report' %}?format=excel" class="btn btn-success no-print">
+                            <i class="fas fa-file-excel me-1"></i> Export Excel
+                        </a>
+                        <a href="{% url 'dashboard:exam_branch_generate_report' %}?format=pdf" class="btn btn-danger no-print">
+                            <i class="fas fa-file-pdf me-1"></i> Export PDF
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    {% if view_mode == 'list' %}
+    <!-- ==================== LIST VIEW ==================== -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-list"></i> Exam Branch - Faculty List
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Faculty</h5>
+                                    <h2 class="stats-number">{{ total_count }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Available PDFs</h5>
+                                    <h2 class="stats-number">{{ available_pdfs }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Missing PDFs</h5>
+                                    <h2 class="stats-number">{{ total_count|add:"-available_pdfs" }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card coverage-card">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Coverage</h5>
+                                    <h2 class="stats-number">
+                                        {% if total_count > 0 %}
+                                            {{ available_pdfs|floatformat:0 }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Faculty Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Employee Code</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Mobile</th>
+                                    <th>PDF Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for faculty in faculties %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><strong>{{ faculty.employee_code }}</strong></td>
+                                    <td>{{ faculty.staff_name }}</td>
+                                    <td>{{ faculty.department }}</td>
+                                    <td>{{ faculty.email }}</td>
+                                    <td>{{ faculty.mobile }}</td>
+                                    <td>
+                                        {% if faculty.pdf_status == 'Available' %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Not Available</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if faculty.cloudinary_pdf_url %}
+                                            <a href="{{ faculty.cloudinary_pdf_url }}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i> View PDF
+                                            </a>
+                                            <a href="{{ faculty.cloudinary_pdf_url }}"
+                                               download
+                                               class="btn btn-sm btn-success">
+                                                <i class="fas fa-download"></i> Download
+                                            </a>
+                                            <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
+                                               class="btn btn-sm btn-info">
+                                                <i class="fas fa-redo"></i> Regenerate
+                                            </a>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-secondary" disabled>
+                                                <i class="fas fa-times"></i> No PDF
+                                            </button>
+                                            <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
+                                               class="btn btn-sm btn-warning">
+                                                <i class="fas fa-file-pdf"></i> Generate PDF
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No faculty records found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-4">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'dashboard:exam_branch' %}?view=dashboard" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                            <button type="button" class="btn btn-info" onclick="printPage()">
+                                <i class="fas fa-print"></i> Print List
+                            </button>
+                            <a href="{% url 'dashboard:exam_branch_generate_report' %}?format=excel" class="btn btn-success">
+                                <i class="fas fa-file-excel"></i> Export to Excel
+                            </a>
+                            <button type="button" class="btn btn-warning" onclick="sendReminders()">
+                                <i class="fas fa-envelope"></i> Send Reminders
+                            </button>
+                            <a href="{% url 'dashboard:exam_branch_batch_download' %}" class="btn btn-primary" id="batchDownloadBtn">
+                                <i class="fas fa-download"></i> Download All PDFs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ==================== END LIST VIEW ==================== -->
+
+    {% else %}
+    <!-- ==================== DASHBOARD VIEW ==================== -->
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
@@ -489,7 +713,7 @@
                             <button class="btn btn-outline-success" onclick="batchGeneratePDFs()">
                                 <i class="fas fa-file-pdf me-1"></i> Generate All PDFs
                             </button>
-                            <a href="{% url 'faculty:download_all_pdfs' %}" class="btn btn-success" id="downloadAllBtn">
+                            <a href="{% url 'dashboard:exam_branch_batch_download' %}" class="btn btn-success" id="downloadAllBtn">
                                 <i class="fas fa-download me-1"></i> Download All PDFs
                             </a>
                         </div>
@@ -577,7 +801,7 @@
                                     <td>
                                         <div class="action-buttons">
                                             <!-- View Details Button -->
-                                            <a href="{% url 'faculty:faculty_detail' faculty.id %}"
+                                            <a href="{% url 'dashboard:faculty' %}?id={{ faculty.id }}"
                                                class="btn btn-sm btn-outline-info btn-action"
                                                title="View Details">
                                                 <i class="fas fa-eye"></i> View
@@ -611,7 +835,7 @@
                                             {% endif %}
 
                                             <!-- Generate PDF Direct Button -->
-                                            <a href="{% url 'faculty:generate_faculty_pdf' faculty.id %}"
+                                            <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
                                                class="btn btn-sm btn-outline-secondary btn-action"
                                                target="_blank"
                                                title="Generate PDF Directly">
@@ -619,7 +843,7 @@
                                             </a>
 
                                             <!-- Merge Certificates Button -->
-                                            {% if faculty.faculty_certificates.count > 0 %}
+                                            {% if faculty.total_certificates > 0 %}
                                             <button class="btn btn-sm btn-outline-dark btn-action"
                                                     onclick="mergeCertificates('{{ faculty.id }}')"
                                                     title="Merge Certificates with PDF">
@@ -728,7 +952,7 @@
                                 <div class="card-body text-center">
                                     <h5 class="card-title">Download All</h5>
                                     <p class="card-text text-muted">Download all available PDFs as ZIP</p>
-                                    <a href="{% url 'faculty:download_all_pdfs' %}"
+                                    <a href="{% url 'dashboard:exam_branch_batch_download' %}"
                                        class="btn btn-success"
                                        id="batchDownloadBtn">
                                         <i class="fas fa-download me-1"></i> Download ZIP
@@ -744,6 +968,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- PDF Preview Modal -->
@@ -851,27 +1076,39 @@
         const department = document.getElementById('departmentFilter').value;
         const status = document.getElementById('statusFilter').value;
 
-        let params = new URLSearchParams();
+        let params = new URLSearchParams(window.location.search);
 
-        if (search) params.append('search', search);
-        if (department) params.append('department', department);
-        if (status) params.append('status', status);
+        if (search) params.set('search', search);
+        else params.delete('search');
+
+        if (department) params.set('department', department);
+        else params.delete('department');
+
+        if (status) params.set('status', status);
+        else params.delete('status');
+
+        // Preserve view mode
+        params.set('view', '{{ view_mode }}');
 
         window.location.href = `?${params.toString()}`;
     }
 
     function clearFilters() {
-        window.location.href = "{% url 'faculty:exam_branch' %}";
+        let params = new URLSearchParams();
+        params.set('view', '{{ view_mode }}');
+        window.location.href = `?${params.toString()}`;
     }
 
     function removeFilter(filterName) {
         const params = new URLSearchParams(window.location.search);
         params.delete(filterName);
+        // Preserve view mode
+        params.set('view', '{{ view_mode }}');
         window.location.search = params.toString();
     }
 
     // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             applyFilters();
         }
@@ -891,7 +1128,7 @@
         errorDiv.style.display = 'none';
 
         // Fetch PDF URL
-        fetch(`/preview-faculty-pdf/${facultyId}/`)
+        fetch(`/faculty/preview-pdf/${facultyId}/`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.pdf_url) {
@@ -926,11 +1163,11 @@
         button.innerHTML = '<span class="loading-spinner"></span> Generating...';
 
         // First generate PDF
-        fetch(`/generate-faculty-pdf/${facultyId}/`)
+        fetch(`/faculty/generate-pdf/${facultyId}/`)
             .then(response => {
                 if (response.ok) {
                     // Then upload to Cloudinary
-                    return fetch(`/upload-faculty-to-cloudinary/${facultyId}/`, {
+                    return fetch(`/faculty/upload-to-cloudinary/${facultyId}/`, {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': csrftoken,
@@ -979,7 +1216,7 @@
         button.disabled = true;
         button.innerHTML = '<span class="loading-spinner"></span> Merging...';
 
-        fetch(`/merge-certificates-with-pdf/${facultyId}/`, {
+        fetch(`/certificates/merge-with-pdf/${facultyId}/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': csrftoken,
@@ -1057,11 +1294,11 @@
 
             try {
                 // Generate PDF
-                const response = await fetch(`/generate-faculty-pdf/${facultyId}/`);
+                const response = await fetch(`/faculty/generate-pdf/${facultyId}/`);
                 if (!response.ok) throw new Error('Generate failed');
 
                 // Upload to Cloudinary
-                const uploadResponse = await fetch(`/upload-faculty-to-cloudinary/${facultyId}/`, {
+                const uploadResponse = await fetch(`/faculty/upload-to-cloudinary/${facultyId}/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrftoken,
@@ -1115,6 +1352,13 @@
     // Print Function
     function printPage() {
         window.print();
+    }
+
+    // Send Reminders Function (for List View)
+    function sendReminders() {
+        if (confirm('Send email reminders to faculty without PDFs?')) {
+            showToast('info', 'Reminder emails would be sent here. This feature is under development.');
+        }
     }
 
     // Toast Notification Function
@@ -1188,7 +1432,7 @@
         const batchDownloadBtn = document.getElementById('downloadAllBtn');
         if (batchDownloadBtn) {
             batchDownloadBtn.addEventListener('click', function(e) {
-                if ({{ stats.with_pdf }} === 0) {
+                if ({{ available_pdfs }} === 0) {
                     e.preventDefault();
                     showToast('warning', 'No PDFs available for download');
                     return false;
@@ -1207,11 +1451,33 @@
             });
         }
 
+        // Handle batch download for list view
+        const listBatchDownloadBtn = document.getElementById('batchDownloadBtn');
+        if (listBatchDownloadBtn) {
+            listBatchDownloadBtn.addEventListener('click', function(e) {
+                if ({{ available_pdfs }} === 0) {
+                    e.preventDefault();
+                    showToast('warning', 'No PDFs available for download');
+                    return false;
+                }
+
+                this.innerHTML = '<span class="loading-spinner"></span> Creating ZIP...';
+                this.disabled = true;
+
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-download"></i> Download All PDFs';
+                    this.disabled = false;
+                }, 5000);
+            });
+        }
+
         // Auto-refresh every 5 minutes
         setTimeout(() => {
             if (!document.hidden) {
                 showToast('info', 'Refreshing data...');
-                applyFilters();
+                // Reload without filters to get latest data
+                let params = new URLSearchParams(window.location.search);
+                window.location.search = params.toString();
             }
         }, 300000); // 5 minutes
     });

@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ANURAG ENGINEERING COLLEGE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+        body { background-color: #000; color: #0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow: hidden; position: relative; }
+        .matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        .matrix-char { position: absolute; color: #0f0; font-size: 14px; opacity: 0; animation: fall linear infinite; }
+        @keyframes fall { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(100vh); opacity: 0; } }
+        .login-container { background-color: rgba(0, 20, 0, 0.85); border: 2px solid #0f0; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 255, 0, 0.5); width: 100%; max-width: 450px; padding: 30px; position: relative; z-index: 1; }
+        .college-header { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #0f0; padding-bottom: 20px; }
+
+        /* 🔥 THE FIX: Explicit styling for the static image */
+        .header-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            display: block;
+            margin: 0 auto 15px auto;
+            background: #FFFFFF; /* High contrast for the logo */
+            border: 2px solid #0f0;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .department { color: #0f0; font-size: 18px; font-weight: 700; text-transform: uppercase; }
+        .login-form { margin-top: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #0f0; }
+        .form-group input { background-color: rgba(0, 30, 0, 0.7); border: 1px solid #0a0; border-radius: 5px; padding: 12px 15px; color: #0f0; width: 100%; }
+        .login-btn { background: linear-gradient(to bottom, #0a0, #050); color: #000; border: none; padding: 14px; width: 100%; border-radius: 5px; font-weight: 600; cursor: pointer; text-transform: uppercase; }
+        .error-message { color: #f00; background-color: rgba(50, 0, 0, 0.5); padding: 10px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #a00; }
+    </style>
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    <div class="login-container">
+        <div class="college-header">
+            <img src="{% static 'images/IT HEADER.png' %}" alt="ANURAG IT HEADER" class="header-image">
+            <p class="department">INFORMATION TECHNOLOGY DEPARTMENT</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error-message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form class="login-form" method="POST" action="{% url 'dashboard:login' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="login-btn">ACCESS SYSTEM</button>
+        </form>
+    </div>
+
+    <script>
+        const matrixBg = document.getElementById('matrixBg');
+        function createMatrix() {
+            const columns = Math.floor(window.innerWidth / 20);
+            for (let i = 0; i < columns; i++) {
+                const column = document.createElement('div');
+                column.style.position = 'absolute';
+                column.style.left = `${i * 20}px`;
+                for (let j = 0; j < 20; j++) {
+                    const char = document.createElement('span');
+                    char.className = 'matrix-char';
+                    char.textContent = Math.floor(Math.random() * 2);
+                    char.style.animationDuration = `${5 + Math.random() * 10}s`;
+                    char.style.animationDelay = `${Math.random() * 5}s`;
+                    column.appendChild(char);
+                }
+                matrixBg.appendChild(column);
+            }
+        }
+        createMatrix();
+    </script>
+</body>
+</html>

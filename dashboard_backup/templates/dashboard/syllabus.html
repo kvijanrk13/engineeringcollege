@@ -1,0 +1,413 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Syllabus & Common Subjects - ANURAG Engineering College{% endblock %}
+
+<!-- Add this block to override body class -->
+{% block body_class %}syllabus-page{% endblock %}
+
+{% block content %}
+<style>
+    /* Global Matrix Styling to match Dashboard & Faculty */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        background-color: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    /* 2. DEPARTMENT HEADER */
+    .dept-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 15px 0 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    /* 3. HORIZONTAL NAVIGATION TABS */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(0, 20, 0, 0.9);
+        padding: 15px;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        border-radius: 8px;
+    }
+
+    .nav-link-tab {
+        padding: 12px 20px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #0f0;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .nav-link-tab:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
+    .nav-link-tab.active-page { background: rgba(0, 255, 0, 0.2); border-width: 2px; }
+
+    /* CONTENT CONTAINER (SYLLABUS) */
+    .container {
+        max-width: 1400px;
+        margin: 20px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        color: #1a1a1a; /* Dark text for readability on white background */
+    }
+
+    h1.syllabus-title {
+        color: #0f172a;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 4px solid #1e293b;
+        padding-bottom: 10px;
+        font-weight: 800;
+        font-family: 'Segoe UI', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Tab Grid Navigation */
+    .tab-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    .tab-btn {
+        padding: 15px;
+        background: #e2e8f0;
+        color: #334155;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .tab-btn:hover { background: #cbd5e1; }
+    .tab-btn.active {
+        background: #1e293b;
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    /* Content Sections */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .semester-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 25px;
+    }
+    .sem-card {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .sem-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+    .sem-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        padding: 12px;
+        font-weight: 700;
+        text-align: center;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Tables */
+    .std-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+    .std-table th, .std-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .std-table th {
+        background-color: #f1f5f9;
+        font-weight: 800;
+        color: #1e293b;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    .std-table tr:hover { background-color: #f8fafc; }
+    .code-col {
+        width: 25%;
+        font-family: 'Consolas', monospace;
+        font-weight: 700;
+        color: #b91c1c;
+    }
+    .name-col {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .sem-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #475569;
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    /* Common Subjects Table */
+    .common-table-wrapper {
+        overflow-x: auto;
+    }
+    .common-table {
+        min-width: 800px;
+    }
+    .common-table th:nth-child(1) { width: 15%; }
+    .common-table th:nth-child(2) { width: 60%; }
+    .common-table th:nth-child(3) { width: 25%; }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- DEPARTMENT HEADER AND NAVIGATION TABS ONLY (No duplicate header image) -->
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab active-page">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+    <a href="{% url 'dashboard:exambranch' %}" class="nav-link-tab">Exam Branch</a>
+    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
+</div>
+
+<div class="container">
+    <h1 class="syllabus-title">Academic Syllabus & Comparison</h1>
+
+    <div class="tab-grid">
+        <button class="tab-btn active" onclick="openTab('it')">IT</button>
+        <button class="tab-btn" onclick="openTab('cse')">CSE</button>
+        <button class="tab-btn" onclick="openTab('aiml')">CSE (AI&ML)</button>
+        <button class="tab-btn" onclick="openTab('common')">Common Subjects</button>
+    </div>
+
+    <div id="tab-it" class="tab-content active">
+        <div id="it-syllabus-container" class="semester-grid"></div>
+    </div>
+
+    <div id="tab-cse" class="tab-content">
+        <div id="cse-syllabus-container" class="semester-grid"></div>
+    </div>
+
+    <div id="tab-aiml" class="tab-content">
+        <div id="aiml-syllabus-container" class="semester-grid"></div>
+    </div>
+
+    <div id="tab-common" class="tab-content">
+        <div class="sem-card">
+            <div class="sem-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">Subjects Common to All Departments (IT, CSE, AIML)</div>
+            <div id="common-syllabus-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Matrix Background Script */
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    // ==========================================
+    // SYLLABUS DATA & RENDERING LOGIC
+    // ==========================================
+    const syllabusData = {
+        "1-1": {
+            "IT": [ {code:"MA101BS", name:"MATRICES AND CALCULUS"}, {code:"AP102BS", name:"APPLIED PHYSICS"}, {code:"CS103ES", name:"PROGRAMMING FOR PROBLEM SOLVING"}, {code:"EN104HS", name:"ENGLISH FOR SKILL ENHANCEMENT"}, {code:"ME105ES", name:"ENGINEERING WORKSHOP"}, {code:"CS106ES", name:"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"}, {code:"AP107BS", name:"APPLIED PHYSICS LABORATORY"}, {code:"EN108HS", name:"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"}, {code:"CS109ES", name:"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"}, {code:"ES110MC", name:"ENVIRONMENTAL SCIENCE"} ],
+            "CSE": [ {code:"MA101BS", name:"MATRICES AND CALCULUS"}, {code:"CH102BS", name:"ENGINEERING CHEMISTRY"}, {code:"CS103ES", name:"PROGRAMMING FOR PROBLEM SOLVING"}, {code:"EE104ES", name:"BASIC ELECTRICAL ENGINEERING"}, {code:"EG105ES", name:"COMPUTER AIDED ENGINEERING GRAPHICS"}, {code:"CS106ES", name:"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"}, {code:"CH107BS", name:"ENGINEERING CHEMISTRY LABORATORY"}, {code:"CS109ES", name:"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"}, {code:"EE108ES", name:"BASIC ELECTRICAL ENGINEERING LABORATORY"}, {code:"HS110MC", name:"CONSTITUTION OF INDIA"} ],
+            "AIML": [ {code:"MA101BS", name:"MATRICES AND CALCULUS"}, {code:"CH102BS", name:"ENGINEERING CHEMISTRY"}, {code:"CS103ES", name:"PROGRAMMING FOR PROBLEM SOLVING"}, {code:"EE104ES", name:"BASIC ELECTRICAL ENGINEERING"}, {code:"EG105ES", name:"COMPUTER AIDED ENGINEERING GRAPHICS"}, {code:"CS106ES", name:"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"}, {code:"CH107BS", name:"ENGINEERING CHEMISTRY LABORATORY"}, {code:"CS109ES", name:"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"}, {code:"EE108ES", name:"BASIC ELECTRICAL ENGINEERING LABORATORY"}, {code:"HS110MC", name:"CONSTITUTION OF INDIA"} ]
+        },
+        "1-2": {
+            "IT": [ {code:"MA201BS", name:"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"}, {code:"CH202BS", name:"ENGINEERING CHEMISTRY"}, {code:"EG203ES", name:"COMPUTER AIDED ENGINEERING GRAPHICS"}, {code:"EE204ES", name:"BASIC ELECTRICAL ENGINEERING"}, {code:"EC205ES", name:"ELECTRONIC DEVICES AND CIRCUITS"}, {code:"CH206BS", name:"ENGINEERING CHEMISTRY LABORATORY"}, {code:"CS207ES", name:"PYTHON PROGRAMMING LABORATORY"}, {code:"EE208ES", name:"BASIC ELECTRICAL ENGINEERING LABORATORY"}, {code:"CS209ES", name:"IT WORKSHOP"}, {code:"HS210MC", name:"CONSTITUTION OF INDIA"} ],
+            "CSE": [ {code:"MA201BS", name:"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"}, {code:"AP202BS", name:"APPLIED PHYSICS"}, {code:"ME203ES", name:"ENGINEERING WORKSHOP"}, {code:"EN204HS", name:"ENGLISH FOR SKILL ENHANCEMENT"}, {code:"EC205ES", name:"ELECTRONIC DEVICES AND CIRCUIT"}, {code:"AP206BS", name:"APPLIED PHYSICS LABORATORY"}, {code:"CS207ES", name:"PYTHON PROGRAMMING LABORATORY"}, {code:"EN208HS", name:"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"}, {code:"CS209ES", name:"IT WORKSHOP"}, {code:"ES210MC", name:"ENVIRONMENTAL SCIENCE"} ],
+            "AIML": [ {code:"MA201BS", name:"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"}, {code:"AP202BS", name:"APPLIED PHYSICS"}, {code:"ME203ES", name:"ENGINEERING WORKSHOP"}, {code:"EN204HS", name:"ENGLISH FOR SKILL ENHANCEMENT"}, {code:"EC205ES", name:"ELECTRONIC DEVICES AND CIRCUIT"}, {code:"AP206BS", name:"APPLIED PHYSICS LABORATORY"}, {code:"CS207ES", name:"PYTHON PROGRAMMING LABORATORY"}, {code:"EN208HS", name:"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"}, {code:"CS209ES", name:"IT WORKSHOP"}, {code:"ES210MC", name:"ENVIRONMENTAL SCIENCE"} ]
+        },
+        "2-1": {
+            "IT": [ {code:"PS301BS", name:"PROBABILITY AND STATISTICS"}, {code:"EC302ES", name:"DIGITAL ELECTRONICS"}, {code:"CS303PC", name:"DATA STRUCTURES"}, {code:"CM304PC", name:"COMPUTER ORGANIZATION AND MICROPROCESSOR"}, {code:"IT305PC", name:"INTRODUCTION TO IOT"}, {code:"CS306PC", name:"DATA STRUCTURES LABORATORY"}, {code:"EC307ES", name:"DIGITAL ELECTRONICS LABORATORY"}, {code:"IT308PC", name:"INTERNET OF THINGS LABORATORY"}, {code:"HS309MC", name:"GENDER SENSITIZATION"}, {code:"CS308PC", name:"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"} ],
+            "CSE": [ {code:"PS301BS", name:"PROBABILITY AND STATISTICS"}, {code:"DE302ES", name:"DIGITAL ELECTRONICS"}, {code:"CS303PC", name:"DATA STRUCTURES"}, {code:"CS304PC", name:"COMPUTER ORGANIZATION AND ARCHITECTURE"}, {code:"CS305PC", name:"OBJECT ORIENTED PROGRAMMING THROUGH JAVA"}, {code:"CS306PC", name:"DATA STRUCTURES LABORATORY"}, {code:"CS307PC", name:"OBJECT ORIENTED PROGRAMMING THROUGH JAVA LABORATORY"}, {code:"HS309MC", name:"GENDER SENSITIZATION"}, {code:"CS308PC", name:"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"} ],
+            "AIML": [ {code:"PS301BS", name:"PROBABILITY AND STATISTICS"}, {code:"CS303PC", name:"DATA STRUCTURES"}, {code:"CS304PC", name:"COMPUTER ORGANIZATION AND ARCHITECTURE"}, {code:"AM305PC", name:"SOFTWARE ENGINEERING"}, {code:"AM306PC", name:"OPERATING SYSTEMS"}, {code:"CS306PC", name:"DATA STRUCTURES LABORATORY"}, {code:"AM307PC", name:"OPERATING SYSTEMS LABORATORY"}, {code:"AM308PC", name:"SOFTWARE ENGINEERING LABORATORY"}, {code:"HS309MC", name:"GENDER SENSITIZATION"}, {code:"AM310PC", name:"SKILL DEVELOPMENT COURSE (NODE JS/ REACT JS/ DJANGO)"} ]
+        },
+        "2-2": {
+            "IT": [ {code:"MB401HS", name:"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"}, {code:"CS402PC", name:"DISCRETE MATHEMATICS"}, {code:"CS403PC", name:"OPERATING SYSTEMS"}, {code:"CS404PC", name:"DATABASE MANAGEMENT SYSTEMS"}, {code:"IT405PC", name:"JAVA PROGRAMMING"}, {code:"CS406PC", name:"OPERATING SYSTEMS LABORATORY"}, {code:"CS407PC", name:"DATABASE MANAGEMENT SYSTEMS LABORATORY"}, {code:"IT408PC", name:"JAVA PROGRAMMING LABORATORY"}, {code:"IT409PW", name:"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"}, {code:"IT410PC", name:"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"}, {code:"HS411MC", name:"INTELLECTUAL PROPERTY RIGHTS"} ],
+            "CSE": [ {code:"MB401HS", name:"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"}, {code:"CS402PC", name:"DISCRETE MATHEMATICS"}, {code:"CS403PC", name:"OPERATING SYSTEMS"}, {code:"CS404PC", name:"DATABASE MANAGEMENT SYSTEMS"}, {code:"CS405PC", name:"SOFTWARE ENGINEERING"}, {code:"CS406PC", name:"OPERATING SYSTEMS LABORATORY"}, {code:"CS407PC", name:"DATABASE MANAGEMENT SYSTEMS LABORATORY"}, {code:"CS408PW", name:"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"}, {code:"HS411MC", name:"INTELLECTUAL PROPERTY RIGHTS"}, {code:"CS409PC", name:"SKILL DEVELOPMENT COURSE(NODE JS/ REACT JS/ DJANGO)"} ],
+            "AIML": [ {code:"CS402PC", name:"DISCRETE MATHEMATICS"}, {code:"AM403PC", name:"AUTOMATA THEORY AND COMPILER DESIGN"}, {code:"CS404PC", name:"DATABASE MANAGEMENT SYSTEMS"}, {code:"AM405PC", name:"INTRODUCTION TO ARTIFICIAL INTELLIGENCE"}, {code:"AM406PC", name:"OBJECT ORIENTED PROGRAMMING THROUGH JAVA"}, {code:"CS407PC", name:"DATABASE MANAGEMENT SYSTEMS LABORATORY"}, {code:"AM408PC", name:"JAVA PROGRAMMING LABORATORY"}, {code:"CS408PW", name:"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"}, {code:"HS411MC", name:"INTELLECTUAL PROPERTY RIGHTS"}, {code:"AM412PC", name:"SKILL DEVELOPMENT COURSE (PROLOG/ LISP/ PYSWIP)"} ]
+        },
+        "3-1": {
+            "IT": [ {code:"CS501PC", name:"DESIGN AND ANALYSIS OF ALGORITHMS"}, {code:"IT502PC", name:"AUTOMATA AND COMPILER DESIGN"}, {code:"IT503PC", name:"EMBEDDED SYSTEMS"}, {code:"IT511PE", name:"FULL STACK DEVELOPMENT"}, {code:"IT512PE", name:"DATA MINING"}, {code:"CS513PE", name:"SCRIPTING LANGUAGES"}, {code:"IT514PE", name:"MOBILE APPLICATION DEVELOPMENT"}, {code:"IT515PE", name:"SOFTWARE TESTING METHODOLOGIES"}, {code:"AM515PE", name:"COMPUTER GRAPHICS"}, {code:"IT522PE", name:"QUANTUM COMPUTING"}, {code:"IT523PE", name:"ADVANCED OPERATING SYSTEMS"}, {code:"CS524PE", name:"DISTRIBUTED DATABASES"}, {code:"IT525PE", name:"PATTERN RECOGNITION"}, {code:"IT532PE", name:"DATA MINING LABORATORY"}, {code:"IT531PE", name:"FULL STACK DEVELOPMENT LABORATORY"}, {code:"IT533PE", name:"SCRIPTING LANGUAGES LABORATORY"}, {code:"IT534PE", name:"MOBILE APPLICATION DEVELOPMENT LABORATORY"}, {code:"IT535PE", name:"SOFTWARE TESTING METHODOLOGIES LABORATORY"}, {code:"IT504PC", name:"COMPILER DESIGN LABORATORY"}, {code:"IT505PC", name:"EMBEDDED SYSTEMS LABORATORY"}, {code:"CS507PC", name:"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"} ],
+            "CSE": [ {code:"CS501PC", name:"DESIGN AND ANALYSIS OF ALGORITHMS"}, {code:"CS502PC", name:"COMPUTER NETWORKS"}, {code:"CS503PC", name:"DEVOPS"}, {code:"CS511PE", name:"QUANTUM COMPUTING"}, {code:"CS512PE", name:"ADVANCED COMPUTER ARCHITECTURE"}, {code:"CS513PE", name:"SCRIPTING LANGUAGES"}, {code:"CS514PE", name:"IMAGE PROCESSING"}, {code:"CS515PE", name:"PRINCIPLES OF PROGRAMMING LANGUAGES"}, {code:"CS521PE", name:"COMPUTER GRAPHICS"}, {code:"CS522PE", name:"EMBEDDED SYSTEM"}, {code:"CS523PE", name:"INFORMATION RETRIEVAL SYSTEMS"}, {code:"CS524PE", name:"DISTRIBUTED DATABASES"}, {code:"CS525PE", name:"NATURAL LANGUAGE PROCESSING"}, {code:"CS504PC", name:"COMPUTER NETWORKS LABORATORY"}, {code:"CS505PC", name:"DEVOPS LABORATORY"}, {code:"AE506HS", name:"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"}, {code:"CS507PC", name:"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"} ],
+            "AIML": [ {code:"CS501PC", name:"DESIGN AND ANALYSIS OF ALGORITHMS"}, {code:"CS502PC", name:"COMPUTER NETWORKS"}, {code:"AM503PC", name:"MACHINE LEARNING"}, {code:"BF504HS", name:"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"}, {code:"AM511PE", name:"GRAPH THEORY"}, {code:"AM512PE", name:"INTRODUCTION TO DATA SCIENCE"}, {code:"AM513PE", name:"WEB PROGRAMMING"}, {code:"EC514PE", name:"IMAGE PROCESSING"}, {code:"AM515PE", name:"COMPUTER GRAPHICS"}, {code:"AM505PC", name:"MACHINE LEARNING LABORATORY"}, {code:"CS504PC", name:"COMPUTER NETWORKS LABORATORY"}, {code:"CS507PC", name:"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"} ]
+        },
+        "3-2": {
+            "IT": [ {code:"CS601PC", name:"MACHINE LEARNING"}, {code:"IT602PC", name:"SOFTWARE ENGINEERING"}, {code:"IT603PC", name:"DATA COMMUNICATIONS AND COMPUTER NETWORKS"}, {code:"IT611PE", name:"BIOMETRICS"}, {code:"IT612PE", name:"ADVANCED COMPUTER ARCHITECTURE"}, {code:"CS633PE", name:"DATA ANALYTICS"}, {code:"CS616PE", name:"IMAGE PROCESSING"}, {code:"CS617PE", name:"PRINCIPLES OF PROGRAMMING LANGUAGES"}, {code:"CE611OE", name:"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"}, {code:"CE612OE", name:"BUILDING MANAGEMENT SYSTEMS"}, {code:"CE613OE", name:"ENVIRONMENTAL IMPACT ASSESSMENT"}, {code:"CE614OE", name:"HYDROGEOLOGY"}, {code:"EE611OE", name:"RENEWABLE ENERGY SOURCES"}, {code:"EE612OE", name:"FUNDAMENTAL OF ELECTRIC VEHICLES"}, {code:"ME611OE", name:"BASIC MECHANICAL ENGINEERING"}, {code:"ME612OE", name:"POWER PLANT ENGINEERING"}, {code:"EC611OE", name:"FUNDAMENTALS OF INTERNET OF THINGS"}, {code:"EC612OE", name:"PRINCIPLES OF SIGNAL PROCESSING"}, {code:"EC613OE", name:"DIGITAL ELECTRONICS FOR ENGINEERING"}, {code:"CS611OE", name:"DATA STRUCTURES"}, {code:"CS612OE", name:"DATABASE MANAGEMENT SYSTEMS"}, {code:"IT611OE", name:"JAVA PROGRAMMING"}, {code:"IT612OE", name:"SOFTWARE ENGINEERING"}, {code:"AM611OE", name:"FUNDAMENTALS OF AI"}, {code:"AM612OE", name:"MACHINE LEARNING BASICS"}, {code:"CS604PC", name:"MACHINE LEARNING LABORATORY"}, {code:"IT605PC", name:"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"}, {code:"AE606HS", name:"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"}, {code:"CS606PW", name:"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATA SPARK)"}, {code:"ES607MC", name:"ENVIRONMENTAL SCIENCE"} ],
+            "CSE": [ {code:"CS601PC", name:"MACHINE LEARNING"}, {code:"CS602PC", name:"FORMAL LANGUAGES AND AUTOMATA THEORY"}, {code:"CS603PC", name:"ARTIFICIAL INTELLIGENCE"}, {code:"CS631PE", name:"FULL STACK DEVELOPMENT"}, {code:"CS632PE", name:"INTERNET OF THINGS"}, {code:"CS633PE", name:"DATA ANALYTICS"}, {code:"CS634PE", name:"MOBILE APPLICATION DEVELOPMENT"}, {code:"CS635PE", name:"SOFTWARE TESTING METHODOLOGIES"}, {code:"CE611OE", name:"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"}, {code:"CE612OE", name:"BUILDING MANAGEMENT SYSTEMS"}, {code:"CE613OE", name:"ENVIRONMENTAL IMPACT ASSESSMENT"}, {code:"CE614OE", name:"HYDROGEOLOGY"}, {code:"EE611OE", name:"RENEWABLE ENERGY SOURCES"}, {code:"EE612OE", name:"FUNDAMENTAL OF ELECTRIC VEHICLES"}, {code:"ME611OE", name:"BASIC MECHANICAL ENGINEERING"}, {code:"ME612OE", name:"POWER PLANT ENGINEERING"}, {code:"EC611OE", name:"FUNDAMENTALS OF INTERNET OF THINGS"}, {code:"EC612OE", name:"PRINCIPLES OF SIGNAL PROCESSING"}, {code:"EC613OE", name:"DIGITAL ELECTRONICS FOR ENGINEERING"}, {code:"CS611OE", name:"DATA STRUCTURES"}, {code:"CS612OE", name:"DATABASE MANAGEMENT SYSTEMS"}, {code:"IT611OE", name:"JAVA PROGRAMMING"}, {code:"IT612OE", name:"SOFTWARE ENGINEERING"}, {code:"AM611OE", name:"FUNDAMENTALS OF AI"}, {code:"AM612OE", name:"MACHINE LEARNING BASICS"}, {code:"CS604PC", name:"MACHINE LEARNING LABORATORY"}, {code:"CS605PC", name:"ARTIFICIAL INTELLIGENCE LABORATORY"}, {code:"CS641PC", name:"FULL STACK DEVELOPMENT LAB"}, {code:"CS642PC", name:"INTERNET OF THINGS LAB"}, {code:"CS643PC", name:"DATA ANALYTICS LAB"}, {code:"CS644PC", name:"MOBILE APPLICATION DEVELOPMENT LAB"}, {code:"CS645PC", name:"SOFTWARE TESTING METHODOLOGIES LAB"}, {code:"CS606PW", name:"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATASPARK)"}, {code:"ES607MC", name:"ENVIRONMENTAL SCIENCE"} ],
+            "AIML": [ {code:"AM601PC", name:"KNOWLEDGE REPRESENTATION AND REASONING"}, {code:"AM602PC", name:"DATA ANALYTICS"}, {code:"AM603PC", name:"NATURAL LANGUAGE PROCESSING"}, {code:"AM621PE", name:"SOFTWARE TESTING METHODOLOGIES"}, {code:"AM622PE", name:"INFORMATION RETRIEVAL SYSTEMS"}, {code:"AM623PE", name:"PATTERN RECOGNITION"}, {code:"AM624PE", name:"DISTRIBUTED COMPUTING"}, {code:"AM625PE", name:"DATA WAREHOUSING AND BUSINESS INTELLIGENCE"}, {code:"CE611OE", name:"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"}, {code:"CE612OE", name:"BUILDING MANAGEMENT SYSTEMS"}, {code:"CE613OE", name:"ENVIRONMENTAL IMPACT ASSESSMENT"}, {code:"CE614OE", name:"HYDROGEOLOGY"}, {code:"EE611OE", name:"RENEWABLE ENERGY SOURCES"}, {code:"EE612OE", name:"FUNDAMENTAL OF ELECTRIC VEHICLES"}, {code:"ME611OE", name:"BASIC MECHANICAL ENGINEERING"}, {code:"ME612OE", name:"POWER PLANT ENGINEERING"}, {code:"EC611OE", name:"FUNDAMENTALS OF INTERNET OF THINGS"}, {code:"EC612OE", name:"PRINCIPLES OF SIGNAL PROCESSING"}, {code:"EC613OE", name:"DIGITAL ELECTRONICS FOR ENGINEERING"}, {code:"CS611OE", name:"DATA STRUCTURES"}, {code:"CS612OE", name:"DATABASE MANAGEMENT SYSTEMS"}, {code:"IT611OE", name:"JAVA PROGRAMMING"}, {code:"IT612OE", name:"SOFTWARE ENGINEERING"}, {code:"AM611OE", name:"FUNDAMENTALS OF AI"}, {code:"AM612OE", name:"MACHINE LEARNING BASICS"}, {code:"AM604PC", name:"NATURAL LANGUAGE PROCESSING LABORATORY"}, {code:"AM605PC", name:"DATA ANALYTICS LABORATORY"}, {code:"AE606HS", name:"ADVANCED ENGLISH COMMUNICATION SKILLS LAB"}, {code:"AM607PW", name:"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP"}, {code:"ES607MC", name:"ENVIRONMENTAL SCIENCE"} ]
+        },
+        "4-1": {
+            "IT": [ {code:"IT701PC", name:"INFORMATION SECURITY"}, {code:"IT702PC", name:"CLOUD COMPUTING"}, {code:"IT711PE", name:"HUMAN COMPUTER INTERACTION"}, {code:"IT712PE", name:"HIGH PERFORMANCE COMPUTING"}, {code:"IT713PE", name:"ARTIFICIAL INTELLIGENCE"}, {code:"IT714PE", name:"INFORMATION RETRIEVAL SYSTEMS"}, {code:"IT715PE", name:"AD-HOC & SENSOR NETWORKS"}, {code:"IT721PE", name:"NATURAL LANGUAGE PROCESSING"}, {code:"IT722PE", name:"DISTRIBUTED SYSTEMS"}, {code:"IT723PE", name:"AUGMENTED REALITY & VIRTUAL REALITY"}, {code:"IT724PE", name:"WEB SECURITY"}, {code:"IT725PE", name:"CYBER FORENSICS"}, {code:"CE721OE", name:"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"}, {code:"CE722OE", name:"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"}, {code:"CE723OE", name:"SOLID WASTE MANAGEMENT"}, {code:"CE724OE", name:"SMART CITIES"}, {code:"EE721OE", name:"UTILIZATION OF ELECTRIC ENERGY"}, {code:"EE722OE", name:"ENERGY STORAGE SYSTEMS"}, {code:"ME721OE", name:"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"}, {code:"ME722OE", name:"INDUSTRIAL ENGINEERING & MANAGEMENT"}, {code:"EC721OE", name:"ELECTRONIC SENSORS"}, {code:"EC722OE", name:"ELECTRONICS FOR HEALTH CARE"}, {code:"EC723OE", name:"TELECOMMUNICATIONS FOR SOCIETY"}, {code:"CS721OE", name:"OPERATING SYSTEMS"}, {code:"CS722OE", name:"COMPUTER NETWORKS"}, {code:"IT721OE", name:"FULL STACK DEVELOPMENT"}, {code:"IT722OE", name:"SCRIPTING LANGUAGES"}, {code:"AM721OE", name:"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"}, {code:"AM722OE", name:"AI APPLICATIONS"}, {code:"IT703PC", name:"INFORMATION SECURITY LAB"}, {code:"IT704PC", name:"CLOUD COMPUTING LAB"}, {code:"IT705PC", name:"PROJECT STAGE – I"} ],
+            "CSE": [ {code:"CS701PC", name:"CRYPTOGRAPHY AND NETWORK SECURITY"}, {code:"CS702PC", name:"COMPILER DESIGN"}, {code:"CS741PE", name:"DATA ANALYTICS FOR IOT"}, {code:"CS742PE", name:"CLOUD COMPUTING"}, {code:"CS743PE", name:"GRAPH THEORY"}, {code:"CS744PE", name:"CYBER SECURITY"}, {code:"CS745PE", name:"SOFT COMPUTING"}, {code:"CS746PE", name:"AD HOC & SENSOR NETWORKS"}, {code:"CS751PE", name:"AGILE METHODOLOGY"}, {code:"CS752PE", name:"IOT ARCHITECTURES AND PROTOCOLS"}, {code:"CS753PE", name:"BIG DATA ANALYTICS"}, {code:"CS754PE", name:"ADVANCED ALGORITHMS"}, {code:"CS755PE", name:"DEEP LEARNING"}, {code:"CS756PE", name:"REINFORCEMENT LEARNING"}, {code:"CS757PE", name:"SOFTWARE PROCESS & PROJECT MANAGEMENT"}, {code:"CE721OE", name:"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"}, {code:"CE722OE", name:"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"}, {code:"CE723OE", name:"SOLID WASTE MANAGEMENT"}, {code:"CE724OE", name:"SMART CITIES"}, {code:"EE721OE", name:"UTILIZATION OF ELECTRIC ENERGY"}, {code:"EE722OE", name:"ENERGY STORAGE SYSTEMS"}, {code:"ME721OE", name:"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"}, {code:"ME722OE", name:"INDUSTRIAL ENGINEERING & MANAGEMENT"}, {code:"EC721OE", name:"ELECTRONIC SENSORS"}, {code:"EC722OE", name:"ELECTRONICS FOR HEALTH CARE"}, {code:"EC723OE", name:"TELECOMMUNICATIONS FOR SOCIETY"}, {code:"CS721OE", name:"OPERATING SYSTEMS"}, {code:"CS722OE", name:"COMPUTER NETWORKS"}, {code:"IT721OE", name:"FULL STACK DEVELOPMENT"}, {code:"IT722OE", name:"SCRIPTING LANGUAGES"}, {code:"AM721OE", name:"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"}, {code:"AM722OE", name:"AI APPLICATIONS"}, {code:"CS703PC", name:"CRYPTOGRAPHY AND NETWORK SECURITY LABORATORY"}, {code:"CS704PC", name:"COMPILER DESIGN LABORATORY"}, {code:"CS705PW", name:"PROJECT STAGE – I"} ],
+            "AIML": [ {code:"AM701PC", name:"DEEP LEARNING"}, {code:"AM702PC", name:"NATURE INSPIRED COMPUTING"}, {code:"AM731PE", name:"INTERNET OF THINGS"}, {code:"AM732PE", name:"DATA MINING"}, {code:"AM733PE", name:"MERN STACK DEVELOPMENT"}, {code:"AM734PE", name:"MOBILE APPLICATION DEVELOPMENT"}, {code:"AM735PE", name:"CLOUD COMPUTING"}, {code:"AM711PE", name:"INTERNET OF THINGS LABORATORY"}, {code:"AM712PE", name:"DATA MINING LABORATORY"}, {code:"AM713PE", name:"MERN STACK DEVELOPMENT LABORATORY"}, {code:"AM714PE", name:"MOBILE APPLICATION DEVELOPMENT LABORATORY"}, {code:"AM715PE", name:"CLOUD COMPUTING LABORATORY"}, {code:"AM741PE", name:"QUANTUM COMPUTING"}, {code:"AM742PE", name:"EXPERT SYSTEMS"}, {code:"AM743PE", name:"SEMANTIC WEB"}, {code:"AM744PE", name:"GAME THEORY"}, {code:"AM745PE", name:"MOBILE COMPUTING"}, {code:"CE721OE", name:"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"}, {code:"CE722OE", name:"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"}, {code:"CE723OE", name:"SOLID WASTE MANAGEMENT"}, {code:"CE724OE", name:"SMART CITIES"}, {code:"EE721OE", name:"UTILIZATION OF ELECTRIC ENERGY"}, {code:"EE722OE", name:"ENERGY STORAGE SYSTEMS"}, {code:"ME721OE", name:"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"}, {code:"ME722OE", name:"INDUSTRIAL ENGINEERING & MANAGEMENT"}, {code:"EC721OE", name:"ELECTRONIC SENSORS"}, {code:"EC722OE", name:"ELECTRONICS FOR HEALTH CARE"}, {code:"EC723OE", name:"TELECOMMUNICATIONS FOR SOCIETY"}, {code:"CS721OE", name:"OPERATING SYSTEMS"}, {code:"CS722OE", name:"COMPUTER NETWORKS"}, {code:"IT721OE", name:"FULL STACK DEVELOPMENT"}, {code:"IT722OE", name:"SCRIPTING LANGUAGES"}, {code:"AM721OE", name:"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"}, {code:"AM722OE", name:"AI APPLICATIONS"}, {code:"AM703PC", name:"PROFESSIONAL PRACTICE, LAW & ETHICS"}, {code:"AM704PC", name:"PROJECT STAGE – I"} ]
+        },
+        "4-2": {
+            "IT": [ {code:"IT801PC", name:"ORGANIZATIONAL BEHAVIOR"}, {code:"IT811PE", name:"INTRUSION DETECTION SYSTEMS"}, {code:"IT812PE", name:"REAL TIME SYSTEMS"}, {code:"IT813PE", name:"BLOCK CHAIN TECHNOLOGY"}, {code:"IT814PE", name:"DEEP LEARNING"}, {code:"IT815PE", name:"SOFTWARE PROCESS & PROJECT MANAGEMENT"}, {code:"CE831OE", name:"ENERGY EFFICIENT BUILDINGS"}, {code:"CE832OE", name:"MULTI CRITERION DECISION MAKING"}, {code:"CE833OE", name:"ENVIRONMENTAL POLLUTION"}, {code:"EE831OE", name:"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"}, {code:"EE832OE", name:"RELIABILITY ENGINEERING"}, {code:"ME831OE", name:"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"}, {code:"ME832OE", name:"ENTREPRENEURSHIP DEVELOPMENT"}, {code:"EC831OE", name:"MEASURING INSTRUMENTS"}, {code:"EC832OE", name:"COMMUNICATION TECHNOLOGIES"}, {code:"EC833OE", name:"FUNDAMENTALS OF SOCIAL NETWORKS"}, {code:"CS831OE", name:"DESIGN AND ANALYSIS OF ALGORITHMS"}, {code:"CS832OE", name:"DATA ANALYTICS"}, {code:"IT831OE", name:"BIG DATA TECHNOLOGIES"}, {code:"IT832OE", name:"DEVOPS"}, {code:"AM831OE", name:"CHATBOTS"}, {code:"AM832OE", name:"EVOLUTIONARY COMPUTING"}, {code:"IT802PC", name:"PROJECT STAGE-II, INCLUDING SEMINAR"} ],
+            "CSE": [ {code:"MB801BS", name:"ORGANIZATIONAL BEHAVIOR"}, {code:"CS861PE", name:"INDUSTRIAL IOT"}, {code:"CS862PE", name:"COMPUTER VISION"}, {code:"CS863PE", name:"COMPUTATIONAL COMPLEXITY"}, {code:"CS864PE", name:"DISTRIBUTED SYSTEMS"}, {code:"CS865PE", name:"BLOCKCHAIN TECHNOLOGY"}, {code:"CS866PE", name:"HUMAN COMPUTER INTERACTION"}, {code:"CS867PE", name:"CYBER FORENSICS"}, {code:"CS868PE", name:"QUALITY ASSURANCE AND TESTING"}, {code:"CE831OE", name:"ENERGY EFFICIENT BUILDINGS"}, {code:"CE832OE", name:"MULTI CRITERION DECISION MAKING"}, {code:"CE833OE", name:"ENVIRONMENTAL POLLUTION"}, {code:"EE831OE", name:"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"}, {code:"EE832OE", name:"RELIABILITY ENGINEERING"}, {code:"ME831OE", name:"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"}, {code:"ME832OE", name:"ENTREPRENEURSHIP DEVELOPMENT"}, {code:"EC831OE", name:"MEASURING INSTRUMENTS"}, {code:"EC832OE", name:"COMMUNICATION TECHNOLOGIES"}, {code:"EC833OE", name:"FUNDAMENTALS OF SOCIAL NETWORKS"}, {code:"CS831OE", name:"DESIGN AND ANALYSIS OF ALGORITHMS"}, {code:"CS832OE", name:"DATA ANALYTICS"}, {code:"IT831OE", name:"BIG DATA TECHNOLOGIES"}, {code:"IT832OE", name:"DEVOPS"}, {code:"AM831OE", name:"CHATBOTS"}, {code:"AM832OE", name:"EVOLUTIONARY COMPUTING"}, {code:"CS802PW", name:"PROJECT STAGE-II ,INCLUDING SEMINAR"} ],
+            "AIML": [ {code:"AM851PE", name:"SOCIAL MEDIA ANALYTICS"}, {code:"AM852PE", name:"FEDERATED MACHINE LEARNING"}, {code:"AM853PE", name:"AUGMENTED REALITY & VIRTUAL REALITY"}, {code:"AM854PE", name:"CYBER SECURITY"}, {code:"AM855PE", name:"AD-HOC & SENSOR NETWORKS"}, {code:"AM861PE", name:"SPEECH AND VIDEO PROCESSING"}, {code:"AM862PE", name:"REINFORCEMENT LEARNING"}, {code:"AM863PE", name:"RANDOMIZED ALGORITHMS"}, {code:"AM864PE", name:"COGNITIVE COMPUTING"}, {code:"AM865PE", name:"CONVERSATIONAL AI"}, {code:"CE831OE", name:"ENERGY EFFICIENT BUILDINGS"}, {code:"CE832OE", name:"MULTI CRITERION DECISION MAKING"}, {code:"CE833OE", name:"ENVIRONMENTAL POLLUTION"}, {code:"EE831OE", name:"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"}, {code:"EE832OE", name:"RELIABILITY ENGINEERING"}, {code:"ME831OE", name:"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"}, {code:"ME832OE", name:"ENTREPRENEURSHIP DEVELOPMENT"}, {code:"EC831OE", name:"MEASURING INSTRUMENTS"}, {code:"EC832OE", name:"COMMUNICATION TECHNOLOGIES"}, {code:"EC833OE", name:"FUNDAMENTALS OF SOCIAL NETWORKS"}, {code:"CS831OE", name:"DESIGN AND ANALYSIS OF ALGORITHMS"}, {code:"CS832OE", name:"DATA ANALYTICS"}, {code:"IT831OE", name:"BIG DATA TECHNOLOGIES"}, {code:"IT832OE", name:"DEVOPS"}, {code:"AM831OE", name:"CHATBOTS"}, {code:"AM832OE", name:"EVOLUTIONARY COMPUTING"}, {code:"AM801PC", name:"PROJECT STAGE-II INCLUDING SEMINAR"} ]
+        }
+    };
+
+    const semOrder = ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"];
+
+    function renderDepartmentSyllabus(dept, containerId) {
+        const container = document.getElementById(containerId);
+        let html = '';
+        semOrder.forEach(sem => {
+            const subjects = syllabusData[sem][dept] || [];
+            if (subjects.length > 0) {
+                html += `
+                    <div class="sem-card">
+                        <div class="sem-header">Semester ${sem}</div>
+                        <table class="std-table">
+                            <thead><tr><th class="code-col">Code</th><th class="name-col">Subject Name</th></tr></thead>
+                            <tbody>
+                `;
+                subjects.forEach(sub => {
+                    html += `<tr><td class="code-col">${sub.code}</td><td class="name-col">${sub.name}</td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
+        });
+        container.innerHTML = html;
+    }
+
+    function renderCommonSubjects() {
+        const container = document.getElementById('common-syllabus-container');
+        let html = '<div class="common-table-wrapper"><table class="std-table common-table"><thead><tr><th>Year/Sem</th><th>Subject Name</th><th>Codes (IT / CSE / AIML)</th></tr></thead><tbody>';
+
+        let hasCommonSubjects = false;
+
+        semOrder.forEach(sem => {
+            const itSubs = syllabusData[sem]["IT"] || [];
+            const cseSubs = syllabusData[sem]["CSE"] || [];
+            const aimlSubs = syllabusData[sem]["AIML"] || [];
+
+            const common = [];
+            itSubs.forEach(itSub => {
+                const name = itSub.name.trim().toUpperCase();
+                const cseMatch = cseSubs.find(s => s.name.trim().toUpperCase() === name);
+                const aimlMatch = aimlSubs.find(s => s.name.trim().toUpperCase() === name);
+                if (cseMatch && aimlMatch) {
+                    common.push({ name: itSub.name, codes: `${itSub.code} / ${cseMatch.code} / ${aimlMatch.code}` });
+                }
+            });
+
+            if (common.length > 0) {
+                hasCommonSubjects = true;
+                common.forEach(sub => {
+                    html += `<tr><td><span class="sem-badge">${sem}</span></td><td class="name-col">${sub.name}</td><td class="code-col">${sub.codes}</td></tr>`;
+                });
+            }
+        });
+
+        if (!hasCommonSubjects) {
+            html += `<tr><td colspan="3" style="text-align: center; padding: 40px; color: #64748b; font-style: italic;">No common subjects found across all three departments.</td></tr>`;
+        }
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    function openTab(tabName) {
+        const contents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
+        }
+
+        const btns = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < btns.length; i++) {
+            btns[i].classList.remove("active");
+        }
+
+        document.getElementById(`tab-${tabName}`).classList.add("active");
+
+        if(tabName === 'it') btns[0].classList.add("active");
+        if(tabName === 'cse') btns[1].classList.add("active");
+        if(tabName === 'aiml') btns[2].classList.add("active");
+        if(tabName === 'common') btns[3].classList.add("active");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderDepartmentSyllabus('IT', 'it-syllabus-container');
+        renderDepartmentSyllabus('CSE', 'cse-syllabus-container');
+        renderDepartmentSyllabus('AIML', 'aiml-syllabus-container');
+        renderCommonSubjects();
+    });
+
+    window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+{% endblock %}

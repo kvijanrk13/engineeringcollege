@@ -4,482 +4,254 @@
 
 {% block content %}
 <style>
-    body { margin: 0; padding: 0; font-family: 'Courier New', monospace; background-color: #000; color: #0f0; overflow-x: hidden; }
-    #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
-    .container { position: relative; z-index: 2; padding: 40px 20px; }
+/* ================= GLOBAL ================= */
+body {
+    font-family: 'Courier New', monospace;
+    background: #000;
+    color: #0f0;
+}
 
-    /* Login Container */
-    .login-container {
-        background-color: rgba(0, 20, 0, 0.9);
-        border: 2px solid #0f0;
-        border-radius: 10px;
-        box-shadow: 0 0 25px rgba(0, 255, 0, 0.3);
-        width: 100%;
-        max-width: 450px;
-        padding: 30px;
-        margin: 50px auto;
-    }
+#matrix-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+}
 
-    .login-title {
-        text-align: center;
-        color: #0f0;
-        margin-bottom: 30px;
-        font-size: 1.5rem;
-    }
+.container {
+    position: relative;
+    z-index: 2;
+    padding: 50px 20px;
+}
 
-    .login-form { margin-top: 20px; }
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #0f0; }
-    .form-group input {
-        background-color: rgba(0, 30, 0, 0.7);
-        border: 1px solid #0a0;
-        border-radius: 5px;
-        padding: 12px 15px;
-        color: #0f0;
-        width: 100%;
-        outline: none;
-    }
-    .form-group input:focus { border-color: #0f0; box-shadow: 0 0 10px #0f0; }
+/* ================= LOGIN ================= */
+.login-container {
+    background: rgba(0, 20, 0, 0.95);
+    border: 2px solid #0f0;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,255,0,.4);
+    max-width: 450px;
+    margin: 80px auto;
+    padding: 30px;
+}
 
-    .login-btn {
-        background: linear-gradient(to bottom, #0a0, #050);
-        color: #000;
-        border: none;
-        padding: 14px;
-        width: 100%;
-        border-radius: 5px;
-        font-weight: 600;
-        cursor: pointer;
-        text-transform: uppercase;
-        transition: 0.3s;
-        margin-top: 20px;
-    }
-    .login-btn:hover { background: #0f0; box-shadow: 0 0 20px #0f0; }
+.login-title {
+    text-align: center;
+    font-size: 1.7rem;
+    margin-bottom: 25px;
+}
 
-    .credential-note {
-        background-color: rgba(0, 40, 0, 0.7);
-        border: 1px solid #0a0;
-        border-radius: 5px;
-        padding: 15px;
-        margin: 20px 0;
-        text-align: center;
-        font-size: 0.9rem;
-        color: #0f0;
-    }
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    background: #001900;
+    border: 1px solid #0a0;
+    color: #0f0;
+    border-radius: 6px;
+}
 
-    /* Data Container */
-    .data-container {
-        background: rgba(255, 255, 255, 0.95);
-        color: #1a1a1a;
-        padding: 30px;
-        border-radius: 15px;
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto;
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
-        border: 3px solid #0f0;
-    }
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    font-weight: bold;
+    background: linear-gradient(#0a0,#050);
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+}
 
-    .data-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 3px solid #0f0;
-    }
+/* ================= DATA ================= */
+.data-container {
+    background: rgba(255,255,255,0.96);
+    color: #111;
+    max-width: 1250px;
+    margin: auto;
+    padding: 35px;
+    border-radius: 18px;
+    border: 3px solid #0f0;
+    box-shadow: 0 0 35px rgba(0,255,0,.5);
+}
 
-    .data-title {
-        font-size: 2rem;
-        color: #000;
-        font-weight: 800;
-        background: linear-gradient(90deg, #000, #0a0, #000);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
+.data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #0f0;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
 
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
+.data-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+}
 
-    .student-username {
-        background: #000;
-        color: #0f0;
-        padding: 8px 15px;
-        border-radius: 5px;
-        border: 1px solid #0f0;
-        font-size: 0.9rem;
-    }
+/* ================= TABLE ================= */
+.table-container {
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+}
 
-    .student-username i {
-        margin-right: 5px;
-    }
+.student-table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-    .logout-btn {
-        background: #000;
-        color: #f00;
-        padding: 10px 20px;
-        text-decoration: none;
-        border: 2px solid #f00;
-        border-radius: 5px;
-        font-weight: bold;
-        transition: all 0.3s;
-    }
+.student-table th {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    color: #fff;
+    padding: 16px;
+}
 
-    .logout-btn:hover {
-        background: #f00;
-        color: #000;
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-    }
+.student-table td {
+    padding: 14px;
+}
 
-    .stats-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
+.btn {
+    border-radius: 6px;
+    font-size: .8rem;
+    padding: 6px 12px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+}
 
-    .stat-card {
-        background: #000;
-        color: #0f0;
-        padding: 20px;
-        border-radius: 10px;
-        border: 2px solid #0a0;
-        text-align: center;
-    }
+.btn-warning { background:#ff9800;color:#000; }
+.btn-info { background:#007bff;color:#fff; }
+.btn-danger { background:#d40000;color:#fff; }
+.btn-success { background:#0a0;color:#fff; }
+.btn-primary { background:#0a0;color:#fff;padding:10px 20px; }
 
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin: 10px 0;
-    }
+img {
+    border-radius: 6px;
+}
 
-    .stat-label {
-        font-size: 0.9rem;
-        opacity: 0.8;
-    }
-
-    .table-container {
-        overflow-x: auto;
-        margin-top: 30px;
-    }
-
-    .student-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-    }
-
-    .student-table th {
-        background: #000;
-        color: #0f0;
-        padding: 15px;
-        text-align: left;
-        font-weight: bold;
-        border: 1px solid #0a0;
-    }
-
-    .student-table td {
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        color: #333;
-    }
-
-    .student-table tr:nth-child(even) {
-        background: #f9f9f9;
-    }
-
-    .student-table tr:hover {
-        background: #e0ffe0;
-    }
-
-    .action-btn {
-        padding: 6px 12px;
-        margin: 2px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.8rem;
-        font-weight: bold;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .generate-btn {
-        background: #0a0;
-        color: white;
-    }
-
-    .view-btn {
-        background: #0066cc;
-        color: white;
-    }
-
-    .delete-btn {
-        background: #cc0000;
-        color: white;
-    }
-
-    /* Messages */
-    .messages {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        max-width: 400px;
-    }
-
-    .alert {
-        padding: 15px 20px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        font-weight: bold;
-        border: 2px solid;
-    }
-
-    .alert-success {
-        background: rgba(0, 30, 0, 0.95);
-        color: #0f0;
-        border-color: #0f0;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-    }
-
-    .alert-error {
-        background: rgba(30, 0, 0, 0.95);
-        color: #f00;
-        border-color: #f00;
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .data-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .user-info {
-            width: 100%;
-            justify-content: space-between;
-        }
-
-        .stats-container {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    @media (max-width: 480px) {
-        .stats-container {
-            grid-template-columns: 1fr;
-        }
-
-        .user-info {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .logout-btn {
-            align-self: flex-end;
-        }
-    }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
 
-{% if messages %}
-<div class="messages">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-        {{ message }}
-    </div>
-    {% endfor %}
+<div class="container">
+
+{% if not request.session.student_logged_in %}
+
+<!-- LOGIN -->
+<div class="login-container">
+<h2 class="login-title">Student Data Portal Login</h2>
+
+<form method="POST" action="{% url 'dashboard:student_login' %}">
+{% csrf_token %}
+<input type="hidden" name="student_login" value="true">
+
+<div class="form-group">
+<input type="text" name="username" value="anrkitstudent" required>
 </div>
+
+<div class="form-group">
+<input type="password" name="password" value="anrkitstudent" required>
+</div>
+
+<button type="submit" class="login-btn">Login</button>
+</form>
+</div>
+
+{% else %}
+
+<div class="data-container">
+
+<div class="data-header">
+<h1 class="data-title">STUDENTS DATA PORTAL</h1>
+<a href="{% url 'dashboard:student_logout' %}" class="btn btn-danger">Logout</a>
+</div>
+
+<!-- ADD STUDENT BUTTON -->
+<div style="text-align:center;margin-bottom:20px;">
+<a href="{% url 'dashboard:students' %}" class="btn btn-primary">
+    ➕ Add New Student
+</a>
+</div>
+
+<!-- TABLE -->
+<div class="table-container">
+<table class="student-table">
+<thead>
+<tr>
+<th>H.T No</th>
+<th>Name</th>
+<th>Year</th>
+<th>Sem</th>
+<th>Phone Number</th>
+<th>CGPA</th>   <!-- ✅ ADDED -->
+<th>Photo</th>
+<th>PDF</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody>
+{% for student in students %}
+<tr>
+
+<td>{{ student.ht_no }}</td>
+
+<td>{{ student.student_name }}</td>
+
+<td>{{ student.year|default:"-" }}</td>
+
+<td>{{ student.sem|default:"-" }}</td>
+
+<td>{{ student.student_phone|default:"-" }}</td>
+
+<td>
+    {{ student.cgpa|default:"-" }}   <!-- ✅ ADDED -->
+</td>
+
+<td>
+{% if student.photo_url %}
+    <img src="{{ student.photo_url }}" width="50" height="50">
+{% elif student.photo %}
+    <img src="{{ student.photo.url }}" width="50" height="50">
+{% else %}
+    <span style="color:gray;">No Photo</span>
+{% endif %}
+</td>
+
+<td>
+{% if student.pdf_url %}
+    <a href="{{ student.pdf_url }}" target="_blank" class="btn btn-success">
+        View PDF
+    </a>
+{% else %}
+    <span class="btn btn-warning">Pending</span>
+{% endif %}
+</td>
+
+<td>
+{% if not student.pdf_url %}
+<a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning">
+    Generate
+</a>
 {% endif %}
 
-<div class="container">
-    {% if not request.session.student_logged_in %}
-    <!-- LOGIN FORM -->
-    <div class="login-container">
-        <h2 class="login-title">Student Data Portal Login</h2>
+<a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-info">
+    Edit
+</a>
 
-        <div class="credential-note">
-            <strong>Student Credentials:</strong><br>
-            Username: <strong>anrkitstudent</strong><br>
-            Password: <strong>anrkitstudent</strong>
-        </div>
+<form method="POST" action="{% url 'dashboard:delete_student' student.id %}">
+{% csrf_token %}
+<button type="submit" class="btn btn-danger">Delete</button>
+</form>
+</td>
 
-        <form class="login-form" method="POST" action="{% url 'dashboard:student_login' %}">
-            {% csrf_token %}
-            <input type="hidden" name="student_login" value="true">
-            <div class="form-group">
-                <label>Student Username</label>
-                <input type="text" name="username" required value="anrkitstudent">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required value="anrkitstudent">
-            </div>
-            <button type="submit" class="login-btn">Login to Student Portal</button>
-        </form>
-
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="{% url 'dashboard:students' %}" style="color: #0f0; text-decoration: none;">
-                ← Go to Student Registration
-            </a>
-        </div>
-    </div>
-    {% else %}
-    <!-- STUDENT DATA -->
-    <div class="data-container">
-        <div class="data-header">
-            <h1 class="data-title">STUDENTS DATA PORTAL</h1>
-            <div class="user-info">
-                <div class="student-username">
-                    <i class="fas fa-user"></i> Student: {{ request.session.student_username|default:"anrkitstudent" }}
-                </div>
-                <a href="{% url 'dashboard:student_logout' %}" class="logout-btn">🚪 Logout</a>
-            </div>
-        </div>
-
-        <div class="stats-container">
-            <div class="stat-card">
-                <div class="stat-label">Total Students</div>
-                <div class="stat-number">{{ total_students }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Male Students</div>
-                <div class="stat-number">{{ male_count }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Female Students</div>
-                <div class="stat-number">{{ female_count }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">PDFs Generated</div>
-                <div class="stat-number">{{ pdf_generated_count }}</div>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <table class="student-table">
-                <thead>
-                    <tr>
-                        <th>HT No</th>
-                        <th>Name</th>
-                        <th>Gender</th>
-                        <th>Year</th>
-                        <th>Sem</th>
-                        <th>CGPA</th>
-                        <th>PDF Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for student in students %}
-                    <tr>
-                        <td>{{ student.ht_no }}</td>
-                        <td>{{ student.student_name }}</td>
-                        <td>{{ student.gender }}</td>
-                        <td>{{ student.year }}</td>
-                        <td>{{ student.sem }}</td>
-                        <td>{{ student.cgpa }}</td>
-                        <td>
-                            {% if student.pdf_url %}
-                            <span style="color: #0a0; font-weight: bold;">✅ Generated</span>
-                            {% else %}
-                            <span style="color: #cc0000;">❌ Pending</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if student.pdf_url %}
-                            <a href="{% url 'dashboard:view_pdf' student.id %}" class="action-btn view-btn" target="_blank">
-                                View PDF
-                            </a>
-                            <a href="{% url 'dashboard:download_pdf' student.id %}" class="action-btn generate-btn">
-                                Download PDF
-                            </a>
-                            {% else %}
-                            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="action-btn generate-btn">
-                                Generate PDF
-                            </a>
-                            {% endif %}
-                            <a href="{% url 'dashboard:delete_student' student.id %}" class="action-btn delete-btn"
-                               onclick="return confirm('Are you sure you want to delete {{ student.student_name }}?')">
-                                Delete
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 30px;">
-                            No students found. <a href="{% url 'dashboard:students' %}" style="color: #0a0;">Register a student first</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="{% url 'dashboard:students' %}" style="background: #0a0; color: white; padding: 12px 25px;
-               text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                ➕ Register New Student
-            </a>
-        </div>
-    </div>
-    {% endif %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
 </div>
 
-<script>
-    // Matrix Animation
-    const canvas = document.getElementById('matrix-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+</div>
+{% endif %}
+</div>
 
-    const chars = '01';
-    const drops = Array(Math.floor(canvas.width / 16)).fill(1);
-
-    function draw() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = '16px monospace';
-        drops.forEach((y, i) => {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * 16, y * 16);
-            if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        });
-    }
-    setInterval(draw, 33);
-
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-
-    // Auto-hide messages after 5 seconds
-    setTimeout(() => {
-        const messages = document.querySelector('.messages');
-        if (messages) {
-            messages.style.transition = 'opacity 1s';
-            messages.style.opacity = '0';
-            setTimeout(() => messages.style.display = 'none', 1000);
-        }
-    }, 5000);
-
-    // Check if student is logged in and redirect if not
-    {% if not request.session.student_logged_in %}
-    // If user tries to access this page without login, show login form
-    // (the template already handles this with the if condition above)
-    {% endif %}
-</script>
 {% endblock %}

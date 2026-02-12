@@ -7,181 +7,221 @@
     <title>
         {% if student_login %}
             Student Login - ANURAG ENGINEERING COLLEGE
+        {% elif admin_login %}
+            Admin Login - ANURAG ENGINEERING COLLEGE
         {% else %}
             Login - ANURAG ENGINEERING COLLEGE
         {% endif %}
     </title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
-        body { background-color: #000; color: #0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow: hidden; position: relative; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        /* Matrix Canvas Styling */
-        #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #0f0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
 
-        .login-container { background-color: rgba(0, 20, 0, 0.9); border: 2px solid #0f0; border-radius: 10px; box-shadow: 0 0 25px rgba(0, 255, 0, 0.3); width: 100%; max-width: 450px; padding: 30px; position: relative; z-index: 1; }
-        .college-header { text-align: center; margin-bottom: 25px; border-bottom: 1px solid #0f0; padding-bottom: 20px; }
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0f0;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .login-type-badge {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #0f0;
+            margin-bottom: 20px;
+            padding: 8px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+
+        .college-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
 
         .header-image {
-            width: 100%;
-            max-width: 400px;
+            max-width: 100%;
             height: auto;
-            display: block;
-            margin: 0 auto 15px auto;
-            background: #FFFFFF;
-            border: 2px solid #0f0;
-            border-radius: 5px;
-            padding: 5px;
+            margin-bottom: 10px;
         }
 
-        .department { color: #0f0; font-size: 18px; font-weight: 700; text-transform: uppercase; }
-        .login-form { margin-top: 20px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #0f0; }
-        .form-group input { background-color: rgba(0, 30, 0, 0.7); border: 1px solid #0a0; border-radius: 5px; padding: 12px 15px; color: #0f0; width: 100%; outline: none; }
-        .form-group input:focus { border-color: #0f0; box-shadow: 0 0 10px #0f0; }
-        .login-btn {
-            background: linear-gradient(to bottom, #0a0, #050);
-            color: #000;
-            border: none;
-            padding: 14px;
-            width: 100%;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.3s;
+        .department {
+            font-size: 1.1rem;
+            color: #0f0;
+            margin-top: 10px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-3 {
             margin-bottom: 15px;
         }
-        .login-btn:hover { background: #0f0; box-shadow: 0 0 20px #0f0; }
 
-        /* Error/Success Messages */
-        .error-message {
-            color: #f00;
-            background-color: rgba(50, 0, 0, 0.5);
-            padding: 10px;
+        .student-credential-note {
+            background-color: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
+            padding: 15px;
+            margin: 20px 0;
             border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #a00;
-            text-align: center;
+            font-size: 0.9rem;
         }
 
-        .success-message {
+        .login-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
             color: #0f0;
-            background-color: rgba(0, 50, 0, 0.5);
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border: 1px solid #0a0;
-            text-align: center;
+            font-weight: bold;
         }
 
-        /* Login Type Switcher */
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 1px solid #0f0;
+            border-radius: 5px;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #0f0;
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        .login-btn:hover {
+            background-color: #0c0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+        }
+
         .login-switch {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 25px;
             padding-top: 20px;
-            border-top: 1px solid #0a0;
+            border-top: 1px solid #0f0;
         }
 
         .login-switch a {
             color: #0f0;
             text-decoration: none;
             font-weight: bold;
-            transition: 0.3s;
-            padding: 8px 15px;
-            border: 1px solid #0a0;
-            border-radius: 5px;
+            transition: all 0.3s;
             display: inline-block;
-            margin: 5px;
+            padding: 10px 20px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
         }
 
         .login-switch a:hover {
-            background: #0a0;
-            color: #000;
-            text-shadow: 0 0 10px #0f0;
+            background-color: rgba(0, 255, 0, 0.1);
+            text-decoration: none;
         }
 
-        /* Student Login Specific */
-        .student-credential-note {
-            background-color: rgba(0, 40, 0, 0.7);
-            border: 1px solid #0a0;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 0.9rem;
-            color: #0f0;
-        }
-
-        .student-credential-note strong {
-            color: #0f0;
-            display: block;
-            margin: 5px 0;
-            font-size: 1.1rem;
-        }
-
-        .login-type-badge {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #000;
-            color: #0f0;
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid #0f0;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        /* Messages Styling */
         .messages {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1000;
-            max-width: 400px;
+            width: 90%;
+            max-width: 500px;
         }
 
         .alert {
-            padding: 15px 20px;
+            padding: 15px;
             margin-bottom: 10px;
-            border-radius: 8px;
+            border-radius: 5px;
+            text-align: center;
             font-weight: bold;
-            border: 2px solid;
         }
 
         .alert-success {
-            background: rgba(0, 30, 0, 0.95);
+            background-color: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
             color: #0f0;
-            border-color: #0f0;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
         }
 
         .alert-error {
-            background: rgba(30, 0, 0, 0.95);
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px solid #f00;
             color: #f00;
-            border-color: #f00;
-            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .login-container {
-                padding: 20px;
-                margin: 10px;
-            }
+        .error-message {
+            background-color: rgba(255, 0, 0, 0.1);
+            border: 1px solid #f00;
+            color: #f00;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
 
-            .header-image {
-                max-width: 300px;
-            }
+        /* For the selector page links */
+        .login-switch a[style*="display: block"] {
+            display: block !important;
+            margin-bottom: 15px;
+            padding: 15px;
+            font-size: 1.1rem;
+            background-color: rgba(0, 255, 0, 0.05);
+            transition: all 0.3s;
+        }
 
-            .login-type-badge {
-                position: relative;
-                top: auto;
-                right: auto;
-                margin-bottom: 15px;
-                display: inline-block;
-            }
+        .login-switch a[style*="display: block"]:hover {
+            background-color: rgba(0, 255, 0, 0.15);
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -201,8 +241,10 @@
     <div class="login-container">
         {% if student_login %}
             <div class="login-type-badge">STUDENT LOGIN</div>
-        {% else %}
+        {% elif admin_login %}
             <div class="login-type-badge">ADMIN LOGIN</div>
+        {% else %}
+            <div class="login-type-badge">SELECT LOGIN</div>
         {% endif %}
 
         <div class="college-header">
@@ -240,10 +282,11 @@
 
             <div class="login-switch">
                 <p style="color: #0a0; margin-bottom: 10px;">Are you an Admin?</p>
-                <a href="{% url 'dashboard:login' %}">Switch to Admin Login →</a>
+                <!-- FIX 5: Changed from dashboard:login to dashboard:admin_login -->
+                <a href="{% url 'dashboard:admin_login' %}">Switch to Admin Login →</a>
             </div>
 
-        {% else %}
+        {% elif admin_login %}
             <h4 class="text-center mb-3" style="color: #0f0;">Admin Login Portal</h4>
 
             {% if error %}
@@ -252,22 +295,43 @@
             </div>
             {% endif %}
 
-            <form class="login-form" method="POST" action="{% url 'dashboard:login' %}">
+            <!-- FIX 2: Changed action from dashboard:login to dashboard:admin_login -->
+            <form class="login-form" method="POST" action="{% url 'dashboard:admin_login' %}">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label>Username</label>
+                    <label>Admin Username</label>
                     <input type="text" name="username" required placeholder="Enter admin username">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" name="password" required placeholder="Enter password">
+                    <input type="password" name="password" required placeholder="Enter admin password">
                 </div>
-                <button type="submit" class="login-btn">ACCESS SYSTEM</button>
+                <button type="submit" class="login-btn">ACCESS ADMIN SYSTEM</button>
             </form>
 
             <div class="login-switch">
                 <p style="color: #0a0; margin-bottom: 10px;">Are you a Student?</p>
                 <a href="{% url 'dashboard:student_login' %}">Switch to Student Login →</a>
+            </div>
+
+        {% else %}
+            <!-- Default login selection page -->
+            <h4 class="text-center mb-3" style="color: #0f0;">Select Login Type</h4>
+
+            <div class="login-switch" style="margin-top: 40px;">
+                <a href="{% url 'dashboard:student_login' %}" style="display: block; margin-bottom: 15px; padding: 15px; font-size: 1.1rem;">
+                    📚 Student Login
+                </a>
+                <!-- FIX 5: Changed from dashboard:login to dashboard:admin_login -->
+                <a href="{% url 'dashboard:admin_login' %}" style="display: block; padding: 15px; font-size: 1.1rem;">
+                    🔐 Admin Login
+                </a>
+            </div>
+
+            <div class="student-credential-note" style="margin-top: 30px;">
+                <strong>Student Demo Credentials:</strong><br>
+                Username: <strong>anrkitstudent</strong><br>
+                Password: <strong>anrkitstudent</strong>
             </div>
         {% endif %}
     </div>
@@ -279,43 +343,39 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const chars = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
-        const fontSize = 16;
-        const columns = Math.floor(canvas.width / fontSize);
-        const drops = Array(columns).fill(1);
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.floor(Math.random() * canvas.height / fontSize) * fontSize;
+        }
 
         function draw() {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
             ctx.fillStyle = '#0f0';
-            ctx.font = fontSize + 'px monospace';
+            ctx.font = `${fontSize}px 'Courier New', monospace`;
 
             for (let i = 0; i < drops.length; i++) {
-                const text = chars[Math.floor(Math.random() * chars.length)];
+                const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
                 drops[i]++;
             }
         }
+
         setInterval(draw, 33);
 
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', function() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
-
-        // Auto-hide messages after 5 seconds
-        setTimeout(() => {
-            const messages = document.querySelector('.messages');
-            if (messages) {
-                messages.style.transition = 'opacity 1s';
-                messages.style.opacity = '0';
-                setTimeout(() => messages.style.display = 'none', 1000);
-            }
-        }, 5000);
-
-        // Auto-focus on username field
-        document.querySelector('input[name="username"]')?.focus();
     </script>
 </body>
 </html>
