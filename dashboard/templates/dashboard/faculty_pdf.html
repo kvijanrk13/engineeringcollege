@@ -1,0 +1,556 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Profile - {{ faculty.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2c3e50;
+        }
+
+        .college-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .college-address {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3498db;
+            margin: 20px 0;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            background-color: #ecf0f1;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .info-table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+        }
+
+        .info-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #2c3e50;
+            width: 40%;
+        }
+
+        .photo-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .faculty-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #3498db;
+        }
+
+        .signature-section {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #2c3e50;
+        }
+
+        .signature-box {
+            width: 300px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+        }
+
+        .print-date {
+            text-align: right;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .info-table th {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            background-color: #f2f2f2;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .certificate-item {
+            display: inline-block;
+            background: #e3f2fd;
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #bbdefb;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 15px;
+        }
+
+        .pdf-header h1 {
+            color: #2c3e50;
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .university-name {
+            color: #3498db;
+            font-size: 18px;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .generation-info {
+            color: #7f8c8d;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .profile-section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            display: inline-block;
+            width: 180px;
+            font-size: 11px;
+        }
+
+        .info-value {
+            color: #333;
+            display: inline-block;
+            font-size: 11px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .data-table th {
+            background-color: #34495e;
+            color: white;
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .data-table td {
+            padding: 7px 10px;
+            border: 1px solid #ddd;
+            font-size: 11px;
+        }
+
+        .data-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .signature-line {
+            width: 250px;
+            height: 1px;
+            border-top: 1px solid #333;
+            margin: 40px auto 5px;
+        }
+
+        .signature-label {
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(0, 0, 0, 0.1);
+            z-index: -1;
+            font-weight: bold;
+        }
+
+        .barcode {
+            margin-top: 10px;
+            text-align: center;
+            font-family: 'Libre Barcode 128', cursive;
+            font-size: 20px;
+        }
+
+        .clearfix {
+            clear: both;
+        }
+
+        .text-bold {
+            font-weight: bold;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">ANURAG ENGINEERING COLLEGE</div>
+
+    <div class="print-date">
+        Generated on: {{ current_date|date:"d M Y h:i A" }}
+    </div>
+
+    <div class="pdf-header">
+        <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+        <div class="college-address">Anurag Nagar, Hyderabad, Telangana</div>
+        <h1>FACULTY PROFILE REPORT</h1>
+        <div class="generation-info">
+            Report ID: FAC-{{ faculty.id }}-{{ current_date|date:"YmdHis" }} |
+            Status: OFFICIAL DOCUMENT |
+            Employee Code: {{ faculty.employee_code }}
+        </div>
+    </div>
+
+    <div class="photo-container">
+        {% if faculty.photo %}
+            <img src="{{ faculty.photo.url }}" alt="{{ faculty.name }}" class="faculty-photo">
+        {% elif faculty.cloudinary_photo_url %}
+            <img src="{{ faculty.cloudinary_photo_url }}" alt="{{ faculty.name }}" class="faculty-photo">
+        {% else %}
+            <div style="width: 150px; height: 150px; border-radius: 50%; background: #ecf0f1; border: 3px solid #3498db; display: inline-flex; align-items: center; justify-content: center; color: #7f8c8d;">
+                No Photo
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="profile-section no-break">
+        <div class="section-title">1. PERSONAL INFORMATION</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Employee Code</td>
+                <td>{{ faculty.employee_code }}</td>
+            </tr>
+            <tr>
+                <td class="label">Full Name</td>
+                <td>{{ faculty.name|upper }}</td>
+            </tr>
+            <tr>
+                <td class="label">Date of Birth</td>
+                <td>{{ faculty.dob|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Gender</td>
+                <td>{{ faculty.gender }}</td>
+            </tr>
+            <tr>
+                <td class="label">Email</td>
+                <td>{{ faculty.email }}</td>
+            </tr>
+            <tr>
+                <td class="label">Mobile</td>
+                <td>{{ faculty.mobile }}</td>
+            </tr>
+            <tr>
+                <td class="label">Address</td>
+                <td>{{ faculty.address }}</td>
+            </tr>
+            {% if faculty.father_name %}
+            <tr>
+                <td class="label">Father's Name</td>
+                <td>{{ faculty.father_name }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.state %}
+            <tr>
+                <td class="label">State</td>
+                <td>{{ faculty.state }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.aadhar %}
+            <tr>
+                <td class="label">Aadhar Number</td>
+                <td>{{ faculty.aadhar }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.pan %}
+            <tr>
+                <td class="label">PAN Number</td>
+                <td>{{ faculty.pan }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <div class="profile-section no-break">
+        <div class="section-title">2. PROFESSIONAL INFORMATION</div>
+        <table class="info-table">
+            <tr>
+                <td class="label">Department</td>
+                <td>{{ faculty.department }}</td>
+            </tr>
+            <tr>
+                <td class="label">Joining Date</td>
+                <td>{{ faculty.joining_date|date:"d M Y" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Total Experience</td>
+                <td>{{ experience }}</td>
+            </tr>
+            <tr>
+                <td class="label">Experience (Anurag)</td>
+                <td>{{ faculty.exp_anurag|default:"N/A" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Experience (Other)</td>
+                <td>{{ faculty.exp_other|default:"N/A" }}</td>
+            </tr>
+            {% if faculty.jntuh_id %}
+            <tr>
+                <td class="label">JNTUH ID</td>
+                <td>{{ faculty.jntuh_id }}</td>
+            </tr>
+            {% endif %}
+            {% if faculty.aicte_id %}
+            <tr>
+                <td class="label">AICTE ID</td>
+                <td>{{ faculty.aicte_id }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td class="label">Current Status</td>
+                <td class="text-bold" style="color: green;">ACTIVE</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="profile-section no-break">
+        <div class="section-title">3. EDUCATIONAL QUALIFICATIONS</div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Degree</th>
+                    <th>Year</th>
+                    <th>Percentage</th>
+                    <th>Institution</th>
+                    <th>Specialization</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if faculty.ssc_year %}
+                <tr>
+                    <td>SSC</td>
+                    <td>{{ faculty.ssc_year }}</td>
+                    <td>{{ faculty.ssc_percent }}%</td>
+                    <td>{{ faculty.ssc_school }}</td>
+                    <td>-</td>
+                </tr>
+                {% endif %}
+                {% if faculty.inter_year %}
+                <tr>
+                    <td>Intermediate</td>
+                    <td>{{ faculty.inter_year }}</td>
+                    <td>{{ faculty.inter_percent }}%</td>
+                    <td>{{ faculty.inter_college }}</td>
+                    <td>-</td>
+                </tr>
+                {% endif %}
+                {% if faculty.ug_year %}
+                <tr>
+                    <td>B.Tech</td>
+                    <td>{{ faculty.ug_year }}</td>
+                    <td>{{ faculty.ug_percentage }}%</td>
+                    <td>{{ faculty.ug_college }}</td>
+                    <td>{{ faculty.ug_spec|default:"-" }}</td>
+                </tr>
+                {% endif %}
+                {% if faculty.pg_year %}
+                <tr>
+                    <td>M.Tech</td>
+                    <td>{{ faculty.pg_year }}</td>
+                    <td>{{ faculty.pg_percentage }}%</td>
+                    <td>{{ faculty.pg_college }}</td>
+                    <td>{{ faculty.pg_spec|default:"-" }}</td>
+                </tr>
+                {% endif %}
+                {% if faculty.phd_degree %}
+                <tr>
+                    <td>Ph.D</td>
+                    <td>{{ faculty.phd_year|default:"-" }}</td>
+                    <td>-</td>
+                    <td>{{ faculty.phd_university|default:"-" }}</td>
+                    <td>{{ faculty.phd_spec|default:"-" }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="profile-section">
+        <div class="section-title">4. SUBJECTS DEALT</div>
+        <div style="padding: 10px;">
+            {% if faculty.subjects_dealt %}
+                {% for subject in faculty.subjects_dealt.split|slice:":10" %}
+                <div class="certificate-item">{{ subject }}</div>
+                {% endfor %}
+                {% if faculty.subjects_dealt.split|length > 10 %}
+                <p>And {{ faculty.subjects_dealt.split|length|add:"-10" }} more subjects...</p>
+                {% endif %}
+            {% else %}
+                <p>No subjects specified</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="section-title">5. RESEARCH &amp; PUBLICATIONS</div>
+        <div style="padding: 15px; background-color: #f9f9f9; border: 1px solid #eee;">
+            {% if faculty.about_yourself %}
+                {{ faculty.about_yourself }}
+            {% else %}
+                <div style="text-align: center; color: #888; font-style: italic;">
+                    Research and publication data not available in the system
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <div class="section-title">6. VERIFICATION &amp; AUTHORIZATION</div>
+
+        <div style="margin: 30px 0; text-align: center; font-size: 11px; color: #555;">
+            This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
+        </div>
+
+        <div class="signature-section">
+            <div style="display: flex; justify-content: space-between;">
+                <div class="signature-box">
+                    <div style="height: 60px;"></div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">
+                        {{ faculty.name }}<br>
+                        Faculty Member<br>
+                        Date: _________________
+                    </div>
+                </div>
+
+                <div class="signature-box">
+                    <div style="height: 60px;"></div>
+                    <div class="signature-line"></div>
+                    <div class="signature-label">
+                        Head of Department<br>
+                        {{ faculty.department }}<br>
+                        Date: _________________
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 60px;">
+                <div style="width: 300px; height: 1px; border-top: 2px solid #333; margin: 0 auto 5px;"></div>
+                <div class="signature-label">
+                    Principal<br>
+                    Anurag Engineering College<br>
+                    Date: _________________
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="barcode text-center">
+        *ANURAG-FAC-{{ faculty.employee_code }}-{{ current_date|date:"Ymd" }}*
+    </div>
+
+    <div class="footer">
+        <p>This document is system generated. For verification, please contact the college administration.</p>
+        <p>ANURAG ENGINEERING COLLEGE | Email: info@anurag.ac.in | Phone: +91-XXX-XXXXXXX</p>
+        <p>Page 1 of 1 | &copy; {{ current_date|date:"Y" }} Anurag Engineering College</p>
+    </div>
+</body>
+</html>

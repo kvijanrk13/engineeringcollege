@@ -1,4 +1,4 @@
-# engineeringcollege/settings.py - COMPLETE MERGED VERSION
+# engineeringcollege/settings.py
 
 """
 Django settings for engineeringcollege project.
@@ -17,12 +17,12 @@ import cloudinary.api
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --------------------------------------------------
-# SECURITY - UPDATED FOR DEVELOPMENT
+# SECURITY
 # --------------------------------------------------
 SECRET_KEY = 'django-insecure-*k#h6s8^m&)3n4v7o0q$%9w1x2y5z8a!b@c#e$g&j)l_n+p3r'
-DEBUG = True  # Changed to True for development
 
-ALLOWED_HOSTS = ['*']  # Allow all for development
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
@@ -63,7 +63,7 @@ MIDDLEWARE = [
 ]
 
 # --------------------------------------------------
-# URLS
+# ROOT URLS
 # --------------------------------------------------
 ROOT_URLCONF = 'engineeringcollege.urls'
 
@@ -127,11 +127,10 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Whitenoise for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --------------------------------------------------
-# MEDIA FILES
+# MEDIA FILES (PDF WILL BE STORED LOCALLY)
 # --------------------------------------------------
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -144,12 +143,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ==================================================
 # CLOUDINARY CONFIGURATION
 # ==================================================
-# Cloudinary configuration variables
+
 CLOUDINARY_CLOUD_NAME = 'dsndiruhe'
 CLOUDINARY_API_KEY = '473455725389669'
 CLOUDINARY_API_SECRET = 'vztmkO4bDwTVvVNG7Mah9yPmkdY'
 
-# Cloudinary config
 cloudinary.config(
     cloud_name=CLOUDINARY_CLOUD_NAME,
     api_key=CLOUDINARY_API_KEY,
@@ -157,40 +155,41 @@ cloudinary.config(
     secure=True
 )
 
-# File storage settings
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# ==================================================
+# CLOUDINARY STORAGE CONFIG
+# ==================================================
 
-# ==================================================
-# WKHTMLTOPDF / PDFKIT CONFIGURATION
-# ==================================================
-WKHTMLTOPDF_PATH = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
-PDFKIT_CONFIG = {
-    'wkhtmltopdf': WKHTMLTOPDF_PATH
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+    'API_KEY': CLOUDINARY_API_KEY,
+    'API_SECRET': CLOUDINARY_API_SECRET,
 }
 
+# IMPORTANT:
+# We are NOT setting DEFAULT_FILE_STORAGE
+# Because generated PDFs must remain LOCAL.
+# CloudinaryField in models handles Cloud upload.
+
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 # ==================================================
-# AUTH URLS
+# AUTH REDIRECTS
 # ==================================================
 LOGIN_URL = 'dashboard:login'
 LOGIN_REDIRECT_URL = 'dashboard:dashboard'
 LOGOUT_REDIRECT_URL = 'dashboard:login'
 
-# ==================================================
-# ADDITIONAL SETTINGS
-# ==================================================
-SERVE_MEDIA = True  # Allow Django to serve media in development
-
-# Session settings
-SESSION_COOKIE_AGE = 1209600  # 2 weeks
+# --------------------------------------------------
+# SESSION SETTINGS
+# --------------------------------------------------
+SESSION_COOKIE_AGE = 1209600
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_SECURE = False  # Set to False for development
-CSRF_COOKIE_SECURE = False  # Set to False for development
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
 
-# File upload permissions
+# --------------------------------------------------
+# FILE UPLOAD LIMITS
+# --------------------------------------------------
 FILE_UPLOAD_PERMISSIONS = 0o644
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
-
-# Additional settings
-ENABLE_API = True
-ENABLE_DOCS = True
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880

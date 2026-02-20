@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ faculty.staff_name }} - Faculty Details | Anurag Engineering College{% endblock %}
+{% block title %}{{ faculty.name }} - Faculty Details | Anurag Engineering College{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -366,7 +366,7 @@
             <div class="col-lg-2 col-md-3 text-center">
                 {% if faculty.cloudinary_photo_url %}
                 <img src="{{ faculty.cloudinary_photo_url }}"
-                     alt="{{ faculty.staff_name }}"
+                     alt="{{ faculty.name }}"
                      class="faculty-photo"
                      id="facultyPhoto">
                 {% else %}
@@ -384,7 +384,7 @@
             </div>
 
             <div class="col-lg-10 col-md-9 faculty-basic-info">
-                <h1>{{ faculty.staff_name }}</h1>
+                <h1>{{ faculty.name }}</h1>
                 <div class="faculty-designation">
                     <i class="fas fa-briefcase me-2"></i>
                     {{ faculty.department }}
@@ -452,7 +452,7 @@
                     <div class="info-label">
                         <i class="fas fa-user info-icon"></i> Full Name
                     </div>
-                    <div class="info-value">{{ faculty.staff_name }}</div>
+                    <div class="info-value">{{ faculty.name }}</div>
                 </div>
 
                 <div class="info-item">
@@ -934,7 +934,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="fas fa-file-pdf text-danger me-2"></i>
-                    PDF Preview - {{ faculty.staff_name }}
+                    PDF Preview - {{ faculty.name }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -1309,7 +1309,7 @@
                     // Replace placeholder with actual photo
                     const placeholder = document.querySelector('.faculty-photo-placeholder');
                     if (placeholder) {
-                        placeholder.outerHTML = `<img src="${data.photo_url}" alt="{{ faculty.staff_name }}" class="faculty-photo" id="facultyPhoto">`;
+                        placeholder.outerHTML = `<img src="${data.photo_url}" alt="{{ faculty.name }}" class="faculty-photo" id="facultyPhoto">`;
                     }
                 }
 

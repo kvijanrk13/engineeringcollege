@@ -779,7 +779,7 @@ def validate_faculty_data(data: Dict) -> Tuple[bool, List[str]]:
     errors = []
 
     # Check required fields
-    required_fields = ['employee_code', 'staff_name', 'department', 'email']
+    required_fields = ['employee_code', 'name', 'department', 'email']
     for field in required_fields:
         if not data.get(field):
             errors.append(f"{field} is required")

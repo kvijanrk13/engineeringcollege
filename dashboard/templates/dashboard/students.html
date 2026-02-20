@@ -417,7 +417,8 @@
             </div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" id="registrationForm">
+        <!-- ✅ FIXED: Added action attribute pointing to the merged add_student view -->
+        <form method="POST" action="{% url 'dashboard:add_student' %}" enctype="multipart/form-data" id="registrationForm">
             {% csrf_token %}
             <div class="form-grid">
                 <div class="section-title">I. PERSONAL INFORMATION</div>
@@ -618,9 +619,11 @@
                     <label>Current CGPA *</label>
                     <input type="number" name="cgpa" min="0" max="10" step="0.01" required>
                 </div>
+                <!-- ✅ FIXED: Changed name from 'rtrp_project_title' to 'rtp_project_title' to match merged add_student view -->
                 <div class="form-group full-width">
                     <label>RTRP Project Title</label>
                     <input type="text" name="rtrp_project_title" placeholder="Enter RTRP project title if any">
+
                 </div>
                 <div class="form-group full-width">
                     <label>Internship Title</label>

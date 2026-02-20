@@ -5,14 +5,14 @@ from .models import Faculty, Certificate, FacultyLog, CloudinaryUpload
 
 @admin.register(Faculty)
 class FacultyAdmin(admin.ModelAdmin):
-    list_display = ('employee_code', 'staff_name', 'department', 'joining_date', 'is_active')
+    list_display = ('employee_code', 'name', 'department', 'joining_date', 'is_active')
     list_filter = ('department', 'is_active', 'gender', 'phd_degree')
-    search_fields = ('staff_name', 'employee_code', 'email', 'mobile')
+    search_fields = ('name', 'employee_code', 'email', 'mobile')
     list_per_page = 25
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('employee_code', 'staff_name', 'department', 'joining_date', 'is_active')
+            'fields': ('employee_code', 'name', 'department', 'joining_date', 'is_active')
         }),
         ('Contact Information', {
             'fields': ('email', 'mobile', 'father_name', 'address')
@@ -69,7 +69,7 @@ class FacultyAdmin(admin.ModelAdmin):
 class CertificateAdmin(admin.ModelAdmin):
     list_display = ('faculty', 'certificate_type', 'issued_by', 'issue_date', 'is_verified')
     list_filter = ('certificate_type', 'is_verified', 'issue_date')
-    search_fields = ('faculty__staff_name', 'certificate_type', 'issued_by')
+    search_fields = ('faculty__name', 'certificate_type', 'issued_by')
     date_hierarchy = 'issue_date'
 
 
@@ -77,7 +77,7 @@ class CertificateAdmin(admin.ModelAdmin):
 class FacultyLogAdmin(admin.ModelAdmin):
     list_display = ('faculty', 'action', 'performed_by', 'created_at')
     list_filter = ('action', 'created_at')
-    search_fields = ('faculty__staff_name', 'details', 'performed_by')
+    search_fields = ('faculty__name', 'details', 'performed_by')
     readonly_fields = ('faculty', 'action', 'details', 'performed_by', 'ip_address', 'created_at')
     date_hierarchy = 'created_at'
 
@@ -86,6 +86,6 @@ class FacultyLogAdmin(admin.ModelAdmin):
 class CloudinaryUploadAdmin(admin.ModelAdmin):
     list_display = ('faculty', 'upload_type', 'public_id', 'upload_date')
     list_filter = ('upload_type', 'upload_date')
-    search_fields = ('faculty__staff_name', 'public_id', 'cloudinary_url')
+    search_fields = ('faculty__name', 'public_id', 'cloudinary_url')
     readonly_fields = ('upload_date', 'raw_response')
     date_hierarchy = 'upload_date'

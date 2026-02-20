@@ -96,13 +96,13 @@ def dashboard(request):
 @login_required
 def faculty_list(request):
     """List all faculty members"""
-    faculties = Faculty.objects.all().order_by('department', 'staff_name')
+    faculties = Faculty.objects.all().order_by('department', 'name')
 
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
         faculties = faculties.filter(
-            Q(staff_name__icontains=search_query) |
+            Q(name__icontains=search_query) |
             Q(employee_code__icontains=search_query) |
             Q(department__icontains=search_query) |
             Q(email__icontains=search_query)
@@ -154,7 +154,7 @@ def faculty_detail(request, faculty_id):
     }
 
     return render(request, 'faculty/detail.html', {
-        'title': f'Faculty - {faculty.staff_name}',
+        'title': f'Faculty - {faculty.name}',
         'faculty': faculty,
         'certificates': certificates,
         'experience': experience,
@@ -171,7 +171,7 @@ def add_faculty(request):
         form = FacultyForm(request.POST, request.FILES)
         if form.is_valid():
             faculty = form.save()
-            messages.success(request, f'Faculty {faculty.staff_name} added successfully!')
+            messages.success(request, f'Faculty {faculty.name} added successfully!')
 
             # Log the action
             FacultyLog.objects.create(
@@ -202,7 +202,7 @@ def edit_faculty(request, faculty_id):
         form = FacultyForm(request.POST, request.FILES, instance=faculty)
         if form.is_valid():
             faculty = form.save()
-            messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
+            messages.success(request, f'Faculty {faculty.name} updated successfully!')
 
             # Log the action
             FacultyLog.objects.create(
@@ -218,7 +218,7 @@ def edit_faculty(request, faculty_id):
         form = FacultyForm(instance=faculty)
 
     return render(request, 'faculty/edit.html', {
-        'title': f'Edit Faculty - {faculty.staff_name}',
+        'title': f'Edit Faculty - {faculty.name}',
         'form': form,
         'faculty': faculty
     })
@@ -234,7 +234,7 @@ def delete_faculty(request, faculty_id):
         faculty.is_active = False
         faculty.save()
 
-        messages.success(request, f'Faculty {faculty.staff_name} has been deactivated.')
+        messages.success(request, f'Faculty {faculty.name} has been deactivated.')
 
         # Log the action
         FacultyLog.objects.create(
@@ -265,7 +265,7 @@ def save_faculty_details(request):
             faculty, created = Faculty.objects.get_or_create(
                 employee_code=employee_code,
                 defaults={
-                    'staff_name': data.get('staff_name', ''),
+                    'name': data.get('name', ''),
                     'department': data.get('department', ''),
                     'email': data.get('email', ''),
                     'mobile': data.get('mobile', ''),
@@ -950,7 +950,7 @@ def upload_certificate(request, faculty_id):
         form = CertificateForm()
 
     return render(request, 'certificates/upload.html', {
-        'title': f'Upload Certificate - {faculty.staff_name}',
+        'title': f'Upload Certificate - {faculty.name}',
         'form': form,
         'faculty': faculty
     })
@@ -1011,7 +1011,7 @@ def view_certificates(request, faculty_id):
     certificates = Certificate.objects.filter(faculty=faculty).order_by('-issue_date')
 
     return render(request, 'certificates/list.html', {
-        'title': f'Certificates - {faculty.staff_name}',
+        'title': f'Certificates - {faculty.name}',
         'faculty': faculty,
         'certificates': certificates
     })
@@ -1254,7 +1254,7 @@ def preview_merged_pdf(request, faculty_id):
 @user_passes_test(lambda u: u.groups.filter(name='Exam Branch').exists() or u.is_superuser)
 def exam_branch(request):
     """Exam branch dashboard"""
-    faculties = Faculty.objects.filter(is_active=True).order_by('department', 'staff_name')
+    faculties = Faculty.objects.filter(is_active=True).order_by('department', 'name')
 
     # Statistics
     stats = {
@@ -1279,7 +1279,7 @@ def exam_branch(request):
 @user_passes_test(lambda u: u.groups.filter(name='Exam Branch').exists() or u.is_superuser)
 def exam_branch_faculty_list(request):
     """Exam branch faculty list with download options"""
-    faculties = Faculty.objects.filter(is_active=True).order_by('department', 'staff_name')
+    faculties = Faculty.objects.filter(is_active=True).order_by('department', 'name')
 
     # Add PDF status to each faculty
     for faculty in faculties:
@@ -1320,7 +1320,7 @@ def download_all_pdfs(request):
                     response = requests.get(faculty.cloudinary_pdf_url)
                     if response.status_code == 200:
                         # Add to zip
-                        filename = f"faculty_{faculty.employee_code}_{faculty.staff_name.replace(' ', '_')}.pdf"
+                        filename = f"faculty_{faculty.employee_code}_{faculty.name.replace(' ', '_')}.pdf"
                         zf.writestr(filename, response.content)
                 except Exception as e:
                     logger.error(f"Error downloading PDF for {faculty.employee_code}: {str(e)}")
@@ -1353,14 +1353,14 @@ def download_all_pdfs(request):
 @user_passes_test(lambda u: u.groups.filter(name='Exam Branch').exists() or u.is_superuser)
 def generate_exam_branch_report(request):
     """Generate exam branch report"""
-    faculties = Faculty.objects.filter(is_active=True).order_by('department', 'staff_name')
+    faculties = Faculty.objects.filter(is_active=True).order_by('department', 'name')
 
     # Prepare report data
     report_data = []
     for faculty in faculties:
         report_data.append({
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,
@@ -1554,7 +1554,7 @@ def api_faculty_list(request):
     search = request.GET.get('search')
     if search:
         faculties = faculties.filter(
-            Q(staff_name__icontains=search) |
+            Q(name__icontains=search) |
             Q(employee_code__icontains=search) |
             Q(email__icontains=search)
         )
@@ -1565,7 +1565,7 @@ def api_faculty_list(request):
         data.append({
             'id': faculty.id,
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,
@@ -1586,7 +1586,7 @@ def api_faculty_detail(request, faculty_id):
         data = {
             'id': faculty.id,
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,
@@ -1782,7 +1782,7 @@ def import_faculty_data(request):
                         faculty, created = Faculty.objects.get_or_create(
                             employee_code=str(row.get('employee_code', '')).strip().upper(),
                             defaults={
-                                'staff_name': str(row.get('staff_name', '')).strip(),
+                                'name': str(row.get('name', '')).strip(),
                                 'department': str(row.get('department', '')).strip(),
                                 'email': str(row.get('email', '')).strip().lower(),
                                 'mobile': str(row.get('mobile', '')).strip(),
@@ -1840,7 +1840,7 @@ def export_faculty_data(request):
         for faculty in faculties:
             writer.writerow([
                 faculty.employee_code,
-                faculty.staff_name,
+                faculty.name,
                 faculty.department,
                 faculty.email,
                 faculty.mobile,
@@ -1881,7 +1881,7 @@ def export_to_excel(request):
         for faculty in Faculty.objects.all():
             data.append({
                 'Employee Code': faculty.employee_code,
-                'Name': faculty.staff_name,
+                'Name': faculty.name,
                 'Department': faculty.department,
                 'Email': faculty.email,
                 'Mobile': faculty.mobile,
@@ -2040,7 +2040,7 @@ def ajax_get_faculty_data(request):
 
     if search:
         faculties = Faculty.objects.filter(
-            Q(staff_name__icontains=search) |
+            Q(name__icontains=search) |
             Q(employee_code__icontains=search) |
             Q(email__icontains=search)
         )[:10]
@@ -2051,9 +2051,9 @@ def ajax_get_faculty_data(request):
     for faculty in faculties:
         data.append({
             'id': faculty.id,
-            'text': f"{faculty.employee_code} - {faculty.staff_name} ({faculty.department})",
+            'text': f"{faculty.employee_code} - {faculty.name} ({faculty.department})",
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
         })
 
@@ -2083,7 +2083,7 @@ def ajax_search_faculty(request):
 
     if search:
         faculties = faculties.filter(
-            Q(staff_name__icontains=search) |
+            Q(name__icontains=search) |
             Q(employee_code__icontains=search) |
             Q(email__icontains=search)
         )
@@ -2097,7 +2097,7 @@ def ajax_search_faculty(request):
         results.append({
             'id': faculty.id,
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,
@@ -2260,7 +2260,7 @@ def pdf_template_view(request):
     # Sample faculty for template preview
     sample_faculty = {
         'employee_code': '7001',
-        'staff_name': 'KAMBHAMPATI VIJAY KUMAR',
+        'name': 'KAMBHAMPATI VIJAY KUMAR',
         'department': 'INFORMATION TECHNOLOGY',
         'joining_date': '2010-12-10',
         'email': 'hod.inf@anurag.ac.in',
@@ -2695,7 +2695,7 @@ def export_faculty_json(request):
     for faculty in faculties:
         data.append({
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,
@@ -2756,7 +2756,7 @@ def export_faculty_xml(request):
         faculty_elem = ET.SubElement(root, 'faculty')
 
         ET.SubElement(faculty_elem, 'employee_code').text = faculty.employee_code
-        ET.SubElement(faculty_elem, 'name').text = faculty.staff_name
+        ET.SubElement(faculty_elem, 'name').text = faculty.name
         ET.SubElement(faculty_elem, 'department').text = faculty.department
         ET.SubElement(faculty_elem, 'email').text = faculty.email
         ET.SubElement(faculty_elem, 'mobile').text = faculty.mobile
@@ -2789,13 +2789,13 @@ def search_faculty(request):
 
     if query:
         faculties = Faculty.objects.filter(
-            Q(staff_name__icontains=query) |
+            Q(name__icontains=query) |
             Q(employee_code__icontains=query) |
             Q(department__icontains=query) |
             Q(email__icontains=query) |
             Q(mobile__icontains=query) |
             Q(subjects_dealt__icontains=query)
-        ).order_by('staff_name')
+        ).order_by('name')
     else:
         faculties = Faculty.objects.none()
 
@@ -2837,7 +2837,7 @@ def filter_faculty(request):
     elif status == 'inactive':
         filters['is_active'] = False
 
-    faculties = Faculty.objects.filter(**filters).order_by('staff_name')
+    faculties = Faculty.objects.filter(**filters).order_by('name')
 
     return render(request, 'search/filter.html', {
         'title': 'Filter Faculty',
@@ -2927,7 +2927,7 @@ def parse_faculty_data(text):
         if 'Employee Code' in line:
             data['employee_code'] = line.split(':')[-1].strip()
         elif 'Name' in line:
-            data['staff_name'] = line.split(':')[-1].strip()
+            data['name'] = line.split(':')[-1].strip()
         # Add more parsing logic as needed
 
     return data
@@ -3113,7 +3113,7 @@ def faculty_timeline(request, faculty_id):
     timeline_events.sort(key=lambda x: x['date'], reverse=True)
 
     return render(request, 'faculty/timeline.html', {
-        'title': f'Activity Timeline - {faculty.staff_name}',
+        'title': f'Activity Timeline - {faculty.name}',
         'faculty': faculty,
         'timeline_events': timeline_events,
         'total_events': len(timeline_events)
@@ -3129,10 +3129,10 @@ def faculty_comparison(request):
         faculties = Faculty.objects.none()
         return render(request, 'comparison/select.html', {
             'title': 'Compare Faculty',
-            'faculties': Faculty.objects.all().order_by('department', 'staff_name')
+            'faculties': Faculty.objects.all().order_by('department', 'name')
         })
 
-    faculties = Faculty.objects.filter(id__in=faculty_ids).order_by('department', 'staff_name')
+    faculties = Faculty.objects.filter(id__in=faculty_ids).order_by('department', 'name')
 
     # Prepare comparison data
     comparison_data = []
@@ -3140,7 +3140,7 @@ def faculty_comparison(request):
         comparison_data.append({
             'id': faculty.id,
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'experience': calculate_experience(faculty.joining_date),
             'qualification': faculty.phd_degree if faculty.phd_degree != 'Not Started' else faculty.pg_spec,
@@ -3211,7 +3211,7 @@ def faculty_bulk_actions(request):
 
     return render(request, 'bulk/actions.html', {
         'title': 'Bulk Actions',
-        'faculties': Faculty.objects.filter(is_active=True).order_by('department', 'staff_name')
+        'faculties': Faculty.objects.filter(is_active=True).order_by('department', 'name')
     })
 
 
@@ -3238,7 +3238,7 @@ def export_selected_faculty_data(request, faculty_ids):
         for faculty in faculties:
             writer.writerow([
                 faculty.employee_code,
-                faculty.staff_name,
+                faculty.name,
                 faculty.department,
                 faculty.email,
                 faculty.mobile,
@@ -3258,7 +3258,7 @@ def export_selected_faculty_data(request, faculty_ids):
         for faculty in faculties:
             data.append({
                 'employee_code': faculty.employee_code,
-                'name': faculty.staff_name,
+                'name': faculty.name,
                 'department': faculty.department,
                 'email': faculty.email,
                 'mobile': faculty.mobile,
@@ -3338,7 +3338,7 @@ def faculty_export_package(request, faculty_id):
             # Add faculty data as JSON
             faculty_data = {
                 'employee_code': faculty.employee_code,
-                'name': faculty.staff_name,
+                'name': faculty.name,
                 'department': faculty.department,
                 'email': faculty.email,
                 'mobile': faculty.mobile,
@@ -3432,7 +3432,7 @@ def faculty_api_webhook(request):
             faculty, created = Faculty.objects.get_or_create(
                 employee_code=employee_code.upper(),
                 defaults={
-                    'staff_name': data.get('name', ''),
+                    'name': data.get('name', ''),
                     'department': data.get('department', ''),
                     'email': data.get('email', ''),
                     'mobile': data.get('mobile', ''),
@@ -3495,7 +3495,7 @@ def faculty_qrcode(request, faculty_id):
         # Create QR code data
         qr_data = {
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,
@@ -3522,7 +3522,7 @@ def faculty_qrcode(request, faculty_id):
         qr_base64 = base64.b64encode(buffer.getvalue()).decode()
 
         return render(request, 'faculty/qrcode.html', {
-            'title': f'QR Code - {faculty.staff_name}',
+            'title': f'QR Code - {faculty.name}',
             'faculty': faculty,
             'qr_code': qr_base64,
             'qr_data': qr_data,
@@ -3579,7 +3579,7 @@ def faculty_search_advanced_api(request):
 
     if query:
         faculties = faculties.filter(
-            Q(staff_name__icontains=query) |
+            Q(name__icontains=query) |
             Q(employee_code__icontains=query) |
             Q(email__icontains=query) |
             Q(subjects_dealt__icontains=query)
@@ -3615,7 +3615,7 @@ def faculty_search_advanced_api(request):
         results.append({
             'id': faculty.id,
             'employee_code': faculty.employee_code,
-            'name': faculty.staff_name,
+            'name': faculty.name,
             'department': faculty.department,
             'email': faculty.email,
             'mobile': faculty.mobile,

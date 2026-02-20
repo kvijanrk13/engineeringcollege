@@ -7,7 +7,7 @@ import os
 class Faculty(models.Model):
     # Basic Information
     employee_code = models.CharField(max_length=20, unique=True)
-    staff_name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
     department = models.CharField(max_length=100)
     joining_date = models.DateField()
 
@@ -132,24 +132,24 @@ class Faculty(models.Model):
 
     class Meta:
         verbose_name_plural = "Faculty"
-        ordering = ['staff_name']
+        ordering = ['name']
         indexes = [
             models.Index(fields=['employee_code']),
             models.Index(fields=['department']),
-            models.Index(fields=['staff_name']),
+            models.Index(fields=['name']),
         ]
 
     def __str__(self):
-        return f"{self.employee_code} - {self.staff_name}"
+        return f"{self.employee_code} - {self.name}"
 
     def full_name(self):
         """Return full name in proper format"""
-        return self.staff_name.title()
+        return self.name.title()
 
     def get_display_name(self):
         """Return name with title"""
         title = "Dr." if self.phd_degree == "Completed" else "Mr./Ms."
-        return f"{title} {self.staff_name}"
+        return f"{title} {self.name}"
 
     def get_experience_years(self):
         """Calculate total experience in years"""
@@ -224,7 +224,7 @@ class Certificate(models.Model):
         ordering = ['-issue_date']
 
     def __str__(self):
-        return f"{self.certificate_type} - {self.faculty.staff_name}"
+        return f"{self.certificate_type} - {self.faculty.name}"
 
     def is_valid(self):
         """Check if certificate is still valid"""
@@ -352,7 +352,7 @@ def get_all_active_faculty():
 def search_faculty(query):
     """Search faculty by name, department, or employee code"""
     return Faculty.objects.filter(
-        models.Q(staff_name__icontains=query) |
+        models.Q(name__icontains=query) |
         models.Q(department__icontains=query) |
         models.Q(employee_code__icontains=query)
     )
@@ -363,7 +363,7 @@ def get_faculty_by_department(department_name):
     return Faculty.objects.filter(
         department__iexact=department_name,
         is_active=True
-    ).order_by('staff_name')
+    ).order_by('name')
 
 
 def get_faculty_stats():

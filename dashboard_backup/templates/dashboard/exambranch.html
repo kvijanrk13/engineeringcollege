@@ -535,7 +535,7 @@
                                         <div class="d-flex align-items-center">
                                             {% if faculty.cloudinary_photo_url %}
                                             <img src="{{ faculty.cloudinary_photo_url }}"
-                                                 alt="{{ faculty.staff_name }}"
+                                                 alt="{{ faculty.name }}"
                                                  class="rounded-circle me-3"
                                                  style="width: 40px; height: 40px; object-fit: cover;">
                                             {% else %}
@@ -545,7 +545,7 @@
                                             </div>
                                             {% endif %}
                                             <div>
-                                                <div class="font-weight-bold">{{ faculty.staff_name }}</div>
+                                                <div class="font-weight-bold">{{ faculty.name }}</div>
                                                 <small class="text-muted">{{ faculty.email }}</small>
                                             </div>
                                         </div>
