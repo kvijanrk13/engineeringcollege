@@ -23,18 +23,6 @@
         padding: 5px;
         box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
     }
-    .stat-box {
-        border: 2px solid #0f0;
-        padding: 30px;
-        border-radius: 12px;
-        text-align: center;
-        width: 260px;
-        background: rgba(0, 20, 0, 0.9);
-    }
-    .stat-number {
-        font-size: 3rem;
-        font-weight: bold;
-    }
     .nav-link-tab {
         border: 2px solid #0f0;
         padding: 10px 20px;
@@ -46,6 +34,63 @@
         background: #0f0;
         color: #000;
     }
+
+    /* Department Info Styling */
+    .dept-section {
+        border: 2px solid #0f0;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        background: rgba(0, 20, 0, 0.9);
+        text-align: left;
+    }
+    .dept-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #0f0;
+        padding-bottom: 10px;
+    }
+    .dept-subtitle {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 20px 0 15px 0;
+        color: #0f0;
+    }
+    .dept-content {
+        line-height: 1.8;
+        font-size: 1.1rem;
+    }
+    .dept-content p {
+        margin-bottom: 15px;
+    }
+    .dept-content ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .dept-content li {
+        margin-bottom: 12px;
+        padding-left: 20px;
+        position: relative;
+    }
+    .dept-content li:before {
+        content: ">";
+        position: absolute;
+        left: 0;
+        color: #0f0;
+        font-weight: bold;
+    }
+    .peo-box, .po-box, .pso-box {
+        border-left: 3px solid #0f0;
+        padding-left: 20px;
+        margin-bottom: 20px;
+    }
+    .peo-box strong, .po-box strong, .pso-box strong {
+        color: #0f0;
+        font-size: 1.2rem;
+        display: block;
+        margin-bottom: 8px;
+    }
 </style>
 
 <div class="text-center">
@@ -55,32 +100,133 @@
 <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
     <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
     <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
-
     <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
     <a href="{% url 'dashboard:students_data' %}" class="nav-link-tab">Students Data</a>
-
-    {# <a href="{% url 'dashboard:exam_branch' %}" class="nav-link-tab">Exam Branch</a> #}
-
-    {# <a href="{% url 'dashboard:reports_dashboard' %}" class="nav-link-tab">Reports</a> #}
-
-
     <a href="{% url 'dashboard:logout' %}" class="nav-link-tab text-danger border-danger">Logout</a>
 </div>
 
-<div class="d-flex flex-wrap justify-content-center gap-4">
-    <div class="stat-box">
-        <div class="stat-number">{{ total_faculty|default:0 }}</div>
-        <div>Total Faculty</div>
+<!-- ==================== DEPARTMENT PROFILE SECTION ==================== -->
+<div class="dept-section">
+    <div class="dept-title">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
+
+    <!-- Department Profile -->
+    <div class="dept-subtitle">Department Profile</div>
+    <div class="dept-content">
+        <p>• The department of IT was established in 2022 with an intake of 90 students in the UG Programme. Right from its inception it is continuously striving to impart quality education and competitive spirit among students for academic excellence.</p>
+        <p>• The department is equipped with state of the art computing facilities and experienced staff members and is known for its academic excellence proved by its performances since its inception. The Department also has audio-visual facilities with LCD Projectors and Digital Boards and Seminar Hall for effective teaching. The staff members are deputed to participate in workshops, Conferences and refreshers courses to keep in place with recent developments in the field of IT.</p>
     </div>
 
-    <div class="stat-box">
-        <div class="stat-number">{{ active_faculty|default:0 }}</div>
-        <div>Active Faculty</div>
+    <!-- Vision -->
+    <div class="dept-subtitle">Vision</div>
+    <div class="dept-content">
+        <p>To impart quality technical education, conduct scientific research of excellence and generate world class professionals to excel in the dynamic realm of Information Technology and contribute to the needs of the society.</p>
     </div>
 
-    <div class="stat-box">
-        <div class="stat-number">{{ departments|length|default:0 }}</div>
-        <div>Departments</div>
+    <!-- Mission -->
+    <div class="dept-subtitle">Mission</div>
+    <div class="dept-content">
+        <p>The Information Technology Department is committed</p>
+        <ul>
+            <li>To achieve excellence in higher education and research through dissemination of quality technical education with a strong foundation.</li>
+            <li>To continuously scout for and build opportunities in the field of IT and sustain long-term interaction with the institute and industry.</li>
+            <li>To build and uphold high professional and ethical standards to make the nation noted for its progressive contribution to global society.</li>
+        </ul>
+    </div>
+
+    <!-- PEOs -->
+    <div class="dept-subtitle">Program Educational Objectives (PEOs)</div>
+    <div class="dept-content">
+        <div class="peo-box">
+            <strong>PEO1:</strong>
+            <p>Graduates will be able to take up the professional responsibilities and effectively communicate with diversified teams.</p>
+        </div>
+        <div class="peo-box">
+            <strong>PEO2:</strong>
+            <p>Graduates will have the commitment towards the sustainable development for the advancement of the society by adhering ethics and values.</p>
+        </div>
+        <div class="peo-box">
+            <strong>PEO3:</strong>
+            <p>Graduates will practice lifelong learning in producing innovative solutions for complex problems.</p>
+        </div>
+    </div>
+
+    <!-- PSOs -->
+    <div class="dept-subtitle">Program Specific Outcomes (PSOs)</div>
+    <div class="dept-content">
+        <div class="pso-box">
+            <strong>PSO1:</strong>
+            <p>Advance professionally through organized training or self-learning in areas related to Information Technology throughout their career.</p>
+        </div>
+        <div class="pso-box">
+            <strong>PSO2:</strong>
+            <p>Learn emerging computing paradigms for research and innovation.</p>
+        </div>
+    </div>
+
+    <!-- POs -->
+    <div class="dept-subtitle">Program Outcomes (POs)</div>
+    <div class="dept-content">
+        <p>At the end of the program, Graduates will be able to:</p>
+
+        <div class="po-box">
+            <strong>PO 1: Engineering knowledge</strong>
+            <p>Apply the knowledge of mathematics, science, engineering fundamentals, and an engineering specialization to the solution of complex engineering problems.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 2: Problem analysis</strong>
+            <p>Identify, formulate, review research literature, and analyze complex engineering problems reaching substantiated conclusions using first principles of mathematics, natural sciences, and engineering sciences.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 3: Design/development of solutions</strong>
+            <p>Design solutions for complex engineering problems and design system components or processes that meet the specified needs with appropriate consideration for the public health and safety, and the cultural, societal, and environmental considerations.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 4: Conduct investigations of complex problems</strong>
+            <p>Use research-based knowledge and research methods including design of experiments, analysis and interpretation of data, and synthesis of the information to provide valid conclusions.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 5: Modern tool usage</strong>
+            <p>Create, select, and apply appropriate techniques, resources, and modern engineering and IT tools including prediction and modeling to complex engineering activities with an understanding of the limitations.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 6: The engineer and society</strong>
+            <p>Apply reasoning informed by the contextual knowledge to assess societal, health, safety, legal and cultural issues and the consequent responsibilities relevant to the professional engineering practice.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 7: Environment and sustainability</strong>
+            <p>Understand the impact of the professional engineering solutions in societal and environmental contexts, and demonstrate the knowledge of, and need for sustainable development.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 8: Ethics</strong>
+            <p>Apply ethical principles and commit to professional ethics and responsibilities and norms of the engineering practice.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 9: Individual and team work</strong>
+            <p>Function effectively as an individual, and as a member or leader in diverse teams, and in multidisciplinary settings.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 10: Communication</strong>
+            <p>Communicate effectively on complex engineering activities with the engineering community and with society at large, such as, being able to comprehend and write effective reports and design documentation, make effective presentations, and give and receive clear instructions.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 11: Project management and finance</strong>
+            <p>Demonstrate knowledge and understanding of the engineering and management principles and apply these to one’s own work, as a member and leader in a team, to manage projects and in multidisciplinary environments.</p>
+        </div>
+
+        <div class="po-box">
+            <strong>PO 12: Life-long learning</strong>
+            <p>Recognize the need for, and have the preparation and ability to engage in independent and life-long learning in the broadest context of technological change.</p>
+        </div>
     </div>
 </div>
 
