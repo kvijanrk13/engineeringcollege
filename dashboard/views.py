@@ -211,12 +211,12 @@ def sync_to_cloudinary(request, faculty_id):
             messages.error(request, "Error uploading faculty photo to Cloudinary")
             return redirect("dashboard:faculty_dashboard")
 
-    # Log the action
+    # Log the sync action
     FacultyLog.objects.create(
-        faculty=None,
-        action="Student Added",
-        details=f"Student added: {student.student_name} ({student.ht_no})",
-        performed_by=request.session.get('student_username', 'Student'),
+        faculty=faculty,
+        action="Cloudinary Sync",
+        details=f"Faculty synced to Cloudinary: {faculty.employee_code}",
+        performed_by=request.user.username,
         ip_address=request.META.get('REMOTE_ADDR')
     )
 
@@ -588,6 +588,19 @@ def redirect_to_dashboard(request):
         return redirect('dashboard:login')
 
 
+# ==================== SYLLABUS VIEW ====================
+
+@login_required
+def syllabus_view(request):
+    """
+    Renders the Syllabus & Common Subjects page.
+    Referenced in urls.py as: path('syllabus/', views.syllabus_view, name='syllabus')
+    """
+    return render(request, 'dashboard/students.html', {
+        'title': 'Syllabus & Common Subjects - ANURAG Engineering College',
+    })
+
+
 # ==================== SINGLE PAGE FACULTY DASHBOARD - MERGED VERSION ====================
 
 @login_required
@@ -926,7 +939,8 @@ def assign_subjects(request, faculty_id):
         )
 
         messages.success(request, f'Subjects assigned to {faculty.staff_name} successfully!')
-        return redirect('dashboard:faculty_dashboard') + f'?id={faculty.id}'
+        # ✅ FIX: Use HttpResponseRedirect with reverse() instead of string concatenation
+        return HttpResponseRedirect(reverse('dashboard:faculty_dashboard') + f'?id={faculty.id}')
 
     # Get available subjects
     available_subjects = Subject.objects.all()
@@ -1049,6 +1063,15 @@ def add_student(request):
                 cert_extra=upload_raw(request.FILES.get("cert_extra")),
                 cert_placement=upload_raw(request.FILES.get("cert_placement")),
                 cert_national=upload_raw(request.FILES.get("cert_national")),
+            )
+
+            # Log student addition
+            FacultyLog.objects.create(
+                faculty=None,
+                action="Student Added",
+                details=f"Student added: {student.student_name} ({student.ht_no})",
+                performed_by=request.session.get('student_username', 'Student'),
+                ip_address=request.META.get('REMOTE_ADDR')
             )
 
             return redirect("dashboard:generate_student_pdf", student_id=student.id)
@@ -1412,7 +1435,7 @@ def generate_faculty_pdf(request, faculty_id):
         context = {
             'faculty': faculty,
             'experience': experience,
-            'current_date': date.today(),
+            'current_date': datetime.now(),
             'pdf_mode': True,  # This triggers PDF mode in template
         }
 
@@ -1432,12 +1455,12 @@ def generate_faculty_pdf(request, faculty_id):
             'enable-local-file-access': '',
         }
 
-        # Configure wkhtmltopdf path
-        config = pdfkit.configuration()
-        if hasattr(settings, 'WKHTMLTOPDF_PATH'):
-            config = pdfkit.configuration(wkhtmltopdf=settings.WKHTMLTOPDF_PATH)
+        # --- ADDED: Explicit path to wkhtmltopdf ---
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+        # --- END OF ADDITION ---
 
-        # Generate PDF
+        # Generate PDF with configuration
         pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
 
         # Create response
@@ -1480,7 +1503,12 @@ def generate_pdf_with_data(request):
                 'encoding': "UTF-8",
             }
 
-            pdf = pdfkit.from_string(html_string, False, options=options)
+            # --- ADDED: Explicit path to wkhtmltopdf ---
+            path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+            config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+            # --- END OF ADDITION ---
+
+            pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
 
             response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="generated_document.pdf"'
@@ -1568,7 +1596,7 @@ def bulk_generate_faculty_pdfs(request):
                         context = {
                             'faculty': faculty,
                             'experience': experience,
-                            'current_date': date.today(),
+                            'current_date': datetime.now(),
                             'pdf_mode': True,
                         }
 
@@ -1584,9 +1612,10 @@ def bulk_generate_faculty_pdfs(request):
                             'encoding': "UTF-8",
                         }
 
-                        config = pdfkit.configuration()
-                        if hasattr(settings, 'WKHTMLTOPDF_PATH'):
-                            config = pdfkit.configuration(wkhtmltopdf=settings.WKHTMLTOPDF_PATH)
+                        # --- ADDED: Explicit path to wkhtmltopdf ---
+                        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+                        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+                        # --- END OF ADDITION ---
 
                         pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
 
@@ -2404,7 +2433,7 @@ def generate_faculty_pdf_bytes(faculty):
         context = {
             'faculty': faculty,
             'experience': experience,
-            'current_date': date.today(),
+            'current_date': datetime.now(),
             'pdf_mode': True,
         }
 
@@ -2424,11 +2453,12 @@ def generate_faculty_pdf_bytes(faculty):
             'enable-local-file-access': '',
         }
 
-        # Generate PDF
-        config = pdfkit.configuration()
-        if hasattr(settings, 'WKHTMLTOPDF_PATH'):
-            config = pdfkit.configuration(wkhtmltopdf=settings.WKHTMLTOPDF_PATH)
+        # --- ADDED: Explicit path to wkhtmltopdf ---
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+        # --- END OF ADDITION ---
 
+        # Generate PDF with configuration
         pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
         return pdf_bytes
 

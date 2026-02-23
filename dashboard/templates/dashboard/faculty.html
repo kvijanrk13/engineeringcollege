@@ -1,1190 +1,1848 @@
-{% extends 'dashboard/base.html' %}
+{% extends "dashboard/base.html" %}
 {% load static %}
-{% block title %}STUDENTS REGISTRATION FORM{% endblock %}
-
-{% block content %}
-{% if pdf_mode %}
+{% block title %}Faculty Profile | {{ faculty.name|default:"Faculty Dashboard" }}{% endblock %}
+{% block extra_css %}
 <style>
-    body { background:#fff!important; color:#000!important; font-family:Arial!important; }
-    canvas, .logout-btn, button, .messages { display:none!important; }
-    input, textarea, select { border:none!important; background:transparent!important; }
-</style>
-{% endif %}
-
-<style>
-    body { margin: 0; padding: 0; font-family: 'Courier New', monospace; background-color: #000; color: #0f0; overflow-x: hidden; }
-    #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-
-    .registration-container { position: relative; z-index: 2; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-
-    .form-card {
-        background: rgba(255, 255, 255, 0.95); color: #1a1a1a; padding: 40px;
-        border-radius: 15px; width: 100%; max-width: 1100px;
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.5); border: 3px solid #0f0;
+    .faculty-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         position: relative;
+        overflow: hidden;
     }
-
-    /* ENHANCED HEADER STYLES */
-    .form-header {
-        text-align: center;
-        border-bottom: 4px solid #0f0;
-        margin-bottom: 35px;
-        padding-bottom: 15px;
-        position: relative;
-    }
-
-    {% if pdf_mode %}
-    .form-header img {
-        width: 120px;
-        border: 1px solid #000;
-        margin-bottom: 20px;
-    }
-    {% endif %}
-
-    .form-title {
-        font-size: 2rem;
-        color: #000;
-        margin: 20px 0 10px 0;
-        font-weight: 800;
-        background: linear-gradient(90deg, #000, #0a0, #000);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    }
-
-    /* STUDENT LOGOUT BUTTON - MERGED */
-    .student-logout-btn {
+    .faculty-header::before {
+        content: '';
         position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #000;
-        color: #f00;
-        padding: 8px 20px;
-        text-decoration: none;
-        border: 2px solid #f00;
-        border-radius: 5px;
-        font-weight: bold;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-        z-index: 10;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.1);
     }
-
-    .student-logout-btn:hover {
-        background: #f00;
-        color: #000;
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+    .faculty-photo {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 5px solid white;
+        object-fit: cover;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
-
-    .header-note {
-        background: #000;
-        color: #0f0;
-        padding: 8px 15px;
-        border-radius: 5px;
-        display: inline-block;
-        margin-top: 10px;
-        font-size: 0.9rem;
-        border: 1px solid #0f0;
-    }
-
-    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
-    .full-width { grid-column: span 2; }
-
-    .section-title { grid-column: span 2; background: #000; color: #0f0; padding: 10px 20px; margin-top: 20px; font-weight: bold; border-left: 10px solid #0f0; }
-
-    .form-group { display: flex; flex-direction: column; }
-    label { font-weight: 900; margin-bottom: 8px; color: #333; text-transform: uppercase; font-size: 0.85rem; }
-    input, select, textarea {
-        padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 1rem;
-        transition: 0.3s; word-wrap: break-word; overflow-wrap: break-word;
-    }
-    input:focus, select:focus, textarea:focus {
-        border-color: #0f0;
-        outline: none;
-        box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
-    }
-
-    /* Style for wrapped content */
-    input[type="text"], input[type="tel"], input[type="email"], input[type="number"], textarea {
-        white-space: pre-wrap;
-        word-break: break-word;
-    }
-
-    textarea {
-        min-height: 80px;
-        resize: vertical;
-        overflow-y: auto;
-    }
-
-    .submit-btn {
-        grid-column: span 2; padding: 20px; background: #000; color: #0f0;
-        font-weight: 900; border: 3px solid #0f0; cursor: pointer;
-        text-transform: uppercase; font-size: 1.2rem; letter-spacing: 2px; margin-top: 30px;
-        transition: all 0.3s;
-    }
-    .submit-btn:hover {
-        background: #0f0;
-        color: #000;
-        transform: scale(1.02);
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
-    }
-
-    .hidden-input { display: none; margin-top: 10px; }
-
-    /* Messages Styling */
-    .messages {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        max-width: 400px;
-    }
-
-    .alert {
-        padding: 15px 20px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        font-weight: bold;
-        border: 2px solid;
-    }
-
-    .alert-success {
-        background: rgba(0, 30, 0, 0.95);
-        color: #0f0;
-        border-color: #0f0;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-    }
-
-    .alert-error {
-        background: rgba(30, 0, 0, 0.95);
-        color: #f00;
-        border-color: #f00;
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-    }
-
-    .pdf-links {
-        margin-top: 10px;
+    .faculty-photo-placeholder {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 5px solid white;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 60px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
-
-    .pdf-link {
-        padding: 8px 15px;
-        background: rgba(0, 20, 0, 0.8);
-        color: #0f0;
-        border: 1px solid #0f0;
-        border-radius: 5px;
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-    }
-
-    .pdf-link:hover {
-        background: #0f0;
-        color: #000;
-    }
-
-    /* Error styling for validation */
-    .error-input {
-        border-color: #f00 !important;
-        box-shadow: 0 0 5px rgba(255, 0, 0, 0.3) !important;
-    }
-
-    .error-message {
-        color: #f00;
-        font-size: 0.8rem;
-        margin-top: 5px;
-        display: none;
-    }
-
-    /* Enhanced Address Field Styling */
-    .address-field-container {
-        position: relative;
-        background: #f9f9f9;
-        border: 2px solid #0a0;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 10px 0;
-    }
-
-    .address-field-container label {
-        background: #000;
-        color: #0f0;
-        padding: 5px 10px;
-        border-radius: 4px;
-        display: inline-block;
-        margin-bottom: 10px;
-    }
-
-    .address-textarea {
-        width: 100%;
-        min-height: 100px;
-        padding: 12px;
-        border: 2px solid #ccc;
-        border-radius: 6px;
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        line-height: 1.5;
-        background: white;
-        color: #000;
-    }
-
-    .address-textarea:focus {
-        border-color: #0f0;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-        outline: none;
-    }
-
-    /* STUDENT USERNAME DISPLAY */
-    .student-user-info {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: #000;
-        color: #0f0;
-        padding: 8px 15px;
-        border-radius: 5px;
-        border: 1px solid #0f0;
-        font-size: 0.9rem;
-        z-index: 10;
-    }
-
-    .student-user-info i {
-        margin-right: 5px;
-    }
-
-    /* PDF-specific styles */
-    @media print {
-        * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            overflow: visible !important;
-        }
-
-        /* Force address to be visible */
-        .address-textarea,
-        textarea[name="address"],
-        [name="address"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            color: #000000 !important;
-            background-color: white !important;
-            border: 1px solid #000 !important;
-            white-space: pre-wrap !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            font-size: 12pt !important;
-            line-height: 1.5 !important;
-            height: auto !important;
-            min-height: 100px !important;
-        }
-
-        /* Hide logout button and user info in print/PDF */
-        .student-logout-btn,
-        .student-user-info {
-            display: none !important;
-        }
-    }
-
-    /* Preview area for address */
-    .address-preview {
-        background: #fff;
-        border: 1px solid #ccc;
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 4px;
-        min-height: 60px;
-        font-family: monospace;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        display: none;
-    }
-
-    .address-preview-label {
-        font-size: 0.8rem;
-        color: #666;
+    .faculty-basic-info h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
         margin-bottom: 5px;
     }
-
-    /* TASK Field Styling */
-    .task-field-container {
-        background: #f0f8ff;
-        border: 2px solid #0066cc;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 10px 0;
+    .faculty-designation {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 15px;
     }
-
-    .task-field-container label {
-        background: #0066cc;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
+    .badge-status {
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        border: 1px solid #eef1f6;
+        transition: transform 0.3s ease;
+        border-left: 4px solid #3498db;
+    }
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .info-card h5 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+        font-weight: 600;
+    }
+    .info-item {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #ecf0f1;
+    }
+    .info-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #34495e;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .info-value {
+        color: #2c3e50;
+        padding-left: 26px;
+    }
+    .info-icon {
+        color: #3498db;
+        width: 18px;
+    }
+    .stat-card {
+        transition: transform 0.3s;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    .border-left-primary { border-left: 4px solid #4e73df; }
+    .border-left-success { border-left: 4px solid #1cc88a; }
+    .border-left-info { border-left: 4px solid #36b9cc; }
+    .border-left-warning { border-left: 4px solid #f6c23e; }
+    .subject-badge {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 20px;
+        padding: 8px 15px;
+        margin: 5px;
         display: inline-block;
-        margin-bottom: 10px;
+        transition: all 0.3s;
     }
-
-    /* Responsive adjustments for header */
+    .subject-badge:hover {
+        background: #e3f2fd;
+        border-color: #3498db;
+        transform: scale(1.05);
+    }
+    .action-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 30px;
+        border: 1px solid #e9ecef;
+    }
+    .btn-action-large {
+        padding: 15px 25px;
+        font-weight: 600;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 15px;
+        border: none;
+    }
+    .btn-action-large:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 7px 20px rgba(0,0,0,0.15);
+    }
+    .btn-generate-pdf { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+    .btn-upload-cloudinary { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+    .btn-preview-pdf { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+    .btn-merge-certificates{ background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+    .btn-download-pdf { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; }
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .status-available { background-color: #d4edda; color: #155724; }
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-uploading { background-color: #d1ecf1; color: #0c5460; }
+    .upload-progress {
+        height: 25px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+    .pdf-preview-modal .modal-dialog { max-width: 90%; }
+    .pdf-preview-iframe {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #3498db;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+    }
+    .timeline-item:last-child { margin-bottom: 0; }
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -25px;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #3498db;
+        border: 3px solid white;
+        box-shadow: 0 0 0 3px #3498db;
+    }
+    .timeline-content h6 { color: #2c3e50; margin-bottom: 5px; }
+    .timeline-content p { color: #7f8c8d; margin-bottom: 0; font-size: 0.9rem; }
+    .profile-completion {
+        height: 10px;
+        background: #f0f0f0;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    .profile-completion-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: 5px;
+    }
+    .contact-info li { padding: 8px 0; border-bottom: 1px solid #eee; }
+    .contact-info li:last-child { border-bottom: none; }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    .loading { animation: pulse 1.5s infinite; }
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .empty-state i { font-size: 5rem; color: #dee2e6; margin-bottom: 20px; }
+    .empty-state h3 { color: #6c757d; margin-bottom: 10px; }
+    .empty-state p { color: #adb5bd; margin-bottom: 25px; }
+    @media print {
+        .no-print { display: none !important; }
+        .info-card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+        .action-section { display: none; }
+    }
     @media (max-width: 768px) {
-        .form-title {
-            font-size: 1.5rem;
-        }
-
-        .student-logout-btn,
-        .student-user-info {
-            position: relative;
-            top: auto;
-            left: auto;
-            right: auto;
-            margin: 10px 0;
-            display: inline-block;
-        }
-
-        .form-header {
-            text-align: center;
-        }
-
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .full-width {
-            grid-column: span 1;
-        }
-
-        .submit-btn {
-            grid-column: span 1;
-        }
+        .faculty-header { padding: 20px; text-align: center; }
+        .faculty-photo, .faculty-photo-placeholder { width: 150px; height: 150px; margin: 0 auto 20px; }
+        .faculty-basic-info h1 { font-size: 1.8rem; }
+        .info-card { padding: 20px; }
+        .btn-action-large { padding: 12px 20px; font-size: 0.9rem; }
+        .timeline { padding-left: 20px; }
+        .timeline-item::before { left: -28px; }
+    }
+    .chart-pie { position: relative; height: 200px; }
+    .dataTable-wrapper { overflow-x: auto; }
+    #facultySelector {
+        border: 2px solid #e3e6f0;
+        border-radius: 0.35rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    #facultySelector:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+    .toast-container { z-index: 9999; }
+    .analytics-card .card-body { padding: 1.25rem; }
+    .analytics-card .h5 { font-size: 1.25rem; font-weight: 600; }
+    .certificate-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #3498db;
+        transition: all 0.3s ease;
+    }
+    .certificate-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    /* Form section headers */
+    .form-section-header {
+        background: linear-gradient(135deg, #2c3e50, #34495e);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin: 24px 0 15px 0;
+        font-weight: 600;
+        font-size: 0.95rem;
+        letter-spacing: 0.4px;
+    }
+    .form-section-header i { margin-right: 8px; }
+    /* Auto-calculated experience field */
+    #experience_display {
+        background-color: #e8f5e9;
+        border: 2px solid #27ae60;
+        font-weight: 700;
+        color: #1e8449;
+    }
+    /* ORCID / APAAR badges */
+    .id-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0f8ff;
+        border: 1px solid #b8d4f0;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #1a5276;
+        word-break: break-all;
+    }
+    .id-badge.orcid {
+        background: #d4efdf;
+        border-color: #27ae60;
+        color: #1e8449;
+    }
+    .id-badge.apaar {
+        background: #fdebd0;
+        border-color: #e67e22;
+        color: #a04000;
     }
 </style>
-
-<canvas id="matrix-canvas"></canvas>
-
-{% if messages %}
-<div class="messages">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-        {{ message }}
-        {% if message.tags == 'success' and request.session.student_id %}
-        <div class="pdf-links">
-            <a href="{% url 'dashboard:view_pdf' request.session.student_id %}" class="pdf-link" target="_blank">
-                📄 View Your PDF
-            </a>
-            <a href="{% url 'dashboard:download_pdf' request.session.student_id %}" class="pdf-link">
-                📥 Download PDF
-            </a>
-        </div>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<div class="registration-container">
-    <div class="form-card">
-        <!-- STUDENT USERNAME DISPLAY - MERGED -->
-        {% if request.session.student_logged_in %}
-        <div class="student-user-info">
-            <i class="fas fa-user"></i> Student: {{ request.session.student_username|default:"Student" }}
-        </div>
-        {% endif %}
-
-        <!-- STUDENT LOGOUT BUTTON - MERGED -->
-        {% if request.session.student_logged_in %}
-        <a href="{% url 'dashboard:student_logout' %}" class="student-logout-btn">
-            🚪 Logout Student
-        </a>
-        {% endif %}
-
-        <!-- ADMIN LOGOUT BUTTON - ADDED (for admin users) -->
-        {% if request.user.is_authenticated %}
-        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-            <a href="{% url 'dashboard:logout' %}" class="student-logout-btn" style="background: #000; color: #f00; border-color: #f00;">
-                🚪 Logout Admin
-            </a>
-        </div>
-        {% endif %}
-
-        <div class="form-header">
-            {% if pdf_mode %}
-            <img src="{{ photo_url }}" style="width:120px;border:1px solid #000;margin-bottom:20px;">
-            {% endif %}
-
-            <!-- Removed the college and department titles here -->
-            <h3 class="form-title">STUDENTS REGISTRATION FORM</h3>
-
-            <div style="margin-top: 15px;">
-                <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">
-                    After submission, a PDF will be generated with filename: <strong>student_{HT_NO}_{NAME}.pdf</strong>
-                </p>
-                <div class="header-note">
-                    <strong>⚠ IMPORTANT:</strong> Ensure address field is filled completely. It will appear in the generated PDF.
-                </div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    {% if is_analytics %}
+    <!-- ==================== FACULTY ANALYTICS PAGE ==================== -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h1 class="h2">Faculty Analytics</h1>
+                <p class="text-muted">Comprehensive analytics and insights about faculty members</p>
             </div>
         </div>
-
-        <!-- ✅ FIXED: Added action attribute pointing to the merged add_student view -->
-        <form method="POST" action="{% url 'dashboard:add_student' %}" enctype="multipart/form-data" id="registrationForm">
-            {% csrf_token %}
-            <div class="form-grid">
-                <div class="section-title">I. PERSONAL INFORMATION</div>
-
-                <div class="form-group">
-                    <label>Hall Ticket Number *</label>
-                    <input type="text" name="ht_no" id="ht_no" required
-                           oninput="this.value = this.value.toUpperCase()"
-                           pattern="[A-Z0-9]+"
-                           title="Hall Ticket Number must be in uppercase letters and numbers only">
-                    <div class="error-message" id="ht_no_error"></div>
-                    <small style="color: #666; font-size: 0.8rem;">PDF will be saved as: student_HTNO_NAME.pdf</small>
-                </div>
-                <div class="form-group">
-                    <label>Name of the Student *</label>
-                    <input type="text" name="student_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Father Name *</label>
-                    <input type="text" name="father_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Mother Name *</label>
-                    <input type="text" name="mother_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Gender *</label>
-                    <select name="gender" required>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date of Birth *</label>
-                    <input type="text" id="dob" name="dob"
-                           pattern="(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}"
-                           placeholder="DD-MM-YYYY"
-                           title="Date must be in DD-MM-YYYY format" required>
-                    <div class="error-message" id="dob_error"></div>
-                </div>
-                <div class="form-group">
-                    <label>Age (Auto-calculated) *</label>
-                    <input type="text" id="age" name="age" readonly style="background:#eee;" required>
-                </div>
-                <div class="form-group">
-                    <label>Nationality</label>
-                    <input type="text" name="nationality" value="Indian">
-                </div>
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select name="category" required>
-                        <option value="">Select Category</option>
-                        <option>General</option><option>OBC</option><option>SC</option><option>ST</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Religion</label>
-                    <input type="text" name="religion">
-                </div>
-                <div class="form-group">
-                    <label>Blood Group</label>
-                    <input type="text" name="blood_group">
-                </div>
-                <div class="form-group">
-                    <label>Aadhar Number / Government ID *</label>
-                    <input type="text" name="aadhar" required>
-                </div>
-                <div class="form-group">
-                    <label>APAAR ID</label>
-                    <input type="text" name="apaar_id" placeholder="810-009-646-074"
-                           pattern="\d{3}-\d{3}-\d{3}-\d{3}" title="Format: 000-000-000-000">
-                </div>
-
-                <div class="form-group full-width address-field-container">
-                    <label>ADDRESS * (Will appear in PDF)</label>
-                    <textarea name="address" id="address_field" class="address-textarea"
-                              rows="4" placeholder="Enter complete address including street, city, state, pincode..."
-                              required
-                              oninput="updateAddressPreview()"></textarea>
-                    <div class="error-message" id="address_error"></div>
-
-                    <div class="address-preview-label">Address Preview (as it will appear in PDF):</div>
-                    <div class="address-preview" id="address_preview">
-                        No address entered yet.
+    </div>
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Faculty</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_faculty }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
                     </div>
-
-                    <small style="color: #666; font-size: 0.8rem; margin-top: 10px; display: block;">
-                        <strong>Format:</strong> House No, Street, Village/Town, City, District, State, Pincode
-                    </small>
                 </div>
-
-                <div class="section-title">II. CONTACT & ACADEMIC STATUS</div>
-                <div class="form-group">
-                    <label>Parent Contact Number *</label>
-                    <input type="tel" name="parent_phone" id="parent_phone"
-                           pattern="[0-9]{10}"
-                           title="10-digit phone number required" required>
-                    <div class="error-message" id="parent_phone_error"></div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">PhD Completed</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ qualification_stats.phd_completed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Student Contact Number *</label>
-                    <input type="tel" name="student_phone" id="student_phone"
-                           pattern="[0-9]{10}"
-                           title="10-digit phone number required" required>
-                    <div class="error-message" id="student_phone_error"></div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">PhD Pursuing</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ qualification_stats.phd_pursuing }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Email ID *</label>
-                    <input type="email" name="email" required>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">PG Only</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ qualification_stats.pg_only }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book-reader fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="form-group full-width task-field-container">
-                    <label>ARE YOU REGISTERED WITH TASK (Telangana Academy for Skill and Knowledge) *</label>
-                    <select name="task_registered" id="task_registered" onchange="toggleTaskUsername()" required>
-                        <option value="">Select Option</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Department-wise Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in departments %}
+                                <tr>
+                                    <td>{{ dept.department }}</td>
+                                    <td>{{ dept.count }}</td>
+                                    <td>{{ dept.percentage|floatformat:2 }}%</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No department data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Experience Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="experiencePieChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        <span class="mr-2"><i class="fas fa-circle text-primary"></i> 0-5 Years</span>
+                        <span class="mr-2"><i class="fas fa-circle text-success"></i> 5-10 Years</span>
+                        <span class="mr-2"><i class="fas fa-circle text-info"></i> 10+ Years</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Faculty Members</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Employee Code</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Mobile</th>
+                                    <th>Joining Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fac in faculties %}
+                                <tr>
+                                    <td>{{ fac.employee_code }}</td>
+                                    <td>{{ fac.name }}</td>
+                                    <td>{{ fac.department }}</td>
+                                    <td>{{ fac.email }}</td>
+                                    <td>{{ fac.mobile }}</td>
+                                    <td>{{ fac.joining_date|date:"d M Y" }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ fac.is_active|yesno:'success,danger' }}">
+                                            {{ fac.is_active|yesno:"Active,Inactive" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="?id={{ fac.id }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No faculty members found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif add_mode %}
+    <!-- ==================== ADD / EDIT FACULTY FORM PAGE ==================== -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>{{ title|default:"Add Faculty" }}</h4>
+                    <a href="{% url 'dashboard:faculty' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Back
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="facultyForm">
+                        {% csrf_token %}
+                        <!-- SECTION 1: PERSONAL INFO -->
+                        <div class="form-section-header"><i class="fas fa-user"></i>Section 1: Personal Information</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="name">Name of the Staff <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name"
+                                       value="{{ faculty.name|default:'' }}" required placeholder="Full name">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="father_name">Father's Name</label>
+                                <input type="text" class="form-control" id="father_name" name="father_name"
+                                       value="{{ faculty.father_name|default:'' }}" placeholder="Father's full name">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="employee_code">Employee Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="employee_code" name="employee_code"
+                                       value="{{ faculty.employee_code|default:'' }}" required placeholder="e.g. AEC-001">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="dob">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob" name="dob"
+                                       value="{{ faculty.dob|date:'Y-m-d'|default:'' }}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="gender">Sex / Gender</label>
+                                <select class="form-select" id="gender" name="gender">
+                                    <option value="">-- Select --</option>
+                                    <option value="Male" {% if faculty.gender == "Male" %}selected{% endif %}>Male</option>
+                                    <option value="Female" {% if faculty.gender == "Female" %}selected{% endif %}>Female</option>
+                                    <option value="Other" {% if faculty.gender == "Other" %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="state">State</label>
+                                <input type="text" class="form-control" id="state" name="state"
+                                       value="{{ faculty.state|default:'' }}" placeholder="e.g. Telangana">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="caste">Caste</label>
+                                <input type="text" class="form-control" id="caste" name="caste"
+                                       value="{{ faculty.caste|default:'' }}" placeholder="e.g. OC / BC-A">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="sub_caste">Sub-Caste</label>
+                                <input type="text" class="form-control" id="sub_caste" name="sub_caste"
+                                       value="{{ faculty.sub_caste|default:'' }}" placeholder="Sub-caste (if any)">
+                            </div>
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label fw-semibold" for="address">Full Permanent Address with Pincode <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" name="address" rows="2"
+                                          placeholder="Door No, Street, City, District, State - Pincode">{{ faculty.address|default:'' }}</textarea>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="photo">Photo</label>
+                                <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                                {% if faculty.photo %}
+                                <small class="text-muted">Current: <a href="{{ faculty.photo.url }}" target="_blank">View Photo</a></small>
+                                {% elif faculty.cloudinary_photo_url %}
+                                <small class="text-muted">Current: <a href="{{ faculty.cloudinary_photo_url }}" target="_blank">View Photo</a></small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <!-- SECTION 2: CONTACT INFORMATION -->
+                        <div class="form-section-header"><i class="fas fa-address-book"></i>Section 2: Contact Information</div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="mobile">Mobile No. <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="mobile" name="mobile"
+                                       value="{{ faculty.mobile|default:'' }}" required placeholder="10-digit mobile number">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="email">Mail-ID / Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                       value="{{ faculty.email|default:'' }}" required placeholder="official@email.com">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="department">Department <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="department" name="department"
+                                       value="{{ faculty.department|default:'' }}" required placeholder="e.g. CSE, ECE, MECH">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="designation">Designation <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="designation" name="designation"
+                                       value="{{ faculty.designation|default:'' }}" required
+                                       placeholder="e.g. Assistant Professor">
+                            </div>
+                        </div>
+                        <!-- SECTION 3: PROFESSIONAL IDs -->
+                        <div class="form-section-header"><i class="fas fa-id-card"></i>Section 3: Professional IDs &amp; Documents</div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="jntuh_id">JNTUH ID</label>
+                                <input type="text" class="form-control" id="jntuh_id" name="jntuh_id"
+                                       value="{{ faculty.jntuh_id|default:'' }}" placeholder="JNTUH Faculty ID">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="aicte_id">AICTE ID</label>
+                                <input type="text" class="form-control" id="aicte_id" name="aicte_id"
+                                       value="{{ faculty.aicte_id|default:'' }}" placeholder="AICTE Faculty ID">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="pan">PAN Number</label>
+                                <input type="text" class="form-control" id="pan" name="pan"
+                                       value="{{ faculty.pan|default:'' }}" placeholder="e.g. ABCDE1234F"
+                                       maxlength="10" style="text-transform:uppercase;">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="aadhar">Aadhar Number</label>
+                                <input type="text" class="form-control" id="aadhar" name="aadhar"
+                                       value="{{ faculty.aadhar|default:'' }}" placeholder="12-digit Aadhar No."
+                                       maxlength="12">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="orcid_id">
+                                    <span style="color:#27ae60; font-weight:700;">ORCID</span> ID
+                                </label>
+                                <input type="text" class="form-control" id="orcid_id" name="orcid_id"
+                                       value="{{ faculty.orcid_id|default:'' }}"
+                                       placeholder="e.g. 0000-0002-1825-0097">
+                                <small class="text-muted">Format: XXXX-XXXX-XXXX-XXXX</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold" for="apaar_id">
+                                    <span style="color:#e67e22; font-weight:700;">APAAR</span> ID
+                                </label>
+                                <input type="text" class="form-control" id="apaar_id" name="apaar_id"
+                                       value="{{ faculty.apaar_id|default:'' }}"
+                                       placeholder="APAAR / ABC ID (Academic Bank of Credits)">
+                            </div>
+                        </div>
+                        <!-- SECTION 4: JOINING DATE & EXPERIENCE -->
+                        <div class="form-section-header"><i class="fas fa-briefcase"></i>Section 4: Joining Date &amp; Experience</div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="joining_date">Date of Joining</label>
+                                <input type="date" class="form-control" id="joining_date" name="joining_date"
+                                       value="{{ faculty.joining_date|date:'Y-m-d'|default:'' }}"
+                                       onchange="calculateExperience()">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="experience_display">
+                                    Total Experience <small class="text-success fw-normal">(Auto-calculated)</small>
+                                </label>
+                                <input type="text" class="form-control" id="experience_display"
+                                       readonly placeholder="Select joining date to auto-fill"
+                                       title="Automatically calculated from Date of Joining">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="exp_anurag">Experience at Anurag</label>
+                                <input type="text" class="form-control" id="exp_anurag" name="exp_anurag"
+                                       value="{{ faculty.exp_anurag|default:'' }}" placeholder="e.g. 5 Years 3 Months">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-semibold" for="exp_other">Experience at Other Institutions</label>
+                                <input type="text" class="form-control" id="exp_other" name="exp_other"
+                                       value="{{ faculty.exp_other|default:'' }}" placeholder="e.g. 2 Years">
+                            </div>
+                        </div>
+                        <!-- SECTION 5: EDUCATIONAL QUALIFICATIONS -->
+                        <div class="form-section-header"><i class="fas fa-graduation-cap"></i>Section 5: Educational Qualifications</div>
+                        <!-- SSC -->
+                        <div class="card border-0 bg-light mb-3 p-3 rounded">
+                            <h6 class="text-secondary fw-semibold mb-2"><i class="fas fa-school me-1"></i>SSC / 10th Standard</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Year of Pass</label>
+                                    <input type="number" class="form-control form-control-sm" name="ssc_year"
+                                           value="{{ faculty.ssc_year|default:'' }}" placeholder="e.g. 2005" min="1950" max="2099">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Percentage (%)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" name="ssc_percent"
+                                           value="{{ faculty.ssc_percent|default:'' }}" placeholder="e.g. 85.50" min="0" max="100">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small">School / Institute Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="ssc_school"
+                                           value="{{ faculty.ssc_school|default:'' }}" placeholder="Name of school">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-primary">Upload SSC Certificate</label>
+                                    <input type="file" class="form-control" name="ssc_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Intermediate -->
+                        <div class="card border-0 bg-light mb-3 p-3 rounded">
+                            <h6 class="text-secondary fw-semibold mb-2"><i class="fas fa-book me-1"></i>Intermediate / 12th / Diploma</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Year of Pass</label>
+                                    <input type="number" class="form-control form-control-sm" name="inter_year"
+                                           value="{{ faculty.inter_year|default:'' }}" placeholder="e.g. 2007" min="1950" max="2099">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Percentage (%)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" name="inter_percent"
+                                           value="{{ faculty.inter_percent|default:'' }}" placeholder="e.g. 78.00" min="0" max="100">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small">College / Institute Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="inter_college"
+                                           value="{{ faculty.inter_college|default:'' }}" placeholder="Name of college">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-primary">Upload Intermediate Certificate</label>
+                                    <input type="file" class="form-control" name="inter_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- UG -->
+                        <div class="card border-0 bg-light mb-3 p-3 rounded">
+                            <h6 class="text-secondary fw-semibold mb-2"><i class="fas fa-university me-1"></i>UG (B.Tech / B.E. / B.Sc / B.Com etc.)</h6>
+                            <div class="row">
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Degree</label>
+                                    <input type="text" class="form-control form-control-sm" name="ug_degree"
+                                           value="{{ faculty.ug_degree|default:'B.Tech' }}" placeholder="e.g. B.Tech">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Year of Pass</label>
+                                    <input type="number" class="form-control form-control-sm" name="ug_year"
+                                           value="{{ faculty.ug_year|default:'' }}" placeholder="e.g. 2011" min="1950" max="2099">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Percentage (%)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" name="ug_percentage"
+                                           value="{{ faculty.ug_percentage|default:'' }}" placeholder="e.g. 72.00" min="0" max="100">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Institute Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="ug_college"
+                                           value="{{ faculty.ug_college|default:'' }}" placeholder="University / College">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Specialization</label>
+                                    <input type="text" class="form-control form-control-sm" name="ug_spec"
+                                           value="{{ faculty.ug_spec|default:'' }}" placeholder="e.g. Computer Science">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-primary">Upload UG Certificate</label>
+                                    <input type="file" class="form-control" name="ug_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- PG -->
+                        <div class="card border-0 bg-light mb-3 p-3 rounded">
+                            <h6 class="text-secondary fw-semibold mb-2"><i class="fas fa-user-graduate me-1"></i>PG (M.Tech / M.E. / M.Sc / MBA etc.)</h6>
+                            <div class="row">
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Degree</label>
+                                    <input type="text" class="form-control form-control-sm" name="pg_degree"
+                                           value="{{ faculty.pg_degree|default:'M.Tech' }}" placeholder="e.g. M.Tech">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Year of Pass</label>
+                                    <input type="number" class="form-control form-control-sm" name="pg_year"
+                                           value="{{ faculty.pg_year|default:'' }}" placeholder="e.g. 2013" min="1950" max="2099">
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Percentage (%)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" name="pg_percentage"
+                                           value="{{ faculty.pg_percentage|default:'' }}" placeholder="e.g. 80.00" min="0" max="100">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Institute Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="pg_college"
+                                           value="{{ faculty.pg_college|default:'' }}" placeholder="University / College">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Specialization</label>
+                                    <input type="text" class="form-control form-control-sm" name="pg_spec"
+                                           value="{{ faculty.pg_spec|default:'' }}" placeholder="e.g. VLSI Design">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-primary">Upload PG Certificate</label>
+                                    <input type="file" class="form-control" name="pg_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Ph.D -->
+                        <div class="card border-0 bg-light mb-3 p-3 rounded">
+                            <h6 class="text-secondary fw-semibold mb-2"><i class="fas fa-flask me-1"></i>Ph.D</h6>
+                            <div class="row">
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Ph.D Status</label>
+                                    <select class="form-select form-select-sm" name="phd_degree">
+                                        <option value="">-- Not Applicable --</option>
+                                        <option value="Completed" {% if faculty.phd_degree == "Completed" %}selected{% endif %}>Completed</option>
+                                        <option value="Pursuing" {% if faculty.phd_degree == "Pursuing" %}selected{% endif %}>Pursuing</option>
+                                        <option value="Submitted" {% if faculty.phd_degree == "Submitted" %}selected{% endif %}>Submitted / Under Evaluation</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 mb-2">
+                                    <label class="form-label small">Year of Award</label>
+                                    <input type="number" class="form-control form-control-sm" name="phd_year"
+                                           value="{{ faculty.phd_year|default:'' }}" placeholder="e.g. 2020" min="1950" max="2099">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label small">University Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="phd_university"
+                                           value="{{ faculty.phd_university|default:'' }}" placeholder="Name of university">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label small">Specialization / Research Area</label>
+                                    <input type="text" class="form-control form-control-sm" name="phd_spec"
+                                           value="{{ faculty.phd_spec|default:'' }}" placeholder="Research area">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold text-primary">Upload Ph.D Certificate</label>
+                                    <input type="file" class="form-control" name="phd_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- SECTION 6: SUBJECTS DEALT -->
+                        <div class="form-section-header"><i class="fas fa-book-open"></i>Section 6: Subjects Dealt</div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-semibold" for="subjects_dealt">
+                                    Subjects Dealt
+                                    <small class="text-muted fw-normal">(separate by comma or new line)</small>
+                                </label>
+                                <textarea class="form-control" id="subjects_dealt" name="subjects_dealt" rows="4"
+                                          placeholder="e.g. Data Structures, Algorithms, Database Management Systems, Operating Systems, Computer Networks">{{ faculty.subjects_dealt|default:'' }}</textarea>
+                            </div>
+                        </div>
+                        <!-- SECTION 7: RESULTS -->
+                        <div class="form-section-header"><i class="fas fa-chart-bar"></i>Section 7: Results / Academic Performance</div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-semibold" for="results">
+                                    Results / Academic Performance Details
+                                    <small class="text-muted fw-normal">(Academic Year, Subject, Pass %, Remarks)</small>
+                                </label>
+                                <textarea class="form-control" id="results" name="results" rows="5"
+                                          placeholder="e.g.&#10;AY 2022-23 Sem-I: Data Structures - Pass% 87%&#10;AY 2022-23 Sem-II: DBMS - Pass% 91%&#10;AY 2023-24 Sem-I: CN - Pass% 79%">{{ faculty.results|default:'' }}</textarea>
+                            </div>
+                        </div>
+                        <!-- SECTION 8: RESEARCH & PUBLICATIONS -->
+                        <div class="form-section-header"><i class="fas fa-microscope"></i>Section 8: Research, Publications &amp; About</div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-semibold" for="about_yourself">About / Research &amp; Publications</label>
+                                <textarea class="form-control" id="about_yourself" name="about_yourself" rows="5"
+                                          placeholder="Brief about research interests, publications, conferences, patents, projects etc.">{{ faculty.about_yourself|default:'' }}</textarea>
+                            </div>
+                        </div>
+                        <!-- FORM SUBMIT BUTTONS -->
+                        <div class="text-center mt-4 py-3 border-top">
+                            <button type="submit" class="btn btn-primary px-5 me-2">
+                                <i class="fas fa-save me-2"></i>Save Faculty
+                            </button>
+                            <a href="{% url 'dashboard:faculty' %}" class="btn btn-secondary px-5">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif faculty %}
+    <!-- ==================== SINGLE FACULTY PROFILE VIEW PAGE ==================== -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-users me-2"></i>Select Faculty</h5>
+                    <select class="form-select" id="facultySelector" onchange="changeFaculty(this.value)">
+                        <option value="">Select a faculty member...</option>
+                        {% for f in faculties %}
+                        <option value="{{ f.id }}" {% if f.id == faculty.id %}selected{% endif %}>
+                            {{ f.employee_code }} - {{ f.name }} ({{ f.department }})
+                        </option>
+                        {% endfor %}
                     </select>
-                    <input type="text" name="task_username" id="task_username"
-                           class="hidden-input"
-                           placeholder="Enter TASK Username (e.g., t23enit00310)"
-                           pattern="[a-zA-Z0-9]+"
-                           title="TASK Username should contain only letters and numbers">
-                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
-                        <strong>Note:</strong> If Yes, please enter your TASK Username (example: t23enit00310)
-                    </small>
                 </div>
-
-                <div class="form-group full-width task-field-container">
-                    <label>ARE YOU REGISTERED WITH CSI (Computer Society of India) *</label>
-                    <select name="csi_registered" id="csi_registered" onchange="toggleCsiMembershipId()" required>
-                        <option value="">Select Option</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                    <input type="text" name="csi_membership_id" id="csi_membership_id"
-                           class="hidden-input"
-                           placeholder="Enter CSI Membership ID (e.g., CSI123456)"
-                           pattern="[a-zA-Z0-9]+"
-                           title="CSI Membership ID should contain only letters and numbers">
-                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
-                        <strong>Note:</strong> If Yes, please enter your CSI Membership ID (example: CSI123456)
-                    </small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>Quick Actions</h5>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}" class="btn btn-success btn-sm" target="_blank">
+                            <i class="fas fa-file-pdf me-1"></i> Generate PDF
+                        </a>
+                        <button class="btn btn-primary btn-sm" onclick="uploadToCloudinary({{ faculty.id }})">
+                            <i class="fas fa-cloud-upload-alt me-1"></i> Upload to Cloudinary
+                        </button>
+                        <a href="?id={{ faculty.id }}&print=1" target="_blank" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-print me-1"></i> Print
+                        </a>
+                        <a href="{% url 'dashboard:faculty_analytics' %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-chart-bar me-1"></i> Analytics
+                        </a>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label>Admission Type *</label>
-                    <select name="admission_type" id="admission_type" onchange="toggleOtherAdmission()" required>
-                        <option value="">Select Admission Type</option>
-                        <option value="Convenor">Convenor</option>
-                        <option value="Management">Management</option>
-                        <option value="Spot">Spot</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input type="text" name="other_admission_details" id="other_admission_input" class="hidden-input" placeholder="Please specify admission type">
-                </div>
-
-                <div class="form-group">
-                    <label>EAMCET/EAPCET Rank</label>
-                    <input type="number" name="eamcet_rank" id="eamcet_rank"
-                           min="1" max="200000"
-                           step="1"
-                           placeholder="Enter rank (1 to 200000)">
-                </div>
-
-                <div class="form-group">
-                    <label>Current Year *</label>
-                    <select name="year" required>
-                        <option value="">Select Year</option>
-                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Current Sem *</label>
-                    <select name="sem" required>
-                        <option value="">Select Semester</option>
-                        <option value="1">1</option><option value="2">2</option>
-                    </select>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Upload Latest Photo *</label>
-                    <input type="file" name="photo" id="photo_input" accept="image/*" required>
-                    <small style="color: #666; font-size: 0.8rem;">Max size: 2MB, Formats: JPG, PNG (Required for PDF Generation)</small>
-                </div>
-
-                <div class="section-title">III. ACADEMIC PERFORMANCE</div>
-                <div class="form-group">
-                    <label>SSC Marks (%) *</label>
-                    <input type="number" name="ssc_marks" min="0" max="100" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Intermediate Marks (%) *</label>
-                    <input type="number" name="inter_marks" min="0" max="100" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Current CGPA *</label>
-                    <input type="number" name="cgpa" min="0" max="10" step="0.01" required>
-                </div>
-                <!-- ✅ FIXED: Changed name from 'rtrp_project_title' to 'rtp_project_title' to match merged add_student view -->
-                <div class="form-group full-width">
-                    <label>RTRP Project Title</label>
-                    <input type="text" name="rtrp_project_title" placeholder="Enter RTRP project title if any">
-
-                </div>
-                <div class="form-group full-width">
-                    <label>Internship Title</label>
-                    <input type="text" name="intern_title" placeholder="Enter internship title if any">
-                </div>
-                <div class="form-group full-width">
-                    <label>Final Project Title</label>
-                    <input type="text" name="final_project_title" placeholder="Enter final year project title if any">
-                </div>
-
-                <div class="section-title">IV. ACHIEVEMENTS & UPLOADS (Optional)</div>
-                <div class="form-group"><label>Achievements Certificate</label><input type="file" name="cert_achieve" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Internship Certificate</label><input type="file" name="cert_intern" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Courses Completed Certificate</label><input type="file" name="cert_courses" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>SDP Certificate</label><input type="file" name="cert_sdp" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Extra / Co-Curricular Certificate</label><input type="file" name="cert_extra" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Placement Offer / Joining Letter</label><input type="file" name="cert_placement" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>National Exam Certificate</label><input type="file" name="cert_national" accept=".pdf,image/*"></div>
-                <div class="form-group full-width">
-                    <label>Any Training Attended beyond Academics</label>
-                    <textarea name="other_training" rows="2" style="word-wrap: break-word; overflow-wrap: break-word;"></textarea>
-                </div>
-
-                {% if not pdf_mode %}
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    📄 Submit & Generate PDF
-                </button>
+            </div>
+        </div>
+    </div>
+    <div class="faculty-header">
+        <div class="row align-items-center">
+            <div class="col-lg-2 col-md-3 text-center">
+                {% if faculty.photo %}
+                    <img src="{{ faculty.photo.url }}" alt="{{ faculty.name }}" class="faculty-photo" id="facultyPhoto">
+                {% elif faculty.cloudinary_photo_url %}
+                    <img src="{{ faculty.cloudinary_photo_url }}" alt="{{ faculty.name }}" class="faculty-photo" id="facultyPhoto">
+                {% else %}
+                    <div class="faculty-photo-placeholder">
+                        <i class="fas fa-user"></i>
+                    </div>
                 {% endif %}
-
-                {% if not pdf_mode %}
-                <div class="form-group full-width" style="text-align: center; margin-top: 20px;">
-                    <p style="color: #666; font-size: 0.9rem;">
-                        <strong>Note:</strong> After submission, a PDF will be automatically generated with your Hall Ticket Number as part of the filename.
-                    </p>
-                    <p style="color: #d00; font-size: 0.9rem; background: #ffe6e6; padding: 8px; border-radius: 4px;">
-                        <strong>IMPORTANT:</strong> Verify all information, especially address and TASK registration, before submission as it cannot be edited later.
-                    </p>
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-light" onclick="uploadPhoto()">
+                        <i class="fas fa-camera me-1"></i> Change Photo
+                    </button>
+                </div>
+            </div>
+            <div class="col-lg-10 col-md-9 faculty-basic-info">
+                <h1>{{ faculty.name }}</h1>
+                <div class="faculty-designation">
+                    <i class="fas fa-briefcase me-2"></i>{{ faculty.department }}
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-id-card me-3"></i>
+                            <strong>Employee Code:</strong>
+                            <span class="ms-2">{{ faculty.employee_code }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar-alt me-3"></i>
+                            <strong>Joining Date:</strong>
+                            <span class="ms-2">{{ faculty.joining_date|date:"d M Y" }}</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock me-3"></i>
+                            <strong>Experience:</strong>
+                            <span class="ms-2">{{ experience }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope me-3"></i>
+                            <strong>Email:</strong>
+                            <a href="mailto:{{ faculty.email }}" class="ms-2 text-white">{{ faculty.email }}</a>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-phone me-3"></i>
+                            <strong>Mobile:</strong>
+                            <a href="tel:{{ faculty.mobile }}" class="ms-2 text-white">{{ faculty.mobile }}</a>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-pdf me-3"></i>
+                            <strong>PDF Status:</strong>
+                            <span class="ms-2 status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                {% if cloudinary_status.has_pdf %}
+                                <i class="fas fa-check-circle"></i> Available on Cloudinary
+                                {% else %}
+                                <i class="fas fa-clock"></i> Not Uploaded
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Experience</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ experience }}</div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span>Since {{ faculty.joining_date|date:"M d, Y"|default:"N/A" }}</span>
+                            </div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-calendar-alt stat-icon text-primary"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Highest Qualification</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ faculty.phd_degree|default:"M.Tech" }}</div>
+                            <div class="mt-2 mb-0 text-muted text-xs">
+                                <span>{{ faculty.pg_spec|default:faculty.ug_spec }}</span>
+                            </div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-graduation-cap stat-icon text-success"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Contact</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ faculty.mobile }}</div>
+                            <div class="mt-2 mb-0 text-muted text-xs"><span>{{ faculty.email }}</span></div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-phone stat-icon text-info"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card stat-card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Profile Complete</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">85%</div>
+                            <div class="mt-2">
+                                <div class="profile-completion">
+                                    <div class="profile-completion-bar" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto"><i class="fas fa-chart-pie stat-icon text-warning"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Detail Info Cards -->
+    <div class="row">
+        <div class="col-lg-6">
+            <!-- Personal Info -->
+            <div class="info-card">
+                <h5><i class="fas fa-user-circle me-2"></i> Personal Information</h5>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-user info-icon"></i> Full Name</div>
+                    <div class="info-value">{{ faculty.name }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-user-friends info-icon"></i> Father's Name</div>
+                    <div class="info-value">{{ faculty.father_name|default:"Not specified" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-id-badge info-icon"></i> Employee Code</div>
+                    <div class="info-value">{{ faculty.employee_code }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-birthday-cake info-icon"></i> Date of Birth</div>
+                    <div class="info-value">{{ faculty.dob|date:"d M Y" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-venus-mars info-icon"></i> Gender</div>
+                    <div class="info-value">{{ faculty.gender|default:"Not specified" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-flag info-icon"></i> State</div>
+                    <div class="info-value">{{ faculty.state|default:"Not specified" }}</div>
+                </div>
+                {% if faculty.caste %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-layer-group info-icon"></i> Caste / Sub-Caste</div>
+                    <div class="info-value">{{ faculty.caste }}{% if faculty.sub_caste %} / {{ faculty.sub_caste }}{% endif %}</div>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-map-marker-alt info-icon"></i> Permanent Address</div>
+                    <div class="info-value">{{ faculty.address|default:"Not specified" }}</div>
+                </div>
+            </div>
+            <!-- Contact & IDs -->
+            <div class="info-card">
+                <h5><i class="fas fa-address-book me-2"></i> Contact &amp; Professional IDs</h5>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-envelope info-icon"></i> Email</div>
+                    <div class="info-value"><a href="mailto:{{ faculty.email }}">{{ faculty.email }}</a></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-phone info-icon"></i> Mobile</div>
+                    <div class="info-value"><a href="tel:{{ faculty.mobile }}">{{ faculty.mobile }}</a></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-building info-icon"></i> Department</div>
+                    <div class="info-value">{{ faculty.department }}</div>
+                </div>
+                {% if faculty.jntuh_id %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-id-card info-icon"></i> JNTUH ID</div>
+                    <div class="info-value">{{ faculty.jntuh_id }}</div>
+                </div>
+                {% endif %}
+                {% if faculty.aicte_id %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-id-card info-icon"></i> AICTE ID</div>
+                    <div class="info-value">{{ faculty.aicte_id }}</div>
+                </div>
+                {% endif %}
+                {% if faculty.pan %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-file-invoice info-icon"></i> PAN</div>
+                    <div class="info-value">{{ faculty.pan }}</div>
+                </div>
+                {% endif %}
+                {% if faculty.aadhar %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-fingerprint info-icon"></i> Aadhar</div>
+                    <div class="info-value">XXXX-XXXX-{{ faculty.aadhar|slice:"-4:" }}</div>
+                </div>
+                {% endif %}
+                {% if faculty.orcid_id %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-microscope info-icon"></i> ORCID ID</div>
+                    <div class="info-value">
+                        <a href="https://orcid.org/{{ faculty.orcid_id }}" target="_blank" class="id-badge orcid">
+                            <i class="fas fa-external-link-alt"></i> {{ faculty.orcid_id }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                {% if faculty.apaar_id %}
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-university info-icon"></i> APAAR ID</div>
+                    <div class="info-value">
+                        <span class="id-badge apaar">
+                            <i class="fas fa-id-badge"></i> {{ faculty.apaar_id }}
+                        </span>
+                    </div>
                 </div>
                 {% endif %}
             </div>
-        </form>
+            <!-- Experience -->
+            <div class="info-card">
+                <h5><i class="fas fa-briefcase me-2"></i> Experience Details</h5>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-calendar-check info-icon"></i> Date of Joining</div>
+                    <div class="info-value">{{ faculty.joining_date|date:"d M Y"|default:"Not specified" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-clock info-icon"></i> Total Experience</div>
+                    <div class="info-value"><strong>{{ experience }}</strong></div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-school info-icon"></i> Experience at Anurag</div>
+                    <div class="info-value">{{ faculty.exp_anurag|default:"N/A" }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label"><i class="fas fa-history info-icon"></i> Experience (Other Institutions)</div>
+                    <div class="info-value">{{ faculty.exp_other|default:"N/A" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <!-- Educational Qualifications -->
+            <div class="info-card">
+                <h5><i class="fas fa-graduation-cap me-2"></i> Educational Qualifications</h5>
+                <div class="timeline">
+                    {% if faculty.ssc_year %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Secondary School Certificate (SSC)</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.ssc_year }} |
+                                <strong>Percentage:</strong> {{ faculty.ssc_percent }}%<br>
+                                <strong>School:</strong> {{ faculty.ssc_school }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if faculty.inter_year %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Intermediate / Diploma</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.inter_year }} |
+                                <strong>Percentage:</strong> {{ faculty.inter_percent }}%<br>
+                                <strong>College:</strong> {{ faculty.inter_college }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if faculty.ug_year %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>UG — {{ faculty.ug_degree|default:"B.Tech" }}</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.ug_year }} |
+                                <strong>Percentage:</strong> {{ faculty.ug_percentage }}%<br>
+                                <strong>Institute:</strong> {{ faculty.ug_college }}<br>
+                                <strong>Specialization:</strong> {{ faculty.ug_spec|default:"—" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if faculty.pg_year %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>PG — {{ faculty.pg_degree|default:"M.Tech" }}</h6>
+                            <p>
+                                <strong>Year:</strong> {{ faculty.pg_year }} |
+                                <strong>Percentage:</strong> {{ faculty.pg_percentage }}%<br>
+                                <strong>Institute:</strong> {{ faculty.pg_college }}<br>
+                                <strong>Specialization:</strong> {{ faculty.pg_spec|default:"—" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if faculty.phd_degree %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <h6>Doctor of Philosophy (Ph.D)</h6>
+                            <p>
+                                <strong>Status:</strong> {{ faculty.phd_degree }}<br>
+                                <strong>University:</strong> {{ faculty.phd_university|default:"Not specified" }}<br>
+                                <strong>Specialization:</strong> {{ faculty.phd_spec|default:"Not specified" }}
+                                {% if faculty.phd_year %}
+                                <br><strong>Year of Award:</strong> {{ faculty.phd_year }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Subjects Dealt -->
+            <div class="info-card">
+                <h5><i class="fas fa-book me-2"></i> Subjects Dealt</h5>
+                <div class="mt-3">
+                    {% if faculty.subjects_dealt %}
+                        {% for subject in faculty.subjects_dealt.split|slice:":15" %}
+                        <span class="subject-badge">{{ subject }}</span>
+                        {% endfor %}
+                        {% if faculty.subjects_dealt.split|length > 15 %}
+                        <p class="text-muted mt-2">And {{ faculty.subjects_dealt.split|length|add:"-15" }} more subjects...</p>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">No subjects specified</p>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Results -->
+            <div class="info-card">
+                <h5><i class="fas fa-chart-bar me-2"></i> Results / Academic Performance</h5>
+                <div class="mt-2">
+                    {% if faculty.results %}
+                        <div style="white-space: pre-line; font-size: 0.9rem; color: #2c3e50; line-height: 1.8;">{{ faculty.results }}</div>
+                    {% else %}
+                        <p class="text-muted">No results data specified</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if faculty.about_yourself %}
+    <div class="row">
+        <div class="col-12">
+            <div class="info-card">
+                <h5><i class="fas fa-flask me-2"></i> Research &amp; Publications</h5>
+                <div style="white-space: pre-line; font-size: 0.9rem; color: #2c3e50; line-height: 1.8;">{{ faculty.about_yourself }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- PDF Management Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="action-section no-print">
+                <h4 class="mb-4 text-center">
+                    <i class="fas fa-cogs me-2"></i> PDF Management &amp; Actions
+                </h4>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3"><i class="fas fa-file-pdf fa-2x text-danger"></i></div>
+                            <div>
+                                <h6 class="mb-0">PDF Status</h6>
+                                <div id="pdfStatusIndicator" class="status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                    {% if cloudinary_status.has_pdf %}
+                                    <i class="fas fa-check-circle"></i> Available on Cloudinary
+                                    {% else %}
+                                    <i class="fas fa-clock"></i> Not Uploaded
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3"><i class="fas fa-cloud fa-2x text-info"></i></div>
+                            <div>
+                                <h6 class="mb-0">Cloudinary Status</h6>
+                                <div id="cloudinaryStatusIndicator" class="status-indicator {% if cloudinary_status.has_pdf %}status-available{% else %}status-pending{% endif %}">
+                                    {% if cloudinary_status.has_pdf %}
+                                    <i class="fas fa-check-circle"></i> Connected &amp; Synced
+                                    {% else %}
+                                    <i class="fas fa-exclamation-triangle"></i> Not Connected
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="upload-progress mb-4" style="display: none;" id="uploadProgressContainer">
+                    <div class="progress-text mb-2 d-flex justify-content-between">
+                        <span id="uploadStatus">Uploading to Cloudinary...</span>
+                        <span id="uploadPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated"
+                             role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
+                           class="btn btn-action-large btn-generate-pdf" target="_blank" id="generatePDFBtn">
+                            <i class="fas fa-file-pdf"></i> Generate PDF
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-upload-cloudinary"
+                                onclick="uploadToCloudinary({{ faculty.id }})" id="uploadCloudBtn"
+                                {% if cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            {% if cloudinary_status.has_pdf %}Already Uploaded{% else %}Upload to Cloudinary{% endif %}
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-action-large btn-preview-pdf"
+                                onclick="previewPDF({{ faculty.id }})" id="previewPDFBtn"
+                                {% if not cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-eye"></i> Preview PDF
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'dashboard:download_faculty_pdf' faculty.id %}"
+                           class="btn btn-action-large btn-download-pdf" id="downloadPDFBtn"
+                           {% if not cloudinary_status.has_pdf %}disabled{% endif %}>
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-primary w-100"
+                                onclick="window.open('?id={{ faculty.id }}&print=1', '_blank')">
+                            <i class="fas fa-print me-2"></i> Print Profile
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-warning w-100" onclick="openEditModal({{ faculty.id }})">
+                            <i class="fas fa-edit me-2"></i> Edit Details
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {% if certificates %}
+                        <button class="btn btn-action-large btn-merge-certificates w-100"
+                                onclick="mergeCertificates({{ faculty.id }})">
+                            <i class="fas fa-file-archive"></i> Merge Certificates
+                        </button>
+                        {% else %}
+                        <button class="btn btn-outline-secondary w-100" disabled>
+                            <i class="fas fa-file-archive me-2"></i> No Certificates
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- DELETE BUTTON -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <button onclick="deleteFaculty({{ faculty.id }})" class="btn btn-danger btn-lg w-100" style="background: linear-gradient(135deg, #e74c3c, #c0392b); border: none;">
+                            <i class="fas fa-trash-alt me-2"></i> DELETE FACULTY &amp; ALL ENTERED DETAILS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- ==================== EMPTY STATE ==================== -->
+    <div class="row">
+        <div class="col-12">
+            <div class="empty-state">
+                <i class="fas fa-user-slash"></i>
+                <h3>No Faculty Member Selected</h3>
+                <p>There are no faculty members in the database, or none has been selected.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i> Add Faculty
+                    </a>
+                    <a href="{% url 'dashboard:faculty_analytics' %}" class="btn btn-outline-info btn-lg">
+                        <i class="fas fa-chart-bar me-2"></i> View Analytics
+                    </a>
+                    <a href="{% url 'dashboard:dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-home me-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% if faculty %}
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-pdf text-danger me-2"></i>
+                    PDF Preview - {{ faculty.name }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-5" id="pdfLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading PDF...</span>
+                    </div>
+                    <p class="mt-3">Loading PDF preview...</p>
+                </div>
+                <iframe id="pdfPreviewFrame" class="pdf-preview-iframe" style="display: none;"></iframe>
+                <div id="pdfError" class="alert alert-danger text-center py-4" style="display: none;">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h5>Unable to load PDF preview</h5>
+                    <p id="errorMessage" class="mb-0">Please try generating the PDF first.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" class="btn btn-primary" id="modalDownloadLink" target="_blank">
+                    <i class="fas fa-download me-1"></i> Download PDF
+                </a>
+                <button type="button" class="btn btn-success" onclick="printPDF()">
+                    <i class="fas fa-print me-1"></i> Print PDF
+                </button>
+            </div>
+        </div>
     </div>
 </div>
-
-{% if not pdf_mode %}
-<script>
-    // Matrix Animation
-    const canvas = document.getElementById('matrix-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const chars = '01';
-    const drops = Array(Math.floor(canvas.width / 16)).fill(1);
-
-    function draw() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = '16px monospace';
-        drops.forEach((y, i) => {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * 16, y * 16);
-            if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        });
-    }
-    setInterval(draw, 33);
-
-    // Age Calculation for DD-MM-YYYY format
-    function calculateAge() {
-        const dobValue = document.getElementById('dob').value;
-        const errorElement = document.getElementById('dob_error');
-
-        // Validate DD-MM-YYYY format
-        const dobPattern = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
-
-        if (dobValue) {
-            if (!dobPattern.test(dobValue)) {
-                errorElement.textContent = "Please enter date in DD-MM-YYYY format";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Parse the date
-            const parts = dobValue.split('-');
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed in JavaScript
-            const year = parseInt(parts[2], 10);
-
-            const dob = new Date(year, month, day);
-            const today = new Date();
-
-            // Validate if date is valid
-            if (dob.getDate() !== day || dob.getMonth() !== month || dob.getFullYear() !== year) {
-                errorElement.textContent = "Invalid date. Please check the day, month, and year.";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Validate if date is not in the future
-            if (dob > today) {
-                errorElement.textContent = "Date of birth cannot be in the future";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Calculate age
-            let age = today.getFullYear() - dob.getFullYear();
-            const m = today.getMonth() - dob.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-                age--;
-            }
-
-            // Validate if age is reasonable (between 15 and 100)
-            if (age < 15 || age > 100) {
-                errorElement.textContent = "Age must be between 15 and 100 years";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Clear error and set age
-            errorElement.style.display = 'none';
-            document.getElementById('dob').classList.remove('error-input');
-            document.getElementById('age').value = age;
-        } else {
-            errorElement.style.display = 'none';
-            document.getElementById('dob').classList.remove('error-input');
-            document.getElementById('age').value = '';
-        }
-    }
-
-    // Admission Type Toggle
-    function toggleOtherAdmission() {
-        const select = document.getElementById('admission_type');
-        const input = document.getElementById('other_admission_input');
-        if (select.value === 'Other') {
-            input.style.display = 'block';
-            input.setAttribute('required', 'true');
-        } else {
-            input.style.display = 'none';
-            input.removeAttribute('required');
-        }
-    }
-
-    // TASK Registration Toggle
-    function toggleTaskUsername() {
-        const select = document.getElementById('task_registered');
-        const input = document.getElementById('task_username');
-        const errorElement = document.getElementById('task_username_error');
-
-        if (select.value === 'Yes') {
-            input.style.display = 'block';
-            input.setAttribute('required', 'true');
-            input.focus();
-        } else {
-            input.style.display = 'none';
-            input.removeAttribute('required');
-            input.value = '';
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-        }
-    }
-
-    // Validate TASK Username
-    function validateTaskUsername() {
-        const taskSelect = document.getElementById('task_registered');
-        const taskInput = document.getElementById('task_username');
-
-        if (taskSelect.value === 'Yes' && taskInput.style.display !== 'none') {
-            const username = taskInput.value.trim();
-
-            if (!username) {
-                // Create error element if it doesn't exist
-                let errorElement = document.getElementById('task_username_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'task_username_error';
-                    taskInput.parentNode.appendChild(errorElement);
-                }
-                errorElement.textContent = "TASK Username is required when 'Yes' is selected";
-                errorElement.style.display = 'block';
-                taskInput.classList.add('error-input');
-                return false;
-            }
-
-            // Validate format (alphanumeric only)
-            if (!/^[a-zA-Z0-9]+$/.test(username)) {
-                let errorElement = document.getElementById('task_username_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'task_username_error';
-                    taskInput.parentNode.appendChild(errorElement);
-                }
-                errorElement.textContent = "TASK Username should contain only letters and numbers";
-                errorElement.style.display = 'block';
-                taskInput.classList.add('error-input');
-                return false;
-            }
-
-            // Clear error if exists
-            const errorElement = document.getElementById('task_username_error');
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-            taskInput.classList.remove('error-input');
-        }
-
-        return true;
-    }
-
-    // CSI Registration Toggle
-    function toggleCsiMembershipId() {
-        const select = document.getElementById('csi_registered');
-        const input = document.getElementById('csi_membership_id');
-        const errorElement = document.getElementById('csi_membership_id_error');
-
-        if (select.value === 'Yes') {
-            input.style.display = 'block';
-            input.setAttribute('required', 'true');
-            input.focus();
-        } else {
-            input.style.display = 'none';
-            input.removeAttribute('required');
-            input.value = '';
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-        }
-    }
-
-    // Validate CSI Membership ID
-    function validateCsiMembershipId() {
-        const csiSelect = document.getElementById('csi_registered');
-        const csiInput = document.getElementById('csi_membership_id');
-
-        if (csiSelect.value === 'Yes' && csiInput.style.display !== 'none') {
-            const membershipId = csiInput.value.trim();
-
-            if (!membershipId) {
-                // Create error element if it doesn't exist
-                let errorElement = document.getElementById('csi_membership_id_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'csi_membership_id_error';
-                    csiInput.parentNode.appendChild(errorElement);
-                }
-                errorElement.textContent = "CSI Membership ID is required when 'Yes' is selected";
-                errorElement.style.display = 'block';
-                csiInput.classList.add('error-input');
-                return false;
-            }
-
-            // Validate format (alphanumeric only)
-            if (!/^[a-zA-Z0-9]+$/.test(membershipId)) {
-                let errorElement = document.getElementById('csi_membership_id_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'csi_membership_id_error';
-                    csiInput.parentNode.appendChild(errorElement);
-                }
-                errorElement.textContent = "CSI Membership ID should contain only letters and numbers";
-                errorElement.style.display = 'block';
-                csiInput.classList.add('error-input');
-                return false;
-            }
-
-            // Clear error if exists
-            const errorElement = document.getElementById('csi_membership_id_error');
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-            csiInput.classList.remove('error-input');
-        }
-
-        return true;
-    }
-
-    // Address Preview Function
-    function updateAddressPreview() {
-        const addressField = document.getElementById('address_field');
-        const preview = document.getElementById('address_preview');
-        const addressText = addressField.value.trim();
-
-        if (addressText) {
-            preview.textContent = addressText;
-            preview.style.display = 'block';
-            preview.style.borderColor = '#0a0';
-            preview.style.background = '#f0fff0';
-        } else {
-            preview.textContent = 'No address entered yet.';
-            preview.style.display = 'block';
-            preview.style.borderColor = '#ccc';
-            preview.style.background = '#fff';
-        }
-    }
-
-    // Validate Address Field
-    function validateAddress() {
-        const addressField = document.getElementById('address_field');
-        const errorElement = document.getElementById('address_error');
-        const addressValue = addressField.value.trim();
-
-        if (!addressValue) {
-            errorElement.textContent = "Address is required";
-            errorElement.style.display = 'block';
-            addressField.classList.add('error-input');
-            addressField.style.borderColor = '#f00';
-            addressField.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
-            return false;
-        }
-
-        // Check minimum length
-        if (addressValue.length < 10) {
-            errorElement.textContent = "Address is too short. Please provide complete address.";
-            errorElement.style.display = 'block';
-            addressField.classList.add('error-input');
-            addressField.style.borderColor = '#f00';
-            addressField.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
-            return false;
-        }
-
-        errorElement.style.display = 'none';
-        addressField.classList.remove('error-input');
-        addressField.style.borderColor = '#0a0';
-        addressField.style.boxShadow = '0 0 5px rgba(0, 255, 0, 0.3)';
-        return true;
-    }
-
-    // Validate Hall Ticket Number format
-    function validateHTNo() {
-        const htNoInput = document.getElementById('ht_no');
-        const errorElement = document.getElementById('ht_no_error');
-        const htNoValue = htNoInput.value.trim();
-
-        if (!htNoValue) {
-            errorElement.textContent = "Hall Ticket Number is required";
-            errorElement.style.display = 'block';
-            htNoInput.classList.add('error-input');
-            return false;
-        }
-
-        // Check if all characters are uppercase or numbers
-        if (!/^[A-Z0-9]+$/.test(htNoValue)) {
-            errorElement.textContent = "Only uppercase letters and numbers allowed";
-            errorElement.style.display = 'block';
-            htNoInput.classList.add('error-input');
-            return false;
-        }
-
-        // Check minimum length (example: at least 6 characters)
-        if (htNoValue.length < 6) {
-            errorElement.textContent = "Hall Ticket Number is too short";
-            errorElement.style.display = 'block';
-            htNoInput.classList.add('error-input');
-            return false;
-        }
-
-        errorElement.style.display = 'none';
-        htNoInput.classList.remove('error-input');
-        return true;
-    }
-
-    // Validate phone numbers are not the same
-    function validatePhoneNumbers() {
-        const parentPhone = document.getElementById('parent_phone').value.trim();
-        const studentPhone = document.getElementById('student_phone').value.trim();
-        const parentError = document.getElementById('parent_phone_error');
-        const studentError = document.getElementById('student_phone_error');
-
-        // Clear previous errors
-        parentError.style.display = 'none';
-        studentError.style.display = 'none';
-        document.getElementById('parent_phone').classList.remove('error-input');
-        document.getElementById('student_phone').classList.remove('error-input');
-
-        let isValid = true;
-
-        // Check if phone numbers are the same
-        if (parentPhone && studentPhone && parentPhone === studentPhone) {
-            parentError.textContent = "Parent and Student phone numbers cannot be the same";
-            studentError.textContent = "Parent and Student phone numbers cannot be the same";
-            parentError.style.display = 'block';
-            studentError.style.display = 'block';
-            document.getElementById('parent_phone').classList.add('error-input');
-            document.getElementById('student_phone').classList.add('error-input');
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-    // Form submission handling
-    document.getElementById('registrationForm').addEventListener('submit', function(e) {
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerHTML = '🔄 Generating PDF...';
-        submitBtn.disabled = true;
-
-        // Validate all fields
-        let isValid = true;
-
-        // Validate Hall Ticket Number
-        if (!validateHTNo()) {
-            isValid = false;
-        }
-
-        // Validate Address
-        if (!validateAddress()) {
-            isValid = false;
-        }
-
-        // Validate TASK Registration
-        if (!validateTaskUsername()) {
-            isValid = false;
-        }
-
-        // Validate CSI Registration
-        if (!validateCsiMembershipId()) {
-            isValid = false;
-        }
-
-        // Validate Date of Birth format
-        const dobValue = document.getElementById('dob').value;
-        const dobPattern = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
-        if (!dobPattern.test(dobValue)) {
-            document.getElementById('dob_error').textContent = "Date must be in DD-MM-YYYY format";
-            document.getElementById('dob_error').style.display = 'block';
-            document.getElementById('dob').classList.add('error-input');
-            isValid = false;
-        } else {
-            // Trigger age calculation to validate date
-            calculateAge();
-            if (!document.getElementById('age').value) {
-                isValid = false;
-            }
-        }
-
-        // Validate phone numbers are not the same
-        if (!validatePhoneNumbers()) {
-            isValid = false;
-        }
-
-        // Validate required fields
-        const requiredFields = this.querySelectorAll('[required]');
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                isValid = false;
-                field.style.borderColor = '#f00';
-                field.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
-            } else {
-                field.style.borderColor = '#ccc';
-                field.style.boxShadow = 'none';
-            }
-        });
-
-        // Validate EAMCET rank if provided
-        const eamcetRank = document.getElementById('eamcet_rank').value;
-        if (eamcetRank) {
-            const rank = parseInt(eamcetRank);
-            if (rank < 1 || rank > 200000) {
-                alert('EAMCET/EAPCET Rank must be between 1 and 200,000');
-                isValid = false;
-            }
-        }
-
-        if (!isValid) {
-            e.preventDefault();
-            alert('Please fix all errors before submitting');
-            submitBtn.innerHTML = '📄 Submit & Generate PDF';
-            submitBtn.disabled = false;
-
-            // Scroll to first error
-            const firstError = document.querySelector('.error-input');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstError.focus();
-            }
-        } else {
-            // Show confirmation for address
-            const addressValue = document.getElementById('address_field').value.trim();
-            if (addressValue) {
-                console.log('Address being submitted:', addressValue);
-                // Add a hidden field to ensure address is captured
-                const hiddenAddress = document.createElement('input');
-                hiddenAddress.type = 'hidden';
-                hiddenAddress.name = 'address_confirm';
-                hiddenAddress.value = addressValue;
-                this.appendChild(hiddenAddress);
-            }
-        }
-    });
-
-    // Real-time validation
-    document.getElementById('ht_no').addEventListener('input', validateHTNo);
-    document.getElementById('dob').addEventListener('blur', calculateAge);
-    document.getElementById('parent_phone').addEventListener('blur', validatePhoneNumbers);
-    document.getElementById('student_phone').addEventListener('blur', validatePhoneNumbers);
-    document.getElementById('address_field').addEventListener('input', function() {
-        updateAddressPreview();
-        validateAddress();
-    });
-    document.getElementById('task_registered').addEventListener('change', function() {
-        toggleTaskUsername();
-        validateTaskUsername();
-    });
-    document.getElementById('task_username').addEventListener('input', validateTaskUsername);
-    document.getElementById('csi_registered').addEventListener('change', function() {
-        toggleCsiMembershipId();
-        validateCsiMembershipId();
-    });
-    document.getElementById('csi_membership_id').addEventListener('input', validateCsiMembershipId);
-
-    // Auto-capitalize Hall Ticket Number as user types
-    document.getElementById('ht_no').addEventListener('input', function(e) {
-        this.value = this.value.toUpperCase();
-    });
-
-    // Auto-hide messages after 10 seconds
-    setTimeout(() => {
-        const messages = document.querySelector('.messages');
-        if (messages) {
-            messages.style.opacity = '0';
-            messages.style.transition = 'opacity 1s';
-            setTimeout(() => messages.remove(), 1000);
-        }
-    }, 10000);
-
-    // Window resize handler
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-
-    // Initialize age calculation if DOB is pre-filled
-    if (document.getElementById('dob').value) {
-        calculateAge();
-    }
-
-    // Initialize address preview
-    updateAddressPreview();
-</script>
 {% endif %}
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    /* ================================================================
+       EXPERIENCE AUTO-CALCULATOR
+    ================================================================ */
+    function calculateExperience() {
+        var joiningInput = document.getElementById('joining_date');
+        var displayInput = document.getElementById('experience_display');
+        if (!joiningInput || !displayInput) return;
+        var joiningDate = new Date(joiningInput.value);
+        if (isNaN(joiningDate.getTime())) {
+            displayInput.value = '';
+            return;
+        }
+        var today = new Date();
+        if (joiningDate > today) {
+            displayInput.value = 'Date is in the future';
+            displayInput.style.borderColor = '#e74c3c';
+            displayInput.style.color = '#c0392b';
+            return;
+        }
+        displayInput.style.borderColor = '#27ae60';
+        displayInput.style.color = '#1e8449';
+        var years = today.getFullYear() - joiningDate.getFullYear();
+        var months = today.getMonth() - joiningDate.getMonth();
+        var days = today.getDate() - joiningDate.getDate();
+        if (days < 0) {
+            months -= 1;
+            var prevMonthDays = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+            days += prevMonthDays;
+        }
+        if (months < 0) {
+            years -= 1;
+            months += 12;
+        }
+        var parts = [];
+        if (years > 0) parts.push(years + (years === 1 ? ' Year' : ' Years'));
+        if (months > 0) parts.push(months + (months === 1 ? ' Month' : ' Months'));
+        if (days > 0) parts.push(days + (days === 1 ? ' Day' : ' Days'));
+        if (parts.length === 0) parts.push('Less than a day');
+        displayInput.value = parts.join(' ');
+    }
+    /* ================================================================
+       CSRF HELPER
+    ================================================================ */
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+    /* ================================================================
+       ANALYTICS PIE CHART
+    ================================================================ */
+    {% if is_analytics %}
+    var ctx = document.getElementById("experiencePieChart");
+    if (ctx) {
+        var experiencePieChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ["0-5 Years", "5-10 Years", "10+ Years"],
+                datasets: [{
+                    data: [
+                        {{ experience_stats.0_5 }},
+                        {{ experience_stats.5_10 }},
+                        {{ experience_stats.10_plus }}
+                    ],
+                    backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc'],
+                    hoverBackgroundColor: ['#2e59d9', '#17a673', '#2c9faf'],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10,
+                },
+                legend: { display: false },
+                cutoutPercentage: 80,
+            },
+        });
+    }
+    $(document).ready(function() {
+        if (typeof $.fn.DataTable !== 'undefined') {
+            $('#dataTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search faculty..."
+                }
+            });
+        }
+    });
+    {% endif %}
+    /* ================================================================
+       FACULTY PROFILE FUNCTIONS
+    ================================================================ */
+    {% if faculty %}
+    function changeFaculty(facultyId) {
+        if (facultyId) {
+            window.location.href = '?id=' + facultyId;
+        }
+    }
+    function generateFacultyPDF(facultyId) {
+        var button = document.getElementById('generatePDFBtn');
+        var originalHTML = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
+        window.open('{% url "dashboard:generate_faculty_pdf" faculty.id %}', '_blank');
+        setTimeout(function() {
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            showToast('success', 'PDF generation started in new tab');
+            setTimeout(function() { checkPDFStatus(facultyId); }, 3000);
+        }, 5000);
+    }
+    function uploadToCloudinary(facultyId) {
+        var button = document.getElementById('uploadCloudBtn');
+        var progressContainer = document.getElementById('uploadProgressContainer');
+        var progressBar = document.getElementById('uploadProgressBar');
+        var uploadStatus = document.getElementById('uploadStatus');
+        var uploadPercentage = document.getElementById('uploadPercentage');
+        progressContainer.style.display = 'block';
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+        var progress = 0;
+        var progressInterval = setInterval(function() {
+            progress += 10;
+            if (progress <= 90) {
+                progressBar.style.width = progress + '%';
+                uploadPercentage.textContent = progress + '%';
+                if (progress === 30) uploadStatus.textContent = 'Generating PDF...';
+                else if (progress === 60) uploadStatus.textContent = 'Uploading to Cloudinary...';
+                else if (progress === 90) uploadStatus.textContent = 'Finalizing upload...';
+            }
+        }, 500);
+        fetch('{% url "dashboard:upload_faculty_to_cloudinary" faculty.id %}', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrftoken, 'Content-Type': 'application/json' }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            clearInterval(progressInterval);
+            if (data.success) {
+                progressBar.style.width = '100%';
+                uploadPercentage.textContent = '100%';
+                uploadStatus.textContent = 'Upload completed!';
+                setTimeout(function() {
+                    progressContainer.style.display = 'none';
+                    button.innerHTML = '<i class="fas fa-check"></i> Uploaded to Cloudinary';
+                    button.classList.remove('btn-upload-cloudinary');
+                    button.classList.add('btn-success');
+                    document.getElementById('previewPDFBtn').disabled = false;
+                    document.getElementById('downloadPDFBtn').disabled = false;
+                    document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
+                    document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
+                    document.getElementById('cloudinaryStatusIndicator').className = 'status-indicator status-available';
+                    document.getElementById('cloudinaryStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Connected & Synced';
+                    if (data.pdf_url) {
+                        document.getElementById('downloadPDFBtn').href = data.pdf_url;
+                        document.getElementById('modalDownloadLink').href = data.pdf_url;
+                    }
+                    showToast('success', data.message || 'PDF uploaded to Cloudinary successfully!');
+                }, 1000);
+            } else {
+                throw new Error(data.error || 'Upload failed');
+            }
+        })
+        .catch(function(error) {
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-danger');
+            uploadStatus.textContent = 'Upload failed!';
+            setTimeout(function() {
+                progressContainer.style.display = 'none';
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Upload to Cloudinary';
+                showToast('error', 'Upload failed: ' + error.message);
+            }, 2000);
+        });
+    }
+    function previewPDF(facultyId) {
+        var modal = new bootstrap.Modal(document.getElementById('pdfPreviewModal'));
+        var frame = document.getElementById('pdfPreviewFrame');
+        var loading = document.getElementById('pdfLoading');
+        var errorDiv = document.getElementById('pdfError');
+        var downloadLink = document.getElementById('modalDownloadLink');
+
+        loading.style.display = 'block';
+        frame.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        // ✅ CORRECTED URL - uses the named URL pattern
+        fetch('{% url "dashboard:ajax_check_pdf_status" faculty.id %}')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.status.cloudinary_url) {
+                    loading.style.display = 'none';
+                    frame.style.display = 'block';
+                    frame.src = data.status.cloudinary_url;
+                    downloadLink.href = data.status.cloudinary_url;
+                    modal.show();
+                } else {
+                    throw new Error('PDF not available');
+                }
+            })
+            .catch(function(error) {
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+                modal.show();
+            });
+    }
+    function checkPDFStatus(facultyId) {
+        // ✅ CORRECTED URL - uses the named URL pattern
+        fetch('{% url "dashboard:ajax_check_pdf_status" faculty.id %}')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var status = data.status;
+                    if (status.has_cloudinary_pdf) {
+                        document.getElementById('pdfStatusIndicator').className = 'status-indicator status-available';
+                        document.getElementById('pdfStatusIndicator').innerHTML = '<i class="fas fa-check-circle"></i> Available on Cloudinary';
+                        document.getElementById('previewPDFBtn').disabled = false;
+                        document.getElementById('downloadPDFBtn').disabled = false;
+                        document.getElementById('uploadCloudBtn').disabled = true;
+                        document.getElementById('uploadCloudBtn').innerHTML = '<i class="fas fa-check"></i> Already Uploaded';
+                        document.getElementById('downloadPDFBtn').href = status.cloudinary_url;
+                        showToast('success', 'PDF is now available on Cloudinary!');
+                    }
+                }
+            })
+            .catch(function(error) { console.error('Error checking PDF status:', error); });
+    }
+    function mergeCertificates(facultyId) { showToast('info', 'Merge certificates functionality will be implemented'); }
+    function printPDF() {
+        var frame = document.getElementById('pdfPreviewFrame');
+        if (frame && frame.contentWindow) { frame.contentWindow.print(); }
+    }
+    function openEditModal(facultyId) { showToast('info', 'Edit functionality will be implemented via modal/AJAX. Faculty ID: ' + facultyId); }
+    function uploadPhoto() { showToast('info', 'Photo upload functionality will be implemented'); }
+
+    /* ==================== WORKING DELETE FUNCTION ==================== */
+    function deleteFaculty(facultyId) {
+        if (confirm('Are you sure you want to permanently delete this faculty member and ALL entered details?\n\nThis action cannot be undone.')) {
+            fetch('{% url "dashboard:delete_faculty" faculty.id %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    showToast('success', 'Faculty and all details deleted successfully!');
+                    setTimeout(() => {
+                        window.location.href = '{% url "dashboard:faculty" %}';
+                    }, 1500);
+                } else {
+                    showToast('error', 'Failed to delete faculty. Please try again.');
+                }
+            })
+            .catch(() => {
+                showToast('error', 'Network error. Deletion failed.');
+            });
+        }
+    }
+    /* ================================================================
+       SHOW TOAST
+    ================================================================ */
+    function showToast(type, message) {
+        var toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.style.position = 'fixed';
+            toastContainer.style.top = '20px';
+            toastContainer.style.right = '20px';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+        var toastId = 'toast-' + Date.now();
+        var toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'toast align-items-center text-white bg-' + type + ' border-0';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        var iconClass = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+        toast.innerHTML =
+            '<div class="d-flex">' +
+                '<div class="toast-body"><i class="fas fa-' + iconClass + ' me-2"></i>' + message + '</div>' +
+                '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>' +
+            '</div>';
+        toastContainer.appendChild(toast);
+        var bsToast = new bootstrap.Toast(toast, { delay: 4000, autohide: true });
+        bsToast.show();
+        toast.addEventListener('hidden.bs.toast', function() { toast.remove(); });
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('generate') === 'true') { generateFacultyPDF({{ faculty.id }}); }
+        if (urlParams.get('upload') === 'true' && !{{ cloudinary_status.has_pdf|yesno:"true,false" }}) { uploadToCloudinary({{ faculty.id }}); }
+        if (!{{ cloudinary_status.has_pdf|yesno:"true,false" }}) { setTimeout(function() { checkPDFStatus({{ faculty.id }}); }, 2000); }
+        if (urlParams.get('print') === '1') { window.print(); }
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(el) { return new bootstrap.Tooltip(el); });
+    });
+    {% endif %}
+    /* ================================================================
+       ADD/EDIT FORM HELPERS
+    ================================================================ */
+    {% if add_mode %}
+    document.addEventListener('DOMContentLoaded', function() {
+        var joiningDateField = document.getElementById('joining_date');
+        if (joiningDateField && joiningDateField.value) {
+            calculateExperience();
+        }
+        var panField = document.getElementById('pan');
+        if (panField) {
+            panField.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+        var aadharField = document.getElementById('aadhar');
+        if (aadharField) {
+            aadharField.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').substring(0, 12);
+            });
+        }
+    });
+    {% endif %}
+</script>
 {% endblock %}

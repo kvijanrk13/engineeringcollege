@@ -20,6 +20,9 @@ urlpatterns = [
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
 
+    # ================= SYLLABUS =================
+    path('syllabus/', views.syllabus_view, name='syllabus'),
+
     # ================= FACULTY =================
     # 🔥 Supports BOTH names (prevents NoReverseMatch)
     path('faculty/', views.faculty_dashboard, name='faculty'),
@@ -38,6 +41,9 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/download-pdf/', views.download_faculty_pdf, name='download_faculty_pdf'),
     path('faculty/pdf-preview/', views.preview_pdf_template, name='preview_pdf_template'),
 
+    # ================= AJAX CHECK PDF STATUS =================
+    path('faculty/<int:faculty_id>/ajax-check-pdf-status/', views.ajax_check_pdf_status, name='ajax_check_pdf_status'),
+
     # ================= BULK FACULTY =================
     path('faculty/bulk-generate-pdfs/', views.bulk_generate_faculty_pdfs, name='bulk_generate_faculty_pdfs'),
     path('faculty/bulk-actions/', views.bulk_faculty_actions, name='bulk_faculty_actions'),
@@ -46,7 +52,8 @@ urlpatterns = [
 
     # ================= CLOUDINARY =================
     path('faculty/<int:faculty_id>/sync-cloudinary/', views.sync_to_cloudinary, name='sync_to_cloudinary'),
-    path('faculty/<int:faculty_id>/upload-cloudinary/', views.upload_faculty_to_cloudinary, name='upload_faculty_to_cloudinary'),
+    path('faculty/<int:faculty_id>/upload-cloudinary/', views.upload_faculty_to_cloudinary,
+         name='upload_faculty_to_cloudinary'),
     path('faculty/<int:faculty_id>/get-cloudinary-url/', views.get_cloudinary_url, name='get_cloudinary_url'),
     path('faculty/bulk-sync-cloudinary/', views.bulk_sync_to_cloudinary, name='bulk_sync_to_cloudinary'),
     path('cloudinary/status/', views.cloudinary_status, name='cloudinary_status'),
@@ -55,12 +62,14 @@ urlpatterns = [
 
     # ================= CERTIFICATES =================
     path('faculty/<int:faculty_id>/upload-certificate/', views.upload_certificate, name='upload_certificate'),
-    path('faculty/<int:faculty_id>/upload-certificates-bulk/', views.upload_certificates_bulk, name='upload_certificates_bulk'),
+    path('faculty/<int:faculty_id>/upload-certificates-bulk/', views.upload_certificates_bulk,
+         name='upload_certificates_bulk'),
     path('faculty/<int:faculty_id>/view-certificates/', views.view_certificates, name='view_certificates'),
     path('certificate/<int:certificate_id>/edit/', views.edit_certificate, name='edit_certificate'),
     path('certificate/<int:certificate_id>/delete/', views.delete_certificate, name='delete_certificate'),
     path('faculty/<int:faculty_id>/merge-certificates/', views.merge_certificates, name='merge_certificates'),
-    path('faculty/<int:faculty_id>/merge-certificates-with-pdf/', views.merge_certificates_with_pdf, name='merge_certificates_with_pdf'),
+    path('faculty/<int:faculty_id>/merge-certificates-with-pdf/', views.merge_certificates_with_pdf,
+         name='merge_certificates_with_pdf'),
     path('faculty/<int:faculty_id>/preview-merged-pdf/', views.preview_merged_pdf, name='preview_merged_pdf'),
 
     # ================= STUDENTS =================
@@ -77,7 +86,8 @@ urlpatterns = [
     # ================= APIs =================
     path('api/faculty-list/', views.api_faculty_list, name='api_faculty_list'),
     path('api/faculty/<int:faculty_id>/', views.api_faculty_detail, name='api_faculty_detail'),
-    path('api/faculty/<int:faculty_id>/update-status/', views.api_update_faculty_status, name='api_update_faculty_status'),
+    path('api/faculty/<int:faculty_id>/update-status/', views.api_update_faculty_status,
+         name='api_update_faculty_status'),
     path('api/student-list/', views.api_student_list, name='api_student_list'),
     path('api/student/<int:student_id>/', views.api_student_detail, name='api_student_detail'),
     path('api/faculty-statistics/<int:faculty_id>/', views.faculty_statistics_api, name='faculty_statistics_api'),

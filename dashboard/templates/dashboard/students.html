@@ -1,1190 +1,1092 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
-{% block title %}STUDENTS REGISTRATION FORM{% endblock %}
+{% block title %}Syllabus & Common Subjects - ANURAG Engineering College{% endblock %}
+
+<!-- Add this block to override body class -->
+{% block body_class %}syllabus-page{% endblock %}
 
 {% block content %}
-{% if pdf_mode %}
 <style>
-    body { background:#fff!important; color:#000!important; font-family:Arial!important; }
-    canvas, .logout-btn, button, .messages { display:none!important; }
-    input, textarea, select { border:none!important; background:transparent!important; }
-</style>
-{% endif %}
-
-<style>
-    body { margin: 0; padding: 0; font-family: 'Courier New', monospace; background-color: #000; color: #0f0; overflow-x: hidden; }
-    #matrix-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-
-    .registration-container { position: relative; z-index: 2; padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
-
-    .form-card {
-        background: rgba(255, 255, 255, 0.95); color: #1a1a1a; padding: 40px;
-        border-radius: 15px; width: 100%; max-width: 1100px;
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.5); border: 3px solid #0f0;
-        position: relative;
-    }
-
-    /* ENHANCED HEADER STYLES */
-    .form-header {
-        text-align: center;
-        border-bottom: 4px solid #0f0;
-        margin-bottom: 35px;
-        padding-bottom: 15px;
-        position: relative;
-    }
-
-    {% if pdf_mode %}
-    .form-header img {
-        width: 120px;
-        border: 1px solid #000;
-        margin-bottom: 20px;
-    }
-    {% endif %}
-
-    .form-title {
-        font-size: 2rem;
-        color: #000;
-        margin: 20px 0 10px 0;
-        font-weight: 800;
-        background: linear-gradient(90deg, #000, #0a0, #000);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    }
-
-    /* STUDENT LOGOUT BUTTON - MERGED */
-    .student-logout-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: #000;
-        color: #f00;
-        padding: 8px 20px;
-        text-decoration: none;
-        border: 2px solid #f00;
-        border-radius: 5px;
-        font-weight: bold;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-        z-index: 10;
-    }
-
-    .student-logout-btn:hover {
-        background: #f00;
-        color: #000;
-        transform: scale(1.05);
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-    }
-
-    .header-note {
-        background: #000;
-        color: #0f0;
-        padding: 8px 15px;
-        border-radius: 5px;
-        display: inline-block;
-        margin-top: 10px;
-        font-size: 0.9rem;
-        border: 1px solid #0f0;
-    }
-
-    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; }
-    .full-width { grid-column: span 2; }
-
-    .section-title { grid-column: span 2; background: #000; color: #0f0; padding: 10px 20px; margin-top: 20px; font-weight: bold; border-left: 10px solid #0f0; }
-
-    .form-group { display: flex; flex-direction: column; }
-    label { font-weight: 900; margin-bottom: 8px; color: #333; text-transform: uppercase; font-size: 0.85rem; }
-    input, select, textarea {
-        padding: 12px; border: 2px solid #ccc; border-radius: 6px; font-size: 1rem;
-        transition: 0.3s; word-wrap: break-word; overflow-wrap: break-word;
-    }
-    input:focus, select:focus, textarea:focus {
-        border-color: #0f0;
-        outline: none;
-        box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
-    }
-
-    /* Style for wrapped content */
-    input[type="text"], input[type="tel"], input[type="email"], input[type="number"], textarea {
-        white-space: pre-wrap;
-        word-break: break-word;
-    }
-
-    textarea {
-        min-height: 80px;
-        resize: vertical;
-        overflow-y: auto;
-    }
-
-    .submit-btn {
-        grid-column: span 2; padding: 20px; background: #000; color: #0f0;
-        font-weight: 900; border: 3px solid #0f0; cursor: pointer;
-        text-transform: uppercase; font-size: 1.2rem; letter-spacing: 2px; margin-top: 30px;
-        transition: all 0.3s;
-    }
-    .submit-btn:hover {
-        background: #0f0;
-        color: #000;
-        transform: scale(1.02);
-        box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
-    }
-
-    .hidden-input { display: none; margin-top: 10px; }
-
-    /* Messages Styling */
-    .messages {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        max-width: 400px;
-    }
-
-    .alert {
-        padding: 15px 20px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        font-weight: bold;
-        border: 2px solid;
-    }
-
-    .alert-success {
-        background: rgba(0, 30, 0, 0.95);
-        color: #0f0;
-        border-color: #0f0;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
-    }
-
-    .alert-error {
-        background: rgba(30, 0, 0, 0.95);
-        color: #f00;
-        border-color: #f00;
-        box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-    }
-
-    .pdf-links {
-        margin-top: 10px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .pdf-link {
-        padding: 8px 15px;
-        background: rgba(0, 20, 0, 0.8);
-        color: #0f0;
-        border: 1px solid #0f0;
-        border-radius: 5px;
-        text-decoration: none;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-    }
-
-    .pdf-link:hover {
-        background: #0f0;
-        color: #000;
-    }
-
-    /* Error styling for validation */
-    .error-input {
-        border-color: #f00 !important;
-        box-shadow: 0 0 5px rgba(255, 0, 0, 0.3) !important;
-    }
-
-    .error-message {
-        color: #f00;
-        font-size: 0.8rem;
-        margin-top: 5px;
-        display: none;
-    }
-
-    /* Enhanced Address Field Styling */
-    .address-field-container {
-        position: relative;
-        background: #f9f9f9;
-        border: 2px solid #0a0;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 10px 0;
-    }
-
-    .address-field-container label {
-        background: #000;
-        color: #0f0;
-        padding: 5px 10px;
-        border-radius: 4px;
-        display: inline-block;
-        margin-bottom: 10px;
-    }
-
-    .address-textarea {
-        width: 100%;
-        min-height: 100px;
-        padding: 12px;
-        border: 2px solid #ccc;
-        border-radius: 6px;
+    /* Global Matrix Styling to match Dashboard & Faculty */
+    body {
+        margin: 0;
+        padding: 0;
         font-family: 'Courier New', monospace;
-        font-size: 14px;
-        line-height: 1.5;
-        background: white;
-        color: #000;
-    }
-
-    .address-textarea:focus {
-        border-color: #0f0;
-        box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
-        outline: none;
-    }
-
-    /* STUDENT USERNAME DISPLAY */
-    .student-user-info {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: #000;
+        overflow-x: hidden;
+        background-color: #000;
         color: #0f0;
-        padding: 8px 15px;
-        border-radius: 5px;
-        border: 1px solid #0f0;
-        font-size: 0.9rem;
-        z-index: 10;
     }
 
-    .student-user-info i {
-        margin-right: 5px;
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
     }
 
-    /* PDF-specific styles */
-    @media print {
-        * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            overflow: visible !important;
-        }
-
-        /* Force address to be visible */
-        .address-textarea,
-        textarea[name="address"],
-        [name="address"] {
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            color: #000000 !important;
-            background-color: white !important;
-            border: 1px solid #000 !important;
-            white-space: pre-wrap !important;
-            word-wrap: break-word !important;
-            overflow-wrap: break-word !important;
-            font-size: 12pt !important;
-            line-height: 1.5 !important;
-            height: auto !important;
-            min-height: 100px !important;
-        }
-
-        /* Hide logout button and user info in print/PDF */
-        .student-logout-btn,
-        .student-user-info {
-            display: none !important;
-        }
+    /* 2. DEPARTMENT HEADER */
+    .dept-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 15px 0 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     }
 
-    /* Preview area for address */
-    .address-preview {
-        background: #fff;
-        border: 1px solid #ccc;
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 4px;
-        min-height: 60px;
-        font-family: monospace;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        display: none;
-    }
-
-    .address-preview-label {
-        font-size: 0.8rem;
-        color: #666;
-        margin-bottom: 5px;
-    }
-
-    /* TASK Field Styling */
-    .task-field-container {
-        background: #f0f8ff;
-        border: 2px solid #0066cc;
-        border-radius: 8px;
+    /* 3. HORIZONTAL NAVIGATION TABS */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(0, 20, 0, 0.9);
         padding: 15px;
-        margin: 10px 0;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        border-radius: 8px;
     }
 
-    .task-field-container label {
-        background: #0066cc;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
+    .nav-link-tab {
+        padding: 12px 20px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #0f0;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .nav-link-tab:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
+    .nav-link-tab.active-page { background: rgba(0, 255, 0, 0.2); border-width: 2px; }
+
+    /* CONTENT CONTAINER (SYLLABUS) */
+    .container {
+        max-width: 1400px;
+        margin: 20px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        color: #1a1a1a;
+    }
+
+    h1.syllabus-title {
+        color: #0f172a;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 4px solid #1e293b;
+        padding-bottom: 10px;
+        font-weight: 800;
+        font-family: 'Segoe UI', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Tab Grid Navigation */
+    .tab-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+    .tab-btn {
+        padding: 15px;
+        background: #e2e8f0;
+        color: #334155;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .tab-btn:hover { background: #cbd5e1; }
+    .tab-btn.active {
+        background: #1e293b;
+        color: #ffffff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+
+    /* Content Sections */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .semester-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 25px;
+    }
+    .sem-card {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .sem-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+    .sem-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        padding: 12px;
+        font-weight: 700;
+        text-align: center;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Tables */
+    .std-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+    .std-table th, .std-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .std-table th {
+        background-color: #f1f5f9;
+        font-weight: 800;
+        color: #1e293b;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    .std-table tr:hover { background-color: #f8fafc; }
+    .code-col {
+        width: 25%;
+        font-family: 'Consolas', monospace;
+        font-weight: 700;
+        color: #b91c1c;
+    }
+    .name-col {
+        font-weight: 600;
+        color: #1e293b;
+    }
+    .sem-badge {
         display: inline-block;
-        margin-bottom: 10px;
+        padding: 4px 12px;
+        background: #475569;
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
     }
 
-    /* Responsive adjustments for header */
+    /* Common Subjects Table */
+    .common-table-wrapper {
+        overflow-x: auto;
+    }
+    .common-table {
+        min-width: 900px;
+    }
+    .common-table th:nth-child(1) { width: 10%; }
+    .common-table th:nth-child(2) { width: 45%; }
+    .common-table th:nth-child(3) { width: 15%; }
+    .common-table th:nth-child(4) { width: 15%; }
+    .common-table th:nth-child(5) { width: 15%; }
+
+    /* Department badges for comparison */
+    .dept-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin: 1px 2px;
+    }
+    .dept-badge.it { background: #dbeafe; color: #1e40af; }
+    .dept-badge.cse { background: #dcfce7; color: #166534; }
+    .dept-badge.aiml { background: #fef3c7; color: #92400e; }
+
+    /* Comparison count badges */
+    .count-badge {
+        display: inline-block;
+        background: #1e293b;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-left: 10px;
+    }
+
+    /* Comparison summary cards */
+    .comparison-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    .summary-card {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+    }
+    .summary-card h3 {
+        margin: 0 0 5px 0;
+        font-size: 2rem;
+        color: #1e293b;
+    }
+    .summary-card p {
+        margin: 0;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
-        .form-title {
-            font-size: 1.5rem;
+        .tab-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
-
-        .student-logout-btn,
-        .student-user-info {
-            position: relative;
-            top: auto;
-            left: auto;
-            right: auto;
-            margin: 10px 0;
-            display: inline-block;
-        }
-
-        .form-header {
-            text-align: center;
-        }
-
-        .form-grid {
+        .semester-grid {
             grid-template-columns: 1fr;
         }
-
-        .full-width {
-            grid-column: span 1;
-        }
-
-        .submit-btn {
-            grid-column: span 1;
+        .comparison-summary {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
 
-{% if messages %}
-<div class="messages">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-        {{ message }}
-        {% if message.tags == 'success' and request.session.student_id %}
-        <div class="pdf-links">
-            <a href="{% url 'dashboard:view_pdf' request.session.student_id %}" class="pdf-link" target="_blank">
-                📄 View Your PDF
-            </a>
-            <a href="{% url 'dashboard:download_pdf' request.session.student_id %}" class="pdf-link">
-                📥 Download PDF
-            </a>
-        </div>
-        {% endif %}
-    </div>
-    {% endfor %}
+<!-- DEPARTMENT HEADER AND NAVIGATION TABS -->
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab active-page">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
 </div>
-{% endif %}
 
-<div class="registration-container">
-    <div class="form-card">
-        <!-- STUDENT USERNAME DISPLAY - MERGED -->
-        {% if request.session.student_logged_in %}
-        <div class="student-user-info">
-            <i class="fas fa-user"></i> Student: {{ request.session.student_username|default:"Student" }}
-        </div>
-        {% endif %}
+<div class="container">
+    <h1 class="syllabus-title">Academic Syllabus & Comparison</h1>
 
-        <!-- STUDENT LOGOUT BUTTON - MERGED -->
-        {% if request.session.student_logged_in %}
-        <a href="{% url 'dashboard:student_logout' %}" class="student-logout-btn">
-            🚪 Logout Student
-        </a>
-        {% endif %}
+    <div class="tab-grid">
+        <button class="tab-btn active" onclick="openTab('it')">IT</button>
+        <button class="tab-btn" onclick="openTab('cse')">CSE</button>
+        <button class="tab-btn" onclick="openTab('aiml')">CSE (AI&ML)</button>
+        <button class="tab-btn" onclick="openTab('common')">Comparison</button>
+    </div>
 
-        <!-- ADMIN LOGOUT BUTTON - ADDED (for admin users) -->
-        {% if request.user.is_authenticated %}
-        <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-            <a href="{% url 'dashboard:logout' %}" class="student-logout-btn" style="background: #000; color: #f00; border-color: #f00;">
-                🚪 Logout Admin
-            </a>
-        </div>
-        {% endif %}
+    <!-- IT TAB -->
+    <div id="tab-it" class="tab-content active">
+        <div id="it-syllabus-container" class="semester-grid"></div>
+    </div>
 
-        <div class="form-header">
-            {% if pdf_mode %}
-            <img src="{{ photo_url }}" style="width:120px;border:1px solid #000;margin-bottom:20px;">
-            {% endif %}
+    <!-- CSE TAB -->
+    <div id="tab-cse" class="tab-content">
+        <div id="cse-syllabus-container" class="semester-grid"></div>
+    </div>
 
-            <!-- Removed the college and department titles here -->
-            <h3 class="form-title">STUDENTS REGISTRATION FORM</h3>
+    <!-- AI&ML TAB -->
+    <div id="tab-aiml" class="tab-content">
+        <div id="aiml-syllabus-container" class="semester-grid"></div>
+    </div>
 
-            <div style="margin-top: 15px;">
-                <p style="color: #666; font-size: 0.9rem; margin: 5px 0;">
-                    After submission, a PDF will be generated with filename: <strong>student_{HT_NO}_{NAME}.pdf</strong>
-                </p>
-                <div class="header-note">
-                    <strong>⚠ IMPORTANT:</strong> Ensure address field is filled completely. It will appear in the generated PDF.
-                </div>
+    <!-- COMPARISON TAB -->
+    <div id="tab-common" class="tab-content">
+        <div class="comparison-summary" id="comparison-summary"></div>
+        <div class="sem-card">
+            <div class="sem-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                Subjects Common Across IT, CSE &amp; CSE(AI&amp;ML)
             </div>
+            <div id="common-syllabus-container"></div>
         </div>
-
-        <!-- ✅ FIXED: Added action attribute pointing to the merged add_student view -->
-        <form method="POST" action="{% url 'dashboard:add_student' %}" enctype="multipart/form-data" id="registrationForm">
-            {% csrf_token %}
-            <div class="form-grid">
-                <div class="section-title">I. PERSONAL INFORMATION</div>
-
-                <div class="form-group">
-                    <label>Hall Ticket Number *</label>
-                    <input type="text" name="ht_no" id="ht_no" required
-                           oninput="this.value = this.value.toUpperCase()"
-                           pattern="[A-Z0-9]+"
-                           title="Hall Ticket Number must be in uppercase letters and numbers only">
-                    <div class="error-message" id="ht_no_error"></div>
-                    <small style="color: #666; font-size: 0.8rem;">PDF will be saved as: student_HTNO_NAME.pdf</small>
-                </div>
-                <div class="form-group">
-                    <label>Name of the Student *</label>
-                    <input type="text" name="student_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Father Name *</label>
-                    <input type="text" name="father_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Mother Name *</label>
-                    <input type="text" name="mother_name" required>
-                </div>
-                <div class="form-group">
-                    <label>Gender *</label>
-                    <select name="gender" required>
-                        <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Date of Birth *</label>
-                    <input type="text" id="dob" name="dob"
-                           pattern="(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}"
-                           placeholder="DD-MM-YYYY"
-                           title="Date must be in DD-MM-YYYY format" required>
-                    <div class="error-message" id="dob_error"></div>
-                </div>
-                <div class="form-group">
-                    <label>Age (Auto-calculated) *</label>
-                    <input type="text" id="age" name="age" readonly style="background:#eee;" required>
-                </div>
-                <div class="form-group">
-                    <label>Nationality</label>
-                    <input type="text" name="nationality" value="Indian">
-                </div>
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select name="category" required>
-                        <option value="">Select Category</option>
-                        <option>General</option><option>OBC</option><option>SC</option><option>ST</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Religion</label>
-                    <input type="text" name="religion">
-                </div>
-                <div class="form-group">
-                    <label>Blood Group</label>
-                    <input type="text" name="blood_group">
-                </div>
-                <div class="form-group">
-                    <label>Aadhar Number / Government ID *</label>
-                    <input type="text" name="aadhar" required>
-                </div>
-                <div class="form-group">
-                    <label>APAAR ID</label>
-                    <input type="text" name="apaar_id" placeholder="810-009-646-074"
-                           pattern="\d{3}-\d{3}-\d{3}-\d{3}" title="Format: 000-000-000-000">
-                </div>
-
-                <div class="form-group full-width address-field-container">
-                    <label>ADDRESS * (Will appear in PDF)</label>
-                    <textarea name="address" id="address_field" class="address-textarea"
-                              rows="4" placeholder="Enter complete address including street, city, state, pincode..."
-                              required
-                              oninput="updateAddressPreview()"></textarea>
-                    <div class="error-message" id="address_error"></div>
-
-                    <div class="address-preview-label">Address Preview (as it will appear in PDF):</div>
-                    <div class="address-preview" id="address_preview">
-                        No address entered yet.
-                    </div>
-
-                    <small style="color: #666; font-size: 0.8rem; margin-top: 10px; display: block;">
-                        <strong>Format:</strong> House No, Street, Village/Town, City, District, State, Pincode
-                    </small>
-                </div>
-
-                <div class="section-title">II. CONTACT & ACADEMIC STATUS</div>
-                <div class="form-group">
-                    <label>Parent Contact Number *</label>
-                    <input type="tel" name="parent_phone" id="parent_phone"
-                           pattern="[0-9]{10}"
-                           title="10-digit phone number required" required>
-                    <div class="error-message" id="parent_phone_error"></div>
-                </div>
-                <div class="form-group">
-                    <label>Student Contact Number *</label>
-                    <input type="tel" name="student_phone" id="student_phone"
-                           pattern="[0-9]{10}"
-                           title="10-digit phone number required" required>
-                    <div class="error-message" id="student_phone_error"></div>
-                </div>
-                <div class="form-group">
-                    <label>Email ID *</label>
-                    <input type="email" name="email" required>
-                </div>
-
-                <div class="form-group full-width task-field-container">
-                    <label>ARE YOU REGISTERED WITH TASK (Telangana Academy for Skill and Knowledge) *</label>
-                    <select name="task_registered" id="task_registered" onchange="toggleTaskUsername()" required>
-                        <option value="">Select Option</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                    <input type="text" name="task_username" id="task_username"
-                           class="hidden-input"
-                           placeholder="Enter TASK Username (e.g., t23enit00310)"
-                           pattern="[a-zA-Z0-9]+"
-                           title="TASK Username should contain only letters and numbers">
-                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
-                        <strong>Note:</strong> If Yes, please enter your TASK Username (example: t23enit00310)
-                    </small>
-                </div>
-
-                <div class="form-group full-width task-field-container">
-                    <label>ARE YOU REGISTERED WITH CSI (Computer Society of India) *</label>
-                    <select name="csi_registered" id="csi_registered" onchange="toggleCsiMembershipId()" required>
-                        <option value="">Select Option</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                    <input type="text" name="csi_membership_id" id="csi_membership_id"
-                           class="hidden-input"
-                           placeholder="Enter CSI Membership ID (e.g., CSI123456)"
-                           pattern="[a-zA-Z0-9]+"
-                           title="CSI Membership ID should contain only letters and numbers">
-                    <small style="color: #666; font-size: 0.8rem; margin-top: 5px; display: block;">
-                        <strong>Note:</strong> If Yes, please enter your CSI Membership ID (example: CSI123456)
-                    </small>
-                </div>
-
-                <div class="form-group">
-                    <label>Admission Type *</label>
-                    <select name="admission_type" id="admission_type" onchange="toggleOtherAdmission()" required>
-                        <option value="">Select Admission Type</option>
-                        <option value="Convenor">Convenor</option>
-                        <option value="Management">Management</option>
-                        <option value="Spot">Spot</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input type="text" name="other_admission_details" id="other_admission_input" class="hidden-input" placeholder="Please specify admission type">
-                </div>
-
-                <div class="form-group">
-                    <label>EAMCET/EAPCET Rank</label>
-                    <input type="number" name="eamcet_rank" id="eamcet_rank"
-                           min="1" max="200000"
-                           step="1"
-                           placeholder="Enter rank (1 to 200000)">
-                </div>
-
-                <div class="form-group">
-                    <label>Current Year *</label>
-                    <select name="year" required>
-                        <option value="">Select Year</option>
-                        <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Current Sem *</label>
-                    <select name="sem" required>
-                        <option value="">Select Semester</option>
-                        <option value="1">1</option><option value="2">2</option>
-                    </select>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Upload Latest Photo *</label>
-                    <input type="file" name="photo" id="photo_input" accept="image/*" required>
-                    <small style="color: #666; font-size: 0.8rem;">Max size: 2MB, Formats: JPG, PNG (Required for PDF Generation)</small>
-                </div>
-
-                <div class="section-title">III. ACADEMIC PERFORMANCE</div>
-                <div class="form-group">
-                    <label>SSC Marks (%) *</label>
-                    <input type="number" name="ssc_marks" min="0" max="100" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Intermediate Marks (%) *</label>
-                    <input type="number" name="inter_marks" min="0" max="100" step="0.01" required>
-                </div>
-                <div class="form-group">
-                    <label>Current CGPA *</label>
-                    <input type="number" name="cgpa" min="0" max="10" step="0.01" required>
-                </div>
-                <!-- ✅ FIXED: Changed name from 'rtrp_project_title' to 'rtp_project_title' to match merged add_student view -->
-                <div class="form-group full-width">
-                    <label>RTRP Project Title</label>
-                    <input type="text" name="rtrp_project_title" placeholder="Enter RTRP project title if any">
-
-                </div>
-                <div class="form-group full-width">
-                    <label>Internship Title</label>
-                    <input type="text" name="intern_title" placeholder="Enter internship title if any">
-                </div>
-                <div class="form-group full-width">
-                    <label>Final Project Title</label>
-                    <input type="text" name="final_project_title" placeholder="Enter final year project title if any">
-                </div>
-
-                <div class="section-title">IV. ACHIEVEMENTS & UPLOADS (Optional)</div>
-                <div class="form-group"><label>Achievements Certificate</label><input type="file" name="cert_achieve" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Internship Certificate</label><input type="file" name="cert_intern" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Courses Completed Certificate</label><input type="file" name="cert_courses" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>SDP Certificate</label><input type="file" name="cert_sdp" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Extra / Co-Curricular Certificate</label><input type="file" name="cert_extra" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>Placement Offer / Joining Letter</label><input type="file" name="cert_placement" accept=".pdf,image/*"></div>
-                <div class="form-group"><label>National Exam Certificate</label><input type="file" name="cert_national" accept=".pdf,image/*"></div>
-                <div class="form-group full-width">
-                    <label>Any Training Attended beyond Academics</label>
-                    <textarea name="other_training" rows="2" style="word-wrap: break-word; overflow-wrap: break-word;"></textarea>
-                </div>
-
-                {% if not pdf_mode %}
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    📄 Submit & Generate PDF
-                </button>
-                {% endif %}
-
-                {% if not pdf_mode %}
-                <div class="form-group full-width" style="text-align: center; margin-top: 20px;">
-                    <p style="color: #666; font-size: 0.9rem;">
-                        <strong>Note:</strong> After submission, a PDF will be automatically generated with your Hall Ticket Number as part of the filename.
-                    </p>
-                    <p style="color: #d00; font-size: 0.9rem; background: #ffe6e6; padding: 8px; border-radius: 4px;">
-                        <strong>IMPORTANT:</strong> Verify all information, especially address and TASK registration, before submission as it cannot be edited later.
-                    </p>
-                </div>
-                {% endif %}
-            </div>
-        </form>
     </div>
 </div>
 
-{% if not pdf_mode %}
 <script>
-    // Matrix Animation
+    /* ============================================
+       MATRIX BACKGROUND ANIMATION
+       ============================================ */
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    const chars = '01';
-    const drops = Array(Math.floor(canvas.width / 16)).fill(1);
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
 
-    function draw() {
+    function drawMatrix() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#0f0';
-        ctx.font = '16px monospace';
-        drops.forEach((y, i) => {
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
             const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * 16, y * 16);
-            if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
             drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    /* ============================================
+       COMPLETE SYLLABUS DATA: IT, CSE, CSE(AI&ML)
+       ============================================ */
+    const syllabusData = {
+        "1-1": {
+            "IT": [
+                {code:"MA101BS", name:"MATRICES AND CALCULUS"},
+                {code:"AP102BS", name:"APPLIED PHYSICS"},
+                {code:"CS103ES", name:"PROGRAMMING FOR PROBLEM SOLVING"},
+                {code:"EN104HS", name:"ENGLISH FOR SKILL ENHANCEMENT"},
+                {code:"ME105ES", name:"ENGINEERING WORKSHOP"},
+                {code:"CS106ES", name:"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
+                {code:"AP107BS", name:"APPLIED PHYSICS LABORATORY"},
+                {code:"EN108HS", name:"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
+                {code:"CS109ES", name:"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
+                {code:"ES110MC", name:"ENVIRONMENTAL SCIENCE"}
+            ],
+            "CSE": [
+                {code:"MA101BS", name:"MATRICES AND CALCULUS"},
+                {code:"CH102BS", name:"ENGINEERING CHEMISTRY"},
+                {code:"CS103ES", name:"PROGRAMMING FOR PROBLEM SOLVING"},
+                {code:"EE104ES", name:"BASIC ELECTRICAL ENGINEERING"},
+                {code:"EG105ES", name:"COMPUTER AIDED ENGINEERING GRAPHICS"},
+                {code:"CS106ES", name:"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
+                {code:"CH107BS", name:"ENGINEERING CHEMISTRY LABORATORY"},
+                {code:"CS109ES", name:"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
+                {code:"EE108ES", name:"BASIC ELECTRICAL ENGINEERING LABORATORY"},
+                {code:"HS110MC", name:"CONSTITUTION OF INDIA"}
+            ],
+            "AIML": [
+                {code:"MA101BS", name:"MATRICES AND CALCULUS"},
+                {code:"CH102BS", name:"ENGINEERING CHEMISTRY"},
+                {code:"CS103ES", name:"PROGRAMMING FOR PROBLEM SOLVING"},
+                {code:"EE104ES", name:"BASIC ELECTRICAL ENGINEERING"},
+                {code:"EG105ES", name:"COMPUTER AIDED ENGINEERING GRAPHICS"},
+                {code:"CS106ES", name:"ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
+                {code:"CH107BS", name:"ENGINEERING CHEMISTRY LABORATORY"},
+                {code:"CS109ES", name:"PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
+                {code:"EE108ES", name:"BASIC ELECTRICAL ENGINEERING LABORATORY"},
+                {code:"HS110MC", name:"CONSTITUTION OF INDIA"}
+            ]
+        },
+        "1-2": {
+            "IT": [
+                {code:"MA201BS", name:"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
+                {code:"CH202BS", name:"ENGINEERING CHEMISTRY"},
+                {code:"EG203ES", name:"COMPUTER AIDED ENGINEERING GRAPHICS"},
+                {code:"EE204ES", name:"BASIC ELECTRICAL ENGINEERING"},
+                {code:"EC205ES", name:"ELECTRONIC DEVICES AND CIRCUITS"},
+                {code:"CH206BS", name:"ENGINEERING CHEMISTRY LABORATORY"},
+                {code:"CS207ES", name:"PYTHON PROGRAMMING LABORATORY"},
+                {code:"EE208ES", name:"BASIC ELECTRICAL ENGINEERING LABORATORY"},
+                {code:"CS209ES", name:"IT WORKSHOP"},
+                {code:"HS210MC", name:"CONSTITUTION OF INDIA"}
+            ],
+            "CSE": [
+                {code:"MA201BS", name:"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
+                {code:"AP202BS", name:"APPLIED PHYSICS"},
+                {code:"ME203ES", name:"ENGINEERING WORKSHOP"},
+                {code:"EN204HS", name:"ENGLISH FOR SKILL ENHANCEMENT"},
+                {code:"EC205ES", name:"ELECTRONIC DEVICES AND CIRCUIT"},
+                {code:"AP206BS", name:"APPLIED PHYSICS LABORATORY"},
+                {code:"CS207ES", name:"PYTHON PROGRAMMING LABORATORY"},
+                {code:"EN208HS", name:"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
+                {code:"CS209ES", name:"IT WORKSHOP"},
+                {code:"ES210MC", name:"ENVIRONMENTAL SCIENCE"}
+            ],
+            "AIML": [
+                {code:"MA201BS", name:"ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
+                {code:"AP202BS", name:"APPLIED PHYSICS"},
+                {code:"ME203ES", name:"ENGINEERING WORKSHOP"},
+                {code:"EN204HS", name:"ENGLISH FOR SKILL ENHANCEMENT"},
+                {code:"EC205ES", name:"ELECTRONIC DEVICES AND CIRCUIT"},
+                {code:"AP206BS", name:"APPLIED PHYSICS LABORATORY"},
+                {code:"CS207ES", name:"PYTHON PROGRAMMING LABORATORY"},
+                {code:"EN208HS", name:"ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
+                {code:"CS209ES", name:"IT WORKSHOP"},
+                {code:"ES210MC", name:"ENVIRONMENTAL SCIENCE"}
+            ]
+        },
+        "2-1": {
+            "IT": [
+                {code:"PS301BS", name:"PROBABILITY AND STATISTICS"},
+                {code:"EC302ES", name:"DIGITAL ELECTRONICS"},
+                {code:"CS303PC", name:"DATA STRUCTURES"},
+                {code:"CM304PC", name:"COMPUTER ORGANIZATION AND MICROPROCESSOR"},
+                {code:"IT305PC", name:"INTRODUCTION TO IOT"},
+                {code:"CS306PC", name:"DATA STRUCTURES LABORATORY"},
+                {code:"EC307ES", name:"DIGITAL ELECTRONICS LABORATORY"},
+                {code:"IT308PC", name:"INTERNET OF THINGS LABORATORY"},
+                {code:"HS309MC", name:"GENDER SENSITIZATION"},
+                {code:"CS308PC", name:"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}
+            ],
+            "CSE": [
+                {code:"PS301BS", name:"PROBABILITY AND STATISTICS"},
+                {code:"DE302ES", name:"DIGITAL ELECTRONICS"},
+                {code:"CS303PC", name:"DATA STRUCTURES"},
+                {code:"CS304PC", name:"COMPUTER ORGANIZATION AND ARCHITECTURE"},
+                {code:"CS305PC", name:"OBJECT ORIENTED PROGRAMMING THROUGH JAVA"},
+                {code:"CS306PC", name:"DATA STRUCTURES LABORATORY"},
+                {code:"CS307PC", name:"OBJECT ORIENTED PROGRAMMING THROUGH JAVA LABORATORY"},
+                {code:"HS309MC", name:"GENDER SENSITIZATION"},
+                {code:"CS308PC", name:"SKILL DEVELOPMENT COURSE(DATA VISUALIZATION-R PROGRAMMING / POWER BI)"}
+            ],
+            "AIML": [
+                {code:"PS301BS", name:"PROBABILITY AND STATISTICS"},
+                {code:"CS303PC", name:"DATA STRUCTURES"},
+                {code:"CS304PC", name:"COMPUTER ORGANIZATION AND ARCHITECTURE"},
+                {code:"AM305PC", name:"SOFTWARE ENGINEERING"},
+                {code:"AM306PC", name:"OPERATING SYSTEMS"},
+                {code:"CS306PC", name:"DATA STRUCTURES LABORATORY"},
+                {code:"AM307PC", name:"OPERATING SYSTEMS LABORATORY"},
+                {code:"AM308PC", name:"SOFTWARE ENGINEERING LABORATORY"},
+                {code:"HS309MC", name:"GENDER SENSITIZATION"},
+                {code:"AM310PC", name:"SKILL DEVELOPMENT COURSE (NODE JS/ REACT JS/ DJANGO)"}
+            ]
+        },
+        "2-2": {
+            "IT": [
+                {code:"MB401HS", name:"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
+                {code:"CS402PC", name:"DISCRETE MATHEMATICS"},
+                {code:"CS403PC", name:"OPERATING SYSTEMS"},
+                {code:"CS404PC", name:"DATABASE MANAGEMENT SYSTEMS"},
+                {code:"IT405PC", name:"JAVA PROGRAMMING"},
+                {code:"CS406PC", name:"OPERATING SYSTEMS LABORATORY"},
+                {code:"CS407PC", name:"DATABASE MANAGEMENT SYSTEMS LABORATORY"},
+                {code:"IT408PC", name:"JAVA PROGRAMMING LABORATORY"},
+                {code:"IT409PW", name:"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
+                {code:"IT410PC", name:"SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},
+                {code:"HS411MC", name:"INTELLECTUAL PROPERTY RIGHTS"}
+            ],
+            "CSE": [
+                {code:"MB401HS", name:"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
+                {code:"CS402PC", name:"DISCRETE MATHEMATICS"},
+                {code:"CS403PC", name:"OPERATING SYSTEMS"},
+                {code:"CS404PC", name:"DATABASE MANAGEMENT SYSTEMS"},
+                {code:"CS405PC", name:"SOFTWARE ENGINEERING"},
+                {code:"CS406PC", name:"OPERATING SYSTEMS LABORATORY"},
+                {code:"CS407PC", name:"DATABASE MANAGEMENT SYSTEMS LABORATORY"},
+                {code:"CS408PW", name:"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
+                {code:"HS411MC", name:"INTELLECTUAL PROPERTY RIGHTS"},
+                {code:"CS409PC", name:"SKILL DEVELOPMENT COURSE(NODE JS/ REACT JS/ DJANGO)"}
+            ],
+            "AIML": [
+                {code:"CS402PC", name:"DISCRETE MATHEMATICS"},
+                {code:"AM403PC", name:"AUTOMATA THEORY AND COMPILER DESIGN"},
+                {code:"CS404PC", name:"DATABASE MANAGEMENT SYSTEMS"},
+                {code:"AM405PC", name:"INTRODUCTION TO ARTIFICIAL INTELLIGENCE"},
+                {code:"AM406PC", name:"OBJECT ORIENTED PROGRAMMING THROUGH JAVA"},
+                {code:"CS407PC", name:"DATABASE MANAGEMENT SYSTEMS LABORATORY"},
+                {code:"AM408PC", name:"JAVA PROGRAMMING LABORATORY"},
+                {code:"CS408PW", name:"REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
+                {code:"HS411MC", name:"INTELLECTUAL PROPERTY RIGHTS"},
+                {code:"AM412PC", name:"SKILL DEVELOPMENT COURSE (PROLOG/ LISP/ PYSWIP)"}
+            ]
+        },
+        "3-1": {
+            "IT": [
+                {code:"CS501PC", name:"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {code:"IT502PC", name:"AUTOMATA AND COMPILER DESIGN"},
+                {code:"IT503PC", name:"EMBEDDED SYSTEMS"},
+                {code:"IT511PE", name:"FULL STACK DEVELOPMENT"},
+                {code:"IT512PE", name:"DATA MINING"},
+                {code:"CS513PE", name:"SCRIPTING LANGUAGES"},
+                {code:"IT514PE", name:"MOBILE APPLICATION DEVELOPMENT"},
+                {code:"IT515PE", name:"SOFTWARE TESTING METHODOLOGIES"},
+                {code:"AM515PE", name:"COMPUTER GRAPHICS"},
+                {code:"IT522PE", name:"QUANTUM COMPUTING"},
+                {code:"IT523PE", name:"ADVANCED OPERATING SYSTEMS"},
+                {code:"CS524PE", name:"DISTRIBUTED DATABASES"},
+                {code:"IT525PE", name:"PATTERN RECOGNITION"},
+                {code:"IT532PE", name:"DATA MINING LABORATORY"},
+                {code:"IT531PE", name:"FULL STACK DEVELOPMENT LABORATORY"},
+                {code:"IT533PE", name:"SCRIPTING LANGUAGES LABORATORY"},
+                {code:"IT534PE", name:"MOBILE APPLICATION DEVELOPMENT LABORATORY"},
+                {code:"IT535PE", name:"SOFTWARE TESTING METHODOLOGIES LABORATORY"},
+                {code:"IT504PC", name:"COMPILER DESIGN LABORATORY"},
+                {code:"IT505PC", name:"EMBEDDED SYSTEMS LABORATORY"},
+                {code:"CS507PC", name:"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}
+            ],
+            "CSE": [
+                {code:"CS501PC", name:"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {code:"CS502PC", name:"COMPUTER NETWORKS"},
+                {code:"CS503PC", name:"DEVOPS"},
+                {code:"CS511PE", name:"QUANTUM COMPUTING"},
+                {code:"CS512PE", name:"ADVANCED COMPUTER ARCHITECTURE"},
+                {code:"CS513PE", name:"SCRIPTING LANGUAGES"},
+                {code:"CS514PE", name:"IMAGE PROCESSING"},
+                {code:"CS515PE", name:"PRINCIPLES OF PROGRAMMING LANGUAGES"},
+                {code:"CS521PE", name:"COMPUTER GRAPHICS"},
+                {code:"CS522PE", name:"EMBEDDED SYSTEM"},
+                {code:"CS523PE", name:"INFORMATION RETRIEVAL SYSTEMS"},
+                {code:"CS524PE", name:"DISTRIBUTED DATABASES"},
+                {code:"CS525PE", name:"NATURAL LANGUAGE PROCESSING"},
+                {code:"CS504PC", name:"COMPUTER NETWORKS LABORATORY"},
+                {code:"CS505PC", name:"DEVOPS LABORATORY"},
+                {code:"AE506HS", name:"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},
+                {code:"CS507PC", name:"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}
+            ],
+            "AIML": [
+                {code:"CS501PC", name:"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {code:"CS502PC", name:"COMPUTER NETWORKS"},
+                {code:"AM503PC", name:"MACHINE LEARNING"},
+                {code:"BF504HS", name:"BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
+                {code:"AM511PE", name:"GRAPH THEORY"},
+                {code:"AM512PE", name:"INTRODUCTION TO DATA SCIENCE"},
+                {code:"AM513PE", name:"WEB PROGRAMMING"},
+                {code:"EC514PE", name:"IMAGE PROCESSING"},
+                {code:"AM515PE", name:"COMPUTER GRAPHICS"},
+                {code:"AM505PC", name:"MACHINE LEARNING LABORATORY"},
+                {code:"CS504PC", name:"COMPUTER NETWORKS LABORATORY"},
+                {code:"CS507PC", name:"SKILL DEVELOPMENT COURSE(UI DESIGN FLUTTER)"}
+            ]
+        },
+        "3-2": {
+            "IT": [
+                {code:"CS601PC", name:"MACHINE LEARNING"},
+                {code:"IT602PC", name:"SOFTWARE ENGINEERING"},
+                {code:"IT603PC", name:"DATA COMMUNICATIONS AND COMPUTER NETWORKS"},
+                {code:"IT611PE", name:"BIOMETRICS"},
+                {code:"IT612PE", name:"ADVANCED COMPUTER ARCHITECTURE"},
+                {code:"CS633PE", name:"DATA ANALYTICS"},
+                {code:"CS616PE", name:"IMAGE PROCESSING"},
+                {code:"CS617PE", name:"PRINCIPLES OF PROGRAMMING LANGUAGES"},
+                {code:"CE611OE", name:"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},
+                {code:"CE612OE", name:"BUILDING MANAGEMENT SYSTEMS"},
+                {code:"CE613OE", name:"ENVIRONMENTAL IMPACT ASSESSMENT"},
+                {code:"CE614OE", name:"HYDROGEOLOGY"},
+                {code:"EE611OE", name:"RENEWABLE ENERGY SOURCES"},
+                {code:"EE612OE", name:"FUNDAMENTAL OF ELECTRIC VEHICLES"},
+                {code:"ME611OE", name:"BASIC MECHANICAL ENGINEERING"},
+                {code:"ME612OE", name:"POWER PLANT ENGINEERING"},
+                {code:"EC611OE", name:"FUNDAMENTALS OF INTERNET OF THINGS"},
+                {code:"EC612OE", name:"PRINCIPLES OF SIGNAL PROCESSING"},
+                {code:"EC613OE", name:"DIGITAL ELECTRONICS FOR ENGINEERING"},
+                {code:"CS611OE", name:"DATA STRUCTURES"},
+                {code:"CS612OE", name:"DATABASE MANAGEMENT SYSTEMS"},
+                {code:"IT611OE", name:"JAVA PROGRAMMING"},
+                {code:"IT612OE", name:"SOFTWARE ENGINEERING"},
+                {code:"AM611OE", name:"FUNDAMENTALS OF AI"},
+                {code:"AM612OE", name:"MACHINE LEARNING BASICS"},
+                {code:"CS604PC", name:"MACHINE LEARNING LABORATORY"},
+                {code:"IT605PC", name:"SOFTWARE ENGINEERING & COMPUTER NETWORKS LABORATORY"},
+                {code:"AE606HS", name:"ADVANCED ENGLISH COMMUNICATION SKILLS LABORATORY"},
+                {code:"CS606PW", name:"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATASPARK)"},
+                {code:"ES607MC", name:"ENVIRONMENTAL SCIENCE"}
+            ],
+            "CSE": [
+                {code:"CS601PC", name:"MACHINE LEARNING"},
+                {code:"CS602PC", name:"FORMAL LANGUAGES AND AUTOMATA THEORY"},
+                {code:"CS603PC", name:"ARTIFICIAL INTELLIGENCE"},
+                {code:"CS631PE", name:"FULL STACK DEVELOPMENT"},
+                {code:"CS632PE", name:"INTERNET OF THINGS"},
+                {code:"CS633PE", name:"DATA ANALYTICS"},
+                {code:"CS634PE", name:"MOBILE APPLICATION DEVELOPMENT"},
+                {code:"CS635PE", name:"SOFTWARE TESTING METHODOLOGIES"},
+                {code:"CE611OE", name:"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},
+                {code:"CE612OE", name:"BUILDING MANAGEMENT SYSTEMS"},
+                {code:"CE613OE", name:"ENVIRONMENTAL IMPACT ASSESSMENT"},
+                {code:"CE614OE", name:"HYDROGEOLOGY"},
+                {code:"EE611OE", name:"RENEWABLE ENERGY SOURCES"},
+                {code:"EE612OE", name:"FUNDAMENTAL OF ELECTRIC VEHICLES"},
+                {code:"ME611OE", name:"BASIC MECHANICAL ENGINEERING"},
+                {code:"ME612OE", name:"POWER PLANT ENGINEERING"},
+                {code:"EC611OE", name:"FUNDAMENTALS OF INTERNET OF THINGS"},
+                {code:"EC612OE", name:"PRINCIPLES OF SIGNAL PROCESSING"},
+                {code:"EC613OE", name:"DIGITAL ELECTRONICS FOR ENGINEERING"},
+                {code:"CS611OE", name:"DATA STRUCTURES"},
+                {code:"CS612OE", name:"DATABASE MANAGEMENT SYSTEMS"},
+                {code:"IT611OE", name:"JAVA PROGRAMMING"},
+                {code:"IT612OE", name:"SOFTWARE ENGINEERING"},
+                {code:"AM611OE", name:"FUNDAMENTALS OF AI"},
+                {code:"AM612OE", name:"MACHINE LEARNING BASICS"},
+                {code:"CS604PC", name:"MACHINE LEARNING LABORATORY"},
+                {code:"CS605PC", name:"ARTIFICIAL INTELLIGENCE LABORATORY"},
+                {code:"CS641PC", name:"FULL STACK DEVELOPMENT LAB"},
+                {code:"CS642PC", name:"INTERNET OF THINGS LAB"},
+                {code:"CS643PC", name:"DATA ANALYTICS LAB"},
+                {code:"CS644PC", name:"MOBILE APPLICATION DEVELOPMENT LAB"},
+                {code:"CS645PC", name:"SOFTWARE TESTING METHODOLOGIES LAB"},
+                {code:"CS606PW", name:"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP/ SKILL DEVELOPMENT COURSE (BIG DATASPARK)"},
+                {code:"ES607MC", name:"ENVIRONMENTAL SCIENCE"}
+            ],
+            "AIML": [
+                {code:"AM601PC", name:"KNOWLEDGE REPRESENTATION AND REASONING"},
+                {code:"AM602PC", name:"DATA ANALYTICS"},
+                {code:"AM603PC", name:"NATURAL LANGUAGE PROCESSING"},
+                {code:"AM621PE", name:"SOFTWARE TESTING METHODOLOGIES"},
+                {code:"AM622PE", name:"INFORMATION RETRIEVAL SYSTEMS"},
+                {code:"AM623PE", name:"PATTERN RECOGNITION"},
+                {code:"AM624PE", name:"DISTRIBUTED COMPUTING"},
+                {code:"AM625PE", name:"DATA WAREHOUSING AND BUSINESS INTELLIGENCE"},
+                {code:"CE611OE", name:"DISASTER PREPAREDNESS & PLANNING MANAGEMENT"},
+                {code:"CE612OE", name:"BUILDING MANAGEMENT SYSTEMS"},
+                {code:"CE613OE", name:"ENVIRONMENTAL IMPACT ASSESSMENT"},
+                {code:"CE614OE", name:"HYDROGEOLOGY"},
+                {code:"EE611OE", name:"RENEWABLE ENERGY SOURCES"},
+                {code:"EE612OE", name:"FUNDAMENTAL OF ELECTRIC VEHICLES"},
+                {code:"ME611OE", name:"BASIC MECHANICAL ENGINEERING"},
+                {code:"ME612OE", name:"POWER PLANT ENGINEERING"},
+                {code:"EC611OE", name:"FUNDAMENTALS OF INTERNET OF THINGS"},
+                {code:"EC612OE", name:"PRINCIPLES OF SIGNAL PROCESSING"},
+                {code:"EC613OE", name:"DIGITAL ELECTRONICS FOR ENGINEERING"},
+                {code:"CS611OE", name:"DATA STRUCTURES"},
+                {code:"CS612OE", name:"DATABASE MANAGEMENT SYSTEMS"},
+                {code:"IT611OE", name:"JAVA PROGRAMMING"},
+                {code:"IT612OE", name:"SOFTWARE ENGINEERING"},
+                {code:"AM611OE", name:"FUNDAMENTALS OF AI"},
+                {code:"AM612OE", name:"MACHINE LEARNING BASICS"},
+                {code:"AM604PC", name:"NATURAL LANGUAGE PROCESSING LABORATORY"},
+                {code:"AM605PC", name:"DATA ANALYTICS LABORATORY"},
+                {code:"AE606HS", name:"ADVANCED ENGLISH COMMUNICATION SKILLS LAB"},
+                {code:"AM607PW", name:"INDUSTRIAL ORIENTED MINI PROJECT/ INTERNSHIP"},
+                {code:"ES607MC", name:"ENVIRONMENTAL SCIENCE"}
+            ]
+        },
+        "4-1": {
+            "IT": [
+                {code:"IT701PC", name:"INFORMATION SECURITY"},
+                {code:"IT702PC", name:"CLOUD COMPUTING"},
+                {code:"IT711PE", name:"HUMAN COMPUTER INTERACTION"},
+                {code:"IT712PE", name:"HIGH PERFORMANCE COMPUTING"},
+                {code:"IT713PE", name:"ARTIFICIAL INTELLIGENCE"},
+                {code:"IT714PE", name:"INFORMATION RETRIEVAL SYSTEMS"},
+                {code:"IT715PE", name:"AD-HOC & SENSOR NETWORKS"},
+                {code:"IT721PE", name:"NATURAL LANGUAGE PROCESSING"},
+                {code:"IT722PE", name:"DISTRIBUTED SYSTEMS"},
+                {code:"IT723PE", name:"AUGMENTED REALITY & VIRTUAL REALITY"},
+                {code:"IT724PE", name:"WEB SECURITY"},
+                {code:"IT725PE", name:"CYBER FORENSICS"},
+                {code:"CE721OE", name:"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},
+                {code:"CE722OE", name:"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},
+                {code:"CE723OE", name:"SOLID WASTE MANAGEMENT"},
+                {code:"CE724OE", name:"SMART CITIES"},
+                {code:"EE721OE", name:"UTILIZATION OF ELECTRIC ENERGY"},
+                {code:"EE722OE", name:"ENERGY STORAGE SYSTEMS"},
+                {code:"ME721OE", name:"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},
+                {code:"ME722OE", name:"INDUSTRIAL ENGINEERING & MANAGEMENT"},
+                {code:"EC721OE", name:"ELECTRONIC SENSORS"},
+                {code:"EC722OE", name:"ELECTRONICS FOR HEALTH CARE"},
+                {code:"EC723OE", name:"TELECOMMUNICATIONS FOR SOCIETY"},
+                {code:"CS721OE", name:"OPERATING SYSTEMS"},
+                {code:"CS722OE", name:"COMPUTER NETWORKS"},
+                {code:"IT721OE", name:"FULL STACK DEVELOPMENT"},
+                {code:"IT722OE", name:"SCRIPTING LANGUAGES"},
+                {code:"AM721OE", name:"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},
+                {code:"AM722OE", name:"AI APPLICATIONS"},
+                {code:"IT703PC", name:"INFORMATION SECURITY LAB"},
+                {code:"IT704PC", name:"CLOUD COMPUTING LAB"},
+                {code:"IT705PC", name:"PROJECT STAGE – I"}
+            ],
+            "CSE": [
+                {code:"CS701PC", name:"CRYPTOGRAPHY AND NETWORK SECURITY"},
+                {code:"CS702PC", name:"COMPILER DESIGN"},
+                {code:"CS741PE", name:"DATA ANALYTICS FOR IOT"},
+                {code:"CS742PE", name:"CLOUD COMPUTING"},
+                {code:"CS743PE", name:"GRAPH THEORY"},
+                {code:"CS744PE", name:"CYBER SECURITY"},
+                {code:"CS745PE", name:"SOFT COMPUTING"},
+                {code:"CS746PE", name:"AD HOC & SENSOR NETWORKS"},
+                {code:"CS751PE", name:"AGILE METHODOLOGY"},
+                {code:"CS752PE", name:"IOT ARCHITECTURES AND PROTOCOLS"},
+                {code:"CS753PE", name:"BIG DATA ANALYTICS"},
+                {code:"CS754PE", name:"ADVANCED ALGORITHMS"},
+                {code:"CS755PE", name:"DEEP LEARNING"},
+                {code:"CS756PE", name:"REINFORCEMENT LEARNING"},
+                {code:"CS757PE", name:"SOFTWARE PROCESS & PROJECT MANAGEMENT"},
+                {code:"CE721OE", name:"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},
+                {code:"CE722OE", name:"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},
+                {code:"CE723OE", name:"SOLID WASTE MANAGEMENT"},
+                {code:"CE724OE", name:"SMART CITIES"},
+                {code:"EE721OE", name:"UTILIZATION OF ELECTRIC ENERGY"},
+                {code:"EE722OE", name:"ENERGY STORAGE SYSTEMS"},
+                {code:"ME721OE", name:"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},
+                {code:"ME722OE", name:"INDUSTRIAL ENGINEERING & MANAGEMENT"},
+                {code:"EC721OE", name:"ELECTRONIC SENSORS"},
+                {code:"EC722OE", name:"ELECTRONICS FOR HEALTH CARE"},
+                {code:"EC723OE", name:"TELECOMMUNICATIONS FOR SOCIETY"},
+                {code:"CS721OE", name:"OPERATING SYSTEMS"},
+                {code:"CS722OE", name:"COMPUTER NETWORKS"},
+                {code:"IT721OE", name:"FULL STACK DEVELOPMENT"},
+                {code:"IT722OE", name:"SCRIPTING LANGUAGES"},
+                {code:"AM721OE", name:"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},
+                {code:"AM722OE", name:"AI APPLICATIONS"},
+                {code:"CS703PC", name:"CRYPTOGRAPHY AND NETWORK SECURITY LABORATORY"},
+                {code:"CS704PC", name:"COMPILER DESIGN LABORATORY"},
+                {code:"CS705PW", name:"PROJECT STAGE – I"}
+            ],
+            "AIML": [
+                {code:"AM701PC", name:"DEEP LEARNING"},
+                {code:"AM702PC", name:"NATURE INSPIRED COMPUTING"},
+                {code:"AM731PE", name:"INTERNET OF THINGS"},
+                {code:"AM732PE", name:"DATA MINING"},
+                {code:"AM733PE", name:"MERN STACK DEVELOPMENT"},
+                {code:"AM734PE", name:"MOBILE APPLICATION DEVELOPMENT"},
+                {code:"AM735PE", name:"CLOUD COMPUTING"},
+                {code:"AM711PE", name:"INTERNET OF THINGS LABORATORY"},
+                {code:"AM712PE", name:"DATA MINING LABORATORY"},
+                {code:"AM713PE", name:"MERN STACK DEVELOPMENT LABORATORY"},
+                {code:"AM714PE", name:"MOBILE APPLICATION DEVELOPMENT LABORATORY"},
+                {code:"AM715PE", name:"CLOUD COMPUTING LABORATORY"},
+                {code:"AM741PE", name:"QUANTUM COMPUTING"},
+                {code:"AM742PE", name:"EXPERT SYSTEMS"},
+                {code:"AM743PE", name:"SEMANTIC WEB"},
+                {code:"AM744PE", name:"GAME THEORY"},
+                {code:"AM745PE", name:"MOBILE COMPUTING"},
+                {code:"CE721OE", name:"REMOTE SENSING & GEOGRAPHICAL INFORMATION SYSTEMS"},
+                {code:"CE722OE", name:"SUSTAINABLE INFRASTRUCTURE DEVELOPMENT"},
+                {code:"CE723OE", name:"SOLID WASTE MANAGEMENT"},
+                {code:"CE724OE", name:"SMART CITIES"},
+                {code:"EE721OE", name:"UTILIZATION OF ELECTRIC ENERGY"},
+                {code:"EE722OE", name:"ENERGY STORAGE SYSTEMS"},
+                {code:"ME721OE", name:"QUANTITATIVE ANALYSIS FOR BUSINESS DECISIONS"},
+                {code:"ME722OE", name:"INDUSTRIAL ENGINEERING & MANAGEMENT"},
+                {code:"EC721OE", name:"ELECTRONIC SENSORS"},
+                {code:"EC722OE", name:"ELECTRONICS FOR HEALTH CARE"},
+                {code:"EC723OE", name:"TELECOMMUNICATIONS FOR SOCIETY"},
+                {code:"CS721OE", name:"OPERATING SYSTEMS"},
+                {code:"CS722OE", name:"COMPUTER NETWORKS"},
+                {code:"IT721OE", name:"FULL STACK DEVELOPMENT"},
+                {code:"IT722OE", name:"SCRIPTING LANGUAGES"},
+                {code:"AM721OE", name:"INTRODUCTION TO NATURAL LANGUAGE PROCESSING"},
+                {code:"AM722OE", name:"AI APPLICATIONS"},
+                {code:"AM703PC", name:"PROFESSIONAL PRACTICE, LAW & ETHICS"},
+                {code:"AM704PC", name:"PROJECT STAGE – I"}
+            ]
+        },
+        "4-2": {
+            "IT": [
+                {code:"IT801PC", name:"ORGANIZATIONAL BEHAVIOR"},
+                {code:"IT811PE", name:"INTRUSION DETECTION SYSTEMS"},
+                {code:"IT812PE", name:"REAL TIME SYSTEMS"},
+                {code:"IT813PE", name:"BLOCK CHAIN TECHNOLOGY"},
+                {code:"IT814PE", name:"DEEP LEARNING"},
+                {code:"IT815PE", name:"SOFTWARE PROCESS & PROJECT MANAGEMENT"},
+                {code:"CE831OE", name:"ENERGY EFFICIENT BUILDINGS"},
+                {code:"CE832OE", name:"MULTI CRITERION DECISION MAKING"},
+                {code:"CE833OE", name:"ENVIRONMENTAL POLLUTION"},
+                {code:"EE831OE", name:"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},
+                {code:"EE832OE", name:"RELIABILITY ENGINEERING"},
+                {code:"ME831OE", name:"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},
+                {code:"ME832OE", name:"ENTREPRENEURSHIP DEVELOPMENT"},
+                {code:"EC831OE", name:"MEASURING INSTRUMENTS"},
+                {code:"EC832OE", name:"COMMUNICATION TECHNOLOGIES"},
+                {code:"EC833OE", name:"FUNDAMENTALS OF SOCIAL NETWORKS"},
+                {code:"CS831OE", name:"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {code:"CS832OE", name:"DATA ANALYTICS"},
+                {code:"IT831OE", name:"BIG DATA TECHNOLOGIES"},
+                {code:"IT832OE", name:"DEVOPS"},
+                {code:"AM831OE", name:"CHATBOTS"},
+                {code:"AM832OE", name:"EVOLUTIONARY COMPUTING"},
+                {code:"IT802PC", name:"PROJECT STAGE-II, INCLUDING SEMINAR"}
+            ],
+            "CSE": [
+                {code:"MB801BS", name:"ORGANIZATIONAL BEHAVIOR"},
+                {code:"CS861PE", name:"INDUSTRIAL IOT"},
+                {code:"CS862PE", name:"COMPUTER VISION"},
+                {code:"CS863PE", name:"COMPUTATIONAL COMPLEXITY"},
+                {code:"CS864PE", name:"DISTRIBUTED SYSTEMS"},
+                {code:"CS865PE", name:"BLOCKCHAIN TECHNOLOGY"},
+                {code:"CS866PE", name:"HUMAN COMPUTER INTERACTION"},
+                {code:"CS867PE", name:"CYBER FORENSICS"},
+                {code:"CS868PE", name:"QUALITY ASSURANCE AND TESTING"},
+                {code:"CE831OE", name:"ENERGY EFFICIENT BUILDINGS"},
+                {code:"CE832OE", name:"MULTI CRITERION DECISION MAKING"},
+                {code:"CE833OE", name:"ENVIRONMENTAL POLLUTION"},
+                {code:"EE831OE", name:"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},
+                {code:"EE832OE", name:"RELIABILITY ENGINEERING"},
+                {code:"ME831OE", name:"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},
+                {code:"ME832OE", name:"ENTREPRENEURSHIP DEVELOPMENT"},
+                {code:"EC831OE", name:"MEASURING INSTRUMENTS"},
+                {code:"EC832OE", name:"COMMUNICATION TECHNOLOGIES"},
+                {code:"EC833OE", name:"FUNDAMENTALS OF SOCIAL NETWORKS"},
+                {code:"CS831OE", name:"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {code:"CS832OE", name:"DATA ANALYTICS"},
+                {code:"IT831OE", name:"BIG DATA TECHNOLOGIES"},
+                {code:"IT832OE", name:"DEVOPS"},
+                {code:"AM831OE", name:"CHATBOTS"},
+                {code:"AM832OE", name:"EVOLUTIONARY COMPUTING"},
+                {code:"CS802PW", name:"PROJECT STAGE-II, INCLUDING SEMINAR"}
+            ],
+            "AIML": [
+                {code:"AM851PE", name:"SOCIAL MEDIA ANALYTICS"},
+                {code:"AM852PE", name:"FEDERATED MACHINE LEARNING"},
+                {code:"AM853PE", name:"AUGMENTED REALITY & VIRTUAL REALITY"},
+                {code:"AM854PE", name:"CYBER SECURITY"},
+                {code:"AM855PE", name:"AD-HOC & SENSOR NETWORKS"},
+                {code:"AM861PE", name:"SPEECH AND VIDEO PROCESSING"},
+                {code:"AM862PE", name:"REINFORCEMENT LEARNING"},
+                {code:"AM863PE", name:"RANDOMIZED ALGORITHMS"},
+                {code:"AM864PE", name:"COGNITIVE COMPUTING"},
+                {code:"AM865PE", name:"CONVERSATIONAL AI"},
+                {code:"CE831OE", name:"ENERGY EFFICIENT BUILDINGS"},
+                {code:"CE832OE", name:"MULTI CRITERION DECISION MAKING"},
+                {code:"CE833OE", name:"ENVIRONMENTAL POLLUTION"},
+                {code:"EE831OE", name:"CHARGING INFRASTRUCTURE FOR ELECTRIC VEHICLES"},
+                {code:"EE832OE", name:"RELIABILITY ENGINEERING"},
+                {code:"ME831OE", name:"ELEMENTS OF ELECTRIC AND HYBRID VEHICLES"},
+                {code:"ME832OE", name:"ENTREPRENEURSHIP DEVELOPMENT"},
+                {code:"EC831OE", name:"MEASURING INSTRUMENTS"},
+                {code:"EC832OE", name:"COMMUNICATION TECHNOLOGIES"},
+                {code:"EC833OE", name:"FUNDAMENTALS OF SOCIAL NETWORKS"},
+                {code:"CS831OE", name:"DESIGN AND ANALYSIS OF ALGORITHMS"},
+                {code:"CS832OE", name:"DATA ANALYTICS"},
+                {code:"IT831OE", name:"BIG DATA TECHNOLOGIES"},
+                {code:"IT832OE", name:"DEVOPS"},
+                {code:"AM831OE", name:"CHATBOTS"},
+                {code:"AM832OE", name:"EVOLUTIONARY COMPUTING"},
+                {code:"AM801PC", name:"PROJECT STAGE-II INCLUDING SEMINAR"}
+            ]
+        }
+    };
+
+    const semOrder = ["1-1", "1-2", "2-1", "2-2", "3-1", "3-2", "4-1", "4-2"];
+
+    /* ============================================
+       RENDER FUNCTIONS
+       ============================================ */
+
+    function renderDepartmentSyllabus(dept, containerId) {
+        const container = document.getElementById(containerId);
+        let html = '';
+        semOrder.forEach(sem => {
+            const subjects = syllabusData[sem][dept] || [];
+            if (subjects.length > 0) {
+                html += `
+                    <div class="sem-card">
+                        <div class="sem-header">Semester ${sem} <span style="font-size:0.8rem; opacity:0.8;">(${subjects.length} subjects)</span></div>
+                        <table class="std-table">
+                            <thead><tr><th class="code-col">Code</th><th class="name-col">Subject Name</th></tr></thead>
+                            <tbody>
+                `;
+                subjects.forEach(sub => {
+                    html += `<tr><td class="code-col">${sub.code}</td><td class="name-col">${sub.name}</td></tr>`;
+                });
+                html += `</tbody></table></div>`;
+            }
         });
-    }
-    setInterval(draw, 33);
-
-    // Age Calculation for DD-MM-YYYY format
-    function calculateAge() {
-        const dobValue = document.getElementById('dob').value;
-        const errorElement = document.getElementById('dob_error');
-
-        // Validate DD-MM-YYYY format
-        const dobPattern = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
-
-        if (dobValue) {
-            if (!dobPattern.test(dobValue)) {
-                errorElement.textContent = "Please enter date in DD-MM-YYYY format";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Parse the date
-            const parts = dobValue.split('-');
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed in JavaScript
-            const year = parseInt(parts[2], 10);
-
-            const dob = new Date(year, month, day);
-            const today = new Date();
-
-            // Validate if date is valid
-            if (dob.getDate() !== day || dob.getMonth() !== month || dob.getFullYear() !== year) {
-                errorElement.textContent = "Invalid date. Please check the day, month, and year.";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Validate if date is not in the future
-            if (dob > today) {
-                errorElement.textContent = "Date of birth cannot be in the future";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Calculate age
-            let age = today.getFullYear() - dob.getFullYear();
-            const m = today.getMonth() - dob.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-                age--;
-            }
-
-            // Validate if age is reasonable (between 15 and 100)
-            if (age < 15 || age > 100) {
-                errorElement.textContent = "Age must be between 15 and 100 years";
-                errorElement.style.display = 'block';
-                document.getElementById('dob').classList.add('error-input');
-                document.getElementById('age').value = '';
-                return;
-            }
-
-            // Clear error and set age
-            errorElement.style.display = 'none';
-            document.getElementById('dob').classList.remove('error-input');
-            document.getElementById('age').value = age;
-        } else {
-            errorElement.style.display = 'none';
-            document.getElementById('dob').classList.remove('error-input');
-            document.getElementById('age').value = '';
-        }
+        container.innerHTML = html;
     }
 
-    // Admission Type Toggle
-    function toggleOtherAdmission() {
-        const select = document.getElementById('admission_type');
-        const input = document.getElementById('other_admission_input');
-        if (select.value === 'Other') {
-            input.style.display = 'block';
-            input.setAttribute('required', 'true');
-        } else {
-            input.style.display = 'none';
-            input.removeAttribute('required');
-        }
+    /**
+     * ============================================================
+     * FIXED normalizeSubjectName function
+     *
+     * Root cause: IT/CSE had "PROJECT STAGE-II, INCLUDING SEMINAR"
+     * but AIML had "PROJECT STAGE-II INCLUDING SEMINAR" (no comma).
+     * The old function did NOT strip commas, so they never matched.
+     *
+     * Fix: Added .replace(/,/g, '') to remove ALL commas,
+     *      plus .replace(/\s+/g, ' ') collapses double spaces
+     *      that may result from comma removal.
+     *
+     * Also strips: & -> AND, parentheses, normalizes slashes,
+     * dashes, and the special dash character "–" (en-dash).
+     * ============================================================
+     */
+    function normalizeSubjectName(name) {
+        return name.trim().toUpperCase()
+            .replace(/,/g, '')              // ✅ FIX: Remove ALL commas
+            .replace(/&amp;/g, '&')         // Decode HTML entity
+            .replace(/&/g, 'AND')           // Normalize ampersand to AND
+            .replace(/[()]/g, '')           // Remove parentheses
+            .replace(/\u2013/g, '-')        // Replace en-dash – with hyphen
+            .replace(/\u2014/g, '-')        // Replace em-dash — with hyphen
+            .replace(/\s*\/\s*/g, '/')      // Normalize slashes
+            .replace(/\s*-\s*/g, '-')       // Normalize dashes
+            .replace(/\s+/g, ' ')           // Collapse multiple spaces to one
+            .trim();                        // Final trim
     }
 
-    // TASK Registration Toggle
-    function toggleTaskUsername() {
-        const select = document.getElementById('task_registered');
-        const input = document.getElementById('task_username');
-        const errorElement = document.getElementById('task_username_error');
+    function renderCommonSubjects() {
+        const container = document.getElementById('common-syllabus-container');
+        const summaryContainer = document.getElementById('comparison-summary');
 
-        if (select.value === 'Yes') {
-            input.style.display = 'block';
-            input.setAttribute('required', 'true');
-            input.focus();
-        } else {
-            input.style.display = 'none';
-            input.removeAttribute('required');
-            input.value = '';
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-        }
-    }
+        let html = '<div class="common-table-wrapper"><table class="std-table common-table">';
+        html += '<thead><tr>';
+        html += '<th>Semester</th>';
+        html += '<th>Subject Name</th>';
+        html += '<th style="text-align:center;">IT Code</th>';
+        html += '<th style="text-align:center;">CSE Code</th>';
+        html += '<th style="text-align:center;">AI&ML Code</th>';
+        html += '</tr></thead><tbody>';
 
-    // Validate TASK Username
-    function validateTaskUsername() {
-        const taskSelect = document.getElementById('task_registered');
-        const taskInput = document.getElementById('task_username');
+        let totalCommon = 0;
+        let semCommonCounts = {};
 
-        if (taskSelect.value === 'Yes' && taskInput.style.display !== 'none') {
-            const username = taskInput.value.trim();
+        semOrder.forEach(sem => {
+            const itSubs = syllabusData[sem]["IT"] || [];
+            const cseSubs = syllabusData[sem]["CSE"] || [];
+            const aimlSubs = syllabusData[sem]["AIML"] || [];
 
-            if (!username) {
-                // Create error element if it doesn't exist
-                let errorElement = document.getElementById('task_username_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'task_username_error';
-                    taskInput.parentNode.appendChild(errorElement);
+            const common = [];
+            const addedNames = new Set();
+
+            // Check IT subjects against CSE and AIML
+            itSubs.forEach(itSub => {
+                const normName = normalizeSubjectName(itSub.name);
+                if (addedNames.has(normName)) return;
+
+                const cseMatch = cseSubs.find(s => normalizeSubjectName(s.name) === normName);
+                const aimlMatch = aimlSubs.find(s => normalizeSubjectName(s.name) === normName);
+
+                if (cseMatch && aimlMatch) {
+                    addedNames.add(normName);
+                    common.push({
+                        name: itSub.name,
+                        itCode: itSub.code,
+                        cseCode: cseMatch.code,
+                        aimlCode: aimlMatch.code
+                    });
                 }
-                errorElement.textContent = "TASK Username is required when 'Yes' is selected";
-                errorElement.style.display = 'block';
-                taskInput.classList.add('error-input');
-                return false;
-            }
+            });
 
-            // Validate format (alphanumeric only)
-            if (!/^[a-zA-Z0-9]+$/.test(username)) {
-                let errorElement = document.getElementById('task_username_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'task_username_error';
-                    taskInput.parentNode.appendChild(errorElement);
+            // Also check CSE subjects against IT and AIML
+            cseSubs.forEach(cseSub => {
+                const normName = normalizeSubjectName(cseSub.name);
+                if (addedNames.has(normName)) return;
+
+                const itMatch = itSubs.find(s => normalizeSubjectName(s.name) === normName);
+                const aimlMatch = aimlSubs.find(s => normalizeSubjectName(s.name) === normName);
+
+                if (itMatch && aimlMatch) {
+                    addedNames.add(normName);
+                    common.push({
+                        name: cseSub.name,
+                        itCode: itMatch.code,
+                        cseCode: cseSub.code,
+                        aimlCode: aimlMatch.code
+                    });
                 }
-                errorElement.textContent = "TASK Username should contain only letters and numbers";
-                errorElement.style.display = 'block';
-                taskInput.classList.add('error-input');
-                return false;
-            }
+            });
 
-            // Clear error if exists
-            const errorElement = document.getElementById('task_username_error');
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-            taskInput.classList.remove('error-input');
-        }
+            // Also check AIML subjects against IT and CSE
+            aimlSubs.forEach(aimlSub => {
+                const normName = normalizeSubjectName(aimlSub.name);
+                if (addedNames.has(normName)) return;
 
-        return true;
-    }
+                const itMatch = itSubs.find(s => normalizeSubjectName(s.name) === normName);
+                const cseMatch = cseSubs.find(s => normalizeSubjectName(s.name) === normName);
 
-    // CSI Registration Toggle
-    function toggleCsiMembershipId() {
-        const select = document.getElementById('csi_registered');
-        const input = document.getElementById('csi_membership_id');
-        const errorElement = document.getElementById('csi_membership_id_error');
-
-        if (select.value === 'Yes') {
-            input.style.display = 'block';
-            input.setAttribute('required', 'true');
-            input.focus();
-        } else {
-            input.style.display = 'none';
-            input.removeAttribute('required');
-            input.value = '';
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-        }
-    }
-
-    // Validate CSI Membership ID
-    function validateCsiMembershipId() {
-        const csiSelect = document.getElementById('csi_registered');
-        const csiInput = document.getElementById('csi_membership_id');
-
-        if (csiSelect.value === 'Yes' && csiInput.style.display !== 'none') {
-            const membershipId = csiInput.value.trim();
-
-            if (!membershipId) {
-                // Create error element if it doesn't exist
-                let errorElement = document.getElementById('csi_membership_id_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'csi_membership_id_error';
-                    csiInput.parentNode.appendChild(errorElement);
+                if (itMatch && cseMatch) {
+                    addedNames.add(normName);
+                    common.push({
+                        name: aimlSub.name,
+                        itCode: itMatch.code,
+                        cseCode: cseMatch.code,
+                        aimlCode: aimlSub.code
+                    });
                 }
-                errorElement.textContent = "CSI Membership ID is required when 'Yes' is selected";
-                errorElement.style.display = 'block';
-                csiInput.classList.add('error-input');
-                return false;
-            }
+            });
 
-            // Validate format (alphanumeric only)
-            if (!/^[a-zA-Z0-9]+$/.test(membershipId)) {
-                let errorElement = document.getElementById('csi_membership_id_error');
-                if (!errorElement) {
-                    errorElement = document.createElement('div');
-                    errorElement.className = 'error-message';
-                    errorElement.id = 'csi_membership_id_error';
-                    csiInput.parentNode.appendChild(errorElement);
-                }
-                errorElement.textContent = "CSI Membership ID should contain only letters and numbers";
-                errorElement.style.display = 'block';
-                csiInput.classList.add('error-input');
-                return false;
-            }
+            semCommonCounts[sem] = common.length;
+            totalCommon += common.length;
 
-            // Clear error if exists
-            const errorElement = document.getElementById('csi_membership_id_error');
-            if (errorElement) {
-                errorElement.style.display = 'none';
-            }
-            csiInput.classList.remove('error-input');
-        }
-
-        return true;
-    }
-
-    // Address Preview Function
-    function updateAddressPreview() {
-        const addressField = document.getElementById('address_field');
-        const preview = document.getElementById('address_preview');
-        const addressText = addressField.value.trim();
-
-        if (addressText) {
-            preview.textContent = addressText;
-            preview.style.display = 'block';
-            preview.style.borderColor = '#0a0';
-            preview.style.background = '#f0fff0';
-        } else {
-            preview.textContent = 'No address entered yet.';
-            preview.style.display = 'block';
-            preview.style.borderColor = '#ccc';
-            preview.style.background = '#fff';
-        }
-    }
-
-    // Validate Address Field
-    function validateAddress() {
-        const addressField = document.getElementById('address_field');
-        const errorElement = document.getElementById('address_error');
-        const addressValue = addressField.value.trim();
-
-        if (!addressValue) {
-            errorElement.textContent = "Address is required";
-            errorElement.style.display = 'block';
-            addressField.classList.add('error-input');
-            addressField.style.borderColor = '#f00';
-            addressField.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
-            return false;
-        }
-
-        // Check minimum length
-        if (addressValue.length < 10) {
-            errorElement.textContent = "Address is too short. Please provide complete address.";
-            errorElement.style.display = 'block';
-            addressField.classList.add('error-input');
-            addressField.style.borderColor = '#f00';
-            addressField.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
-            return false;
-        }
-
-        errorElement.style.display = 'none';
-        addressField.classList.remove('error-input');
-        addressField.style.borderColor = '#0a0';
-        addressField.style.boxShadow = '0 0 5px rgba(0, 255, 0, 0.3)';
-        return true;
-    }
-
-    // Validate Hall Ticket Number format
-    function validateHTNo() {
-        const htNoInput = document.getElementById('ht_no');
-        const errorElement = document.getElementById('ht_no_error');
-        const htNoValue = htNoInput.value.trim();
-
-        if (!htNoValue) {
-            errorElement.textContent = "Hall Ticket Number is required";
-            errorElement.style.display = 'block';
-            htNoInput.classList.add('error-input');
-            return false;
-        }
-
-        // Check if all characters are uppercase or numbers
-        if (!/^[A-Z0-9]+$/.test(htNoValue)) {
-            errorElement.textContent = "Only uppercase letters and numbers allowed";
-            errorElement.style.display = 'block';
-            htNoInput.classList.add('error-input');
-            return false;
-        }
-
-        // Check minimum length (example: at least 6 characters)
-        if (htNoValue.length < 6) {
-            errorElement.textContent = "Hall Ticket Number is too short";
-            errorElement.style.display = 'block';
-            htNoInput.classList.add('error-input');
-            return false;
-        }
-
-        errorElement.style.display = 'none';
-        htNoInput.classList.remove('error-input');
-        return true;
-    }
-
-    // Validate phone numbers are not the same
-    function validatePhoneNumbers() {
-        const parentPhone = document.getElementById('parent_phone').value.trim();
-        const studentPhone = document.getElementById('student_phone').value.trim();
-        const parentError = document.getElementById('parent_phone_error');
-        const studentError = document.getElementById('student_phone_error');
-
-        // Clear previous errors
-        parentError.style.display = 'none';
-        studentError.style.display = 'none';
-        document.getElementById('parent_phone').classList.remove('error-input');
-        document.getElementById('student_phone').classList.remove('error-input');
-
-        let isValid = true;
-
-        // Check if phone numbers are the same
-        if (parentPhone && studentPhone && parentPhone === studentPhone) {
-            parentError.textContent = "Parent and Student phone numbers cannot be the same";
-            studentError.textContent = "Parent and Student phone numbers cannot be the same";
-            parentError.style.display = 'block';
-            studentError.style.display = 'block';
-            document.getElementById('parent_phone').classList.add('error-input');
-            document.getElementById('student_phone').classList.add('error-input');
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-    // Form submission handling
-    document.getElementById('registrationForm').addEventListener('submit', function(e) {
-        const submitBtn = document.getElementById('submitBtn');
-        submitBtn.innerHTML = '🔄 Generating PDF...';
-        submitBtn.disabled = true;
-
-        // Validate all fields
-        let isValid = true;
-
-        // Validate Hall Ticket Number
-        if (!validateHTNo()) {
-            isValid = false;
-        }
-
-        // Validate Address
-        if (!validateAddress()) {
-            isValid = false;
-        }
-
-        // Validate TASK Registration
-        if (!validateTaskUsername()) {
-            isValid = false;
-        }
-
-        // Validate CSI Registration
-        if (!validateCsiMembershipId()) {
-            isValid = false;
-        }
-
-        // Validate Date of Birth format
-        const dobValue = document.getElementById('dob').value;
-        const dobPattern = /^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
-        if (!dobPattern.test(dobValue)) {
-            document.getElementById('dob_error').textContent = "Date must be in DD-MM-YYYY format";
-            document.getElementById('dob_error').style.display = 'block';
-            document.getElementById('dob').classList.add('error-input');
-            isValid = false;
-        } else {
-            // Trigger age calculation to validate date
-            calculateAge();
-            if (!document.getElementById('age').value) {
-                isValid = false;
-            }
-        }
-
-        // Validate phone numbers are not the same
-        if (!validatePhoneNumbers()) {
-            isValid = false;
-        }
-
-        // Validate required fields
-        const requiredFields = this.querySelectorAll('[required]');
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                isValid = false;
-                field.style.borderColor = '#f00';
-                field.style.boxShadow = '0 0 5px rgba(255, 0, 0, 0.3)';
-            } else {
-                field.style.borderColor = '#ccc';
-                field.style.boxShadow = 'none';
+            if (common.length > 0) {
+                let isFirst = true;
+                common.forEach(sub => {
+                    html += '<tr>';
+                    if (isFirst) {
+                        html += `<td rowspan="${common.length}" style="vertical-align:middle; text-align:center;"><span class="sem-badge">${sem}</span><br><small style="color:#64748b;">${common.length} common</small></td>`;
+                        isFirst = false;
+                    }
+                    html += `<td class="name-col">${sub.name}</td>`;
+                    html += `<td class="code-col" style="text-align:center;">${sub.itCode}</td>`;
+                    html += `<td class="code-col" style="text-align:center;">${sub.cseCode}</td>`;
+                    html += `<td class="code-col" style="text-align:center;">${sub.aimlCode}</td>`;
+                    html += '</tr>';
+                });
             }
         });
 
-        // Validate EAMCET rank if provided
-        const eamcetRank = document.getElementById('eamcet_rank').value;
-        if (eamcetRank) {
-            const rank = parseInt(eamcetRank);
-            if (rank < 1 || rank > 200000) {
-                alert('EAMCET/EAPCET Rank must be between 1 and 200,000');
-                isValid = false;
-            }
+        if (totalCommon === 0) {
+            html += `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748b; font-style: italic;">No common subjects found across all three departments.</td></tr>`;
         }
 
-        if (!isValid) {
-            e.preventDefault();
-            alert('Please fix all errors before submitting');
-            submitBtn.innerHTML = '📄 Submit & Generate PDF';
-            submitBtn.disabled = false;
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
 
-            // Scroll to first error
-            const firstError = document.querySelector('.error-input');
-            if (firstError) {
-                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                firstError.focus();
-            }
-        } else {
-            // Show confirmation for address
-            const addressValue = document.getElementById('address_field').value.trim();
-            if (addressValue) {
-                console.log('Address being submitted:', addressValue);
-                // Add a hidden field to ensure address is captured
-                const hiddenAddress = document.createElement('input');
-                hiddenAddress.type = 'hidden';
-                hiddenAddress.name = 'address_confirm';
-                hiddenAddress.value = addressValue;
-                this.appendChild(hiddenAddress);
-            }
+        // Render summary cards
+        let itTotal = 0, cseTotal = 0, aimlTotal = 0;
+        semOrder.forEach(sem => {
+            itTotal += (syllabusData[sem]["IT"] || []).length;
+            cseTotal += (syllabusData[sem]["CSE"] || []).length;
+            aimlTotal += (syllabusData[sem]["AIML"] || []).length;
+        });
+
+        let summaryHtml = `
+            <div class="summary-card">
+                <h3>${totalCommon}</h3>
+                <p>Common Subjects<br>(All 3 Departments)</p>
+            </div>
+            <div class="summary-card">
+                <h3>${itTotal}</h3>
+                <p>Total IT Subjects<br>(1-1 to 4-2)</p>
+            </div>
+            <div class="summary-card">
+                <h3>${cseTotal}</h3>
+                <p>Total CSE Subjects<br>(1-1 to 4-2)</p>
+            </div>
+            <div class="summary-card">
+                <h3>${aimlTotal}</h3>
+                <p>Total CSE(AI&ML) Subjects<br>(1-1 to 4-2)</p>
+            </div>
+        `;
+        summaryContainer.innerHTML = summaryHtml;
+    }
+
+    /* ============================================
+       TAB SWITCHING
+       ============================================ */
+    function openTab(tabName) {
+        const contents = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < contents.length; i++) {
+            contents[i].classList.remove("active");
         }
-    });
-
-    // Real-time validation
-    document.getElementById('ht_no').addEventListener('input', validateHTNo);
-    document.getElementById('dob').addEventListener('blur', calculateAge);
-    document.getElementById('parent_phone').addEventListener('blur', validatePhoneNumbers);
-    document.getElementById('student_phone').addEventListener('blur', validatePhoneNumbers);
-    document.getElementById('address_field').addEventListener('input', function() {
-        updateAddressPreview();
-        validateAddress();
-    });
-    document.getElementById('task_registered').addEventListener('change', function() {
-        toggleTaskUsername();
-        validateTaskUsername();
-    });
-    document.getElementById('task_username').addEventListener('input', validateTaskUsername);
-    document.getElementById('csi_registered').addEventListener('change', function() {
-        toggleCsiMembershipId();
-        validateCsiMembershipId();
-    });
-    document.getElementById('csi_membership_id').addEventListener('input', validateCsiMembershipId);
-
-    // Auto-capitalize Hall Ticket Number as user types
-    document.getElementById('ht_no').addEventListener('input', function(e) {
-        this.value = this.value.toUpperCase();
-    });
-
-    // Auto-hide messages after 10 seconds
-    setTimeout(() => {
-        const messages = document.querySelector('.messages');
-        if (messages) {
-            messages.style.opacity = '0';
-            messages.style.transition = 'opacity 1s';
-            setTimeout(() => messages.remove(), 1000);
+        const btns = document.getElementsByClassName("tab-btn");
+        for (let i = 0; i < btns.length; i++) {
+            btns[i].classList.remove("active");
         }
-    }, 10000);
+        document.getElementById(`tab-${tabName}`).classList.add("active");
 
-    // Window resize handler
-    window.addEventListener('resize', () => {
+        if (tabName === 'it') btns[0].classList.add("active");
+        if (tabName === 'cse') btns[1].classList.add("active");
+        if (tabName === 'aiml') btns[2].classList.add("active");
+        if (tabName === 'common') btns[3].classList.add("active");
+    }
+
+    /* ============================================
+       INITIALIZE ON PAGE LOAD
+       ============================================ */
+    document.addEventListener('DOMContentLoaded', () => {
+        renderDepartmentSyllabus('IT', 'it-syllabus-container');
+        renderDepartmentSyllabus('CSE', 'cse-syllabus-container');
+        renderDepartmentSyllabus('AIML', 'aiml-syllabus-container');
+        renderCommonSubjects();
+    });
+
+    window.addEventListener('resize', function() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     });
-
-    // Initialize age calculation if DOB is pre-filled
-    if (document.getElementById('dob').value) {
-        calculateAge();
-    }
-
-    // Initialize address preview
-    updateAddressPreview();
 </script>
-{% endif %}
 {% endblock %}

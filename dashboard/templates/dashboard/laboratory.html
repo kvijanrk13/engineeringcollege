@@ -1,0 +1,531 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Laboratory - ANURAG Engineering College{% endblock %}
+
+{% block body_class %}laboratory-page{% endblock %}
+
+{% block content %}
+<style>
+    /* Global Matrix Styling */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        background-color: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    /* DEPARTMENT HEADER */
+    .dept-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 15px 0 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    /* HORIZONTAL NAVIGATION TABS */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(0, 20, 0, 0.9);
+        padding: 15px;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        border-radius: 8px;
+    }
+
+    .nav-link-tab {
+        padding: 12px 20px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #0f0;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .nav-link-tab:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
+    .nav-link-tab.active-page { background: rgba(0, 255, 0, 0.2); border-width: 2px; }
+
+    /* CONTENT CONTAINER */
+    .container {
+        max-width: 1400px;
+        margin: 20px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        color: #1a1a1a;
+    }
+
+    h1.lab-title {
+        color: #0f172a;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 4px solid #1e293b;
+        padding-bottom: 10px;
+        font-weight: 800;
+        font-family: 'Segoe UI', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* Lab Cards Grid */
+    .lab-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+        margin-top: 20px;
+    }
+
+    .lab-card {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .lab-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    .lab-card-header {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        padding: 15px 20px;
+        font-weight: 700;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .lab-card-header .lab-icon {
+        font-size: 1.5rem;
+    }
+
+    .lab-card-body {
+        padding: 20px;
+    }
+
+    .lab-card-body p {
+        margin: 0 0 10px 0;
+        color: #475569;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .lab-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .lab-info-row:last-child {
+        border-bottom: none;
+    }
+
+    .lab-info-label {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+
+    .lab-info-value {
+        color: #475569;
+        font-weight: 600;
+    }
+
+    .lab-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .lab-badge.active {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .lab-badge.maintenance {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .lab-badge.upcoming {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    /* Summary Stats */
+    .lab-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .summary-stat {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .summary-stat h3 {
+        margin: 0 0 5px 0;
+        font-size: 2.2rem;
+        color: #1e293b;
+    }
+
+    .summary-stat p {
+        margin: 0;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* Software List */
+    .software-list {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0 0;
+    }
+
+    .software-list li {
+        padding: 4px 0;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+
+    .software-list li::before {
+        content: "✅ ";
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .lab-grid {
+            grid-template-columns: 1fr;
+        }
+        .lab-summary {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- DEPARTMENT HEADER AND NAVIGATION TABS -->
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab active-page">Laboratory</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
+</div>
+
+<div class="container">
+    <h1 class="lab-title">🖥️ Department Laboratories</h1>
+
+    <!-- Summary Stats -->
+    <div class="lab-summary">
+        <div class="summary-stat">
+            <h3>6</h3>
+            <p>Total Labs</p>
+        </div>
+        <div class="summary-stat">
+            <h3>360</h3>
+            <p>Total Systems</p>
+        </div>
+        <div class="summary-stat">
+            <h3>5</h3>
+            <p>Active Labs</p>
+        </div>
+        <div class="summary-stat">
+            <h3>1</h3>
+            <p>Under Maintenance</p>
+        </div>
+    </div>
+
+    <!-- Lab Cards -->
+    <div class="lab-grid">
+
+        <!-- Lab 1 -->
+        <div class="lab-card">
+            <div class="lab-card-header">
+                <span class="lab-icon">🖥️</span>
+                Programming Lab - 1
+            </div>
+            <div class="lab-card-body">
+                <p>Primary programming lab for C, Python, and Java programming courses.</p>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Room No</span>
+                    <span class="lab-info-value">IT-101</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Capacity</span>
+                    <span class="lab-info-value">60 Systems</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Status</span>
+                    <span class="lab-badge active">Active</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Lab Incharge</span>
+                    <span class="lab-info-value">Dr. Faculty Name</span>
+                </div>
+                <p style="margin-top: 10px; font-weight: 700; color: #1e293b;">Software Installed:</p>
+                <ul class="software-list">
+                    <li>Turbo C++ / GCC Compiler</li>
+                    <li>Python 3.12 + Anaconda</li>
+                    <li>JDK 21 + Eclipse IDE</li>
+                    <li>VS Code</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Lab 2 -->
+        <div class="lab-card">
+            <div class="lab-card-header">
+                <span class="lab-icon">🌐</span>
+                Web Technologies Lab
+            </div>
+            <div class="lab-card-body">
+                <p>Full Stack Development, Web Programming, and Django/Node.js projects.</p>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Room No</span>
+                    <span class="lab-info-value">IT-102</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Capacity</span>
+                    <span class="lab-info-value">60 Systems</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Status</span>
+                    <span class="lab-badge active">Active</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Lab Incharge</span>
+                    <span class="lab-info-value">Prof. Faculty Name</span>
+                </div>
+                <p style="margin-top: 10px; font-weight: 700; color: #1e293b;">Software Installed:</p>
+                <ul class="software-list">
+                    <li>Node.js + NPM</li>
+                    <li>Django + Flask</li>
+                    <li>XAMPP (Apache, MySQL, PHP)</li>
+                    <li>React.js / Angular CLI</li>
+                    <li>VS Code + Postman</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Lab 3 -->
+        <div class="lab-card">
+            <div class="lab-card-header">
+                <span class="lab-icon">🗄️</span>
+                Database & OS Lab
+            </div>
+            <div class="lab-card-body">
+                <p>Database Management Systems, Operating Systems, and Linux administration.</p>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Room No</span>
+                    <span class="lab-info-value">IT-201</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Capacity</span>
+                    <span class="lab-info-value">60 Systems</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Status</span>
+                    <span class="lab-badge active">Active</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Lab Incharge</span>
+                    <span class="lab-info-value">Dr. Faculty Name</span>
+                </div>
+                <p style="margin-top: 10px; font-weight: 700; color: #1e293b;">Software Installed:</p>
+                <ul class="software-list">
+                    <li>Oracle 19c / MySQL 8.0</li>
+                    <li>PostgreSQL</li>
+                    <li>Ubuntu 22.04 (Dual Boot)</li>
+                    <li>VirtualBox + VMware</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Lab 4 -->
+        <div class="lab-card">
+            <div class="lab-card-header">
+                <span class="lab-icon">🤖</span>
+                AI / ML & Data Science Lab
+            </div>
+            <div class="lab-card-body">
+                <p>Machine Learning, Data Analytics, Deep Learning, and NLP experiments.</p>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Room No</span>
+                    <span class="lab-info-value">IT-202</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Capacity</span>
+                    <span class="lab-info-value">60 Systems</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Status</span>
+                    <span class="lab-badge active">Active</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Lab Incharge</span>
+                    <span class="lab-info-value">Dr. Faculty Name</span>
+                </div>
+                <p style="margin-top: 10px; font-weight: 700; color: #1e293b;">Software Installed:</p>
+                <ul class="software-list">
+                    <li>Python 3.12 + Jupyter Notebook</li>
+                    <li>TensorFlow + Keras</li>
+                    <li>PyTorch</li>
+                    <li>Scikit-learn + Pandas + NumPy</li>
+                    <li>R Studio + Power BI</li>
+                    <li>MATLAB (Student License)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Lab 5 -->
+        <div class="lab-card">
+            <div class="lab-card-header">
+                <span class="lab-icon">☁️</span>
+                Cloud & IoT Lab
+            </div>
+            <div class="lab-card-body">
+                <p>Cloud Computing, Internet of Things, DevOps, and Embedded Systems experiments.</p>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Room No</span>
+                    <span class="lab-info-value">IT-301</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Capacity</span>
+                    <span class="lab-info-value">60 Systems</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Status</span>
+                    <span class="lab-badge active">Active</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Lab Incharge</span>
+                    <span class="lab-info-value">Prof. Faculty Name</span>
+                </div>
+                <p style="margin-top: 10px; font-weight: 700; color: #1e293b;">Software Installed:</p>
+                <ul class="software-list">
+                    <li>AWS Academy / Azure Portal</li>
+                    <li>Docker + Kubernetes</li>
+                    <li>Arduino IDE</li>
+                    <li>Raspberry Pi OS</li>
+                    <li>Jenkins + Git</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Lab 6 -->
+        <div class="lab-card">
+            <div class="lab-card-header">
+                <span class="lab-icon">🔧</span>
+                Research & Project Lab
+            </div>
+            <div class="lab-card-body">
+                <p>Dedicated lab for final year projects, research work, and mini projects.</p>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Room No</span>
+                    <span class="lab-info-value">IT-302</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Capacity</span>
+                    <span class="lab-info-value">60 Systems</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Status</span>
+                    <span class="lab-badge maintenance">Maintenance</span>
+                </div>
+                <div class="lab-info-row">
+                    <span class="lab-info-label">Lab Incharge</span>
+                    <span class="lab-info-value">Dr. Faculty Name</span>
+                </div>
+                <p style="margin-top: 10px; font-weight: 700; color: #1e293b;">Software Installed:</p>
+                <ul class="software-list">
+                    <li>All Development Tools</li>
+                    <li>NVIDIA GPU Drivers (CUDA)</li>
+                    <li>Cisco Packet Tracer</li>
+                    <li>Wireshark</li>
+                    <li>Android Studio</li>
+                    <li>Flutter SDK</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    /* MATRIX BACKGROUND ANIMATION */
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+{% endblock %}
