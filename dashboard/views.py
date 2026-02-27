@@ -3044,7 +3044,7 @@ def generate_faculty_pdf_bytes(faculty):
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
     """Merge certificates with faculty PDF bytes"""
     try:
-        from PyPDF2 import PdfMerger, PdfReader
+        from pypdf import PdfMerger, PdfReader
         merger = PdfMerger()
 
         # Add faculty PDF
