@@ -22,7 +22,6 @@ from pypdf import PdfWriter, PdfReader
 from .models import Student
 # ============================================================================
 
-from weasyprint import HTML
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4, letter
