@@ -1,3 +1,4 @@
+# FORCE NEW DEPLOY
 # dashboard/views.py - COMPLETE MERGED VERSION WITH ALL FUNCTIONS
 # ============================================================================
 # UPDATED IMPORT BLOCK (added HRFlowable, ParagraphStyle, colors, datetime)
