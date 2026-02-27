@@ -4,231 +4,165 @@
 {% block title %}Dashboard | ANURAG Engineering College{% endblock %}
 
 {% block content %}
-
-<style>
-    body {
-        background: #000;
-        color: #0f0;
-        font-family: "Courier New", monospace;
-    }
-    /* Letterhead Styling */
-    .dashboard-letterhead {
-        width: 100%;
-        max-width: 1000px;
-        margin: 0 auto 30px auto;
-        display: block;
-        border: 2px solid #0f0;
-        border-radius: 8px;
-        background: #fff; /* Ensures logo visibility */
-        padding: 5px;
-        box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-    }
-    .nav-link-tab {
-        border: 2px solid #0f0;
-        padding: 10px 20px;
-        text-decoration: none;
-        color: #0f0;
-        font-weight: bold;
-    }
-    .nav-link-tab:hover {
-        background: #0f0;
-        color: #000;
-    }
-
-    /* Department Info Styling */
-    .dept-section {
-        border: 2px solid #0f0;
-        border-radius: 12px;
-        padding: 25px;
-        margin-bottom: 30px;
-        background: rgba(0, 20, 0, 0.9);
-        text-align: left;
-    }
-    .dept-title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 20px;
-        border-bottom: 2px solid #0f0;
-        padding-bottom: 10px;
-    }
-    .dept-subtitle {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin: 20px 0 15px 0;
-        color: #0f0;
-    }
-    .dept-content {
-        line-height: 1.8;
-        font-size: 1.1rem;
-    }
-    .dept-content p {
-        margin-bottom: 15px;
-    }
-    .dept-content ul {
-        list-style-type: none;
-        padding-left: 0;
-    }
-    .dept-content li {
-        margin-bottom: 12px;
-        padding-left: 20px;
-        position: relative;
-    }
-    .dept-content li:before {
-        content: ">";
-        position: absolute;
-        left: 0;
-        color: #0f0;
-        font-weight: bold;
-    }
-    .peo-box, .po-box, .pso-box {
-        border-left: 3px solid #0f0;
-        padding-left: 20px;
-        margin-bottom: 20px;
-    }
-    .peo-box strong, .po-box strong, .pso-box strong {
-        color: #0f0;
-        font-size: 1.2rem;
-        display: block;
-        margin-bottom: 8px;
-    }
-</style>
-
-<div class="text-center">
-    <img src="{% static 'images/NEW LETTER HEAD.png' %}" alt="ANURAG Engineering College" class="dashboard-letterhead">
-</div>
-
-<div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
-    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
-    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
-    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
-    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
-    <a href="{% url 'dashboard:students_data' %}" class="nav-link-tab">Students Data</a>
-    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab text-danger border-danger">Logout</a>
-</div>
-
-<!-- ==================== DEPARTMENT PROFILE SECTION ==================== -->
-<div class="dept-section">
-    <div class="dept-title">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
-
-    <!-- Department Profile -->
-    <div class="dept-subtitle">Department Profile</div>
-    <div class="dept-content">
-        <p>• The department of IT was established in 2022 with an intake of 90 students in the UG Programme. Right from its inception it is continuously striving to impart quality education and competitive spirit among students for academic excellence.</p>
-        <p>• The department is equipped with state of the art computing facilities and experienced staff members and is known for its academic excellence proved by its performances since its inception. The Department also has audio-visual facilities with LCD Projectors and Digital Boards and Seminar Hall for effective teaching. The staff members are deputed to participate in workshops, Conferences and refreshers courses to keep in place with recent developments in the field of IT.</p>
+<div class="container-fluid py-4">
+    <div class="text-center mb-4">
+        <h1 class="display-4">Welcome to ANURAG Engineering College</h1>
+        <p class="lead">Department of Information Technology - Faculty Management System</p>
     </div>
 
-    <!-- Vision -->
-    <div class="dept-subtitle">Vision</div>
-    <div class="dept-content">
-        <p>To impart quality technical education, conduct scientific research of excellence and generate world class professionals to excel in the dynamic realm of Information Technology and contribute to the needs of the society.</p>
-    </div>
-
-    <!-- Mission -->
-    <div class="dept-subtitle">Mission</div>
-    <div class="dept-content">
-        <p>The Information Technology Department is committed</p>
-        <ul>
-            <li>To achieve excellence in higher education and research through dissemination of quality technical education with a strong foundation.</li>
-            <li>To continuously scout for and build opportunities in the field of IT and sustain long-term interaction with the institute and industry.</li>
-            <li>To build and uphold high professional and ethical standards to make the nation noted for its progressive contribution to global society.</li>
-        </ul>
-    </div>
-
-    <!-- PEOs -->
-    <div class="dept-subtitle">Program Educational Objectives (PEOs)</div>
-    <div class="dept-content">
-        <div class="peo-box">
-            <strong>PEO1:</strong>
-            <p>Graduates will be able to take up the professional responsibilities and effectively communicate with diversified teams.</p>
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Faculty</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_faculty }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="peo-box">
-            <strong>PEO2:</strong>
-            <p>Graduates will have the commitment towards the sustainable development for the advancement of the society by adhering ethics and values.</p>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">With PhD</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ with_phd }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-graduation-cap fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="peo-box">
-            <strong>PEO3:</strong>
-            <p>Graduates will practice lifelong learning in producing innovative solutions for complex problems.</p>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Active Faculty</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_faculty }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Certificates</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_certificates }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-certificate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- PSOs -->
-    <div class="dept-subtitle">Program Specific Outcomes (PSOs)</div>
-    <div class="dept-content">
-        <div class="pso-box">
-            <strong>PSO1:</strong>
-            <p>Advance professionally through organized training or self-learning in areas related to Information Technology throughout their career.</p>
+    <!-- Quick Navigation -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{% url 'dashboard:faculty' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users me-2"></i>Manage Faculty
+                        </a>
+                        <a href="{% url 'dashboard:add_faculty' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-plus me-2"></i>Add New Faculty
+                        </a>
+                        <a href="{% url 'dashboard:students' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-graduate me-2"></i>Manage Students
+                        </a>
+                        <a href="{% url 'dashboard:syllabus' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-book me-2"></i>View Syllabus
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="pso-box">
-            <strong>PSO2:</strong>
-            <p>Learn emerging computing paradigms for research and innovation.</p>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for log in recent_logs %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ log.action }}</h6>
+                                <small>{{ log.created_at|timesince }} ago</small>
+                            </div>
+                            <p class="mb-1">{{ log.details }}</p>
+                            <small>by {{ log.performed_by }}</small>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No recent activity</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- POs -->
-    <div class="dept-subtitle">Program Outcomes (POs)</div>
-    <div class="dept-content">
-        <p>At the end of the program, Graduates will be able to:</p>
-
-        <div class="po-box">
-            <strong>PO 1: Engineering knowledge</strong>
-            <p>Apply the knowledge of mathematics, science, engineering fundamentals, and an engineering specialization to the solution of complex engineering problems.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 2: Problem analysis</strong>
-            <p>Identify, formulate, review research literature, and analyze complex engineering problems reaching substantiated conclusions using first principles of mathematics, natural sciences, and engineering sciences.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 3: Design/development of solutions</strong>
-            <p>Design solutions for complex engineering problems and design system components or processes that meet the specified needs with appropriate consideration for the public health and safety, and the cultural, societal, and environmental considerations.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 4: Conduct investigations of complex problems</strong>
-            <p>Use research-based knowledge and research methods including design of experiments, analysis and interpretation of data, and synthesis of the information to provide valid conclusions.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 5: Modern tool usage</strong>
-            <p>Create, select, and apply appropriate techniques, resources, and modern engineering and IT tools including prediction and modeling to complex engineering activities with an understanding of the limitations.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 6: The engineer and society</strong>
-            <p>Apply reasoning informed by the contextual knowledge to assess societal, health, safety, legal and cultural issues and the consequent responsibilities relevant to the professional engineering practice.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 7: Environment and sustainability</strong>
-            <p>Understand the impact of the professional engineering solutions in societal and environmental contexts, and demonstrate the knowledge of, and need for sustainable development.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 8: Ethics</strong>
-            <p>Apply ethical principles and commit to professional ethics and responsibilities and norms of the engineering practice.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 9: Individual and team work</strong>
-            <p>Function effectively as an individual, and as a member or leader in diverse teams, and in multidisciplinary settings.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 10: Communication</strong>
-            <p>Communicate effectively on complex engineering activities with the engineering community and with society at large, such as, being able to comprehend and write effective reports and design documentation, make effective presentations, and give and receive clear instructions.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 11: Project management and finance</strong>
-            <p>Demonstrate knowledge and understanding of the engineering and management principles and apply these to one’s own work, as a member and leader in a team, to manage projects and in multidisciplinary environments.</p>
-        </div>
-
-        <div class="po-box">
-            <strong>PO 12: Life-long learning</strong>
-            <p>Recognize the need for, and have the preparation and ability to engage in independent and life-long learning in the broadest context of technological change.</p>
+    <!-- Department Distribution -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Department Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Count</th>
+                                    <th>Active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in departments %}
+                                <tr>
+                                    <td>{{ dept.department }}</td>
+                                    <td>{{ dept.count }}</td>
+                                    <td>{{ dept.active }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No departments found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
 {% endblock %}

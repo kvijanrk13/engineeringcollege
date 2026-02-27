@@ -8,14 +8,14 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
 
+    # 🔥 ADD THIS LINE (IMPORTANT)
+    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
+
     # Root → redirect to dashboard home
     path('', RedirectView.as_view(
         pattern_name='dashboard:dashboard',
         permanent=False
     ), name='home'),
-
-    # Dashboard app
-    path('dashboard/', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
 
     # Admin panel
     path('admin/', admin.site.urls),

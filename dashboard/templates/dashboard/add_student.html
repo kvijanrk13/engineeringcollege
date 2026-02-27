@@ -1,0 +1,644 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Add New Student - ANURAG Engineering College{% endblock %}
+
+{% block body_class %}add-student-page{% endblock %}
+
+{% block content %}
+<style>
+    /* Global Matrix Styling */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        background-color: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    /* Department Header */
+    .dept-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 15px 0 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(0, 20, 0, 0.9);
+        padding: 15px;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        border-radius: 8px;
+    }
+
+    .nav-link-tab {
+        padding: 12px 20px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #0f0;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .nav-link-tab:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 15px #0f0;
+    }
+
+    .nav-link-tab.active-page {
+        background: rgba(0, 255, 0, 0.2);
+        border-width: 2px;
+    }
+
+    /* Form Container */
+    .form-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        background: rgba(0, 20, 0, 0.95);
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
+        border: 2px solid #0f0;
+    }
+
+    h1.page-title {
+        color: #0f0;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #0f0;
+        padding-bottom: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Form Sections */
+    .form-section {
+        background: rgba(0, 30, 0, 0.8);
+        border: 1px solid #0f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        color: #0f0;
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #0f0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        color: #0f0;
+        margin-bottom: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        background: #000;
+        border: 2px solid #0f0;
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+        border-radius: 5px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        box-shadow: 0 0 10px #0f0;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: rgba(0, 255, 0, 0.3);
+    }
+
+    .form-group select option {
+        background: #000;
+        color: #0f0;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-row .form-group {
+        flex: 1;
+    }
+
+    /* File Upload */
+    .file-upload {
+        border: 2px dashed #0f0;
+        padding: 20px;
+        text-align: center;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .file-upload:hover {
+        background: rgba(0, 255, 0, 0.1);
+    }
+
+    .file-upload input[type="file"] {
+        display: none;
+    }
+
+    .file-upload label {
+        cursor: pointer;
+        color: #0f0;
+    }
+
+    .file-upload i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid rgba(0, 255, 0, 0.3);
+    }
+
+    .btn-submit, .btn-cancel {
+        padding: 15px 40px;
+        border: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: 0.3s;
+        border-radius: 8px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-submit {
+        background: transparent;
+        color: #0f0;
+        border: 3px solid #0f0;
+    }
+
+    .btn-submit:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 20px #0f0;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        color: #f00;
+        border: 3px solid #f00;
+    }
+
+    .btn-cancel:hover {
+        background: #f00;
+        color: #000;
+        box-shadow: 0 0 20px #f00;
+    }
+
+    /* Helper text */
+    .help-text {
+        color: #666;
+        font-size: 0.8rem;
+        margin-top: 5px;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #f00;
+    }
+
+    /* Footer */
+    .footer {
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 255, 0, 0.3);
+        color: #666;
+        font-size: 0.9rem;
+    }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- DEPARTMENT HEADER AND NAVIGATION TABS -->
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
+    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
+</div>
+
+<div class="form-container">
+    <h1 class="page-title">ADD NEW STUDENT</h1>
+
+    <form method="POST" enctype="multipart/form-data" id="addStudentForm">
+        {% csrf_token %}
+
+        <!-- Basic Information Section -->
+        <div class="form-section">
+            <h3 class="section-title">Basic Information</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="required-field">Hall Ticket Number</label>
+                    <input type="text" name="ht_no" placeholder="e.g., 23C11A1201" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Student Name</label>
+                    <input type="text" name="student_name" placeholder="Full Name" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Father's Name</label>
+                    <input type="text" name="father_name" placeholder="Father's Full Name" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Mother's Name</label>
+                    <input type="text" name="mother_name" placeholder="Mother's Full Name" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Gender</label>
+                    <select name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Date of Birth</label>
+                    <input type="date" name="dob" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Age</label>
+                    <input type="number" name="age" placeholder="Age" required>
+                </div>
+                <div class="form-group">
+                    <label>Nationality</label>
+                    <input type="text" name="nationality" value="Indian">
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Details Section -->
+        <div class="form-section">
+            <h3 class="section-title">Personal Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="">Select Category</option>
+                        <option value="General">General</option>
+                        <option value="OBC">OBC</option>
+                        <option value="SC">SC</option>
+                        <option value="ST">ST</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Religion</label>
+                    <input type="text" name="religion" placeholder="Religion">
+                </div>
+                <div class="form-group">
+                    <label>Blood Group</label>
+                    <select name="blood_group">
+                        <option value="">Select Blood Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Aadhar Number</label>
+                    <input type="text" name="aadhar" placeholder="12-digit Aadhar" required>
+                </div>
+                <div class="form-group">
+                    <label>APAAR ID</label>
+                    <input type="text" name="apaar_id" placeholder="APAAR ID">
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Address</label>
+                    <textarea name="address" rows="3" placeholder="Full Address" required></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="form-section">
+            <h3 class="section-title">Contact Information</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="required-field">Parent Phone</label>
+                    <input type="text" name="parent_phone" placeholder="Parent's Mobile Number" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Student Phone</label>
+                    <input type="text" name="student_phone" placeholder="Student's Mobile Number" required>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Email</label>
+                    <input type="email" name="email" placeholder="student@anurag.ac.in" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Details -->
+        <div class="form-section">
+            <h3 class="section-title">Registration Details</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>TASK Registered</label>
+                    <select name="task_registered">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>TASK Username</label>
+                    <input type="text" name="task_username" placeholder="TASK Username">
+                </div>
+                <div class="form-group">
+                    <label>CSI Registered</label>
+                    <select name="csi_registered">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>CSI Membership ID</label>
+                    <input type="text" name="csi_membership_id" placeholder="CSI Membership ID">
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="form-section">
+            <h3 class="section-title">Academic Information</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="required-field">Admission Type</label>
+                    <select name="admission_type" required>
+                        <option value="">Select Type</option>
+                        <option value="Management">Management</option>
+                        <option value="EAMCET">EAMCET</option>
+                        <option value="ECET">ECET</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Other Admission Details</label>
+                    <input type="text" name="other_admission_details" placeholder="If other, specify">
+                </div>
+                <div class="form-group">
+                    <label>EAMCET Rank</label>
+                    <input type="number" name="eamcet_rank" placeholder="EAMCET Rank">
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Year</label>
+                    <select name="year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Semester</label>
+                    <select name="sem" required>
+                        <option value="">Select Semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>SSC Marks (%)</label>
+                    <input type="number" step="0.01" name="ssc_marks" placeholder="SSC Percentage">
+                </div>
+                <div class="form-group">
+                    <label>Intermediate Marks (%)</label>
+                    <input type="number" step="0.01" name="inter_marks" placeholder="Intermediate Percentage">
+                </div>
+                <div class="form-group">
+                    <label>CGPA</label>
+                    <input type="number" step="0.01" name="cgpa" placeholder="Current CGPA">
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div class="form-section">
+            <h3 class="section-title">Projects & Internships</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>RTRP Project Title</label>
+                    <input type="text" name="rtrp_project_title" placeholder="RTRP Project Title">
+                </div>
+                <div class="form-group">
+                    <label>Internship Title</label>
+                    <input type="text" name="intern_title" placeholder="Internship Title">
+                </div>
+                <div class="form-group">
+                    <label>Final Project Title</label>
+                    <input type="text" name="final_project_title" placeholder="Final Year Project Title">
+                </div>
+                <div class="form-group">
+                    <label>Other Training</label>
+                    <textarea name="other_training" rows="2" placeholder="Other training details"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Upload -->
+        <div class="form-section">
+            <h3 class="section-title">Student Photo</h3>
+            <div class="file-upload" onclick="document.getElementById('photoInput').click()">
+                <i>📷</i>
+                <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;">
+                <label for="photoInput">Click to upload student photo</label>
+                <div class="help-text">Supported formats: JPG, PNG (Max size: 5MB)</div>
+            </div>
+        </div>
+
+        <!-- Certificates Upload -->
+        <div class="form-section">
+            <h3 class="section-title">Certificates & Documents</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Achievement Certificates</label>
+                    <input type="file" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload achievement certificates (PDF/Image)</div>
+                </div>
+                <div class="form-group">
+                    <label>Internship Certificates</label>
+                    <input type="file" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload internship certificates (PDF/Image)</div>
+                </div>
+                <div class="form-group">
+                    <label>Course Certificates</label>
+                    <input type="file" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload course completion certificates</div>
+                </div>
+                <div class="form-group">
+                    <label>SDP Certificates</label>
+                    <input type="file" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload Skill Development Program certificates</div>
+                </div>
+                <div class="form-group">
+                    <label>Extracurricular Certificates</label>
+                    <input type="file" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload extracurricular activity certificates</div>
+                </div>
+                <div class="form-group">
+                    <label>Placement Certificates</label>
+                    <input type="file" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload placement offer letters</div>
+                </div>
+                <div class="form-group">
+                    <label>National Exam Certificates</label>
+                    <input type="file" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="help-text">Upload national exam certificates</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">SAVE STUDENT</button>
+            <a href="{% url 'dashboard:students' %}" class="btn-cancel">CANCEL</a>
+        </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="footer">
+        © 2026 ANURAG Engineering College. All rights reserved.
+    </div>
+</div>
+
+<script>
+    // Matrix Animation
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZANURAGIT';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    // Auto-calculate age from DOB
+    document.getElementById('addStudentForm').addEventListener('submit', function(e) {
+        const dobInput = document.querySelector('input[name="dob"]');
+        const ageInput = document.querySelector('input[name="age"]');
+
+        if (dobInput.value && !ageInput.value) {
+            const dob = new Date(dobInput.value);
+            const today = new Date();
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                age--;
+            }
+
+            ageInput.value = age;
+        }
+    });
+
+    // File upload preview
+    document.getElementById('photoInput').addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name;
+        if (fileName) {
+            const label = document.querySelector('.file-upload label');
+            label.textContent = `Selected: ${fileName}`;
+        }
+    });
+</script>
+{% endblock %}

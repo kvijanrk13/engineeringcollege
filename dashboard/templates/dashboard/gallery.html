@@ -1,482 +1,71 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
-{% block title %}Gallery - ANURAG Engineering College{% endblock %}
 
-{% block body_class %}gallery-page{% endblock %}
+{% block title %}Gallery - ANURAG Engineering College{% endblock %}
 
 {% block content %}
 <style>
-    /* Global Matrix Styling */
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Courier New', monospace;
-        overflow-x: hidden;
-        background-color: #000;
-        color: #0f0;
-    }
-
-    #matrix-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: -1;
-    }
-
-    /* DEPARTMENT HEADER */
-    .dept-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #0f0;
-        margin: 15px 0 30px 0;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 3px;
-        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-    }
-
-    /* HORIZONTAL NAVIGATION TABS */
-    .nav-tabs-container {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        background: rgba(0, 20, 0, 0.9);
-        padding: 15px;
-        border: 1px solid #0f0;
-        width: 100%;
-        max-width: 1200px;
-        margin: 0 auto 40px auto;
-        border-radius: 8px;
-    }
-
-    .nav-link-tab {
-        padding: 12px 20px;
-        color: #0f0;
-        text-decoration: none;
-        font-weight: bold;
-        text-transform: uppercase;
-        border: 1px solid #0f0;
-        transition: 0.3s;
-        font-size: 0.9rem;
-    }
-
-    .nav-link-tab:hover { background: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
-    .nav-link-tab.active-page { background: rgba(0, 255, 0, 0.2); border-width: 2px; }
-
-    /* CONTENT CONTAINER */
     .container {
-        max-width: 1400px;
-        margin: 20px auto;
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 30px;
         background: white;
-        padding: 25px;
         border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        color: #1a1a1a;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
     }
-
-    h1.gallery-title {
-        color: #0f172a;
+    h1 {
+        color: #1e293b;
         text-align: center;
         margin-bottom: 30px;
-        border-bottom: 4px solid #1e293b;
-        padding-bottom: 10px;
-        font-weight: 800;
-        font-family: 'Segoe UI', sans-serif;
-        text-transform: uppercase;
-        letter-spacing: 1px;
     }
-
-    /* Category Filter Tabs */
-    .filter-tabs {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 30px;
+    .coming-soon {
+        text-align: center;
+        padding: 50px;
+        background: #f8fafc;
+        border-radius: 8px;
+        color: #64748b;
+        font-size: 1.2rem;
     }
-
-    .filter-btn {
-        padding: 10px 25px;
-        background: #e2e8f0;
-        color: #334155;
-        border: none;
-        border-radius: 25px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: 0.3s;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .filter-btn:hover { background: #cbd5e1; }
-    .filter-btn.active {
-        background: #1e293b;
-        color: #ffffff;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    }
-
-    /* Gallery Grid */
     .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 25px;
-        margin-top: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
     }
-
-    .gallery-card {
-        background: #fff;
-        border: 1px solid #cbd5e1;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .gallery-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    }
-
-    .gallery-card-img {
-        width: 100%;
-        height: 220px;
-        background: linear-gradient(135deg, #1e293b 0%, #475569 50%, #1e293b 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 3rem;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .gallery-card-img .placeholder-text {
-        font-size: 1rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        opacity: 0.7;
-    }
-
-    .gallery-card-body {
-        padding: 15px 20px;
-    }
-
-    .gallery-card-body h3 {
-        margin: 0 0 8px 0;
-        color: #1e293b;
-        font-size: 1.1rem;
-        font-weight: 700;
-    }
-
-    .gallery-card-body p {
-        margin: 0 0 10px 0;
-        color: #64748b;
-        font-size: 0.9rem;
-        line-height: 1.5;
-    }
-
-    .gallery-card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 20px;
+    .gallery-item {
         background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    .gallery-date {
-        font-size: 0.8rem;
-        color: #94a3b8;
-        font-weight: 600;
+    .gallery-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
     }
-
-    .gallery-category {
-        display: inline-block;
-        padding: 3px 10px;
-        border-radius: 15px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .cat-events { background: #dbeafe; color: #1e40af; }
-    .cat-workshops { background: #dcfce7; color: #166534; }
-    .cat-labs { background: #fef3c7; color: #92400e; }
-    .cat-achievements { background: #fce7f3; color: #9d174d; }
-    .cat-campus { background: #e0e7ff; color: #3730a3; }
-
-    /* Empty State */
-    .empty-gallery {
+    .gallery-item .caption {
+        padding: 10px;
         text-align: center;
-        padding: 60px 20px;
-        color: #94a3b8;
-    }
-
-    .empty-gallery .icon {
-        font-size: 4rem;
-        margin-bottom: 15px;
-    }
-
-    .empty-gallery h3 {
-        color: #64748b;
-        margin-bottom: 10px;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .gallery-grid {
-            grid-template-columns: 1fr;
-        }
+        font-weight: 500;
+        color: #1e293b;
     }
 </style>
 
-<canvas id="matrix-canvas"></canvas>
-
-<!-- DEPARTMENT HEADER AND NAVIGATION TABS -->
-<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
-
-<div class="nav-tabs-container">
-    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
-    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
-    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
-    <a href="{% url 'dashboard:students' %}" class="nav-link-tab">Students</a>
-    <a href="{% url 'dashboard:laboratory' %}" class="nav-link-tab">Laboratory</a>
-    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab active-page">Gallery</a>
-    <a href="{% url 'dashboard:logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
-</div>
-
 <div class="container">
-    <h1 class="gallery-title">📸 Department Gallery</h1>
-
-    <!-- Filter Tabs -->
-    <div class="filter-tabs">
-        <button class="filter-btn active" onclick="filterGallery('all', this)">All</button>
-        <button class="filter-btn" onclick="filterGallery('events', this)">Events</button>
-        <button class="filter-btn" onclick="filterGallery('workshops', this)">Workshops</button>
-        <button class="filter-btn" onclick="filterGallery('labs', this)">Labs</button>
-        <button class="filter-btn" onclick="filterGallery('achievements', this)">Achievements</button>
-        <button class="filter-btn" onclick="filterGallery('campus', this)">Campus</button>
+    <h1>Gallery</h1>
+    <div class="coming-soon">
+        <h2>🚧 Under Construction 🚧</h2>
+        <p>Gallery page is coming soon. Check back later for photos and videos.</p>
     </div>
 
-    <!-- Gallery Grid -->
-    <div class="gallery-grid" id="gallery-grid">
-
-        <!-- Card 1 -->
-        <div class="gallery-card" data-category="events">
-            <div class="gallery-card-img">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🎓</div>
-                    <div class="placeholder-text">Event Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>Annual Technical Symposium 2025</h3>
-                <p>Students presenting innovative projects and research papers at the annual IT department technical fest.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 March 15, 2025</span>
-                <span class="gallery-category cat-events">Events</span>
-            </div>
+    <!-- Placeholder for future gallery content -->
+    <!--
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <img src="{% static 'images/placeholder.jpg' %}" alt="Placeholder">
+            <div class="caption">Campus View</div>
         </div>
-
-        <!-- Card 2 -->
-        <div class="gallery-card" data-category="workshops">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #166534 0%, #22c55e 50%, #166534 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">💻</div>
-                    <div class="placeholder-text">Workshop Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>Django Full Stack Development Workshop</h3>
-                <p>3-day hands-on workshop on building web applications using Django framework and React.js frontend.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 February 20, 2025</span>
-                <span class="gallery-category cat-workshops">Workshops</span>
-            </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="gallery-card" data-category="labs">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #92400e 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🖥️</div>
-                    <div class="placeholder-text">Lab Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>New AI/ML Lab Inauguration</h3>
-                <p>State-of-the-art AI and Machine Learning laboratory equipped with GPU workstations inaugurated by the Principal.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 January 10, 2025</span>
-                <span class="gallery-category cat-labs">Labs</span>
-            </div>
-        </div>
-
-        <!-- Card 4 -->
-        <div class="gallery-card" data-category="achievements">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #9d174d 0%, #ec4899 50%, #9d174d 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🏆</div>
-                    <div class="placeholder-text">Achievement Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>Smart India Hackathon Winners</h3>
-                <p>IT department team won the Smart India Hackathon 2025 at national level with their IoT-based solution.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 December 22, 2024</span>
-                <span class="gallery-category cat-achievements">Achievements</span>
-            </div>
-        </div>
-
-        <!-- Card 5 -->
-        <div class="gallery-card" data-category="events">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🎤</div>
-                    <div class="placeholder-text">Guest Lecture Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>Guest Lecture on Cloud Computing</h3>
-                <p>Industry expert from AWS delivered a guest lecture on cloud architecture and serverless computing.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 November 18, 2024</span>
-                <span class="gallery-category cat-events">Events</span>
-            </div>
-        </div>
-
-        <!-- Card 6 -->
-        <div class="gallery-card" data-category="workshops">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #7c3aed 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🐍</div>
-                    <div class="placeholder-text">Workshop Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>Machine Learning with Python Bootcamp</h3>
-                <p>5-day intensive bootcamp on ML algorithms, data preprocessing, and model deployment using Python.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 October 05, 2024</span>
-                <span class="gallery-category cat-workshops">Workshops</span>
-            </div>
-        </div>
-
-        <!-- Card 7 -->
-        <div class="gallery-card" data-category="campus">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #3730a3 0%, #6366f1 50%, #3730a3 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🏫</div>
-                    <div class="placeholder-text">Campus Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>IT Department Building</h3>
-                <p>The Information Technology department building with modern classrooms and well-equipped laboratories.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 September 01, 2024</span>
-                <span class="gallery-category cat-campus">Campus</span>
-            </div>
-        </div>
-
-        <!-- Card 8 -->
-        <div class="gallery-card" data-category="achievements">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #b91c1c 0%, #ef4444 50%, #b91c1c 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">🥇</div>
-                    <div class="placeholder-text">Achievement Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>100% Placement Record - 2024 Batch</h3>
-                <p>IT department achieved 100% placement for the 2024 graduating batch with top companies like TCS, Infosys, and Wipro.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 August 15, 2024</span>
-                <span class="gallery-category cat-achievements">Achievements</span>
-            </div>
-        </div>
-
-        <!-- Card 9 -->
-        <div class="gallery-card" data-category="labs">
-            <div class="gallery-card-img" style="background: linear-gradient(135deg, #0f766e 0%, #14b8a6 50%, #0f766e 100%);">
-                <div style="text-align:center;">
-                    <div style="font-size: 3rem;">☁️</div>
-                    <div class="placeholder-text">Lab Photo</div>
-                </div>
-            </div>
-            <div class="gallery-card-body">
-                <h3>Cloud & IoT Lab Setup</h3>
-                <p>Newly configured Cloud Computing and IoT laboratory with Arduino kits, Raspberry Pi, and AWS Academy access.</p>
-            </div>
-            <div class="gallery-card-footer">
-                <span class="gallery-date">📅 July 20, 2024</span>
-                <span class="gallery-category cat-labs">Labs</span>
-            </div>
-        </div>
-
     </div>
+    -->
 </div>
-
-<script>
-    /* MATRIX BACKGROUND ANIMATION */
-    const canvas = document.getElementById('matrix-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
-
-    function drawMatrix() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = fontSize + 'px monospace';
-        for (let i = 0; i < drops.length; i++) {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        }
-    }
-    setInterval(drawMatrix, 33);
-
-    window.addEventListener('resize', function() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-
-    /* GALLERY FILTER */
-    function filterGallery(category, btn) {
-        // Update active button
-        const btns = document.querySelectorAll('.filter-btn');
-        btns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        // Filter cards
-        const cards = document.querySelectorAll('.gallery-card');
-        cards.forEach(card => {
-            if (category === 'all' || card.dataset.category === category) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
-        });
-    }
-</script>
 {% endblock %}

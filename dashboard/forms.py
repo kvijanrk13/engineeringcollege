@@ -1,7 +1,7 @@
 # dashboard/forms.py
 
 from django import forms
-from .models import Faculty, Student, Certificate
+from .models import Faculty, Student, Certificate, FacultyProfile, ResearchProject
 
 
 # =====================================================
@@ -45,13 +45,27 @@ class FacultyForm(forms.ModelForm):
             'gender',
             'address',
             'father_name',
+            'mother_name',
             'state',
+            'caste',
+            'sub_caste',
             'aadhar',
             'pan',
             'jntuh_id',
             'aicte_id',
+            'apaar_id',
+            'orcid_id',
+            'scm',
 
             # Education
+            'ssc_year',
+            'ssc_percent',
+            'ssc_school',
+
+            'inter_year',
+            'inter_percent',
+            'inter_college',
+
             'ug_degree',
             'ug_year',
             'ug_percentage',
@@ -69,14 +83,6 @@ class FacultyForm(forms.ModelForm):
             'phd_university',
             'phd_spec',
 
-            'ssc_year',
-            'ssc_percent',
-            'ssc_school',
-
-            'inter_year',
-            'inter_percent',
-            'inter_college',
-
             # Experience
             'total_experience',
             'exp_anurag',
@@ -85,10 +91,20 @@ class FacultyForm(forms.ModelForm):
             # Other
             'subjects_dealt',
             'about_yourself',
+            'results',  # ADDED BACK - this field exists in the model
 
             # Files
             'photo',
             'pdf_document',
+            'aadhar_file',
+            'pan_file',
+            'apaar_file',
+            'scm_file',
+            'ssc_certificate',
+            'inter_certificate',
+            'ug_certificate',
+            'pg_certificate',
+            'phd_certificate',
 
             # Status
             'is_active',
@@ -110,11 +126,25 @@ class FacultyForm(forms.ModelForm):
             ),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'father_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'mother_name': forms.TextInput(attrs={'class': 'form-control'}),
             'state': forms.TextInput(attrs={'class': 'form-control'}),
+            'caste': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Caste'}),
+            'sub_caste': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Sub-Caste'}),
             'aadhar': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Aadhar Number'}),
             'pan': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PAN Number'}),
             'jntuh_id': forms.TextInput(attrs={'class': 'form-control'}),
             'aicte_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'apaar_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'orcid_id': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0000-0002-9791-8445'}),
+            'scm': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'SCM Details'}),
+
+            'ssc_year': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ssc_percent': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'ssc_school': forms.TextInput(attrs={'class': 'form-control'}),
+
+            'inter_year': forms.NumberInput(attrs={'class': 'form-control'}),
+            'inter_percent': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'inter_college': forms.TextInput(attrs={'class': 'form-control'}),
 
             'ug_degree': forms.TextInput(attrs={'class': 'form-control'}),
             'ug_year': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -133,25 +163,81 @@ class FacultyForm(forms.ModelForm):
             'phd_university': forms.TextInput(attrs={'class': 'form-control'}),
             'phd_spec': forms.TextInput(attrs={'class': 'form-control'}),
 
-            'ssc_year': forms.NumberInput(attrs={'class': 'form-control'}),
-            'ssc_percent': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'ssc_school': forms.TextInput(attrs={'class': 'form-control'}),
-
-            'inter_year': forms.NumberInput(attrs={'class': 'form-control'}),
-            'inter_percent': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'inter_college': forms.TextInput(attrs={'class': 'form-control'}),
-
             'total_experience': forms.TextInput(attrs={'class': 'form-control'}),
             'exp_anurag': forms.TextInput(attrs={'class': 'form-control'}),
             'exp_other': forms.TextInput(attrs={'class': 'form-control'}),
 
             'subjects_dealt': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'about_yourself': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'results': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),  # ADDED BACK
 
             'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'pdf_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'aadhar_file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'pan_file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'apaar_file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'scm_file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'ssc_certificate': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'inter_certificate': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'ug_certificate': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'pg_certificate': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'phd_certificate': forms.ClearableFileInput(attrs={'class': 'form-control'}),
 
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+# =====================================================
+# FACULTY PROFILE FORM (NEW)
+# =====================================================
+
+class FacultyProfileForm(forms.ModelForm):
+    class Meta:
+        model = FacultyProfile
+        fields = [
+            'batch_number', 'student_name',
+            'aadhar_document', 'apaar_document', 'pan_document', 'scm_document',
+            'joining_date', 'experience_other',
+            'ssc_year', 'ssc_percentage',
+            'projects_done',
+        ]
+        widgets = {
+            'joining_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'ssc_year': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ssc_percentage': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'experience_other': forms.NumberInput(attrs={'class': 'form-control'}),
+            'batch_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'student_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'projects_done': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'aadhar_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'apaar_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'pan_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'scm_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+
+# =====================================================
+# RESEARCH PROJECT FORM (NEW)
+# =====================================================
+
+class ResearchProjectForm(forms.ModelForm):
+    class Meta:
+        model = ResearchProject
+        fields = [
+            'research_type', 'title_of_project', 'marks_awarded',
+            'doi', 'volume', 'issn_number', 'journal_name',
+            'publisher_name', 'upload_pdf'
+        ]
+        widgets = {
+            'research_type': forms.Select(attrs={'class': 'form-control'}),
+            'title_of_project': forms.TextInput(attrs={'class': 'form-control'}),
+            'marks_awarded': forms.NumberInput(attrs={'class': 'form-control'}),
+            'doi': forms.TextInput(attrs={'class': 'form-control'}),
+            'volume': forms.TextInput(attrs={'class': 'form-control'}),
+            'issn_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'journal_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'publisher_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'upload_pdf': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
 

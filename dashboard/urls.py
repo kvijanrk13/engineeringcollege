@@ -1,3 +1,4 @@
+# dashboard/urls.py
 from django.urls import path
 from . import views
 
@@ -34,6 +35,10 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/edit/', views.edit_faculty, name='edit_faculty'),
     path('faculty/<int:faculty_id>/delete/', views.delete_faculty, name='delete_faculty'),
     path('faculty/<int:faculty_id>/assign-subjects/', views.assign_subjects, name='assign_subjects'),
+
+    # ================= NEW FACULTY PROFILE ROUTES =================
+    path('faculty/<int:faculty_id>/profile/', views.faculty_profile_view, name='faculty_profile_view'),
+    path('research-project/<int:project_id>/delete/', views.delete_research_project, name='delete_research_project'),
 
     # ================= FACULTY PDF =================
     path('faculty/<int:faculty_id>/pdf/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
@@ -115,4 +120,9 @@ urlpatterns = [
     path('about/', views.about_system, name='about_system'),
     path('help/', views.help_documentation, name='help_documentation'),
     path('contact/', views.contact_support, name='contact_support'),
+    path('laboratory/', views.laboratory, name='laboratory'),
+    path('gallery/', views.gallery, name='gallery'),  # Added gallery URL
+
+    # ================= DEBUG =================
+    path('debug/faculty/<int:faculty_id>/', views.debug_faculty_data, name='debug_faculty_data'),
 ]

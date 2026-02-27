@@ -121,16 +121,25 @@ USE_I18N = True
 USE_TZ = True
 
 # --------------------------------------------------
-# STATIC FILES
+# STATIC FILES (CSS, JavaScript, Images)
 # --------------------------------------------------
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# WhiteNoise configuration for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Ensure staticfiles finder is used
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
 # --------------------------------------------------
-# MEDIA FILES (PDF WILL BE STORED LOCALLY)
+# MEDIA FILES (User uploaded files)
 # --------------------------------------------------
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -165,13 +174,6 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': CLOUDINARY_API_SECRET,
 }
 
-# IMPORTANT:
-# We are NOT setting DEFAULT_FILE_STORAGE
-# Because generated PDFs must remain LOCAL.
-# CloudinaryField in models handles Cloud upload.
-
-# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
 # ==================================================
 # AUTH REDIRECTS
 # ==================================================
@@ -182,14 +184,28 @@ LOGOUT_REDIRECT_URL = 'dashboard:login'
 # --------------------------------------------------
 # SESSION SETTINGS
 # --------------------------------------------------
-SESSION_COOKIE_AGE = 1209600
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SECURE = False     # Set to True in production with HTTPS
 
 # --------------------------------------------------
 # FILE UPLOAD LIMITS
 # --------------------------------------------------
 FILE_UPLOAD_PERMISSIONS = 0o644
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880
-DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880   # 5MB
+
+# --------------------------------------------------
+# SECURITY SETTINGS (for production, adjust as needed)
+# --------------------------------------------------
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

@@ -1,4 +1,3 @@
-<!-- dashboard/templates/dashboard/student_detail.html -->
 {% extends 'dashboard/base.html' %}
 {% load static %}
 {% block title %}{{ student.student_name }} - Details{% endblock %}
@@ -215,6 +214,17 @@
         background: linear-gradient(135deg, #330033, #aa00aa);
         box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
     }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #1a1a00, #333300);
+        color: #ff0;
+        border: 2px solid #ff0;
+    }
+
+    .btn-edit:hover {
+        background: linear-gradient(135deg, #333300, #aaaa00);
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+    }
 </style>
 
 <canvas id="matrix-canvas"></canvas>
@@ -242,7 +252,7 @@
                 <h1 class="student-name">{{ student.student_name }}</h1>
                 <div class="student-id">Hall Ticket No: <strong>{{ student.ht_no }}</strong></div>
                 <div class="student-id">Year {{ student.year }} - Semester {{ student.sem }}</div>
-                <div class="student-id">Registered: {{ student.registration_date|date:"F d, Y" }}</div>
+                <div class="student-id">CGPA: <strong>{{ student.cgpa }}</strong></div>
             </div>
         </div>
 
@@ -267,12 +277,28 @@
                     <div class="info-value">{{ student.dob }} (Age: {{ student.age }})</div>
                 </div>
                 <div class="info-row">
+                    <div class="info-label">Nationality:</div>
+                    <div class="info-value">{{ student.nationality|default:"Indian" }}</div>
+                </div>
+                <div class="info-row">
                     <div class="info-label">Category:</div>
-                    <div class="info-value">{{ student.category }}</div>
+                    <div class="info-value">{{ student.category|default:"Not specified" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Religion:</div>
+                    <div class="info-value">{{ student.religion|default:"Not specified" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Blood Group:</div>
+                    <div class="info-value">{{ student.blood_group|default:"Not specified" }}</div>
                 </div>
                 <div class="info-row">
                     <div class="info-label">Aadhar No:</div>
                     <div class="info-value">{{ student.aadhar }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">APAAR ID:</div>
+                    <div class="info-value">{{ student.apaar_id|default:"Not provided" }}</div>
                 </div>
             </div>
 
@@ -297,6 +323,31 @@
                 </div>
             </div>
 
+            <!-- Registration Details -->
+            <div class="info-section">
+                <h3 class="section-title">Registration Details</h3>
+                <div class="info-row">
+                    <div class="info-label">TASK Registered:</div>
+                    <div class="info-value">{{ student.task_registered|default:"No" }}</div>
+                </div>
+                {% if student.task_username %}
+                <div class="info-row">
+                    <div class="info-label">TASK Username:</div>
+                    <div class="info-value">{{ student.task_username }}</div>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <div class="info-label">CSI Registered:</div>
+                    <div class="info-value">{{ student.csi_registered|default:"No" }}</div>
+                </div>
+                {% if student.csi_membership_id %}
+                <div class="info-row">
+                    <div class="info-label">CSI Membership ID:</div>
+                    <div class="info-value">{{ student.csi_membership_id }}</div>
+                </div>
+                {% endif %}
+            </div>
+
             <!-- Academic Information -->
             <div class="info-section">
                 <h3 class="section-title">Academic Information</h3>
@@ -308,6 +359,12 @@
                 <div class="info-row">
                     <div class="info-label">Admission Details:</div>
                     <div class="info-value">{{ student.other_admission_details }}</div>
+                </div>
+                {% endif %}
+                {% if student.eamcet_rank %}
+                <div class="info-row">
+                    <div class="info-label">EAMCET Rank:</div>
+                    <div class="info-value">{{ student.eamcet_rank }}</div>
                 </div>
                 {% endif %}
                 <div class="info-row">
@@ -327,10 +384,10 @@
             <!-- Projects & Internships -->
             <div class="info-section">
                 <h3 class="section-title">Projects & Internships</h3>
-                {% if student.rtrp_title %}
+                {% if student.rtrp_project_title %}
                 <div class="info-row">
                     <div class="info-label">RTRP Project:</div>
-                    <div class="info-value">{{ student.rtrp_title }}</div>
+                    <div class="info-value">{{ student.rtrp_project_title }}</div>
                 </div>
                 {% endif %}
                 {% if student.intern_title %}
@@ -349,6 +406,11 @@
                 <div class="info-row">
                     <div class="info-label">Other Training:</div>
                     <div class="info-value">{{ student.other_training }}</div>
+                </div>
+                {% endif %}
+                {% if not student.rtrp_project_title and not student.intern_title and not student.final_project_title and not student.other_training %}
+                <div class="info-row">
+                    <div class="info-value" style="color: #666;">No projects or internships added</div>
                 </div>
                 {% endif %}
             </div>
@@ -403,12 +465,15 @@
         </div>
 
         <div class="action-buttons">
-            <button onclick="window.print()" class="action-btn btn-print">
-                🖨️ PRINT PROFILE
-            </button>
-            <a href="#" class="action-btn btn-export">
-                📥 EXPORT AS PDF
+            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="action-btn btn-print" target="_blank">
+                🖨️ GENERATE PDF
             </a>
+            <a href="{% url 'dashboard:edit_student' student.id %}" class="action-btn btn-edit">
+                ✏️ EDIT PROFILE
+            </a>
+            <button onclick="window.print()" class="action-btn btn-export">
+                📥 PRINT PAGE
+            </button>
         </div>
     </div>
 </div>
