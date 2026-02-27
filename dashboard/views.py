@@ -17,7 +17,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 
-from PyPDF2 import PdfMerger
+from pypdf import PdfMerger, PdfReader
 
 from .models import Student
 # ============================================================================
