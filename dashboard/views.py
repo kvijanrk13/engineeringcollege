@@ -60,7 +60,7 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.urls import reverse
 from django.utils import timezone
 import pdfkit
-from PyPDF2 import PdfMerger, PdfReader, PdfWriter
+from pypdf import PdfMerger, PdfReader
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -1444,7 +1444,7 @@ def generate_student_pdf_file(request, student_id):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import inch
     from reportlab.lib import colors
-    from PyPDF2 import PdfMerger, PdfReader
+    from pypdf import PdfMerger, PdfReader
     import mimetypes
     from PIL import Image as PILImage
     import io
