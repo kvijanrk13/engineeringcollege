@@ -1,4 +1,3 @@
-# FORCE NEW DEPLOY
 # dashboard/views.py - COMPLETE MERGED VERSION WITH ALL FUNCTIONS
 # ============================================================================
 # UPDATED IMPORT BLOCK (added HRFlowable, ParagraphStyle, colors, datetime)
@@ -18,7 +17,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 
-from pypdf import PdfMerger, PdfReader
+from pypdf import PdfWriter, PdfReader
 
 from .models import Student
 # ============================================================================
@@ -61,7 +60,6 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.urls import reverse
 from django.utils import timezone
 import pdfkit
-from pypdf import PdfMerger, PdfReader
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -1445,7 +1443,7 @@ def generate_student_pdf_file(request, student_id):
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import inch
     from reportlab.lib import colors
-    from pypdf import PdfMerger, PdfReader
+    from pypdf import PdfWriter, PdfReader
     import mimetypes
     from PIL import Image as PILImage
     import io
@@ -1605,14 +1603,16 @@ def generate_student_pdf_file(request, student_id):
     # ===============================
     # 2. MERGE CERTIFICATES
     # ===============================
-    merger = PdfMerger()
+    writer = PdfWriter()
 
     # Add the main PDF
     try:
-        merger.append(main_pdf_path)
-        print("Added main PDF to merger")
+        reader = PdfReader(main_pdf_path)
+        for page in reader.pages:
+            writer.add_page(page)
+        print("Added main PDF to writer")
     except Exception as e:
-        print(f"Error adding main PDF to merger: {e}")
+        print(f"Error adding main PDF to writer: {e}")
 
     # List of certificate fields
     certificate_fields = [
@@ -1654,8 +1654,10 @@ def generate_student_pdf_file(request, student_id):
                         tmp_cert.close()
                         temp_files.append(tmp_cert.name)
 
-                        # Add to merger
-                        merger.append(tmp_cert.name)
+                        # Add to writer
+                        reader = PdfReader(tmp_cert.name)
+                        for page in reader.pages:
+                            writer.add_page(page)
                         merged_count += 1
                         print(f"  ✓ Added PDF: {field_label}")
 
@@ -1678,8 +1680,10 @@ def generate_student_pdf_file(request, student_id):
                             img_pdf.close()
                             temp_files.append(img_pdf.name)
 
-                            # Add to merger
-                            merger.append(img_pdf.name)
+                            # Add to writer
+                            reader = PdfReader(img_pdf.name)
+                            for page in reader.pages:
+                                writer.add_page(page)
                             merged_count += 1
                             print(f"  ✓ Converted and added image: {field_label}")
 
@@ -1703,8 +1707,8 @@ def generate_student_pdf_file(request, student_id):
     temp_files.append(final_path)
 
     try:
-        merger.write(final_path)
-        merger.close()
+        with open(final_path, "wb") as output_file:
+            writer.write(output_file)
         print(f"Final merged PDF saved: {final_path}")
     except Exception as e:
         print(f"Error writing merged PDF: {e}")
@@ -1764,7 +1768,7 @@ def view_pdf(request, student_id):
     if not student.pdf_file:
         return HttpResponse("PDF not generated yet.")
 
-    return redirect(student.pdf_file.url)
+    return redirect(student.pdf_file)
 
 
 # =====================================================
@@ -1776,7 +1780,7 @@ def download_pdf(request, student_id):
     if not student.pdf_file:
         return HttpResponse("PDF not generated yet.")
 
-    return redirect(student.pdf_file.url)
+    return redirect(student.pdf_file)
 
 
 # =====================================================
@@ -2852,7 +2856,7 @@ def merge_certificates(request, faculty_id):
         return redirect('dashboard:view_certificates', faculty_id=faculty_id)
 
     try:
-        merger = PdfMerger()
+        writer = PdfWriter()
 
         # Add faculty PDF if exists
         if faculty.cloudinary_pdf_url:
@@ -2862,7 +2866,9 @@ def merge_certificates(request, faculty_id):
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                     tmp_file.write(response.content)
                     tmp_file_path = tmp_file.name
-                merger.append(tmp_file_path)
+                reader = PdfReader(tmp_file_path)
+                for page in reader.pages:
+                    writer.add_page(page)
                 os.unlink(tmp_file_path)
 
         # Add certificates
@@ -2870,7 +2876,9 @@ def merge_certificates(request, faculty_id):
             if certificate.certificate_file:
                 # Local file
                 if os.path.exists(certificate.certificate_file.path):
-                    merger.append(certificate.certificate_file.path)
+                    reader = PdfReader(certificate.certificate_file.path)
+                    for page in reader.pages:
+                        writer.add_page(page)
             elif certificate.cloudinary_url:
                 # Cloudinary URL
                 response = requests.get(certificate.cloudinary_url)
@@ -2878,12 +2886,14 @@ def merge_certificates(request, faculty_id):
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                         tmp_file.write(response.content)
                         tmp_file_path = tmp_file.name
-                    merger.append(tmp_file_path)
+                    reader = PdfReader(tmp_file_path)
+                    for page in reader.pages:
+                        writer.add_page(page)
                     os.unlink(tmp_file_path)
 
         # Create merged PDF
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as merged_file:
-            merger.write(merged_file.name)
+            writer.write(merged_file.name)
 
             # Upload to Cloudinary
             cloudinary_response = cloudinary.uploader.upload(
@@ -2906,10 +2916,6 @@ def merge_certificates(request, faculty_id):
                 resource_type=cloudinary_response['resource_type'],
                 uploaded_by=request.user.username
             )
-
-            # Clean up
-            merger.close()
-            os.unlink(merged_file.name)
 
         # Log the action
         FacultyLog.objects.create(
@@ -3045,8 +3051,8 @@ def generate_faculty_pdf_bytes(faculty):
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
     """Merge certificates with faculty PDF bytes"""
     try:
-        from pypdf import PdfMerger, PdfReader
-        merger = PdfMerger()
+        from pypdf import PdfWriter, PdfReader
+        writer = PdfWriter()
 
         # Add faculty PDF
         if pdf_bytes:
@@ -3054,7 +3060,9 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
                 tmp_faculty.write(pdf_bytes)
                 tmp_faculty_path = tmp_faculty.name
 
-            merger.append(tmp_faculty_path)
+            reader = PdfReader(tmp_faculty_path)
+            for page in reader.pages:
+                writer.add_page(page)
 
         # Add certificates
         certificates = Certificate.objects.filter(faculty=faculty)
@@ -3067,7 +3075,9 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
                             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_cert:
                                 tmp_cert.write(response.content)
                                 tmp_cert_path = tmp_cert.name
-                            merger.append(tmp_cert_path)
+                            reader = PdfReader(tmp_cert_path)
+                            for page in reader.pages:
+                                writer.add_page(page)
                             try:
                                 os.unlink(tmp_cert_path)
                             except:
@@ -3077,13 +3087,15 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             elif certificate.certificate_file:
                 try:
                     if os.path.exists(certificate.certificate_file.path):
-                        merger.append(certificate.certificate_file.path)
+                        reader = PdfReader(certificate.certificate_file.path)
+                        for page in reader.pages:
+                            writer.add_page(page)
                 except Exception:
                     pass
 
         # Create merged PDF
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as merged_file:
-            merger.write(merged_file.name)
+            writer.write(merged_file.name)
 
             # Read merged PDF
             with open(merged_file.name, 'rb') as f:
@@ -3097,8 +3109,6 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
                 os.unlink(tmp_faculty_path)
             except Exception:
                 pass
-
-        merger.close()
 
         return merged_bytes
 
