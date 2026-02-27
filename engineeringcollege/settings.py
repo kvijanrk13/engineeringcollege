@@ -4,28 +4,33 @@ from pathlib import Path
 import os
 import cloudinary
 
-# --------------------------------------------------
-# BASE DIR
-# --------------------------------------------------
+# ==================================================
+# BASE DIRECTORY
+# ==================================================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --------------------------------------------------
+# ==================================================
 # SECURITY
-# --------------------------------------------------
+# ==================================================
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key')
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    '.onrender.com',
+    'localhost',
+    '127.0.0.1',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
 ]
 
-# --------------------------------------------------
+# ==================================================
 # APPLICATIONS
-# --------------------------------------------------
+# ==================================================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,13 +44,13 @@ INSTALLED_APPS = [
     'cloudinary',
     'cloudinary_storage',
 
-    # Local apps
+    # Local Apps
     'dashboard',
 ]
 
-# --------------------------------------------------
+# ==================================================
 # MIDDLEWARE
-# --------------------------------------------------
+# ==================================================
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -58,15 +63,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# --------------------------------------------------
-# ROOT URLS
-# --------------------------------------------------
+# ==================================================
+# ROOT URL CONFIG
+# ==================================================
 
 ROOT_URLCONF = 'engineeringcollege.urls'
 
-# --------------------------------------------------
+# ==================================================
 # TEMPLATES
-# --------------------------------------------------
+# ==================================================
 
 TEMPLATES = [
     {
@@ -84,15 +89,15 @@ TEMPLATES = [
     },
 ]
 
-# --------------------------------------------------
+# ==================================================
 # WSGI
-# --------------------------------------------------
+# ==================================================
 
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
-# --------------------------------------------------
-# DATABASE
-# --------------------------------------------------
+# ==================================================
+# DATABASE (SQLite for Free Plan)
+# ==================================================
 
 DATABASES = {
     'default': {
@@ -101,9 +106,9 @@ DATABASES = {
     }
 }
 
-# --------------------------------------------------
+# ==================================================
 # PASSWORD VALIDATION
-# --------------------------------------------------
+# ==================================================
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -112,18 +117,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --------------------------------------------------
+# ==================================================
 # INTERNATIONALIZATION
-# --------------------------------------------------
+# ==================================================
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-# --------------------------------------------------
+# ==================================================
 # STATIC FILES
-# --------------------------------------------------
+# ==================================================
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
@@ -131,21 +136,21 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --------------------------------------------------
+# ==================================================
 # MEDIA FILES
-# --------------------------------------------------
+# ==================================================
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# --------------------------------------------------
-# DEFAULT PK
-# --------------------------------------------------
+# ==================================================
+# DEFAULT PRIMARY KEY
+# ==================================================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==================================================
-# CLOUDINARY CONFIGURATION (FROM ENV VARIABLES)
+# CLOUDINARY CONFIGURATION
 # ==================================================
 
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
@@ -165,22 +170,26 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': CLOUDINARY_API_SECRET,
 }
 
-# --------------------------------------------------
+# ==================================================
 # LOGIN REDIRECTS
-# --------------------------------------------------
+# ==================================================
 
 LOGIN_URL = 'dashboard:login'
 LOGIN_REDIRECT_URL = 'dashboard:dashboard'
 LOGOUT_REDIRECT_URL = 'dashboard:login'
 
-# --------------------------------------------------
-# SECURITY (PRODUCTION)
-# --------------------------------------------------
+# ==================================================
+# PRODUCTION SECURITY SETTINGS (RENDER SAFE)
+# ==================================================
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+    # IMPORTANT FOR RENDER HTTPS
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
