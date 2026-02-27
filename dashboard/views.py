@@ -1291,8 +1291,31 @@ def add_student(request):
     """Add a new student"""
     if request.method == 'POST':
         try:
+            print("=" * 60)
+            print("ADDING NEW STUDENT")
+            print("=" * 60)
+
+            # Handle file uploads to Cloudinary
+            def upload_to_cloudinary(file, folder_name):
+                if file:
+                    try:
+                        print(f"Uploading {file.name} to Cloudinary...")
+                        result = cloudinary.uploader.upload(
+                            file,
+                            resource_type="auto",
+                            folder=f"student_documents/{folder_name}",
+                            public_id=f"{folder_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                            overwrite=True
+                        )
+                        print(f"  ✓ Uploaded: {result['secure_url']}")
+                        return result['secure_url']
+                    except Exception as e:
+                        print(f"  ✗ Upload failed: {e}")
+                        return None
+                return None
+
             # Create new student
-            student = Student.objects.create(
+            student = Student(
                 ht_no=request.POST.get('ht_no'),
                 student_name=request.POST.get('student_name'),
                 father_name=request.POST.get('father_name'),
@@ -1328,15 +1351,50 @@ def add_student(request):
                 other_training=request.POST.get('other_training'),
             )
 
+            # Save to get an ID first
+            student.save()
+            print(f"Student created with ID: {student.id}")
+
             # Handle photo upload
             if request.FILES.get('photo'):
-                student.photo = request.FILES.get('photo')
-                student.save()
+                photo_file = request.FILES['photo']
+                photo_url = upload_to_cloudinary(photo_file, 'photos')
+                if photo_url:
+                    student.photo = photo_url
+                    print(f"Photo saved: {photo_url}")
+
+            # Handle certificate uploads
+            certificate_fields = [
+                ('cert_achieve', 'achievement'),
+                ('cert_intern', 'internship'),
+                ('cert_courses', 'courses'),
+                ('cert_sdp', 'sdp'),
+                ('cert_extra', 'extra'),
+                ('cert_placement', 'placement'),
+                ('cert_national', 'national'),
+            ]
+
+            for field_name, folder_name in certificate_fields:
+                if request.FILES.get(field_name):
+                    cert_file = request.FILES[field_name]
+                    cert_url = upload_to_cloudinary(cert_file, folder_name)
+                    if cert_url:
+                        setattr(student, field_name, cert_url)
+                        print(f"{field_name} saved: {cert_url}")
+
+            # Final save with all files
+            student.save()
 
             messages.success(request, f'Student {student.student_name} added successfully!')
+            print("=" * 60)
+            print("STUDENT ADDED SUCCESSFULLY")
+            print("=" * 60)
             return redirect('dashboard:students_data')
 
         except Exception as e:
+            print(f"Error adding student: {e}")
+            import traceback
+            traceback.print_exc()
             messages.error(request, f'Error adding student: {str(e)}')
             return redirect('dashboard:add_student')
 

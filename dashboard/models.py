@@ -272,8 +272,8 @@ class Student(models.Model):
     cert_placement = CloudinaryField("raw", blank=True, null=True)
     cert_national = CloudinaryField("raw", blank=True, null=True)
 
-    # Final Generated PDF
-    pdf_file = CloudinaryField("raw", blank=True, null=True)
+    # Final Generated PDF - CHANGED TO URLField
+    pdf_file = models.URLField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
