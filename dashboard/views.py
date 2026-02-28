@@ -58,7 +58,6 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.urls import reverse
 from django.utils import timezone
-
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
