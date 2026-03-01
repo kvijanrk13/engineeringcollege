@@ -6,6 +6,9 @@ app_name = 'dashboard'
 
 urlpatterns = [
 
+    # ================= TEST TEMPLATE (FOR DEBUGGING) =================
+    path('test-template/', views.test_template, name='test_template'),
+
     # ================= AUTHENTICATION =================
     path('login/', views.login_view, name='login'),
     path('admin-login/', views.admin_login, name='admin_login'),

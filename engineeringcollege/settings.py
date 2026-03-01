@@ -3,6 +3,8 @@
 from pathlib import Path
 import os
 import cloudinary
+import django
+from django.contrib.messages import constants as messages
 
 # ==================================================
 # BASE DIRECTORY
@@ -25,8 +27,13 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
 ]
 
+if DEBUG:
+    ALLOWED_HOSTS += ['*']  # Allow all hosts in development
+
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
 ]
 
 # ==================================================
@@ -77,7 +84,7 @@ ROOT_URLCONF = 'engineeringcollege.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'],  # This points to your templates folder
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,6 +92,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
             ],
         },
     },
@@ -160,18 +169,28 @@ CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-cloudinary.config(
-    cloud_name=CLOUDINARY_CLOUD_NAME,
-    api_key=CLOUDINARY_API_KEY,
-    api_secret=CLOUDINARY_API_SECRET,
-    secure=True
-)
+# Only configure Cloudinary if credentials are provided
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True
+    )
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-    'API_KEY': CLOUDINARY_API_KEY,
-    'API_SECRET': CLOUDINARY_API_SECRET,
-}
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY': CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
+    }
+else:
+    # Set defaults to avoid errors
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': '',
+        'API_KEY': '',
+        'API_SECRET': '',
+    }
+    print("WARNING: Cloudinary credentials not found. Cloudinary features will be disabled.")
 
 # ==================================================
 # LOGIN REDIRECTS
@@ -180,6 +199,18 @@ CLOUDINARY_STORAGE = {
 LOGIN_URL = 'dashboard:login'
 LOGIN_REDIRECT_URL = 'dashboard:dashboard'
 LOGOUT_REDIRECT_URL = 'dashboard:login'
+
+# ==================================================
+# MESSAGE TAGS (for Bootstrap compatibility)
+# ==================================================
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'secondary',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
+}
 
 # ==================================================
 # PRODUCTION SECURITY SETTINGS (ONLY ON RENDER)
@@ -193,3 +224,12 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+    # Session settings
+    SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+    SESSION_SAVE_EVERY_REQUEST = True
+
+    # Security headers
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

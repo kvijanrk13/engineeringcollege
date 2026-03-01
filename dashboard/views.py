@@ -115,16 +115,41 @@ except ImportError:
     np = None
     logger.warning("Matplotlib library not installed. Chart features will be limited.")
 
+
+# ==================== HELPER FUNCTIONS ====================
+
+def is_cloudinary_configured():
+    """Check if Cloudinary is properly configured"""
+    return all([
+        hasattr(settings, 'CLOUDINARY_CLOUD_NAME') and settings.CLOUDINARY_CLOUD_NAME,
+        hasattr(settings, 'CLOUDINARY_API_KEY') and settings.CLOUDINARY_API_KEY,
+        hasattr(settings, 'CLOUDINARY_API_SECRET') and settings.CLOUDINARY_API_SECRET,
+    ])
+
+
+# ==================== TEST TEMPLATE VIEW ====================
+def test_template(request):
+    """Test view to verify template loading"""
+    return render(request, 'test.html')
+
+
 # Initialize Cloudinary if configured
 if hasattr(settings, 'CLOUDINARY_CLOUD_NAME'):
     try:
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
-            api_key=settings.CLOUDINARY_API_KEY,
-            api_secret=settings.CLOUDINARY_API_SECRET,
-            secure=True
-        )
-        logger.info("Cloudinary initialized successfully")
+        cloud_name = settings.CLOUDINARY_CLOUD_NAME
+        api_key = settings.CLOUDINARY_API_KEY
+        api_secret = settings.CLOUDINARY_API_SECRET
+
+        if cloud_name and api_key and api_secret:
+            cloudinary.config(
+                cloud_name=cloud_name,
+                api_key=api_key,
+                api_secret=api_secret,
+                secure=True
+            )
+            logger.info("Cloudinary initialized successfully with credentials")
+        else:
+            logger.warning("Cloudinary credentials missing or incomplete")
     except Exception as e:
         logger.error(f"Failed to initialize Cloudinary: {str(e)}")
 else:
@@ -387,6 +412,11 @@ def sync_to_cloudinary(request, faculty_id):
     """
     faculty = get_object_or_404(Faculty, id=faculty_id)
 
+    # Check if Cloudinary is configured
+    if not is_cloudinary_configured():
+        messages.error(request, "Cloudinary is not configured properly. Please check your settings.")
+        return redirect("dashboard:faculty_dashboard")
+
     # -------------------------------------------------
     # 1. UPLOAD PDF (if not already uploaded)
     # -------------------------------------------------
@@ -416,7 +446,7 @@ def sync_to_cloudinary(request, faculty_id):
 
         except Exception as e:
             logger.error(f"PDF Cloudinary upload error: {str(e)}")
-            messages.error(request, "Error uploading faculty PDF to Cloudinary")
+            messages.error(request, f"Error uploading faculty PDF to Cloudinary: {str(e)}")
             return redirect("dashboard:faculty_dashboard")
 
     # -------------------------------------------------
@@ -451,7 +481,7 @@ def sync_to_cloudinary(request, faculty_id):
 
         except Exception as e:
             logger.error(f"Photo Cloudinary upload error: {str(e)}")
-            messages.error(request, "Error uploading faculty photo to Cloudinary")
+            messages.error(request, f"Error uploading faculty photo to Cloudinary: {str(e)}")
             return redirect("dashboard:faculty_dashboard")
 
     # Log the sync action
@@ -1054,31 +1084,80 @@ def faculty_list(request):
     return render(request, 'dashboard/faculty_list.html', context)
 
 
-# ==================== CORRECTED ADD FACULTY VIEW ====================
+# ==================== UPDATED ADD FACULTY VIEW WITH CLOUDINARY ERROR HANDLING ====================
+
 @login_required
 def add_faculty(request):
     if request.method == "POST":
-        # Capture all user-inserted values explicitly
-        faculty = Faculty.objects.create(
-            staff_name=request.POST.get("staff_name"),  # Matches 'Name of the Staff'
-            employee_code=request.POST.get("employee_code"),
-            father_name=request.POST.get("father_name"),
-            dob=request.POST.get("dob"),
-            gender=request.POST.get("gender"),
-            state=request.POST.get("state"),
-            address=request.POST.get("address"),  # Matches 'Full Permanent Address'
-            mobile=request.POST.get("mobile"),
-            email=request.POST.get("email"),
-            department=request.POST.get("department"),
-            designation=request.POST.get("designation"),
-            photo=request.FILES.get("photo"),
-        )
+        try:
+            # Capture all user-inserted values explicitly
+            faculty = Faculty.objects.create(
+                staff_name=request.POST.get("staff_name"),  # Matches 'Name of the Staff'
+                employee_code=request.POST.get("employee_code"),
+                father_name=request.POST.get("father_name"),
+                dob=request.POST.get("dob"),
+                gender=request.POST.get("gender"),
+                state=request.POST.get("state"),
+                address=request.POST.get("address"),  # Matches 'Full Permanent Address'
+                mobile=request.POST.get("mobile"),
+                email=request.POST.get("email"),
+                department=request.POST.get("department"),
+                designation=request.POST.get("designation"),
+                photo=request.FILES.get("photo"),
+            )
 
-        # Create faculty profile
-        FacultyProfile.objects.create(faculty=faculty)
+            # Create faculty profile
+            FacultyProfile.objects.create(faculty=faculty)
 
-        messages.success(request, "Faculty added successfully with all details.")
-        return redirect("dashboard:faculty_dashboard")
+            # Handle photo upload to Cloudinary if photo exists and Cloudinary is configured
+            if request.FILES.get("photo") and is_cloudinary_configured():
+                try:
+                    photo_file = request.FILES["photo"]
+
+                    # Upload to Cloudinary
+                    cloudinary_response = cloudinary.uploader.upload(
+                        photo_file,
+                        folder="faculty_photos",
+                        public_id=f"faculty_{faculty.employee_code}_photo",
+                        overwrite=True,
+                        transformation=[
+                            {'width': 300, 'height': 300, 'crop': 'fill'},
+                            {'quality': 'auto:good'}
+                        ]
+                    )
+
+                    # Save Cloudinary URL
+                    faculty.cloudinary_photo_url = cloudinary_response["secure_url"]
+                    faculty.save()
+
+                    # Record the upload
+                    CloudinaryUpload.objects.create(
+                        faculty=faculty,
+                        upload_type="photo",
+                        cloudinary_url=cloudinary_response["secure_url"],
+                        public_id=cloudinary_response["public_id"],
+                        resource_type=cloudinary_response["resource_type"],
+                        uploaded_by=request.user.username if request.user.is_authenticated else 'System'
+                    )
+
+                    logger.info(f"Photo uploaded to Cloudinary for faculty {faculty.employee_code}")
+
+                except Exception as e:
+                    logger.error(f"Cloudinary upload error: {str(e)}")
+                    # Continue anyway - photo is already saved locally
+                    messages.warning(request,
+                                     "Faculty added but photo upload to Cloudinary failed. Photo saved locally.")
+            elif request.FILES.get("photo") and not is_cloudinary_configured():
+                logger.warning("Cloudinary not configured. Photo saved locally only.")
+                messages.info(request, "Cloudinary not configured. Photo saved locally.")
+
+            messages.success(request, "Faculty added successfully with all details.")
+            return redirect("dashboard:faculty_dashboard")
+
+        except Exception as e:
+            logger.error(f"Error adding faculty: {str(e)}")
+            messages.error(request, f"Error adding faculty: {str(e)}")
+            return redirect("dashboard:add_faculty")
 
     return render(request, "dashboard/faculty.html", {
         "add_mode": True,
@@ -1114,6 +1193,34 @@ def edit_faculty(request, faculty_id):
         # Handle document uploads
         if request.FILES.get("photo"):
             faculty.photo = request.FILES.get("photo")
+
+            # Try to upload to Cloudinary if configured
+            if is_cloudinary_configured():
+                try:
+                    cloudinary_response = cloudinary.uploader.upload(
+                        request.FILES["photo"],
+                        folder="faculty_photos",
+                        public_id=f"faculty_{faculty.employee_code}_photo",
+                        overwrite=True,
+                        transformation=[
+                            {'width': 300, 'height': 300, 'crop': 'fill'},
+                            {'quality': 'auto:good'}
+                        ]
+                    )
+                    faculty.cloudinary_photo_url = cloudinary_response["secure_url"]
+
+                    CloudinaryUpload.objects.create(
+                        faculty=faculty,
+                        upload_type="photo",
+                        cloudinary_url=cloudinary_response["secure_url"],
+                        public_id=cloudinary_response["public_id"],
+                        resource_type=cloudinary_response["resource_type"],
+                        uploaded_by=request.user.username
+                    )
+                except Exception as e:
+                    logger.error(f"Cloudinary upload error during edit: {str(e)}")
+                    messages.warning(request, "Photo saved locally but Cloudinary upload failed.")
+
         if request.FILES.get("aadhar_file"):
             faculty.aadhar_file = request.FILES.get("aadhar_file")
         if request.FILES.get("pan_file"):
@@ -1294,7 +1401,7 @@ def add_student(request):
 
             # Handle file uploads to Cloudinary
             def upload_to_cloudinary(file, folder_name):
-                if file:
+                if file and is_cloudinary_configured():
                     try:
                         print(f"Uploading {file.name} to Cloudinary...")
                         result = cloudinary.uploader.upload(
@@ -1717,21 +1824,24 @@ def generate_student_pdf_file(request, student_id):
     # ===============================
     # 4. UPLOAD FINAL PDF TO CLOUDINARY
     # ===============================
-    try:
-        upload_result = cloudinary.uploader.upload(
-            final_path,
-            resource_type="raw",
-            folder="student_generated_pdfs",
-            public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            overwrite=True
-        )
+    if is_cloudinary_configured():
+        try:
+            upload_result = cloudinary.uploader.upload(
+                final_path,
+                resource_type="raw",
+                folder="student_generated_pdfs",
+                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                overwrite=True
+            )
 
-        student.pdf_file = upload_result["secure_url"]
-        student.save()
-        print(f"PDF uploaded to Cloudinary: {upload_result['secure_url']}")
+            student.pdf_file = upload_result["secure_url"]
+            student.save()
+            print(f"PDF uploaded to Cloudinary: {upload_result['secure_url']}")
 
-    except Exception as e:
-        print(f"Error uploading to Cloudinary: {e}")
+        except Exception as e:
+            print(f"Error uploading to Cloudinary: {e}")
+    else:
+        print("Cloudinary not configured. PDF saved locally only.")
 
     # ===============================
     # 5. RETURN THE PDF
@@ -2260,6 +2370,13 @@ def upload_faculty_to_cloudinary(request, faculty_id):
         try:
             faculty = get_object_or_404(Faculty, id=faculty_id)
 
+            # Check if Cloudinary is configured
+            if not is_cloudinary_configured():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cloudinary is not configured properly. Please check your settings.'
+                })
+
             # First, check if PDF already exists
             if faculty.cloudinary_pdf_url:
                 return JsonResponse({
@@ -2347,6 +2464,13 @@ def upload_faculty_photo(request):
             faculty = get_object_or_404(Faculty, employee_code=employee_code)
             photo_file = request.FILES['photo']
 
+            # Check if Cloudinary is configured
+            if not is_cloudinary_configured():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cloudinary is not configured properly. Please check your settings.'
+                })
+
             # Upload to Cloudinary
             cloudinary_response = cloudinary.uploader.upload(
                 photo_file,
@@ -2395,6 +2519,13 @@ def upload_faculty_pdf(request):
             faculty = get_object_or_404(Faculty, employee_code=employee_code)
             pdf_file = request.FILES['pdf_file']
 
+            # Check if Cloudinary is configured
+            if not is_cloudinary_configured():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cloudinary is not configured properly. Please check your settings.'
+                })
+
             # Upload to Cloudinary
             cloudinary_response = cloudinary.uploader.upload(
                 pdf_file,
@@ -2435,6 +2566,19 @@ def upload_faculty_pdf(request):
 def cloudinary_status(request):
     """Check Cloudinary connection status"""
     try:
+        # Check if Cloudinary is configured
+        if not is_cloudinary_configured():
+            return render(request, 'cloudinary/status.html', {
+                'title': 'Cloudinary Status',
+                'connected': False,
+                'error': 'Cloudinary credentials not configured. Please check settings.py or environment variables.',
+                'cloudinary_config': {
+                    'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                    'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                    'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
+                }
+            })
+
         # Test Cloudinary connection
         result = cloudinary.api.ping()
         status = result.get('status') == 'ok'
@@ -2505,6 +2649,11 @@ def bulk_sync_to_cloudinary(request):
         faculty_ids = request.POST.getlist('faculty_ids')
         if not faculty_ids:
             messages.error(request, "No faculty selected.")
+            return redirect('dashboard:faculty_list')
+
+        # Check if Cloudinary is configured
+        if not is_cloudinary_configured():
+            messages.error(request, "Cloudinary is not configured properly. Please check your settings.")
             return redirect('dashboard:faculty_list')
 
         success_count = 0
@@ -2611,8 +2760,8 @@ def upload_certificate(request, faculty_id):
             certificate = form.save(commit=False)
             certificate.faculty = faculty
 
-            # Upload certificate file to Cloudinary
-            if 'certificate_file' in request.FILES:
+            # Upload certificate file to Cloudinary if configured
+            if 'certificate_file' in request.FILES and is_cloudinary_configured():
                 cert_file = request.FILES['certificate_file']
 
                 try:
@@ -2684,21 +2833,27 @@ def upload_certificates_bulk(request):
                 if len(cert_type) < 3:
                     cert_type = "Certificate"
 
-                # Upload to Cloudinary
-                cloudinary_response = cloudinary.uploader.upload(
-                    cert_file,
-                    resource_type="raw",
-                    folder=f"certificates/{employee_code}",
-                    public_id=f"cert_{cert_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    overwrite=False
-                )
+                cloudinary_url = None
+                # Upload to Cloudinary if configured
+                if is_cloudinary_configured():
+                    try:
+                        cloudinary_response = cloudinary.uploader.upload(
+                            cert_file,
+                            resource_type="raw",
+                            folder=f"certificates/{employee_code}",
+                            public_id=f"cert_{cert_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                            overwrite=False
+                        )
+                        cloudinary_url = cloudinary_response['secure_url']
+                    except Exception as e:
+                        logger.error(f"Error uploading to Cloudinary: {str(e)}")
 
                 # Create certificate record
                 Certificate.objects.create(
                     faculty=faculty,
                     certificate_type=cert_type,
                     certificate_file=cert_file,
-                    cloudinary_url=cloudinary_response['secure_url'],
+                    cloudinary_url=cloudinary_url,
                     issued_by='Unknown',
                     issue_date=date.today(),
                     description=f'Uploaded in bulk on {date.today().strftime("%Y-%m-%d")}'
@@ -2759,8 +2914,8 @@ def delete_certificate(request, certificate_id):
     faculty_id = certificate.faculty.id
 
     if request.method == 'POST':
-        # Delete from Cloudinary if URL exists
-        if certificate.cloudinary_url:
+        # Delete from Cloudinary if URL exists and Cloudinary is configured
+        if certificate.cloudinary_url and is_cloudinary_configured():
             try:
                 # Extract public_id from URL
                 parts = certificate.cloudinary_url.split('/')
@@ -2806,7 +2961,7 @@ def edit_certificate(request, certificate_id):
             old_type = certificate.certificate_type
 
             # Handle new file upload if provided
-            if 'certificate_file' in request.FILES:
+            if 'certificate_file' in request.FILES and is_cloudinary_configured():
                 cert_file = request.FILES['certificate_file']
                 try:
                     cloudinary_response = cloudinary.uploader.upload(
@@ -2893,27 +3048,32 @@ def merge_certificates(request, faculty_id):
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as merged_file:
             writer.write(merged_file.name)
 
-            # Upload to Cloudinary
-            cloudinary_response = cloudinary.uploader.upload(
-                merged_file.name,
-                resource_type="raw",
-                folder="merged_certificates",
-                public_id=f"merged_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                overwrite=False
-            )
+            merged_url = None
+            # Upload to Cloudinary if configured
+            if is_cloudinary_configured():
+                try:
+                    cloudinary_response = cloudinary.uploader.upload(
+                        merged_file.name,
+                        resource_type="raw",
+                        folder="merged_certificates",
+                        public_id=f"merged_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        overwrite=False
+                    )
 
-            # Save merged PDF URL
-            merged_url = cloudinary_response['secure_url']
+                    # Save merged PDF URL
+                    merged_url = cloudinary_response['secure_url']
 
-            # Record the upload
-            CloudinaryUpload.objects.create(
-                faculty=faculty,
-                upload_type='merged_certificates',
-                cloudinary_url=cloudinary_response['secure_url'],
-                public_id=cloudinary_response['public_id'],
-                resource_type=cloudinary_response['resource_type'],
-                uploaded_by=request.user.username
-            )
+                    # Record the upload
+                    CloudinaryUpload.objects.create(
+                        faculty=faculty,
+                        upload_type='merged_certificates',
+                        cloudinary_url=cloudinary_response['secure_url'],
+                        public_id=cloudinary_response['public_id'],
+                        resource_type=cloudinary_response['resource_type'],
+                        uploaded_by=request.user.username
+                    )
+                except Exception as e:
+                    logger.error(f"Error uploading merged PDF to Cloudinary: {str(e)}")
 
         # Log the action
         FacultyLog.objects.create(
@@ -2931,8 +3091,11 @@ def merge_certificates(request, faculty_id):
                 'message': f'{certificates.count()} certificates merged successfully'
             })
 
-        messages.success(request, f'{certificates.count()} certificates merged successfully!')
-        return redirect(merged_url)
+        if merged_url:
+            messages.success(request, f'{certificates.count()} certificates merged successfully!')
+            return redirect(merged_url)
+        else:
+            messages.warning(request, 'Certificates merged locally but Cloudinary upload failed.')
 
     except Exception as e:
         logger.error(f"Error merging certificates: {str(e)}")
@@ -2973,27 +3136,33 @@ def merge_certificates_with_pdf(request, faculty_id):
                 tmp_file.write(merged_pdf)
                 tmp_file_path = tmp_file.name
 
-            # Upload to Cloudinary
-            cloudinary_response = cloudinary.uploader.upload(
-                tmp_file_path,
-                resource_type="raw",
-                folder="merged_documents",
-                public_id=f"faculty_certs_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                overwrite=False
-            )
+            merged_url = None
+            # Upload to Cloudinary if configured
+            if is_cloudinary_configured():
+                try:
+                    cloudinary_response = cloudinary.uploader.upload(
+                        tmp_file_path,
+                        resource_type="raw",
+                        folder="merged_documents",
+                        public_id=f"faculty_certs_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        overwrite=False
+                    )
+                    merged_url = cloudinary_response['secure_url']
+
+                    # Record the upload
+                    CloudinaryUpload.objects.create(
+                        faculty=faculty,
+                        upload_type='merged_faculty_certs',
+                        cloudinary_url=cloudinary_response['secure_url'],
+                        public_id=cloudinary_response['public_id'],
+                        resource_type=cloudinary_response['resource_type'],
+                        uploaded_by=request.user.username
+                    )
+                except Exception as e:
+                    logger.error(f"Error uploading to Cloudinary: {str(e)}")
 
             # Clean up
             os.unlink(tmp_file_path)
-
-            # Record the upload
-            CloudinaryUpload.objects.create(
-                faculty=faculty,
-                upload_type='merged_faculty_certs',
-                cloudinary_url=cloudinary_response['secure_url'],
-                public_id=cloudinary_response['public_id'],
-                resource_type=cloudinary_response['resource_type'],
-                uploaded_by=request.user.username
-            )
 
             # Log the action
             FacultyLog.objects.create(
@@ -3007,11 +3176,17 @@ def merge_certificates_with_pdf(request, faculty_id):
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
                     'success': True,
-                    'merged_url': cloudinary_response['secure_url'],
+                    'merged_url': merged_url,
                     'message': f'PDF merged with {certificates.count()} certificates'
                 })
 
-            return redirect(cloudinary_response['secure_url'])
+            if merged_url:
+                return redirect(merged_url)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Failed to upload merged PDF to Cloudinary'
+                })
         else:
             return JsonResponse({
                 'success': False,
@@ -3127,7 +3302,7 @@ def preview_merged_pdf(request, faculty_id):
         public_id__contains='merged'
     ).order_by('-upload_date').first()
 
-    if recent_upload:
+    if recent_upload and recent_upload.cloudinary_url:
         return JsonResponse({
             'success': True,
             'pdf_url': recent_upload.cloudinary_url,
@@ -3284,7 +3459,7 @@ def export_faculty_csv(request, faculty_ids=None):
             faculty.department,
             faculty.designation,
             faculty.email,
-            faculty.phone,
+            faculty.mobile,
             faculty.dob.strftime('%Y-%m-%d') if faculty.dob else '',
             faculty.joining_date.strftime('%Y-%m-%d') if faculty.joining_date else '',
             faculty.ug_degree,
@@ -3494,11 +3669,14 @@ def system_status(request):
 
     # Check Cloudinary connection
     cloudinary_status = {'connected': False, 'error': ''}
-    try:
-        result = cloudinary.api.ping()
-        cloudinary_status['connected'] = result.get('status') == 'ok'
-    except Exception as e:
-        cloudinary_status['error'] = str(e)
+    if is_cloudinary_configured():
+        try:
+            result = cloudinary.api.ping()
+            cloudinary_status['connected'] = result.get('status') == 'ok'
+        except Exception as e:
+            cloudinary_status['error'] = str(e)
+    else:
+        cloudinary_status['error'] = 'Cloudinary not configured'
 
     return render(request, 'dashboard/system_status.html', {
         'title': 'System Status',
@@ -3589,7 +3767,7 @@ def api_faculty_list(request):
     """API endpoint for faculty list (JSON)"""
     faculties = Faculty.objects.all().values(
         'id', 'employee_code', 'staff_name', 'department',
-        'designation', 'email', 'phone', 'is_active',
+        'designation', 'email', 'mobile', 'is_active',
         'cloudinary_pdf_url', 'cloudinary_photo_url'
     )
     return JsonResponse(list(faculties), safe=False)
@@ -3608,7 +3786,7 @@ def api_faculty_detail(request, faculty_id):
         'department': faculty.department,
         'designation': faculty.designation,
         'email': faculty.email,
-        'phone': faculty.phone,
+        'mobile': faculty.mobile,
         'dob': faculty.dob.strftime('%Y-%m-%d') if faculty.dob else None,
         'joining_date': faculty.joining_date.strftime('%Y-%m-%d') if faculty.joining_date else None,
         'ug_degree': faculty.ug_degree,
@@ -3983,7 +4161,7 @@ def search_faculty(request):
             'employee_code': faculty.employee_code,
             'department': faculty.department,
             'designation': faculty.designation,
-            'photo_url': faculty.cloudinary_photo_url or faculty.photo.url if faculty.photo else None,
+            'photo_url': faculty.cloudinary_photo_url or (faculty.photo.url if faculty.photo else None),
             'detail_url': reverse('dashboard:faculty_dashboard') + f'?id={faculty.id}',
         })
 
