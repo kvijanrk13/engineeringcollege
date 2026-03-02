@@ -3,7 +3,6 @@
 from pathlib import Path
 import os
 import cloudinary
-import django
 from django.contrib.messages import constants as messages
 
 # ==================================================
@@ -18,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key')
 
-# True locally, False on Render (set in Render Environment Variables)
+# True locally, False on Render
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = [
@@ -28,7 +27,7 @@ ALLOWED_HOSTS = [
 ]
 
 if DEBUG:
-    ALLOWED_HOSTS += ['*']  # Allow all hosts in development
+    ALLOWED_HOSTS += ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
@@ -84,7 +83,7 @@ ROOT_URLCONF = 'engineeringcollege.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # This points to your templates folder
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -106,7 +105,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
 # ==================================================
-# DATABASE (SQLite for local + Render free plan)
+# DATABASE
 # ==================================================
 
 DATABASES = {
@@ -141,11 +140,8 @@ USE_TZ = True
 # ==================================================
 
 STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [BASE_DIR / 'static']
-
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ==================================================
@@ -169,8 +165,8 @@ CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-# Only configure Cloudinary if credentials are provided
 if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+
     cloudinary.config(
         cloud_name=CLOUDINARY_CLOUD_NAME,
         api_key=CLOUDINARY_API_KEY,
@@ -183,14 +179,13 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
         'API_KEY': CLOUDINARY_API_KEY,
         'API_SECRET': CLOUDINARY_API_SECRET,
     }
+
+    # 🔥 IMPORTANT: Use Cloudinary for media files in production
+    if not DEBUG:
+        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 else:
-    # Set defaults to avoid errors
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': '',
-        'API_KEY': '',
-        'API_SECRET': '',
-    }
-    print("WARNING: Cloudinary credentials not found. Cloudinary features will be disabled.")
+    print("WARNING: Cloudinary credentials not found. Media will use local storage.")
 
 # ==================================================
 # LOGIN REDIRECTS
@@ -201,7 +196,7 @@ LOGIN_REDIRECT_URL = 'dashboard:dashboard'
 LOGOUT_REDIRECT_URL = 'dashboard:login'
 
 # ==================================================
-# MESSAGE TAGS (for Bootstrap compatibility)
+# MESSAGE TAGS
 # ==================================================
 
 MESSAGE_TAGS = {
@@ -213,7 +208,7 @@ MESSAGE_TAGS = {
 }
 
 # ==================================================
-# PRODUCTION SECURITY SETTINGS (ONLY ON RENDER)
+# PRODUCTION SECURITY SETTINGS
 # ==================================================
 
 if not DEBUG:
@@ -225,11 +220,9 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-    # Session settings
-    SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+    SESSION_COOKIE_AGE = 1209600
     SESSION_SAVE_EVERY_REQUEST = True
 
-    # Security headers
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
