@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import cloudinary
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib.messages import constants as messages
 
 # ==================================================
@@ -13,21 +14,36 @@ from django.contrib.messages import constants as messages
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ==================================================
-# SECURITY
+# ENVIRONMENT DETECTION
 # ==================================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# Check if we're running on Render
+ON_RENDER = os.environ.get('RENDER', False)
+
+# ==================================================
+# SECURITY WARNING: don't run with debug turned on in production!
+# ==================================================
+
+# DEBUG must be defined BEFORE it's used
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+
+# SECRET KEY - defined after DEBUG
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable not set!")
+    if DEBUG:
+        # Only use default for local development
+        SECRET_KEY = 'django-insecure-dev-key-for-local-development-only'
+    else:
+        raise ValueError("SECRET_KEY environment variable not set for production!")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# ==================================================
+# ALLOWED HOSTS
+# ==================================================
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.onrender.com',  # Allows all Render subdomains
+    '.onrender.com',
 ]
 
 # Add the actual Render URL without wildcard for CSRF
@@ -73,7 +89,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Must be after security, before others
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,20 +133,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
 # ==================================================
-# DATABASE - Configure for Render PostgreSQL
+# DATABASE - Fixed Configuration
 # ==================================================
 
-# Use SQLite for local, PostgreSQL for production
-if DEBUG:
-    # Local development with SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    # Production with PostgreSQL on Render
+if ON_RENDER:
+    # On Render - use PostgreSQL
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
@@ -138,6 +145,21 @@ else:
             conn_health_checks=True,
         )
     }
+else:
+    # Local development - use SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+
+# Verify database configuration
+if not DATABASES['default'].get('ENGINE'):
+    raise ImproperlyConfigured(
+        "Database ENGINE not configured properly. "
+        "Please check your DATABASE_URL environment variable or local SQLite configuration."
+    )
 
 # ==================================================
 # PASSWORD VALIDATION
@@ -164,8 +186,8 @@ USE_TZ = True
 # ==================================================
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']  # Where your static files are during development
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Where collectstatic puts them
+STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise compression and caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -207,7 +229,7 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
     }
 
     # Use Cloudinary for media files in production
-    if not DEBUG:
+    if ON_RENDER:
         DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 else:
     print("WARNING: Cloudinary credentials not found. Media will use local storage.")
@@ -223,12 +245,6 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-
-# Security settings for session cookies (applied when DEBUG=False)
-if not DEBUG:
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
 
 # ==================================================
 # LOGIN REDIRECTS
@@ -254,12 +270,15 @@ MESSAGE_TAGS = {
 # PRODUCTION SECURITY SETTINGS
 # ==================================================
 
-if not DEBUG:
+if ON_RENDER or not DEBUG:
     # HTTPS settings
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
     # Cookie security
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
     CSRF_COOKIE_SECURE = True
     CSRF_COOKIE_HTTPONLY = True
     CSRF_COOKIE_SAMESITE = 'Lax'
