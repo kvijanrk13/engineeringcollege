@@ -1,4 +1,4 @@
-# engineeringcollege/settings.py
+# engineeringcollege/settings.py - FIXED CLOUDINARY CONFIGURATION
 
 from pathlib import Path
 import os
@@ -6,6 +6,10 @@ import cloudinary
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.messages import constants as messages
+from dotenv import load_dotenv
+
+# Load environment variables from .env file - THIS MUST BE AT THE TOP
+load_dotenv()
 
 # ==================================================
 # BASE DIRECTORY
@@ -18,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==================================================
 
 # Check if we're running on Render
-ON_RENDER = os.environ.get('RENDER', False)
+ON_RENDER = os.environ.get('RENDER', False) == 'True'
 
 # ==================================================
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -133,33 +137,40 @@ TEMPLATES = [
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
 # ==================================================
-# DATABASE - Fixed Configuration
+# DATABASE - FIXED Configuration
 # ==================================================
+
+# Initialize DATABASES dict
+DATABASES = {}
 
 if ON_RENDER:
     # On Render - use PostgreSQL
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        DATABASES['default'] = dj_database_url.config(
+            default=database_url,
             conn_max_age=600,
             conn_health_checks=True,
         )
-    }
+    else:
+        raise ImproperlyConfigured("DATABASE_URL environment variable not set on Render!")
 else:
-    # Local development - use SQLite
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+    # Local development - use SQLite (ALWAYS provide this)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 
-# Verify database configuration
+# Verify database configuration (this will always pass now)
 if not DATABASES['default'].get('ENGINE'):
     raise ImproperlyConfigured(
         "Database ENGINE not configured properly. "
         "Please check your DATABASE_URL environment variable or local SQLite configuration."
     )
+
+# Print database info for debugging (remove in production)
+print(f"Database configured: ENGINE={DATABASES['default']['ENGINE']}")
+print(f"ON_RENDER = {ON_RENDER}")
 
 # ==================================================
 # PASSWORD VALIDATION
@@ -206,33 +217,60 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==================================================
-# CLOUDINARY CONFIGURATION
+# CLOUDINARY CONFIGURATION - FIXED
 # ==================================================
 
+# Get Cloudinary credentials from environment (loaded from .env file)
+# DO NOT use default values - they must come from .env
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-# Always configure cloudinary if credentials exist
-if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
-    cloudinary.config(
-        cloud_name=CLOUDINARY_CLOUD_NAME,
-        api_key=CLOUDINARY_API_KEY,
-        api_secret=CLOUDINARY_API_SECRET,
-        secure=True
-    )
+# Check if Cloudinary is properly configured
+CLOUDINARY_CONFIGURED = all([
+    CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
+])
 
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-        'API_KEY': CLOUDINARY_API_KEY,
-        'API_SECRET': CLOUDINARY_API_SECRET,
-    }
+# Configure Cloudinary only if all credentials exist
+if CLOUDINARY_CONFIGURED:
+    try:
+        cloudinary.config(
+            cloud_name=CLOUDINARY_CLOUD_NAME,
+            api_key=CLOUDINARY_API_KEY,
+            api_secret=CLOUDINARY_API_SECRET,
+            secure=True
+        )
 
-    # Use Cloudinary for media files in production
-    if ON_RENDER:
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+        CLOUDINARY_STORAGE = {
+            'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+            'API_KEY': CLOUDINARY_API_KEY,
+            'API_SECRET': CLOUDINARY_API_SECRET,
+        }
+
+        # Use Cloudinary for media files in production
+        if ON_RENDER:
+            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+        print(f"[OK] Cloudinary configured successfully")
+        print(f"      Cloud Name: {CLOUDINARY_CLOUD_NAME}")
+        print(f"      API Key: {CLOUDINARY_API_KEY[:4]}...{CLOUDINARY_API_KEY[-4:]}")
+        print(f"      API Secret: {'*' * 8}{CLOUDINARY_API_SECRET[-4:]}")
+    except Exception as e:
+        print(f"[ERROR] Cloudinary configuration error: {e}")
+        CLOUDINARY_CONFIGURED = False
 else:
-    print("WARNING: Cloudinary credentials not found. Media will use local storage.")
+    print("[WARNING] Cloudinary not configured - files will be saved locally only")
+    if not CLOUDINARY_CLOUD_NAME:
+        print("         - Missing CLOUDINARY_CLOUD_NAME (should be 'dsndirhuhe')")
+    if not CLOUDINARY_API_KEY:
+        print("         - Missing CLOUDINARY_API_KEY (should be '473455725389669')")
+    if not CLOUDINARY_API_SECRET:
+        print("         - Missing CLOUDINARY_API_SECRET")
+
+# Make CLOUDINARY_CONFIGURED available in settings
+# This is used by the is_cloudinary_configured function in views.py
 
 # ==================================================
 # SESSION CONFIGURATION (Important for Student Login)
@@ -294,7 +332,7 @@ if ON_RENDER or not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # ==================================================
-# LOGGING CONFIGURATION (For debugging)
+# LOGGING CONFIGURATION - REDUCED VERBOSITY
 # ==================================================
 
 LOGGING = {
@@ -307,12 +345,17 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'INFO' if not DEBUG else 'DEBUG',
+        'level': 'WARNING',
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO' if not DEBUG else 'DEBUG',
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'level': 'ERROR',
+            'handlers': ['console'],
             'propagate': False,
         },
         'django.request': {

@@ -1,55 +1,24 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH ALL FUNCTIONS
+# dashboard/views.py - COMPLETE MERGED VERSION WITH FIXED CLOUDINARY CHECK AND ASCII OUTPUT
 # ============================================================================
-# UPDATED IMPORT BLOCK (added HRFlowable, ParagraphStyle, colors, datetime)
-import os
-import tempfile
-import requests
-from datetime import datetime
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import FileResponse, HttpResponse
-from django.contrib import messages
-from django.conf import settings
-
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, HRFlowable
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-
-from pypdf import PdfWriter, PdfReader
-
-from .models import Student
-# ============================================================================
-
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.pagesizes import A4, letter
-from reportlab.lib import colors
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
-import tempfile
-import os
-
+# UPDATED IMPORT BLOCK
 import os
 import json
 import csv
 import tempfile
 import logging
-import time
 import uuid
 import zipfile
 from datetime import datetime, date, timedelta
 from io import BytesIO
 from typing import Dict, List, Optional, Any
+
+import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect, FileResponse, HttpResponseBadRequest
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from django.db.models import Q, Count, Sum, Avg, Max, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template.loader import render_to_string
@@ -58,34 +27,37 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.urls import reverse
 from django.utils import timezone
+import django
+
+# PDF Generation imports
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, HRFlowable, PageBreak
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.pdfgen import canvas
+from pypdf import PdfWriter, PdfReader
+from PIL import Image as PILImage
+
+# Cloudinary imports
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-import requests
 
-# Add these imports for students
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib.units import inch
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
-# ==================== ADD MISSING MODEL IMPORTS ====================
-from .models import Faculty, Certificate, FacultyLog, CloudinaryUpload, Subject, FacultyProfile, ResearchProject
-# ====================================================================
-
-from .models import Student
-
-from .forms import LoginForm, StudentForm, FacultyForm, CertificateForm, BulkUploadForm, FacultyProfileForm, \
-    ResearchProjectForm
-
+# Local imports
+from .models import (
+    Faculty, Certificate, FacultyLog, CloudinaryUpload,
+    Subject, FacultyProfile, ResearchProject, Student
+)
+from .forms import (
+    LoginForm, StudentForm, FacultyForm, CertificateForm,
+    BulkUploadForm, FacultyProfileForm, ResearchProjectForm
+)
 from .utils import (
-    calculate_experience, generate_pdf_from_html,
-    merge_pdfs, extract_text_from_pdf, validate_faculty_data,
-    calculate_age, format_date, get_academic_year,
-    send_email_notification, generate_qr_code,
-    export_to_excel, validate_student_data
+    calculate_experience, generate_pdf_from_html, merge_pdfs,
+    extract_text_from_pdf, validate_faculty_data, calculate_age,
+    format_date, get_academic_year, send_email_notification,
+    generate_qr_code, export_to_excel, validate_student_data
 )
 
 # Configure logging
@@ -107,7 +79,7 @@ except ImportError:
 try:
     import matplotlib
 
-    matplotlib.use('Agg')  # Use non-interactive backend
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
@@ -115,45 +87,115 @@ except ImportError:
     np = None
     logger.warning("Matplotlib library not installed. Chart features will be limited.")
 
+try:
+    import pdfkit
+except ImportError:
+    pdfkit = None
+    logger.warning("pdfkit library not installed. PDF generation features will be limited.")
+
 
 # ==================== HELPER FUNCTIONS ====================
 
 def is_cloudinary_configured():
-    """Check if Cloudinary is properly configured"""
-    return all([
-        hasattr(settings, 'CLOUDINARY_CLOUD_NAME') and settings.CLOUDINARY_CLOUD_NAME,
-        hasattr(settings, 'CLOUDINARY_API_KEY') and settings.CLOUDINARY_API_KEY,
-        hasattr(settings, 'CLOUDINARY_API_SECRET') and settings.CLOUDINARY_API_SECRET,
-    ])
+    """Check if Cloudinary is properly configured by checking settings"""
+    return getattr(settings, 'CLOUDINARY_CONFIGURED', False)
 
 
 # ==================== TEST TEMPLATE VIEW ====================
 def test_template(request):
     """Test view to verify template loading"""
-    return render(request, 'test.html')
+    return render(request, 'test.html', {
+        'title': 'Template Test',
+        'message': 'If you can see this, templates are working correctly!'
+    })
+
+
+# ==================== TEST SESSION VIEW ====================
+def test_session(request):
+    """Test view to check session"""
+    return JsonResponse({
+        'student_logged_in': request.session.get('student_logged_in', False),
+        'student_username': request.session.get('student_username', None),
+        'session_keys': list(request.session.keys()),
+        'path': request.path,
+        'method': request.method,
+    })
+
+
+# ==================== DEBUG CLOUDINARY VIEW ====================
+def debug_cloudinary(request):
+    """Debug view to check Cloudinary configuration"""
+    import cloudinary
+
+    config = {
+        'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', None),
+        'api_key': getattr(settings, 'CLOUDINARY_API_KEY', None),
+        'api_secret': '***' + getattr(settings, 'CLOUDINARY_API_SECRET', '')[-4:] if getattr(settings,
+                                                                                             'CLOUDINARY_API_SECRET',
+                                                                                             None) else None,
+        'configured': is_cloudinary_configured(),
+    }
+
+    # Test connection
+    connection_test = False
+    error_msg = None
+    if config['configured']:
+        try:
+            cloudinary.api.ping()
+            connection_test = True
+        except Exception as e:
+            error_msg = str(e)
+
+    return JsonResponse({
+        'config': config,
+        'connection_test': connection_test,
+        'error': error_msg,
+        'env_vars': {
+            'CLOUDINARY_CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+            'CLOUDINARY_API_KEY': os.environ.get('CLOUDINARY_API_KEY')[:4] + '...' if os.environ.get(
+                'CLOUDINARY_API_KEY') else None,
+            'CLOUDINARY_API_SECRET': '***' + os.environ.get('CLOUDINARY_API_SECRET', '')[-4:] if os.environ.get(
+                'CLOUDINARY_API_SECRET') else None,
+        }
+    })
+
+
+# ==================== DEBUG LOGIN VIEW ====================
+def debug_login(request):
+    """Debug view to check login status"""
+    return HttpResponse(f"""
+    <html>
+        <body style="background: black; color: lime; font-family: monospace; padding: 20px;">
+            <h1>Login Debug Info</h1>
+            <pre>
+student_logged_in: {request.session.get('student_logged_in', False)}
+student_username: {request.session.get('student_username', 'None')}
+session keys: {list(request.session.keys())}
+user authenticated: {request.user.is_authenticated}
+user: {request.user}
+            </pre>
+            <p><a href="/student-login/">Go to Student Login</a></p>
+            <p><a href="/students-data/">Go to Students Data</a></p>
+            <p><a href="/add-student/">Go to Add Student</a></p>
+        </body>
+    </html>
+    """)
 
 
 # Initialize Cloudinary if configured
-if hasattr(settings, 'CLOUDINARY_CLOUD_NAME'):
+if is_cloudinary_configured():
     try:
-        cloud_name = settings.CLOUDINARY_CLOUD_NAME
-        api_key = settings.CLOUDINARY_API_KEY
-        api_secret = settings.CLOUDINARY_API_SECRET
-
-        if cloud_name and api_key and api_secret:
-            cloudinary.config(
-                cloud_name=cloud_name,
-                api_key=api_key,
-                api_secret=api_secret,
-                secure=True
-            )
-            logger.info("Cloudinary initialized successfully with credentials")
-        else:
-            logger.warning("Cloudinary credentials missing or incomplete")
+        cloudinary.config(
+            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+            api_key=settings.CLOUDINARY_API_KEY,
+            api_secret=settings.CLOUDINARY_API_SECRET,
+            secure=True
+        )
+        logger.info("Cloudinary initialized successfully with credentials")
     except Exception as e:
         logger.error(f"Failed to initialize Cloudinary: {str(e)}")
 else:
-    logger.warning("Cloudinary credentials not found in settings")
+    logger.warning("Cloudinary credentials not found in settings or incomplete")
 
 
 # ==================== DEBUG FUNCTION TO CHECK FACULTY DATA ====================
@@ -173,9 +215,8 @@ def debug_faculty_data(request, faculty_id):
         if field_name == 'photo' and field_value:
             try:
                 data[field_name] = {
-                    'url': field_value.url,
-                    'path': field_value.path,
-                    'exists': os.path.exists(field_value.path) if hasattr(field_value, 'path') else False
+                    'url': field_value.url if hasattr(field_value, 'url') else str(field_value),
+                    'exists': True
                 }
             except:
                 data[field_name] = str(field_value)
@@ -618,10 +659,6 @@ def logout_view(request):
 # =====================================================
 # STUDENT LOGOUT (MERGED VERSION)
 # =====================================================
-from django.contrib import messages
-from django.shortcuts import redirect
-
-
 def student_logout(request):
     """
     Logout student safely by flushing session
@@ -642,7 +679,19 @@ def admin_logout(request):
 # ==================== HOME & DASHBOARD ====================
 
 def home(request):
-    """Home page view"""
+    """Home page view - redirects based on authentication"""
+    # If student is logged in, redirect to student dashboard
+    if request.session.get('student_logged_in'):
+        return redirect('dashboard:student_dashboard')
+
+    # If admin is logged in, redirect to admin dashboard
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect('dashboard:admin_dashboard')
+        else:
+            return redirect('dashboard:dashboard')
+
+    # Otherwise, show the public home page
     # Get statistics for home page
     total_faculty = Faculty.objects.count()
     active_faculty = Faculty.objects.filter(is_active=True).count()
@@ -803,20 +852,26 @@ def student_dashboard(request):
     student_username = request.session.get('student_username', 'anrkitstudent')
 
     # Try to get student data
+    student = None
     try:
         student = Student.objects.filter(ht_no=student_username).first()
-        if not student:
-            # Create a dummy student if not found
-            student = {
-                'ht_no': student_username,
-                'student_name': 'Student User',
-                'year': 'II',
-                'sem': 'II',
-                'branch': 'Computer Science',
-            }
     except Exception as e:
         logger.error(f"Error getting student data: {str(e)}")
-        student = None
+
+    # Create a session-based student object if no database record exists
+    if not student:
+        student = {
+            'ht_no': student_username,
+            'student_name': 'Student User',
+            'year': 'II',
+            'sem': 'II',
+            'branch': 'Computer Science',
+            'email': 'student@anurag.edu.in',
+            'student_phone': 'Not Available',
+            'cgpa': None,
+            'photo': None,
+            'photo_url': None,
+        }
 
     # Get student statistics
     total_students = Student.objects.count()
@@ -826,14 +881,21 @@ def student_dashboard(request):
     certificates = []
     if student and hasattr(student, 'id'):
         # Check for certificate fields
-        cert_fields = ['achievement_certificate', 'internship_certificate',
-                       'courses_certificate', 'sdp_certificate', 'extra_certificate',
-                       'placement_offer', 'national_exam_certificate']
+        cert_fields = [
+            ('cert_achieve', 'Achievement'),
+            ('cert_intern', 'Internship'),
+            ('cert_courses', 'Courses'),
+            ('cert_sdp', 'SDP'),
+            ('cert_extra', 'Extra Curricular'),
+            ('cert_placement', 'Placement'),
+            ('cert_national', 'National Exam')
+        ]
 
-        for field in cert_fields:
-            if getattr(student, field):
+        for field_name, display_name in cert_fields:
+            if hasattr(student, field_name) and getattr(student, field_name):
                 certificates.append({
-                    'type': field.replace('_', ' ').title(),
+                    'type': display_name,
+                    'field': field_name,
                     'has_file': True
                 })
 
@@ -1341,7 +1403,8 @@ def assign_subjects(request, faculty_id):
 # STUDENTS REGISTRATION PAGE (REPLACED WITH SIMPLE VERSION)
 # =====================================================
 def students(request):
-    return render(request, "dashboard/students.html")
+    """Students registration page - redirects to add student"""
+    return redirect('dashboard:add_student')
 
 
 # =====================================================
@@ -1365,9 +1428,14 @@ def students_data(request):
     year_3_count = students.filter(year=3).count()
     year_4_count = students.filter(year=4).count()
 
+    # Add pagination
+    paginator = Paginator(students, 20)  # Show 20 students per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     context = {
         "title": "Students Data",
-        "students": students,
+        "students": page_obj,  # Use paginated students
         "total_students": total_students,
         "year_1_count": year_1_count,
         "year_2_count": year_2_count,
@@ -1383,13 +1451,16 @@ def students_data(request):
         "sems": Student.objects.values_list(
             "sem", flat=True
         ).distinct(),
+
+        "is_paginated": page_obj.has_other_pages(),
+        "page_obj": page_obj,
     }
 
     return render(request, "dashboard/students_data.html", context)
 
 
 # =====================================================
-# ADD STUDENT – UPDATED VERSION (with direct Cloudinary upload)
+# ADD STUDENT – COMPLETELY FIXED VERSION (NO UNICODE CHARACTERS)
 # =====================================================
 def add_student(request):
     """Add a new student"""
@@ -1399,11 +1470,19 @@ def add_student(request):
             print("ADDING NEW STUDENT")
             print("=" * 60)
 
-            # Handle file uploads to Cloudinary
+            # Check if Cloudinary is configured
+            cloudinary_available = is_cloudinary_configured()
+            print(f"Cloudinary configured: {cloudinary_available}")
+
+            # Helper function to handle file uploads - with ASCII-only output
             def upload_to_cloudinary(file, folder_name):
-                if file and is_cloudinary_configured():
+                """Upload file to Cloudinary if configured, otherwise return None"""
+                if not file:
+                    return None
+
+                if cloudinary_available:
                     try:
-                        print(f"Uploading {file.name} to Cloudinary...")
+                        print(f"Attempting to upload {file.name} to Cloudinary...")
                         result = cloudinary.uploader.upload(
                             file,
                             resource_type="auto",
@@ -1411,14 +1490,18 @@ def add_student(request):
                             public_id=f"{folder_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                             overwrite=True
                         )
-                        print(f"  ✓ Uploaded: {result['secure_url']}")
+                        print(f"  [OK] Uploaded: {result['secure_url']}")
                         return result['secure_url']
                     except Exception as e:
-                        print(f"  ✗ Upload failed: {e}")
+                        print(f"  [ERROR] Cloudinary upload failed: {e}")
+                        # Re-open the file pointer as it might be consumed
+                        if hasattr(file, 'seek'):
+                            file.seek(0)
                         return None
                 return None
 
-            # Create new student
+            # FIRST: Create student WITHOUT any file fields
+            # This avoids triggering Cloudinary during initial save
             student = Student(
                 ht_no=request.POST.get('ht_no'),
                 student_name=request.POST.get('student_name'),
@@ -1453,19 +1536,47 @@ def add_student(request):
                 intern_title=request.POST.get('intern_title'),
                 final_project_title=request.POST.get('final_project_title'),
                 other_training=request.POST.get('other_training'),
+                # Explicitly set file fields to None initially
+                photo=None,
+                cert_achieve=None,
+                cert_intern=None,
+                cert_courses=None,
+                cert_sdp=None,
+                cert_extra=None,
+                cert_placement=None,
+                cert_national=None,
             )
 
-            # Save to get an ID first
+            # Save to get an ID (this won't trigger Cloudinary because file fields are None)
             student.save()
             print(f"Student created with ID: {student.id}")
+
+            # NOW handle file uploads one by one
+            files_uploaded = []
+            files_local = []
 
             # Handle photo upload
             if request.FILES.get('photo'):
                 photo_file = request.FILES['photo']
-                photo_url = upload_to_cloudinary(photo_file, 'photos')
-                if photo_url:
-                    student.photo = photo_url
-                    print(f"Photo saved: {photo_url}")
+
+                # Try Cloudinary first if available
+                if cloudinary_available:
+                    photo_url = upload_to_cloudinary(photo_file, 'photos')
+                    if photo_url:
+                        student.photo_url = photo_url
+                        student.photo = None  # Don't save locally
+                        files_uploaded.append('photo (to Cloudinary)')
+                        print(f"Photo uploaded to Cloudinary: {photo_url}")
+                    else:
+                        # Cloudinary failed, save locally
+                        student.photo = photo_file
+                        files_local.append('photo (locally)')
+                        print(f"Photo saved locally (Cloudinary upload failed)")
+                else:
+                    # Cloudinary not configured, save locally
+                    student.photo = photo_file
+                    files_local.append('photo (locally)')
+                    print(f"Photo saved locally (Cloudinary not configured)")
 
             # Handle certificate uploads
             certificate_fields = [
@@ -1481,18 +1592,49 @@ def add_student(request):
             for field_name, folder_name in certificate_fields:
                 if request.FILES.get(field_name):
                     cert_file = request.FILES[field_name]
-                    cert_url = upload_to_cloudinary(cert_file, folder_name)
-                    if cert_url:
-                        setattr(student, field_name, cert_url)
-                        print(f"{field_name} saved: {cert_url}")
+
+                    # Try Cloudinary first if available
+                    if cloudinary_available:
+                        cert_url = upload_to_cloudinary(cert_file, folder_name)
+                        if cert_url:
+                            # Store as URL in the field
+                            setattr(student, field_name, cert_url)
+                            files_uploaded.append(f'{field_name} (to Cloudinary)')
+                            print(f"{field_name} uploaded to Cloudinary: {cert_url}")
+                        else:
+                            # Cloudinary failed, save locally
+                            setattr(student, field_name, cert_file)
+                            files_local.append(f'{field_name} (locally)')
+                            print(f"{field_name} saved locally (Cloudinary upload failed)")
+                    else:
+                        # Cloudinary not configured, save locally
+                        setattr(student, field_name, cert_file)
+                        files_local.append(f'{field_name} (locally)')
+                        print(f"{field_name} saved locally (Cloudinary not configured)")
 
             # Final save with all files
             student.save()
 
-            messages.success(request, f'Student {student.student_name} added successfully!')
+            # Create success message based on what happened (using ASCII only)
+            if cloudinary_available:
+                if files_uploaded:
+                    messages.success(request,
+                                     f'Student {student.student_name} added successfully! Files uploaded to Cloudinary: {", ".join(files_uploaded)}')
+                if files_local:
+                    messages.warning(request, f'Some files saved locally: {", ".join(files_local)}')
+                if not files_uploaded and not files_local:
+                    messages.success(request, f'Student {student.student_name} added successfully!')
+            else:
+                messages.success(request, f'Student {student.student_name} added successfully! (Files saved locally)')
+                messages.info(request, 'To enable cloud storage, configure Cloudinary credentials in settings.py')
+
             print("=" * 60)
             print("STUDENT ADDED SUCCESSFULLY")
+            print(f"Cloudinary used: {cloudinary_available}")
+            print(f"Files to Cloudinary: {len(files_uploaded)}")
+            print(f"Files local: {len(files_local)}")
             print("=" * 60)
+
             return redirect('dashboard:students_data')
 
         except Exception as e:
@@ -1589,14 +1731,17 @@ def generate_student_pdf_file(request, student_id):
 
     # -------- STUDENT PHOTO (if exists) --------
     photo_img = None
-    if student.photo:
+    photo_url = None
+    if student.photo_url:
+        photo_url = student.photo_url
+    elif student.photo:
         try:
-            # Get photo URL
-            if hasattr(student.photo, 'url'):
-                photo_url = student.photo.url
-            else:
-                photo_url = student.photo
+            photo_url = student.photo.url
+        except:
+            photo_url = None
 
+    if photo_url:
+        try:
             print(f"Attempting to load photo from: {photo_url}")
 
             # Download photo
@@ -1764,7 +1909,7 @@ def generate_student_pdf_file(request, student_id):
                         for page in reader.pages:
                             writer.add_page(page)
                         merged_count += 1
-                        print(f"  ✓ Added PDF: {field_label}")
+                        print(f"  [OK] Added PDF: {field_label}")
 
                     else:
                         # Check if it's an image that needs to be converted to PDF
@@ -1790,16 +1935,16 @@ def generate_student_pdf_file(request, student_id):
                             for page in reader.pages:
                                 writer.add_page(page)
                             merged_count += 1
-                            print(f"  ✓ Converted and added image: {field_label}")
+                            print(f"  [OK] Converted and added image: {field_label}")
 
                         except Exception as img_error:
-                            print(f"  ✗ Not a valid image: {img_error}")
+                            print(f"  [ERROR] Not a valid image: {img_error}")
 
                 else:
-                    print(f"  ✗ Failed to download: HTTP {response.status_code}")
+                    print(f"  [ERROR] Failed to download: HTTP {response.status_code}")
 
             except Exception as e:
-                print(f"  ✗ Error processing {field_label}: {e}")
+                print(f"  [ERROR] Error processing {field_label}: {e}")
 
     print(f"Total certificates merged: {merged_count}")
 
@@ -1824,6 +1969,7 @@ def generate_student_pdf_file(request, student_id):
     # ===============================
     # 4. UPLOAD FINAL PDF TO CLOUDINARY
     # ===============================
+    pdf_url = None
     if is_cloudinary_configured():
         try:
             upload_result = cloudinary.uploader.upload(
@@ -1834,9 +1980,22 @@ def generate_student_pdf_file(request, student_id):
                 overwrite=True
             )
 
+            student.pdf_url = upload_result["secure_url"]
             student.pdf_file = upload_result["secure_url"]
+            student.pdf_generated = True
+            student.pdf_generation_time = timezone.now()
             student.save()
+            pdf_url = upload_result["secure_url"]
             print(f"PDF uploaded to Cloudinary: {upload_result['secure_url']}")
+
+            CloudinaryUpload.objects.create(
+                student=student,
+                upload_type='pdf',
+                cloudinary_url=upload_result['secure_url'],
+                public_id=upload_result['public_id'],
+                resource_type=upload_result['resource_type'],
+                uploaded_by=request.user.username if request.user.is_authenticated else 'Student'
+            )
 
         except Exception as e:
             print(f"Error uploading to Cloudinary: {e}")
@@ -1873,10 +2032,13 @@ def generate_student_pdf_file(request, student_id):
 def view_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
 
-    if not student.pdf_file:
-        return HttpResponse("PDF not generated yet.")
-
-    return redirect(student.pdf_file)
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+    elif student.pdf_file:
+        return redirect(student.pdf_file)
+    else:
+        messages.error(request, "PDF not generated yet.")
+        return redirect('dashboard:students_data')
 
 
 # =====================================================
@@ -1885,10 +2047,12 @@ def view_pdf(request, student_id):
 def download_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
 
-    if not student.pdf_file:
-        return HttpResponse("PDF not generated yet.")
-
-    return redirect(student.pdf_file)
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+    elif student.pdf_file:
+        return redirect(student.pdf_file)
+    else:
+        return generate_student_pdf_file(request, student_id)
 
 
 # =====================================================

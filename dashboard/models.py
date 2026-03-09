@@ -23,7 +23,7 @@ class Faculty(models.Model):
     gender = models.CharField(max_length=20, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
-    # Additional fields from your views
+    # Additional fields
     father_name = models.CharField(max_length=200, blank=True, null=True)
     mother_name = models.CharField(max_length=200, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
@@ -273,6 +273,7 @@ class Student(models.Model):
 
     # Photo (Image)
     photo = CloudinaryField("image", blank=True, null=True)
+    photo_url = models.URLField(blank=True, null=True)  # For Cloudinary URL
 
     # Certificates (Images)
     cert_achieve = CloudinaryField("image", blank=True, null=True)
@@ -285,11 +286,9 @@ class Student(models.Model):
 
     # Final Generated PDF URL
     pdf_file = models.URLField(blank=True, null=True)
+    pdf_url = models.URLField(blank=True, null=True)  # Alias for pdf_file
     pdf_generated = models.BooleanField(default=False)
     pdf_generation_time = models.DateTimeField(blank=True, null=True)
-
-    # Photo URL (for Cloudinary)
-    photo_url = models.URLField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

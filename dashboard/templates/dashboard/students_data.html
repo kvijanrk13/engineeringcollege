@@ -63,9 +63,9 @@ body {
 
 /* ================= DATA ================= */
 .data-container {
-    background: rgba(255,255,255,0.96);
-    color: #111;
-    max-width: 1250px;
+    background: rgba(0, 20, 0, 0.95);
+    color: #0f0;
+    max-width: 1400px;
     margin: auto;
     padding: 35px;
     border-radius: 18px;
@@ -85,48 +85,331 @@ body {
 .data-title {
     font-size: 2.2rem;
     font-weight: 900;
+    color: #0f0;
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: rgba(0, 30, 0, 0.8);
+    border: 2px solid #0f0;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0f0;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #0f0;
+    opacity: 0.8;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* Filter Section */
+.filter-section {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    background: rgba(0, 30, 0, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #0f0;
+}
+
+.filter-input, .filter-select {
+    flex: 1;
+    min-width: 150px;
+    padding: 12px;
+    background: #000;
+    border: 2px solid #0f0;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    border-radius: 5px;
+}
+
+.filter-input::placeholder {
+    color: rgba(0, 255, 0, 0.5);
+}
+
+.btn-filter {
+    padding: 12px 25px;
+    background: transparent;
+    color: #0f0;
+    border: 2px solid #0f0;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 5px;
+    min-width: 120px;
+}
+
+.btn-filter:hover {
+    background: #0f0;
+    color: #000;
+    box-shadow: 0 0 15px #0f0;
 }
 
 /* ================= TABLE ================= */
 .table-container {
-    background: #fff;
+    background: rgba(0, 10, 0, 0.9);
     border-radius: 12px;
-    overflow: hidden;
+    overflow-x: auto;
+    border: 2px solid #0f0;
 }
 
 .student-table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 1200px;
 }
 
 .student-table th {
-    background: linear-gradient(135deg,#667eea,#764ba2);
-    color: #fff;
+    background: rgba(0, 50, 0, 0.9);
+    color: #0f0;
     padding: 16px;
+    text-align: left;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 3px solid #0f0;
 }
 
 .student-table td {
     padding: 14px;
+    border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+    color: #0f0;
 }
 
-.btn {
-    border-radius: 6px;
-    font-size: .8rem;
-    padding: 6px 12px;
+.student-table tr:hover {
+    background: rgba(0, 50, 0, 0.5);
+}
+
+/* Photo styling */
+.student-photo {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 2px solid #0f0;
+}
+
+.no-photo {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 30, 0, 0.8);
+    border: 2px solid #0f0;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #0f0;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
     font-weight: bold;
-    cursor: pointer;
-    border: none;
-    text-decoration: none;
 }
 
-.btn-warning { background:#ff9800;color:#000; }
-.btn-info { background:#007bff;color:#fff; }
-.btn-danger { background:#d40000;color:#fff; }
-.btn-success { background:#0a0;color:#fff; }
-.btn-primary { background:#0a0;color:#fff;padding:10px 20px; }
+.badge-year {
+    background: rgba(0, 100, 0, 0.8);
+    border: 1px solid #0f0;
+}
 
-img {
-    border-radius: 6px;
+.badge-sem {
+    background: rgba(0, 50, 100, 0.8);
+    border: 1px solid #0ff;
+    margin-left: 5px;
+}
+
+/* CGPA colors */
+.cgpa-high {
+    color: #0f0;
+    font-weight: bold;
+}
+
+.cgpa-medium {
+    color: #ff0;
+    font-weight: bold;
+}
+
+.cgpa-low {
+    color: #f00;
+    font-weight: bold;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 1px solid #0f0;
+    color: #0f0;
+    text-decoration: none;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    margin: 2px;
+}
+
+.btn:hover {
+    background: #0f0;
+    color: #000;
+}
+
+.btn-warning {
+    border-color: #ff0;
+    color: #ff0;
+}
+
+.btn-warning:hover {
+    background: #ff0;
+    color: #000;
+}
+
+.btn-info {
+    border-color: #0ff;
+    color: #0ff;
+}
+
+.btn-info:hover {
+    background: #0ff;
+    color: #000;
+}
+
+.btn-danger {
+    border-color: #f00;
+    color: #f00;
+}
+
+.btn-danger:hover {
+    background: #f00;
+    color: #000;
+}
+
+.btn-success {
+    border-color: #0f0;
+    color: #0f0;
+}
+
+.btn-success:hover {
+    background: #0f0;
+    color: #000;
+}
+
+.btn-primary {
+    border-color: #0f0;
+    color: #0f0;
+    padding: 10px 20px;
+    font-size: 1rem;
+}
+
+.action-cell {
+    white-space: nowrap;
+}
+
+.action-form {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
+.action-form button {
+    background: transparent;
+    border: 1px solid #f00;
+    color: #f00;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+}
+
+.action-form button:hover {
+    background: #f00;
+    color: #000;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.page-link {
+    padding: 8px 15px;
+    border: 2px solid #0f0;
+    color: #0f0;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.page-link:hover,
+.page-link.active {
+    background: #0f0;
+    color: #000;
+}
+
+/* No data */
+.no-data {
+    text-align: center;
+    padding: 50px;
+    color: #0f0;
+    font-size: 1.2rem;
+}
+
+/* Add button */
+.add-button-container {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.add-student-btn {
+    display: inline-block;
+    padding: 15px 40px;
+    background: transparent;
+    color: #0f0;
+    border: 3px solid #0f0;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.3s;
+}
+
+.add-student-btn:hover {
+    background: #0f0;
+    color: #000;
+    box-shadow: 0 0 20px #0f0;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 255, 0, 0.3);
+    color: #666;
+    font-size: 0.9rem;
 }
 
 </style>
@@ -139,119 +422,289 @@ img {
 
 <!-- LOGIN -->
 <div class="login-container">
-<h2 class="login-title">Student Data Portal Login</h2>
+    <h2 class="login-title">STUDENT DATA PORTAL LOGIN</h2>
 
-<form method="POST" action="{% url 'dashboard:student_login' %}">
-{% csrf_token %}
-<input type="hidden" name="student_login" value="true">
+    <form method="POST" action="{% url 'dashboard:student_login' %}">
+        {% csrf_token %}
+        <input type="hidden" name="student_login" value="true">
 
-<div class="form-group">
-<input type="text" name="username" value="anrkitstudent" required>
-</div>
+        <div class="form-group">
+            <input type="text" name="username" value="anrkitstudent" required>
+        </div>
 
-<div class="form-group">
-<input type="password" name="password" value="anrkitstudent" required>
-</div>
+        <div class="form-group">
+            <input type="password" name="password" value="anrkitstudent" required>
+        </div>
 
-<button type="submit" class="login-btn">Login</button>
-</form>
+        <button type="submit" class="login-btn">LOGIN</button>
+    </form>
 </div>
 
 {% else %}
 
 <div class="data-container">
 
-<div class="data-header">
-<h1 class="data-title">STUDENTS DATA PORTAL</h1>
-<a href="{% url 'dashboard:student_logout' %}" class="btn btn-danger">Logout</a>
+    <div class="data-header">
+        <h1 class="data-title">STUDENTS DATA PORTAL</h1>
+        <div>
+            <a href="{% url 'dashboard:student_dashboard' %}" class="btn btn-info">Dashboard</a>
+            <a href="{% url 'dashboard:student_logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_students|default:"0" }}</div>
+            <div class="stat-label">TOTAL STUDENTS</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ year_1_count|default:"0" }}</div>
+            <div class="stat-label">YEAR 1</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ year_2_count|default:"0" }}</div>
+            <div class="stat-label">YEAR 2</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ year_3_count|default:"0" }}</div>
+            <div class="stat-label">YEAR 3</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ year_4_count|default:"0" }}</div>
+            <div class="stat-label">YEAR 4</div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <input type="text" id="searchInput" class="filter-input" placeholder="Search by Name, HT No, or Email...">
+
+        <select id="yearFilter" class="filter-select">
+            <option value="">All Years</option>
+            <option value="1">Year 1</option>
+            <option value="2">Year 2</option>
+            <option value="3">Year 3</option>
+            <option value="4">Year 4</option>
+        </select>
+
+        <select id="semFilter" class="filter-select">
+            <option value="">All Semesters</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+        </select>
+
+        <button onclick="filterStudents()" class="btn-filter">FILTER</button>
+        <button onclick="resetFilters()" class="btn-filter">RESET</button>
+    </div>
+
+    <!-- ADD STUDENT BUTTON -->
+    <div style="text-align:center; margin-bottom:20px;">
+        <a href="{% url 'dashboard:add_student' %}" class="btn btn-primary">
+            + ADD NEW STUDENT
+        </a>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-container">
+        <table class="student-table" id="studentTable">
+            <thead>
+                <tr>
+                    <th>PHOTO</th>
+                    <th>H.T No</th>
+                    <th>NAME</th>
+                    <th>YEAR/SEM</th>
+                    <th>PHONE</th>
+                    <th>EMAIL</th>
+                    <th>CGPA</th>
+                    <th>PDF</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>
+                        {% if student.photo_url %}
+                            <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}">
+                        {% elif student.photo %}
+                            {% if student.photo.url %}
+                                <img src="{{ student.photo.url }}" class="student-photo" alt="{{ student.student_name }}">
+                            {% else %}
+                                <div class="no-photo">No Photo</div>
+                            {% endif %}
+                        {% else %}
+                            <div class="no-photo">No Photo</div>
+                        {% endif %}
+                    </td>
+
+                    <td><strong>{{ student.ht_no }}</strong></td>
+
+                    <td>
+                        <a href="{% url 'dashboard:student_detail' student.id %}" style="color: #0f0; text-decoration: none;">
+                            {{ student.student_name }}
+                        </a>
+                    </td>
+
+                    <td>
+                        <span class="badge badge-year">Y{{ student.year }}</span>
+                        <span class="badge badge-sem">S{{ student.sem }}</span>
+                    </td>
+
+                    <td>{{ student.student_phone|default:"-" }}</td>
+
+                    <td>{{ student.email|default:"-" }}</td>
+
+                    <td>
+                        {% if student.cgpa %}
+                            {% if student.cgpa >= 8.5 %}
+                                <span class="cgpa-high">{{ student.cgpa }}</span>
+                            {% elif student.cgpa >= 6.0 %}
+                                <span class="cgpa-medium">{{ student.cgpa }}</span>
+                            {% else %}
+                                <span class="cgpa-low">{{ student.cgpa }}</span>
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="action-cell">
+                        {% if student.pdf_url %}
+                            <a href="{{ student.pdf_url }}" target="_blank" class="btn btn-success">View PDF</a>
+                        {% elif student.pdf_file %}
+                            <a href="{{ student.pdf_file.url }}" target="_blank" class="btn btn-success">View PDF</a>
+                        {% else %}
+                            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning">Generate</a>
+                        {% endif %}
+                    </td>
+
+                    <td class="action-cell">
+                        <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info">View</a>
+                        <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-warning">Edit</a>
+                        <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="action-form" onsubmit="return confirm('Are you sure you want to delete this student?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="no-data">
+                        No students found. Click "ADD NEW STUDENT" to create one.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if students.has_other_pages %}
+    <div class="pagination">
+        {% if students.has_previous %}
+            <a href="?page={{ students.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">←</a>
+        {% endif %}
+
+        {% for i in students.paginator.page_range %}
+            {% if students.number == i %}
+                <span class="page-link active">{{ i }}</span>
+            {% else %}
+                <a href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">{{ i }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if students.has_next %}
+            <a href="?page={{ students.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">→</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div>
-
-<!-- ADD STUDENT BUTTON -->
-<div style="text-align:center;margin-bottom:20px;">
-<a href="{% url 'dashboard:students' %}" class="btn btn-primary">
-    ➕ Add New Student
-</a>
-</div>
-
-<!-- TABLE -->
-<div class="table-container">
-<table class="student-table">
-<thead>
-<tr>
-<th>H.T No</th>
-<th>Name</th>
-<th>Year</th>
-<th>Sem</th>
-<th>Phone Number</th>
-<th>CGPA</th>   <!-- ✅ ADDED -->
-<th>Photo</th>
-<th>PDF</th>
-<th>Actions</th>
-</tr>
-</thead>
-<tbody>
-{% for student in students %}
-<tr>
-
-<td>{{ student.ht_no }}</td>
-
-<td>{{ student.student_name }}</td>
-
-<td>{{ student.year|default:"-" }}</td>
-
-<td>{{ student.sem|default:"-" }}</td>
-
-<td>{{ student.student_phone|default:"-" }}</td>
-
-<td>
-    {{ student.cgpa|default:"-" }}   <!-- ✅ ADDED -->
-</td>
-
-<td>
-{% if student.photo_url %}
-    <img src="{{ student.photo_url }}" width="50" height="50">
-{% elif student.photo %}
-    <img src="{{ student.photo.url }}" width="50" height="50">
-{% else %}
-    <span style="color:gray;">No Photo</span>
 {% endif %}
-</td>
-
-<td>
-{% if student.pdf_url %}
-    <a href="{{ student.pdf_url }}" target="_blank" class="btn btn-success">
-        View PDF
-    </a>
-{% else %}
-    <span class="btn btn-warning">Pending</span>
-{% endif %}
-</td>
-
-<td>
-{% if not student.pdf_url %}
-<a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning">
-    Generate
-</a>
-{% endif %}
-
-<a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-info">
-    Edit
-</a>
-
-<form method="POST" action="{% url 'dashboard:delete_student' student.id %}">
-{% csrf_token %}
-<button type="submit" class="btn btn-danger">Delete</button>
-</form>
-</td>
-
-</tr>
-{% endfor %}
-</tbody>
-</table>
 </div>
 
-</div>
-{% endif %}
-</div>
+<script>
+    // Matrix Animation
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
+    const chars = '01ANURAGIT';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    // Filter Function
+    function filterStudents() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const year = document.getElementById('yearFilter').value;
+        const sem = document.getElementById('semFilter').value;
+
+        const rows = document.querySelectorAll('#studentTable tbody tr');
+
+        rows.forEach(row => {
+            if (row.querySelector('.no-data')) return;
+
+            const htNo = row.cells[1].textContent.toLowerCase();
+            const name = row.cells[2].textContent.toLowerCase();
+            const email = row.cells[5].textContent.toLowerCase();
+            const yearSem = row.cells[3].textContent;
+
+            let matchesSearch = true;
+            if (search) {
+                matchesSearch = htNo.includes(search) || name.includes(search) || email.includes(search);
+            }
+
+            let matchesYear = true;
+            if (year) {
+                matchesYear = yearSem.includes(`Y${year}`);
+            }
+
+            let matchesSem = true;
+            if (sem) {
+                matchesSem = yearSem.includes(`S${sem}`);
+            }
+
+            row.style.display = matchesSearch && matchesYear && matchesSem ? '' : 'none';
+        });
+    }
+
+    // Reset Filters
+    function resetFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('yearFilter').value = '';
+        document.getElementById('semFilter').value = '';
+
+        const rows = document.querySelectorAll('#studentTable tbody tr');
+        rows.forEach(row => row.style.display = '');
+    }
+
+    // Enter key for search
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            filterStudents();
+        }
+    });
+</script>
 {% endblock %}
