@@ -9,7 +9,7 @@ services:
   - type: web
     name: anrkitdept
     runtime: python
-    pythonVersion: 3.11.9
+    pythonVersion: 3.10.11  # Changed from 3.11.9 to 3.10.11
     buildCommand: ./build.sh
     startCommand: gunicorn engineeringcollege.wsgi:application --log-file -
     plan: free
@@ -21,7 +21,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: "False"  # CRITICAL: Must be False in production
+        value: "False"
       - key: RENDER
         value: "True"
       - key: CLOUDINARY_CLOUD_NAME
