@@ -14,9 +14,9 @@ python manage.py collectstatic --no-input
 
 # Run migrations
 echo "🔄 Running migrations..."
-python manage.py migrate --no-input || true
+python manage.py migrate --no-input
 
-# Run database fixes
+# Run database fixes (THIS WILL ADD THE MISSING COLUMN)
 echo "🔄 Running database fixes..."
 python manage.py fix_db
 
