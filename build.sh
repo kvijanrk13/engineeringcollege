@@ -12,16 +12,8 @@ pip install -r requirements.txt
 # Collect static files
 python manage.py collectstatic --no-input
 
-# Show current migrations
-echo "📋 Current migrations:"
-python manage.py showmigrations
-
-# Try to run migrations (they might fail, but we continue)
+# Run migrations (let them fail if they do, but we continue)
 echo "🔄 Running migrations..."
-python manage.py migrate --no-input || echo "⚠️ Migrations had issues but continuing..."
+python manage.py migrate --no-input || echo "⚠️ Migration issues - continuing anyway"
 
-# Run the fix command (this is our reliable method)
-echo "🔄 Running pdf_url fix command..."
-python manage.py fix_pdf_url_final
-
-echo "✅ Build completed successfully!"
+echo "✅ Build completed! The startup check will add the pdf_url column if needed."

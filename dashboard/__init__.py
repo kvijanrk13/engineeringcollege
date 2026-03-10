@@ -1,2 +1,2 @@
-# dashboard/templatetags/__init__.py
-# Empty file to make directory a Python package
+# dashboard/__init__.py
+default_app_config = 'dashboard.apps.DashboardConfig'
