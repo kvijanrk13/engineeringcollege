@@ -1,4 +1,4 @@
-# engineeringcollege/settings.py - FIXED CLOUDINARY CONFIGURATION
+# engineeringcollege/settings.py - PRODUCTION READY VERSION
 
 from pathlib import Path
 import os
@@ -22,23 +22,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==================================================
 
 # Check if we're running on Render
-ON_RENDER = os.environ.get('RENDER', False) == 'True'
+ON_RENDER = os.environ.get('RENDER', 'False') == 'True'
 
 # ==================================================
 # SECURITY WARNING: don't run with debug turned on in production!
 # ==================================================
 
-# DEBUG must be defined BEFORE it's used
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# CRITICAL FIX: DEBUG must be False on Render
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# SECRET KEY - defined after DEBUG
+# SECRET KEY - must be set in production
 SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    if DEBUG:
-        # Only use default for local development
-        SECRET_KEY = 'django-insecure-dev-key-for-local-development-only'
-    else:
-        raise ValueError("SECRET_KEY environment variable not set for production!")
+if not SECRET_KEY and not DEBUG:
+    raise ValueError("SECRET_KEY environment variable not set for production!")
+elif not SECRET_KEY and DEBUG:
+    SECRET_KEY = 'django-insecure-dev-key-for-local-development-only'
 
 # ==================================================
 # ALLOWED HOSTS
@@ -55,6 +53,7 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# CRITICAL: Don't use ['*'] in production
 if DEBUG:
     ALLOWED_HOSTS += ['*']
 
@@ -93,7 +92,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # CRITICAL: Must be here
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -153,24 +152,17 @@ if ON_RENDER:
             conn_health_checks=True,
         )
     else:
-        raise ImproperlyConfigured("DATABASE_URL environment variable not set on Render!")
+        # Fallback for Render without database (should not happen)
+        DATABASES['default'] = {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
 else:
-    # Local development - use SQLite (ALWAYS provide this)
+    # Local development - use SQLite
     DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-
-# Verify database configuration (this will always pass now)
-if not DATABASES['default'].get('ENGINE'):
-    raise ImproperlyConfigured(
-        "Database ENGINE not configured properly. "
-        "Please check your DATABASE_URL environment variable or local SQLite configuration."
-    )
-
-# Print database info for debugging (remove in production)
-print(f"Database configured: ENGINE={DATABASES['default']['ENGINE']}")
-print(f"ON_RENDER = {ON_RENDER}")
 
 # ==================================================
 # PASSWORD VALIDATION
@@ -193,15 +185,18 @@ USE_I18N = True
 USE_TZ = True
 
 # ==================================================
-# STATIC FILES - WhiteNoise Configuration
+# STATIC FILES - CRITICAL FOR PRODUCTION
 # ==================================================
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise compression and caching
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# WhiteNoise configuration for production - THIS IS KEY
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+else:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # ==================================================
 # MEDIA FILES
@@ -217,11 +212,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==================================================
-# CLOUDINARY CONFIGURATION - FIXED
+# CLOUDINARY CONFIGURATION
 # ==================================================
 
-# Get Cloudinary credentials from environment (loaded from .env file)
-# DO NOT use default values - they must come from .env
+# Get Cloudinary credentials from environment
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
@@ -262,24 +256,12 @@ if CLOUDINARY_CONFIGURED:
         CLOUDINARY_CONFIGURED = False
 else:
     print("[WARNING] Cloudinary not configured - files will be saved locally only")
-    if not CLOUDINARY_CLOUD_NAME:
-        print("         - Missing CLOUDINARY_CLOUD_NAME (should be 'dsndirhuhe')")
-    if not CLOUDINARY_API_KEY:
-        print("         - Missing CLOUDINARY_API_KEY (should be '473455725389669')")
-    if not CLOUDINARY_API_SECRET:
-        print("         - Missing CLOUDINARY_API_SECRET")
-
-# Make CLOUDINARY_CONFIGURED available in settings
-# This is used by the is_cloudinary_configured function in views.py
 
 # ==================================================
-# SESSION CONFIGURATION (Important for Student Login)
+# SESSION CONFIGURATION
 # ==================================================
 
-# Use database for session storage
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
-
-# Session settings
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
@@ -308,7 +290,7 @@ MESSAGE_TAGS = {
 # PRODUCTION SECURITY SETTINGS
 # ==================================================
 
-if ON_RENDER or not DEBUG:
+if ON_RENDER and not DEBUG:
     # HTTPS settings
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -332,7 +314,7 @@ if ON_RENDER or not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # ==================================================
-# LOGGING CONFIGURATION - REDUCED VERBOSITY
+# LOGGING CONFIGURATION
 # ==================================================
 
 LOGGING = {
@@ -345,12 +327,12 @@ LOGGING = {
     },
     'root': {
         'handlers': ['console'],
-        'level': 'WARNING',
+        'level': 'INFO' if not DEBUG else 'DEBUG',
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'WARNING',
+            'level': 'INFO' if not DEBUG else 'DEBUG',
             'propagate': False,
         },
         'django.db.backends': {

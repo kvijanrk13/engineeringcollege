@@ -11,7 +11,7 @@ services:
     runtime: python
     pythonVersion: 3.11.9
     buildCommand: ./build.sh
-    startCommand: gunicorn engineeringcollege.wsgi:application
+    startCommand: gunicorn engineeringcollege.wsgi:application --log-file -
     plan: free
     envVars:
       - key: DATABASE_URL
@@ -21,7 +21,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: "False"
+        value: "False"  # CRITICAL: Must be False in production
       - key: RENDER
         value: "True"
       - key: CLOUDINARY_CLOUD_NAME
