@@ -16,8 +16,23 @@ python manage.py collectstatic --no-input
 echo "🔄 Running migrations..."
 python manage.py migrate --no-input
 
-# Run the fix command (this will add the column if missing)
-echo "🔄 Running pdf_url fix..."
-python manage.py fix_pdf_url
+# DIRECT FIX: Add the column using PostgreSQL
+echo "🔄 Attempting direct SQL fix for pdf_url column..."
+python manage.py dbshell << EOF
+DO \$\$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='dashboard_student'
+        AND column_name='pdf_url'
+    ) THEN
+        ALTER TABLE dashboard_student ADD COLUMN pdf_url varchar(200) NULL;
+        RAISE NOTICE 'Added pdf_url column via direct SQL';
+    ELSE
+        RAISE NOTICE 'pdf_url column already exists';
+    END IF;
+END \$\$;
+EOF
 
 echo "✅ Build completed successfully!"
