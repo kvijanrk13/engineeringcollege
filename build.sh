@@ -16,8 +16,8 @@ python manage.py collectstatic --no-input
 echo "🔄 Running migrations..."
 python manage.py migrate --no-input
 
-# Run database fixes (ADD THIS LINE)
-echo "🔄 Running database fixes..."
-python manage.py fix_db || echo "⚠️ Fix command not found - continuing"
+# Run the fix command to add pdf_url column
+echo "🔄 Running database fix..."
+python manage.py fix_db
 
 echo "✅ Build completed successfully!"
