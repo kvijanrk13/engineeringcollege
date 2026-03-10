@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 echo "🚀 Starting build process..."
+echo "========================================"
 
-set -o errexit  # Exit on any error
+set -o errexit
 
 # Upgrade pip
 echo "📦 Upgrading pip..."
@@ -15,12 +16,16 @@ pip install -r requirements.txt
 echo "🎨 Collecting static files..."
 python manage.py collectstatic --no-input
 
-# Run migrations (allow to continue even if they fail)
+# Run migrations
 echo "🔄 Running migrations..."
-python manage.py migrate --no-input || echo "⚠️ Migration issues - continuing..."
+python manage.py migrate --no-input
 
-# CRITICAL: Run the fix command - this MUST succeed
-echo "🔄 Running database fix command..."
-python manage.py fix_db  # This will exit if it fails
+# ===== CRITICAL FIX =====
+echo "========================================"
+echo "🔧 RUNNING DATABASE FIX COMMAND"
+echo "========================================"
+python manage.py fix_db
+echo "✅ Database fix completed"
+echo "========================================"
 
 echo "✅ Build completed successfully!"
