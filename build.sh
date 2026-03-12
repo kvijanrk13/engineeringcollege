@@ -1,23 +1,31 @@
 #!/usr/bin/env bash
 echo "🚀 Starting build process..."
+echo "========================================"
 
 set -o errexit
 
 # Upgrade pip
+echo "📦 Upgrading pip..."
 pip install --upgrade pip
 
 # Install dependencies
+echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
 # Collect static files
+echo "🎨 Collecting static files..."
 python manage.py collectstatic --no-input
 
 # Run migrations
 echo "🔄 Running migrations..."
 python manage.py migrate --no-input
 
-# Run database fix (this will add pdf_url if missing)
-echo "🔧 Running database fix..."
-python manage.py fix_db || echo "Fix command not found, continuing..."
+# ===== CRITICAL FIX =====
+echo "========================================"
+echo "🔧 RUNNING PDF_URL FIX COMMAND"
+echo "========================================"
+python manage.py fix_pdf_url
+echo "✅ Fix command completed"
+echo "========================================"
 
 echo "✅ Build completed successfully!"
