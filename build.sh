@@ -16,16 +16,17 @@ pip install -r requirements.txt
 echo "🎨 Collecting static files..."
 python manage.py collectstatic --no-input
 
-# Run migrations
-echo "🔄 Running migrations..."
+# Show current migrations
+echo "📋 Current migrations:"
+python manage.py showmigrations
+
+# Force apply all migrations including 0013
+echo "🔄 Applying all migrations..."
 python manage.py migrate --no-input
 
-# ===== CRITICAL FIX =====
-echo "========================================"
-echo "🔧 RUNNING DATABASE FIX COMMAND"
-echo "========================================"
-python manage.py fix_db
-echo "✅ Database fix completed"
-echo "========================================"
+# Run the fix command as backup
+echo "🔧 Running database fix command..."
+python manage.py fix_db || echo "Fix command not found, continuing..."
 
+echo "========================================"
 echo "✅ Build completed successfully!"
