@@ -220,7 +220,7 @@ class ResearchProject(models.Model):
 
 
 # =====================================================
-# STUDENT MODEL
+# STUDENT MODEL (COMPLETE)
 # =====================================================
 
 class Student(models.Model):
@@ -271,7 +271,7 @@ class Student(models.Model):
 
     # ================= FILES =================
 
-    # Photo (Image)
+    # Photo (Image) - supports both Cloudinary and URL
     photo = CloudinaryField("image", blank=True, null=True)
     photo_url = models.URLField(blank=True, null=True)  # For Cloudinary URL
 
