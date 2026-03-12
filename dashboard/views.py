@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH ENHANCED FACULTY PDF GENERATION
+# dashboard/views.py - COMPLETE MERGED VERSION WITH ENHANCED DASHBOARD FUNCTION
 # ============================================================================
 # UPDATED IMPORT BLOCK
 import os
@@ -718,18 +718,22 @@ def dashboard(request):
     """Main dashboard - protected by login_required"""
     # Calculate statistics
     total_faculty = Faculty.objects.count()
-    with_phd_count = Faculty.objects.filter(phd_degree='Completed').count()
+    with_phd = Faculty.objects.exclude(
+        phd_degree__isnull=True
+    ).exclude(
+        phd_degree__exact=''
+    ).count()
     active_faculty = Faculty.objects.filter(is_active=True).count()
     total_certificates = Certificate.objects.count()
 
     # Department statistics
     departments = Faculty.objects.values('department').annotate(
         count=Count('id'),
-        active=Count('id', filter=Q(is_active=True))
+        active=Count('id')
     ).order_by('-count')
 
     # Recent activities
-    recent_logs = FacultyLog.objects.select_related('faculty').order_by('-created_at')[:10]
+    recent_logs = FacultyLog.objects.all().order_by('-created_at')[:5]
 
     # Recent uploads
     recent_uploads = Faculty.objects.select_related('department').order_by('-created_at')[:5]
@@ -758,7 +762,7 @@ def dashboard(request):
     context = {
         'title': 'Dashboard',
         'total_faculty': total_faculty,
-        'with_phd': with_phd_count,
+        'with_phd': with_phd,
         'active_faculty': active_faculty,
         'total_certificates': total_certificates,
         'departments': departments,

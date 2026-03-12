@@ -119,5 +119,5 @@ urlpatterns = [
 
     # Test
     path('test/', views.test_template, name='test_template'),
-    path('test-session/', views.test_session, name='test_session'),  # NEW TEST SESSION URL
+    path('test-session/', views.test_session, name='test_session'),
 ]
