@@ -16,20 +16,15 @@ pip install -r requirements.txt
 echo "🎨 Collecting static files..."
 python manage.py collectstatic --no-input
 
-# Show current migrations
-echo "📋 Current migrations:"
-python manage.py showmigrations
-
 # Run migrations
 echo "🔄 Running migrations..."
 python manage.py migrate --no-input
 
-# ===== FORCE ADD PDF_URL COLUMN =====
+# ===== CRITICAL FIX =====
 echo "========================================"
-echo "🔧 FORCE ADDING PDF_URL COLUMN"
+echo "🔧 ADDING PDF_URL COLUMN IF MISSING"
 echo "========================================"
 python manage.py force_add_pdf_url
 echo "========================================"
 
 echo "✅ Build completed successfully!"
-echo "========================================"
