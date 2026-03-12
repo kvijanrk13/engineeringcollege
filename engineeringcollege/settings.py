@@ -1,4 +1,4 @@
-# engineeringcollege/settings.py - PRODUCTION READY VERSION
+# engineeringcollege/settings.py - PRODUCTION READY VERSION WITH RENDER OPTIMIZATIONS
 
 from pathlib import Path
 import os
@@ -53,6 +53,10 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+# Add the specific Render URL for your app
+if ON_RENDER:
+    ALLOWED_HOSTS.append('engineeringcollege.onrender.com')
+
 # CRITICAL: Don't use ['*'] in production
 if DEBUG:
     ALLOWED_HOSTS += ['*']
@@ -65,6 +69,10 @@ CSRF_TRUSTED_ORIGINS = [
 
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
+# Add the specific Render URL for CSRF
+if ON_RENDER:
+    CSRF_TRUSTED_ORIGINS.append('https://engineeringcollege.onrender.com')
 
 # ==================================================
 # APPLICATIONS
@@ -151,8 +159,10 @@ if ON_RENDER:
             conn_max_age=600,
             conn_health_checks=True,
         )
+        print(f"[OK] PostgreSQL database configured on Render")
     else:
         # Fallback for Render without database (should not happen)
+        print("[WARNING] DATABASE_URL not found, using SQLite fallback")
         DATABASES['default'] = {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
@@ -163,6 +173,14 @@ else:
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
+    print("[OK] SQLite database configured for local development")
+
+# Verify database configuration
+if not DATABASES['default'].get('ENGINE'):
+    raise ImproperlyConfigured(
+        "Database ENGINE not configured properly. "
+        "Please check your DATABASE_URL environment variable or local SQLite configuration."
+    )
 
 # ==================================================
 # PASSWORD VALIDATION
@@ -195,8 +213,14 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise configuration for production - THIS IS KEY
 if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    print("[OK] Using WhiteNoise compressed manifest storage for production")
 else:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+# Ensure STATICFILES_DIRS exists
+if not (BASE_DIR / 'static').exists():
+    os.makedirs(BASE_DIR / 'static', exist_ok=True)
+    print("[INFO] Created static directory")
 
 # ==================================================
 # MEDIA FILES
@@ -204,6 +228,9 @@ else:
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Ensure MEDIA_ROOT exists
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 # ==================================================
 # DEFAULT PRIMARY KEY
@@ -256,6 +283,15 @@ if CLOUDINARY_CONFIGURED:
         CLOUDINARY_CONFIGURED = False
 else:
     print("[WARNING] Cloudinary not configured - files will be saved locally only")
+    if not CLOUDINARY_CLOUD_NAME:
+        print("         - Missing CLOUDINARY_CLOUD_NAME")
+    if not CLOUDINARY_API_KEY:
+        print("         - Missing CLOUDINARY_API_KEY")
+    if not CLOUDINARY_API_SECRET:
+        print("         - Missing CLOUDINARY_API_SECRET")
+
+# Make CLOUDINARY_CONFIGURED available in settings
+# This is used by the is_cloudinary_configured function in views.py
 
 # ==================================================
 # SESSION CONFIGURATION
@@ -291,6 +327,8 @@ MESSAGE_TAGS = {
 # ==================================================
 
 if ON_RENDER and not DEBUG:
+    print("[OK] Applying production security settings on Render")
+
     # HTTPS settings
     SECURE_SSL_REDIRECT = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -347,3 +385,18 @@ LOGGING = {
         },
     },
 }
+
+# ==================================================
+# ENVIRONMENT SUMMARY
+# ==================================================
+
+print(f"\n{'=' * 60}")
+print(f"ENVIRONMENT SUMMARY")
+print(f"{'=' * 60}")
+print(f"ON_RENDER: {ON_RENDER}")
+print(f"DEBUG: {DEBUG}")
+print(f"DATABASE: {DATABASES['default']['ENGINE']}")
+print(f"CLOUDINARY_CONFIGURED: {CLOUDINARY_CONFIGURED}")
+print(f"STATIC_ROOT: {STATIC_ROOT}")
+print(f"MEDIA_ROOT: {MEDIA_ROOT}")
+print(f"{'=' * 60}\n")
