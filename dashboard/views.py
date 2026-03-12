@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH FIXED CLOUDINARY CHECK AND ASCII OUTPUT
+# dashboard/views.py - COMPLETE MERGED VERSION WITH ENHANCED FACULTY PDF GENERATION
 # ============================================================================
 # UPDATED IMPORT BLOCK
 import os
@@ -37,6 +37,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from pypdf import PdfWriter, PdfReader
+from PyPDF2 import PdfMerger  # Add this for better merging
 from PIL import Image as PILImage
 
 # Cloudinary imports
@@ -2153,15 +2154,22 @@ def export_students_csv(request):
     return response
 
 
-# ==================== SIMPLIFIED PDF GENERATION WITH CERTIFICATE MERGING ====================
+# ==================== ENHANCED FACULTY PDF GENERATION WITH CERTIFICATE MERGING ====================
 
 @login_required
 def generate_faculty_pdf(request, faculty_id):
-    """Generate PDF for a faculty member using HTML template with certificate merging"""
+    """Generate PDF for a faculty member using HTML template with certificate merging - ENHANCED VERSION"""
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
+        print(f"\n{'='*60}")
+        print(f"GENERATING FACULTY PDF FOR: {faculty.staff_name}")
+        print(f"{'='*60}")
 
-        # Calculate detailed experience
+        # Create a merger object
+        merger = PdfMerger()
+        temp_files = []  # Track temp files for cleanup
+
+        # -------- 1. CALCULATE DETAILED EXPERIENCE --------
         experience = "N/A"
         if faculty.joining_date:
             today = date.today()
@@ -2197,44 +2205,51 @@ def generate_faculty_pdf(request, faculty_id):
                 months += 12
 
             experience = f"{years} Years {months} Months {days} Days"
+            print(f"Experience calculated: {experience}")
 
-        # Download photo if exists
+        # -------- 2. DOWNLOAD PHOTO IF EXISTS --------
         temp_photo_path = None
         photo_url = None
         if faculty.photo:
             try:
                 photo_url = faculty.photo.url
+                print(f"Photo URL: {photo_url}")
             except:
                 photo_url = None
         elif faculty.cloudinary_photo_url:
             photo_url = faculty.cloudinary_photo_url
+            print(f"Cloudinary Photo URL: {photo_url}")
 
         if photo_url:
             try:
+                print("Downloading photo...")
                 response = requests.get(photo_url, timeout=15)
                 if response.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_p:
                         tmp_p.write(response.content)
                         temp_photo_path = tmp_p.name
+                        temp_files.append(temp_photo_path)
+                        print(f"Photo downloaded to: {temp_photo_path}")
             except Exception as e:
-                logger.error(f"Photo download error: {e}")
+                print(f"Photo download error: {e}")
 
-        # Get certificates and research projects
+        # -------- 3. GET CERTIFICATES AND RESEARCH PROJECTS --------
         certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
+        print(f"Found {certificates.count()} certificates and {research_projects.count()} research projects")
 
-        # Get faculty profile
+        # -------- 4. GET FACULTY PROFILE --------
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
         except FacultyProfile.DoesNotExist:
             profile = None
 
-        # Prepare subjects list
+        # -------- 5. PREPARE SUBJECTS LIST --------
         subjects_list = []
         if faculty.subjects_dealt:
             subjects_list = [s.strip() for s in faculty.subjects_dealt.split(',') if s.strip()]
 
-        # Prepare context with ALL faculty data
+        # -------- 6. PREPARE CONTEXT WITH ALL FACULTY DATA --------
         context = {
             'faculty': faculty,
             'profile': profile,
@@ -2284,7 +2299,8 @@ def generate_faculty_pdf(request, faculty_id):
             'has_scm': bool(faculty.scm_file),
         }
 
-        # Render HTML to string
+        # -------- 7. GENERATE MAIN PROFILE PDF --------
+        print("Generating main profile PDF...")
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
 
         # PDF options
@@ -2307,37 +2323,154 @@ def generate_faculty_pdf(request, faculty_id):
             # Try to find wkhtmltopdf in PATH
             config = pdfkit.configuration()
 
-        # Generate PDF
-        pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
+        # Generate main PDF
+        main_pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
 
-        # Create response
-        response = HttpResponse(pdf, content_type='application/pdf')
-        filename = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        # Save main PDF to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_main:
+            tmp_main.write(main_pdf)
+            main_pdf_path = tmp_main.name
+            temp_files.append(main_pdf_path)
+            print(f"Main PDF saved to: {main_pdf_path}")
 
-        # Log the action
+        # Add main PDF to merger
+        merger.append(main_pdf_path)
+        print("Added main PDF to merger")
+
+        # -------- 8. MERGE CERTIFICATES FROM CLOUDINARY --------
+        # Certificate fields from migrations 0008 and 0012
+        cert_fields = [
+            ('ssc_certificate', 'SSC Certificate'),
+            ('inter_certificate', 'Intermediate Certificate'),
+            ('ug_certificate', 'UG Certificate'),
+            ('pg_certificate', 'PG Certificate'),
+            ('phd_certificate', 'PhD Certificate'),
+        ]
+
+        cert_count = 0
+        for field_name, field_label in cert_fields:
+            cert_field = getattr(faculty, field_name, None)
+            if cert_field and hasattr(cert_field, 'url'):
+                cert_url = cert_field.url
+                print(f"Processing {field_label}: {cert_url}")
+
+                try:
+                    # Fetch certificate from Cloudinary
+                    response = requests.get(cert_url, timeout=30)
+                    if response.status_code == 200:
+                        content = response.content
+
+                        # Check if it's a PDF
+                        if content.startswith(b'%PDF'):
+                            # Save as PDF
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_cert:
+                                tmp_cert.write(content)
+                                cert_pdf_path = tmp_cert.name
+                                temp_files.append(cert_pdf_path)
+
+                            # Add to merger
+                            merger.append(cert_pdf_path)
+                            cert_count += 1
+                            print(f"  [OK] Added {field_label} PDF")
+                        else:
+                            # Try to convert image to PDF
+                            try:
+                                img = PILImage.open(BytesIO(content))
+                                print(f"  Image detected: {img.format}, size: {img.size}")
+
+                                # Convert to PDF
+                                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as img_pdf:
+                                    if img.mode != 'RGB':
+                                        img = img.convert('RGB')
+                                    img.save(img_pdf.name, 'PDF', resolution=100.0)
+                                    cert_pdf_path = img_pdf.name
+                                    temp_files.append(cert_pdf_path)
+
+                                # Add to merger
+                                merger.append(cert_pdf_path)
+                                cert_count += 1
+                                print(f"  [OK] Converted and added {field_label} image")
+                            except Exception as img_error:
+                                print(f"  [ERROR] Could not convert image: {img_error}")
+                    else:
+                        print(f"  [ERROR] Failed to download: HTTP {response.status_code}")
+
+                except Exception as e:
+                    print(f"  [ERROR] Error processing {field_label}: {e}")
+
+        print(f"Total certificates merged: {cert_count}")
+
+        # -------- 9. SAVE FINAL MERGED PDF --------
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as output_temp:
+            merger.write(output_temp.name)
+            final_pdf_path = output_temp.name
+            temp_files.append(final_pdf_path)
+            print(f"Final merged PDF saved to: {final_pdf_path}")
+
+        merger.close()
+
+        # -------- 10. UPLOAD FINAL PDF TO CLOUDINARY (OPTIONAL) --------
+        if is_cloudinary_configured():
+            try:
+                print("Uploading final PDF to Cloudinary...")
+                upload_result = cloudinary.uploader.upload(
+                    final_pdf_path,
+                    resource_type="raw",
+                    folder="faculty_generated_pdfs",
+                    public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}",
+                    overwrite=True
+                )
+
+                faculty.cloudinary_pdf_url = upload_result["secure_url"]
+                faculty.save()
+                print(f"PDF uploaded to Cloudinary: {upload_result['secure_url']}")
+
+                CloudinaryUpload.objects.create(
+                    faculty=faculty,
+                    upload_type='pdf',
+                    cloudinary_url=upload_result['secure_url'],
+                    public_id=upload_result['public_id'],
+                    resource_type=upload_result['resource_type'],
+                    uploaded_by=request.user.username if request.user.is_authenticated else 'System'
+                )
+            except Exception as e:
+                print(f"Error uploading to Cloudinary: {e}")
+
+        # -------- 11. RETURN THE PDF --------
+        with open(final_pdf_path, 'rb') as pdf_file:
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+            filename = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        # -------- 12. CLEAN UP TEMP FILES --------
+        for temp_file in temp_files:
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                    print(f"Cleaned up: {temp_file}")
+            except Exception as e:
+                print(f"Error cleaning up {temp_file}: {e}")
+
+        # -------- 13. LOG THE ACTION --------
         FacultyLog.objects.create(
             faculty=faculty,
             action='PDF Generated',
-            details=f'PDF generated for faculty: {faculty.employee_code}',
+            details=f'Enhanced PDF generated for faculty: {faculty.employee_code} with {cert_count} certificates',
             performed_by=request.user.username if request.user.is_authenticated else 'Anonymous',
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
-        # Clean up temp photo
-        if temp_photo_path and os.path.exists(temp_photo_path):
-            try:
-                os.remove(temp_photo_path)
-            except:
-                pass
-
+        print(f"{'='*60}")
+        print(f"PDF GENERATION COMPLETE")
+        print(f"{'='*60}")
         return response
 
     except Exception as e:
-        logger.error(f"PDF Error: {str(e)}")
+        logger.error(f"PDF Generation Error: {str(e)}")
         import traceback
         traceback.print_exc()
-        return HttpResponse(f"Error generating PDF: {str(e)}", status=500)
+        messages.error(request, f'Error generating faculty PDF: {str(e)}')
+        return redirect('dashboard:faculty_dashboard')
 
 
 def generate_pdf_with_data(request):
