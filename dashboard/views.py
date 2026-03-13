@@ -728,12 +728,11 @@ def dashboard(request):
 
     # Department statistics
     departments = Faculty.objects.values('department').annotate(
-        count=Count('id'),
-        active=Count('id')
+        count=Count('id')
     ).order_by('-count')
 
     # Recent activities
-    recent_logs = FacultyLog.objects.all().order_by('-created_at')[:5]
+    recent_logs = FacultyLog.objects.order_by('-created_at')[:5]
 
     # Recent uploads
     recent_uploads = Faculty.objects.select_related('department').order_by('-created_at')[:5]
