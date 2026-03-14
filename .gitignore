@@ -1,5 +1,5 @@
-# .gitignore
-
+# Create .gitignore file
+cat > .gitignore << EOF
 # Python
 __pycache__/
 *.py[cod]
@@ -46,3 +46,4 @@ Thumbs.db
 # Project specific
 *.bak
 *.pid
+EOF
