@@ -6,14 +6,14 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
-    # Home & Dashboard
-    path('', views.dashboard, name='dashboard'),  # This handles the root URL
+    # ==================== Home & Dashboard ====================
+    path('', views.dashboard, name='dashboard'),
     path('home/', views.home, name='home'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
     path('redirect/', views.redirect_to_dashboard, name='redirect_to_dashboard'),
 
-    # Authentication
+    # ==================== Authentication ====================
     path('login/', views.login_view, name='login'),
     path('admin-login/', views.admin_login, name='admin_login'),
     path('student-login/', views.student_login, name='student_login'),
@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin-logout/', views.admin_logout, name='admin_logout'),
     path('student-logout/', views.student_logout, name='student_logout'),
 
-    # Student Management
+    # ==================== Student Management ====================
     path('students/', views.students, name='students'),
     path('students-data/', views.students_data, name='students_data'),
     path('add-student/', views.add_student, name='add_student'),
@@ -32,7 +32,7 @@ urlpatterns = [
     path('student/<int:student_id>/view-pdf/', views.view_pdf, name='view_pdf'),
     path('student/<int:student_id>/download-pdf/', views.download_pdf, name='download_pdf'),
 
-    # Faculty Management
+    # ==================== Faculty Management ====================
     path('faculty/', views.faculty_dashboard, name='faculty'),
     path('faculty/list/', views.faculty_list, name='faculty_list'),
     path('faculty/add/', views.add_faculty, name='add_faculty'),
@@ -49,15 +49,18 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/check-pdf-status/', views.ajax_check_pdf_status, name='ajax_check_pdf_status'),
     path('faculty/<int:faculty_id>/debug/', views.debug_faculty_data, name='debug_faculty_data'),
 
-    # Research Projects
+    # ==================== Faculty Dashboard (named alias) ====================
+    path('faculty-dashboard/', views.faculty_dashboard, name='faculty_dashboard'),
+
+    # ==================== Research Projects ====================
     path('research-project/<int:project_id>/delete/', views.delete_research_project, name='delete_research_project'),
 
-    # Analytics
+    # ==================== Analytics ====================
     path('faculty-analytics/', views.faculty_analytics, name='faculty_analytics'),
     path('faculty-charts/', views.faculty_charts, name='faculty_charts'),
     path('student-charts/', views.student_charts, name='student_charts'),
 
-    # Certificate Management
+    # ==================== Certificate Management ====================
     path('faculty/<int:faculty_id>/certificates/', views.view_certificates, name='view_certificates'),
     path('faculty/<int:faculty_id>/certificates/upload/', views.upload_certificate, name='upload_certificate'),
     path('certificates/bulk-upload/', views.upload_certificates_bulk, name='upload_certificates_bulk'),
@@ -67,7 +70,7 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/certificates/merge-with-pdf/', views.merge_certificates_with_pdf, name='merge_certificates_with_pdf'),
     path('faculty/<int:faculty_id>/certificates/preview-merged/', views.preview_merged_pdf, name='preview_merged_pdf'),
 
-    # Cloudinary Integration
+    # ==================== Cloudinary Integration ====================
     path('cloudinary/status/', views.cloudinary_status, name='cloudinary_status'),
     path('faculty/<int:faculty_id>/sync-cloudinary/', views.sync_to_cloudinary, name='sync_to_cloudinary'),
     path('faculty/<int:faculty_id>/upload-cloudinary/', views.upload_to_cloudinary, name='upload_to_cloudinary'),
@@ -77,14 +80,14 @@ urlpatterns = [
     path('upload-faculty-pdf/', views.upload_faculty_pdf, name='upload_faculty_pdf'),
     path('faculty/<int:faculty_id>/upload-to-cloudinary/', views.upload_faculty_to_cloudinary, name='upload_faculty_to_cloudinary'),
 
-    # Bulk Operations
+    # ==================== Bulk Operations ====================
     path('faculty/bulk-actions/', views.bulk_faculty_actions, name='bulk_faculty_actions'),
     path('faculty/bulk-upload/', views.bulk_upload, name='bulk_upload'),
     path('faculty/bulk-generate-pdfs/', views.bulk_generate_faculty_pdfs, name='bulk_generate_faculty_pdfs'),
     path('export/students/csv/', views.export_students_csv, name='export_students_csv'),
     path('export/faculty/csv/', views.export_faculty_csv, name='export_faculty_csv'),
 
-    # API Endpoints
+    # ==================== API Endpoints ====================
     path('api/faculty/', views.api_faculty_list, name='api_faculty_list'),
     path('api/faculty/<int:faculty_id>/', views.api_faculty_detail, name='api_faculty_detail'),
     path('api/faculty/<int:faculty_id>/update-status/', views.api_update_faculty_status, name='api_update_faculty_status'),
@@ -95,7 +98,7 @@ urlpatterns = [
     path('api/search/faculty/', views.search_faculty, name='search_faculty'),
     path('api/search/students/', views.search_students, name='search_students'),
 
-    # System & Utilities
+    # ==================== System & Utilities ====================
     path('system-status/', views.system_status, name='system_status'),
     path('recent-activity/', views.recent_activity, name='recent_activity'),
     path('clear-logs/', views.clear_logs, name='clear_logs'),
@@ -103,7 +106,7 @@ urlpatterns = [
     path('session-info/', views.session_info, name='session_info'),
     path('clear-session/', views.clear_session, name='clear_session'),
 
-    # Application Pages
+    # ==================== Application Pages ====================
     path('syllabus/', views.syllabus_view, name='syllabus'),
     path('laboratory/', views.laboratory, name='laboratory'),
     path('gallery/', views.gallery, name='gallery'),
@@ -113,11 +116,13 @@ urlpatterns = [
     path('help/', views.help_documentation, name='help_documentation'),
     path('contact/', views.contact_support, name='contact_support'),
 
-    # PDF Generation
+    # ==================== PDF Generation ====================
     path('generate-pdf/', views.generate_pdf_with_data, name='generate_pdf_with_data'),
     path('preview-pdf/', views.preview_pdf_template, name='preview_pdf_template'),
 
-    # Test
+    # ==================== Debug / Test ====================
     path('test/', views.test_template, name='test_template'),
     path('test-session/', views.test_session, name='test_session'),
+    path('debug-cloudinary/', views.debug_cloudinary, name='debug_cloudinary'),
+    path('debug-login/', views.debug_login, name='debug_login'),
 ]
