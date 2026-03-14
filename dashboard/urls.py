@@ -7,8 +7,8 @@ app_name = 'dashboard'
 
 urlpatterns = [
     # Home & Dashboard
-    path('', views.home, name='home'),  # This handles the root URL
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('', views.dashboard, name='dashboard'),  # This handles the root URL
+    path('home/', views.home, name='home'),
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
     path('redirect/', views.redirect_to_dashboard, name='redirect_to_dashboard'),
