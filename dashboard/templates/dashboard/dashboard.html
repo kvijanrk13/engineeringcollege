@@ -150,7 +150,13 @@
                                 <tr>
                                     <td>{{ dept.department }}</td>
                                     <td>{{ dept.count }}</td>
-                                    <td>{{ dept.active }}</td>
+                                    <td>
+                                        {% if dept.active is defined %}
+                                            {{ dept.active }}
+                                        {% else %}
+                                            {{ dept.active_count|default:"0" }}
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
