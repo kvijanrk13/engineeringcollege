@@ -791,39 +791,61 @@ def add_faculty(request):
 def edit_faculty(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     if request.method == "POST":
-        # ── All plain text / char fields from the form ──────────────────
+        # ── SIMPLE & ROBUST: setattr all form fields, then call save()
+        # Django's save() internally uses _meta.concrete_fields to build
+        # the SQL UPDATE, so any extra Python attributes that don't map
+        # to DB columns are simply ignored — no errors, no data loss.
+        # This is SAFER than filtering with _meta.get_fields() which can
+        # miss fields or produce false negatives.
+
+        # All text/char/number fields the edit form submits
         text_fields = [
             # Personal
             'staff_name', 'employee_code', 'father_name', 'mother_name',
             'gender', 'state', 'caste', 'sub_caste', 'address',
             # Contact
             'email', 'mobile', 'phone', 'department', 'designation',
-            # Professional IDs  ← these were missing before
+            # Professional IDs
             'jntuh_id', 'aicte_id', 'pan', 'aadhar', 'apaar_id', 'orcid_id',
-            # SSC
+            # Education — SSC
             'ssc_year', 'ssc_percent', 'ssc_school',
-            # Intermediate
+            # Education — Intermediate
             'inter_year', 'inter_percent', 'inter_college',
-            # UG
+            # Education — UG
             'ug_degree', 'ug_year', 'ug_percentage', 'ug_college', 'ug_spec',
-            # PG
+            # Education — PG
             'pg_degree', 'pg_year', 'pg_percentage', 'pg_college', 'pg_spec',
-            # PhD
+            # Education — PhD
             'phd_degree', 'phd_year', 'phd_university', 'phd_spec',
-            # Additional
+            # Additional info
             'subjects_dealt', 'scm', 'about_yourself', 'results',
-            # Experience
-            'exp_anurag', 'exp_other',
         ]
+
         for attr in text_fields:
             val = request.POST.get(attr)
             if val is not None:
                 setattr(faculty, attr, val)
 
-        # Date fields need special handling (empty string → None)
+        # Date fields: empty string → None to avoid DB errors
         for date_attr in ['dob', 'joining_date']:
             val = request.POST.get(date_attr)
             setattr(faculty, date_attr, val if val else None)
+
+        # ── FacultyProfile (separate model) ────────────────────────────
+        try:
+            profile, _ = FacultyProfile.objects.get_or_create(faculty=faculty)
+            for fp_attr in ['experience_other', 'experience_at_anurag', 'batch_number']:
+                form_key = {
+                    'experience_other':    'exp_other',
+                    'experience_at_anurag':'exp_anurag',
+                    'batch_number':        'batch_number',
+                }.get(fp_attr, fp_attr)
+                val = request.POST.get(form_key)
+                if val is not None and hasattr(profile, fp_attr):
+                    setattr(profile, fp_attr, val)
+            profile.save()
+        except Exception as e:
+            logger.error(f"FacultyProfile save error: {e}")
 
         if request.FILES.get("photo"):
             faculty.photo = request.FILES["photo"]
