@@ -5,6 +5,10 @@ WSGI config for engineeringcollege project.
 import os
 import sys
 import traceback
+import io
+
+# Force UTF-8 encoding for stdout to handle emoji characters in Windows console
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Print Python path for debugging
 print("Python path:", sys.path)

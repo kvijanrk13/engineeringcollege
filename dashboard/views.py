@@ -1,6 +1,6 @@
-# dashboard/views.py - COMPLETE MERGED VERSION
+# dashboard/views.py - COMPLETE MERGED VERSION WITH ENHANCED DASHBOARD FUNCTION
 # ============================================================================
-
+# UPDATED IMPORT BLOCK
 import os
 import json
 import csv
@@ -14,8 +14,7 @@ from typing import Dict, List, Optional, Any
 
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
-                         FileResponse, HttpResponseBadRequest)
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect, FileResponse, HttpResponseBadRequest
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -31,15 +30,14 @@ from django.utils import timezone
 import django
 
 # PDF Generation imports
-from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Image,
-                                 Table, TableStyle, HRFlowable, PageBreak)
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, HRFlowable, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from pypdf import PdfWriter, PdfReader
-from PyPDF2 import PdfMerger
+from PyPDF2 import PdfMerger  # Add this for better merging
 from PIL import Image as PILImage
 
 # Cloudinary imports
@@ -63,69 +61,59 @@ from .utils import (
     generate_qr_code, export_to_excel, validate_student_data
 )
 
+# Configure logging
 logger = logging.getLogger(__name__)
 
-# ==================== OPTIONAL LIBRARIES ====================
+# Safeguard optional libraries
 try:
     import pandas as pd
 except ImportError:
     pd = None
-    logger.warning("Pandas not installed. Bulk upload features limited.")
+    logger.warning("Pandas library not installed. Bulk upload features will be limited.")
 
 try:
     import psutil
 except ImportError:
     psutil = None
-    logger.warning("psutil not installed. System monitoring limited.")
+    logger.warning("psutil library not installed. System monitoring features will be limited.")
 
 try:
     import matplotlib
+
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
     plt = None
     np = None
-    logger.warning("Matplotlib not installed. Chart features limited.")
+    logger.warning("Matplotlib library not installed. Chart features will be limited.")
 
 try:
     import pdfkit
 except ImportError:
     pdfkit = None
-    logger.warning("pdfkit not installed. PDF generation features limited.")
+    logger.warning("pdfkit library not installed. PDF generation features will be limited.")
 
 
-# ==================== HELPERS ====================
+# ==================== HELPER FUNCTIONS ====================
 
 def is_cloudinary_configured():
+    """Check if Cloudinary is properly configured by checking settings"""
     return getattr(settings, 'CLOUDINARY_CONFIGURED', False)
 
 
-if is_cloudinary_configured():
-    try:
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
-            api_key=settings.CLOUDINARY_API_KEY,
-            api_secret=settings.CLOUDINARY_API_SECRET,
-            secure=True
-        )
-        logger.info("Cloudinary initialized successfully.")
-    except Exception as e:
-        logger.error(f"Failed to initialize Cloudinary: {e}")
-else:
-    logger.warning("Cloudinary credentials not found.")
-
-
-# ==================== DEBUG / TEST VIEWS ====================
-
+# ==================== TEST TEMPLATE VIEW ====================
 def test_template(request):
+    """Test view to verify template loading"""
     return render(request, 'test.html', {
         'title': 'Template Test',
         'message': 'If you can see this, templates are working correctly!'
     })
 
 
+# ==================== TEST SESSION VIEW ====================
 def test_session(request):
+    """Test view to check session"""
     return JsonResponse({
         'student_logged_in': request.session.get('student_logged_in', False),
         'student_username': request.session.get('student_username', None),
@@ -135,14 +123,21 @@ def test_session(request):
     })
 
 
+# ==================== DEBUG CLOUDINARY VIEW ====================
 def debug_cloudinary(request):
+    """Debug view to check Cloudinary configuration"""
+    import cloudinary
+
     config = {
         'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', None),
         'api_key': getattr(settings, 'CLOUDINARY_API_KEY', None),
-        'api_secret': ('***' + getattr(settings, 'CLOUDINARY_API_SECRET', '')[-4:]
-                       if getattr(settings, 'CLOUDINARY_API_SECRET', None) else None),
+        'api_secret': '***' + getattr(settings, 'CLOUDINARY_API_SECRET', '')[-4:] if getattr(settings,
+                                                                                             'CLOUDINARY_API_SECRET',
+                                                                                             None) else None,
         'configured': is_cloudinary_configured(),
     }
+
+    # Test connection
     connection_test = False
     error_msg = None
     if config['configured']:
@@ -151,277 +146,444 @@ def debug_cloudinary(request):
             connection_test = True
         except Exception as e:
             error_msg = str(e)
+
     return JsonResponse({
         'config': config,
         'connection_test': connection_test,
         'error': error_msg,
         'env_vars': {
             'CLOUDINARY_CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
-            'CLOUDINARY_API_KEY': (
-                os.environ.get('CLOUDINARY_API_KEY')[:4] + '...'
-                if os.environ.get('CLOUDINARY_API_KEY') else None
-            ),
-            'CLOUDINARY_API_SECRET': (
-                '***' + os.environ.get('CLOUDINARY_API_SECRET', '')[-4:]
-                if os.environ.get('CLOUDINARY_API_SECRET') else None
-            ),
+            'CLOUDINARY_API_KEY': os.environ.get('CLOUDINARY_API_KEY')[:4] + '...' if os.environ.get(
+                'CLOUDINARY_API_KEY') else None,
+            'CLOUDINARY_API_SECRET': '***' + os.environ.get('CLOUDINARY_API_SECRET', '')[-4:] if os.environ.get(
+                'CLOUDINARY_API_SECRET') else None,
         }
     })
 
 
+# ==================== DEBUG LOGIN VIEW ====================
 def debug_login(request):
+    """Debug view to check login status"""
     return HttpResponse(f"""
-    <html><body style="background:black;color:lime;font-family:monospace;padding:20px;">
-    <h1>Login Debug Info</h1><pre>
+    <html>
+        <body style="background: black; color: lime; font-family: monospace; padding: 20px;">
+            <h1>Login Debug Info</h1>
+            <pre>
 student_logged_in: {request.session.get('student_logged_in', False)}
 student_username: {request.session.get('student_username', 'None')}
 session keys: {list(request.session.keys())}
 user authenticated: {request.user.is_authenticated}
 user: {request.user}
-    </pre>
-    <p><a href="/student-login/">Go to Student Login</a></p>
-    <p><a href="/students-data/">Go to Students Data</a></p>
-    <p><a href="/add-student/">Go to Add Student</a></p>
-    </body></html>
+            </pre>
+            <p><a href="/student-login/">Go to Student Login</a></p>
+            <p><a href="/students-data/">Go to Students Data</a></p>
+            <p><a href="/add-student/">Go to Add Student</a></p>
+        </body>
+    </html>
     """)
 
 
+# Initialize Cloudinary if configured
+if is_cloudinary_configured():
+    try:
+        cloudinary.config(
+            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+            api_key=settings.CLOUDINARY_API_KEY,
+            api_secret=settings.CLOUDINARY_API_SECRET,
+            secure=True
+        )
+        logger.info("Cloudinary initialized successfully with credentials")
+    except Exception as e:
+        logger.error(f"Failed to initialize Cloudinary: {str(e)}")
+else:
+    logger.warning("Cloudinary credentials not found in settings or incomplete")
+
+
+# ==================== DEBUG FUNCTION TO CHECK FACULTY DATA ====================
+
 @login_required
 def debug_faculty_data(request, faculty_id):
+    """Debug endpoint to check faculty data"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    # Get all fields and their values
     data = {}
     for field in Faculty._meta.fields:
-        fn = field.name
-        fv = getattr(faculty, fn)
-        if fn == 'photo' and fv:
+        field_name = field.name
+        field_value = getattr(faculty, field_name)
+
+        # Handle special cases
+        if field_name == 'photo' and field_value:
             try:
-                data[fn] = {'url': fv.url if hasattr(fv, 'url') else str(fv), 'exists': True}
-            except Exception:
-                data[fn] = str(fv)
-        elif fv and hasattr(fv, 'strftime'):
-            data[fn] = fv.strftime('%Y-%m-%d')
+                data[field_name] = {
+                    'url': field_value.url if hasattr(field_value, 'url') else str(field_value),
+                    'exists': True
+                }
+            except:
+                data[field_name] = str(field_value)
+        elif field_name == 'cloudinary_photo_url':
+            data[field_name] = field_value
+        elif field_value and hasattr(field_value, 'strftime'):
+            data[field_name] = field_value.strftime('%Y-%m-%d')
         else:
-            data[fn] = str(fv) if fv else None
+            data[field_name] = str(field_value) if field_value else None
+
+    # Get certificates
     certificates = Certificate.objects.filter(faculty=faculty)
     data['certificates'] = [
         {
-            'id': c.id,
-            'certificate_type': c.certificate_type,
-            'certificate_file': str(c.certificate_file) if c.certificate_file else None,
-            'cloudinary_url': c.cloudinary_url,
-            'issue_date': c.issue_date.strftime('%Y-%m-%d') if c.issue_date else None
+            'id': cert.id,
+            'certificate_type': cert.certificate_type,
+            'certificate_file': str(cert.certificate_file) if cert.certificate_file else None,
+            'cloudinary_url': cert.cloudinary_url,
+            'issue_date': cert.issue_date.strftime('%Y-%m-%d') if cert.issue_date else None
         }
-        for c in certificates
+        for cert in certificates
     ]
-    data['subjects'] = [s.name for s in faculty.subjects.all()]
+
+    # Get subjects
+    subjects = faculty.subjects.all()
+    data['subjects'] = [subject.name for subject in subjects]
+
     return JsonResponse(data, safe=False, json_dumps_params={'indent': 2})
 
 
-# ==================== FACULTY PROFILE VIEW ====================
+# ==================== ENHANCED FACULTY EDIT VIEW ====================
 
 @login_required
 def edit_faculty_complete(request, faculty_id):
+    """Complete faculty edit view with all fields"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
     if request.method == "POST":
-        for attr in ['staff_name','employee_code','department','designation','email','mobile',
-                     'gender','address','father_name','mother_name','aadhar','pan','state',
-                     'ug_degree','ug_college','ug_spec','pg_degree','pg_college','pg_spec',
-                     'phd_degree','phd_university','phd_spec','about_yourself']:
-            val = request.POST.get(attr)
-            if val is not None:
-                setattr(faculty, attr, val)
-        for date_attr in ['joining_date','dob','ug_year','pg_year','phd_year']:
-            val = request.POST.get(date_attr)
-            if val:
-                setattr(faculty, date_attr, val)
-        for pct_attr in ['ug_percentage','pg_percentage']:
-            val = request.POST.get(pct_attr)
-            if val:
-                setattr(faculty, pct_attr, val)
+        # Update all fields
+        faculty.staff_name = request.POST.get("staff_name", faculty.staff_name)
+        faculty.employee_code = request.POST.get("employee_code", faculty.employee_code)
+        faculty.department = request.POST.get("department", faculty.department)
+        faculty.designation = request.POST.get("designation", faculty.designation)
+        faculty.email = request.POST.get("email", faculty.email)
+        faculty.mobile = request.POST.get("mobile", faculty.mobile)
+        faculty.joining_date = request.POST.get("joining_date") or faculty.joining_date
+
+        # Personal information
+        faculty.dob = request.POST.get("dob") or faculty.dob
+        faculty.gender = request.POST.get("gender", faculty.gender)
+        faculty.address = request.POST.get("address", faculty.address)
+        faculty.father_name = request.POST.get("father_name", faculty.father_name)
+        faculty.mother_name = request.POST.get("mother_name", faculty.mother_name)
+        faculty.aadhar = request.POST.get("aadhar", faculty.aadhar)
+        faculty.pan = request.POST.get("pan", faculty.pan)
+        faculty.state = request.POST.get("state", faculty.state)
+
+        # Educational qualifications
+        faculty.ug_degree = request.POST.get("ug_degree", faculty.ug_degree)
+        faculty.ug_year = request.POST.get("ug_year") or faculty.ug_year
+        faculty.ug_college = request.POST.get("ug_college", faculty.ug_college)
+        faculty.ug_spec = request.POST.get("ug_spec", faculty.ug_spec)
+        faculty.ug_percentage = request.POST.get("ug_percentage") or faculty.ug_percentage
+
+        faculty.pg_degree = request.POST.get("pg_degree", faculty.pg_degree)
+        faculty.pg_year = request.POST.get("pg_year") or faculty.pg_year
+        faculty.pg_college = request.POST.get("pg_college", faculty.pg_college)
+        faculty.pg_spec = request.POST.get("pg_spec", faculty.pg_spec)
+        faculty.pg_percentage = request.POST.get("pg_percentage") or faculty.pg_percentage
+
+        faculty.phd_degree = request.POST.get("phd_degree", faculty.phd_degree)
+        faculty.phd_year = request.POST.get("phd_year") or faculty.phd_year
+        faculty.phd_university = request.POST.get("phd_university", faculty.phd_university)
+        faculty.phd_spec = request.POST.get("phd_spec", faculty.phd_spec)
+
+        # About
+        faculty.about_yourself = request.POST.get("about_yourself", faculty.about_yourself)
+
+        # Photo
         if request.FILES.get("photo"):
-            faculty.photo = request.FILES["photo"]
+            faculty.photo = request.FILES.get("photo")
+
         faculty.save()
+
         messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
-        return HttpResponseRedirect(reverse('dashboard:faculty_dashboard') + f'?id={faculty.id}')
-    return render(request, 'dashboard/edit_faculty_complete.html', {
+        return redirect('dashboard:faculty_dashboard') + f'?id={faculty.id}'
+
+    # Get all fields for the form
+    context = {
         'faculty': faculty,
         'title': f'Edit Faculty - {faculty.staff_name}',
-    })
+    }
+    return render(request, 'dashboard/edit_faculty_complete.html', context)
 
+
+# ==================== NEW FACULTY PROFILE VIEW ====================
 
 @login_required
 def faculty_profile_view(request, faculty_id):
+    """View and edit faculty profile with additional fields"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    profile, _ = FacultyProfile.objects.get_or_create(faculty=faculty)
+
+    # Get or create faculty profile
+    profile, created = FacultyProfile.objects.get_or_create(faculty=faculty)
+
+    # Get research projects
     research_projects = ResearchProject.objects.filter(faculty=faculty)
 
     if request.method == "POST":
         profile_form = FacultyProfileForm(request.POST, request.FILES, instance=profile)
+
         if profile_form.is_valid():
             profile = profile_form.save()
-            research_types = request.POST.getlist('research_type[]')
-            titles       = request.POST.getlist('title_of_project[]')
-            marks        = request.POST.getlist('marks_awarded[]')
-            dois         = request.POST.getlist('doi[]')
-            volumes      = request.POST.getlist('volume[]')
-            issns        = request.POST.getlist('issn_number[]')
-            journals     = request.POST.getlist('journal_name[]')
-            publishers   = request.POST.getlist('publisher_name[]')
-            project_ids  = request.POST.getlist('project_id[]')
 
+            # Handle research projects
+            research_types = request.POST.getlist('research_type[]')
+            titles = request.POST.getlist('title_of_project[]')
+            marks = request.POST.getlist('marks_awarded[]')
+            dois = request.POST.getlist('doi[]')
+            volumes = request.POST.getlist('volume[]')
+            issns = request.POST.getlist('issn_number[]')
+            journals = request.POST.getlist('journal_name[]')
+            publishers = request.POST.getlist('publisher_name[]')
+            project_ids = request.POST.getlist('project_id[]')
+
+            # Process each research project
             for i in range(len(titles)):
-                if not titles[i]:
-                    continue
-                pid = project_ids[i] if i < len(project_ids) else None
-                if pid and pid.isdigit():
-                    proj = get_object_or_404(ResearchProject, id=int(pid), faculty=faculty)
-                    proj.research_type   = research_types[i] if i < len(research_types) else ''
-                    proj.title_of_project = titles[i]
-                    proj.marks_awarded   = marks[i] if i < len(marks) and marks[i] else None
-                    proj.doi             = dois[i] if i < len(dois) else ''
-                    proj.volume          = volumes[i] if i < len(volumes) else ''
-                    proj.issn_number     = issns[i] if i < len(issns) else ''
-                    proj.journal_name    = journals[i] if i < len(journals) else ''
-                    proj.publisher_name  = publishers[i] if i < len(publishers) else ''
-                    if request.FILES.get(f'upload_pdf_{i}'):
-                        proj.upload_pdf = request.FILES[f'upload_pdf_{i}']
-                    proj.save()
-                else:
-                    ResearchProject.objects.create(
-                        faculty=faculty,
-                        faculty_profile=profile,
-                        research_type   = research_types[i] if i < len(research_types) else '',
-                        title_of_project = titles[i],
-                        marks_awarded    = marks[i] if i < len(marks) and marks[i] else None,
-                        doi              = dois[i] if i < len(dois) else '',
-                        volume           = volumes[i] if i < len(volumes) else '',
-                        issn_number      = issns[i] if i < len(issns) else '',
-                        journal_name     = journals[i] if i < len(journals) else '',
-                        publisher_name   = publishers[i] if i < len(publishers) else '',
-                        upload_pdf       = request.FILES.get(f'upload_pdf_{i}') or None,
-                    )
+                if titles[i]:  # Only create if title exists
+                    project_id = project_ids[i] if i < len(project_ids) else None
+
+                    if project_id and project_id.isdigit():
+                        # Update existing project
+                        project = get_object_or_404(ResearchProject, id=int(project_id), faculty=faculty)
+                        project.research_type = research_types[i] if i < len(research_types) else ''
+                        project.title_of_project = titles[i]
+                        project.marks_awarded = marks[i] if i < len(marks) and marks[i] else None
+                        project.doi = dois[i] if i < len(dois) else ''
+                        project.volume = volumes[i] if i < len(volumes) else ''
+                        project.issn_number = issns[i] if i < len(issns) else ''
+                        project.journal_name = journals[i] if i < len(journals) else ''
+                        project.publisher_name = publishers[i] if i < len(publishers) else ''
+
+                        # Handle file upload
+                        if request.FILES.get(f'upload_pdf_{i}'):
+                            project.upload_pdf = request.FILES.get(f'upload_pdf_{i}')
+
+                        project.save()
+                    else:
+                        # Create new project
+                        ResearchProject.objects.create(
+                            faculty=faculty,
+                            faculty_profile=profile,
+                            research_type=research_types[i] if i < len(research_types) else '',
+                            title_of_project=titles[i],
+                            marks_awarded=marks[i] if i < len(marks) and marks[i] else None,
+                            doi=dois[i] if i < len(dois) else '',
+                            volume=volumes[i] if i < len(volumes) else '',
+                            issn_number=issns[i] if i < len(issns) else '',
+                            journal_name=journals[i] if i < len(journals) else '',
+                            publisher_name=publishers[i] if i < len(publishers) else '',
+                            upload_pdf=request.FILES.get(f'upload_pdf_{i}') if request.FILES.get(
+                                f'upload_pdf_{i}') else None
+                        )
+
             messages.success(request, 'Faculty profile updated successfully!')
             return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
     else:
         profile_form = FacultyProfileForm(instance=profile)
 
-    return render(request, 'dashboard/faculty_profile.html', {
-        'faculty': faculty, 'profile': profile,
-        'profile_form': profile_form, 'research_projects': research_projects,
+    context = {
+        'faculty': faculty,
+        'profile': profile,
+        'profile_form': profile_form,
+        'research_projects': research_projects,
         'title': f'Profile - {faculty.staff_name}',
-    })
+    }
+    return render(request, 'dashboard/faculty_profile.html', context)
 
+
+# ==================== DELETE RESEARCH PROJECT ====================
 
 @login_required
 @require_POST
 def delete_research_project(request, project_id):
+    """Delete a research project"""
     project = get_object_or_404(ResearchProject, id=project_id)
+    faculty_id = project.faculty.id
+
     project.delete()
     messages.success(request, 'Research project deleted successfully.')
+
     return JsonResponse({'success': True})
 
 
+# ==================== LABORATORY VIEW ====================
+
 def laboratory(request):
+    """Simple laboratory view"""
     return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
 
 
+# ==================== GALLERY VIEW ====================
+
 def gallery(request):
+    """Simple gallery view"""
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
 
+# ==================== STUDENT DETAIL VIEW ====================
+
 def student_detail(request, student_id):
+    """Display detailed information for a specific student"""
+    # Check if student is logged in via session
     if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
+
     student = get_object_or_404(Student, id=student_id)
-    return render(request, 'dashboard/student_detail.html', {
+
+    context = {
         'student': student,
         'title': f'{student.student_name} - Details',
-    })
+    }
+
+    return render(request, 'dashboard/student_detail.html', context)
 
 
-# ==================== CLOUDINARY SYNC ====================
+# ==================== CLOUDINARY SYNC FUNCTIONS (MERGED VERSION) ====================
 
 @login_required
 def sync_to_cloudinary(request, faculty_id):
+    """
+    Upload faculty PDF and photo to Cloudinary and store URLs.
+    Updated merged version that handles both PDF and photo uploads.
+    """
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    # Check if Cloudinary is configured
     if not is_cloudinary_configured():
-        messages.error(request, "Cloudinary is not configured properly.")
+        messages.error(request, "Cloudinary is not configured properly. Please check your settings.")
         return redirect("dashboard:faculty_dashboard")
 
+    # -------------------------------------------------
+    # 1. UPLOAD PDF (if not already uploaded)
+    # -------------------------------------------------
     if faculty.pdf_document and not faculty.cloudinary_pdf_url:
         try:
-            with faculty.pdf_document.open("rb") as f:
-                resp = cloudinary.uploader.upload(
-                    f, folder="faculty_pdfs", resource_type="raw",
-                    public_id=f"faculty_{faculty.employee_code}_profile", overwrite=True,
+            with faculty.pdf_document.open("rb") as pdf_file:
+                response = cloudinary.uploader.upload(
+                    pdf_file,
+                    folder="faculty_pdfs",
+                    resource_type="raw",
+                    public_id=f"faculty_{faculty.employee_code}_profile",
+                    overwrite=True,
                 )
-            faculty.cloudinary_pdf_url = resp["secure_url"]
-            faculty.save()
-            CloudinaryUpload.objects.create(
-                faculty=faculty, upload_type="pdf",
-                cloudinary_url=resp["secure_url"], public_id=resp["public_id"],
-                resource_type=resp["resource_type"], uploaded_by=request.user.username,
-            )
+
+                faculty.cloudinary_pdf_url = response["secure_url"]
+                faculty.save()
+
+                CloudinaryUpload.objects.create(
+                    faculty=faculty,
+                    upload_type="pdf",
+                    cloudinary_url=response["secure_url"],
+                    public_id=response["public_id"],
+                    resource_type=response["resource_type"],
+                    uploaded_by=request.user.username,
+                )
+                logger.info(f"PDF uploaded to Cloudinary for faculty {faculty.employee_code}")
+
         except Exception as e:
-            messages.error(request, f"Error uploading PDF: {e}")
+            logger.error(f"PDF Cloudinary upload error: {str(e)}")
+            messages.error(request, f"Error uploading faculty PDF to Cloudinary: {str(e)}")
             return redirect("dashboard:faculty_dashboard")
 
+    # -------------------------------------------------
+    # 2. UPLOAD PHOTO (if exists and not uploaded)
+    # -------------------------------------------------
     if faculty.photo and not faculty.cloudinary_photo_url:
         try:
-            with faculty.photo.open("rb") as f:
-                resp = cloudinary.uploader.upload(
-                    f, folder="faculty_photos",
-                    public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                    transformation=[{'width': 300, 'height': 300, 'crop': 'fill'},
-                                    {'quality': 'auto:good'}]
+            with faculty.photo.open("rb") as photo_file:
+                response = cloudinary.uploader.upload(
+                    photo_file,
+                    folder="faculty_photos",
+                    public_id=f"faculty_{faculty.employee_code}_photo",
+                    overwrite=True,
+                    transformation=[
+                        {'width': 300, 'height': 300, 'crop': 'fill'},
+                        {'quality': 'auto:good'}
+                    ]
                 )
-            faculty.cloudinary_photo_url = resp["secure_url"]
-            faculty.save()
-            CloudinaryUpload.objects.create(
-                faculty=faculty, upload_type="photo",
-                cloudinary_url=resp["secure_url"], public_id=resp["public_id"],
-                resource_type=resp["resource_type"], uploaded_by=request.user.username,
-            )
+
+                faculty.cloudinary_photo_url = response["secure_url"]
+                faculty.save()
+
+                CloudinaryUpload.objects.create(
+                    faculty=faculty,
+                    upload_type="photo",
+                    cloudinary_url=response["secure_url"],
+                    public_id=response["public_id"],
+                    resource_type=response["resource_type"],
+                    uploaded_by=request.user.username,
+                )
+                logger.info(f"Photo uploaded to Cloudinary for faculty {faculty.employee_code}")
+
         except Exception as e:
-            messages.error(request, f"Error uploading photo: {e}")
+            logger.error(f"Photo Cloudinary upload error: {str(e)}")
+            messages.error(request, f"Error uploading faculty photo to Cloudinary: {str(e)}")
             return redirect("dashboard:faculty_dashboard")
 
+    # Log the sync action
     FacultyLog.objects.create(
-        faculty=faculty, action="Cloudinary Sync",
+        faculty=faculty,
+        action="Cloudinary Sync",
         details=f"Faculty synced to Cloudinary: {faculty.employee_code}",
-        performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+        performed_by=request.user.username,
+        ip_address=request.META.get('REMOTE_ADDR')
     )
-    messages.success(request, f"Faculty {faculty.employee_code} synced to Cloudinary.")
+
+    messages.success(
+        request,
+        f"Faculty {faculty.employee_code} successfully synced to Cloudinary"
+    )
     return redirect("dashboard:faculty_dashboard")
 
 
+# =========================================================
+# UPLOAD TO CLOUDINARY (ALIAS – REQUIRED FOR URLS)
+# =========================================================
+
 @login_required
 def upload_to_cloudinary(request, faculty_id):
+    """
+    Alias for backward compatibility.
+    DO NOT REMOVE – used by dashboard/urls.py
+    """
     return sync_to_cloudinary(request, faculty_id)
 
 
-# ==================== AUTHENTICATION ====================
+# ==================== AUTHENTICATION FUNCTIONS ====================
 
 def login_view(request):
+    """Login selector page - Updated with explicit flags"""
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
+
     if request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
+
     return render(request, 'dashboard/login.html', {
         'title': 'Login - ANURAG ENGINEERING COLLEGE',
-        'student_login': False, 'admin_login': False,
+        'student_login': False,
+        'admin_login': False,
     })
 
 
 @csrf_protect
 def admin_login(request):
+    """Admin login page - Updated with proper authentication"""
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
+
     error = None
     if request.method == 'POST':
-        user = authenticate(request,
-                            username=request.POST.get('username'),
-                            password=request.POST.get('password'))
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
         if user is not None and user.is_staff:
             login(request, user)
             messages.success(request, 'Admin login successful!')
@@ -429,50 +591,86 @@ def admin_login(request):
         else:
             error = 'Invalid admin credentials'
             messages.error(request, error)
+
     return render(request, 'dashboard/login.html', {
         'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
-        'admin_login': True, 'error': error,
+        'admin_login': True,
+        'error': error,
     })
 
 
+# =====================================================
+# STUDENT LOGIN (MERGED VERSION)
+# =====================================================
 def student_login(request):
+    """Dedicated student login with hardcoded credentials"""
+    # If already logged in via session, redirect
     if request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
+
     error = None
+
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
+
+        # Simple static login (as per your design)
         if username == "anrkitstudent" and password == "anrkitstudent":
             request.session["student_logged_in"] = True
-            request.session["student_username"]  = username
+            request.session["student_username"] = username
             messages.success(request, "Student login successful!")
             return redirect("dashboard:students_data")
+
         error = "Invalid student credentials"
         messages.error(request, error)
+        return render(request, 'dashboard/login.html', {
+            'student_login': True,
+            'error': error,
+            'title': 'Student Login - ANURAG ENGINEERING COLLEGE'
+        })
+
+    # Render student login template
     return render(request, 'dashboard/login.html', {
-        'student_login': True, 'error': error,
+        'student_login': True,
+        'error': error,
         'title': 'Student Login - ANURAG ENGINEERING COLLEGE'
     })
 
 
 def logout_view(request):
+    """Logout view - handles both admin and student logout"""
+    # Logout Django user
     if request.user.is_authenticated:
         logout(request)
         messages.success(request, 'Admin logged out successfully.')
     else:
         messages.success(request, 'Logged out successfully.')
-    for key in ('student_logged_in', 'student_username', 'student_role'):
-        request.session.pop(key, None)
+
+    # Clear student session
+    if 'student_logged_in' in request.session:
+        del request.session['student_logged_in']
+    if 'student_username' in request.session:
+        del request.session['student_username']
+    if 'student_role' in request.session:
+        del request.session['student_role']
+
     return redirect('dashboard:login')
 
 
+# =====================================================
+# STUDENT LOGOUT (MERGED VERSION)
+# =====================================================
 def student_logout(request):
-    request.session.flush()
+    """
+    Logout student safely by flushing session
+    """
+    request.session.flush()  # Clears entire session securely
     messages.success(request, "Student logged out successfully.")
     return redirect('dashboard:student_login')
 
 
 def admin_logout(request):
+    """Admin logout - logs out admin user"""
     if request.user.is_authenticated:
         logout(request)
         messages.success(request, 'Admin logged out successfully.')
@@ -482,181 +680,339 @@ def admin_logout(request):
 # ==================== HOME & DASHBOARD ====================
 
 def home(request):
+    """Home page view - redirects based on authentication"""
+    # If student is logged in, redirect to student dashboard
     if request.session.get('student_logged_in'):
         return redirect('dashboard:student_dashboard')
+
+    # If admin is logged in, redirect to admin dashboard
     if request.user.is_authenticated:
-        return redirect('dashboard:admin_dashboard' if request.user.is_superuser else 'dashboard:dashboard')
+        if request.user.is_superuser:
+            return redirect('dashboard:admin_dashboard')
+        else:
+            return redirect('dashboard:dashboard')
+
+    # Otherwise, show the public home page
+    # Get statistics for home page
+    total_faculty = Faculty.objects.count()
+    active_faculty = Faculty.objects.filter(is_active=True).count()
+    total_students = Student.objects.count()
+    departments = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5]
+
+    # Get recent activities
+    recent_activities = FacultyLog.objects.order_by('-created_at')[:5]
+
     return render(request, 'dashboard/home.html', {
         'title': 'Faculty Management System - Home',
-        'total_faculty':      Faculty.objects.count(),
-        'active_faculty':     Faculty.objects.filter(is_active=True).count(),
-        'total_students':     Student.objects.count(),
-        'departments':        Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5],
-        'recent_activities':  FacultyLog.objects.order_by('-created_at')[:5],
+        'total_faculty': total_faculty,
+        'active_faculty': active_faculty,
+        'total_students': total_students,
+        'departments': departments,
+        'recent_activities': recent_activities,
         'show_hero': True,
     })
 
 
 @login_required
 def dashboard(request):
+    """Main dashboard - protected by login_required"""
+    # Calculate statistics
     total_faculty = Faculty.objects.count()
-    with_phd = Faculty.objects.exclude(phd_degree__isnull=True).exclude(phd_degree__exact='').count()
+    with_phd = Faculty.objects.exclude(
+        phd_degree__isnull=True
+    ).exclude(
+        phd_degree__exact=''
+    ).count()
+    active_faculty = Faculty.objects.filter(is_active=True).count()
+    total_certificates = Certificate.objects.count()
+
+    # Department statistics
+    departments = Faculty.objects.values('department').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Recent activities
+    recent_logs = FacultyLog.objects.order_by('-created_at')[:5]
+
+    # Recent uploads
+    recent_uploads = Faculty.objects.select_related('department').order_by('-created_at')[:5]
+
+    # Calculate experience distribution
     today = date.today()
-    exp_distribution = {'0-5': 0, '5-10': 0, '10-15': 0, '15+': 0}
-    for f in Faculty.objects.all():
-        if f.joining_date:
-            yrs = (today - f.joining_date).days / 365.25
-            if yrs <= 5:        exp_distribution['0-5']   += 1
-            elif yrs <= 10:     exp_distribution['5-10']  += 1
-            elif yrs <= 15:     exp_distribution['10-15'] += 1
-            else:               exp_distribution['15+']   += 1
-    return render(request, "dashboard/dashboard.html", {
+    exp_distribution = {
+        '0-5': 0,
+        '5-10': 0,
+        '10-15': 0,
+        '15+': 0
+    }
+
+    for faculty in Faculty.objects.all():
+        if faculty.joining_date:
+            exp_years = (today - faculty.joining_date).days / 365.25
+            if exp_years <= 5:
+                exp_distribution['0-5'] += 1
+            elif exp_years <= 10:
+                exp_distribution['5-10'] += 1
+            elif exp_years <= 15:
+                exp_distribution['10-15'] += 1
+            else:
+                exp_distribution['15+'] += 1
+
+    context = {
         'title': 'Dashboard',
-        'total_faculty':      total_faculty,
-        'with_phd':           with_phd,
-        'active_faculty':     Faculty.objects.filter(is_active=True).count(),
-        'total_certificates': Certificate.objects.count(),
-        'departments':        Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
-        'recent_uploads':     Faculty.objects.order_by('-created_at')[:5],
-        'recent_logs':        FacultyLog.objects.order_by('-created_at')[:5],
-        'exp_distribution':   exp_distribution,
-        'today': today, 'user': request.user,
-    })
+        'total_faculty': total_faculty,
+        'with_phd': with_phd,
+        'active_faculty': active_faculty,
+        'total_certificates': total_certificates,
+        'departments': departments,
+        'recent_uploads': recent_uploads,
+        'recent_logs': recent_logs,
+        'exp_distribution': exp_distribution,
+        'today': today,
+        'user': request.user,
+    }
+
+    return render(request, "dashboard/dashboard.html", context)
 
 
 @login_required
 def admin_dashboard(request):
+    """Admin dashboard - separate from main dashboard"""
+    # Only superusers can access admin dashboard
     if not request.user.is_superuser:
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('dashboard:dashboard')
+
+    # Get comprehensive statistics
     total_faculty = Faculty.objects.count()
-    departments = list(Faculty.objects.values('department')
-                       .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
-                       .order_by('-count'))
-    for d in departments:
-        d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+    active_faculty = Faculty.objects.filter(is_active=True).count()
+    with_phd_count = Faculty.objects.filter(phd_degree='Completed').count()
+    total_students = Student.objects.count()
+    total_certificates = Certificate.objects.count()
+    cloudinary_uploads = CloudinaryUpload.objects.count()
+
+    # Get recent activities
+    recent_logs = FacultyLog.objects.all().order_by('-created_at')[:10]
+
+    # Get system statistics if psutil is available
     system_stats = {}
     if psutil:
         try:
             system_stats = {
-                'cpu_percent':    psutil.cpu_percent(interval=1),
+                'cpu_percent': psutil.cpu_percent(interval=1),
                 'memory_percent': psutil.virtual_memory().percent,
-                'disk_usage':     psutil.disk_usage('/').percent,
-                'boot_time':      datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'disk_usage': psutil.disk_usage('/').percent,
+                'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
             }
         except Exception as e:
+            logger.error(f"Error getting system stats: {str(e)}")
             system_stats = {'error': str(e)}
-    return render(request, "dashboard/admin_dashboard.html", {
+
+    # Get user activity
+    user_activity = {
+        'total_users': User.objects.count(),
+        'active_today': FacultyLog.objects.filter(
+            created_at__date=date.today()
+        ).values('performed_by').distinct().count(),
+    }
+
+    # Get department statistics
+    departments = Faculty.objects.values('department').annotate(
+        count=Count('id'),
+        active=Count('id', filter=Q(is_active=True))
+    ).order_by('-count')
+
+    # Add percentage
+    for dept in departments:
+        dept['percentage'] = (dept['count'] / total_faculty * 100) if total_faculty > 0 else 0
+
+    context = {
         'title': 'Admin Dashboard',
-        'total_faculty':      total_faculty,
-        'active_faculty':     Faculty.objects.filter(is_active=True).count(),
-        'total_students':     Student.objects.count(),
-        'total_certificates': Certificate.objects.count(),
-        'cloudinary_uploads': CloudinaryUpload.objects.count(),
-        'with_phd':           Faculty.objects.filter(phd_degree='Completed').count(),
-        'departments':        departments,
-        'recent_logs':        FacultyLog.objects.order_by('-created_at')[:10],
-        'system_stats':       system_stats,
-        'user_activity': {
-            'total_users': User.objects.count(),
-            'active_today': FacultyLog.objects.filter(
-                created_at__date=date.today()).values('performed_by').distinct().count(),
-        },
-        'has_psutil':     psutil is not None,
+        'total_faculty': total_faculty,
+        'active_faculty': active_faculty,
+        'total_students': total_students,
+        'total_certificates': total_certificates,
+        'cloudinary_uploads': cloudinary_uploads,
+        'with_phd': with_phd_count,
+        'departments': departments,
+        'recent_logs': recent_logs,
+        'system_stats': system_stats,
+        'user_activity': user_activity,
+        'has_psutil': psutil is not None,
         'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
-    })
+    }
+
+    return render(request, "dashboard/admin_dashboard.html", context)
 
 
 def student_dashboard(request):
+    """Student dashboard - separate from students data view"""
+    # Check if student is logged in via session
     if not request.session.get('student_logged_in'):
         messages.error(request, 'Please login to access student dashboard')
         return redirect('dashboard:student_login')
+
+    # Get student from session
     student_username = request.session.get('student_username', 'anrkitstudent')
+
+    # Try to get student data
     student = None
     try:
         student = Student.objects.filter(ht_no=student_username).first()
     except Exception as e:
-        logger.error(f"Error getting student data: {e}")
+        logger.error(f"Error getting student data: {str(e)}")
+
+    # Create a session-based student object if no database record exists
     if not student:
         student = {
-            'ht_no': student_username, 'student_name': 'Student User',
-            'year': 'II', 'sem': 'II', 'branch': 'Computer Science',
-            'email': 'student@anurag.edu.in', 'student_phone': 'Not Available',
-            'cgpa': None, 'photo': None, 'photo_url': None,
+            'ht_no': student_username,
+            'student_name': 'Student User',
+            'year': 'II',
+            'sem': 'II',
+            'branch': 'Computer Science',
+            'email': 'student@anurag.edu.in',
+            'student_phone': 'Not Available',
+            'cgpa': None,
+            'photo': None,
+            'photo_url': None,
         }
+
+    # Get student statistics
+    total_students = Student.objects.count()
+    recent_students = Student.objects.order_by('-created_at')[:5]
+
+    # Get student's certificates if available
     certificates = []
     if student and hasattr(student, 'id'):
-        for fn, dn in [('cert_achieve','Achievement'),('cert_intern','Internship'),
-                       ('cert_courses','Courses'),('cert_sdp','SDP'),
-                       ('cert_extra','Extra Curricular'),('cert_placement','Placement'),
-                       ('cert_national','National Exam')]:
-            if hasattr(student, fn) and getattr(student, fn):
-                certificates.append({'type': dn, 'field': fn, 'has_file': True})
-    return render(request, "dashboard/student_dashboard.html", {
-        'student': student, 'title': 'Student Dashboard',
-        'total_students':  Student.objects.count(),
-        'recent_students': Student.objects.order_by('-created_at')[:5],
-        'certificates': certificates, 'is_student': True,
-    })
+        # Check for certificate fields
+        cert_fields = [
+            ('cert_achieve', 'Achievement'),
+            ('cert_intern', 'Internship'),
+            ('cert_courses', 'Courses'),
+            ('cert_sdp', 'SDP'),
+            ('cert_extra', 'Extra Curricular'),
+            ('cert_placement', 'Placement'),
+            ('cert_national', 'National Exam')
+        ]
+
+        for field_name, display_name in cert_fields:
+            if hasattr(student, field_name) and getattr(student, field_name):
+                certificates.append({
+                    'type': display_name,
+                    'field': field_name,
+                    'has_file': True
+                })
+
+    context = {
+        'student': student,
+        'title': 'Student Dashboard',
+        'total_students': total_students,
+        'recent_students': recent_students,
+        'certificates': certificates,
+        'is_student': True,
+    }
+
+    return render(request, "dashboard/student_dashboard.html", context)
 
 
 def redirect_to_dashboard(request):
+    """Redirect to dashboard based on authentication"""
     if request.user.is_authenticated:
-        return redirect('dashboard:admin_dashboard' if request.user.is_superuser else 'dashboard:dashboard')
+        if request.user.is_superuser:
+            return redirect('dashboard:admin_dashboard')
+        else:
+            return redirect('dashboard:dashboard')
     elif request.session.get('student_logged_in'):
         return redirect('dashboard:student_dashboard')
-    return redirect('dashboard:login')
+    else:
+        return redirect('dashboard:login')
 
+
+# ==================== SYLLABUS VIEW ====================
 
 @login_required
 def syllabus_view(request):
+    """
+    Renders the Syllabus & Common Subjects page.
+    Referenced in urls.py as: path('syllabus/', views.syllabus_view, name='syllabus')
+    """
     return render(request, 'dashboard/students.html', {
         'title': 'Syllabus & Common Subjects - ANURAG Engineering College',
     })
 
 
-# ==================== FACULTY DASHBOARD ====================
+# ==================== SINGLE PAGE FACULTY DASHBOARD - MERGED VERSION ====================
 
 @login_required
 def faculty_dashboard(request):
+    """Single page faculty dashboard - uses new merged template structure"""
+    # Check for PDF mode
     pdf_mode = request.GET.get("print") == "1"
+
     if pdf_mode:
-        fid = request.GET.get("id")
-        if not fid:
-            return HttpResponseBadRequest("Faculty ID required for PDF mode")
-        f = get_object_or_404(Faculty, id=fid)
-        exp = calculate_experience(f.joining_date) if f.joining_date else "N/A"
+        faculty_id = request.GET.get("id")
+        if not faculty_id:
+            return HttpResponseBadRequest("Faculty ID is required for PDF mode")
+
+        faculty = get_object_or_404(Faculty, id=faculty_id)
+
+        # Calculate experience
+        experience = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
+
+        # USE faculty_pdf.html FOR PDF MODE
         return render(request, "dashboard/faculty_pdf.html", {
-            "faculty": f, "pdf_mode": True, "current_date": timezone.now(),
-            "experience": exp, "cloudinary_status": {"has_pdf": bool(f.cloudinary_pdf_url)},
+            "faculty": faculty,
+            "pdf_mode": pdf_mode,
+            "current_date": timezone.now(),
+            "experience": experience,
+            "cloudinary_status": {
+                "has_pdf": bool(faculty.cloudinary_pdf_url)
+            }
         })
 
+    # Non-PDF mode - show faculty list
     faculties = Faculty.objects.all().order_by('staff_name')
-    fid = request.GET.get('id')
-    faculty = certificates = None
 
-    if fid:
-        faculty = get_object_or_404(Faculty, id=fid)
+    faculty_id = request.GET.get('id')
+    faculty = None
+    certificates = []
+
+    if faculty_id:
+        faculty = get_object_or_404(Faculty, id=faculty_id)
+        certificates = Certificate.objects.filter(faculty=faculty)
     elif faculties.exists():
         faculty = faculties.first()
-
-    if faculty:
         certificates = Certificate.objects.filter(faculty=faculty)
 
-    if request.GET.get('analytics') == 'true' or (not faculty and faculties.exists()):
+    # Check if analytics mode
+    is_analytics = request.GET.get('analytics') == 'true' or (not faculty and faculties.exists())
+
+    if is_analytics:
         return faculty_analytics(request)
 
+    # Calculate experience
     experience = calculate_experience(faculty.joining_date) if faculty and faculty.joining_date else "N/A"
+
+    cloudinary_status = {
+        'has_pdf': bool(faculty.cloudinary_pdf_url) if faculty else False,
+        'has_photo': bool(faculty.cloudinary_photo_url) if faculty else False,
+    }
+
+    # Get current date
+    current_date = timezone.now()
+
+    # Get unique departments for filter
     departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
 
     return render(request, 'dashboard/faculty.html', {
-        'faculties': faculties, 'faculty': faculty, 'certificates': certificates or [],
+        'faculties': faculties,
+        'faculty': faculty,
+        'certificates': certificates,
         'experience': experience,
-        'cloudinary_status': {
-            'has_pdf':   bool(faculty.cloudinary_pdf_url)   if faculty else False,
-            'has_photo': bool(faculty.cloudinary_photo_url) if faculty else False,
-        },
-        'current_date': timezone.now(), 'is_analytics': False, 'pdf_mode': False,
+        'cloudinary_status': cloudinary_status,
+        'current_date': current_date,
+        'is_analytics': False,
+        'pdf_mode': pdf_mode,
         'departments': departments,
         'title': f'Faculty Profile - {faculty.staff_name}' if faculty else 'Faculty Dashboard',
     })
@@ -664,410 +1020,794 @@ def faculty_dashboard(request):
 
 @login_required
 def faculty_analytics(request):
-    total = Faculty.objects.count()
-    departments = list(Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'))
-    for d in departments:
-        d['percentage'] = (d['count'] / total * 100) if total > 0 else 0
+    """Faculty analytics dashboard"""
+    total_faculty = Faculty.objects.count()
+
+    # Qualification statistics
+    qualification_stats = {
+        'phd_completed': Faculty.objects.filter(phd_degree='Completed').count(),
+        'phd_pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
+        'pg_only': Faculty.objects.filter(
+            pg_year__isnull=False,
+            phd_degree__in=['', 'Not Started', 'None']
+        ).count(),
+        'ug_only': Faculty.objects.filter(
+            ug_year__isnull=False,
+            pg_year__isnull=True,
+            phd_degree__in=['', 'Not Started', 'None']
+        ).count(),
+    }
+
+    # Department statistics
+    departments = Faculty.objects.values('department').annotate(
+        count=Count('id')
+    ).order_by('-count')
+
+    # Add percentage
+    for dept in departments:
+        dept['percentage'] = (dept['count'] / total_faculty * 100) if total_faculty > 0 else 0
+
+    # Experience statistics
     today = date.today()
-    exp_stats = {'0_5': 0, '5_10': 0, '10_plus': 0}
-    for f in Faculty.objects.all():
-        if f.joining_date:
-            yrs = today.year - f.joining_date.year
-            if yrs <= 5:    exp_stats['0_5']     += 1
-            elif yrs <= 10: exp_stats['5_10']    += 1
-            else:           exp_stats['10_plus'] += 1
-    return render(request, 'dashboard/faculty.html', {
-        'is_analytics': True, 'total_faculty': total,
-        'qualification_stats': {
-            'phd_completed': Faculty.objects.filter(phd_degree='Completed').count(),
-            'phd_pursuing':  Faculty.objects.filter(phd_degree='Pursuing').count(),
-            'pg_only':  Faculty.objects.filter(pg_year__isnull=False, phd_degree__in=['','Not Started','None']).count(),
-            'ug_only':  Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True,
-                                               phd_degree__in=['','Not Started','None']).count(),
-        },
-        'departments': departments, 'experience_stats': exp_stats,
-        'faculties': Faculty.objects.all()[:10], 'title': 'Faculty Analytics',
-    })
+    experience_stats = {
+        '0_5': 0,
+        '5_10': 0,
+        '10_plus': 0
+    }
+
+    faculties = Faculty.objects.all()
+    for faculty in faculties:
+        if faculty.joining_date:
+            years_exp = today.year - faculty.joining_date.year
+            if years_exp <= 5:
+                experience_stats['0_5'] += 1
+            elif years_exp <= 10:
+                experience_stats['5_10'] += 1
+            else:
+                experience_stats['10_plus'] += 1
+
+    context = {
+        'is_analytics': True,
+        'total_faculty': total_faculty,
+        'qualification_stats': qualification_stats,
+        'departments': departments,
+        'experience_stats': experience_stats,
+        'faculties': faculties[:10],  # Show recent 10
+        'title': 'Faculty Analytics',
+    }
+
+    return render(request, 'dashboard/faculty.html', context)
 
 
-# ==================== FACULTY LIST ====================
+# ==================== FACULTY LIST & MANAGEMENT ====================
 
 @login_required
 def faculty_list(request):
-    qs = Faculty.objects.all().order_by('staff_name')
-    sq = request.GET.get('search', '')
-    if sq:
-        qs = qs.filter(Q(staff_name__icontains=sq)|Q(employee_code__icontains=sq)|
-                       Q(email__icontains=sq)|Q(department__icontains=sq)|Q(designation__icontains=sq))
-    df = request.GET.get('department', '')
-    if df: qs = qs.filter(department__icontains=df)
-    sf = request.GET.get('status', '')
-    if sf == 'active':    qs = qs.filter(is_active=True)
-    elif sf == 'inactive': qs = qs.filter(is_active=False)
-    qf = request.GET.get('qualification', '')
-    if qf == 'phd': qs = qs.filter(phd_degree='Completed')
-    elif qf == 'pg': qs = qs.filter(pg_year__isnull=False, phd_degree__in=['','Not Started','None'])
-    paginator = Paginator(qs, 20)
+    """
+    Display list of all faculty members with search and filters
+    """
+    # Get all faculty
+    faculty_list = Faculty.objects.all().order_by('staff_name')
+
+    # Search functionality
+    search_query = request.GET.get('search', '')
+    if search_query:
+        faculty_list = faculty_list.filter(
+            Q(staff_name__icontains=search_query) |
+            Q(employee_code__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(department__icontains=search_query) |
+            Q(designation__icontains=search_query)
+        )
+
+    # Filter by department
+    department_filter = request.GET.get('department', '')
+    if department_filter:
+        faculty_list = faculty_list.filter(department__icontains=department_filter)
+
+    # Filter by status
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        if status_filter == 'active':
+            faculty_list = faculty_list.filter(is_active=True)
+        elif status_filter == 'inactive':
+            faculty_list = faculty_list.filter(is_active=False)
+
+    # Filter by qualification
+    qualification_filter = request.GET.get('qualification', '')
+    if qualification_filter:
+        if qualification_filter == 'phd':
+            faculty_list = faculty_list.filter(phd_degree='Completed')
+        elif qualification_filter == 'pg':
+            faculty_list = faculty_list.filter(pg_year__isnull=False, phd_degree__in=['', 'Not Started', 'None'])
+
+    # Pagination
+    page = request.GET.get('page', 1)
+    paginator = Paginator(faculty_list, 20)  # 20 items per page
+
     try:
-        faculties = paginator.page(request.GET.get('page', 1))
-    except (PageNotAnInteger, EmptyPage) as e:
-        faculties = paginator.page(1 if isinstance(e, PageNotAnInteger) else paginator.num_pages)
-    return render(request, 'dashboard/faculty_list.html', {
+        faculties = paginator.page(page)
+    except PageNotAnInteger:
+        faculties = paginator.page(1)
+    except EmptyPage:
+        faculties = paginator.page(paginator.num_pages)
+
+    # Get unique departments for filter dropdown
+    departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
+
+    context = {
         'faculties': faculties,
-        'departments': Faculty.objects.values_list('department', flat=True).distinct().order_by('department'),
-        'search_query': sq, 'department_filter': df, 'status_filter': sf, 'qualification_filter': qf,
-        'total_faculty': qs.count(), 'page_title': 'Faculty Directory', 'active_page': 'faculty_list',
-    })
+        'departments': departments,
+        'search_query': search_query,
+        'department_filter': department_filter,
+        'status_filter': status_filter,
+        'qualification_filter': qualification_filter,
+        'total_faculty': faculty_list.count(),
+        'page_title': 'Faculty Directory',
+        'active_page': 'faculty_list',
+    }
+
+    return render(request, 'dashboard/faculty_list.html', context)
 
 
-# ==================== ADD FACULTY ====================
+# ==================== UPDATED ADD FACULTY VIEW WITH CLOUDINARY ERROR HANDLING ====================
 
 @login_required
 def add_faculty(request):
     if request.method == "POST":
         try:
+            # Capture all user-inserted values explicitly
             faculty = Faculty.objects.create(
-                staff_name   = request.POST.get("staff_name"),
-                employee_code= request.POST.get("employee_code"),
-                father_name  = request.POST.get("father_name"),
-                dob          = request.POST.get("dob"),
-                gender       = request.POST.get("gender"),
-                state        = request.POST.get("state"),
-                address      = request.POST.get("address"),
-                mobile       = request.POST.get("mobile"),
-                email        = request.POST.get("email"),
-                department   = request.POST.get("department"),
-                designation  = request.POST.get("designation"),
-                photo        = request.FILES.get("photo"),
+                staff_name=request.POST.get("staff_name"),  # Matches 'Name of the Staff'
+                employee_code=request.POST.get("employee_code"),
+                father_name=request.POST.get("father_name"),
+                dob=request.POST.get("dob"),
+                gender=request.POST.get("gender"),
+                state=request.POST.get("state"),
+                address=request.POST.get("address"),  # Matches 'Full Permanent Address'
+                mobile=request.POST.get("mobile"),
+                email=request.POST.get("email"),
+                department=request.POST.get("department"),
+                designation=request.POST.get("designation"),
+                photo=request.FILES.get("photo"),
             )
+
+            # Create faculty profile
             FacultyProfile.objects.create(faculty=faculty)
+
+            # Handle photo upload to Cloudinary if photo exists and Cloudinary is configured
             if request.FILES.get("photo") and is_cloudinary_configured():
                 try:
-                    cr = cloudinary.uploader.upload(
-                        request.FILES["photo"], folder="faculty_photos",
-                        public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                        transformation=[{'width':300,'height':300,'crop':'fill'},{'quality':'auto:good'}]
+                    photo_file = request.FILES["photo"]
+
+                    # Upload to Cloudinary
+                    cloudinary_response = cloudinary.uploader.upload(
+                        photo_file,
+                        folder="faculty_photos",
+                        public_id=f"faculty_{faculty.employee_code}_photo",
+                        overwrite=True,
+                        transformation=[
+                            {'width': 300, 'height': 300, 'crop': 'fill'},
+                            {'quality': 'auto:good'}
+                        ]
                     )
-                    faculty.cloudinary_photo_url = cr["secure_url"]
+
+                    # Save Cloudinary URL
+                    faculty.cloudinary_photo_url = cloudinary_response["secure_url"]
                     faculty.save()
+
+                    # Record the upload
                     CloudinaryUpload.objects.create(
-                        faculty=faculty, upload_type="photo",
-                        cloudinary_url=cr["secure_url"], public_id=cr["public_id"],
-                        resource_type=cr["resource_type"],
+                        faculty=faculty,
+                        upload_type="photo",
+                        cloudinary_url=cloudinary_response["secure_url"],
+                        public_id=cloudinary_response["public_id"],
+                        resource_type=cloudinary_response["resource_type"],
                         uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                     )
+
+                    logger.info(f"Photo uploaded to Cloudinary for faculty {faculty.employee_code}")
+
                 except Exception as e:
-                    logger.error(f"Cloudinary upload error: {e}")
-                    messages.warning(request, "Faculty added but Cloudinary photo upload failed.")
-            messages.success(request, "Faculty added successfully.")
+                    logger.error(f"Cloudinary upload error: {str(e)}")
+                    # Continue anyway - photo is already saved locally
+                    messages.warning(request,
+                                     "Faculty added but photo upload to Cloudinary failed. Photo saved locally.")
+            elif request.FILES.get("photo") and not is_cloudinary_configured():
+                logger.warning("Cloudinary not configured. Photo saved locally only.")
+                messages.info(request, "Cloudinary not configured. Photo saved locally.")
+
+            messages.success(request, "Faculty added successfully with all details.")
             return redirect("dashboard:faculty_dashboard")
+
         except Exception as e:
-            logger.error(f"Error adding faculty: {e}")
-            messages.error(request, f"Error adding faculty: {e}")
+            logger.error(f"Error adding faculty: {str(e)}")
+            messages.error(request, f"Error adding faculty: {str(e)}")
             return redirect("dashboard:add_faculty")
-    return render(request, "dashboard/faculty.html", {"add_mode": True, "faculty": None, "title": "Add Faculty"})
+
+    return render(request, "dashboard/faculty.html", {
+        "add_mode": True,
+        "faculty": None,
+        "title": "Add Faculty",
+    })
 
 
-# ==================== EDIT FACULTY ====================
+# ==================== EDIT FACULTY (FINAL FIX) ====================
 
 @login_required
 def edit_faculty(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    if request.method == "POST":
-        for attr in ['staff_name','employee_code','department','designation','email','mobile',
-                     'father_name','dob','gender','state','address','aadhar','pan','apaar_id','scm']:
-            val = request.POST.get(attr)
-            if val is not None:
-                setattr(faculty, attr, val)
-        jd = request.POST.get("joining_date")
-        if jd: faculty.joining_date = jd
 
+    if request.method == "POST":
+        faculty.staff_name = request.POST.get("staff_name")
+        faculty.employee_code = request.POST.get("employee_code")
+        faculty.department = request.POST.get("department")
+        faculty.designation = request.POST.get("designation")
+        faculty.email = request.POST.get("email")
+        faculty.mobile = request.POST.get("mobile")
+        faculty.joining_date = request.POST.get("joining_date") or None
+        faculty.father_name = request.POST.get("father_name")
+        faculty.dob = request.POST.get("dob")
+        faculty.gender = request.POST.get("gender")
+        faculty.state = request.POST.get("state")
+        faculty.address = request.POST.get("address")
+        faculty.aadhar = request.POST.get("aadhar")
+        faculty.pan = request.POST.get("pan")
+        faculty.apaar_id = request.POST.get("apaar_id")
+        faculty.scm = request.POST.get("scm")
+
+        # Handle document uploads
         if request.FILES.get("photo"):
-            faculty.photo = request.FILES["photo"]
+            faculty.photo = request.FILES.get("photo")
+
+            # Try to upload to Cloudinary if configured
             if is_cloudinary_configured():
                 try:
-                    cr = cloudinary.uploader.upload(
-                        request.FILES["photo"], folder="faculty_photos",
-                        public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                        transformation=[{'width':300,'height':300,'crop':'fill'},{'quality':'auto:good'}]
+                    cloudinary_response = cloudinary.uploader.upload(
+                        request.FILES["photo"],
+                        folder="faculty_photos",
+                        public_id=f"faculty_{faculty.employee_code}_photo",
+                        overwrite=True,
+                        transformation=[
+                            {'width': 300, 'height': 300, 'crop': 'fill'},
+                            {'quality': 'auto:good'}
+                        ]
                     )
-                    faculty.cloudinary_photo_url = cr["secure_url"]
+                    faculty.cloudinary_photo_url = cloudinary_response["secure_url"]
+
                     CloudinaryUpload.objects.create(
-                        faculty=faculty, upload_type="photo",
-                        cloudinary_url=cr["secure_url"], public_id=cr["public_id"],
-                        resource_type=cr["resource_type"], uploaded_by=request.user.username
+                        faculty=faculty,
+                        upload_type="photo",
+                        cloudinary_url=cloudinary_response["secure_url"],
+                        public_id=cloudinary_response["public_id"],
+                        resource_type=cloudinary_response["resource_type"],
+                        uploaded_by=request.user.username
                     )
                 except Exception as e:
-                    logger.error(f"Cloudinary upload error during edit: {e}")
-                    messages.warning(request, "Photo saved but Cloudinary upload failed.")
+                    logger.error(f"Cloudinary upload error during edit: {str(e)}")
+                    messages.warning(request, "Photo saved locally but Cloudinary upload failed.")
 
-        for ffile in ['aadhar_file','pan_file','apaar_file','scm_file']:
-            if request.FILES.get(ffile):
-                setattr(faculty, ffile, request.FILES[ffile])
+        if request.FILES.get("aadhar_file"):
+            faculty.aadhar_file = request.FILES.get("aadhar_file")
+        if request.FILES.get("pan_file"):
+            faculty.pan_file = request.FILES.get("pan_file")
+        if request.FILES.get("apaar_file"):
+            faculty.apaar_file = request.FILES.get("apaar_file")
+        if request.FILES.get("scm_file"):
+            faculty.scm_file = request.FILES.get("scm_file")
+
         faculty.save()
+
         messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
-        return redirect("dashboard:faculty_dashboard")
-    return render(request, "dashboard/faculty.html", {"add_mode": True, "faculty": faculty, "title": "Edit Faculty"})
+        return redirect("dashboard:faculty")
+
+    return render(request, "dashboard/faculty.html", {
+        "add_mode": True,
+        "faculty": faculty,
+        "title": "Edit Faculty",
+    })
 
 
 @login_required
 def delete_faculty(request, faculty_id):
+    """
+    Delete faculty member (AJAX supported)
+    """
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
     if request.method == 'POST':
+        faculty_name = faculty.staff_name
+        employee_code = faculty.employee_code
+
+        # Log before deletion
         FacultyLog.objects.create(
-            faculty=None, action='Faculty Deleted',
-            details=f'Faculty deleted: {faculty.staff_name} ({faculty.employee_code})',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+            faculty=None,  # Will be deleted
+            action='Faculty Deleted',
+            details=f'Faculty deleted: {faculty_name} ({employee_code})',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
         )
-        name = faculty.staff_name
+
         faculty.delete()
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'message': f'Faculty {name} deleted successfully.'})
-        messages.success(request, f'Faculty {name} deleted successfully.')
+            return JsonResponse({
+                'success': True,
+                'message': f'Faculty {faculty_name} deleted successfully.'
+            })
+
+        messages.success(request, f'Faculty {faculty_name} deleted successfully.')
         return redirect('dashboard:faculty_list')
-    return render(request, 'dashboard/confirm_delete.html', {
-        'faculty': faculty, 'page_title': f'Delete {faculty.staff_name}'
-    })
+
+    context = {
+        'faculty': faculty,
+        'page_title': f'Delete {faculty.staff_name}',
+    }
+
+    return render(request, 'dashboard/confirm_delete.html', context)
 
 
 @login_required
 def assign_subjects(request, faculty_id):
+    """
+    Assign subjects to faculty member
+    """
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
     if request.method == 'POST':
-        subject_ids  = request.POST.getlist('subjects')
+        subject_ids = request.POST.getlist('subjects')
         old_subjects = set(faculty.subjects.values_list('id', flat=True))
         new_subjects = set(map(int, subject_ids))
+
+        # Update subjects
         faculty.subjects.set(Subject.objects.filter(id__in=subject_ids))
-        changes = []
+
+        # Calculate changes
         added = new_subjects - old_subjects
         removed = old_subjects - new_subjects
+
+        # Log the action
+        changes = []
         if added:
-            changes.append(f"Added: {', '.join(Subject.objects.filter(id__in=added).values_list('name', flat=True))}")
+            added_names = Subject.objects.filter(id__in=added).values_list('name', flat=True)
+            changes.append(f"Added subjects: {', '.join(added_names)}")
         if removed:
-            changes.append(f"Removed: {', '.join(Subject.objects.filter(id__in=removed).values_list('name', flat=True))}")
+            removed_names = Subject.objects.filter(id__in=removed).values_list('name', flat=True)
+            changes.append(f"Removed subjects: {', '.join(removed_names)}")
+
         FacultyLog.objects.create(
-            faculty=faculty, action='Subjects Assigned',
-            details=f"Subjects updated. {'; '.join(changes) if changes else 'No changes'}",
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+            faculty=faculty,
+            action='Subjects Assigned',
+            details=f'Subjects updated for {faculty.staff_name}. {"; ".join(changes) if changes else "No changes"}',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
         )
+
         messages.success(request, f'Subjects assigned to {faculty.staff_name} successfully!')
+        # ✅ FIX: Use HttpResponseRedirect with reverse() instead of string concatenation
         return HttpResponseRedirect(reverse('dashboard:faculty_dashboard') + f'?id={faculty.id}')
-    return render(request, 'dashboard/assign_subjects.html', {
+
+    # Get available subjects
+    available_subjects = Subject.objects.all()
+
+    context = {
         'faculty': faculty,
-        'available_subjects': Subject.objects.all(),
+        'available_subjects': available_subjects,
         'assigned_subjects': faculty.subjects.all(),
         'page_title': f'Assign Subjects to {faculty.staff_name}',
         'active_page': 'assign_subjects',
-    })
+    }
+
+    return render(request, 'dashboard/assign_subjects.html', context)
 
 
 # ==================== STUDENT MANAGEMENT ====================
 
+# =====================================================
+# STUDENTS REGISTRATION PAGE (REPLACED WITH SIMPLE VERSION)
+# =====================================================
 def students(request):
+    """Students registration page - redirects to add student"""
     return redirect('dashboard:add_student')
 
 
+# =====================================================
+# STUDENTS DATA DASHBOARD (REPLACED WITH SIMPLE VERSION)
+# =====================================================
 def students_data(request):
+    """
+    Display all students data (Student Portal)
+    """
+
+    # Session check
     if not request.session.get('student_logged_in'):
         return redirect('dashboard:student_login')
-    qs = Student.objects.all().order_by('-created_at')
-    paginator = Paginator(qs, 20)
-    page_obj  = paginator.get_page(request.GET.get('page'))
-    return render(request, "dashboard/students_data.html", {
-        "title": "Students Data", "students": page_obj,
-        "total_students": qs.count(),
-        "year_1_count": qs.filter(year=1).count(), "year_2_count": qs.filter(year=2).count(),
-        "year_3_count": qs.filter(year=3).count(), "year_4_count": qs.filter(year=4).count(),
-        "years": Student.objects.values_list("year", flat=True).distinct(),
-        "sems":  Student.objects.values_list("sem",  flat=True).distinct(),
-        "is_paginated": page_obj.has_other_pages(), "page_obj": page_obj,
-    })
+
+    students = Student.objects.all().order_by('-created_at')
+
+    # Calculate statistics
+    total_students = students.count()
+    year_1_count = students.filter(year=1).count()
+    year_2_count = students.filter(year=2).count()
+    year_3_count = students.filter(year=3).count()
+    year_4_count = students.filter(year=4).count()
+
+    # Add pagination
+    paginator = Paginator(students, 20)  # Show 20 students per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        "title": "Students Data",
+        "students": page_obj,  # Use paginated students
+        "total_students": total_students,
+        "year_1_count": year_1_count,
+        "year_2_count": year_2_count,
+        "year_3_count": year_3_count,
+        "year_4_count": year_4_count,
+
+        # Distinct Years
+        "years": Student.objects.values_list(
+            "year", flat=True
+        ).distinct(),
+
+        # Distinct Semesters
+        "sems": Student.objects.values_list(
+            "sem", flat=True
+        ).distinct(),
+
+        "is_paginated": page_obj.has_other_pages(),
+        "page_obj": page_obj,
+    }
+
+    return render(request, "dashboard/students_data.html", context)
 
 
+# =====================================================
+# ADD STUDENT – COMPLETELY FIXED VERSION (NO UNICODE CHARACTERS)
+# =====================================================
 def add_student(request):
+    """Add a new student"""
     if request.method == 'POST':
         try:
-            ca = is_cloudinary_configured()
+            print("=" * 60)
+            print("ADDING NEW STUDENT")
+            print("=" * 60)
 
-            def _upload(file, folder):
-                if not file or not ca:
-                    return None
-                try:
-                    res = cloudinary.uploader.upload(
-                        file, resource_type="auto",
-                        folder=f"student_documents/{folder}",
-                        public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                        overwrite=True
-                    )
-                    return res['secure_url']
-                except Exception as e:
-                    logger.error(f"Cloudinary upload error ({folder}): {e}")
-                    if hasattr(file, 'seek'): file.seek(0)
+            # Check if Cloudinary is configured
+            cloudinary_available = is_cloudinary_configured()
+            print(f"Cloudinary configured: {cloudinary_available}")
+
+            # Helper function to handle file uploads - with ASCII-only output
+            def upload_to_cloudinary(file, folder_name):
+                """Upload file to Cloudinary if configured, otherwise return None"""
+                if not file:
                     return None
 
+                if cloudinary_available:
+                    try:
+                        print(f"Attempting to upload {file.name} to Cloudinary...")
+                        result = cloudinary.uploader.upload(
+                            file,
+                            resource_type="auto",
+                            folder=f"student_documents/{folder_name}",
+                            public_id=f"{folder_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                            overwrite=True
+                        )
+                        print(f"  [OK] Uploaded: {result['secure_url']}")
+                        return result['secure_url']
+                    except Exception as e:
+                        print(f"  [ERROR] Cloudinary upload failed: {e}")
+                        # Re-open the file pointer as it might be consumed
+                        if hasattr(file, 'seek'):
+                            file.seek(0)
+                        return None
+                return None
+
+            # FIRST: Create student WITHOUT any file fields
+            # This avoids triggering Cloudinary during initial save
             student = Student(
-                ht_no           = request.POST.get('ht_no'),
-                student_name    = request.POST.get('student_name'),
-                father_name     = request.POST.get('father_name'),
-                mother_name     = request.POST.get('mother_name'),
-                gender          = request.POST.get('gender'),
-                dob             = request.POST.get('dob'),
-                age             = request.POST.get('age'),
-                nationality     = request.POST.get('nationality', 'Indian'),
-                category        = request.POST.get('category'),
-                religion        = request.POST.get('religion'),
-                blood_group     = request.POST.get('blood_group'),
-                aadhar          = request.POST.get('aadhar'),
-                apaar_id        = request.POST.get('apaar_id'),
-                address         = request.POST.get('address'),
-                parent_phone    = request.POST.get('parent_phone'),
-                student_phone   = request.POST.get('student_phone'),
-                email           = request.POST.get('email'),
-                task_registered = request.POST.get('task_registered'),
-                task_username   = request.POST.get('task_username'),
-                csi_registered  = request.POST.get('csi_registered'),
-                csi_membership_id = request.POST.get('csi_membership_id'),
-                admission_type  = request.POST.get('admission_type'),
-                other_admission_details = request.POST.get('other_admission_details'),
-                eamcet_rank     = request.POST.get('eamcet_rank') or None,
-                year            = request.POST.get('year'),
-                sem             = request.POST.get('sem'),
-                ssc_marks       = request.POST.get('ssc_marks'),
-                inter_marks     = request.POST.get('inter_marks'),
-                cgpa            = request.POST.get('cgpa'),
-                rtrp_project_title  = request.POST.get('rtrp_project_title'),
-                intern_title        = request.POST.get('intern_title'),
-                final_project_title = request.POST.get('final_project_title'),
-                other_training      = request.POST.get('other_training'),
-                photo=None, cert_achieve=None, cert_intern=None, cert_courses=None,
-                cert_sdp=None, cert_extra=None, cert_placement=None, cert_national=None,
+                ht_no=request.POST.get('ht_no'),
+                student_name=request.POST.get('student_name'),
+                father_name=request.POST.get('father_name'),
+                mother_name=request.POST.get('mother_name'),
+                gender=request.POST.get('gender'),
+                dob=request.POST.get('dob'),
+                age=request.POST.get('age'),
+                nationality=request.POST.get('nationality', 'Indian'),
+                category=request.POST.get('category'),
+                religion=request.POST.get('religion'),
+                blood_group=request.POST.get('blood_group'),
+                aadhar=request.POST.get('aadhar'),
+                apaar_id=request.POST.get('apaar_id'),
+                address=request.POST.get('address'),
+                parent_phone=request.POST.get('parent_phone'),
+                student_phone=request.POST.get('student_phone'),
+                email=request.POST.get('email'),
+                task_registered=request.POST.get('task_registered'),
+                task_username=request.POST.get('task_username'),
+                csi_registered=request.POST.get('csi_registered'),
+                csi_membership_id=request.POST.get('csi_membership_id'),
+                admission_type=request.POST.get('admission_type'),
+                other_admission_details=request.POST.get('other_admission_details'),
+                eamcet_rank=request.POST.get('eamcet_rank') or None,
+                year=request.POST.get('year'),
+                sem=request.POST.get('sem'),
+                ssc_marks=request.POST.get('ssc_marks'),
+                inter_marks=request.POST.get('inter_marks'),
+                cgpa=request.POST.get('cgpa'),
+                rtrp_project_title=request.POST.get('rtrp_project_title'),
+                intern_title=request.POST.get('intern_title'),
+                final_project_title=request.POST.get('final_project_title'),
+                other_training=request.POST.get('other_training'),
+                # Explicitly set file fields to None initially
+                photo=None,
+                cert_achieve=None,
+                cert_intern=None,
+                cert_courses=None,
+                cert_sdp=None,
+                cert_extra=None,
+                cert_placement=None,
+                cert_national=None,
             )
+
+            # Save to get an ID (this won't trigger Cloudinary because file fields are None)
             student.save()
+            print(f"Student created with ID: {student.id}")
 
-            files_up, files_lo = [], []
+            # NOW handle file uploads one by one
+            files_uploaded = []
+            files_local = []
 
-            # Photo
+            # Handle photo upload
             if request.FILES.get('photo'):
-                pf = request.FILES['photo']
-                url = _upload(pf, 'photos')
-                if url:
-                    student.photo_url = url
-                    student.photo = None
-                    files_up.append('photo')
-                else:
-                    student.photo = pf
-                    files_lo.append('photo')
+                photo_file = request.FILES['photo']
 
-            # Certificates
-            for fn, folder in [('cert_achieve','achievement'),('cert_intern','internship'),
-                                ('cert_courses','courses'),('cert_sdp','sdp'),
-                                ('cert_extra','extra'),('cert_placement','placement'),
-                                ('cert_national','national')]:
-                if request.FILES.get(fn):
-                    cf = request.FILES[fn]
-                    url = _upload(cf, folder)
-                    if url:
-                        setattr(student, fn, url)
-                        files_up.append(fn)
+                # Try Cloudinary first if available
+                if cloudinary_available:
+                    photo_url = upload_to_cloudinary(photo_file, 'photos')
+                    if photo_url:
+                        student.photo_url = photo_url
+                        student.photo = None  # Don't save locally
+                        files_uploaded.append('photo (to Cloudinary)')
+                        print(f"Photo uploaded to Cloudinary: {photo_url}")
                     else:
-                        setattr(student, fn, cf)
-                        files_lo.append(fn)
+                        # Cloudinary failed, save locally
+                        student.photo = photo_file
+                        files_local.append('photo (locally)')
+                        print(f"Photo saved locally (Cloudinary upload failed)")
+                else:
+                    # Cloudinary not configured, save locally
+                    student.photo = photo_file
+                    files_local.append('photo (locally)')
+                    print(f"Photo saved locally (Cloudinary not configured)")
 
+            # Handle certificate uploads
+            certificate_fields = [
+                ('cert_achieve', 'achievement'),
+                ('cert_intern', 'internship'),
+                ('cert_courses', 'courses'),
+                ('cert_sdp', 'sdp'),
+                ('cert_extra', 'extra'),
+                ('cert_placement', 'placement'),
+                ('cert_national', 'national'),
+            ]
+
+            for field_name, folder_name in certificate_fields:
+                if request.FILES.get(field_name):
+                    cert_file = request.FILES[field_name]
+
+                    # Try Cloudinary first if available
+                    if cloudinary_available:
+                        cert_url = upload_to_cloudinary(cert_file, folder_name)
+                        if cert_url:
+                            # Store as URL in the field
+                            setattr(student, field_name, cert_url)
+                            files_uploaded.append(f'{field_name} (to Cloudinary)')
+                            print(f"{field_name} uploaded to Cloudinary: {cert_url}")
+                        else:
+                            # Cloudinary failed, save locally
+                            setattr(student, field_name, cert_file)
+                            files_local.append(f'{field_name} (locally)')
+                            print(f"{field_name} saved locally (Cloudinary upload failed)")
+                    else:
+                        # Cloudinary not configured, save locally
+                        setattr(student, field_name, cert_file)
+                        files_local.append(f'{field_name} (locally)')
+                        print(f"{field_name} saved locally (Cloudinary not configured)")
+
+            # Final save with all files
             student.save()
 
-            if files_up:
-                messages.success(request, f'Student {student.student_name} added! Cloudinary: {", ".join(files_up)}')
-            if files_lo:
-                messages.warning(request, f'Some files saved locally: {", ".join(files_lo)}')
-            if not files_up and not files_lo:
-                messages.success(request, f'Student {student.student_name} added successfully!')
+            # Create success message based on what happened (using ASCII only)
+            if cloudinary_available:
+                if files_uploaded:
+                    messages.success(request,
+                                     f'Student {student.student_name} added successfully! Files uploaded to Cloudinary: {", ".join(files_uploaded)}')
+                if files_local:
+                    messages.warning(request, f'Some files saved locally: {", ".join(files_local)}')
+                if not files_uploaded and not files_local:
+                    messages.success(request, f'Student {student.student_name} added successfully!')
+            else:
+                messages.success(request, f'Student {student.student_name} added successfully! (Files saved locally)')
+                messages.info(request, 'To enable cloud storage, configure Cloudinary credentials in settings.py')
+
+            print("=" * 60)
+            print("STUDENT ADDED SUCCESSFULLY")
+            print(f"Cloudinary used: {cloudinary_available}")
+            print(f"Files to Cloudinary: {len(files_uploaded)}")
+            print(f"Files local: {len(files_local)}")
+            print("=" * 60)
 
             return redirect('dashboard:students_data')
+
         except Exception as e:
-            import traceback; traceback.print_exc()
-            messages.error(request, f'Error adding student: {e}')
+            print(f"Error adding student: {e}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f'Error adding student: {str(e)}')
             return redirect('dashboard:add_student')
+
     return render(request, 'dashboard/add_student.html')
 
 
+# =====================================================
+# DELETE STUDENT (MERGED VERSION)
+# =====================================================
 @require_POST
 def delete_student(request, student_id):
+    """
+    Delete student (Session based protection)
+    """
+
+    # ✅ Session authentication check
     if not request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
+
     student = get_object_or_404(Student, id=student_id)
-    name, ht = student.student_name, student.ht_no
+    student_name = student.student_name
+    ht_no = student.ht_no
+
     student.delete()
-    messages.success(request, f"Student {name} ({ht}) deleted successfully.")
+
+    messages.success(
+        request,
+        f"Student {student_name} ({ht_no}) deleted successfully."
+    )
+
     return redirect('dashboard:students_data')
 
 
-def edit_student(request, student_id):
-    if not request.session.get('student_logged_in'):
-        return redirect('dashboard:students_data')
-    student = get_object_or_404(Student, id=student_id)
-    if request.method == 'POST':
-        form = StudentForm(request.POST, instance=student)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Student updated successfully.")
-            return redirect('dashboard:students_data')
-    else:
-        form = StudentForm(instance=student)
-    return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student'})
-
-
-# ==================== GENERATE STUDENT PDF ====================
-
+# =====================================================
+# GENERATE STUDENT PDF + MERGE CERTIFICATES (ENHANCED VERSION WITH IMAGE SUPPORT)
+# =====================================================
 def generate_student_pdf_file(request, student_id):
-    import io, shutil
+    import os
+    import tempfile
+    import requests
+    import cloudinary.uploader
+    from datetime import datetime
+    from django.shortcuts import get_object_or_404
+    from django.http import FileResponse
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, HRFlowable, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    from pypdf import PdfWriter, PdfReader
+    import mimetypes
+    from PIL import Image as PILImage
+    import io
+
     student = get_object_or_404(Student, id=student_id)
     styles = getSampleStyleSheet()
+
+    print(f"Generating PDF for student: {student.student_name} (ID: {student_id})")
+
+    # Create a list to store temporary files for cleanup
     temp_files = []
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    main_pdf_path = tmp.name; tmp.close()
+    # ===============================
+    # 1. CREATE MAIN PROFILE PDF
+    # ===============================
+    temp_main = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    main_pdf_path = temp_main.name
+    temp_main.close()
     temp_files.append(main_pdf_path)
 
+    print(f"Created main PDF temp file: {main_pdf_path}")
+
     doc = SimpleDocTemplate(main_pdf_path, pagesize=A4)
-    elems = []
-    elems.append(Paragraph("""<para alignment='center'>
+    elements = []
+
+    # -------- COLLEGE HEADER --------
+    header_text = f"""
+    <para alignment='center'>
         <font name='Helvetica-Bold' size='16' color='darkblue'>ANURAG ENGINEERING COLLEGE</font><br/>
         <font name='Helvetica' size='12' color='navy'>DEPARTMENT OF INFORMATION TECHNOLOGY</font><br/><br/>
-        <font name='Helvetica-Bold' size='14'>STUDENT PROFILE</font></para>""", styles['Normal']))
-    elems.append(Spacer(1, 0.2*inch))
-    elems.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
-    elems.append(Spacer(1, 0.2*inch))
+        <font name='Helvetica-Bold' size='14' color='black'>STUDENT PROFILE</font>
+    </para>
+    """
+    elements.append(Paragraph(header_text, styles['Normal']))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
+    elements.append(Spacer(1, 0.2 * inch))
 
+    # -------- STUDENT PHOTO (if exists) --------
     photo_img = None
-    photo_url = getattr(student, 'photo_url', None) or (student.photo.url if student.photo else None)
+    photo_url = None
+    if student.photo_url:
+        photo_url = student.photo_url
+    elif student.photo:
+        try:
+            photo_url = student.photo.url
+        except:
+            photo_url = None
+
     if photo_url:
         try:
-            r = requests.get(photo_url, timeout=10)
-            if r.status_code == 200:
-                ext = '.png' if 'png' in r.headers.get('content-type','') else '.jpg'
-                tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-                tp.write(r.content); tp.close(); temp_files.append(tp.name)
-                photo_img = Image(tp.name, width=1.5*inch, height=1.8*inch)
-        except Exception: pass
+            print(f"Attempting to load photo from: {photo_url}")
 
+            # Download photo
+            response = requests.get(photo_url, timeout=10)
+            if response.status_code == 200:
+                # Save photo to temporary file
+                content_type = response.headers.get('content-type', '')
+                if 'png' in content_type:
+                    photo_ext = '.png'
+                else:
+                    photo_ext = '.jpg'
+
+                tmp_photo = tempfile.NamedTemporaryFile(delete=False, suffix=photo_ext)
+                tmp_photo.write(response.content)
+                tmp_photo.close()
+                temp_files.append(tmp_photo.name)
+
+                # Create ReportLab Image object
+                try:
+                    photo_img = Image(tmp_photo.name, width=1.5 * inch, height=1.8 * inch)
+                    print("Photo loaded successfully")
+                except Exception as e:
+                    print(f"Error creating Image object: {e}")
+                    photo_img = None
+        except Exception as e:
+            print(f"Error loading photo: {e}")
+            photo_img = None
+
+    # Create header with photo if available
     if photo_img:
-        ht = Table([[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]],
-                   colWidths=[4.5*inch, 1.5*inch])
-        ht.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'MIDDLE'),('ALIGN',(1,0),(1,0),'RIGHT')]))
-        elems.append(ht)
+        data = [[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]]
+        header_table = Table(data, colWidths=[4.5 * inch, 1.5 * inch])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ]))
+        elements.append(header_table)
     else:
-        elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
-    elems.append(Spacer(1, 0.2*inch))
+        elements.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
 
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # -------- STUDENT DETAILS TABLE --------
+    # Prepare all student fields
     fields = [
-        ("Hall Ticket No", student.ht_no), ("Name", student.student_name),
-        ("Father Name", student.father_name), ("Mother Name", student.mother_name),
-        ("Gender", student.gender), ("Date of Birth", student.dob), ("Age", student.age),
-        ("Nationality", student.nationality or "Indian"), ("Category", student.category or "N/S"),
-        ("Religion", student.religion or "N/S"), ("Blood Group", student.blood_group or "N/S"),
-        ("Aadhar Number", student.aadhar), ("APAAR ID", student.apaar_id or "N/S"),
-        ("Address", student.address), ("Parent Phone", student.parent_phone),
-        ("Student Phone", student.student_phone), ("Email", student.email),
+        ("Hall Ticket No", student.ht_no),
+        ("Name", student.student_name),
+        ("Father Name", student.father_name),
+        ("Mother Name", student.mother_name),
+        ("Gender", student.gender),
+        ("Date of Birth", student.dob),
+        ("Age", student.age),
+        ("Nationality", student.nationality or "Indian"),
+        ("Category", student.category or "Not Specified"),
+        ("Religion", student.religion or "Not Specified"),
+        ("Blood Group", student.blood_group or "Not Specified"),
+        ("Aadhar Number", student.aadhar),
+        ("APAAR ID", student.apaar_id or "Not Specified"),
+        ("Address", student.address),
+        ("Parent Phone", student.parent_phone),
+        ("Student Phone", student.student_phone),
+        ("Email", student.email),
         ("TASK Registered", student.task_registered or "No"),
         ("TASK Username", student.task_username or "N/A"),
         ("CSI Registered", student.csi_registered or "No"),
@@ -1075,7 +1815,8 @@ def generate_student_pdf_file(request, student_id):
         ("Admission Type", student.admission_type),
         ("Other Admission Details", student.other_admission_details or "N/A"),
         ("EAMCET Rank", student.eamcet_rank or "N/A"),
-        ("Year", student.year), ("Semester", student.sem),
+        ("Year", student.year),
+        ("Semester", student.sem),
         ("SSC Marks (%)", student.ssc_marks or "N/A"),
         ("Intermediate Marks (%)", student.inter_marks or "N/A"),
         ("CGPA", student.cgpa or "N/A"),
@@ -1084,667 +1825,1289 @@ def generate_student_pdf_file(request, student_id):
         ("Final Project Title", student.final_project_title or "N/A"),
         ("Other Training", student.other_training or "N/A"),
     ]
-    tbl = Table([[Paragraph(f"<b>{l}</b>", styles['Normal']),
-                  Paragraph(str(v) if v else "N/A", styles['Normal'])] for l,v in fields],
-                colWidths=[2.2*inch, 4.3*inch])
-    tbl.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),0.5,colors.grey),
-        ('BACKGROUND',(0,0),(0,-1),colors.lightgrey),
-        ('VALIGN',(0,0),(-1,-1),'TOP'), ('PADDING',(0,0),(-1,-1),6),
-        ('FONTNAME',(0,0),(0,-1),'Helvetica-Bold'),
-        ('FONTNAME',(1,0),(1,-1),'Helvetica'), ('FONTSIZE',(0,0),(-1,-1),10),
+
+    # Create table data
+    table_data = []
+    for i, (label, value) in enumerate(fields):
+        table_data.append([
+            Paragraph(f"<b>{label}</b>", styles['Normal']),
+            Paragraph(str(value) if value else "N/A", styles['Normal'])
+        ])
+
+    # Create and style the table
+    student_table = Table(table_data, colWidths=[2.2 * inch, 4.3 * inch])
+    student_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('PADDING', (0, 0), (-1, -1), 6),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
     ]))
-    elems.append(tbl)
-    elems.append(Spacer(1,0.2*inch))
-    elems.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", styles['Normal']))
-    doc.build(elems)
 
+    elements.append(student_table)
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", styles['Normal']))
+
+    # Build the main PDF
+    doc.build(elements)
+    print(f"Main PDF built successfully: {main_pdf_path}")
+
+    # ===============================
+    # 2. MERGE CERTIFICATES
+    # ===============================
     writer = PdfWriter()
+
+    # Add the main PDF
     try:
-        for pg in PdfReader(main_pdf_path).pages: writer.add_page(pg)
+        reader = PdfReader(main_pdf_path)
+        for page in reader.pages:
+            writer.add_page(page)
+        print("Added main PDF to writer")
     except Exception as e:
-        logger.error(f"Error adding main PDF: {e}")
+        print(f"Error adding main PDF to writer: {e}")
 
-    cert_fields = [
-        ('cert_achieve','Achievement'),('cert_intern','Internship'),
-        ('cert_courses','Courses'),('cert_sdp','SDP'),
-        ('cert_extra','Extracurricular'),('cert_placement','Placement'),
-        ('cert_national','National Exam'),
+    # List of certificate fields
+    certificate_fields = [
+        ('cert_achieve', 'Achievement Certificates'),
+        ('cert_intern', 'Internship Certificates'),
+        ('cert_courses', 'Course Certificates'),
+        ('cert_sdp', 'SDP Certificates'),
+        ('cert_extra', 'Extracurricular Certificates'),
+        ('cert_placement', 'Placement Certificates'),
+        ('cert_national', 'National Exam Certificates'),
     ]
-    merged_count = 0
-    for fn, fl in cert_fields:
-        cf = getattr(student, fn, None)
-        if not cf: continue
-        try:
-            curl = cf.url if hasattr(cf,'url') else str(cf)
-            r = requests.get(curl, timeout=30)
-            if r.status_code == 200:
-                content = r.content
-                if content.startswith(b'%PDF'):
-                    tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    tp.write(content); tp.close(); temp_files.append(tp.name)
-                    for pg in PdfReader(tp.name).pages: writer.add_page(pg)
-                    merged_count += 1
-                else:
-                    try:
-                        img = PILImage.open(io.BytesIO(content))
-                        if img.mode != 'RGB': img = img.convert('RGB')
-                        tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                        img.save(tp.name, 'PDF', resolution=100.0); tp.close(); temp_files.append(tp.name)
-                        for pg in PdfReader(tp.name).pages: writer.add_page(pg)
-                        merged_count += 1
-                    except Exception: pass
-        except Exception as e:
-            logger.error(f"Error processing {fl}: {e}")
 
-    fp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    final_path = fp.name; fp.close(); temp_files.append(final_path)
+    merged_count = 0
+    for field_name, field_label in certificate_fields:
+        cert_field = getattr(student, field_name, None)
+
+        if cert_field:
+            print(f"Processing {field_label}...")
+
+            try:
+                # Get the certificate URL
+                if hasattr(cert_field, 'url'):
+                    cert_url = cert_field.url
+                else:
+                    cert_url = str(cert_field)
+
+                print(f"  URL: {cert_url}")
+
+                # Download the certificate
+                response = requests.get(cert_url, timeout=30)
+                if response.status_code == 200:
+                    content = response.content
+
+                    # Check if it's a PDF
+                    if content.startswith(b'%PDF'):
+                        # Save as PDF
+                        tmp_cert = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                        tmp_cert.write(content)
+                        tmp_cert.close()
+                        temp_files.append(tmp_cert.name)
+
+                        # Add to writer
+                        reader = PdfReader(tmp_cert.name)
+                        for page in reader.pages:
+                            writer.add_page(page)
+                        merged_count += 1
+                        print(f"  [OK] Added PDF: {field_label}")
+
+                    else:
+                        # Check if it's an image that needs to be converted to PDF
+                        try:
+                            # Try to open as image
+                            img = PILImage.open(io.BytesIO(content))
+                            print(f"  Image detected: {img.format}, size: {img.size}")
+
+                            # Convert image to PDF
+                            img_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+
+                            # Convert to RGB if necessary
+                            if img.mode != 'RGB':
+                                img = img.convert('RGB')
+
+                            # Save as PDF
+                            img.save(img_pdf.name, 'PDF', resolution=100.0)
+                            img_pdf.close()
+                            temp_files.append(img_pdf.name)
+
+                            # Add to writer
+                            reader = PdfReader(img_pdf.name)
+                            for page in reader.pages:
+                                writer.add_page(page)
+                            merged_count += 1
+                            print(f"  [OK] Converted and added image: {field_label}")
+
+                        except Exception as img_error:
+                            print(f"  [ERROR] Not a valid image: {img_error}")
+
+                else:
+                    print(f"  [ERROR] Failed to download: HTTP {response.status_code}")
+
+            except Exception as e:
+                print(f"  [ERROR] Error processing {field_label}: {e}")
+
+    print(f"Total certificates merged: {merged_count}")
+
+    # ===============================
+    # 3. SAVE FINAL MERGED PDF
+    # ===============================
+    final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    final_path = final_pdf.name
+    final_pdf.close()
+    temp_files.append(final_path)
+
     try:
-        with open(final_path, "wb") as out: writer.write(out)
-    except Exception:
+        with open(final_path, "wb") as output_file:
+            writer.write(output_file)
+        print(f"Final merged PDF saved: {final_path}")
+    except Exception as e:
+        print(f"Error writing merged PDF: {e}")
+        # If merge fails, just use the main PDF
+        import shutil
         shutil.copy(main_pdf_path, final_path)
 
+    # ===============================
+    # 4. UPLOAD FINAL PDF TO CLOUDINARY
+    # ===============================
+    pdf_url = None
     if is_cloudinary_configured():
         try:
-            ur = cloudinary.uploader.upload(
-                final_path, resource_type="raw", folder="student_generated_pdfs",
-                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}", overwrite=True
+            upload_result = cloudinary.uploader.upload(
+                final_path,
+                resource_type="raw",
+                folder="student_generated_pdfs",
+                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                overwrite=True
             )
-            student.pdf_url = ur["secure_url"]
-            student.pdf_file = ur["secure_url"]
+
+            student.pdf_url = upload_result["secure_url"]
+            student.pdf_file = upload_result["secure_url"]
             student.pdf_generated = True
             student.pdf_generation_time = timezone.now()
             student.save()
+            pdf_url = upload_result["secure_url"]
+            print(f"PDF uploaded to Cloudinary: {upload_result['secure_url']}")
+
             CloudinaryUpload.objects.create(
-                student=student, upload_type='pdf',
-                cloudinary_url=ur['secure_url'], public_id=ur['public_id'],
-                resource_type=ur['resource_type'],
+                student=student,
+                upload_type='pdf',
+                cloudinary_url=upload_result['secure_url'],
+                public_id=upload_result['public_id'],
+                resource_type=upload_result['resource_type'],
                 uploaded_by=request.user.username if request.user.is_authenticated else 'Student'
             )
+
         except Exception as e:
-            logger.error(f"Error uploading student PDF to Cloudinary: {e}")
+            print(f"Error uploading to Cloudinary: {e}")
+    else:
+        print("Cloudinary not configured. PDF saved locally only.")
 
+    # ===============================
+    # 5. RETURN THE PDF
+    # ===============================
     try:
-        with open(final_path, 'rb') as pf:
-            response = HttpResponse(pf.read(), content_type='application/pdf')
+        with open(final_path, 'rb') as pdf_file:
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
-        for t in temp_files:
-            try:
-                if os.path.exists(t): os.remove(t)
-            except Exception: pass
-        return response
+
+            # Clean up temp files
+            for temp_file in temp_files:
+                try:
+                    if os.path.exists(temp_file):
+                        os.remove(temp_file)
+                        print(f"Cleaned up: {temp_file}")
+                except Exception as e:
+                    print(f"Error cleaning up {temp_file}: {e}")
+
+            return response
+
     except Exception as e:
-        return HttpResponse(f"Error generating PDF: {e}", status=500)
+        print(f"Error returning PDF: {e}")
+        return HttpResponse(f"Error generating PDF: {str(e)}", status=500)
 
 
+# =====================================================
+# VIEW PDF (UPDATED VERSION)
+# =====================================================
 def view_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    url = getattr(student, 'pdf_url', None) or getattr(student, 'pdf_file', None)
-    if url: return redirect(url)
-    messages.error(request, "PDF not generated yet.")
-    return redirect('dashboard:students_data')
+
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+    elif student.pdf_file:
+        return redirect(student.pdf_file)
+    else:
+        messages.error(request, "PDF not generated yet.")
+        return redirect('dashboard:students_data')
 
 
+# =====================================================
+# DOWNLOAD PDF (UPDATED VERSION)
+# =====================================================
 def download_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    url = getattr(student, 'pdf_url', None) or getattr(student, 'pdf_file', None)
-    if url: return redirect(url)
-    return generate_student_pdf_file(request, student_id)
+
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+    elif student.pdf_file:
+        return redirect(student.pdf_file)
+    else:
+        return generate_student_pdf_file(request, student_id)
+
+
+# =====================================================
+# EDIT STUDENT (KEPT UNCHANGED)
+# =====================================================
+def edit_student(request, student_id):
+    """
+    Edit student (Session based protection)
+    """
+
+    # ✅ Session authentication check
+    if not request.session.get('student_logged_in'):
+        return redirect('dashboard:students_data')
+
+    student = get_object_or_404(Student, id=student_id)
+
+    if request.method == 'POST':
+        form = StudentForm(request.POST, instance=student)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Student updated successfully.")
+            return redirect('dashboard:students_data')
+    else:
+        form = StudentForm(instance=student)
+
+    return render(request, 'dashboard/add_student.html', {
+        'form': form,
+        'title': 'Edit Student'
+    })
 
 
 @login_required
 def export_students_csv(request):
-    qs = Student.objects.all().order_by('ht_no')
+    """Export students data to CSV"""
+    students = Student.objects.all().order_by('ht_no')
+
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = (
-        f'attachment; filename="students_export_{date.today().strftime("%Y%m%d")}.csv"'
-    )
-    w = csv.writer(response)
-    w.writerow(['HT No','Student Name','Father Name','Mother Name','Gender','Date of Birth','Age',
-                'Category','Religion','Blood Group','Aadhar','APAAR ID','Address',
-                'Parent Phone','Student Phone','Email','Year','Semester','Branch','Roll Number',
-                'SSC Marks','Inter Marks','CGPA','Admission Type','EAMCET Rank',
-                'RTRP Project Title','Internship Title','Final Project Title','Created Date'])
-    for s in qs:
-        w.writerow([
-            s.ht_no, s.student_name, s.father_name, s.mother_name, s.gender,
-            s.dob.strftime('%d-%m-%Y') if s.dob else '',
-            s.age, s.category, s.religion or '', s.blood_group or '',
-            s.aadhar or '', s.apaar_id or '', s.address,
-            s.parent_phone, s.student_phone, s.email,
-            s.year, s.sem,
-            getattr(s,'branch','') or '', getattr(s,'roll_number','') or '',
-            s.ssc_marks, s.inter_marks, s.cgpa,
-            s.admission_type or '', s.eamcet_rank or '',
-            s.rtrp_project_title or '', s.intern_title or '', s.final_project_title or '',
-            s.created_at.strftime('%d-%m-%Y %H:%M:%S') if s.created_at else '',
+    response['Content-Disposition'] = f'attachment; filename="students_export_{date.today().strftime("%Y%m%d")}.csv"'
+
+    writer = csv.writer(response)
+
+    # Write header
+    writer.writerow([
+        'HT No', 'Student Name', 'Father Name', 'Mother Name',
+        'Gender', 'Date of Birth', 'Age', 'Category', 'Religion',
+        'Blood Group', 'Aadhar', 'APAAR ID', 'Address',
+        'Parent Phone', 'Student Phone', 'Email',
+        'Year', 'Semester', 'Branch', 'Roll Number',
+        'SSC Marks', 'Inter Marks', 'CGPA',
+        'Admission Type', 'EAMCET Rank',
+        'RTRP Project Title', 'Internship Title', 'Final Project Title',
+        'Created Date'
+    ])
+
+    # Write data
+    for student in students:
+        writer.writerow([
+            student.ht_no,
+            student.student_name,
+            student.father_name,
+            student.mother_name,
+            student.gender,
+            student.dob.strftime('%d-%m-%Y') if student.dob else '',
+            student.age,
+            student.category,
+            student.religion or '',
+            student.blood_group or '',
+            student.aadhar or '',
+            student.apaar_id or '',
+            student.address,
+            student.parent_phone,
+            student.student_phone,
+            student.email,
+            student.year,
+            student.sem,
+            student.branch or '',
+            student.roll_number or '',
+            student.ssc_marks,
+            student.inter_marks,
+            student.cgpa,
+            student.admission_type or '',
+            student.eamcet_rank or '',
+            student.rtrp_project_title or '',
+            student.intern_title or '',
+            student.final_project_title or '',
+            student.created_at.strftime('%d-%m-%Y %H:%M:%S') if student.created_at else '',
         ])
+
+    # Log the action
     FacultyLog.objects.create(
-        faculty=None, action='Students CSV Export',
-        details=f'Exported {qs.count()} students to CSV',
-        performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+        faculty=None,
+        action='Students CSV Export',
+        details=f'Exported {students.count()} students to CSV',
+        performed_by=request.user.username,
+        ip_address=request.META.get('REMOTE_ADDR')
     )
+
     return response
 
 
-# ==================== GENERATE FACULTY PDF ====================
+# ==================== ENHANCED FACULTY PDF GENERATION WITH CERTIFICATE MERGING ====================
 
 @login_required
 def generate_faculty_pdf(request, faculty_id):
+    """Generate PDF for a faculty member using HTML template with certificate merging - ENHANCED VERSION"""
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
-        merger = PdfMerger()
-        temp_files = []
+        print(f"\n{'='*60}")
+        print(f"GENERATING FACULTY PDF FOR: {faculty.staff_name}")
+        print(f"{'='*60}")
 
-        # --- Experience ---
+        # Create a merger object
+        merger = PdfMerger()
+        temp_files = []  # Track temp files for cleanup
+
+        # -------- 1. CALCULATE DETAILED EXPERIENCE --------
         experience = "N/A"
         if faculty.joining_date:
             today = date.today()
-            j = faculty.joining_date
-            yrs = today.year - j.year
-            mths = today.month - j.month
-            dys = today.day - j.day
-            if dys < 0:
-                mths -= 1
-                pm = today.month - 1 or 12
-                py = today.year - (1 if today.month == 1 else 0)
-                dim = 30 if pm in [4,6,9,11] else (29 if pm==2 and ((py%4==0 and py%100!=0) or py%400==0) else 28 if pm==2 else 31)
-                dys += dim
-            if mths < 0: yrs -= 1; mths += 12
-            experience = f"{yrs} Years {mths} Months {dys} Days"
+            joining = faculty.joining_date
+            years = today.year - joining.year
+            months = today.month - joining.month
+            days = today.day - joining.day
 
-        # --- Download photo ---
+            if days < 0:
+                months -= 1
+                # Get days in previous month
+                if today.month == 1:
+                    prev_month = 12
+                    prev_year = today.year - 1
+                else:
+                    prev_month = today.month - 1
+                    prev_year = today.year
+                # Get last day of previous month
+                if prev_month in [4, 6, 9, 11]:
+                    days_in_prev_month = 30
+                elif prev_month == 2:
+                    # Check for leap year
+                    if (prev_year % 4 == 0 and prev_year % 100 != 0) or (prev_year % 400 == 0):
+                        days_in_prev_month = 29
+                    else:
+                        days_in_prev_month = 28
+                else:
+                    days_in_prev_month = 31
+                days += days_in_prev_month
+
+            if months < 0:
+                years -= 1
+                months += 12
+
+            experience = f"{years} Years {months} Months {days} Days"
+            print(f"Experience calculated: {experience}")
+
+        # -------- 2. DOWNLOAD PHOTO IF EXISTS --------
         temp_photo_path = None
         photo_url = None
-        try:
-            photo_url = faculty.photo.url if faculty.photo else None
-        except Exception: pass
-        if not photo_url:
-            photo_url = getattr(faculty, 'cloudinary_photo_url', None)
+        if faculty.photo:
+            try:
+                photo_url = faculty.photo.url
+                print(f"Photo URL: {photo_url}")
+            except:
+                photo_url = None
+        elif faculty.cloudinary_photo_url:
+            photo_url = faculty.cloudinary_photo_url
+            print(f"Cloudinary Photo URL: {photo_url}")
+
         if photo_url:
             try:
-                r = requests.get(photo_url, timeout=15)
-                if r.status_code == 200:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tp:
-                        tp.write(r.content); temp_photo_path = tp.name
-                    temp_files.append(temp_photo_path)
+                print("Downloading photo...")
+                response = requests.get(photo_url, timeout=15)
+                if response.status_code == 200:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_p:
+                        tmp_p.write(response.content)
+                        temp_photo_path = tmp_p.name
+                        temp_files.append(temp_photo_path)
+                        print(f"Photo downloaded to: {temp_photo_path}")
             except Exception as e:
-                logger.error(f"Photo download error: {e}")
+                print(f"Photo download error: {e}")
 
-        certificates    = Certificate.objects.filter(faculty=faculty)
+        # -------- 3. GET CERTIFICATES AND RESEARCH PROJECTS --------
+        certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
+        print(f"Found {certificates.count()} certificates and {research_projects.count()} research projects")
+
+        # -------- 4. GET FACULTY PROFILE --------
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
         except FacultyProfile.DoesNotExist:
             profile = None
 
+        # -------- 5. PREPARE SUBJECTS LIST --------
         subjects_list = []
-        sd = getattr(faculty, 'subjects_dealt', None)
-        if sd: subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
+        if faculty.subjects_dealt:
+            subjects_list = [s.strip() for s in faculty.subjects_dealt.split(',') if s.strip()]
 
+        # -------- 6. PREPARE CONTEXT WITH ALL FACULTY DATA --------
         context = {
-            'faculty': faculty, 'profile': profile,
-            'research_projects': research_projects, 'certificates': certificates,
-            'subjects_list': subjects_list, 'experience': experience,
-            'current_date': datetime.now(), 'local_photo_path': temp_photo_path,
-            'ssc_year': getattr(faculty,'ssc_year',None),
-            'ssc_percent': getattr(faculty,'ssc_percent',None),
-            'ssc_school': getattr(faculty,'ssc_school',None),
-            'inter_year': getattr(faculty,'inter_year',None),
-            'inter_percent': getattr(faculty,'inter_percent',None),
-            'inter_college': getattr(faculty,'inter_college',None),
-            'ug_degree': getattr(faculty,'ug_degree',None),
-            'ug_year': getattr(faculty,'ug_year',None),
-            'ug_percentage': getattr(faculty,'ug_percentage',None),
-            'ug_college': getattr(faculty,'ug_college',None),
-            'ug_spec': getattr(faculty,'ug_spec',None),
-            'pg_degree': getattr(faculty,'pg_degree',None),
-            'pg_year': getattr(faculty,'pg_year',None),
-            'pg_percentage': getattr(faculty,'pg_percentage',None),
-            'pg_college': getattr(faculty,'pg_college',None),
-            'pg_spec': getattr(faculty,'pg_spec',None),
-            'phd_degree': getattr(faculty,'phd_degree',None),
-            'phd_year': getattr(faculty,'phd_year',None),
-            'phd_university': getattr(faculty,'phd_university',None),
-            'phd_spec': getattr(faculty,'phd_spec',None),
-            'jntuh_id': getattr(faculty,'jntuh_id',None),
-            'aicte_id': getattr(faculty,'aicte_id',None),
-            'pan': getattr(faculty,'pan',None),
-            'aadhar': getattr(faculty,'aadhar',None),
-            'apaar_id': getattr(faculty,'apaar_id',None),
-            'orcid_id': getattr(faculty,'orcid_id',None),
-            'subjects_dealt': getattr(faculty,'subjects_dealt',None),
-            'about_yourself': getattr(faculty,'about_yourself',None),
-            'results': getattr(faculty,'results',None),
-            'scm': getattr(faculty,'scm',None),
-            'has_aadhar': bool(getattr(faculty,'aadhar_file',None)),
-            'has_pan':    bool(getattr(faculty,'pan_file',None)),
-            'has_apaar':  bool(getattr(faculty,'apaar_file',None)),
-            'has_scm':    bool(getattr(faculty,'scm_file',None)),
+            'faculty': faculty,
+            'profile': profile,
+            'research_projects': research_projects,
+            'certificates': certificates,
+            'subjects_list': subjects_list,
+            'experience': experience,
+            'current_date': datetime.now(),
+            'local_photo_path': temp_photo_path,
+
+            # Explicitly pass all fields
+            'ssc_year': faculty.ssc_year,
+            'ssc_percent': faculty.ssc_percent,
+            'ssc_school': faculty.ssc_school,
+            'inter_year': faculty.inter_year,
+            'inter_percent': faculty.inter_percent,
+            'inter_college': faculty.inter_college,
+            'ug_degree': faculty.ug_degree,
+            'ug_year': faculty.ug_year,
+            'ug_percentage': faculty.ug_percentage,
+            'ug_college': faculty.ug_college,
+            'ug_spec': faculty.ug_spec,
+            'pg_degree': faculty.pg_degree,
+            'pg_year': faculty.pg_year,
+            'pg_percentage': faculty.pg_percentage,
+            'pg_college': faculty.pg_college,
+            'pg_spec': faculty.pg_spec,
+            'phd_degree': faculty.phd_degree,
+            'phd_year': faculty.phd_year,
+            'phd_university': faculty.phd_university,
+            'phd_spec': faculty.phd_spec,
+            'jntuh_id': faculty.jntuh_id,
+            'aicte_id': faculty.aicte_id,
+            'pan': faculty.pan,
+            'aadhar': faculty.aadhar,
+            'apaar_id': faculty.apaar_id,
+            'orcid_id': faculty.orcid_id,
+            'subjects_dealt': faculty.subjects_dealt,
+            'about_yourself': faculty.about_yourself,
+            'results': faculty.results,
+            'scm': faculty.scm,
+
+            # Document flags
+            'has_aadhar': bool(faculty.aadhar_file),
+            'has_pan': bool(faculty.pan_file),
+            'has_apaar': bool(faculty.apaar_file),
+            'has_scm': bool(faculty.scm_file),
         }
 
-        # --- Generate main PDF ---
-        main_pdf_path = None
+        # -------- 7. GENERATE MAIN PROFILE PDF --------
+        print("Generating main profile PDF...")
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
 
-        if pdfkit is not None:
-            try:
-                opts = {'page-size':'A4','margin-top':'15mm','margin-right':'15mm',
-                        'margin-bottom':'15mm','margin-left':'15mm',
-                        'encoding':'UTF-8','enable-local-file-access':'','quiet':''}
-                wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-                cfg = pdfkit.configuration(wkhtmltopdf=wk) if os.path.exists(wk) else pdfkit.configuration()
-                pdf_bytes = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tm:
-                    tm.write(pdf_bytes); main_pdf_path = tm.name
-                temp_files.append(main_pdf_path)
-            except Exception as e:
-                logger.warning(f"pdfkit failed ({e}), using ReportLab fallback.")
-                main_pdf_path = None
+        # PDF options
+        options = {
+            'page-size': 'A4',
+            'margin-top': '15mm',
+            'margin-right': '15mm',
+            'margin-bottom': '15mm',
+            'margin-left': '15mm',
+            'encoding': "UTF-8",
+            'enable-local-file-access': '',
+            'quiet': '',
+        }
 
-        if main_pdf_path is None:
-            # ReportLab fallback
-            tm = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-            main_pdf_path = tm.name; tm.close()
+        # wkhtmltopdf configuration
+        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        if os.path.exists(path_wkhtmltopdf):
+            config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+        else:
+            # Try to find wkhtmltopdf in PATH
+            config = pdfkit.configuration()
+
+        # Generate main PDF
+        main_pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
+
+        # Save main PDF to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_main:
+            tmp_main.write(main_pdf)
+            main_pdf_path = tmp_main.name
             temp_files.append(main_pdf_path)
-            s = getSampleStyleSheet()
-            hs = ParagraphStyle('h', fontSize=16, fontName='Helvetica-Bold',
-                                textColor=colors.darkblue, alignment=1)
-            docrl = SimpleDocTemplate(main_pdf_path, pagesize=A4,
-                                      topMargin=0.75*inch, bottomMargin=0.75*inch,
-                                      leftMargin=0.75*inch, rightMargin=0.75*inch)
-            el = []
-            el.append(Paragraph("ANURAG ENGINEERING COLLEGE", hs))
-            el.append(Spacer(1, 0.1*inch))
-            el.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
-            el.append(Spacer(1, 0.1*inch))
-            el.append(Paragraph("FACULTY PROFILE",
-                                 ParagraphStyle('t', fontSize=14, alignment=1)))
-            el.append(Spacer(1, 0.2*inch))
-            rows = [
-                ("Employee Code", faculty.employee_code),
-                ("Name", faculty.staff_name),
-                ("Department", faculty.department),
-                ("Designation", faculty.designation),
-                ("Email", faculty.email),
-                ("Mobile", faculty.mobile),
-                ("Gender", faculty.gender),
-                ("Date of Birth", faculty.dob.strftime('%d-%m-%Y') if faculty.dob else "N/A"),
-                ("Joining Date", faculty.joining_date.strftime('%d-%m-%Y') if faculty.joining_date else "N/A"),
-                ("Experience", experience),
-                ("Address", faculty.address),
-            ]
-            td = [[Paragraph(f"<b>{l}</b>", s['Normal']),
-                   Paragraph(str(v) if v else "N/A", s['Normal'])] for l,v in rows]
-            tbl = Table(td, colWidths=[2.2*inch, 4.3*inch])
-            tbl.setStyle(TableStyle([
-                ('GRID',(0,0),(-1,-1),0.5,colors.grey),
-                ('BACKGROUND',(0,0),(0,-1),colors.lightgrey),
-                ('VALIGN',(0,0),(-1,-1),'TOP'),('PADDING',(0,0),(-1,-1),5),
-                ('FONTSIZE',(0,0),(-1,-1),9),
-            ]))
-            el.append(tbl)
-            el.append(Spacer(1,0.2*inch))
-            el.append(Paragraph(f"Generated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", s['Normal']))
-            docrl.build(el)
+            print(f"Main PDF saved to: {main_pdf_path}")
 
+        # Add main PDF to merger
         merger.append(main_pdf_path)
+        print("Added main PDF to merger")
 
-        # --- Merge education certificates ---
+        # -------- 8. MERGE CERTIFICATES --------
+        # Certificate fields from migrations 0008 and 0012
         cert_fields = [
-            ('ssc_certificate','SSC Certificate'),
-            ('inter_certificate','Intermediate Certificate'),
-            ('ug_certificate','UG Certificate'),
-            ('pg_certificate','PG Certificate'),
-            ('phd_certificate','PhD Certificate'),
+            ('ssc_certificate', 'SSC Certificate'),
+            ('inter_certificate', 'Intermediate Certificate'),
+            ('ug_certificate', 'UG Certificate'),
+            ('pg_certificate', 'PG Certificate'),
+            ('phd_certificate', 'PhD Certificate'),
         ]
-        cert_count = 0
-        for fn, fl in cert_fields:
-            cf = getattr(faculty, fn, None)
-            if not cf or not hasattr(cf, 'url'): continue
-            try:
-                r = requests.get(cf.url, timeout=30)
-                if r.status_code != 200: continue
-                content = r.content
-                if content.startswith(b'%PDF'):
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
-                        tc.write(content); temp_files.append(tc.name)
-                    merger.append(tc.name); cert_count += 1
-                else:
-                    try:
-                        img = PILImage.open(BytesIO(content))
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as ti:
-                            if img.mode != 'RGB': img = img.convert('RGB')
-                            img.save(ti.name, 'PDF', resolution=100.0)
-                            temp_files.append(ti.name)
-                        merger.append(ti.name); cert_count += 1
-                    except Exception: pass
-            except Exception as e:
-                logger.error(f"Error processing {fl}: {e}")
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as ot:
-            merger.write(ot.name); final_pdf_path = ot.name
-        temp_files.append(final_pdf_path)
+        cert_count = 0
+        for field_name, field_label in cert_fields:
+            cert_field = getattr(faculty, field_name, None)
+            if cert_field and hasattr(cert_field, 'url'):
+                cert_url = cert_field.url
+                print(f"Processing {field_label}: {cert_url}")
+
+                try:
+                    # Fetch certificate from Cloudinary
+                    response = requests.get(cert_url, timeout=30)
+                    if response.status_code == 200:
+                        content = response.content
+
+                        # Check if it's a PDF
+                        if content.startswith(b'%PDF'):
+                            # Save as PDF
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_cert:
+                                tmp_cert.write(content)
+                                cert_pdf_path = tmp_cert.name
+                                temp_files.append(cert_pdf_path)
+
+                            # Add to merger
+                            merger.append(cert_pdf_path)
+                            cert_count += 1
+                            print(f"  [OK] Added {field_label} PDF")
+                        else:
+                            # Try to convert image to PDF
+                            try:
+                                img = PILImage.open(BytesIO(content))
+                                print(f"  Image detected: {img.format}, size: {img.size}")
+
+                                # Convert to PDF
+                                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as img_pdf:
+                                    if img.mode != 'RGB':
+                                        img = img.convert('RGB')
+                                    img.save(img_pdf.name, 'PDF', resolution=100.0)
+                                    cert_pdf_path = img_pdf.name
+                                    temp_files.append(cert_pdf_path)
+
+                                # Add to merger
+                                merger.append(cert_pdf_path)
+                                cert_count += 1
+                                print(f"  [OK] Converted and added {field_label} image")
+                            except Exception as img_error:
+                                print(f"  [ERROR] Could not convert image: {img_error}")
+                    else:
+                        print(f"  [ERROR] Failed to download: HTTP {response.status_code}")
+
+                except Exception as e:
+                    print(f"  [ERROR] Error processing {field_label}: {e}")
+
+        print(f"Total certificates merged: {cert_count}")
+
+        # -------- 9. MERGE DOCUMENT FILES (Aadhar, PAN, APAAR, SCM) --------
+        print("\n--- MERGING DOCUMENT FILES ---")
+        doc_fields = [
+            ('aadhar_file', 'Aadhar Card'),
+            ('pan_file', 'PAN Card'),
+            ('apaar_file', 'APAAR Document'),
+            ('scm_file', 'SCM Document'),
+        ]
+
+        doc_count = 0
+        for field_name, field_label in doc_fields:
+            doc_field = getattr(faculty, field_name, None)
+            if doc_field and hasattr(doc_field, 'url'):
+                doc_url = doc_field.url
+                print(f"Processing {field_label}: {doc_url}")
+
+                try:
+                    # Fetch document from URL
+                    response = requests.get(doc_url, timeout=30)
+                    if response.status_code == 200:
+                        content = response.content
+
+                        # Check if it's a PDF
+                        if content.startswith(b'%PDF'):
+                            # Save as PDF
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_doc:
+                                tmp_doc.write(content)
+                                doc_pdf_path = tmp_doc.name
+                                temp_files.append(doc_pdf_path)
+
+                            # Add to merger
+                            merger.append(doc_pdf_path)
+                            doc_count += 1
+                            print(f"  [OK] Added {field_label} PDF")
+                        else:
+                            # Try to convert image to PDF
+                            try:
+                                img = PILImage.open(BytesIO(content))
+                                print(f"  Image detected: {img.format}, size: {img.size}")
+
+                                # Convert to PDF
+                                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as img_pdf:
+                                    if img.mode != 'RGB':
+                                        img = img.convert('RGB')
+                                    img.save(img_pdf.name, 'PDF', resolution=100.0)
+                                    doc_pdf_path = img_pdf.name
+                                    temp_files.append(doc_pdf_path)
+
+                                # Add to merger
+                                merger.append(doc_pdf_path)
+                                doc_count += 1
+                                print(f"  [OK] Converted and added {field_label} image")
+                            except Exception as img_error:
+                                print(f"  [ERROR] Could not convert image: {img_error}")
+                    else:
+                        print(f"  [ERROR] Failed to download: HTTP {response.status_code}")
+
+                except Exception as e:
+                    print(f"  [ERROR] Error processing {field_label}: {e}")
+
+        print(f"Total document files merged: {doc_count}")
+
+        # -------- 10. SAVE FINAL MERGED PDF --------
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as output_temp:
+            merger.write(output_temp.name)
+            final_pdf_path = output_temp.name
+            temp_files.append(final_pdf_path)
+            print(f"\nFinal merged PDF saved to: {final_pdf_path}")
+
         merger.close()
 
-        # --- Upload to Cloudinary ---
+        # -------- 11. UPLOAD FINAL PDF TO CLOUDINARY (OPTIONAL) --------
         if is_cloudinary_configured():
             try:
-                ur = cloudinary.uploader.upload(
-                    final_pdf_path, resource_type="raw", folder="faculty_generated_pdfs",
-                    public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}", overwrite=True
+                print("Uploading final PDF to Cloudinary...")
+                upload_result = cloudinary.uploader.upload(
+                    final_pdf_path,
+                    resource_type="raw",
+                    folder="faculty_generated_pdfs",
+                    public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}",
+                    overwrite=True
                 )
-                faculty.cloudinary_pdf_url = ur["secure_url"]
+
+                faculty.cloudinary_pdf_url = upload_result["secure_url"]
                 faculty.save()
+                print(f"PDF uploaded to Cloudinary: {upload_result['secure_url']}")
+
                 CloudinaryUpload.objects.create(
-                    faculty=faculty, upload_type='pdf',
-                    cloudinary_url=ur['secure_url'], public_id=ur['public_id'],
-                    resource_type=ur['resource_type'],
+                    faculty=faculty,
+                    upload_type='pdf',
+                    cloudinary_url=upload_result['secure_url'],
+                    public_id=upload_result['public_id'],
+                    resource_type=upload_result['resource_type'],
                     uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                 )
             except Exception as e:
-                logger.error(f"Cloudinary upload error: {e}")
+                print(f"Error uploading to Cloudinary: {e}")
 
-        with open(final_pdf_path, 'rb') as pf:
-            response = HttpResponse(pf.read(), content_type='application/pdf')
-            fname = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
-            response['Content-Disposition'] = f'attachment; filename="{fname}"'
+        # -------- 12. RETURN THE PDF --------
+        with open(final_pdf_path, 'rb') as pdf_file:
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+            filename = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
 
-        for t in temp_files:
+        # -------- 13. CLEAN UP TEMP FILES --------
+        for temp_file in temp_files:
             try:
-                if os.path.exists(t): os.remove(t)
-            except Exception: pass
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                    print(f"Cleaned up: {temp_file}")
+            except Exception as e:
+                print(f"Error cleaning up {temp_file}: {e}")
 
+        # -------- 14. LOG THE ACTION --------
         FacultyLog.objects.create(
-            faculty=faculty, action='PDF Generated',
-            details=f'PDF generated for {faculty.employee_code} with {cert_count} certificates',
+            faculty=faculty,
+            action='PDF Generated',
+            details=f'Enhanced PDF generated for faculty: {faculty.employee_code} with {cert_count} certificates and {doc_count} documents',
             performed_by=request.user.username if request.user.is_authenticated else 'Anonymous',
             ip_address=request.META.get('REMOTE_ADDR')
         )
+
+        print(f"{'='*60}")
+        print(f"PDF GENERATION COMPLETE")
+        print(f"Certificates merged: {cert_count}")
+        print(f"Documents merged: {doc_count}")
+        print(f"{'='*60}")
         return response
 
     except Exception as e:
-        logger.error(f"PDF Generation Error: {e}")
-        import traceback; traceback.print_exc()
-        messages.error(request, f'Error generating PDF: {e}')
+        logger.error(f"PDF Generation Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        messages.error(request, f'Error generating faculty PDF: {str(e)}')
         return redirect('dashboard:faculty_dashboard')
 
 
 def generate_pdf_with_data(request):
+    """Generate PDF with custom data"""
     if request.method == 'POST':
-        if pdfkit is None:
-            return JsonResponse({'success': False, 'error': 'pdfkit not installed'})
+        data = request.POST.dict()
+
         try:
-            html_string = render_to_string('faculty/custom_pdf_template.html', {'data': request.POST.dict()})
-            opts = {'page-size':'A4','margin-top':'0.5in','margin-right':'0.5in',
-                    'margin-bottom':'0.5in','margin-left':'0.5in','encoding':'UTF-8'}
-            wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-            cfg = pdfkit.configuration(wkhtmltopdf=wk)
-            pdf = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
+            # Generate PDF from data
+            html_string = render_to_string('faculty/custom_pdf_template.html', {'data': data})
+
+            options = {
+                'page-size': 'A4',
+                'margin-top': '0.5in',
+                'margin-right': '0.5in',
+                'margin-bottom': '0.5in',
+                'margin-left': '0.5in',
+                'encoding': "UTF-8",
+            }
+
+            # --- ADDED: Explicit path to wkhtmltopdf ---
+            path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+            config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+            # --- END OF ADDITION ---
+
+            pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
+
             response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="generated_document.pdf"'
             return response
+
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
+
     return render(request, 'faculty/generate_pdf_form.html')
 
 
 @login_required
 def preview_faculty_pdf(request, faculty_id):
+    """Preview faculty PDF"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    # Check if PDF exists in Cloudinary
     if faculty.cloudinary_pdf_url:
-        return JsonResponse({'success': True, 'pdf_url': faculty.cloudinary_pdf_url, 'message': 'PDF on Cloudinary'})
+        return JsonResponse({
+            'success': True,
+            'pdf_url': faculty.cloudinary_pdf_url,
+            'message': 'PDF available on Cloudinary'
+        })
+
+    # Check if local PDF exists
     if faculty.pdf_document and faculty.pdf_document.url:
-        return JsonResponse({'success': True, 'pdf_url': faculty.pdf_document.url, 'message': 'Local PDF available'})
-    return JsonResponse({'success': False, 'error': 'No PDF available. Please generate one first.'})
+        return JsonResponse({
+            'success': True,
+            'pdf_url': faculty.pdf_document.url,
+            'message': 'Local PDF available'
+        })
+
+    return JsonResponse({
+        'success': False,
+        'error': 'No PDF available. Please generate one first.'
+    })
 
 
 def preview_pdf_template(request):
+    """Preview PDF template"""
     return render(request, 'faculty/pdf_preview.html')
 
 
 @login_required
 def download_faculty_pdf(request, faculty_id):
+    """Download faculty PDF"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    # Check Cloudinary first
     if faculty.cloudinary_pdf_url:
         return redirect(faculty.cloudinary_pdf_url)
+
+    # Check local file
     if faculty.pdf_document and faculty.pdf_document.url:
         response = HttpResponse(faculty.pdf_document, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="faculty_{faculty.employee_code}.pdf"'
         return response
+
+    # Generate PDF if not exists
     return generate_faculty_pdf(request, faculty_id)
 
 
 @login_required
 def bulk_generate_faculty_pdfs(request):
-    if request.method != 'POST':
-        return redirect('dashboard:faculty_list')
-    faculty_ids = request.POST.getlist('faculty_ids')
-    if not faculty_ids:
-        messages.error(request, "No faculty selected.")
-        return redirect('dashboard:faculty_list')
-    try:
-        temp_dir = tempfile.mkdtemp()
-        zip_path = os.path.join(temp_dir, f'faculty_pdfs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip')
-        with zipfile.ZipFile(zip_path, 'w') as zipf:
-            for fid in faculty_ids:
-                try:
-                    fac = Faculty.objects.get(id=fid)
-                    exp = calculate_experience(fac.joining_date) if fac.joining_date else "N/A"
-                    ctx = {'faculty': fac, 'experience': exp, 'current_date': datetime.now(), 'pdf_mode': True}
-                    html = render_to_string('dashboard/faculty_pdf.html', ctx)
-                    if pdfkit is not None:
-                        opts = {'page-size':'A4','margin-top':'20mm','margin-right':'20mm',
-                                'margin-bottom':'20mm','margin-left':'20mm','encoding':'UTF-8'}
-                        wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-                        cfg = pdfkit.configuration(wkhtmltopdf=wk)
-                        pdf = pdfkit.from_string(html, False, options=opts, configuration=cfg)
-                        pname = f"faculty_{fac.employee_code}.pdf"
-                        pp = os.path.join(temp_dir, pname)
-                        with open(pp, 'wb') as f: f.write(pdf)
-                        zipf.write(pp, pname)
-                        os.remove(pp)
-                except Exception as e:
-                    logger.error(f"Error generating PDF for faculty {fid}: {e}")
-        with open(zip_path, 'rb') as f: zip_data = f.read()
-        response = HttpResponse(zip_data, content_type='application/zip')
-        response['Content-Disposition'] = f'attachment; filename="faculty_pdfs_{datetime.now().strftime("%Y%m%d")}.zip"'
-        if os.path.exists(zip_path): os.remove(zip_path)
-        try: os.rmdir(temp_dir)
-        except Exception: pass
-        FacultyLog.objects.create(
-            faculty=None, action='Bulk Faculty PDFs Generated',
-            details=f'PDFs generated for {len(faculty_ids)} faculty members',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
-        )
-        return response
-    except Exception as e:
-        logger.error(f"Bulk PDF error: {e}")
-        messages.error(request, f"Error generating PDFs: {e}")
+    """Generate PDFs for multiple faculty members"""
+    if request.method == 'POST':
+        faculty_ids = request.POST.getlist('faculty_ids')
+        if not faculty_ids:
+            messages.error(request, "No faculty selected.")
+            return redirect('dashboard:faculty_list')
+
+        try:
+            # Create temporary directory for PDFs
+            temp_dir = tempfile.mkdtemp()
+            zip_path = os.path.join(temp_dir, f'faculty_pdfs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.zip')
+
+            with zipfile.ZipFile(zip_path, 'w') as zipf:
+                for faculty_id in faculty_ids:
+                    try:
+                        faculty = Faculty.objects.get(id=faculty_id)
+
+                        # Generate PDF
+                        experience = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
+
+                        context = {
+                            'faculty': faculty,
+                            'experience': experience,
+                            'current_date': datetime.now(),
+                            'pdf_mode': True,
+                        }
+
+                        # ✅ USE faculty_pdf.html FOR BULK PDF GENERATION
+                        html_string = render_to_string('dashboard/faculty_pdf.html', context)
+
+                        options = {
+                            'page-size': 'A4',
+                            'margin-top': '20mm',
+                            'margin-right': '20mm',
+                            'margin-bottom': '20mm',
+                            'margin-left': '20mm',
+                            'encoding': "UTF-8",
+                        }
+
+                        # --- ADDED: Explicit path to wkhtmltopdf ---
+                        path_wkhtmltopdf = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+                        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+                        # --- END OF ADDITION ---
+
+                        pdf = pdfkit.from_string(html_string, False, options=options, configuration=config)
+
+                        # Save PDF to temp file
+                        pdf_filename = f"faculty_{faculty.employee_code}.pdf"
+                        pdf_path = os.path.join(temp_dir, pdf_filename)
+
+                        with open(pdf_path, 'wb') as f:
+                            f.write(pdf)
+
+                        # Add to zip
+                        zipf.write(pdf_path, pdf_filename)
+
+                        # Clean up individual PDF
+                        os.remove(pdf_path)
+
+                    except Exception as e:
+                        logger.error(f"Error generating PDF for faculty {faculty_id}: {str(e)}")
+                        continue
+
+            # Read zip file
+            with open(zip_path, 'rb') as f:
+                zip_data = f.read()
+
+            # Create response
+            response = HttpResponse(zip_data, content_type='application/zip')
+            response[
+                'Content-Disposition'] = f'attachment; filename="faculty_pdfs_{datetime.now().strftime("%Y%m%d")}.zip"'
+
+            # Clean up
+            if os.path.exists(zip_path):
+                os.remove(zip_path)
+            if os.path.exists(temp_dir):
+                os.rmdir(temp_dir)
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=None,
+                action='Bulk Faculty PDFs Generated',
+                details=f'PDFs generated for {len(faculty_ids)} faculty members',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            return response
+
+        except Exception as e:
+            logger.error(f"Error in bulk PDF generation: {str(e)}")
+            messages.error(request, f"Error generating PDFs: {str(e)}")
+
     return redirect('dashboard:faculty_list')
 
 
-# ==================== CLOUDINARY MANAGEMENT ====================
+# ==================== CLOUDINARY INTEGRATION ====================
 
 @login_required
 @csrf_exempt
 def upload_faculty_to_cloudinary(request, faculty_id):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid request method'})
-    try:
-        faculty = get_object_or_404(Faculty, id=faculty_id)
-        if not is_cloudinary_configured():
-            return JsonResponse({'success': False, 'error': 'Cloudinary not configured.'})
-        if faculty.cloudinary_pdf_url:
-            return JsonResponse({'success': True, 'pdf_url': faculty.cloudinary_pdf_url,
-                                 'message': 'PDF already exists on Cloudinary'})
-        pdf_resp = generate_faculty_pdf(request, faculty_id)
-        if not isinstance(pdf_resp, HttpResponse):
-            return JsonResponse({'success': False, 'error': 'Failed to generate PDF'})
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-            tf.write(pdf_resp.content); tfp = tf.name
-        cr = cloudinary.uploader.upload(
-            tfp, resource_type="raw", folder="faculty_pdfs",
-            public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}",
-            overwrite=True, tags=[f"faculty_{faculty.employee_code}", faculty.department, "pdf"]
-        )
-        faculty.cloudinary_pdf_url = cr['secure_url']; faculty.save()
-        CloudinaryUpload.objects.create(
-            faculty=faculty, upload_type='pdf', cloudinary_url=cr['secure_url'],
-            public_id=cr['public_id'], resource_type=cr['resource_type'], uploaded_by=request.user.username
-        )
-        os.unlink(tfp)
-        FacultyLog.objects.create(
-            faculty=faculty, action='PDF Uploaded to Cloudinary',
-            details=f'PDF uploaded: {faculty.employee_code}',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
-        )
-        return JsonResponse({'success': True, 'pdf_url': faculty.cloudinary_pdf_url,
-                             'public_id': cr['public_id'], 'message': 'Uploaded successfully'})
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+    """Upload faculty PDF to Cloudinary"""
+    if request.method == 'POST':
+        try:
+            faculty = get_object_or_404(Faculty, id=faculty_id)
+
+            # Check if Cloudinary is configured
+            if not is_cloudinary_configured():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cloudinary is not configured properly. Please check your settings.'
+                })
+
+            # First, check if PDF already exists
+            if faculty.cloudinary_pdf_url:
+                return JsonResponse({
+                    'success': True,
+                    'pdf_url': faculty.cloudinary_pdf_url,
+                    'message': 'PDF already exists on Cloudinary'
+                })
+
+            # Generate PDF
+            pdf_response = generate_faculty_pdf(request, faculty_id)
+
+            if not isinstance(pdf_response, HttpResponse):
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Failed to generate PDF'
+                })
+
+            # Get PDF content
+            pdf_content = pdf_response.content
+
+            # Save to temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                tmp_file.write(pdf_content)
+                tmp_file_path = tmp_file.name
+
+            # Upload to Cloudinary
+            cloudinary_response = cloudinary.uploader.upload(
+                tmp_file_path,
+                resource_type="raw",
+                folder="faculty_pdfs",
+                public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}",
+                overwrite=True,
+                tags=[f"faculty_{faculty.employee_code}", faculty.department, "pdf"]
+            )
+
+            # Save Cloudinary URL to faculty record
+            faculty.cloudinary_pdf_url = cloudinary_response['secure_url']
+            faculty.save()
+
+            # Record the upload
+            CloudinaryUpload.objects.create(
+                faculty=faculty,
+                upload_type='pdf',
+                cloudinary_url=cloudinary_response['secure_url'],
+                public_id=cloudinary_response['public_id'],
+                resource_type=cloudinary_response['resource_type'],
+                uploaded_by=request.user.username
+            )
+
+            # Clean up temp file
+            os.unlink(tmp_file_path)
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=faculty,
+                action='PDF Uploaded to Cloudinary',
+                details=f'PDF uploaded to Cloudinary: {faculty.employee_code}',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            return JsonResponse({
+                'success': True,
+                'pdf_url': faculty.cloudinary_pdf_url,
+                'public_id': cloudinary_response['public_id'],
+                'message': 'PDF uploaded to Cloudinary successfully'
+            })
+
+        except Exception as e:
+            logger.error(f"Error uploading to Cloudinary: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
 @csrf_exempt
 def upload_faculty_photo(request):
+    """Upload faculty photo to Cloudinary"""
     if request.method == 'POST' and request.FILES.get('photo'):
         try:
-            faculty = get_object_or_404(Faculty, employee_code=request.POST.get('employee_code'))
+            employee_code = request.POST.get('employee_code')
+            faculty = get_object_or_404(Faculty, employee_code=employee_code)
+            photo_file = request.FILES['photo']
+
+            # Check if Cloudinary is configured
             if not is_cloudinary_configured():
-                return JsonResponse({'success': False, 'error': 'Cloudinary not configured.'})
-            cr = cloudinary.uploader.upload(
-                request.FILES['photo'], folder="faculty_photos",
-                public_id=f"faculty_{faculty.employee_code}", overwrite=True,
-                transformation=[{'width':300,'height':300,'crop':'fill'},{'quality':'auto:good'}]
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cloudinary is not configured properly. Please check your settings.'
+                })
+
+            # Upload to Cloudinary
+            cloudinary_response = cloudinary.uploader.upload(
+                photo_file,
+                folder="faculty_photos",
+                public_id=f"faculty_{employee_code}",
+                overwrite=True,
+                transformation=[
+                    {'width': 300, 'height': 300, 'crop': 'fill'},
+                    {'quality': 'auto:good'}
+                ]
             )
-            faculty.cloudinary_photo_url = cr['secure_url']; faculty.save()
+
+            # Save Cloudinary URL
+            faculty.cloudinary_photo_url = cloudinary_response['secure_url']
+            faculty.save()
+
+            # Record the upload
             CloudinaryUpload.objects.create(
-                faculty=faculty, upload_type='photo', cloudinary_url=cr['secure_url'],
-                public_id=cr['public_id'], resource_type=cr['resource_type'],
+                faculty=faculty,
+                upload_type='photo',
+                cloudinary_url=cloudinary_response['secure_url'],
+                public_id=cloudinary_response['public_id'],
+                resource_type=cloudinary_response['resource_type'],
                 uploaded_by=request.user.username if request.user.is_authenticated else 'Anonymous'
             )
-            return JsonResponse({'success': True, 'photo_url': faculty.cloudinary_photo_url,
-                                 'message': 'Photo uploaded successfully'})
+
+            return JsonResponse({
+                'success': True,
+                'photo_url': faculty.cloudinary_photo_url,
+                'message': 'Photo uploaded successfully'
+            })
+
         except Exception as e:
+            logger.error(f"Error uploading photo: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
+
     return JsonResponse({'success': False, 'error': 'No photo file provided'})
 
 
 @csrf_exempt
 def upload_faculty_pdf(request):
+    """Upload existing PDF to Cloudinary"""
     if request.method == 'POST' and request.FILES.get('pdf_file'):
         try:
-            faculty = get_object_or_404(Faculty, employee_code=request.POST.get('employee_code'))
+            employee_code = request.POST.get('employee_code')
+            faculty = get_object_or_404(Faculty, employee_code=employee_code)
+            pdf_file = request.FILES['pdf_file']
+
+            # Check if Cloudinary is configured
             if not is_cloudinary_configured():
-                return JsonResponse({'success': False, 'error': 'Cloudinary not configured.'})
-            cr = cloudinary.uploader.upload(
-                request.FILES['pdf_file'], resource_type="raw", folder="faculty_pdfs",
-                public_id=f"faculty_{faculty.employee_code}", overwrite=True
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Cloudinary is not configured properly. Please check your settings.'
+                })
+
+            # Upload to Cloudinary
+            cloudinary_response = cloudinary.uploader.upload(
+                pdf_file,
+                resource_type="raw",
+                folder="faculty_pdfs",
+                public_id=f"faculty_{employee_code}",
+                overwrite=True
             )
-            faculty.cloudinary_pdf_url = cr['secure_url']; faculty.save()
+
+            # Save Cloudinary URL
+            faculty.cloudinary_pdf_url = cloudinary_response['secure_url']
+            faculty.save()
+
+            # Record the upload
             CloudinaryUpload.objects.create(
-                faculty=faculty, upload_type='pdf', cloudinary_url=cr['secure_url'],
-                public_id=cr['public_id'], resource_type=cr['resource_type'],
+                faculty=faculty,
+                upload_type='pdf',
+                cloudinary_url=cloudinary_response['secure_url'],
+                public_id=cloudinary_response['public_id'],
+                resource_type=cloudinary_response['resource_type'],
                 uploaded_by=request.user.username if request.user.is_authenticated else 'Anonymous'
             )
-            return JsonResponse({'success': True, 'pdf_url': faculty.cloudinary_pdf_url,
-                                 'message': 'PDF uploaded successfully'})
+
+            return JsonResponse({
+                'success': True,
+                'pdf_url': faculty.cloudinary_pdf_url,
+                'message': 'PDF uploaded to Cloudinary successfully'
+            })
+
         except Exception as e:
+            logger.error(f"Error uploading PDF: {str(e)}")
             return JsonResponse({'success': False, 'error': str(e)})
+
     return JsonResponse({'success': False, 'error': 'No PDF file provided'})
 
 
 @login_required
 def cloudinary_status(request):
+    """Check Cloudinary connection status"""
     try:
+        # Check if Cloudinary is configured
         if not is_cloudinary_configured():
             return render(request, 'cloudinary/status.html', {
-                'title': 'Cloudinary Status', 'connected': False,
-                'error': 'Cloudinary credentials not configured.',
+                'title': 'Cloudinary Status',
+                'connected': False,
+                'error': 'Cloudinary credentials not configured. Please check settings.py or environment variables.',
                 'cloudinary_config': {
-                    'cloud_name': getattr(settings,'CLOUDINARY_CLOUD_NAME','Not configured'),
-                    'api_key_exists': bool(getattr(settings,'CLOUDINARY_API_KEY',None)),
-                    'api_secret_exists': bool(getattr(settings,'CLOUDINARY_API_SECRET',None)),
+                    'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                    'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                    'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
                 }
             })
+
+        # Test Cloudinary connection
         result = cloudinary.api.ping()
-        usage  = cloudinary.api.usage()
-        recent_uploads = CloudinaryUpload.objects.select_related('faculty','student').order_by('-upload_date')[:10]
-        total_faculty = Faculty.objects.count()
+        status = result.get('status') == 'ok'
+
+        # Get Cloudinary usage
+        usage = cloudinary.api.usage()
+
+        # Count uploaded files
+        uploaded_count = CloudinaryUpload.objects.count()
+        faculty_with_pdf = Faculty.objects.exclude(cloudinary_pdf_url__isnull=True).exclude(
+            cloudinary_pdf_url='').count()
+        faculty_with_photo = Faculty.objects.exclude(cloudinary_photo_url__isnull=True).exclude(
+            cloudinary_photo_url='').count()
+
+        # Get recent uploads
+        recent_uploads = CloudinaryUpload.objects.select_related('faculty', 'student').order_by('-upload_date')[:10]
+
         return render(request, 'cloudinary/status.html', {
-            'title': 'Cloudinary Status', 'connected': result.get('status') == 'ok',
+            'title': 'Cloudinary Status',
+            'connected': status,
             'usage': usage,
-            'uploaded_count':   CloudinaryUpload.objects.count(),
-            'faculty_with_pdf': Faculty.objects.exclude(cloudinary_pdf_url__isnull=True).exclude(cloudinary_pdf_url='').count(),
-            'faculty_with_photo': Faculty.objects.exclude(cloudinary_photo_url__isnull=True).exclude(cloudinary_photo_url='').count(),
-            'total_faculty': total_faculty, 'recent_uploads': recent_uploads,
+            'uploaded_count': uploaded_count,
+            'faculty_with_pdf': faculty_with_pdf,
+            'faculty_with_photo': faculty_with_photo,
+            'total_faculty': Faculty.objects.count(),
+            'recent_uploads': recent_uploads,
             'cloudinary_config': {
-                'cloud_name': getattr(settings,'CLOUDINARY_CLOUD_NAME','Not configured'),
-                'api_key_exists': bool(getattr(settings,'CLOUDINARY_API_KEY',None)),
-                'api_secret_exists': bool(getattr(settings,'CLOUDINARY_API_SECRET',None)),
+                'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
             }
         })
+
     except Exception as e:
+        logger.error(f"Cloudinary connection error: {str(e)}")
         return render(request, 'cloudinary/status.html', {
-            'title': 'Cloudinary Status', 'connected': False, 'error': str(e),
+            'title': 'Cloudinary Status',
+            'connected': False,
+            'error': str(e),
             'cloudinary_config': {
-                'cloud_name': getattr(settings,'CLOUDINARY_CLOUD_NAME','Not configured'),
-                'api_key_exists': bool(getattr(settings,'CLOUDINARY_API_KEY',None)),
-                'api_secret_exists': bool(getattr(settings,'CLOUDINARY_API_SECRET',None)),
+                'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
             }
         })
 
 
 @login_required
 def get_cloudinary_url(request, faculty_id):
+    """Get Cloudinary URL for faculty"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    return JsonResponse({
-        'pdf_url':   faculty.cloudinary_pdf_url,
+
+    urls = {
+        'pdf_url': faculty.cloudinary_pdf_url,
         'photo_url': faculty.cloudinary_photo_url,
         'employee_code': faculty.employee_code,
-        'has_pdf':   bool(faculty.cloudinary_pdf_url),
+        'has_pdf': bool(faculty.cloudinary_pdf_url),
         'has_photo': bool(faculty.cloudinary_photo_url),
-    })
+    }
+
+    return JsonResponse(urls)
 
 
 @login_required
 def bulk_sync_to_cloudinary(request):
-    if request.method != 'POST':
-        return redirect('dashboard:faculty_list')
-    faculty_ids = request.POST.getlist('faculty_ids')
-    if not faculty_ids:
-        messages.error(request, "No faculty selected.")
-        return redirect('dashboard:faculty_list')
-    if not is_cloudinary_configured():
-        messages.error(request, "Cloudinary not configured.")
-        return redirect('dashboard:faculty_list')
-    ok = err = 0
-    for fid in faculty_ids:
-        try:
-            fac = Faculty.objects.get(id=fid)
-            if fac.photo and not fac.cloudinary_photo_url:
-                try:
-                    with fac.photo.open('rb') as pf:
-                        cr = cloudinary.uploader.upload(pf, folder="faculty_photos",
-                                                        public_id=f"faculty_{fac.employee_code}", overwrite=True)
-                        fac.cloudinary_photo_url = cr['secure_url']; fac.save()
-                        CloudinaryUpload.objects.create(
-                            faculty=fac, upload_type='photo', cloudinary_url=cr['secure_url'],
-                            public_id=cr['public_id'], resource_type=cr['resource_type'],
-                            uploaded_by=request.user.username
-                        )
-                except Exception as e:
-                    logger.error(f"Photo sync error for {fid}: {e}")
-            ok += 1
-        except Exception as e:
-            logger.error(f"Sync error for {fid}: {e}"); err += 1
-    FacultyLog.objects.create(
-        faculty=None, action='Bulk Cloudinary Sync',
-        details=f'Synced {ok} faculty ({err} errors)',
-        performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
-    )
-    if ok:  messages.success(request, f"Synced {ok} faculty to Cloudinary.")
-    if err: messages.warning(request, f"Failed to sync {err} faculty.")
+    """Bulk sync faculty data to Cloudinary"""
+    if request.method == 'POST':
+        faculty_ids = request.POST.getlist('faculty_ids')
+        if not faculty_ids:
+            messages.error(request, "No faculty selected.")
+            return redirect('dashboard:faculty_list')
+
+        # Check if Cloudinary is configured
+        if not is_cloudinary_configured():
+            messages.error(request, "Cloudinary is not configured properly. Please check your settings.")
+            return redirect('dashboard:faculty_list')
+
+        success_count = 0
+        error_count = 0
+
+        for faculty_id in faculty_ids:
+            try:
+                faculty = Faculty.objects.get(id=faculty_id)
+
+                # Sync PDF if not exists
+                if not faculty.cloudinary_pdf_url:
+                    try:
+                        # Generate and upload PDF
+                        pdf_response = generate_faculty_pdf(request, faculty_id)
+
+                        if isinstance(pdf_response, HttpResponse):
+                            pdf_content = pdf_response.content
+
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                                tmp_file.write(pdf_content)
+                                tmp_file_path = tmp_file.name
+
+                            cloudinary_response = cloudinary.uploader.upload(
+                                tmp_file_path,
+                                resource_type="raw",
+                                folder="faculty_pdfs",
+                                public_id=f"faculty_{faculty.employee_code}",
+                                overwrite=True
+                            )
+
+                            faculty.cloudinary_pdf_url = cloudinary_response['secure_url']
+                            faculty.save()
+
+                            CloudinaryUpload.objects.create(
+                                faculty=faculty,
+                                upload_type='pdf',
+                                cloudinary_url=cloudinary_response['secure_url'],
+                                public_id=cloudinary_response['public_id'],
+                                resource_type=cloudinary_response['resource_type'],
+                                uploaded_by=request.user.username
+                            )
+
+                            os.unlink(tmp_file_path)
+                    except Exception as e:
+                        logger.error(f"Error syncing PDF for faculty {faculty_id}: {str(e)}")
+
+                # Sync photo if exists locally but not on Cloudinary
+                if faculty.photo and not faculty.cloudinary_photo_url:
+                    try:
+                        with faculty.photo.open('rb') as photo_file:
+                            cloudinary_response = cloudinary.uploader.upload(
+                                photo_file,
+                                folder="faculty_photos",
+                                public_id=f"faculty_{faculty.employee_code}",
+                                overwrite=True
+                            )
+                            faculty.cloudinary_photo_url = cloudinary_response['secure_url']
+                            faculty.save()
+
+                            CloudinaryUpload.objects.create(
+                                faculty=faculty,
+                                upload_type='photo',
+                                cloudinary_url=cloudinary_response['secure_url'],
+                                public_id=cloudinary_response['public_id'],
+                                resource_type=cloudinary_response['resource_type'],
+                                uploaded_by=request.user.username
+                            )
+                    except Exception as e:
+                        logger.error(f"Error syncing photo for faculty {faculty_id}: {str(e)}")
+
+                success_count += 1
+
+            except Exception as e:
+                logger.error(f"Error syncing faculty {faculty_id}: {str(e)}")
+                error_count += 1
+
+        # Log the action
+        FacultyLog.objects.create(
+            faculty=None,
+            action='Bulk Cloudinary Sync',
+            details=f'Synced {success_count} faculty to Cloudinary ({error_count} errors)',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+
+        if success_count > 0:
+            messages.success(request, f"Successfully synced {success_count} faculty to Cloudinary.")
+        if error_count > 0:
+            messages.warning(request, f"Failed to sync {error_count} faculty.")
+
     return redirect('dashboard:faculty_list')
 
 
@@ -1752,414 +3115,737 @@ def bulk_sync_to_cloudinary(request):
 
 @login_required
 def upload_certificate(request, faculty_id):
+    """Upload certificate for faculty"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
     if request.method == 'POST':
         form = CertificateForm(request.POST, request.FILES)
         if form.is_valid():
-            cert = form.save(commit=False)
-            cert.faculty = faculty
+            certificate = form.save(commit=False)
+            certificate.faculty = faculty
+
+            # Upload certificate file to Cloudinary if configured
             if 'certificate_file' in request.FILES and is_cloudinary_configured():
+                cert_file = request.FILES['certificate_file']
+
                 try:
-                    cr = cloudinary.uploader.upload(
-                        request.FILES['certificate_file'], resource_type="raw",
+                    cloudinary_response = cloudinary.uploader.upload(
+                        cert_file,
+                        resource_type="raw",
                         folder=f"certificates/{faculty.employee_code}",
-                        public_id=f"cert_{cert.certificate_type.replace(' ','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        public_id=f"cert_{certificate.certificate_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=False
                     )
-                    cert.cloudinary_url = cr['secure_url']
+
+                    certificate.cloudinary_url = cloudinary_response['secure_url']
+
                     CloudinaryUpload.objects.create(
-                        faculty=faculty, upload_type='certificate',
-                        cloudinary_url=cr['secure_url'], public_id=cr['public_id'],
-                        resource_type=cr['resource_type'], uploaded_by=request.user.username
+                        faculty=faculty,
+                        upload_type='certificate',
+                        cloudinary_url=cloudinary_response['secure_url'],
+                        public_id=cloudinary_response['public_id'],
+                        resource_type=cloudinary_response['resource_type'],
+                        uploaded_by=request.user.username
                     )
-                    messages.success(request, 'Certificate uploaded to Cloudinary!')
+
+                    messages.success(request, 'Certificate uploaded to Cloudinary successfully!')
+
                 except Exception as e:
-                    logger.error(f"Certificate Cloudinary error: {e}")
+                    logger.error(f"Error uploading certificate to Cloudinary: {str(e)}")
                     messages.warning(request, 'Certificate saved locally but Cloudinary upload failed.')
-            cert.save()
+
+            certificate.save()
+
             FacultyLog.objects.create(
-                faculty=faculty, action='Certificate Uploaded',
-                details=f'Certificate uploaded: {cert.certificate_type}',
-                performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+                faculty=faculty,
+                action='Certificate Uploaded',
+                details=f'Certificate uploaded: {certificate.certificate_type}',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
             )
+
             messages.success(request, 'Certificate uploaded successfully!')
             return redirect('dashboard:view_certificates', faculty_id=faculty_id)
     else:
         form = CertificateForm()
+
     return render(request, 'dashboard/certificate_upload.html', {
-        'title': f'Upload Certificate - {faculty.staff_name}', 'form': form, 'faculty': faculty
+        'title': f'Upload Certificate - {faculty.staff_name}',
+        'form': form,
+        'faculty': faculty
     })
 
 
 @login_required
 def upload_certificates_bulk(request):
+    """Bulk upload certificates"""
     if request.method == 'POST' and request.FILES.getlist('certificate_files'):
-        faculty = get_object_or_404(Faculty, employee_code=request.POST.get('employee_code'))
+        employee_code = request.POST.get('employee_code')
+        faculty = get_object_or_404(Faculty, employee_code=employee_code)
+
         files = request.FILES.getlist('certificate_files')
-        ok = err = 0
-        for cf in files:
+        uploaded_count = 0
+        failed_count = 0
+
+        for cert_file in files:
             try:
-                ct = os.path.splitext(cf.name)[0].replace('_',' ').replace('-',' ').title() or "Certificate"
-                curl = None
+                # Extract certificate type from filename
+                filename = os.path.splitext(cert_file.name)[0]
+                cert_type = filename.replace('_', ' ').replace('-', ' ').title()
+
+                # If certificate type is too generic, use a default
+                if len(cert_type) < 3:
+                    cert_type = "Certificate"
+
+                cloudinary_url = None
+                # Upload to Cloudinary if configured
                 if is_cloudinary_configured():
                     try:
-                        cr = cloudinary.uploader.upload(
-                            cf, resource_type="raw", folder=f"certificates/{faculty.employee_code}",
-                            public_id=f"cert_{ct.replace(' ','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        cloudinary_response = cloudinary.uploader.upload(
+                            cert_file,
+                            resource_type="raw",
+                            folder=f"certificates/{employee_code}",
+                            public_id=f"cert_{cert_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                             overwrite=False
                         )
-                        curl = cr['secure_url']
+                        cloudinary_url = cloudinary_response['secure_url']
                     except Exception as e:
-                        logger.error(f"Cloudinary upload error: {e}")
+                        logger.error(f"Error uploading to Cloudinary: {str(e)}")
+
+                # Create certificate record
                 Certificate.objects.create(
-                    faculty=faculty, certificate_type=ct, certificate_file=cf,
-                    cloudinary_url=curl, issued_by='Unknown', issue_date=date.today(),
-                    description=f'Uploaded bulk on {date.today().strftime("%Y-%m-%d")}'
+                    faculty=faculty,
+                    certificate_type=cert_type,
+                    certificate_file=cert_file,
+                    cloudinary_url=cloudinary_url,
+                    issued_by='Unknown',
+                    issue_date=date.today(),
+                    description=f'Uploaded in bulk on {date.today().strftime("%Y-%m-%d")}'
                 )
-                ok += 1
+
+                uploaded_count += 1
+
             except Exception as e:
-                logger.error(f"Error uploading {cf.name}: {e}"); err += 1
+                logger.error(f"Error uploading certificate {cert_file.name}: {str(e)}")
+                failed_count += 1
+
+        # Log the action
         FacultyLog.objects.create(
-            faculty=faculty, action='Bulk Certificates Uploaded',
-            details=f'{ok} certs uploaded ({err} failed)',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+            faculty=faculty,
+            action='Bulk Certificates Uploaded',
+            details=f'{uploaded_count} certificates uploaded in bulk ({failed_count} failed)',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
         )
-        if ok:  messages.success(request, f'{ok} certificates uploaded!')
-        if err: messages.warning(request, f'{err} certificates failed.')
+
+        if uploaded_count > 0:
+            messages.success(request, f'{uploaded_count} certificates uploaded successfully!')
+        if failed_count > 0:
+            messages.warning(request, f'{failed_count} certificates failed to upload.')
+
         return redirect('dashboard:view_certificates', faculty_id=faculty.id)
-    return render(request, 'certificates/bulk_upload.html', {'title': 'Bulk Upload Certificates'})
+
+    return render(request, 'certificates/bulk_upload.html', {
+        'title': 'Bulk Upload Certificates'
+    })
 
 
 @login_required
 def view_certificates(request, faculty_id):
+    """View all certificates for a faculty"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    certs   = Certificate.objects.filter(faculty=faculty).order_by('-issue_date')
+    certificates = Certificate.objects.filter(faculty=faculty).order_by('-issue_date')
+
+    # Get certificate statistics
+    cert_stats = {
+        'total': certificates.count(),
+        'by_type': certificates.values('certificate_type').annotate(count=Count('id')).order_by('-count'),
+        'has_cloudinary': certificates.exclude(cloudinary_url__isnull=True).exclude(cloudinary_url='').count(),
+    }
+
     return render(request, 'dashboard/certificate_list.html', {
         'title': f'Certificates - {faculty.staff_name}',
-        'faculty': faculty, 'certificates': certs,
-        'cert_stats': {
-            'total': certs.count(),
-            'by_type': certs.values('certificate_type').annotate(count=Count('id')).order_by('-count'),
-            'has_cloudinary': certs.exclude(cloudinary_url__isnull=True).exclude(cloudinary_url='').count(),
-        }
+        'faculty': faculty,
+        'certificates': certificates,
+        'cert_stats': cert_stats
     })
 
 
 @login_required
 def delete_certificate(request, certificate_id):
-    cert = get_object_or_404(Certificate, id=certificate_id)
-    fid  = cert.faculty.id
+    """Delete a certificate"""
+    certificate = get_object_or_404(Certificate, id=certificate_id)
+    faculty_id = certificate.faculty.id
+
     if request.method == 'POST':
-        if cert.cloudinary_url and is_cloudinary_configured():
+        # Delete from Cloudinary if URL exists and Cloudinary is configured
+        if certificate.cloudinary_url and is_cloudinary_configured():
             try:
-                pid = cert.cloudinary_url.split('/')[-1].split('.')[0]
-                cloudinary.uploader.destroy(pid, resource_type="raw")
+                # Extract public_id from URL
+                parts = certificate.cloudinary_url.split('/')
+                public_id = parts[-1].split('.')[0]
+                cloudinary.uploader.destroy(public_id, resource_type="raw")
             except Exception as e:
-                logger.error(f"Cloudinary delete error: {e}")
-        ct = cert.certificate_type
-        cert.delete()
+                logger.error(f"Error deleting from Cloudinary: {str(e)}")
+
+        certificate_type = certificate.certificate_type
+        certificate.delete()
+
         messages.success(request, 'Certificate deleted successfully!')
+
+        # Log the action
         FacultyLog.objects.create(
-            faculty=cert.faculty, action='Certificate Deleted',
-            details=f'Certificate deleted: {ct}',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+            faculty=certificate.faculty,
+            action='Certificate Deleted',
+            details=f'Certificate deleted: {certificate_type}',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
         )
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
-        return redirect('dashboard:view_certificates', faculty_id=fid)
+
+        return redirect('dashboard:view_certificates', faculty_id=faculty_id)
+
     return render(request, 'dashboard/certificate_confirm_delete.html', {
-        'title': 'Delete Certificate', 'certificate': cert
+        'title': 'Delete Certificate',
+        'certificate': certificate
     })
 
 
 @login_required
 def edit_certificate(request, certificate_id):
-    cert = get_object_or_404(Certificate, id=certificate_id)
-    fid  = cert.faculty.id
+    """Edit certificate details"""
+    certificate = get_object_or_404(Certificate, id=certificate_id)
+    faculty_id = certificate.faculty.id
+
     if request.method == 'POST':
-        form = CertificateForm(request.POST, instance=cert)
+        form = CertificateForm(request.POST, instance=certificate)
         if form.is_valid():
-            old_type = cert.certificate_type
+            old_type = certificate.certificate_type
+
+            # Handle new file upload if provided
             if 'certificate_file' in request.FILES and is_cloudinary_configured():
+                cert_file = request.FILES['certificate_file']
                 try:
-                    cr = cloudinary.uploader.upload(
-                        request.FILES['certificate_file'], resource_type="raw",
-                        folder=f"certificates/{cert.faculty.employee_code}",
-                        public_id=f"cert_{cert.certificate_type.replace(' ','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    cloudinary_response = cloudinary.uploader.upload(
+                        cert_file,
+                        resource_type="raw",
+                        folder=f"certificates/{certificate.faculty.employee_code}",
+                        public_id=f"cert_{certificate.certificate_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=True
                     )
-                    cert.cloudinary_url = cr['secure_url']
+                    certificate.cloudinary_url = cloudinary_response['secure_url']
                 except Exception as e:
-                    logger.error(f"Cloudinary error editing cert: {e}")
+                    logger.error(f"Error uploading certificate to Cloudinary: {str(e)}")
+
             form.save()
+
+            # Log the action
             FacultyLog.objects.create(
-                faculty=cert.faculty, action='Certificate Edited',
-                details=f'Certificate edited: {old_type} -> {cert.certificate_type}',
-                performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+                faculty=certificate.faculty,
+                action='Certificate Edited',
+                details=f'Certificate edited: {old_type} -> {certificate.certificate_type}',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
             )
+
             messages.success(request, 'Certificate updated successfully!')
-            return redirect('dashboard:view_certificates', faculty_id=fid)
+            return redirect('dashboard:view_certificates', faculty_id=faculty_id)
     else:
-        form = CertificateForm(instance=cert)
+        form = CertificateForm(instance=certificate)
+
     return render(request, 'dashboard/certificate_edit.html', {
-        'title': 'Edit Certificate', 'form': form, 'certificate': cert
+        'title': 'Edit Certificate',
+        'form': form,
+        'certificate': certificate
     })
 
 
 @login_required
 def merge_certificates(request, faculty_id):
+    """Merge certificates into a single PDF"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    certs   = Certificate.objects.filter(faculty=faculty)
-    if not certs.exists():
+    certificates = Certificate.objects.filter(faculty=faculty)
+
+    if not certificates.exists():
         messages.error(request, 'No certificates found to merge.')
         return redirect('dashboard:view_certificates', faculty_id=faculty_id)
+
     try:
         writer = PdfWriter()
+
+        # Add faculty PDF if exists
         if faculty.cloudinary_pdf_url:
-            r = requests.get(faculty.cloudinary_pdf_url)
-            if r.status_code == 200:
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                    tf.write(r.content); tfp = tf.name
-                for pg in PdfReader(tfp).pages: writer.add_page(pg)
-                os.unlink(tfp)
-        for cert in certs:
-            if cert.certificate_file:
+            # Download from Cloudinary
+            response = requests.get(faculty.cloudinary_pdf_url)
+            if response.status_code == 200:
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                    tmp_file.write(response.content)
+                    tmp_file_path = tmp_file.name
+                reader = PdfReader(tmp_file_path)
+                for page in reader.pages:
+                    writer.add_page(page)
+                os.unlink(tmp_file_path)
+
+        # Add certificates
+        for certificate in certificates:
+            if certificate.certificate_file:
+                # Local file
+                if os.path.exists(certificate.certificate_file.path):
+                    reader = PdfReader(certificate.certificate_file.path)
+                    for page in reader.pages:
+                        writer.add_page(page)
+            elif certificate.cloudinary_url:
+                # Cloudinary URL
+                response = requests.get(certificate.cloudinary_url)
+                if response.status_code == 200:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                        tmp_file.write(response.content)
+                        tmp_file_path = tmp_file.name
+                    reader = PdfReader(tmp_file_path)
+                    for page in reader.pages:
+                        writer.add_page(page)
+                    os.unlink(tmp_file_path)
+
+        # Create merged PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as merged_file:
+            writer.write(merged_file.name)
+
+            merged_url = None
+            # Upload to Cloudinary if configured
+            if is_cloudinary_configured():
                 try:
-                    if os.path.exists(cert.certificate_file.path):
-                        for pg in PdfReader(cert.certificate_file.path).pages: writer.add_page(pg)
-                except Exception: pass
-            elif cert.cloudinary_url:
-                r = requests.get(cert.cloudinary_url)
-                if r.status_code == 200:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                        tf.write(r.content); tfp = tf.name
-                    for pg in PdfReader(tfp).pages: writer.add_page(pg)
-                    os.unlink(tfp)
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-            writer.write(mf.name); merged_path = mf.name
-        merged_url = None
-        if is_cloudinary_configured():
-            try:
-                cr = cloudinary.uploader.upload(
-                    merged_path, resource_type="raw", folder="merged_certificates",
-                    public_id=f"merged_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    overwrite=False
-                )
-                merged_url = cr['secure_url']
-                CloudinaryUpload.objects.create(
-                    faculty=faculty, upload_type='merged_certificates',
-                    cloudinary_url=cr['secure_url'], public_id=cr['public_id'],
-                    resource_type=cr['resource_type'], uploaded_by=request.user.username
-                )
-            except Exception as e:
-                logger.error(f"Cloudinary merge upload error: {e}")
+                    cloudinary_response = cloudinary.uploader.upload(
+                        merged_file.name,
+                        resource_type="raw",
+                        folder="merged_certificates",
+                        public_id=f"merged_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        overwrite=False
+                    )
+
+                    # Save merged PDF URL
+                    merged_url = cloudinary_response['secure_url']
+
+                    # Record the upload
+                    CloudinaryUpload.objects.create(
+                        faculty=faculty,
+                        upload_type='merged_certificates',
+                        cloudinary_url=cloudinary_response['secure_url'],
+                        public_id=cloudinary_response['public_id'],
+                        resource_type=cloudinary_response['resource_type'],
+                        uploaded_by=request.user.username
+                    )
+                except Exception as e:
+                    logger.error(f"Error uploading merged PDF to Cloudinary: {str(e)}")
+
+        # Log the action
         FacultyLog.objects.create(
-            faculty=faculty, action='Certificates Merged',
-            details=f'{certs.count()} certificates merged',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+            faculty=faculty,
+            action='Certificates Merged',
+            details=f'Certificates merged: {certificates.count()} certificates',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
         )
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': True, 'merged_url': merged_url,
-                                 'message': f'{certs.count()} certificates merged successfully'})
+            return JsonResponse({
+                'success': True,
+                'merged_url': merged_url,
+                'message': f'{certificates.count()} certificates merged successfully'
+            })
+
         if merged_url:
-            messages.success(request, f'{certs.count()} certificates merged!')
+            messages.success(request, f'{certificates.count()} certificates merged successfully!')
             return redirect(merged_url)
-        messages.warning(request, 'Merged locally but Cloudinary upload failed.')
+        else:
+            messages.warning(request, 'Certificates merged locally but Cloudinary upload failed.')
+
     except Exception as e:
-        logger.error(f"Merge error: {e}")
+        logger.error(f"Error merging certificates: {str(e)}")
+
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'error': str(e)})
-        messages.error(request, f'Error merging: {e}')
-    return redirect('dashboard:view_certificates', faculty_id=faculty_id)
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+
+        messages.error(request, f'Error merging certificates: {str(e)}')
+        return redirect('dashboard:view_certificates', faculty_id=faculty_id)
 
 
 @login_required
 def merge_certificates_with_pdf(request, faculty_id):
+    """Merge certificates with faculty PDF"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
+
     try:
+        # Generate faculty PDF bytes
         pdf_bytes = generate_faculty_pdf_bytes(faculty)
         if not pdf_bytes:
-            return JsonResponse({'success': False, 'error': 'Failed to generate faculty PDF'})
-        merged = merge_certificates_with_pdf_bytes(pdf_bytes, faculty)
-        if merged:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                tf.write(merged); tfp = tf.name
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to generate faculty PDF'
+            })
+
+        # Get certificates
+        certificates = Certificate.objects.filter(faculty=faculty)
+
+        # Merge certificates with PDF bytes
+        merged_pdf = merge_certificates_with_pdf_bytes(pdf_bytes, faculty)
+
+        if merged_pdf:
+            # Save merged PDF temporarily
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                tmp_file.write(merged_pdf)
+                tmp_file_path = tmp_file.name
+
             merged_url = None
+            # Upload to Cloudinary if configured
             if is_cloudinary_configured():
                 try:
-                    cr = cloudinary.uploader.upload(
-                        tfp, resource_type="raw", folder="merged_documents",
+                    cloudinary_response = cloudinary.uploader.upload(
+                        tmp_file_path,
+                        resource_type="raw",
+                        folder="merged_documents",
                         public_id=f"faculty_certs_{faculty.employee_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=False
                     )
-                    merged_url = cr['secure_url']
+                    merged_url = cloudinary_response['secure_url']
+
+                    # Record the upload
                     CloudinaryUpload.objects.create(
-                        faculty=faculty, upload_type='merged_faculty_certs',
-                        cloudinary_url=cr['secure_url'], public_id=cr['public_id'],
-                        resource_type=cr['resource_type'], uploaded_by=request.user.username
+                        faculty=faculty,
+                        upload_type='merged_faculty_certs',
+                        cloudinary_url=cloudinary_response['secure_url'],
+                        public_id=cloudinary_response['public_id'],
+                        resource_type=cloudinary_response['resource_type'],
+                        uploaded_by=request.user.username
                     )
                 except Exception as e:
-                    logger.error(f"Cloudinary error: {e}")
-            os.unlink(tfp)
+                    logger.error(f"Error uploading to Cloudinary: {str(e)}")
+
+            # Clean up
+            os.unlink(tmp_file_path)
+
+            # Log the action
             FacultyLog.objects.create(
-                faculty=faculty, action='Certificates Merged with PDF',
-                details=f'Certs merged with PDF: {Certificate.objects.filter(faculty=faculty).count()} certs',
-                performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+                faculty=faculty,
+                action='Certificates Merged with PDF',
+                details=f'Certificates merged with faculty PDF: {certificates.count()} certificates',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
             )
+
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'merged_url': merged_url})
-            if merged_url: return redirect(merged_url)
-            return JsonResponse({'success': False, 'error': 'Failed to upload to Cloudinary'})
-        return JsonResponse({'success': False, 'error': 'Failed to merge certificates'})
+                return JsonResponse({
+                    'success': True,
+                    'merged_url': merged_url,
+                    'message': f'PDF merged with {certificates.count()} certificates'
+                })
+
+            if merged_url:
+                return redirect(merged_url)
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Failed to upload merged PDF to Cloudinary'
+                })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to merge certificates'
+            })
+
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        logger.error(f"Error merging certificates with PDF: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
 
 
 def generate_faculty_pdf_bytes(faculty):
+    """Generate PDF bytes for a faculty member using a mock request"""
     try:
         from django.test import RequestFactory
         from django.contrib.auth.models import AnonymousUser
         factory = RequestFactory()
-        fake_req = factory.get('/')
-        fake_req.user = AnonymousUser()
-        fake_req.META['REMOTE_ADDR'] = '127.0.0.1'
-        r = generate_faculty_pdf(fake_req, faculty.id)
-        return r.content if isinstance(r, HttpResponse) else None
+        fake_request = factory.get('/')
+        fake_request.user = AnonymousUser()
+        fake_request.META['REMOTE_ADDR'] = '127.0.0.1'
+
+        # Use the PDF generator
+        response = generate_faculty_pdf(fake_request, faculty.id)
+        if isinstance(response, HttpResponse):
+            return response.content
+        return None
     except Exception as e:
-        logger.error(f"Error generating PDF bytes: {e}")
+        logger.error(f"Error generating PDF bytes: {str(e)}")
         return None
 
 
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
+    """Merge certificates with faculty PDF bytes"""
     try:
+        from pypdf import PdfWriter, PdfReader
         writer = PdfWriter()
+
+        # Add faculty PDF
         if pdf_bytes:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                tf.write(pdf_bytes); tfp = tf.name
-            for pg in PdfReader(tfp).pages: writer.add_page(pg)
-        for cert in Certificate.objects.filter(faculty=faculty):
-            if cert.cloudinary_url:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_faculty:
+                tmp_faculty.write(pdf_bytes)
+                tmp_faculty_path = tmp_faculty.name
+
+            reader = PdfReader(tmp_faculty_path)
+            for page in reader.pages:
+                writer.add_page(page)
+
+        # Add certificates
+        certificates = Certificate.objects.filter(faculty=faculty)
+        for certificate in certificates:
+            if certificate.cloudinary_url:
                 try:
-                    r = requests.get(cert.cloudinary_url)
-                    if r.status_code == 200 and r.content[:4] == b'%PDF':
-                        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tc:
-                            tc.write(r.content); tcp = tc.name
-                        for pg in PdfReader(tcp).pages: writer.add_page(pg)
-                        try: os.unlink(tcp)
-                        except Exception: pass
+                    response = requests.get(certificate.cloudinary_url)
+                    if response.status_code == 200:
+                        if response.content[:4] == b'%PDF':
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_cert:
+                                tmp_cert.write(response.content)
+                                tmp_cert_path = tmp_cert.name
+                            reader = PdfReader(tmp_cert_path)
+                            for page in reader.pages:
+                                writer.add_page(page)
+                            try:
+                                os.unlink(tmp_cert_path)
+                            except:
+                                pass
                 except Exception as e:
-                    logger.error(f"Error merging cert: {e}")
-            elif cert.certificate_file:
+                    logger.error(f"Error merging certificate: {e}")
+            elif certificate.certificate_file:
                 try:
-                    if os.path.exists(cert.certificate_file.path):
-                        for pg in PdfReader(cert.certificate_file.path).pages: writer.add_page(pg)
-                except Exception: pass
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-            writer.write(mf.name)
-            with open(mf.name, 'rb') as f: merged = f.read()
-            os.unlink(mf.name)
-        if pdf_bytes and 'tfp' in dir():
-            try: os.unlink(tfp)
-            except Exception: pass
-        return merged
+                    if os.path.exists(certificate.certificate_file.path):
+                        reader = PdfReader(certificate.certificate_file.path)
+                        for page in reader.pages:
+                            writer.add_page(page)
+                except Exception:
+                    pass
+
+        # Create merged PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as merged_file:
+            writer.write(merged_file.name)
+
+            # Read merged PDF
+            with open(merged_file.name, 'rb') as f:
+                merged_bytes = f.read()
+
+            os.unlink(merged_file.name)
+
+        # Clean up faculty temp file
+        if pdf_bytes and 'tmp_faculty_path' in locals():
+            try:
+                os.unlink(tmp_faculty_path)
+            except Exception:
+                pass
+
+        return merged_bytes
+
     except Exception as e:
-        logger.error(f"Error in merge_certificates_with_pdf_bytes: {e}")
+        logger.error(f"Error merging certificates with PDF: {str(e)}")
         return None
 
 
 @login_required
 def preview_merged_pdf(request, faculty_id):
+    """Preview merged PDF"""
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    recent = CloudinaryUpload.objects.filter(
+
+    # Check for existing merged PDF
+    recent_upload = CloudinaryUpload.objects.filter(
         faculty=faculty,
-        upload_type__in=['merged','merged_certificates','merged_faculty_certs'],
+        upload_type__in=['merged', 'merged_certificates', 'merged_faculty_certs'],
         public_id__contains='merged'
     ).order_by('-upload_date').first()
-    if recent and recent.cloudinary_url:
-        return JsonResponse({'success': True, 'pdf_url': recent.cloudinary_url, 'message': 'Merged PDF available'})
-    return JsonResponse({'success': False, 'error': 'No merged PDF found.'})
+
+    if recent_upload and recent_upload.cloudinary_url:
+        return JsonResponse({
+            'success': True,
+            'pdf_url': recent_upload.cloudinary_url,
+            'message': 'Merged PDF available'
+        })
+
+    return JsonResponse({
+        'success': False,
+        'error': 'No merged PDF found. Please merge certificates first.'
+    })
 
 
-# ==================== FACULTY STATISTICS & APIs ====================
+# ==================== FACULTY STATISTICS & APIS ====================
 
 @login_required
 def faculty_statistics_api(request, faculty_id):
+    """
+    API endpoint for faculty statistics (AJAX)
+    """
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    rc = ResearchProject.objects.filter(faculty=faculty).count()
-    return JsonResponse({
-        'total_subjects': faculty.subjects.count(),
-        'total_students': 0,
-        'avg_rating': 4.5,
+
+    # Calculate statistics
+    total_subjects = faculty.subjects.count()
+    total_students = 0  # You would need to calculate this based on your models
+    avg_rating = 4.5  # You would calculate this from feedback
+    research_count = ResearchProject.objects.filter(faculty=faculty).count()
+
+    # Mock data for demonstration
+    statistics = {
+        'total_subjects': total_subjects,
+        'total_students': total_students,
+        'avg_rating': avg_rating,
         'teaching_load': 75,
         'research_output': 60,
         'attendance_rate': 95,
-        'publications': rc,
-        'conferences': rc,
+        'publications': research_count,
+        'conferences': research_count,
         'projects': 3,
         'awards': 2,
-    })
+    }
+
+    return JsonResponse(statistics)
 
 
 @login_required
 def bulk_faculty_actions(request):
-    if request.method != 'POST':
-        return redirect('dashboard:faculty_list')
-    action     = request.POST.get('bulk_action')
-    faculty_ids = request.POST.getlist('faculty_ids')
-    if not faculty_ids:
-        messages.error(request, 'No faculty members selected.')
-        return redirect('dashboard:faculty_list')
-    if action == 'delete':
-        cnt = 0
-        for fid in faculty_ids:
-            try: Faculty.objects.get(id=fid).delete(); cnt += 1
-            except Faculty.DoesNotExist: pass
-        FacultyLog.objects.create(faculty=None, action='Bulk Faculty Delete',
-            details=f'{cnt} faculty deleted in bulk', performed_by=request.user.username,
-            ip_address=request.META.get('REMOTE_ADDR'))
-        messages.success(request, f'Deleted {cnt} faculty member(s).')
-    elif action == 'activate':
-        cnt = Faculty.objects.filter(id__in=faculty_ids).update(is_active=True)
-        messages.success(request, f'Activated {cnt} faculty member(s).')
-    elif action == 'deactivate':
-        cnt = Faculty.objects.filter(id__in=faculty_ids).update(is_active=False)
-        messages.success(request, f'Deactivated {cnt} faculty member(s).')
-    elif action == 'export_csv':
-        return export_faculty_csv(request, faculty_ids)
-    elif action == 'generate_pdfs':
-        return bulk_generate_faculty_pdfs(request)
-    elif action == 'sync_cloudinary':
-        return bulk_sync_to_cloudinary(request)
-    else:
-        messages.error(request, 'Invalid bulk action.')
+    """Handle bulk actions for faculty"""
+    if request.method == 'POST':
+        action = request.POST.get('bulk_action')
+        faculty_ids = request.POST.getlist('faculty_ids')
+
+        if not faculty_ids:
+            messages.error(request, 'No faculty members selected.')
+            return redirect('dashboard:faculty_list')
+
+        if action == 'delete':
+            # Delete selected faculty
+            deleted_count = 0
+            for faculty_id in faculty_ids:
+                try:
+                    faculty = Faculty.objects.get(id=faculty_id)
+                    faculty.delete()
+                    deleted_count += 1
+                except Faculty.DoesNotExist:
+                    continue
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=None,
+                action='Bulk Faculty Delete',
+                details=f'{deleted_count} faculty members deleted in bulk',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            messages.success(request, f'Successfully deleted {deleted_count} faculty member(s).')
+
+        elif action == 'activate':
+            # Activate selected faculty
+            updated_count = Faculty.objects.filter(id__in=faculty_ids).update(is_active=True)
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=None,
+                action='Bulk Faculty Activate',
+                details=f'{updated_count} faculty members activated',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            messages.success(request, f'Successfully activated {updated_count} faculty member(s).')
+
+        elif action == 'deactivate':
+            # Deactivate selected faculty
+            updated_count = Faculty.objects.filter(id__in=faculty_ids).update(is_active=False)
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=None,
+                action='Bulk Faculty Deactivate',
+                details=f'{updated_count} faculty members deactivated',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            messages.success(request, f'Successfully deactivated {updated_count} faculty member(s).')
+
+        elif action == 'export_csv':
+            # Export selected faculty to CSV
+            return export_faculty_csv(request, faculty_ids)
+
+        elif action == 'generate_pdfs':
+            # Generate PDFs for selected faculty
+            return bulk_generate_faculty_pdfs(request)
+
+        elif action == 'sync_cloudinary':
+            # Sync selected faculty to Cloudinary
+            return bulk_sync_to_cloudinary(request)
+
+        else:
+            messages.error(request, 'Invalid bulk action selected.')
+
     return redirect('dashboard:faculty_list')
 
 
 @login_required
 def export_faculty_csv(request, faculty_ids=None):
-    qs = Faculty.objects.filter(id__in=faculty_ids) if faculty_ids else Faculty.objects.all()
+    """Export faculty data to CSV"""
+    # If no specific IDs provided, export all
+    if faculty_ids:
+        faculties = Faculty.objects.filter(id__in=faculty_ids)
+    else:
+        faculties = Faculty.objects.all()
+
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="faculty_export_{date.today().strftime("%Y%m%d")}.csv"'
-    w = csv.writer(response)
-    w.writerow(['Employee Code','Staff Name','Department','Designation','Email','Phone',
-                'Date of Birth','Joining Date','UG Degree','UG Year','PG Degree','PG Year',
-                'PhD Status','Total Experience','Current Status','Cloudinary PDF URL','Cloudinary Photo URL'])
-    for f in qs:
-        w.writerow([
-            f.employee_code, f.staff_name, f.department, f.designation,
-            f.email, f.mobile,
-            f.dob.strftime('%Y-%m-%d') if f.dob else '',
-            f.joining_date.strftime('%Y-%m-%d') if f.joining_date else '',
-            getattr(f,'ug_degree',''), getattr(f,'ug_year',''),
-            getattr(f,'pg_degree',''), getattr(f,'pg_year',''),
-            getattr(f,'phd_degree',''),
-            calculate_experience(f.joining_date) if f.joining_date else 'N/A',
-            'Active' if f.is_active else 'Inactive',
-            f.cloudinary_pdf_url or '', f.cloudinary_photo_url or '',
+
+    writer = csv.writer(response)
+
+    # Write header
+    writer.writerow([
+        'Employee Code', 'Staff Name', 'Department', 'Designation',
+        'Email', 'Phone', 'Date of Birth', 'Joining Date',
+        'UG Degree', 'UG Year', 'PG Degree', 'PG Year',
+        'PhD Status', 'Total Experience', 'Current Status',
+        'Cloudinary PDF URL', 'Cloudinary Photo URL'
+    ])
+
+    # Write data
+    for faculty in faculties:
+        writer.writerow([
+            faculty.employee_code,
+            faculty.staff_name,
+            faculty.department,
+            faculty.designation,
+            faculty.email,
+            faculty.mobile,
+            faculty.dob.strftime('%Y-%m-%d') if faculty.dob else '',
+            faculty.joining_date.strftime('%Y-%m-%d') if faculty.joining_date else '',
+            faculty.ug_degree,
+            faculty.ug_year,
+            faculty.pg_degree,
+            faculty.pg_year,
+            faculty.phd_degree,
+            calculate_experience(faculty.joining_date) if faculty.joining_date else 'N/A',
+            'Active' if faculty.is_active else 'Inactive',
+            faculty.cloudinary_pdf_url or '',
+            faculty.cloudinary_photo_url or ''
         ])
-    FacultyLog.objects.create(faculty=None, action='Faculty CSV Export',
-        details=f'Exported {qs.count()} faculty to CSV',
-        performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+
+    # Log the action
+    FacultyLog.objects.create(
+        faculty=None,
+        action='Faculty CSV Export',
+        details=f'Exported {faculties.count()} faculty to CSV',
+        performed_by=request.user.username,
+        ip_address=request.META.get('REMOTE_ADDR')
+    )
+
     return response
 
 
@@ -2167,82 +3853,161 @@ def export_faculty_csv(request, faculty_ids=None):
 
 @login_required
 def bulk_upload(request):
+    """Handle bulk upload of faculty data via Excel/CSV"""
     if request.method == 'POST':
         form = BulkUploadForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                if pd is None:
-                    messages.error(request, 'Pandas not installed. Cannot process file.')
-                    return redirect('dashboard:bulk_upload')
-                f = request.FILES['file']
-                fn = f.name.lower()
-                if fn.endswith('.csv'):
-                    df = pd.read_csv(f)
-                elif fn.endswith(('.xlsx','.xls')):
-                    df = pd.read_excel(f)
+                # Read the uploaded file
+                uploaded_file = request.FILES['file']
+
+                # Check file extension
+                file_name = uploaded_file.name.lower()
+
+                if file_name.endswith('.csv'):
+                    # Process CSV
+                    if pd is None:
+                        messages.error(request,
+                                       'Pandas library is not installed. Please install pandas for CSV processing.')
+                        return redirect('dashboard:bulk_upload')
+
+                    df = pd.read_csv(uploaded_file)
+                    success_count, error_count = process_csv_faculty_data(df, request.user)
+
+                elif file_name.endswith('.xlsx') or file_name.endswith('.xls'):
+                    # Process Excel
+                    if pd is None:
+                        messages.error(request,
+                                       'Pandas library is not installed. Please install pandas for Excel processing.')
+                        return redirect('dashboard:bulk_upload')
+
+                    df = pd.read_excel(uploaded_file)
+                    success_count, error_count = process_csv_faculty_data(df, request.user)
+
                 else:
-                    messages.error(request, 'Unsupported format. Use CSV or Excel.')
+                    messages.error(request, 'Unsupported file format. Please upload CSV or Excel files.')
                     return redirect('dashboard:bulk_upload')
-                ok, err = process_csv_faculty_data(df, request.user)
-                if ok:  messages.success(request, f'Imported {ok} faculty records.')
-                if err: messages.warning(request, f'{err} records had errors.')
-                FacultyLog.objects.create(faculty=None, action='Bulk Faculty Upload',
-                    details=f'Bulk upload: {ok} ok, {err} failed',
-                    performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+
+                # Show results
+                if success_count > 0:
+                    messages.success(request, f'Successfully imported {success_count} faculty records.')
+                if error_count > 0:
+                    messages.warning(request, f'{error_count} records had errors and were not imported.')
+
+                # Log the action
+                FacultyLog.objects.create(
+                    faculty=None,
+                    action='Bulk Faculty Upload',
+                    details=f'Bulk upload: {success_count} successful, {error_count} failed',
+                    performed_by=request.user.username,
+                    ip_address=request.META.get('REMOTE_ADDR')
+                )
+
                 return redirect('dashboard:faculty_list')
+
             except Exception as e:
-                logger.error(f"Bulk upload error: {e}")
-                messages.error(request, f'Error processing file: {e}')
+                logger.error(f"Error in bulk upload: {str(e)}")
+                messages.error(request, f'Error processing file: {str(e)}')
                 return redirect('dashboard:bulk_upload')
     else:
         form = BulkUploadForm()
+
     return render(request, 'dashboard/bulk_upload.html', {
-        'form': form, 'title': 'Bulk Faculty Upload', 'has_pandas': pd is not None
+        'form': form,
+        'title': 'Bulk Faculty Upload',
+        'has_pandas': pd is not None
     })
 
 
 def process_csv_faculty_data(df, user):
-    ok = err = 0
-    required = ['employee_code','staff_name','department','designation']
-    for col in required:
+    """Process faculty data from DataFrame"""
+    success_count = 0
+    error_count = 0
+
+    # Required columns
+    required_columns = ['employee_code', 'staff_name', 'department', 'designation']
+
+    # Check if required columns exist
+    for col in required_columns:
         if col not in df.columns:
-            raise ValueError(f"Required column '{col}' not found.")
-    for i, row in df.iterrows():
+            raise ValueError(f"Required column '{col}' not found in file.")
+
+    for index, row in df.iterrows():
         try:
-            ec = str(row['employee_code']).strip()
-            fac = Faculty.objects.filter(employee_code=ec).first()
-            if fac:
-                for col in df.columns:
-                    if hasattr(fac, col) and not pd.isna(row[col]):
-                        if col in ['dob','joining_date']:
-                            try: setattr(fac, col, pd.to_datetime(row[col]).date())
-                            except Exception: pass
-                        else: setattr(fac, col, row[col])
-                fac.save(); act = 'updated'
+            # Check if faculty already exists
+            employee_code = str(row['employee_code']).strip()
+            faculty = Faculty.objects.filter(employee_code=employee_code).first()
+
+            if faculty:
+                # Update existing faculty
+                for field in df.columns:
+                    if hasattr(faculty, field) and not pd.isna(row[field]):
+                        # Handle date fields
+                        if field in ['dob', 'joining_date']:
+                            try:
+                                date_val = pd.to_datetime(row[field]).date()
+                                setattr(faculty, field, date_val)
+                            except:
+                                pass
+                        else:
+                            setattr(faculty, field, row[field])
+                faculty.save()
+                action = 'updated'
             else:
-                fd = {}
-                for col in df.columns:
-                    if hasattr(Faculty, col) and not pd.isna(row[col]):
-                        if col in ['dob','joining_date']:
-                            try: fd[col] = pd.to_datetime(row[col]).date()
-                            except Exception: fd[col] = None
-                        else: fd[col] = row[col]
-                fac = Faculty.objects.create(**fd)
-                FacultyProfile.objects.create(faculty=fac)
-                act = 'created'
-            FacultyLog.objects.create(faculty=fac, action=f'Bulk Upload - {act}',
-                details=f'Faculty {act} via bulk upload: {fac.employee_code}',
-                performed_by=user.username if user else 'System', ip_address='127.0.0.1')
-            ok += 1
+                # Create new faculty
+                faculty_data = {}
+                for field in df.columns:
+                    if hasattr(Faculty, field) and not pd.isna(row[field]):
+                        # Handle date fields
+                        if field in ['dob', 'joining_date']:
+                            try:
+                                faculty_data[field] = pd.to_datetime(row[field]).date()
+                            except:
+                                faculty_data[field] = None
+                        else:
+                            faculty_data[field] = row[field]
+
+                faculty = Faculty.objects.create(**faculty_data)
+                # Create faculty profile
+                FacultyProfile.objects.create(faculty=faculty)
+                action = 'created'
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=faculty,
+                action=f'Bulk Upload - {action}',
+                details=f'Faculty {action} via bulk upload: {faculty.employee_code}',
+                performed_by=user.username if user else 'System',
+                ip_address='127.0.0.1'  # Bulk upload doesn't have request context
+            )
+
+            success_count += 1
+
         except Exception as e:
-            logger.error(f"Error row {i}: {e}"); err += 1
-    return ok, err
+            logger.error(f"Error processing row {index}: {str(e)}")
+            error_count += 1
+            continue
+
+    return success_count, error_count
 
 
 # ==================== SYSTEM UTILITIES ====================
 
 @login_required
 def system_status(request):
+    """Display system status and statistics"""
+    # Get system statistics
+    stats = {
+        'total_faculty': Faculty.objects.count(),
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
+        'total_students': Student.objects.count(),
+        'total_certificates': Certificate.objects.count(),
+        'cloudinary_uploads': CloudinaryUpload.objects.count(),
+        'total_logs': FacultyLog.objects.count(),
+        'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
+    }
+
+    # Get system info if psutil is available
     system_info = {}
     if psutil:
         try:
@@ -2254,34 +4019,35 @@ def system_status(request):
                 'python_version': os.sys.version,
                 'django_version': django.get_version(),
             }
-        except Exception: system_info = {'error': 'Unable to retrieve system info'}
-    cs = {'connected': False, 'error': ''}
+        except:
+            system_info = {'error': 'Unable to retrieve system information'}
+
+    # Get database statistics
+    db_stats = {
+        'faculty_table': Faculty.objects.count(),
+        'student_table': Student.objects.count(),
+        'certificate_table': Certificate.objects.count(),
+        'log_table': FacultyLog.objects.count(),
+        'cloudinary_table': CloudinaryUpload.objects.count(),
+    }
+
+    # Check Cloudinary connection
+    cloudinary_status = {'connected': False, 'error': ''}
     if is_cloudinary_configured():
         try:
-            r = cloudinary.api.ping()
-            cs['connected'] = r.get('status') == 'ok'
-        except Exception as e: cs['error'] = str(e)
-    else: cs['error'] = 'Cloudinary not configured'
+            result = cloudinary.api.ping()
+            cloudinary_status['connected'] = result.get('status') == 'ok'
+        except Exception as e:
+            cloudinary_status['error'] = str(e)
+    else:
+        cloudinary_status['error'] = 'Cloudinary not configured'
+
     return render(request, 'dashboard/system_status.html', {
         'title': 'System Status',
-        'stats': {
-            'total_faculty': Faculty.objects.count(),
-            'active_faculty': Faculty.objects.filter(is_active=True).count(),
-            'total_students': Student.objects.count(),
-            'total_certificates': Certificate.objects.count(),
-            'cloudinary_uploads': CloudinaryUpload.objects.count(),
-            'total_logs': FacultyLog.objects.count(),
-            'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
-        },
+        'stats': stats,
         'system_info': system_info,
-        'db_stats': {
-            'faculty_table': Faculty.objects.count(),
-            'student_table': Student.objects.count(),
-            'certificate_table': Certificate.objects.count(),
-            'log_table': FacultyLog.objects.count(),
-            'cloudinary_table': CloudinaryUpload.objects.count(),
-        },
-        'cloudinary_status': cs,
+        'db_stats': db_stats,
+        'cloudinary_status': cloudinary_status,
         'has_psutil': psutil is not None,
         'has_pandas': pd is not None,
         'current_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -2290,37 +4056,70 @@ def system_status(request):
 
 @login_required
 def clear_logs(request):
+    """Clear system logs (with confirmation)"""
     if request.method == 'POST':
         try:
-            days = int(request.POST.get('days', 30))
-            cutoff = timezone.now() - timedelta(days=days)
-            cnt, _ = FacultyLog.objects.filter(created_at__lt=cutoff).delete()
-            FacultyLog.objects.create(faculty=None, action='Logs Cleared',
-                details=f'Cleared {cnt} logs older than {days} days',
-                performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
-            messages.success(request, f'Deleted {cnt} logs older than {days} days.')
+            days_old = int(request.POST.get('days', 30))
+            cutoff_date = timezone.now() - timedelta(days=days_old)
+
+            deleted_count, _ = FacultyLog.objects.filter(created_at__lt=cutoff_date).delete()
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=None,
+                action='Logs Cleared',
+                details=f'Cleared {deleted_count} logs older than {days_old} days',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            messages.success(request, f'Successfully deleted {deleted_count} logs older than {days_old} days.')
             return redirect('dashboard:system_status')
         except Exception as e:
-            messages.error(request, f'Error clearing logs: {e}')
+            messages.error(request, f'Error clearing logs: {str(e)}')
             return redirect('dashboard:system_status')
-    return render(request, 'dashboard/clear_logs.html', {'title': 'Clear System Logs'})
+
+    return render(request, 'dashboard/clear_logs.html', {
+        'title': 'Clear System Logs'
+    })
 
 
 @login_required
 def backup_database(request):
+    """Create database backup"""
     try:
-        from django.core.management import call_command
+        import subprocess
+        from django.conf import settings
+
+        # Create backup directory if it doesn't exist
         backup_dir = os.path.join(settings.BASE_DIR, 'backups')
         os.makedirs(backup_dir, exist_ok=True)
-        ts = datetime.now().strftime('%Y%m%d_%H%M%S')
-        bf = os.path.join(backup_dir, f'db_backup_{ts}.json')
-        with open(bf, 'w') as f: call_command('dumpdata', stdout=f)
-        FacultyLog.objects.create(faculty=None, action='Database Backup',
-            details=f'Backup created: {bf}',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
-        messages.success(request, f'Backup created: {os.path.basename(bf)}')
+
+        # Generate backup filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_file = os.path.join(backup_dir, f'db_backup_{timestamp}.json')
+
+        # Use Django's dumpdata command
+        from django.core.management import call_command
+
+        with open(backup_file, 'w') as f:
+            call_command('dumpdata', stdout=f)
+
+        # Log the action
+        FacultyLog.objects.create(
+            faculty=None,
+            action='Database Backup',
+            details=f'Database backup created: {backup_file}',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+
+        messages.success(request, f'Database backup created successfully: {os.path.basename(backup_file)}')
+
     except Exception as e:
-        logger.error(f"Backup error: {e}"); messages.error(request, f'Error creating backup: {e}')
+        logger.error(f"Error creating database backup: {str(e)}")
+        messages.error(request, f'Error creating backup: {str(e)}')
+
     return redirect('dashboard:system_status')
 
 
@@ -2329,289 +4128,461 @@ def backup_database(request):
 @login_required
 @require_GET
 def api_faculty_list(request):
-    data = list(Faculty.objects.all().values(
-        'id','employee_code','staff_name','department','designation',
-        'email','mobile','is_active','cloudinary_pdf_url','cloudinary_photo_url'
-    ))
-    return JsonResponse(data, safe=False)
+    """API endpoint for faculty list (JSON)"""
+    faculties = Faculty.objects.all().values(
+        'id', 'employee_code', 'staff_name', 'department',
+        'designation', 'email', 'mobile', 'is_active',
+        'cloudinary_pdf_url', 'cloudinary_photo_url'
+    )
+    return JsonResponse(list(faculties), safe=False)
 
 
 @login_required
 @require_GET
 def api_faculty_detail(request, faculty_id):
-    f = get_object_or_404(Faculty, id=faculty_id)
-    return JsonResponse({
-        'id': f.id, 'employee_code': f.employee_code, 'staff_name': f.staff_name,
-        'department': f.department, 'designation': f.designation,
-        'email': f.email, 'mobile': f.mobile,
-        'dob': f.dob.strftime('%Y-%m-%d') if f.dob else None,
-        'joining_date': f.joining_date.strftime('%Y-%m-%d') if f.joining_date else None,
-        'ug_degree': getattr(f,'ug_degree',None), 'ug_year': getattr(f,'ug_year',None),
-        'pg_degree': getattr(f,'pg_degree',None), 'pg_year': getattr(f,'pg_year',None),
-        'phd_degree': getattr(f,'phd_degree',None),
-        'is_active': f.is_active,
-        'experience': calculate_experience(f.joining_date) if f.joining_date else "N/A",
-        'cloudinary_pdf_url': f.cloudinary_pdf_url,
-        'cloudinary_photo_url': f.cloudinary_photo_url,
-        'created_at': f.created_at.strftime('%Y-%m-%d %H:%M:%S') if f.created_at else None,
-        'updated_at': f.updated_at.strftime('%Y-%m-%d %H:%M:%S') if f.updated_at else None,
-    })
+    """API endpoint for faculty details"""
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    data = {
+        'id': faculty.id,
+        'employee_code': faculty.employee_code,
+        'staff_name': faculty.staff_name,
+        'department': faculty.department,
+        'designation': faculty.designation,
+        'email': faculty.email,
+        'mobile': faculty.mobile,
+        'dob': faculty.dob.strftime('%Y-%m-%d') if faculty.dob else None,
+        'joining_date': faculty.joining_date.strftime('%Y-%m-%d') if faculty.joining_date else None,
+        'ug_degree': faculty.ug_degree,
+        'ug_year': faculty.ug_year,
+        'pg_degree': faculty.pg_degree,
+        'pg_year': faculty.pg_year,
+        'phd_degree': faculty.phd_degree,
+        'is_active': faculty.is_active,
+        'experience': calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A",
+        'cloudinary_pdf_url': faculty.cloudinary_pdf_url,
+        'cloudinary_photo_url': faculty.cloudinary_photo_url,
+        'created_at': faculty.created_at.strftime('%Y-%m-%d %H:%M:%S') if faculty.created_at else None,
+        'updated_at': faculty.updated_at.strftime('%Y-%m-%d %H:%M:%S') if faculty.updated_at else None,
+    }
+
+    return JsonResponse(data)
 
 
 @login_required
 @require_POST
 def api_update_faculty_status(request, faculty_id):
-    f = get_object_or_404(Faculty, id=faculty_id)
+    """API endpoint to update faculty status"""
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
     try:
         data = json.loads(request.body)
-        ns = data.get('is_active')
-        if ns is None:
-            return JsonResponse({'success': False, 'error': 'Missing is_active'}, status=400)
-        old = f.is_active; f.is_active = bool(ns); f.save()
-        FacultyLog.objects.create(faculty=f, action='Status Updated via API',
-            details=f'Status: {"Active" if old else "Inactive"} -> {"Active" if f.is_active else "Inactive"}',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
-        return JsonResponse({'success': True, 'message': 'Status updated', 'is_active': f.is_active})
+        new_status = data.get('is_active')
+
+        if new_status is not None:
+            old_status = faculty.is_active
+            faculty.is_active = bool(new_status)
+            faculty.save()
+
+            # Log the action
+            FacultyLog.objects.create(
+                faculty=faculty,
+                action='Status Updated via API',
+                details=f'Status changed from {"Active" if old_status else "Inactive"} to {"Active" if faculty.is_active else "Inactive"}',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            return JsonResponse({
+                'success': True,
+                'message': f'Status updated successfully',
+                'is_active': faculty.is_active
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Missing is_active parameter'
+            }, status=400)
+
     except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 @require_GET
 def api_student_list(request):
+    """API endpoint for student list (JSON)"""
+    # Check authentication
     if not (request.user.is_authenticated or request.session.get('student_logged_in')):
         return JsonResponse({'error': 'Authentication required'}, status=401)
-    data = list(Student.objects.all().values(
-        'id','ht_no','student_name','father_name','mother_name','gender','dob','age',
-        'category','year','sem','email','student_phone','parent_phone',
-        'ssc_marks','inter_marks','cgpa','created_at'
-    ))
-    return JsonResponse(data, safe=False)
+
+    students = Student.objects.all().values(
+        'id', 'ht_no', 'student_name', 'father_name', 'mother_name',
+        'gender', 'dob', 'age', 'category', 'year', 'sem', 'branch', 'roll_number',
+        'email', 'student_phone', 'parent_phone',
+        'ssc_marks', 'inter_marks', 'cgpa',
+        'photo_url', 'pdf_url', 'pdf_generated', 'created_at'
+    )
+
+    return JsonResponse(list(students), safe=False)
 
 
 @require_GET
 def api_student_detail(request, student_id):
+    """API endpoint for student details"""
+    # Check authentication
     if not (request.user.is_authenticated or request.session.get('student_logged_in')):
         return JsonResponse({'error': 'Authentication required'}, status=401)
-    s = get_object_or_404(Student, id=student_id)
-    return JsonResponse({
-        'id': s.id, 'ht_no': s.ht_no, 'student_name': s.student_name,
-        'father_name': s.father_name, 'mother_name': s.mother_name,
-        'gender': s.gender, 'dob': s.dob.strftime('%Y-%m-%d') if s.dob else None,
-        'age': s.age, 'category': s.category, 'religion': s.religion,
-        'blood_group': s.blood_group, 'aadhar': s.aadhar,
-        'apaar_id': s.apaar_id, 'address': s.address,
-        'parent_phone': s.parent_phone, 'student_phone': s.student_phone,
-        'email': s.email, 'year': s.year, 'sem': s.sem,
-        'ssc_marks': s.ssc_marks, 'inter_marks': s.inter_marks, 'cgpa': s.cgpa,
-        'photo_url': getattr(s,'photo_url',None),
-        'pdf_url': getattr(s,'pdf_url',None),
-        'pdf_generated': getattr(s,'pdf_generated',None),
-        'created_at': s.created_at.strftime('%Y-%m-%d %H:%M:%S') if s.created_at else None,
-    })
+
+    student = get_object_or_404(Student, id=student_id)
+
+    data = {
+        'id': student.id,
+        'ht_no': student.ht_no,
+        'student_name': student.student_name,
+        'father_name': student.father_name,
+        'mother_name': student.mother_name,
+        'gender': student.gender,
+        'dob': student.dob.strftime('%Y-%m-%d') if student.dob else None,
+        'age': student.age,
+        'category': student.category,
+        'religion': student.religion,
+        'blood_group': student.blood_group,
+        'aadhar': student.aadhar,
+        'apaar_id': student.apaar_id,
+        'address': student.address,
+        'parent_phone': student.parent_phone,
+        'student_phone': student.student_phone,
+        'email': student.email,
+        'year': student.year,
+        'sem': student.sem,
+        'branch': student.branch,
+        'roll_number': student.roll_number,
+        'ssc_marks': student.ssc_marks,
+        'inter_marks': student.inter_marks,
+        'cgpa': student.cgpa,
+        'photo_url': student.photo_url,
+        'pdf_url': student.pdf_url,
+        'pdf_generated': student.pdf_generated,
+        'pdf_generation_time': student.pdf_generation_time.strftime(
+            '%Y-%m-%d %H:%M:%S') if student.pdf_generation_time else None,
+        'created_at': student.created_at.strftime('%Y-%m-%d %H:%M:%S') if student.created_at else None,
+        'updated_at': student.updated_at.strftime('%Y-%m-%d %H:%M:%S') if student.updated_at else None,
+    }
+
+    return JsonResponse(data)
 
 
-# ==================== CHARTS & ANALYTICS ====================
+# ==================== CHART & ANALYTICS ====================
 
 @login_required
 def faculty_charts(request):
+    """Generate charts for faculty analytics"""
     if plt is None:
-        messages.error(request, 'Matplotlib not installed.')
+        messages.error(request, 'Matplotlib not installed. Charts unavailable.')
         return redirect('dashboard:dashboard')
+
     try:
+        # Create charts directory
         charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
         os.makedirs(charts_dir, exist_ok=True)
 
-        dept_data  = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:10]
-        depts = [d['department'] for d in dept_data]
-        cnts  = [d['count'] for d in dept_data]
+        # 1. Department Distribution Chart
+        dept_data = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:10]
+        departments = [item['department'] for item in dept_data]
+        counts = [item['count'] for item in dept_data]
 
-        plt.figure(figsize=(10,6))
-        bars = plt.bar(depts, cnts)
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(departments, counts, color=plt.cm.Set3(range(len(departments))))
         plt.title('Faculty Distribution by Department')
-        plt.xlabel('Department'); plt.ylabel('Number of Faculty')
+        plt.xlabel('Department')
+        plt.ylabel('Number of Faculty')
         plt.xticks(rotation=45, ha='right')
-        for bar in bars:
-            h = bar.get_height()
-            plt.text(bar.get_x()+bar.get_width()/2., h+0.1, f'{int(h)}', ha='center', va='bottom')
-        plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'dept_distribution.png'), dpi=100); plt.close()
 
+        # Add value labels on bars
+        for bar in bars:
+            height = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width() / 2., height + 0.1,
+                     f'{int(height)}', ha='center', va='bottom')
+
+        plt.tight_layout()
+        dept_chart_path = os.path.join(charts_dir, 'dept_distribution.png')
+        plt.savefig(dept_chart_path, dpi=100)
+        plt.close()
+
+        # 2. Qualification Chart
         qual_data = {
             'PhD Completed': Faculty.objects.filter(phd_degree='Completed').count(),
-            'PhD Pursuing':  Faculty.objects.filter(phd_degree='Pursuing').count(),
-            'PG Only':       Faculty.objects.filter(pg_year__isnull=False, phd_degree__in=['','Not Started','None']).count(),
-            'UG Only':       Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True).count(),
+            'PhD Pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
+            'PG Only': Faculty.objects.filter(pg_year__isnull=False,
+                                              phd_degree__in=['', 'Not Started', 'None']).count(),
+            'UG Only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True).count(),
         }
-        plt.figure(figsize=(8,8))
-        plt.pie(list(qual_data.values()), labels=list(qual_data.keys()),
-                colors=['#ff9999','#66b3ff','#99ff99','#ffcc99'], autopct='%1.1f%%', startangle=90)
-        plt.axis('equal'); plt.title('Faculty Qualification Distribution')
-        plt.savefig(os.path.join(charts_dir, 'qualification_distribution.png'), dpi=100); plt.close()
 
+        plt.figure(figsize=(8, 8))
+        labels = list(qual_data.keys())
+        sizes = list(qual_data.values())
+        colors_list = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99']
+
+        plt.pie(sizes, labels=labels, colors=colors_list, autopct='%1.1f%%', startangle=90)
+        plt.axis('equal')
+        plt.title('Faculty Qualification Distribution')
+
+        qual_chart_path = os.path.join(charts_dir, 'qualification_distribution.png')
+        plt.savefig(qual_chart_path, dpi=100)
+        plt.close()
+
+        # 3. Experience Chart
         today = date.today()
-        exp_ranges = ['0-5 years','5-10 years','10-15 years','15+ years']
-        exp_counts = [0,0,0,0]
-        for f in Faculty.objects.all():
-            if f.joining_date:
-                yrs = (today - f.joining_date).days / 365.25
-                if yrs <= 5:        exp_counts[0] += 1
-                elif yrs <= 10:     exp_counts[1] += 1
-                elif yrs <= 15:     exp_counts[2] += 1
-                else:               exp_counts[3] += 1
-        plt.figure(figsize=(10,6))
-        bars = plt.bar(range(len(exp_ranges)), exp_counts,
-                       color=['#3498db','#2ecc71','#e74c3c','#f39c12'])
+        exp_ranges = ['0-5 years', '5-10 years', '10-15 years', '15+ years']
+        exp_counts = [0, 0, 0, 0]
+
+        for faculty in Faculty.objects.all():
+            if faculty.joining_date:
+                exp_years = (today - faculty.joining_date).days / 365.25
+                if exp_years <= 5:
+                    exp_counts[0] += 1
+                elif exp_years <= 10:
+                    exp_counts[1] += 1
+                elif exp_years <= 15:
+                    exp_counts[2] += 1
+                else:
+                    exp_counts[3] += 1
+
+        plt.figure(figsize=(10, 6))
+        x = range(len(exp_ranges))
+        bars = plt.bar(x, exp_counts, color=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'])
         plt.title('Faculty Experience Distribution')
-        plt.xlabel('Experience Range'); plt.ylabel('Number of Faculty')
-        plt.xticks(range(len(exp_ranges)), exp_ranges)
-        for i,(bar,cnt) in enumerate(zip(bars,exp_counts)):
-            plt.text(bar.get_x()+bar.get_width()/2., cnt+0.1, f'{cnt}', ha='center', va='bottom')
+        plt.xlabel('Experience Range')
+        plt.ylabel('Number of Faculty')
+        plt.xticks(x, exp_ranges)
+
+        # Add value labels
+        for i, (bar, count) in enumerate(zip(bars, exp_counts)):
+            plt.text(bar.get_x() + bar.get_width() / 2., count + 0.1,
+                     f'{count}', ha='center', va='bottom')
+
         plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'experience_distribution.png'), dpi=100); plt.close()
+        exp_chart_path = os.path.join(charts_dir, 'experience_distribution.png')
+        plt.savefig(exp_chart_path, dpi=100)
+        plt.close()
+
+        # Generate chart URLs
+        chart_urls = {
+            'dept_chart': os.path.join(settings.MEDIA_URL, 'charts', 'dept_distribution.png'),
+            'qual_chart': os.path.join(settings.MEDIA_URL, 'charts', 'qualification_distribution.png'),
+            'exp_chart': os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
+        }
 
         return render(request, 'dashboard/charts.html', {
             'title': 'Faculty Analytics Charts',
-            'chart_urls': {
-                'dept_chart': os.path.join(settings.MEDIA_URL, 'charts', 'dept_distribution.png'),
-                'qual_chart': os.path.join(settings.MEDIA_URL, 'charts', 'qualification_distribution.png'),
-                'exp_chart':  os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
-            },
-            'dept_data': list(zip(depts,cnts)),
+            'chart_urls': chart_urls,
+            'dept_data': list(zip(departments, counts)),
             'qual_data': qual_data,
-            'exp_data':  list(zip(exp_ranges,exp_counts)),
+            'exp_data': list(zip(exp_ranges, exp_counts)),
         })
+
     except Exception as e:
-        logger.error(f"Chart error: {e}")
-        messages.error(request, f'Error generating charts: {e}')
+        logger.error(f"Error generating charts: {str(e)}")
+        messages.error(request, f'Error generating charts: {str(e)}')
         return redirect('dashboard:dashboard')
 
 
 @login_required
 def student_charts(request):
+    """Generate charts for student analytics"""
     if plt is None:
-        messages.error(request, 'Matplotlib not installed.')
+        messages.error(request, 'Matplotlib not installed. Charts unavailable.')
         return redirect('dashboard:students_data')
+
     try:
+        # Create charts directory
         charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
         os.makedirs(charts_dir, exist_ok=True)
 
-        gd = Student.objects.values('gender').annotate(count=Count('id')).order_by('-count')
-        gs = [d['gender'] for d in gd]; gc = [d['count'] for d in gd]
-        plt.figure(figsize=(8,8))
-        plt.pie(gc, labels=gs, colors=['#66b3ff','#ff9999','#99ff99'][:len(gs)],
-                autopct='%1.1f%%', startangle=90)
-        plt.axis('equal'); plt.title('Student Gender Distribution')
-        plt.savefig(os.path.join(charts_dir,'student_gender_distribution.png'), dpi=100); plt.close()
+        # 1. Gender Distribution
+        gender_data = Student.objects.values('gender').annotate(count=Count('id')).order_by('-count')
+        genders = [item['gender'] for item in gender_data]
+        gender_counts = [item['count'] for item in gender_data]
 
-        yd = Student.objects.values('year').annotate(count=Count('id')).order_by('year')
-        ys = [d['year'] for d in yd]; yc = [d['count'] for d in yd]
-        plt.figure(figsize=(10,6))
-        bars = plt.bar(ys, yc)
+        plt.figure(figsize=(8, 8))
+        colors_list = ['#66b3ff', '#ff9999', '#99ff99']
+        plt.pie(gender_counts, labels=genders, colors=colors_list[:len(genders)], autopct='%1.1f%%', startangle=90)
+        plt.axis('equal')
+        plt.title('Student Gender Distribution')
+
+        gender_chart_path = os.path.join(charts_dir, 'student_gender_distribution.png')
+        plt.savefig(gender_chart_path, dpi=100)
+        plt.close()
+
+        # 2. Year-wise Distribution
+        year_data = Student.objects.values('year').annotate(count=Count('id')).order_by('year')
+        years = [item['year'] for item in year_data]
+        year_counts = [item['count'] for item in year_data]
+
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(years, year_counts, color=plt.cm.Paired(range(len(years))))
         plt.title('Student Distribution by Year')
-        plt.xlabel('Year'); plt.ylabel('Number of Students')
-        for bar,cnt in zip(bars,yc):
-            plt.text(bar.get_x()+bar.get_width()/2., cnt+0.1, f'{cnt}', ha='center', va='bottom')
-        plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir,'student_year_distribution.png'), dpi=100); plt.close()
+        plt.xlabel('Year')
+        plt.ylabel('Number of Students')
 
-        cd = Student.objects.values('category').annotate(count=Count('id')).order_by('-count')[:10]
-        cs = [d['category'] for d in cd]; cc = [d['count'] for d in cd]
-        plt.figure(figsize=(10,6))
-        bars = plt.bar(range(len(cs)), cc)
-        plt.title('Student Category Distribution (Top 10)')
-        plt.xlabel('Category'); plt.ylabel('Number of Students')
-        plt.xticks(range(len(cs)), cs, rotation=45, ha='right')
-        for bar,cnt in zip(bars,cc):
-            plt.text(bar.get_x()+bar.get_width()/2., cnt+0.1, f'{cnt}', ha='center', va='bottom')
+        # Add value labels
+        for bar, count in zip(bars, year_counts):
+            plt.text(bar.get_x() + bar.get_width() / 2., count + 0.1,
+                     f'{count}', ha='center', va='bottom')
+
         plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir,'student_category_distribution.png'), dpi=100); plt.close()
+        year_chart_path = os.path.join(charts_dir, 'student_year_distribution.png')
+        plt.savefig(year_chart_path, dpi=100)
+        plt.close()
+
+        # 3. Category Distribution
+        category_data = Student.objects.values('category').annotate(count=Count('id')).order_by('-count')[:10]
+        categories = [item['category'] for item in category_data]
+        category_counts = [item['count'] for item in category_data]
+
+        plt.figure(figsize=(10, 6))
+        x = range(len(categories))
+        bars = plt.bar(x, category_counts, color=plt.cm.Set3(range(len(categories))))
+        plt.title('Student Category Distribution (Top 10)')
+        plt.xlabel('Category')
+        plt.ylabel('Number of Students')
+        plt.xticks(x, categories, rotation=45, ha='right')
+
+        # Add value labels
+        for bar, count in zip(bars, category_counts):
+            plt.text(bar.get_x() + bar.get_width() / 2., count + 0.1,
+                     f'{count}', ha='center', va='bottom')
+
+        plt.tight_layout()
+        category_chart_path = os.path.join(charts_dir, 'student_category_distribution.png')
+        plt.savefig(category_chart_path, dpi=100)
+        plt.close()
+
+        # Generate chart URLs
+        chart_urls = {
+            'gender_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_gender_distribution.png'),
+            'year_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_year_distribution.png'),
+            'category_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_category_distribution.png'),
+        }
 
         return render(request, 'dashboard/student_charts.html', {
             'title': 'Student Analytics Charts',
-            'chart_urls': {
-                'gender_chart':   os.path.join(settings.MEDIA_URL,'charts','student_gender_distribution.png'),
-                'year_chart':     os.path.join(settings.MEDIA_URL,'charts','student_year_distribution.png'),
-                'category_chart': os.path.join(settings.MEDIA_URL,'charts','student_category_distribution.png'),
-            },
-            'gender_data': list(zip(gs,gc)),
-            'year_data':   list(zip(ys,yc)),
-            'category_data': list(zip(cs,cc)),
+            'chart_urls': chart_urls,
+            'gender_data': list(zip(genders, gender_counts)),
+            'year_data': list(zip(years, year_counts)),
+            'category_data': list(zip(categories, category_counts)),
         })
+
     except Exception as e:
-        logger.error(f"Student chart error: {e}")
-        messages.error(request, f'Error generating charts: {e}')
+        logger.error(f"Error generating student charts: {str(e)}")
+        messages.error(request, f'Error generating charts: {str(e)}')
         return redirect('dashboard:students_data')
 
 
-# ==================== MISCELLANEOUS ====================
+# ==================== MISCELLANEOUS FUNCTIONS ====================
 
 @login_required
 def recent_activity(request):
-    acts = FacultyLog.objects.select_related('faculty','student').order_by('-created_at')[:50]
+    """Show recent system activities"""
+    activities = FacultyLog.objects.select_related('faculty', 'student').order_by('-created_at')[:50]
+
     return render(request, 'dashboard/recent_activity.html', {
-        'title': 'Recent Activities', 'activities': acts,
+        'title': 'Recent Activities',
+        'activities': activities,
         'total_activities': FacultyLog.objects.count(),
     })
 
 
 @login_required
 def search_faculty(request):
-    q = request.GET.get('q', '')
-    qs = Faculty.objects.filter(
-        Q(staff_name__icontains=q)|Q(employee_code__icontains=q)|
-        Q(department__icontains=q)|Q(designation__icontains=q)|Q(email__icontains=q)
-    ).order_by('staff_name')[:20] if q else Faculty.objects.none()
+    """Search faculty members"""
+    query = request.GET.get('q', '')
+
+    if query:
+        faculties = Faculty.objects.filter(
+            Q(staff_name__icontains=query) |
+            Q(employee_code__icontains=query) |
+            Q(department__icontains=query) |
+            Q(designation__icontains=query) |
+            Q(email__icontains=query)
+        ).order_by('staff_name')[:20]
+    else:
+        faculties = Faculty.objects.none()
+
     results = []
-    for f in qs:
-        pu = None
-        try: pu = f.cloudinary_photo_url or (f.photo.url if f.photo else None)
-        except Exception: pass
+    for faculty in faculties:
         results.append({
-            'id': f.id, 'name': f.staff_name, 'employee_code': f.employee_code,
-            'department': f.department, 'designation': f.designation, 'photo_url': pu,
-            'detail_url': reverse('dashboard:faculty_dashboard') + f'?id={f.id}',
+            'id': faculty.id,
+            'name': faculty.staff_name,
+            'employee_code': faculty.employee_code,
+            'department': faculty.department,
+            'designation': faculty.designation,
+            'photo_url': faculty.cloudinary_photo_url or (faculty.photo.url if faculty.photo else None),
+            'detail_url': reverse('dashboard:faculty_dashboard') + f'?id={faculty.id}',
         })
+
     return JsonResponse({'results': results, 'count': len(results)})
 
 
 @login_required
 def search_students(request):
-    q = request.GET.get('q', '')
-    qs = Student.objects.filter(
-        Q(student_name__icontains=q)|Q(ht_no__icontains=q)|
-        Q(father_name__icontains=q)|Q(email__icontains=q)
-    ).order_by('student_name')[:20] if q else Student.objects.none()
-    results = [
-        {
-            'id': s.id, 'name': s.student_name, 'ht_no': s.ht_no,
-            'year': s.year, 'sem': s.sem,
-            'branch':       getattr(s, 'branch', ''),
-            'roll_number':  getattr(s, 'roll_number', ''),
-            'photo_url':    getattr(s, 'photo_url', None),
-            'detail_url':   reverse('dashboard:students_data'),
-        }
-        for s in qs
-    ]
+    """Search students"""
+    query = request.GET.get('q', '')
+
+    if query:
+        students = Student.objects.filter(
+            Q(student_name__icontains=query) |
+            Q(ht_no__icontains=query) |
+            Q(father_name__icontains=query) |
+            Q(email__icontains=query)
+        ).order_by('student_name')[:20]
+    else:
+        students = Student.objects.none()
+
+    results = []
+    for student in students:
+        results.append({
+            'id': student.id,
+            'name': student.student_name,
+            'ht_no': student.ht_no,
+            'year': student.year,
+            'sem': student.sem,
+            'branch': student.branch,
+            'roll_number': student.roll_number,
+            'photo_url': student.photo_url,
+            'detail_url': reverse('dashboard:students_data'),
+        })
+
     return JsonResponse({'results': results, 'count': len(results)})
 
 
 @login_required
 def quick_stats(request):
-    return JsonResponse({
-        'total_faculty':    Faculty.objects.count(),
-        'active_faculty':   Faculty.objects.filter(is_active=True).count(),
-        'total_students':   Student.objects.count(),
+    """Get quick statistics for dashboard widgets"""
+    stats = {
+        'total_faculty': Faculty.objects.count(),
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
+        'total_students': Student.objects.count(),
         'total_certificates': Certificate.objects.count(),
-        'recent_uploads':   Faculty.objects.order_by('-created_at').count(),
+        'recent_uploads': Faculty.objects.order_by('-created_at').count(),
         'cloudinary_uploads': CloudinaryUpload.objects.count(),
-    })
+    }
+
+    return JsonResponse(stats)
 
 
 # ==================== ERROR HANDLERS ====================
 
 def handler404(request, exception):
+    """Custom 404 error handler"""
     return render(request, 'dashboard/404.html', {
         'title': 'Page Not Found',
         'error_message': 'The page you are looking for does not exist.'
@@ -2619,13 +4590,15 @@ def handler404(request, exception):
 
 
 def handler500(request):
+    """Custom 500 error handler"""
     return render(request, 'dashboard/500.html', {
         'title': 'Server Error',
-        'error_message': 'An internal server error occurred.'
+        'error_message': 'An internal server error occurred. Please try again later.'
     }, status=500)
 
 
 def handler403(request, exception):
+    """Custom 403 error handler"""
     return render(request, 'dashboard/403.html', {
         'title': 'Access Denied',
         'error_message': 'You do not have permission to access this page.'
@@ -2633,48 +4606,67 @@ def handler403(request, exception):
 
 
 def handler400(request, exception):
+    """Custom 400 error handler"""
     return render(request, 'dashboard/400.html', {
         'title': 'Bad Request',
         'error_message': 'Invalid request. Please check your input.'
     }, status=400)
 
 
-# ==================== APPLICATION VIEWS ====================
+# ==================== MAIN APPLICATION VIEWS ====================
 
 @login_required
 def application_home(request):
+    """Main application home page"""
     return render(request, 'dashboard/application_home.html', {
-        'title': 'Faculty Management System', 'user': request.user,
+        'title': 'Faculty Management System',
+        'user': request.user,
     })
 
 
 @login_required
 def profile_settings(request):
+    """User profile settings"""
     user = request.user
+
     if request.method == 'POST':
-        fn = request.POST.get('first_name','').strip()
-        ln = request.POST.get('last_name','').strip()
-        em = request.POST.get('email','').strip().lower()
-        if fn: user.first_name = fn
-        if ln: user.last_name  = ln
-        if em: user.email = em
-        np = request.POST.get('new_password','').strip()
-        cp = request.POST.get('confirm_password','').strip()
-        if np and np == cp:
-            user.set_password(np)
+        # Update user profile
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+
+        if first_name:
+            user.first_name = first_name
+        if last_name:
+            user.last_name = last_name
+        if email:
+            user.email = email
+
+        # Update password if provided
+        new_password = request.POST.get('new_password', '').strip()
+        confirm_password = request.POST.get('confirm_password', '').strip()
+
+        if new_password and new_password == confirm_password:
+            user.set_password(new_password)
+            messages.success(request, 'Password updated successfully.')
+            # Re-login user with new password
             from django.contrib.auth import update_session_auth_hash
             update_session_auth_hash(request, user)
-            messages.success(request, 'Password updated successfully.')
+
         user.save()
+
         messages.success(request, 'Profile updated successfully.')
         return redirect('dashboard:profile_settings')
+
     return render(request, 'dashboard/profile_settings.html', {
-        'title': 'Profile Settings', 'user': user,
+        'title': 'Profile Settings',
+        'user': user,
     })
 
 
 @login_required
 def about_system(request):
+    """About system page"""
     return render(request, 'dashboard/about.html', {
         'title': 'About Faculty Management System',
         'version': '2.0.0',
@@ -2694,32 +4686,58 @@ def about_system(request):
 
 @login_required
 def help_documentation(request):
+    """Help documentation page"""
     return render(request, 'dashboard/help.html', {
         'title': 'Help & Documentation',
         'sections': [
-            {'title': 'Faculty Management', 'content': 'Add, edit, delete faculty. Generate PDF profiles and upload to Cloudinary.'},
-            {'title': 'Student Management', 'content': 'Register students, manage data, generate student PDFs.'},
-            {'title': 'Certificate Management', 'content': 'Upload, view, and manage certificates for faculty.'},
-            {'title': 'Cloudinary Integration', 'content': 'Sync faculty PDFs and photos to Cloudinary.'},
-            {'title': 'Analytics', 'content': 'View charts and statistics about faculty and students.'},
-            {'title': 'System Tools', 'content': 'Backup database, clear logs, check system status.'},
+            {
+                'title': 'Faculty Management',
+                'content': 'Add, edit, delete faculty members. Generate PDF profiles and upload to Cloudinary.'
+            },
+            {
+                'title': 'Student Management',
+                'content': 'Register students, manage their data, generate student PDFs.'
+            },
+            {
+                'title': 'Certificate Management',
+                'content': 'Upload, view, and manage certificates for faculty members.'
+            },
+            {
+                'title': 'Cloudinary Integration',
+                'content': 'Sync faculty PDFs and photos to Cloudinary for secure cloud storage.'
+            },
+            {
+                'title': 'Analytics',
+                'content': 'View charts and statistics about faculty and students.'
+            },
+            {
+                'title': 'System Tools',
+                'content': 'Backup database, clear logs, check system status.'
+            },
         ]
     })
 
 
 @login_required
 def contact_support(request):
+    """Contact support page"""
     if request.method == 'POST':
-        name    = request.POST.get('name','').strip()
-        email   = request.POST.get('email','').strip()
-        subject = request.POST.get('subject','').strip()
-        msg     = request.POST.get('message','').strip()
-        if name and email and subject and msg:
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        message = request.POST.get('message', '').strip()
+
+        if name and email and subject and message:
+            # In a real application, you would send an email here
+            # For now, we'll just log it and show a success message
             logger.info(f"Support request from {name} ({email}): {subject}")
-            messages.success(request, 'Message sent to support. We will get back to you soon.')
+            logger.info(f"Message: {message}")
+
+            messages.success(request, 'Your message has been sent to support. We will get back to you soon.')
             return redirect('dashboard:contact_support')
         else:
             messages.error(request, 'Please fill in all fields.')
+
     return render(request, 'dashboard/contact.html', {
         'title': 'Contact Support',
         'support_email': 'support@anurag.edu.in',
@@ -2732,48 +4750,70 @@ def contact_support(request):
 
 @login_required
 def session_info(request):
+    """Display session information"""
+    session_info = {
+        'session_key': request.session.session_key,
+        'session_expiry_age': request.session.get_expiry_age(),
+        'session_expiry_date': request.session.get_expiry_date(),
+        'session_data': dict(request.session.items()),
+        'user_authenticated': request.user.is_authenticated,
+        'user_username': request.user.username,
+        'user_email': request.user.email,
+        'user_is_staff': request.user.is_staff,
+        'user_is_superuser': request.user.is_superuser,
+    }
+
     return render(request, 'dashboard/session_info.html', {
         'title': 'Session Information',
-        'session_info': {
-            'session_key':         request.session.session_key,
-            'session_expiry_age':  request.session.get_expiry_age(),
-            'session_expiry_date': request.session.get_expiry_date(),
-            'session_data':        dict(request.session.items()),
-            'user_authenticated':  request.user.is_authenticated,
-            'user_username':       request.user.username,
-            'user_email':          request.user.email,
-            'user_is_staff':       request.user.is_staff,
-            'user_is_superuser':   request.user.is_superuser,
-        }
+        'session_info': session_info,
     })
 
 
 @login_required
 def clear_session(request):
-    auth = {k: request.session.get(k) for k in
-            ('_auth_user_id','_auth_user_backend','_auth_user_hash')}
+    """Clear session data (except authentication)"""
+    # Save authentication data
+    auth_data = {
+        '_auth_user_id': request.session.get('_auth_user_id'),
+        '_auth_user_backend': request.session.get('_auth_user_backend'),
+        '_auth_user_hash': request.session.get('_auth_user_hash'),
+    }
+
+    # Clear all session data
     request.session.clear()
-    for k, v in auth.items():
-        if v: request.session[k] = v
+
+    # Restore authentication data
+    for key, value in auth_data.items():
+        if value:
+            request.session[key] = value
+
     messages.success(request, 'Session data cleared successfully.')
     return redirect('dashboard:session_info')
 
 
-# ==================== FACULTY PDF HELPERS ====================
+# ==================== ADDITIONAL VIEWS FOR FACULTY.HTML ====================
 
 @login_required
 def faculty_pdf(request, faculty_id):
+    """
+    Redirect to generate_faculty_pdf for inline viewing.
+    Used by the iframe in faculty.html.
+    """
     return redirect('dashboard:generate_faculty_pdf', faculty_id=faculty_id)
 
 
 @login_required
 def ajax_check_pdf_status(request, faculty_id):
+    """
+    Return JSON with faculty's Cloudinary PDF status and URL.
+    Used by the JavaScript in faculty.html to check if PDF is available.
+    """
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    has_pdf = bool(faculty.cloudinary_pdf_url)
+    has_cloudinary_pdf = bool(faculty.cloudinary_pdf_url)
     return JsonResponse({
         'success': True,
         'status': {
-            'has_cloudinary_pdf': has_pdf,
-            'cloudinary_url': faculty.cloudinary_pdf_url if has_pdf else None,
+            'has_cloudinary_pdf': has_cloudinary_pdf,
+            'cloudinary_url': faculty.cloudinary_pdf_url if has_cloudinary_pdf else None,
         }
     })

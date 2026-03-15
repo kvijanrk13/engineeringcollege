@@ -99,7 +99,7 @@
                                 <div class="card-header">
                                     <h5>Experience Distribution</h5>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body" style="position: relative; height: 300px;">
                                     <canvas id="experienceChart"></canvas>
                                 </div>
                             </div>
@@ -333,6 +333,7 @@
                                 <h5 class="mb-0">Educational Qualifications</h5>
                             </div>
                             <div class="card-body">
+
                                 <!-- SSC -->
                                 <h6 class="bg-light p-2">SSC / 10th Standard</h6>
                                 <div class="row">
@@ -347,6 +348,15 @@
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">School</label>
                                         <input type="text" class="form-control" name="ssc_school" value="{{ faculty.ssc_school|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">SSC Certificate</label>
+                                        <input type="file" class="form-control" name="ssc_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                        {% if faculty.ssc_certificate %}
+                                        <small class="text-muted">Current: <a href="{{ faculty.ssc_certificate.url }}" target="_blank">View</a></small>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -364,6 +374,15 @@
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">College</label>
                                         <input type="text" class="form-control" name="inter_college" value="{{ faculty.inter_college|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Intermediate Certificate</label>
+                                        <input type="file" class="form-control" name="inter_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                        {% if faculty.inter_certificate %}
+                                        <small class="text-muted">Current: <a href="{{ faculty.inter_certificate.url }}" target="_blank">View</a></small>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -391,6 +410,15 @@
                                         <input type="text" class="form-control" name="ug_spec" value="{{ faculty.ug_spec|default:'' }}">
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">UG Certificate</label>
+                                        <input type="file" class="form-control" name="ug_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                        {% if faculty.ug_certificate %}
+                                        <small class="text-muted">Current: <a href="{{ faculty.ug_certificate.url }}" target="_blank">View</a></small>
+                                        {% endif %}
+                                    </div>
+                                </div>
 
                                 <!-- PG -->
                                 <h6 class="bg-light p-2 mt-3">PG (M.Tech/M.E.)</h6>
@@ -414,6 +442,15 @@
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Specialization</label>
                                         <input type="text" class="form-control" name="pg_spec" value="{{ faculty.pg_spec|default:'' }}">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">PG Certificate</label>
+                                        <input type="file" class="form-control" name="pg_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                        {% if faculty.pg_certificate %}
+                                        <small class="text-muted">Current: <a href="{{ faculty.pg_certificate.url }}" target="_blank">View</a></small>
+                                        {% endif %}
                                     </div>
                                 </div>
 
@@ -442,10 +479,20 @@
                                         <input type="text" class="form-control" name="phd_spec" value="{{ faculty.phd_spec|default:'' }}">
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">PhD Certificate</label>
+                                        <input type="file" class="form-control" name="phd_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                        {% if faculty.phd_certificate %}
+                                        <small class="text-muted">Current: <a href="{{ faculty.phd_certificate.url }}" target="_blank">View</a></small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
 
-                        <!-- Subjects, SCM, Research -->
+                        <!-- Additional Information -->
                         <div class="card mb-3">
                             <div class="card-header bg-info text-white">
                                 <h5 class="mb-0">Additional Information</h5>
@@ -506,6 +553,10 @@
                     </a>
                 </div>
                 <div class="card-body">
+
+                    <!-- Alert container for success/error messages -->
+                    <div id="alertContainer"></div>
+
                     <!-- Search and Filter -->
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -546,7 +597,8 @@
                             </thead>
                             <tbody>
                                 {% for fac in faculties %}
-                                <tr>
+                                {# FIX: data-faculty-id used by JS to remove row after delete #}
+                                <tr data-faculty-id="{{ fac.id }}">
                                     <td>{{ forloop.counter }}</td>
                                     <td>{{ fac.employee_code }}</td>
                                     <td>{{ fac.staff_name }}</td>
@@ -579,7 +631,7 @@
                                 {% empty %}
                                 <tr>
                                     <td colspan="9" class="text-center py-4">
-                                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                        <i class="fas fa-users fa-3x text-muted mb-3 d-block"></i>
                                         <p class="mb-0">No faculty members found.</p>
                                         <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary mt-3">
                                             <i class="fas fa-plus me-2"></i>Add First Faculty
@@ -602,15 +654,22 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this faculty member? This action cannot be undone.</p>
+                <p>Are you sure you want to delete this faculty member?</p>
+                <p class="text-danger mb-0"><strong>This action cannot be undone.</strong></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-1"></i>Delete
+                </button>
             </div>
         </div>
     </div>
@@ -620,10 +679,10 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Experience Chart for Analytics
+    // ==================== ANALYTICS CHART ====================
     {% if is_analytics %}
     var ctx = document.getElementById('experienceChart').getContext('2d');
-    var chart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'pie',
         data: {
             labels: ['0-5 Years', '5-10 Years', '10+ Years'],
@@ -643,55 +702,137 @@
     });
     {% endif %}
 
-    // Search and Filter Functionality
+    // ==================== SEARCH & FILTER ====================
     document.getElementById('searchInput')?.addEventListener('keyup', filterTable);
     document.getElementById('deptFilter')?.addEventListener('change', filterTable);
     document.getElementById('statusFilter')?.addEventListener('change', filterTable);
 
     function filterTable() {
-        var searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
-        var deptFilter = document.getElementById('deptFilter')?.value.toLowerCase() || '';
+        var searchText  = document.getElementById('searchInput')?.value.toLowerCase()  || '';
+        var deptFilter  = document.getElementById('deptFilter')?.value.toLowerCase()   || '';
         var statusFilter = document.getElementById('statusFilter')?.value.toLowerCase() || '';
         var rows = document.querySelectorAll('#facultyTable tbody tr');
 
         rows.forEach(function(row) {
-            var text = row.textContent.toLowerCase();
-            var dept = row.cells[3]?.textContent.toLowerCase() || '';
+            var text   = row.textContent.toLowerCase();
+            var dept   = row.cells[3]?.textContent.toLowerCase() || '';
             var status = row.cells[7]?.textContent.toLowerCase() || '';
 
             var matchesSearch = text.includes(searchText);
-            var matchesDept = deptFilter === '' || dept.includes(deptFilter);
+            var matchesDept   = deptFilter === ''   || dept.includes(deptFilter);
             var matchesStatus = statusFilter === '' || status.includes(statusFilter);
 
             row.style.display = matchesSearch && matchesDept && matchesStatus ? '' : 'none';
         });
     }
 
-    // Delete Faculty Function
-    var deleteId = null;
+    // ==================== DELETE FACULTY (FIXED) ====================
+    var deleteId    = null;
     var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
     window.deleteFaculty = function(id) {
         deleteId = id;
         deleteModal.show();
+    };
+
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', function () {
+        if (!deleteId) return;
+
+        var btn = document.getElementById('confirmDeleteBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Deleting...';
+
+        fetch('/faculty/' + deleteId + '/delete/', {
+            method: 'POST',
+            // FIX 1: credentials ensures the session cookie is sent
+            credentials: 'same-origin',
+            headers: {
+                // FIX 2: reads CSRF from cookie (not template tag, which breaks in JS)
+                'X-CSRFToken': getCookie('csrftoken'),
+                // FIX 3: tells the view to return JSON instead of redirecting
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(function (response) {
+            if (response.redirected || response.status === 302) {
+                // Session expired - redirected to login
+                window.location.href = '/login/';
+                return null;
+            }
+            if (!response.ok) {
+                throw new Error('Server returned status ' + response.status);
+            }
+            return response.json();
+        })
+        .then(function (data) {
+            if (!data) return;
+
+            if (data.success) {
+                // Remove the deleted row from the table
+                var row = document.querySelector('tr[data-faculty-id="' + deleteId + '"]');
+                if (row) {
+                    row.style.transition = 'opacity 0.3s';
+                    row.style.opacity    = '0';
+                    setTimeout(function () { row.remove(); }, 300);
+                } else {
+                    location.reload();
+                }
+                deleteModal.hide();
+                showAlert('success', data.message || 'Faculty deleted successfully.');
+            } else {
+                showAlert('danger', 'Error: ' + (data.error || 'Could not delete faculty.'));
+            }
+        })
+        .catch(function (err) {
+            console.error('Delete error:', err);
+            showAlert('danger', 'An error occurred while deleting. Please try again.');
+        })
+        .finally(function () {
+            btn.disabled  = false;
+            btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
+            deleteId      = null;
+            deleteModal.hide();
+        });
+    });
+
+    // ==================== HELPERS ====================
+
+    // Read a cookie value by name (used for CSRF token)
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
 
-    document.getElementById('confirmDeleteBtn')?.addEventListener('click', function() {
-        if (deleteId) {
-            fetch(`/dashboard/faculty/${deleteId}/delete/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                }
-            }).then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Error deleting faculty');
-                }
-            });
-        }
-        deleteModal.hide();
-    });
+    // Show a dismissible Bootstrap alert at top of card
+    function showAlert(type, message) {
+        var container = document.getElementById('alertContainer');
+        if (!container) return;
+
+        var alertDiv        = document.createElement('div');
+        alertDiv.className  = 'alert alert-' + type + ' alert-dismissible fade show';
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML  =
+            '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + ' me-2"></i>' +
+            message +
+            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+
+        container.appendChild(alertDiv);
+
+        // Auto-remove after 4 seconds
+        setTimeout(function () {
+            if (alertDiv.parentNode) alertDiv.remove();
+        }, 4000);
+    }
 </script>
 {% endblock %}
