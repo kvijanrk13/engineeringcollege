@@ -23,56 +23,62 @@ class Faculty(models.Model):
     gender = models.CharField(max_length=20, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
 
-    # Additional fields
+    # Personal Information
     father_name = models.CharField(max_length=200, blank=True, null=True)
     mother_name = models.CharField(max_length=200, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
+    caste = models.CharField(max_length=100, blank=True, null=True)       # ← ADDED
+    sub_caste = models.CharField(max_length=100, blank=True, null=True)   # ← ADDED
+    nationality = models.CharField(max_length=100, blank=True, null=True, default='Indian')  # ← ADDED
+
+    # Identity Numbers
     aadhar = models.CharField(max_length=20, blank=True, null=True)
     pan = models.CharField(max_length=20, blank=True, null=True)
     apaar_id = models.CharField(max_length=50, blank=True, null=True)
-    scm = models.CharField(max_length=100, blank=True, null=True)
+    jntuh_id = models.CharField(max_length=100, blank=True, null=True)
+    aicte_id = models.CharField(max_length=100, blank=True, null=True)
+    orcid_id = models.CharField(max_length=100, blank=True, null=True)
 
-    # Educational qualifications
+    # Educational Qualifications — SSC
+    ssc_year = models.IntegerField(blank=True, null=True)
+    ssc_percent = models.FloatField(blank=True, null=True)
+    ssc_school = models.CharField(max_length=300, blank=True, null=True)
+
+    # Educational Qualifications — Intermediate
+    inter_year = models.IntegerField(blank=True, null=True)
+    inter_percent = models.FloatField(blank=True, null=True)
+    inter_college = models.CharField(max_length=300, blank=True, null=True)
+
+    # Educational Qualifications — UG
     ug_degree = models.CharField(max_length=200, blank=True, null=True)
     ug_year = models.IntegerField(blank=True, null=True)
     ug_college = models.CharField(max_length=300, blank=True, null=True)
     ug_spec = models.CharField(max_length=200, blank=True, null=True)
     ug_percentage = models.FloatField(blank=True, null=True)
 
+    # Educational Qualifications — PG
     pg_degree = models.CharField(max_length=200, blank=True, null=True)
     pg_year = models.IntegerField(blank=True, null=True)
     pg_college = models.CharField(max_length=300, blank=True, null=True)
     pg_spec = models.CharField(max_length=200, blank=True, null=True)
     pg_percentage = models.FloatField(blank=True, null=True)
 
+    # Educational Qualifications — PhD
     phd_degree = models.CharField(max_length=200, blank=True, null=True)
     phd_year = models.IntegerField(blank=True, null=True)
     phd_university = models.CharField(max_length=300, blank=True, null=True)
     phd_spec = models.CharField(max_length=200, blank=True, null=True)
 
-    # Other fields
+    # Additional Information
+    scm = models.CharField(max_length=100, blank=True, null=True)
     subjects_dealt = models.TextField(blank=True, null=True)
     about_yourself = models.TextField(blank=True, null=True)
     results = models.TextField(blank=True, null=True)
 
-    # SSC and Intermediate
-    ssc_year = models.IntegerField(blank=True, null=True)
-    ssc_percent = models.FloatField(blank=True, null=True)
-    ssc_school = models.CharField(max_length=300, blank=True, null=True)
-
-    inter_year = models.IntegerField(blank=True, null=True)
-    inter_percent = models.FloatField(blank=True, null=True)
-    inter_college = models.CharField(max_length=300, blank=True, null=True)
-
-    # IDs
-    jntuh_id = models.CharField(max_length=100, blank=True, null=True)
-    aicte_id = models.CharField(max_length=100, blank=True, null=True)
-    orcid_id = models.CharField(max_length=100, blank=True, null=True)
-
     # Photo
     photo = CloudinaryField("image", blank=True, null=True)
 
-    # Cloudinary URLs (for tracking uploaded files)
+    # Cloudinary URL tracking
     cloudinary_photo_url = models.URLField(max_length=500, blank=True, null=True)
     cloudinary_pdf_url = models.URLField(max_length=500, blank=True, null=True)
 
@@ -83,7 +89,7 @@ class Faculty(models.Model):
     apaar_file = CloudinaryField("raw", blank=True, null=True)
     scm_file = CloudinaryField("raw", blank=True, null=True)
 
-    # Certificates (Images)
+    # Education Certificates (Images)
     ssc_certificate = CloudinaryField("image", blank=True, null=True)
     inter_certificate = CloudinaryField("image", blank=True, null=True)
     ug_certificate = CloudinaryField("image", blank=True, null=True)
@@ -107,15 +113,23 @@ class Faculty(models.Model):
 # =====================================================
 
 class CloudinaryUpload(models.Model):
-    """Track uploads to Cloudinary"""
-    faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True,
-                                related_name='cloudinary_uploads')
-    student = models.ForeignKey('Student', on_delete=models.SET_NULL, null=True, blank=True,
-                                related_name='cloudinary_uploads')
-    upload_type = models.CharField(max_length=50)  # 'photo', 'pdf', 'certificate', etc.
+    """Track all uploads to Cloudinary"""
+    faculty = models.ForeignKey(
+        Faculty,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='cloudinary_uploads'
+    )
+    student = models.ForeignKey(
+        'Student',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='cloudinary_uploads'
+    )
+    upload_type = models.CharField(max_length=50)       # 'photo', 'pdf', 'certificate', etc.
     cloudinary_url = models.URLField(max_length=500)
     public_id = models.CharField(max_length=200)
-    resource_type = models.CharField(max_length=50)  # 'image', 'raw', etc.
+    resource_type = models.CharField(max_length=50)     # 'image', 'raw', etc.
     uploaded_by = models.CharField(max_length=150)
     upload_date = models.DateTimeField(auto_now_add=True)
 
@@ -136,13 +150,12 @@ class FacultyProfile(models.Model):
         Faculty,
         on_delete=models.CASCADE,
         related_name='profile',
-        null=True,
-        blank=True
+        null=True, blank=True
     )
 
     batch_number = models.CharField(max_length=50, blank=True, null=True)
 
-    # All files stored in Cloudinary
+    # Documents (stored in Cloudinary)
     aadhar_document = CloudinaryField("raw", blank=True, null=True)
     apaar_document = CloudinaryField("raw", blank=True, null=True)
     pan_document = CloudinaryField("raw", blank=True, null=True)
@@ -156,10 +169,9 @@ class FacultyProfile(models.Model):
         if self.joining_date:
             today = date.today()
             exp = today.year - self.joining_date.year
-            if today.month < self.joining_date.month or (
-                    today.month == self.joining_date.month and
-                    today.day < self.joining_date.day
-            ):
+            if (today.month < self.joining_date.month or
+                    (today.month == self.joining_date.month and
+                     today.day < self.joining_date.day)):
                 exp -= 1
             return max(0, exp)
         return 0
@@ -190,19 +202,17 @@ class ResearchProject(models.Model):
         on_delete=models.CASCADE,
         related_name='research_projects'
     )
-
     faculty_profile = models.ForeignKey(
         FacultyProfile,
         on_delete=models.CASCADE,
         related_name='research_projects',
-        null=True,
-        blank=True
+        null=True, blank=True
     )
 
     research_type = models.CharField(max_length=20, choices=RESEARCH_TYPE_CHOICES)
     title_of_project = models.CharField(max_length=500)
 
-    # Additional fields
+    # Publication details
     marks_awarded = models.CharField(max_length=100, blank=True, null=True)
     doi = models.CharField(max_length=200, blank=True, null=True)
     volume = models.CharField(max_length=100, blank=True, null=True)
@@ -220,7 +230,7 @@ class ResearchProject(models.Model):
 
 
 # =====================================================
-# STUDENT MODEL (COMPLETE)
+# STUDENT MODEL
 # =====================================================
 
 class Student(models.Model):
@@ -245,7 +255,7 @@ class Student(models.Model):
     student_phone = models.CharField(max_length=15)
     email = models.EmailField()
 
-    # Academic Info
+    # Academic / Registration Info
     task_registered = models.CharField(max_length=10, blank=True, null=True)
     task_username = models.CharField(max_length=100, blank=True, null=True)
     csi_registered = models.CharField(max_length=10, blank=True, null=True)
@@ -269,11 +279,9 @@ class Student(models.Model):
     final_project_title = models.CharField(max_length=500, blank=True, null=True)
     other_training = models.TextField(blank=True, null=True)
 
-    # ================= FILES =================
-
-    # Photo (Image) - supports both Cloudinary and URL
+    # Photo
     photo = CloudinaryField("image", blank=True, null=True)
-    photo_url = models.URLField(blank=True, null=True)  # For Cloudinary URL
+    photo_url = models.URLField(blank=True, null=True)
 
     # Certificates (Images)
     cert_achieve = CloudinaryField("image", blank=True, null=True)
@@ -284,9 +292,9 @@ class Student(models.Model):
     cert_placement = CloudinaryField("image", blank=True, null=True)
     cert_national = CloudinaryField("image", blank=True, null=True)
 
-    # Final Generated PDF URL
+    # Generated PDF
     pdf_file = models.URLField(blank=True, null=True)
-    pdf_url = models.URLField(blank=True, null=True)  # Alias for pdf_file
+    pdf_url = models.URLField(blank=True, null=True)
     pdf_generated = models.BooleanField(default=False)
     pdf_generation_time = models.DateTimeField(blank=True, null=True)
 
@@ -328,8 +336,16 @@ class Certificate(models.Model):
 # =====================================================
 
 class FacultyLog(models.Model):
-    faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
-    student = models.ForeignKey(Student, on_delete=models.SET_NULL, null=True, blank=True)
+    faculty = models.ForeignKey(
+        Faculty,
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
     action = models.CharField(max_length=100)
     details = models.TextField(blank=True)
     performed_by = models.CharField(max_length=150)
