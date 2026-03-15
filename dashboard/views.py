@@ -791,13 +791,39 @@ def add_faculty(request):
 def edit_faculty(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     if request.method == "POST":
-        for attr in ['staff_name','employee_code','department','designation','email','mobile',
-                     'father_name','dob','gender','state','address','aadhar','pan','apaar_id','scm']:
+        # ── All plain text / char fields from the form ──────────────────
+        text_fields = [
+            # Personal
+            'staff_name', 'employee_code', 'father_name', 'mother_name',
+            'gender', 'state', 'caste', 'sub_caste', 'address',
+            # Contact
+            'email', 'mobile', 'phone', 'department', 'designation',
+            # Professional IDs  ← these were missing before
+            'jntuh_id', 'aicte_id', 'pan', 'aadhar', 'apaar_id', 'orcid_id',
+            # SSC
+            'ssc_year', 'ssc_percent', 'ssc_school',
+            # Intermediate
+            'inter_year', 'inter_percent', 'inter_college',
+            # UG
+            'ug_degree', 'ug_year', 'ug_percentage', 'ug_college', 'ug_spec',
+            # PG
+            'pg_degree', 'pg_year', 'pg_percentage', 'pg_college', 'pg_spec',
+            # PhD
+            'phd_degree', 'phd_year', 'phd_university', 'phd_spec',
+            # Additional
+            'subjects_dealt', 'scm', 'about_yourself', 'results',
+            # Experience
+            'exp_anurag', 'exp_other',
+        ]
+        for attr in text_fields:
             val = request.POST.get(attr)
             if val is not None:
                 setattr(faculty, attr, val)
-        jd = request.POST.get("joining_date")
-        if jd: faculty.joining_date = jd
+
+        # Date fields need special handling (empty string → None)
+        for date_attr in ['dob', 'joining_date']:
+            val = request.POST.get(date_attr)
+            setattr(faculty, date_attr, val if val else None)
 
         if request.FILES.get("photo"):
             faculty.photo = request.FILES["photo"]
