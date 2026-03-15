@@ -2157,11 +2157,11 @@ def export_students_csv(request):
     return response
 
 
-# ==================== ENHANCED FACULTY PDF GENERATION WITH CERTIFICATE MERGING ====================
+# ==================== ENHANCED FACULTY PDF GENERATION WITH CERTIFICATE AND DOCUMENT MERGING ====================
 
 @login_required
 def generate_faculty_pdf(request, faculty_id):
-    """Generate PDF for a faculty member using HTML template with certificate merging - ENHANCED VERSION"""
+    """Generate PDF for a faculty member using HTML template with certificate and document merging - ENHANCED VERSION"""
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}")
