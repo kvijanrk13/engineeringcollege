@@ -358,9 +358,17 @@ if ON_RENDER and not DEBUG:
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        # Suppress the "File X first seen with mtime" spam from Django's StatReloader
+        'suppress_mtime_spam': {
+            '()': 'django.utils.log.CallbackFilter',
+            'callback': lambda record: 'first seen with mtime' not in record.getMessage(),
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'filters': ['suppress_mtime_spam'],
         },
     },
     'root': {
@@ -381,6 +389,12 @@ LOGGING = {
         'django.request': {
             'handlers': ['console'],
             'level': 'ERROR',
+            'propagate': False,
+        },
+        # Silence StatReloader mtime messages completely
+        'django.utils.autoreload': {
+            'handlers': ['console'],
+            'level': 'WARNING',
             'propagate': False,
         },
     },
