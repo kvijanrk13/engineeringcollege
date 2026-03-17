@@ -225,6 +225,7 @@ def edit_faculty_complete(request, faculty_id):
     if request.method == "POST":
         for attr in ['staff_name','employee_code','department','designation','email','mobile',
                      'gender','address','father_name','mother_name','aadhar','pan','state',
+                     'caste', 'sub_caste', 'nationality', 'jntuh_id', 'aicte_id', 'orcid_id', 'apaar_id',
                      'ug_degree','ug_college','ug_spec','pg_degree','pg_college','pg_spec',
                      'phd_degree','phd_university','phd_spec','about_yourself']:
             val = request.POST.get(attr)
@@ -234,10 +235,14 @@ def edit_faculty_complete(request, faculty_id):
             val = request.POST.get(date_attr)
             if val:
                 setattr(faculty, date_attr, val)
-        for pct_attr in ['ug_percentage','pg_percentage']:
+        for pct_attr in ['ug_percentage','pg_percentage', 'ssc_percent', 'inter_percent']:
             val = request.POST.get(pct_attr)
             if val:
                 setattr(faculty, pct_attr, val)
+        for text_attr in ['ssc_year', 'ssc_school', 'inter_year', 'inter_college']:
+            val = request.POST.get(text_attr)
+            if val:
+                setattr(faculty, text_attr, val)
         if request.FILES.get("photo"):
             faculty.photo = request.FILES["photo"]
         faculty.save()
@@ -730,14 +735,50 @@ def add_faculty(request):
                 staff_name   = request.POST.get("staff_name"),
                 employee_code= request.POST.get("employee_code"),
                 father_name  = request.POST.get("father_name"),
+                mother_name  = request.POST.get("mother_name"),
                 dob          = request.POST.get("dob"),
                 gender       = request.POST.get("gender"),
                 state        = request.POST.get("state"),
+                caste        = request.POST.get("caste"),
+                sub_caste    = request.POST.get("sub_caste"),
+                nationality  = request.POST.get("nationality", "Indian"),
                 address      = request.POST.get("address"),
                 mobile       = request.POST.get("mobile"),
+                phone        = request.POST.get("phone"),
                 email        = request.POST.get("email"),
                 department   = request.POST.get("department"),
                 designation  = request.POST.get("designation"),
+                joining_date = request.POST.get("joining_date"),
+                jntuh_id     = request.POST.get("jntuh_id"),
+                aicte_id     = request.POST.get("aicte_id"),
+                pan          = request.POST.get("pan"),
+                aadhar       = request.POST.get("aadhar"),
+                apaar_id     = request.POST.get("apaar_id"),
+                orcid_id     = request.POST.get("orcid_id"),
+                ssc_year     = request.POST.get("ssc_year"),
+                ssc_percent  = request.POST.get("ssc_percent"),
+                ssc_school   = request.POST.get("ssc_school"),
+                inter_year   = request.POST.get("inter_year"),
+                inter_percent= request.POST.get("inter_percent"),
+                inter_college= request.POST.get("inter_college"),
+                ug_degree    = request.POST.get("ug_degree"),
+                ug_year      = request.POST.get("ug_year"),
+                ug_percentage= request.POST.get("ug_percentage"),
+                ug_college   = request.POST.get("ug_college"),
+                ug_spec      = request.POST.get("ug_spec"),
+                pg_degree    = request.POST.get("pg_degree"),
+                pg_year      = request.POST.get("pg_year"),
+                pg_percentage= request.POST.get("pg_percentage"),
+                pg_college   = request.POST.get("pg_college"),
+                pg_spec      = request.POST.get("pg_spec"),
+                phd_degree   = request.POST.get("phd_degree"),
+                phd_year     = request.POST.get("phd_year"),
+                phd_university= request.POST.get("phd_university"),
+                phd_spec     = request.POST.get("phd_spec"),
+                subjects_dealt= request.POST.get("subjects_dealt"),
+                scm          = request.POST.get("scm"),
+                about_yourself= request.POST.get("about_yourself"),
+                results      = request.POST.get("results"),
                 photo        = request.FILES.get("photo"),
             )
             FacultyProfile.objects.create(faculty=faculty)
@@ -802,7 +843,7 @@ def edit_faculty(request, faculty_id):
         text_fields = [
             # Personal
             'staff_name', 'employee_code', 'father_name', 'mother_name',
-            'gender', 'state', 'caste', 'sub_caste', 'address',
+            'gender', 'state', 'caste', 'sub_caste', 'nationality', 'address',
             # Contact
             'email', 'mobile', 'phone', 'department', 'designation',
             # Professional IDs
@@ -1331,7 +1372,54 @@ def generate_faculty_pdf(request, faculty_id):
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}")
         print(f"GENERATING FACULTY PDF FOR: {faculty.staff_name}")
+        print(f"Employee Code: {faculty.employee_code}")
         print(f"{'='*60}")
+
+        # Debug print to verify all fields have data
+        print("\n--- FACULTY DATA CHECK ---")
+        print(f"Caste: {faculty.caste}")
+        print(f"Sub-Caste: {faculty.sub_caste}")
+        print(f"Nationality: {faculty.nationality}")
+        print(f"JNTUH ID: {faculty.jntuh_id}")
+        print(f"AICTE ID: {faculty.aicte_id}")
+        print(f"PAN: {faculty.pan}")
+        print(f"Aadhar: {faculty.aadhar}")
+        print(f"APAAR ID: {faculty.apaar_id}")
+        print(f"ORCID ID: {faculty.orcid_id}")
+        print(f"SSC Year: {faculty.ssc_year}")
+        print(f"SSC Percent: {faculty.ssc_percent}")
+        print(f"SSC School: {faculty.ssc_school}")
+        print(f"Inter Year: {faculty.inter_year}")
+        print(f"Inter Percent: {faculty.inter_percent}")
+        print(f"Inter College: {faculty.inter_college}")
+        print(f"UG Degree: {faculty.ug_degree}")
+        print(f"UG Year: {faculty.ug_year}")
+        print(f"UG Percentage: {faculty.ug_percentage}")
+        print(f"UG College: {faculty.ug_college}")
+        print(f"UG Spec: {faculty.ug_spec}")
+        print(f"PG Degree: {faculty.pg_degree}")
+        print(f"PG Year: {faculty.pg_year}")
+        print(f"PG Percentage: {faculty.pg_percentage}")
+        print(f"PG College: {faculty.pg_college}")
+        print(f"PG Spec: {faculty.pg_spec}")
+        print(f"PhD Status: {faculty.phd_degree}")
+        print(f"PhD Year: {faculty.phd_year}")
+        print(f"PhD University: {faculty.phd_university}")
+        print(f"PhD Spec: {faculty.phd_spec}")
+        print(f"Subjects Dealt: {faculty.subjects_dealt}")
+        print(f"SCM: {faculty.scm}")
+        print(f"About: {faculty.about_yourself}")
+        print(f"Results: {faculty.results}")
+        print(f"Has Aadhar File: {bool(faculty.aadhar_file)}")
+        print(f"Has PAN File: {bool(faculty.pan_file)}")
+        print(f"Has APAAR File: {bool(faculty.apaar_file)}")
+        print(f"Has SCM File: {bool(faculty.scm_file)}")
+        print(f"Has SSC Certificate: {bool(faculty.ssc_certificate)}")
+        print(f"Has Inter Certificate: {bool(faculty.inter_certificate)}")
+        print(f"Has UG Certificate: {bool(faculty.ug_certificate)}")
+        print(f"Has PG Certificate: {bool(faculty.pg_certificate)}")
+        print(f"Has PhD Certificate: {bool(faculty.phd_certificate)}")
+        print("---------------------------\n")
 
         merger = PdfMerger()
         temp_files = []
@@ -1405,40 +1493,68 @@ def generate_faculty_pdf(request, faculty_id):
             'experience': experience,
             'current_date': datetime.now(),
             'local_photo_path': temp_photo_path,
-            'ssc_year':        getattr(faculty, 'ssc_year', None),
-            'ssc_percent':     getattr(faculty, 'ssc_percent', None),
-            'ssc_school':      getattr(faculty, 'ssc_school', None),
-            'inter_year':      getattr(faculty, 'inter_year', None),
-            'inter_percent':   getattr(faculty, 'inter_percent', None),
-            'inter_college':   getattr(faculty, 'inter_college', None),
-            'ug_degree':       getattr(faculty, 'ug_degree', None),
-            'ug_year':         getattr(faculty, 'ug_year', None),
-            'ug_percentage':   getattr(faculty, 'ug_percentage', None),
-            'ug_college':      getattr(faculty, 'ug_college', None),
-            'ug_spec':         getattr(faculty, 'ug_spec', None),
-            'pg_degree':       getattr(faculty, 'pg_degree', None),
-            'pg_year':         getattr(faculty, 'pg_year', None),
-            'pg_percentage':   getattr(faculty, 'pg_percentage', None),
-            'pg_college':      getattr(faculty, 'pg_college', None),
-            'pg_spec':         getattr(faculty, 'pg_spec', None),
-            'phd_degree':      getattr(faculty, 'phd_degree', None),
-            'phd_year':        getattr(faculty, 'phd_year', None),
-            'phd_university':  getattr(faculty, 'phd_university', None),
-            'phd_spec':        getattr(faculty, 'phd_spec', None),
-            'jntuh_id':        getattr(faculty, 'jntuh_id', None),
-            'aicte_id':        getattr(faculty, 'aicte_id', None),
-            'pan':             getattr(faculty, 'pan', None),
-            'aadhar':          getattr(faculty, 'aadhar', None),
-            'apaar_id':        getattr(faculty, 'apaar_id', None),
-            'orcid_id':        getattr(faculty, 'orcid_id', None),
-            'subjects_dealt':  getattr(faculty, 'subjects_dealt', None),
-            'about_yourself':  getattr(faculty, 'about_yourself', None),
-            'results':         getattr(faculty, 'results', None),
-            'scm':             getattr(faculty, 'scm', None),
-            'has_aadhar':      bool(getattr(faculty, 'aadhar_file', None)),
-            'has_pan':         bool(getattr(faculty, 'pan_file', None)),
-            'has_apaar':       bool(getattr(faculty, 'apaar_file', None)),
-            'has_scm':         bool(getattr(faculty, 'scm_file', None)),
+            # Personal Information
+            'staff_name': faculty.staff_name,
+            'employee_code': faculty.employee_code,
+            'father_name': faculty.father_name,
+            'mother_name': faculty.mother_name,
+            'dob': faculty.dob,
+            'gender': faculty.gender,
+            'state': faculty.state,
+            'caste': faculty.caste,
+            'sub_caste': faculty.sub_caste,
+            'nationality': faculty.nationality,
+            'address': faculty.address,
+            # Professional Information
+            'department': faculty.department,
+            'designation': faculty.designation,
+            'joining_date': faculty.joining_date,
+            'email': faculty.email,
+            'mobile': faculty.mobile,
+            'phone': faculty.phone,
+            # Professional IDs
+            'jntuh_id': faculty.jntuh_id,
+            'aicte_id': faculty.aicte_id,
+            'pan': faculty.pan,
+            'aadhar': faculty.aadhar,
+            'apaar_id': faculty.apaar_id,
+            'orcid_id': faculty.orcid_id,
+            # Educational Qualifications
+            'ssc_year': faculty.ssc_year,
+            'ssc_percent': faculty.ssc_percent,
+            'ssc_school': faculty.ssc_school,
+            'inter_year': faculty.inter_year,
+            'inter_percent': faculty.inter_percent,
+            'inter_college': faculty.inter_college,
+            'ug_degree': faculty.ug_degree,
+            'ug_year': faculty.ug_year,
+            'ug_percentage': faculty.ug_percentage,
+            'ug_college': faculty.ug_college,
+            'ug_spec': faculty.ug_spec,
+            'pg_degree': faculty.pg_degree,
+            'pg_year': faculty.pg_year,
+            'pg_percentage': faculty.pg_percentage,
+            'pg_college': faculty.pg_college,
+            'pg_spec': faculty.pg_spec,
+            'phd_degree': faculty.phd_degree,
+            'phd_year': faculty.phd_year,
+            'phd_university': faculty.phd_university,
+            'phd_spec': faculty.phd_spec,
+            # Additional Information
+            'subjects_dealt': faculty.subjects_dealt,
+            'about_yourself': faculty.about_yourself,
+            'results': faculty.results,
+            'scm': faculty.scm,
+            # Document flags
+            'has_aadhar': bool(faculty.aadhar_file),
+            'has_pan': bool(faculty.pan_file),
+            'has_apaar': bool(faculty.apaar_file),
+            'has_scm': bool(faculty.scm_file),
+            'has_ssc_cert': bool(faculty.ssc_certificate),
+            'has_inter_cert': bool(faculty.inter_certificate),
+            'has_ug_cert': bool(faculty.ug_certificate),
+            'has_pg_cert': bool(faculty.pg_certificate),
+            'has_phd_cert': bool(faculty.phd_certificate),
         }
 
         # ---- 5. GENERATE MAIN PROFILE PDF ----
@@ -1521,47 +1637,50 @@ def generate_faculty_pdf(request, faculty_id):
                 ("Mobile",             faculty.mobile),
                 ("Gender",             faculty.gender),
                 ("Date of Birth",      faculty.dob.strftime('%d-%m-%Y') if faculty.dob else "N/A"),
-                ("Father's Name",      getattr(faculty,'father_name',None) or "N/A"),
-                ("Mother's Name",      getattr(faculty,'mother_name',None) or "N/A"),
-                ("State",              getattr(faculty,'state',None) or "N/A"),
+                ("Father's Name",      faculty.father_name or "N/A"),
+                ("Mother's Name",      faculty.mother_name or "N/A"),
+                ("State",              faculty.state or "N/A"),
+                ("Caste",              faculty.caste or "N/A"),
+                ("Sub-Caste",          faculty.sub_caste or "N/A"),
+                ("Nationality",        faculty.nationality or "N/A"),
                 ("Address",            faculty.address or "N/A"),
                 ("Joining Date",       faculty.joining_date.strftime('%d-%m-%Y') if faculty.joining_date else "N/A"),
                 ("Total Experience",   experience),
                 ("Status",             "Active" if faculty.is_active else "Inactive"),
-                ("JNTUH ID",           getattr(faculty,'jntuh_id',None) or "N/A"),
-                ("AICTE ID",           getattr(faculty,'aicte_id',None) or "N/A"),
-                ("PAN Number",         getattr(faculty,'pan',None) or "N/A"),
-                ("Aadhar Number",      getattr(faculty,'aadhar',None) or "N/A"),
-                ("APAAR ID",           getattr(faculty,'apaar_id',None) or "N/A"),
-                ("ORCID ID",           getattr(faculty,'orcid_id',None) or "N/A"),
-                ("SSC Year",           str(getattr(faculty,'ssc_year',None) or "N/A")),
-                ("SSC %",              str(getattr(faculty,'ssc_percent',None) or "N/A")),
-                ("SSC School",         getattr(faculty,'ssc_school',None) or "N/A"),
-                ("Inter Year",         str(getattr(faculty,'inter_year',None) or "N/A")),
-                ("Inter %",            str(getattr(faculty,'inter_percent',None) or "N/A")),
-                ("Inter College",      getattr(faculty,'inter_college',None) or "N/A"),
-                ("UG Degree",          getattr(faculty,'ug_degree',None) or "N/A"),
-                ("UG Year",            str(getattr(faculty,'ug_year',None) or "N/A")),
-                ("UG %",               str(getattr(faculty,'ug_percentage',None) or "N/A")),
-                ("UG College",         getattr(faculty,'ug_college',None) or "N/A"),
-                ("UG Specialization",  getattr(faculty,'ug_spec',None) or "N/A"),
-                ("PG Degree",          getattr(faculty,'pg_degree',None) or "N/A"),
-                ("PG Year",            str(getattr(faculty,'pg_year',None) or "N/A")),
-                ("PG %",               str(getattr(faculty,'pg_percentage',None) or "N/A")),
-                ("PG College",         getattr(faculty,'pg_college',None) or "N/A"),
-                ("PG Specialization",  getattr(faculty,'pg_spec',None) or "N/A"),
-                ("PhD Status",         getattr(faculty,'phd_degree',None) or "N/A"),
-                ("PhD Year",           str(getattr(faculty,'phd_year',None) or "N/A")),
-                ("PhD University",     getattr(faculty,'phd_university',None) or "N/A"),
-                ("PhD Specialization", getattr(faculty,'phd_spec',None) or "N/A"),
-                ("Subjects Dealt",     getattr(faculty,'subjects_dealt',None) or "N/A"),
-                ("About / Research",   getattr(faculty,'about_yourself',None) or "N/A"),
-                ("Results",            getattr(faculty,'results',None) or "N/A"),
-                ("SCM Details",        getattr(faculty,'scm',None) or "N/A"),
-                ("Aadhar Document",    "Uploaded" if bool(getattr(faculty,'aadhar_file',None)) else "Not Uploaded"),
-                ("PAN Document",       "Uploaded" if bool(getattr(faculty,'pan_file',None)) else "Not Uploaded"),
-                ("APAAR Document",     "Uploaded" if bool(getattr(faculty,'apaar_file',None)) else "Not Uploaded"),
-                ("SCM Document",       "Uploaded" if bool(getattr(faculty,'scm_file',None)) else "Not Uploaded"),
+                ("JNTUH ID",           faculty.jntuh_id or "N/A"),
+                ("AICTE ID",           faculty.aicte_id or "N/A"),
+                ("PAN Number",         faculty.pan or "N/A"),
+                ("Aadhar Number",      faculty.aadhar or "N/A"),
+                ("APAAR ID",           faculty.apaar_id or "N/A"),
+                ("ORCID ID",           faculty.orcid_id or "N/A"),
+                ("SSC Year",           str(faculty.ssc_year or "N/A")),
+                ("SSC %",              str(faculty.ssc_percent or "N/A")),
+                ("SSC School",         faculty.ssc_school or "N/A"),
+                ("Inter Year",         str(faculty.inter_year or "N/A")),
+                ("Inter %",            str(faculty.inter_percent or "N/A")),
+                ("Inter College",      faculty.inter_college or "N/A"),
+                ("UG Degree",          faculty.ug_degree or "N/A"),
+                ("UG Year",            str(faculty.ug_year or "N/A")),
+                ("UG %",               str(faculty.ug_percentage or "N/A")),
+                ("UG College",         faculty.ug_college or "N/A"),
+                ("UG Specialization",  faculty.ug_spec or "N/A"),
+                ("PG Degree",          faculty.pg_degree or "N/A"),
+                ("PG Year",            str(faculty.pg_year or "N/A")),
+                ("PG %",               str(faculty.pg_percentage or "N/A")),
+                ("PG College",         faculty.pg_college or "N/A"),
+                ("PG Specialization",  faculty.pg_spec or "N/A"),
+                ("PhD Status",         faculty.phd_degree or "N/A"),
+                ("PhD Year",           str(faculty.phd_year or "N/A")),
+                ("PhD University",     faculty.phd_university or "N/A"),
+                ("PhD Specialization", faculty.phd_spec or "N/A"),
+                ("Subjects Dealt",     faculty.subjects_dealt or "N/A"),
+                ("About / Research",   faculty.about_yourself or "N/A"),
+                ("Results",            faculty.results or "N/A"),
+                ("SCM Details",        faculty.scm or "N/A"),
+                ("Aadhar Document",    "Uploaded" if bool(faculty.aadhar_file) else "Not Uploaded"),
+                ("PAN Document",       "Uploaded" if bool(faculty.pan_file) else "Not Uploaded"),
+                ("APAAR Document",     "Uploaded" if bool(faculty.apaar_file) else "Not Uploaded"),
+                ("SCM Document",       "Uploaded" if bool(faculty.scm_file) else "Not Uploaded"),
             ]
 
             td = [
