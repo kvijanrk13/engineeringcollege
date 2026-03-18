@@ -32,7 +32,7 @@ import django
 
 # PDF Generation imports
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Image,
-                                 Table, TableStyle, HRFlowable, PageBreak)
+                                Table, TableStyle, HRFlowable, PageBreak)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.units import inch
@@ -80,6 +80,7 @@ except ImportError:
 
 try:
     import matplotlib
+
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import numpy as np
@@ -223,19 +224,19 @@ def debug_faculty_data(request, faculty_id):
 def edit_faculty_complete(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     if request.method == "POST":
-        for attr in ['staff_name','employee_code','department','designation','email','mobile',
-                     'gender','address','father_name','mother_name','aadhar','pan','state',
+        for attr in ['staff_name', 'employee_code', 'department', 'designation', 'email', 'mobile',
+                     'gender', 'address', 'father_name', 'mother_name', 'aadhar', 'pan', 'state',
                      'caste', 'sub_caste', 'nationality', 'jntuh_id', 'aicte_id', 'orcid_id', 'apaar_id',
-                     'ug_degree','ug_college','ug_spec','pg_degree','pg_college','pg_spec',
-                     'phd_degree','phd_university','phd_spec','about_yourself']:
+                     'ug_degree', 'ug_college', 'ug_spec', 'pg_degree', 'pg_college', 'pg_spec',
+                     'phd_degree', 'phd_university', 'phd_spec', 'about_yourself']:
             val = request.POST.get(attr)
             if val is not None:
                 setattr(faculty, attr, val)
-        for date_attr in ['joining_date','dob','ug_year','pg_year','phd_year']:
+        for date_attr in ['joining_date', 'dob', 'ug_year', 'pg_year', 'phd_year']:
             val = request.POST.get(date_attr)
             if val:
                 setattr(faculty, date_attr, val)
-        for pct_attr in ['ug_percentage','pg_percentage', 'ssc_percent', 'inter_percent']:
+        for pct_attr in ['ug_percentage', 'pg_percentage', 'ssc_percent', 'inter_percent']:
             val = request.POST.get(pct_attr)
             if val:
                 setattr(faculty, pct_attr, val)
@@ -265,14 +266,14 @@ def faculty_profile_view(request, faculty_id):
         if profile_form.is_valid():
             profile = profile_form.save()
             research_types = request.POST.getlist('research_type[]')
-            titles       = request.POST.getlist('title_of_project[]')
-            marks        = request.POST.getlist('marks_awarded[]')
-            dois         = request.POST.getlist('doi[]')
-            volumes      = request.POST.getlist('volume[]')
-            issns        = request.POST.getlist('issn_number[]')
-            journals     = request.POST.getlist('journal_name[]')
-            publishers   = request.POST.getlist('publisher_name[]')
-            project_ids  = request.POST.getlist('project_id[]')
+            titles = request.POST.getlist('title_of_project[]')
+            marks = request.POST.getlist('marks_awarded[]')
+            dois = request.POST.getlist('doi[]')
+            volumes = request.POST.getlist('volume[]')
+            issns = request.POST.getlist('issn_number[]')
+            journals = request.POST.getlist('journal_name[]')
+            publishers = request.POST.getlist('publisher_name[]')
+            project_ids = request.POST.getlist('project_id[]')
 
             for i in range(len(titles)):
                 if not titles[i]:
@@ -280,14 +281,14 @@ def faculty_profile_view(request, faculty_id):
                 pid = project_ids[i] if i < len(project_ids) else None
                 if pid and pid.isdigit():
                     proj = get_object_or_404(ResearchProject, id=int(pid), faculty=faculty)
-                    proj.research_type   = research_types[i] if i < len(research_types) else ''
+                    proj.research_type = research_types[i] if i < len(research_types) else ''
                     proj.title_of_project = titles[i]
-                    proj.marks_awarded   = marks[i] if i < len(marks) and marks[i] else None
-                    proj.doi             = dois[i] if i < len(dois) else ''
-                    proj.volume          = volumes[i] if i < len(volumes) else ''
-                    proj.issn_number     = issns[i] if i < len(issns) else ''
-                    proj.journal_name    = journals[i] if i < len(journals) else ''
-                    proj.publisher_name  = publishers[i] if i < len(publishers) else ''
+                    proj.marks_awarded = marks[i] if i < len(marks) and marks[i] else None
+                    proj.doi = dois[i] if i < len(dois) else ''
+                    proj.volume = volumes[i] if i < len(volumes) else ''
+                    proj.issn_number = issns[i] if i < len(issns) else ''
+                    proj.journal_name = journals[i] if i < len(journals) else ''
+                    proj.publisher_name = publishers[i] if i < len(publishers) else ''
                     if request.FILES.get(f'upload_pdf_{i}'):
                         proj.upload_pdf = request.FILES[f'upload_pdf_{i}']
                     proj.save()
@@ -295,15 +296,15 @@ def faculty_profile_view(request, faculty_id):
                     ResearchProject.objects.create(
                         faculty=faculty,
                         faculty_profile=profile,
-                        research_type   = research_types[i] if i < len(research_types) else '',
-                        title_of_project = titles[i],
-                        marks_awarded    = marks[i] if i < len(marks) and marks[i] else None,
-                        doi              = dois[i] if i < len(dois) else '',
-                        volume           = volumes[i] if i < len(volumes) else '',
-                        issn_number      = issns[i] if i < len(issns) else '',
-                        journal_name     = journals[i] if i < len(journals) else '',
-                        publisher_name   = publishers[i] if i < len(publishers) else '',
-                        upload_pdf       = request.FILES.get(f'upload_pdf_{i}') or None,
+                        research_type=research_types[i] if i < len(research_types) else '',
+                        title_of_project=titles[i],
+                        marks_awarded=marks[i] if i < len(marks) and marks[i] else None,
+                        doi=dois[i] if i < len(dois) else '',
+                        volume=volumes[i] if i < len(volumes) else '',
+                        issn_number=issns[i] if i < len(issns) else '',
+                        journal_name=journals[i] if i < len(journals) else '',
+                        publisher_name=publishers[i] if i < len(publishers) else '',
+                        upload_pdf=request.FILES.get(f'upload_pdf_{i}') or None,
                     )
             messages.success(request, 'Faculty profile updated successfully!')
             return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
@@ -449,7 +450,7 @@ def student_login(request):
         password = request.POST.get("password")
         if username == "anrkitstudent" and password == "anrkitstudent":
             request.session["student_logged_in"] = True
-            request.session["student_username"]  = username
+            request.session["student_username"] = username
             messages.success(request, "Student login successful!")
             return redirect("dashboard:students_data")
         error = "Invalid student credentials"
@@ -493,11 +494,11 @@ def home(request):
         return redirect('dashboard:admin_dashboard' if request.user.is_superuser else 'dashboard:dashboard')
     return render(request, 'dashboard/home.html', {
         'title': 'Faculty Management System - Home',
-        'total_faculty':      Faculty.objects.count(),
-        'active_faculty':     Faculty.objects.filter(is_active=True).count(),
-        'total_students':     Student.objects.count(),
-        'departments':        Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5],
-        'recent_activities':  FacultyLog.objects.order_by('-created_at')[:5],
+        'total_faculty': Faculty.objects.count(),
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
+        'total_students': Student.objects.count(),
+        'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5],
+        'recent_activities': FacultyLog.objects.order_by('-created_at')[:5],
         'show_hero': True,
     })
 
@@ -511,20 +512,24 @@ def dashboard(request):
     for f in Faculty.objects.all():
         if f.joining_date:
             yrs = (today - f.joining_date).days / 365.25
-            if yrs <= 5:        exp_distribution['0-5']   += 1
-            elif yrs <= 10:     exp_distribution['5-10']  += 1
-            elif yrs <= 15:     exp_distribution['10-15'] += 1
-            else:               exp_distribution['15+']   += 1
+            if yrs <= 5:
+                exp_distribution['0-5'] += 1
+            elif yrs <= 10:
+                exp_distribution['5-10'] += 1
+            elif yrs <= 15:
+                exp_distribution['10-15'] += 1
+            else:
+                exp_distribution['15+'] += 1
     return render(request, "dashboard/dashboard.html", {
         'title': 'Dashboard',
-        'total_faculty':      total_faculty,
-        'with_phd':           with_phd,
-        'active_faculty':     Faculty.objects.filter(is_active=True).count(),
+        'total_faculty': total_faculty,
+        'with_phd': with_phd,
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
         'total_certificates': Certificate.objects.count(),
-        'departments':        Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
-        'recent_uploads':     Faculty.objects.order_by('-created_at')[:5],
-        'recent_logs':        FacultyLog.objects.order_by('-created_at')[:5],
-        'exp_distribution':   exp_distribution,
+        'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
+        'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
+        'recent_logs': FacultyLog.objects.order_by('-created_at')[:5],
+        'exp_distribution': exp_distribution,
         'today': today, 'user': request.user,
     })
 
@@ -544,30 +549,30 @@ def admin_dashboard(request):
     if psutil:
         try:
             system_stats = {
-                'cpu_percent':    psutil.cpu_percent(interval=1),
+                'cpu_percent': psutil.cpu_percent(interval=1),
                 'memory_percent': psutil.virtual_memory().percent,
-                'disk_usage':     psutil.disk_usage('/').percent,
-                'boot_time':      datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'disk_usage': psutil.disk_usage('/').percent,
+                'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
             }
         except Exception as e:
             system_stats = {'error': str(e)}
     return render(request, "dashboard/admin_dashboard.html", {
         'title': 'Admin Dashboard',
-        'total_faculty':      total_faculty,
-        'active_faculty':     Faculty.objects.filter(is_active=True).count(),
-        'total_students':     Student.objects.count(),
+        'total_faculty': total_faculty,
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
+        'total_students': Student.objects.count(),
         'total_certificates': Certificate.objects.count(),
         'cloudinary_uploads': CloudinaryUpload.objects.count(),
-        'with_phd':           Faculty.objects.filter(phd_degree='Completed').count(),
-        'departments':        departments,
-        'recent_logs':        FacultyLog.objects.order_by('-created_at')[:10],
-        'system_stats':       system_stats,
+        'with_phd': Faculty.objects.filter(phd_degree='Completed').count(),
+        'departments': departments,
+        'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
+        'system_stats': system_stats,
         'user_activity': {
             'total_users': User.objects.count(),
             'active_today': FacultyLog.objects.filter(
                 created_at__date=date.today()).values('performed_by').distinct().count(),
         },
-        'has_psutil':     psutil is not None,
+        'has_psutil': psutil is not None,
         'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
     })
 
@@ -591,15 +596,15 @@ def student_dashboard(request):
         }
     certificates = []
     if student and hasattr(student, 'id'):
-        for fn, dn in [('cert_achieve','Achievement'),('cert_intern','Internship'),
-                       ('cert_courses','Courses'),('cert_sdp','SDP'),
-                       ('cert_extra','Extra Curricular'),('cert_placement','Placement'),
-                       ('cert_national','National Exam')]:
+        for fn, dn in [('cert_achieve', 'Achievement'), ('cert_intern', 'Internship'),
+                       ('cert_courses', 'Courses'), ('cert_sdp', 'SDP'),
+                       ('cert_extra', 'Extra Curricular'), ('cert_placement', 'Placement'),
+                       ('cert_national', 'National Exam')]:
             if hasattr(student, fn) and getattr(student, fn):
                 certificates.append({'type': dn, 'field': fn, 'has_file': True})
     return render(request, "dashboard/student_dashboard.html", {
         'student': student, 'title': 'Student Dashboard',
-        'total_students':  Student.objects.count(),
+        'total_students': Student.objects.count(),
         'recent_students': Student.objects.order_by('-created_at')[:5],
         'certificates': certificates, 'is_student': True,
     })
@@ -658,7 +663,7 @@ def faculty_dashboard(request):
         'faculties': faculties, 'faculty': faculty, 'certificates': certificates or [],
         'experience': experience,
         'cloudinary_status': {
-            'has_pdf':   bool(faculty.cloudinary_pdf_url)   if faculty else False,
+            'has_pdf': bool(faculty.cloudinary_pdf_url) if faculty else False,
             'has_photo': bool(faculty.cloudinary_photo_url) if faculty else False,
         },
         'current_date': timezone.now(), 'is_analytics': False, 'pdf_mode': False,
@@ -678,17 +683,21 @@ def faculty_analytics(request):
     for f in Faculty.objects.all():
         if f.joining_date:
             yrs = today.year - f.joining_date.year
-            if yrs <= 5:    exp_stats['0_5']     += 1
-            elif yrs <= 10: exp_stats['5_10']    += 1
-            else:           exp_stats['10_plus'] += 1
+            if yrs <= 5:
+                exp_stats['0_5'] += 1
+            elif yrs <= 10:
+                exp_stats['5_10'] += 1
+            else:
+                exp_stats['10_plus'] += 1
     return render(request, 'dashboard/faculty.html', {
         'is_analytics': True, 'total_faculty': total,
         'qualification_stats': {
             'phd_completed': Faculty.objects.filter(phd_degree='Completed').count(),
-            'phd_pursuing':  Faculty.objects.filter(phd_degree='Pursuing').count(),
-            'pg_only':  Faculty.objects.filter(pg_year__isnull=False, phd_degree__in=['','Not Started','None']).count(),
-            'ug_only':  Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True,
-                                               phd_degree__in=['','Not Started','None']).count(),
+            'phd_pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
+            'pg_only': Faculty.objects.filter(pg_year__isnull=False,
+                                              phd_degree__in=['', 'Not Started', 'None']).count(),
+            'ug_only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True,
+                                              phd_degree__in=['', 'Not Started', 'None']).count(),
         },
         'departments': departments, 'experience_stats': exp_stats,
         'faculties': Faculty.objects.all()[:10], 'title': 'Faculty Analytics',
@@ -702,16 +711,20 @@ def faculty_list(request):
     qs = Faculty.objects.all().order_by('staff_name')
     sq = request.GET.get('search', '')
     if sq:
-        qs = qs.filter(Q(staff_name__icontains=sq)|Q(employee_code__icontains=sq)|
-                       Q(email__icontains=sq)|Q(department__icontains=sq)|Q(designation__icontains=sq))
+        qs = qs.filter(Q(staff_name__icontains=sq) | Q(employee_code__icontains=sq) |
+                       Q(email__icontains=sq) | Q(department__icontains=sq) | Q(designation__icontains=sq))
     df = request.GET.get('department', '')
     if df: qs = qs.filter(department__icontains=df)
     sf = request.GET.get('status', '')
-    if sf == 'active':    qs = qs.filter(is_active=True)
-    elif sf == 'inactive': qs = qs.filter(is_active=False)
+    if sf == 'active':
+        qs = qs.filter(is_active=True)
+    elif sf == 'inactive':
+        qs = qs.filter(is_active=False)
     qf = request.GET.get('qualification', '')
-    if qf == 'phd': qs = qs.filter(phd_degree='Completed')
-    elif qf == 'pg': qs = qs.filter(pg_year__isnull=False, phd_degree__in=['','Not Started','None'])
+    if qf == 'phd':
+        qs = qs.filter(phd_degree='Completed')
+    elif qf == 'pg':
+        qs = qs.filter(pg_year__isnull=False, phd_degree__in=['', 'Not Started', 'None'])
     paginator = Paginator(qs, 20)
     try:
         faculties = paginator.page(request.GET.get('page', 1))
@@ -732,54 +745,54 @@ def add_faculty(request):
     if request.method == "POST":
         try:
             faculty = Faculty.objects.create(
-                staff_name   = request.POST.get("staff_name"),
-                employee_code= request.POST.get("employee_code"),
-                father_name  = request.POST.get("father_name"),
-                mother_name  = request.POST.get("mother_name"),
-                dob          = request.POST.get("dob"),
-                gender       = request.POST.get("gender"),
-                state        = request.POST.get("state"),
-                caste        = request.POST.get("caste"),
-                sub_caste    = request.POST.get("sub_caste"),
-                nationality  = request.POST.get("nationality", "Indian"),
-                address      = request.POST.get("address"),
-                mobile       = request.POST.get("mobile"),
-                phone        = request.POST.get("phone"),
-                email        = request.POST.get("email"),
-                department   = request.POST.get("department"),
-                designation  = request.POST.get("designation"),
-                joining_date = request.POST.get("joining_date"),
-                jntuh_id     = request.POST.get("jntuh_id"),
-                aicte_id     = request.POST.get("aicte_id"),
-                pan          = request.POST.get("pan"),
-                aadhar       = request.POST.get("aadhar"),
-                apaar_id     = request.POST.get("apaar_id"),
-                orcid_id     = request.POST.get("orcid_id"),
-                ssc_year     = request.POST.get("ssc_year"),
-                ssc_percent  = request.POST.get("ssc_percent"),
-                ssc_school   = request.POST.get("ssc_school"),
-                inter_year   = request.POST.get("inter_year"),
-                inter_percent= request.POST.get("inter_percent"),
-                inter_college= request.POST.get("inter_college"),
-                ug_degree    = request.POST.get("ug_degree"),
-                ug_year      = request.POST.get("ug_year"),
-                ug_percentage= request.POST.get("ug_percentage"),
-                ug_college   = request.POST.get("ug_college"),
-                ug_spec      = request.POST.get("ug_spec"),
-                pg_degree    = request.POST.get("pg_degree"),
-                pg_year      = request.POST.get("pg_year"),
-                pg_percentage= request.POST.get("pg_percentage"),
-                pg_college   = request.POST.get("pg_college"),
-                pg_spec      = request.POST.get("pg_spec"),
-                phd_degree   = request.POST.get("phd_degree"),
-                phd_year     = request.POST.get("phd_year"),
-                phd_university= request.POST.get("phd_university"),
-                phd_spec     = request.POST.get("phd_spec"),
-                subjects_dealt= request.POST.get("subjects_dealt"),
-                scm          = request.POST.get("scm"),
-                about_yourself= request.POST.get("about_yourself"),
-                results      = request.POST.get("results"),
-                photo        = request.FILES.get("photo"),
+                staff_name=request.POST.get("staff_name"),
+                employee_code=request.POST.get("employee_code"),
+                father_name=request.POST.get("father_name"),
+                mother_name=request.POST.get("mother_name"),
+                dob=request.POST.get("dob"),
+                gender=request.POST.get("gender"),
+                state=request.POST.get("state"),
+                caste=request.POST.get("caste"),
+                sub_caste=request.POST.get("sub_caste"),
+                nationality=request.POST.get("nationality", "Indian"),
+                address=request.POST.get("address"),
+                mobile=request.POST.get("mobile"),
+                phone=request.POST.get("phone"),
+                email=request.POST.get("email"),
+                department=request.POST.get("department"),
+                designation=request.POST.get("designation"),
+                joining_date=request.POST.get("joining_date"),
+                jntuh_id=request.POST.get("jntuh_id"),
+                aicte_id=request.POST.get("aicte_id"),
+                pan=request.POST.get("pan"),
+                aadhar=request.POST.get("aadhar"),
+                apaar_id=request.POST.get("apaar_id"),
+                orcid_id=request.POST.get("orcid_id"),
+                ssc_year=request.POST.get("ssc_year"),
+                ssc_percent=request.POST.get("ssc_percent"),
+                ssc_school=request.POST.get("ssc_school"),
+                inter_year=request.POST.get("inter_year"),
+                inter_percent=request.POST.get("inter_percent"),
+                inter_college=request.POST.get("inter_college"),
+                ug_degree=request.POST.get("ug_degree"),
+                ug_year=request.POST.get("ug_year"),
+                ug_percentage=request.POST.get("ug_percentage"),
+                ug_college=request.POST.get("ug_college"),
+                ug_spec=request.POST.get("ug_spec"),
+                pg_degree=request.POST.get("pg_degree"),
+                pg_year=request.POST.get("pg_year"),
+                pg_percentage=request.POST.get("pg_percentage"),
+                pg_college=request.POST.get("pg_college"),
+                pg_spec=request.POST.get("pg_spec"),
+                phd_degree=request.POST.get("phd_degree"),
+                phd_year=request.POST.get("phd_year"),
+                phd_university=request.POST.get("phd_university"),
+                phd_spec=request.POST.get("phd_spec"),
+                subjects_dealt=request.POST.get("subjects_dealt"),
+                scm=request.POST.get("scm"),
+                about_yourself=request.POST.get("about_yourself"),
+                results=request.POST.get("results"),
+                photo=request.FILES.get("photo"),
             )
             FacultyProfile.objects.create(faculty=faculty)
 
@@ -789,7 +802,7 @@ def add_faculty(request):
                     cr = cloudinary.uploader.upload(
                         request.FILES["photo"], folder="faculty_photos",
                         public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                        transformation=[{'width':300,'height':300,'crop':'fill'},{'quality':'auto:good'}]
+                        transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
                     )
                     faculty.cloudinary_photo_url = cr["secure_url"]
                     faculty.save()
@@ -877,9 +890,9 @@ def edit_faculty(request, faculty_id):
             profile, _ = FacultyProfile.objects.get_or_create(faculty=faculty)
             for fp_attr in ['experience_other', 'experience_at_anurag', 'batch_number']:
                 form_key = {
-                    'experience_other':    'exp_other',
-                    'experience_at_anurag':'exp_anurag',
-                    'batch_number':        'batch_number',
+                    'experience_other': 'exp_other',
+                    'experience_at_anurag': 'exp_anurag',
+                    'batch_number': 'batch_number',
                 }.get(fp_attr, fp_attr)
                 val = request.POST.get(form_key)
                 if val is not None and hasattr(profile, fp_attr):
@@ -895,7 +908,7 @@ def edit_faculty(request, faculty_id):
                     cr = cloudinary.uploader.upload(
                         request.FILES["photo"], folder="faculty_photos",
                         public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                        transformation=[{'width':300,'height':300,'crop':'fill'},{'quality':'auto:good'}]
+                        transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
                     )
                     faculty.cloudinary_photo_url = cr["secure_url"]
                     CloudinaryUpload.objects.create(
@@ -928,7 +941,7 @@ def delete_faculty(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
 
     if request.method == 'POST':
-        faculty_name  = faculty.staff_name
+        faculty_name = faculty.staff_name
         employee_code = faculty.employee_code
 
         # Log before deletion
@@ -944,8 +957,8 @@ def delete_faculty(request, faculty_id):
 
         # Detect AJAX — check both X-Requested-With and Accept header
         is_ajax = (
-            request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
-            'application/json' in request.headers.get('Accept', '')
+                request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+                'application/json' in request.headers.get('Accept', '')
         )
         if is_ajax:
             return JsonResponse({
@@ -967,7 +980,7 @@ def delete_faculty(request, faculty_id):
 def assign_subjects(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     if request.method == 'POST':
-        subject_ids  = request.POST.getlist('subjects')
+        subject_ids = request.POST.getlist('subjects')
         old_subjects = set(faculty.subjects.values_list('id', flat=True))
         new_subjects = set(map(int, subject_ids))
         faculty.subjects.set(Subject.objects.filter(id__in=subject_ids))
@@ -977,7 +990,8 @@ def assign_subjects(request, faculty_id):
         if added:
             changes.append(f"Added: {', '.join(Subject.objects.filter(id__in=added).values_list('name', flat=True))}")
         if removed:
-            changes.append(f"Removed: {', '.join(Subject.objects.filter(id__in=removed).values_list('name', flat=True))}")
+            changes.append(
+                f"Removed: {', '.join(Subject.objects.filter(id__in=removed).values_list('name', flat=True))}")
         FacultyLog.objects.create(
             faculty=faculty, action='Subjects Assigned',
             details=f"Subjects updated. {'; '.join(changes) if changes else 'No changes'}",
@@ -1005,14 +1019,14 @@ def students_data(request):
         return redirect('dashboard:student_login')
     qs = Student.objects.all().order_by('-created_at')
     paginator = Paginator(qs, 20)
-    page_obj  = paginator.get_page(request.GET.get('page'))
+    page_obj = paginator.get_page(request.GET.get('page'))
     return render(request, "dashboard/students_data.html", {
         "title": "Students Data", "students": page_obj,
         "total_students": qs.count(),
         "year_1_count": qs.filter(year=1).count(), "year_2_count": qs.filter(year=2).count(),
         "year_3_count": qs.filter(year=3).count(), "year_4_count": qs.filter(year=4).count(),
         "years": Student.objects.values_list("year", flat=True).distinct(),
-        "sems":  Student.objects.values_list("sem",  flat=True).distinct(),
+        "sems": Student.objects.values_list("sem", flat=True).distinct(),
         "is_paginated": page_obj.has_other_pages(), "page_obj": page_obj,
     })
 
@@ -1039,39 +1053,39 @@ def add_student(request):
                     return None
 
             student = Student(
-                ht_no           = request.POST.get('ht_no'),
-                student_name    = request.POST.get('student_name'),
-                father_name     = request.POST.get('father_name'),
-                mother_name     = request.POST.get('mother_name'),
-                gender          = request.POST.get('gender'),
-                dob             = request.POST.get('dob'),
-                age             = request.POST.get('age'),
-                nationality     = request.POST.get('nationality', 'Indian'),
-                category        = request.POST.get('category'),
-                religion        = request.POST.get('religion'),
-                blood_group     = request.POST.get('blood_group'),
-                aadhar          = request.POST.get('aadhar'),
-                apaar_id        = request.POST.get('apaar_id'),
-                address         = request.POST.get('address'),
-                parent_phone    = request.POST.get('parent_phone'),
-                student_phone   = request.POST.get('student_phone'),
-                email           = request.POST.get('email'),
-                task_registered = request.POST.get('task_registered'),
-                task_username   = request.POST.get('task_username'),
-                csi_registered  = request.POST.get('csi_registered'),
-                csi_membership_id = request.POST.get('csi_membership_id'),
-                admission_type  = request.POST.get('admission_type'),
-                other_admission_details = request.POST.get('other_admission_details'),
-                eamcet_rank     = request.POST.get('eamcet_rank') or None,
-                year            = request.POST.get('year'),
-                sem             = request.POST.get('sem'),
-                ssc_marks       = request.POST.get('ssc_marks'),
-                inter_marks     = request.POST.get('inter_marks'),
-                cgpa            = request.POST.get('cgpa'),
-                rtrp_project_title  = request.POST.get('rtrp_project_title'),
-                intern_title        = request.POST.get('intern_title'),
-                final_project_title = request.POST.get('final_project_title'),
-                other_training      = request.POST.get('other_training'),
+                ht_no=request.POST.get('ht_no'),
+                student_name=request.POST.get('student_name'),
+                father_name=request.POST.get('father_name'),
+                mother_name=request.POST.get('mother_name'),
+                gender=request.POST.get('gender'),
+                dob=request.POST.get('dob'),
+                age=request.POST.get('age'),
+                nationality=request.POST.get('nationality', 'Indian'),
+                category=request.POST.get('category'),
+                religion=request.POST.get('religion'),
+                blood_group=request.POST.get('blood_group'),
+                aadhar=request.POST.get('aadhar'),
+                apaar_id=request.POST.get('apaar_id'),
+                address=request.POST.get('address'),
+                parent_phone=request.POST.get('parent_phone'),
+                student_phone=request.POST.get('student_phone'),
+                email=request.POST.get('email'),
+                task_registered=request.POST.get('task_registered'),
+                task_username=request.POST.get('task_username'),
+                csi_registered=request.POST.get('csi_registered'),
+                csi_membership_id=request.POST.get('csi_membership_id'),
+                admission_type=request.POST.get('admission_type'),
+                other_admission_details=request.POST.get('other_admission_details'),
+                eamcet_rank=request.POST.get('eamcet_rank') or None,
+                year=request.POST.get('year'),
+                sem=request.POST.get('sem'),
+                ssc_marks=request.POST.get('ssc_marks'),
+                inter_marks=request.POST.get('inter_marks'),
+                cgpa=request.POST.get('cgpa'),
+                rtrp_project_title=request.POST.get('rtrp_project_title'),
+                intern_title=request.POST.get('intern_title'),
+                final_project_title=request.POST.get('final_project_title'),
+                other_training=request.POST.get('other_training'),
                 photo=None, cert_achieve=None, cert_intern=None, cert_courses=None,
                 cert_sdp=None, cert_extra=None, cert_placement=None, cert_national=None,
             )
@@ -1092,10 +1106,10 @@ def add_student(request):
                     files_lo.append('photo')
 
             # Certificates
-            for fn, folder in [('cert_achieve','achievement'),('cert_intern','internship'),
-                                ('cert_courses','courses'),('cert_sdp','sdp'),
-                                ('cert_extra','extra'),('cert_placement','placement'),
-                                ('cert_national','national')]:
+            for fn, folder in [('cert_achieve', 'achievement'), ('cert_intern', 'internship'),
+                               ('cert_courses', 'courses'), ('cert_sdp', 'sdp'),
+                               ('cert_extra', 'extra'), ('cert_placement', 'placement'),
+                               ('cert_national', 'national')]:
                 if request.FILES.get(fn):
                     cf = request.FILES[fn]
                     url = _upload(cf, folder)
@@ -1117,7 +1131,8 @@ def add_student(request):
 
             return redirect('dashboard:students_data')
         except Exception as e:
-            import traceback; traceback.print_exc()
+            import traceback;
+            traceback.print_exc()
             messages.error(request, f'Error adding student: {e}')
             return redirect('dashboard:add_student')
     return render(request, 'dashboard/add_student.html')
@@ -1149,7 +1164,95 @@ def edit_student(request, student_id):
     return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student'})
 
 
+# ==================== PDF MERGE UTILITY ====================
+
+def merge_files(file_list):
+    from pypdf import PdfMerger
+    from PIL import Image
+    import tempfile
+    import os
+    import requests
+
+    merger = PdfMerger()
+    temp_files = []
+
+    for file in file_list:
+        if not file:
+            continue
+
+        try:
+            file_url = file.url if hasattr(file, "url") else file
+
+            # Download file if it's a URL (Cloudinary case)
+            if isinstance(file_url, str) and file_url.startswith("http"):
+                response = requests.get(file_url)
+                temp = tempfile.NamedTemporaryFile(delete=False)
+                temp.write(response.content)
+                temp.close()
+                file_path = temp.name
+            else:
+                file_path = file.path
+
+            # IMAGE → convert to PDF
+            if file_url.lower().endswith(('.png', '.jpg', '.jpeg')):
+                img = Image.open(file_path)
+                temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                img.convert('RGB').save(temp_pdf.name)
+                merger.append(temp_pdf.name)
+                temp_files.append(temp_pdf.name)
+
+            # PDF → directly append
+            elif file_url.lower().endswith('.pdf'):
+                merger.append(file_path)
+
+        except Exception as e:
+            print("Error processing file:", e)
+
+    # Final merged PDF
+    final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    merger.write(final_pdf.name)
+    merger.close()
+
+    # Cleanup temp files
+    for f in temp_files:
+        try:
+            os.remove(f)
+        except:
+            pass
+
+    return final_pdf.name
+
+
 # ==================== GENERATE STUDENT PDF ====================
+
+def generate_student_pdf(student):
+    """
+    Generate a merged PDF for a student by combining:
+    - Student photo
+    - All certificate files (achievement, internship, courses, sdp, extra, placement, national)
+    - Existing student PDF file
+    """
+    files = [
+        student.photo,
+        student.cert_achieve,
+        student.cert_intern,
+        student.cert_courses,
+        student.cert_sdp,
+        student.cert_extra,
+        student.cert_placement,
+        student.cert_national,
+        student.pdf_file  # existing PDF
+    ]
+
+    final_pdf_path = merge_files(files)
+
+    # Save final PDF path
+    student.pdf_url = final_pdf_path
+    student.pdf_generated = True
+    student.save()
+
+    return final_pdf_path
+
 
 def generate_student_pdf_file(request, student_id):
     import io, shutil
@@ -1158,7 +1261,8 @@ def generate_student_pdf_file(request, student_id):
     temp_files = []
 
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    main_pdf_path = tmp.name; tmp.close()
+    main_pdf_path = tmp.name;
+    tmp.close()
     temp_files.append(main_pdf_path)
 
     doc = SimpleDocTemplate(main_pdf_path, pagesize=A4)
@@ -1167,9 +1271,9 @@ def generate_student_pdf_file(request, student_id):
         <font name='Helvetica-Bold' size='16' color='darkblue'>ANURAG ENGINEERING COLLEGE</font><br/>
         <font name='Helvetica' size='12' color='navy'>DEPARTMENT OF INFORMATION TECHNOLOGY</font><br/><br/>
         <font name='Helvetica-Bold' size='14'>STUDENT PROFILE</font></para>""", styles['Normal']))
-    elems.append(Spacer(1, 0.2*inch))
+    elems.append(Spacer(1, 0.2 * inch))
     elems.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
-    elems.append(Spacer(1, 0.2*inch))
+    elems.append(Spacer(1, 0.2 * inch))
 
     photo_img = None
     photo_url = getattr(student, 'photo_url', None) or (student.photo.url if student.photo else None)
@@ -1177,20 +1281,23 @@ def generate_student_pdf_file(request, student_id):
         try:
             r = requests.get(photo_url, timeout=10)
             if r.status_code == 200:
-                ext = '.png' if 'png' in r.headers.get('content-type','') else '.jpg'
+                ext = '.png' if 'png' in r.headers.get('content-type', '') else '.jpg'
                 tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-                tp.write(r.content); tp.close(); temp_files.append(tp.name)
-                photo_img = Image(tp.name, width=1.5*inch, height=1.8*inch)
-        except Exception: pass
+                tp.write(r.content);
+                tp.close();
+                temp_files.append(tp.name)
+                photo_img = Image(tp.name, width=1.5 * inch, height=1.8 * inch)
+        except Exception:
+            pass
 
     if photo_img:
         ht = Table([[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]],
-                   colWidths=[4.5*inch, 1.5*inch])
-        ht.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'MIDDLE'),('ALIGN',(1,0),(1,0),'RIGHT')]))
+                   colWidths=[4.5 * inch, 1.5 * inch])
+        ht.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('ALIGN', (1, 0), (1, 0), 'RIGHT')]))
         elems.append(ht)
     else:
         elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
-    elems.append(Spacer(1, 0.2*inch))
+    elems.append(Spacer(1, 0.2 * inch))
 
     fields = [
         ("Hall Ticket No", student.ht_no), ("Name", student.student_name),
@@ -1218,17 +1325,17 @@ def generate_student_pdf_file(request, student_id):
         ("Other Training", student.other_training or "N/A"),
     ]
     tbl = Table([[Paragraph(f"<b>{l}</b>", styles['Normal']),
-                  Paragraph(str(v) if v else "N/A", styles['Normal'])] for l,v in fields],
-                colWidths=[2.2*inch, 4.3*inch])
+                  Paragraph(str(v) if v else "N/A", styles['Normal'])] for l, v in fields],
+                colWidths=[2.2 * inch, 4.3 * inch])
     tbl.setStyle(TableStyle([
-        ('GRID',(0,0),(-1,-1),0.5,colors.grey),
-        ('BACKGROUND',(0,0),(0,-1),colors.lightgrey),
-        ('VALIGN',(0,0),(-1,-1),'TOP'), ('PADDING',(0,0),(-1,-1),6),
-        ('FONTNAME',(0,0),(0,-1),'Helvetica-Bold'),
-        ('FONTNAME',(1,0),(1,-1),'Helvetica'), ('FONTSIZE',(0,0),(-1,-1),10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('PADDING', (0, 0), (-1, -1), 6),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'), ('FONTSIZE', (0, 0), (-1, -1), 10),
     ]))
     elems.append(tbl)
-    elems.append(Spacer(1,0.2*inch))
+    elems.append(Spacer(1, 0.2 * inch))
     elems.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", styles['Normal']))
     doc.build(elems)
 
@@ -1239,23 +1346,25 @@ def generate_student_pdf_file(request, student_id):
         logger.error(f"Error adding main PDF: {e}")
 
     cert_fields = [
-        ('cert_achieve','Achievement'),('cert_intern','Internship'),
-        ('cert_courses','Courses'),('cert_sdp','SDP'),
-        ('cert_extra','Extracurricular'),('cert_placement','Placement'),
-        ('cert_national','National Exam'),
+        ('cert_achieve', 'Achievement'), ('cert_intern', 'Internship'),
+        ('cert_courses', 'Courses'), ('cert_sdp', 'SDP'),
+        ('cert_extra', 'Extracurricular'), ('cert_placement', 'Placement'),
+        ('cert_national', 'National Exam'),
     ]
     merged_count = 0
     for fn, fl in cert_fields:
         cf = getattr(student, fn, None)
         if not cf: continue
         try:
-            curl = cf.url if hasattr(cf,'url') else str(cf)
+            curl = cf.url if hasattr(cf, 'url') else str(cf)
             r = requests.get(curl, timeout=30)
             if r.status_code == 200:
                 content = r.content
                 if content.startswith(b'%PDF'):
                     tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    tp.write(content); tp.close(); temp_files.append(tp.name)
+                    tp.write(content);
+                    tp.close();
+                    temp_files.append(tp.name)
                     for pg in PdfReader(tp.name).pages: writer.add_page(pg)
                     merged_count += 1
                 else:
@@ -1263,17 +1372,23 @@ def generate_student_pdf_file(request, student_id):
                         img = PILImage.open(io.BytesIO(content))
                         if img.mode != 'RGB': img = img.convert('RGB')
                         tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                        img.save(tp.name, 'PDF', resolution=100.0); tp.close(); temp_files.append(tp.name)
+                        img.save(tp.name, 'PDF', resolution=100.0);
+                        tp.close();
+                        temp_files.append(tp.name)
                         for pg in PdfReader(tp.name).pages: writer.add_page(pg)
                         merged_count += 1
-                    except Exception: pass
+                    except Exception:
+                        pass
         except Exception as e:
             logger.error(f"Error processing {fl}: {e}")
 
     fp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    final_path = fp.name; fp.close(); temp_files.append(final_path)
+    final_path = fp.name;
+    fp.close();
+    temp_files.append(final_path)
     try:
-        with open(final_path, "wb") as out: writer.write(out)
+        with open(final_path, "wb") as out:
+            writer.write(out)
     except Exception:
         shutil.copy(main_pdf_path, final_path)
 
@@ -1304,7 +1419,8 @@ def generate_student_pdf_file(request, student_id):
         for t in temp_files:
             try:
                 if os.path.exists(t): os.remove(t)
-            except Exception: pass
+            except Exception:
+                pass
         return response
     except Exception as e:
         return HttpResponse(f"Error generating PDF: {e}", status=500)
@@ -1333,23 +1449,23 @@ def export_students_csv(request):
         f'attachment; filename="students_export_{date.today().strftime("%Y%m%d")}.csv"'
     )
     w = csv.writer(response)
-    w.writerow(['HT No','Student Name','Father Name','Mother Name','Gender','Date of Birth','Age',
-                'Category','Religion','Blood Group','Aadhar','APAAR ID','Address',
-                'Parent Phone','Student Phone','Email','Year','Semester','Branch','Roll Number',
-                'SSC Marks','Inter Marks','CGPA','Admission Type','EAMCET Rank',
-                'RTRP Project Title','Internship Title','Final Project Title','Created Date'])
+    w.writerow(['HT No', 'Student Name', 'Father Name', 'Mother Name', 'Gender', 'Date of Birth', 'Age',
+                'Category', 'Religion', 'Blood Group', 'Aadhar', 'APAAR ID', 'Address',
+                'Parent Phone', 'Student Phone', 'Email', 'Year', 'Semester', 'Branch', 'Roll Number',
+                'SSC Marks', 'Inter Marks', 'CGPA', 'Admission Type', 'EAMCET Rank',
+                'RTRP Project Title', 'Internship Title', 'Final Project Title', 'Created Date'])
     for s in qs:
         w.writerow([
             s.ht_no, s.student_name, s.father_name, s.mother_name, s.gender,
             s.dob.strftime('%d-%m-%Y') if s.dob else '',
             s.age, s.category, s.religion or '', s.blood_group or '',
-            s.aadhar or '', s.apaar_id or '', s.address,
+                               s.aadhar or '', s.apaar_id or '', s.address,
             s.parent_phone, s.student_phone, s.email,
             s.year, s.sem,
-            getattr(s,'branch','') or '', getattr(s,'roll_number','') or '',
+                               getattr(s, 'branch', '') or '', getattr(s, 'roll_number', '') or '',
             s.ssc_marks, s.inter_marks, s.cgpa,
-            s.admission_type or '', s.eamcet_rank or '',
-            s.rtrp_project_title or '', s.intern_title or '', s.final_project_title or '',
+                               s.admission_type or '', s.eamcet_rank or '',
+                               s.rtrp_project_title or '', s.intern_title or '', s.final_project_title or '',
             s.created_at.strftime('%d-%m-%Y %H:%M:%S') if s.created_at else '',
         ])
     FacultyLog.objects.create(
@@ -1370,10 +1486,10 @@ def generate_faculty_pdf(request, faculty_id):
 
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"GENERATING FACULTY PDF FOR: {faculty.staff_name}")
         print(f"Employee Code: {faculty.employee_code}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Debug print to verify all fields have data
         print("\n--- FACULTY DATA CHECK ---")
@@ -1437,10 +1553,10 @@ def generate_faculty_pdf(request, faculty_id):
                 mths -= 1
                 pm = today.month - 1 or 12
                 py = today.year - (1 if today.month == 1 else 0)
-                dim = (30 if pm in [4,6,9,11]
-                       else 29 if pm == 2 and ((py%4==0 and py%100!=0) or py%400==0)
-                       else 28 if pm == 2
-                       else 31)
+                dim = (30 if pm in [4, 6, 9, 11]
+                       else 29 if pm == 2 and ((py % 4 == 0 and py % 100 != 0) or py % 400 == 0)
+                else 28 if pm == 2
+                else 31)
                 dys += dim
             if mths < 0:
                 yrs -= 1
@@ -1471,7 +1587,7 @@ def generate_faculty_pdf(request, faculty_id):
                 print(f"Photo download error: {e}")
 
         # ---- 3. GET RELATED DATA ----
-        certificates     = Certificate.objects.filter(faculty=faculty)
+        certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
@@ -1596,91 +1712,91 @@ def generate_faculty_pdf(request, faculty_id):
             ts = ParagraphStyle('t', fontSize=14, alignment=1)
             docrl = SimpleDocTemplate(
                 main_pdf_path, pagesize=A4,
-                topMargin=0.75*inch, bottomMargin=0.75*inch,
-                leftMargin=0.75*inch, rightMargin=0.75*inch
+                topMargin=0.75 * inch, bottomMargin=0.75 * inch,
+                leftMargin=0.75 * inch, rightMargin=0.75 * inch
             )
             el = []
             el.append(Paragraph("ANURAG ENGINEERING COLLEGE", hs))
-            el.append(Spacer(1, 0.1*inch))
+            el.append(Spacer(1, 0.1 * inch))
             el.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
-            el.append(Spacer(1, 0.1*inch))
+            el.append(Spacer(1, 0.1 * inch))
             el.append(Paragraph("FACULTY PROFILE", ts))
-            el.append(Spacer(1, 0.2*inch))
+            el.append(Spacer(1, 0.2 * inch))
 
             # Photo in header if available
             if temp_photo_path:
                 try:
-                    photo_rl = Image(temp_photo_path, width=1.2*inch, height=1.4*inch)
+                    photo_rl = Image(temp_photo_path, width=1.2 * inch, height=1.4 * inch)
                     hdr = Table(
                         [[Paragraph(
                             f"<b>{faculty.staff_name}</b><br/>{faculty.designation}<br/>{faculty.department}",
                             s['Normal']), photo_rl]],
-                        colWidths=[5*inch, 1.5*inch]
+                        colWidths=[5 * inch, 1.5 * inch]
                     )
                     hdr.setStyle(TableStyle([
-                        ('VALIGN', (0,0),(-1,-1),'MIDDLE'),
-                        ('ALIGN',  (1,0),(1,0),'RIGHT'),
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
                     ]))
                     el.append(hdr)
                 except Exception:
                     el.append(Paragraph(f"<b>{faculty.staff_name}</b>", s['Normal']))
             else:
                 el.append(Paragraph(f"<b>{faculty.staff_name}</b>", s['Normal']))
-            el.append(Spacer(1, 0.2*inch))
+            el.append(Spacer(1, 0.2 * inch))
 
             # Info table rows
             rows = [
-                ("Employee Code",      faculty.employee_code),
-                ("Department",         faculty.department),
-                ("Designation",        faculty.designation),
-                ("Email",              faculty.email),
-                ("Mobile",             faculty.mobile),
-                ("Gender",             faculty.gender),
-                ("Date of Birth",      faculty.dob.strftime('%d-%m-%Y') if faculty.dob else "N/A"),
-                ("Father's Name",      faculty.father_name or "N/A"),
-                ("Mother's Name",      faculty.mother_name or "N/A"),
-                ("State",              faculty.state or "N/A"),
-                ("Caste",              faculty.caste or "N/A"),
-                ("Sub-Caste",          faculty.sub_caste or "N/A"),
-                ("Nationality",        faculty.nationality or "N/A"),
-                ("Address",            faculty.address or "N/A"),
-                ("Joining Date",       faculty.joining_date.strftime('%d-%m-%Y') if faculty.joining_date else "N/A"),
-                ("Total Experience",   experience),
-                ("Status",             "Active" if faculty.is_active else "Inactive"),
-                ("JNTUH ID",           faculty.jntuh_id or "N/A"),
-                ("AICTE ID",           faculty.aicte_id or "N/A"),
-                ("PAN Number",         faculty.pan or "N/A"),
-                ("Aadhar Number",      faculty.aadhar or "N/A"),
-                ("APAAR ID",           faculty.apaar_id or "N/A"),
-                ("ORCID ID",           faculty.orcid_id or "N/A"),
-                ("SSC Year",           str(faculty.ssc_year or "N/A")),
-                ("SSC %",              str(faculty.ssc_percent or "N/A")),
-                ("SSC School",         faculty.ssc_school or "N/A"),
-                ("Inter Year",         str(faculty.inter_year or "N/A")),
-                ("Inter %",            str(faculty.inter_percent or "N/A")),
-                ("Inter College",      faculty.inter_college or "N/A"),
-                ("UG Degree",          faculty.ug_degree or "N/A"),
-                ("UG Year",            str(faculty.ug_year or "N/A")),
-                ("UG %",               str(faculty.ug_percentage or "N/A")),
-                ("UG College",         faculty.ug_college or "N/A"),
-                ("UG Specialization",  faculty.ug_spec or "N/A"),
-                ("PG Degree",          faculty.pg_degree or "N/A"),
-                ("PG Year",            str(faculty.pg_year or "N/A")),
-                ("PG %",               str(faculty.pg_percentage or "N/A")),
-                ("PG College",         faculty.pg_college or "N/A"),
-                ("PG Specialization",  faculty.pg_spec or "N/A"),
-                ("PhD Status",         faculty.phd_degree or "N/A"),
-                ("PhD Year",           str(faculty.phd_year or "N/A")),
-                ("PhD University",     faculty.phd_university or "N/A"),
+                ("Employee Code", faculty.employee_code),
+                ("Department", faculty.department),
+                ("Designation", faculty.designation),
+                ("Email", faculty.email),
+                ("Mobile", faculty.mobile),
+                ("Gender", faculty.gender),
+                ("Date of Birth", faculty.dob.strftime('%d-%m-%Y') if faculty.dob else "N/A"),
+                ("Father's Name", faculty.father_name or "N/A"),
+                ("Mother's Name", faculty.mother_name or "N/A"),
+                ("State", faculty.state or "N/A"),
+                ("Caste", faculty.caste or "N/A"),
+                ("Sub-Caste", faculty.sub_caste or "N/A"),
+                ("Nationality", faculty.nationality or "N/A"),
+                ("Address", faculty.address or "N/A"),
+                ("Joining Date", faculty.joining_date.strftime('%d-%m-%Y') if faculty.joining_date else "N/A"),
+                ("Total Experience", experience),
+                ("Status", "Active" if faculty.is_active else "Inactive"),
+                ("JNTUH ID", faculty.jntuh_id or "N/A"),
+                ("AICTE ID", faculty.aicte_id or "N/A"),
+                ("PAN Number", faculty.pan or "N/A"),
+                ("Aadhar Number", faculty.aadhar or "N/A"),
+                ("APAAR ID", faculty.apaar_id or "N/A"),
+                ("ORCID ID", faculty.orcid_id or "N/A"),
+                ("SSC Year", str(faculty.ssc_year or "N/A")),
+                ("SSC %", str(faculty.ssc_percent or "N/A")),
+                ("SSC School", faculty.ssc_school or "N/A"),
+                ("Inter Year", str(faculty.inter_year or "N/A")),
+                ("Inter %", str(faculty.inter_percent or "N/A")),
+                ("Inter College", faculty.inter_college or "N/A"),
+                ("UG Degree", faculty.ug_degree or "N/A"),
+                ("UG Year", str(faculty.ug_year or "N/A")),
+                ("UG %", str(faculty.ug_percentage or "N/A")),
+                ("UG College", faculty.ug_college or "N/A"),
+                ("UG Specialization", faculty.ug_spec or "N/A"),
+                ("PG Degree", faculty.pg_degree or "N/A"),
+                ("PG Year", str(faculty.pg_year or "N/A")),
+                ("PG %", str(faculty.pg_percentage or "N/A")),
+                ("PG College", faculty.pg_college or "N/A"),
+                ("PG Specialization", faculty.pg_spec or "N/A"),
+                ("PhD Status", faculty.phd_degree or "N/A"),
+                ("PhD Year", str(faculty.phd_year or "N/A")),
+                ("PhD University", faculty.phd_university or "N/A"),
                 ("PhD Specialization", faculty.phd_spec or "N/A"),
-                ("Subjects Dealt",     faculty.subjects_dealt or "N/A"),
-                ("About / Research",   faculty.about_yourself or "N/A"),
-                ("Results",            faculty.results or "N/A"),
-                ("SCM Details",        faculty.scm or "N/A"),
-                ("Aadhar Document",    "Uploaded" if bool(faculty.aadhar_file) else "Not Uploaded"),
-                ("PAN Document",       "Uploaded" if bool(faculty.pan_file) else "Not Uploaded"),
-                ("APAAR Document",     "Uploaded" if bool(faculty.apaar_file) else "Not Uploaded"),
-                ("SCM Document",       "Uploaded" if bool(faculty.scm_file) else "Not Uploaded"),
+                ("Subjects Dealt", faculty.subjects_dealt or "N/A"),
+                ("About / Research", faculty.about_yourself or "N/A"),
+                ("Results", faculty.results or "N/A"),
+                ("SCM Details", faculty.scm or "N/A"),
+                ("Aadhar Document", "Uploaded" if bool(faculty.aadhar_file) else "Not Uploaded"),
+                ("PAN Document", "Uploaded" if bool(faculty.pan_file) else "Not Uploaded"),
+                ("APAAR Document", "Uploaded" if bool(faculty.apaar_file) else "Not Uploaded"),
+                ("SCM Document", "Uploaded" if bool(faculty.scm_file) else "Not Uploaded"),
             ]
 
             td = [
@@ -1688,22 +1804,22 @@ def generate_faculty_pdf(request, faculty_id):
                  Paragraph(str(v) if v else "N/A", s['Normal'])]
                 for l, v in rows
             ]
-            tbl = Table(td, colWidths=[2.2*inch, 4.3*inch])
+            tbl = Table(td, colWidths=[2.2 * inch, 4.3 * inch])
             tbl.setStyle(TableStyle([
-                ('GRID',       (0,0),(-1,-1), 0.5, colors.grey),
-                ('BACKGROUND', (0,0),(0,-1),  colors.lightgrey),
-                ('VALIGN',     (0,0),(-1,-1), 'TOP'),
-                ('PADDING',    (0,0),(-1,-1), 5),
-                ('FONTSIZE',   (0,0),(-1,-1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('PADDING', (0, 0), (-1, -1), 5),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
             ]))
             el.append(tbl)
 
             # Research projects table
             if research_projects:
-                el.append(Spacer(1, 0.2*inch))
+                el.append(Spacer(1, 0.2 * inch))
                 el.append(Paragraph("<b>RESEARCH PROJECTS</b>",
-                                     ParagraphStyle('rh', fontSize=12, fontName='Helvetica-Bold')))
-                el.append(Spacer(1, 0.1*inch))
+                                    ParagraphStyle('rh', fontSize=12, fontName='Helvetica-Bold')))
+                el.append(Spacer(1, 0.1 * inch))
                 rp_data = [['Type', 'Title', 'Journal/Publisher', 'DOI/ISSN']]
                 for rp in research_projects:
                     rp_data.append([
@@ -1712,19 +1828,19 @@ def generate_faculty_pdf(request, faculty_id):
                         (rp.journal_name or rp.publisher_name or ''),
                         (rp.doi or rp.issn_number or '')
                     ])
-                rp_tbl = Table(rp_data, colWidths=[1.2*inch, 2.5*inch, 2*inch, 1*inch])
+                rp_tbl = Table(rp_data, colWidths=[1.2 * inch, 2.5 * inch, 2 * inch, 1 * inch])
                 rp_tbl.setStyle(TableStyle([
-                    ('GRID',       (0,0),(-1,-1), 0.5, colors.grey),
-                    ('BACKGROUND', (0,0),(-1,0),  colors.darkblue),
-                    ('TEXTCOLOR',  (0,0),(-1,0),  colors.white),
-                    ('FONTNAME',   (0,0),(-1,0),  'Helvetica-Bold'),
-                    ('FONTSIZE',   (0,0),(-1,-1),  8),
-                    ('VALIGN',     (0,0),(-1,-1),  'TOP'),
-                    ('PADDING',    (0,0),(-1,-1),   4),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('PADDING', (0, 0), (-1, -1), 4),
                 ]))
                 el.append(rp_tbl)
 
-            el.append(Spacer(1, 0.2*inch))
+            el.append(Spacer(1, 0.2 * inch))
             el.append(Paragraph(
                 f"Generated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
                 s['Normal']
@@ -1741,16 +1857,16 @@ def generate_faculty_pdf(request, faculty_id):
         # in addition to education certificates - same image/PDF handling as student PDF
         all_doc_fields = [
             # Identity / KYC Documents
-            ('aadhar_file',       'Aadhar Card'),
-            ('pan_file',          'PAN Card'),
-            ('apaar_file',        'APAAR Document'),
-            ('scm_file',          'SCM Document'),
+            ('aadhar_file', 'Aadhar Card'),
+            ('pan_file', 'PAN Card'),
+            ('apaar_file', 'APAAR Document'),
+            ('scm_file', 'SCM Document'),
             # Education Certificates
-            ('ssc_certificate',   'SSC Certificate'),
+            ('ssc_certificate', 'SSC Certificate'),
             ('inter_certificate', 'Intermediate Certificate'),
-            ('ug_certificate',    'UG Certificate'),
-            ('pg_certificate',    'PG Certificate'),
-            ('phd_certificate',   'PhD Certificate'),
+            ('ug_certificate', 'UG Certificate'),
+            ('pg_certificate', 'PG Certificate'),
+            ('phd_certificate', 'PhD Certificate'),
         ]
 
         cert_count = 0
@@ -1822,7 +1938,7 @@ def generate_faculty_pdf(request, faculty_id):
         # Also merge Certificate model records (from certificate management)
         for cert in certificates:
             cert_label = f"Certificate: {cert.certificate_type}"
-            cert_url   = None
+            cert_url = None
 
             if cert.certificate_file:
                 try:
@@ -1924,7 +2040,7 @@ def generate_faculty_pdf(request, faculty_id):
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
-        print(f"{'='*60}\nPDF GENERATION COMPLETE - {cert_count} docs merged\n{'='*60}")
+        print(f"{'=' * 60}\nPDF GENERATION COMPLETE - {cert_count} docs merged\n{'=' * 60}")
         return response
 
     except Exception as e:
@@ -1941,8 +2057,8 @@ def generate_pdf_with_data(request):
             return JsonResponse({'success': False, 'error': 'pdfkit not installed'})
         try:
             html_string = render_to_string('faculty/custom_pdf_template.html', {'data': request.POST.dict()})
-            opts = {'page-size':'A4','margin-top':'0.5in','margin-right':'0.5in',
-                    'margin-bottom':'0.5in','margin-left':'0.5in','encoding':'UTF-8'}
+            opts = {'page-size': 'A4', 'margin-top': '0.5in', 'margin-right': '0.5in',
+                    'margin-bottom': '0.5in', 'margin-left': '0.5in', 'encoding': 'UTF-8'}
             wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
             cfg = pdfkit.configuration(wkhtmltopdf=wk)
             pdf = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
@@ -1999,8 +2115,8 @@ def bulk_generate_faculty_pdfs(request):
                     ctx = {'faculty': fac, 'experience': exp, 'current_date': datetime.now(), 'pdf_mode': True}
                     html = render_to_string('dashboard/faculty_pdf.html', ctx)
                     if pdfkit is not None:
-                        opts = {'page-size':'A4','margin-top':'20mm','margin-right':'20mm',
-                                'margin-bottom':'20mm','margin-left':'20mm','encoding':'UTF-8'}
+                        opts = {'page-size': 'A4', 'margin-top': '20mm', 'margin-right': '20mm',
+                                'margin-bottom': '20mm', 'margin-left': '20mm', 'encoding': 'UTF-8'}
                         wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
                         cfg = pdfkit.configuration(wkhtmltopdf=wk)
                         pdf = pdfkit.from_string(html, False, options=opts, configuration=cfg)
@@ -2011,12 +2127,15 @@ def bulk_generate_faculty_pdfs(request):
                         os.remove(pp)
                 except Exception as e:
                     logger.error(f"Error generating PDF for faculty {fid}: {e}")
-        with open(zip_path, 'rb') as f: zip_data = f.read()
+        with open(zip_path, 'rb') as f:
+            zip_data = f.read()
         response = HttpResponse(zip_data, content_type='application/zip')
         response['Content-Disposition'] = f'attachment; filename="faculty_pdfs_{datetime.now().strftime("%Y%m%d")}.zip"'
         if os.path.exists(zip_path): os.remove(zip_path)
-        try: os.rmdir(temp_dir)
-        except Exception: pass
+        try:
+            os.rmdir(temp_dir)
+        except Exception:
+            pass
         FacultyLog.objects.create(
             faculty=None, action='Bulk Faculty PDFs Generated',
             details=f'PDFs generated for {len(faculty_ids)} faculty members',
@@ -2047,13 +2166,15 @@ def upload_faculty_to_cloudinary(request, faculty_id):
         if not isinstance(pdf_resp, HttpResponse):
             return JsonResponse({'success': False, 'error': 'Failed to generate PDF'})
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-            tf.write(pdf_resp.content); tfp = tf.name
+            tf.write(pdf_resp.content);
+            tfp = tf.name
         cr = cloudinary.uploader.upload(
             tfp, resource_type="raw", folder="faculty_pdfs",
             public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}",
             overwrite=True, tags=[f"faculty_{faculty.employee_code}", faculty.department, "pdf"]
         )
-        faculty.cloudinary_pdf_url = cr['secure_url']; faculty.save()
+        faculty.cloudinary_pdf_url = cr['secure_url'];
+        faculty.save()
         CloudinaryUpload.objects.create(
             faculty=faculty, upload_type='pdf', cloudinary_url=cr['secure_url'],
             public_id=cr['public_id'], resource_type=cr['resource_type'], uploaded_by=request.user.username
@@ -2080,9 +2201,10 @@ def upload_faculty_photo(request):
             cr = cloudinary.uploader.upload(
                 request.FILES['photo'], folder="faculty_photos",
                 public_id=f"faculty_{faculty.employee_code}", overwrite=True,
-                transformation=[{'width':300,'height':300,'crop':'fill'},{'quality':'auto:good'}]
+                transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
             )
-            faculty.cloudinary_photo_url = cr['secure_url']; faculty.save()
+            faculty.cloudinary_photo_url = cr['secure_url'];
+            faculty.save()
             CloudinaryUpload.objects.create(
                 faculty=faculty, upload_type='photo', cloudinary_url=cr['secure_url'],
                 public_id=cr['public_id'], resource_type=cr['resource_type'],
@@ -2106,7 +2228,8 @@ def upload_faculty_pdf(request):
                 request.FILES['pdf_file'], resource_type="raw", folder="faculty_pdfs",
                 public_id=f"faculty_{faculty.employee_code}", overwrite=True
             )
-            faculty.cloudinary_pdf_url = cr['secure_url']; faculty.save()
+            faculty.cloudinary_pdf_url = cr['secure_url'];
+            faculty.save()
             CloudinaryUpload.objects.create(
                 faculty=faculty, upload_type='pdf', cloudinary_url=cr['secure_url'],
                 public_id=cr['public_id'], resource_type=cr['resource_type'],
@@ -2127,35 +2250,37 @@ def cloudinary_status(request):
                 'title': 'Cloudinary Status', 'connected': False,
                 'error': 'Cloudinary credentials not configured.',
                 'cloudinary_config': {
-                    'cloud_name': getattr(settings,'CLOUDINARY_CLOUD_NAME','Not configured'),
-                    'api_key_exists': bool(getattr(settings,'CLOUDINARY_API_KEY',None)),
-                    'api_secret_exists': bool(getattr(settings,'CLOUDINARY_API_SECRET',None)),
+                    'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                    'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                    'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
                 }
             })
         result = cloudinary.api.ping()
-        usage  = cloudinary.api.usage()
-        recent_uploads = CloudinaryUpload.objects.select_related('faculty','student').order_by('-upload_date')[:10]
+        usage = cloudinary.api.usage()
+        recent_uploads = CloudinaryUpload.objects.select_related('faculty', 'student').order_by('-upload_date')[:10]
         total_faculty = Faculty.objects.count()
         return render(request, 'cloudinary/status.html', {
             'title': 'Cloudinary Status', 'connected': result.get('status') == 'ok',
             'usage': usage,
-            'uploaded_count':   CloudinaryUpload.objects.count(),
-            'faculty_with_pdf': Faculty.objects.exclude(cloudinary_pdf_url__isnull=True).exclude(cloudinary_pdf_url='').count(),
-            'faculty_with_photo': Faculty.objects.exclude(cloudinary_photo_url__isnull=True).exclude(cloudinary_photo_url='').count(),
+            'uploaded_count': CloudinaryUpload.objects.count(),
+            'faculty_with_pdf': Faculty.objects.exclude(cloudinary_pdf_url__isnull=True).exclude(
+                cloudinary_pdf_url='').count(),
+            'faculty_with_photo': Faculty.objects.exclude(cloudinary_photo_url__isnull=True).exclude(
+                cloudinary_photo_url='').count(),
             'total_faculty': total_faculty, 'recent_uploads': recent_uploads,
             'cloudinary_config': {
-                'cloud_name': getattr(settings,'CLOUDINARY_CLOUD_NAME','Not configured'),
-                'api_key_exists': bool(getattr(settings,'CLOUDINARY_API_KEY',None)),
-                'api_secret_exists': bool(getattr(settings,'CLOUDINARY_API_SECRET',None)),
+                'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
             }
         })
     except Exception as e:
         return render(request, 'cloudinary/status.html', {
             'title': 'Cloudinary Status', 'connected': False, 'error': str(e),
             'cloudinary_config': {
-                'cloud_name': getattr(settings,'CLOUDINARY_CLOUD_NAME','Not configured'),
-                'api_key_exists': bool(getattr(settings,'CLOUDINARY_API_KEY',None)),
-                'api_secret_exists': bool(getattr(settings,'CLOUDINARY_API_SECRET',None)),
+                'cloud_name': getattr(settings, 'CLOUDINARY_CLOUD_NAME', 'Not configured'),
+                'api_key_exists': bool(getattr(settings, 'CLOUDINARY_API_KEY', None)),
+                'api_secret_exists': bool(getattr(settings, 'CLOUDINARY_API_SECRET', None)),
             }
         })
 
@@ -2164,10 +2289,10 @@ def cloudinary_status(request):
 def get_cloudinary_url(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     return JsonResponse({
-        'pdf_url':   faculty.cloudinary_pdf_url,
+        'pdf_url': faculty.cloudinary_pdf_url,
         'photo_url': faculty.cloudinary_photo_url,
         'employee_code': faculty.employee_code,
-        'has_pdf':   bool(faculty.cloudinary_pdf_url),
+        'has_pdf': bool(faculty.cloudinary_pdf_url),
         'has_photo': bool(faculty.cloudinary_photo_url),
     })
 
@@ -2192,7 +2317,8 @@ def bulk_sync_to_cloudinary(request):
                     with fac.photo.open('rb') as pf:
                         cr = cloudinary.uploader.upload(pf, folder="faculty_photos",
                                                         public_id=f"faculty_{fac.employee_code}", overwrite=True)
-                        fac.cloudinary_photo_url = cr['secure_url']; fac.save()
+                        fac.cloudinary_photo_url = cr['secure_url'];
+                        fac.save()
                         CloudinaryUpload.objects.create(
                             faculty=fac, upload_type='photo', cloudinary_url=cr['secure_url'],
                             public_id=cr['public_id'], resource_type=cr['resource_type'],
@@ -2202,7 +2328,8 @@ def bulk_sync_to_cloudinary(request):
                     logger.error(f"Photo sync error for {fid}: {e}")
             ok += 1
         except Exception as e:
-            logger.error(f"Sync error for {fid}: {e}"); err += 1
+            logger.error(f"Sync error for {fid}: {e}");
+            err += 1
     FacultyLog.objects.create(
         faculty=None, action='Bulk Cloudinary Sync',
         details=f'Synced {ok} faculty ({err} errors)',
@@ -2228,7 +2355,7 @@ def upload_certificate(request, faculty_id):
                     cr = cloudinary.uploader.upload(
                         request.FILES['certificate_file'], resource_type="raw",
                         folder=f"certificates/{faculty.employee_code}",
-                        public_id=f"cert_{cert.certificate_type.replace(' ','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        public_id=f"cert_{cert.certificate_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=False
                     )
                     cert.cloudinary_url = cr['secure_url']
@@ -2264,13 +2391,13 @@ def upload_certificates_bulk(request):
         ok = err = 0
         for cf in files:
             try:
-                ct = os.path.splitext(cf.name)[0].replace('_',' ').replace('-',' ').title() or "Certificate"
+                ct = os.path.splitext(cf.name)[0].replace('_', ' ').replace('-', ' ').title() or "Certificate"
                 curl = None
                 if is_cloudinary_configured():
                     try:
                         cr = cloudinary.uploader.upload(
                             cf, resource_type="raw", folder=f"certificates/{faculty.employee_code}",
-                            public_id=f"cert_{ct.replace(' ','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                            public_id=f"cert_{ct.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                             overwrite=False
                         )
                         curl = cr['secure_url']
@@ -2283,7 +2410,8 @@ def upload_certificates_bulk(request):
                 )
                 ok += 1
             except Exception as e:
-                logger.error(f"Error uploading {cf.name}: {e}"); err += 1
+                logger.error(f"Error uploading {cf.name}: {e}");
+                err += 1
         FacultyLog.objects.create(
             faculty=faculty, action='Bulk Certificates Uploaded',
             details=f'{ok} certs uploaded ({err} failed)',
@@ -2298,7 +2426,7 @@ def upload_certificates_bulk(request):
 @login_required
 def view_certificates(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    certs   = Certificate.objects.filter(faculty=faculty).order_by('-issue_date')
+    certs = Certificate.objects.filter(faculty=faculty).order_by('-issue_date')
     return render(request, 'dashboard/certificate_list.html', {
         'title': f'Certificates - {faculty.staff_name}',
         'faculty': faculty, 'certificates': certs,
@@ -2313,7 +2441,7 @@ def view_certificates(request, faculty_id):
 @login_required
 def delete_certificate(request, certificate_id):
     cert = get_object_or_404(Certificate, id=certificate_id)
-    fid  = cert.faculty.id
+    fid = cert.faculty.id
     if request.method == 'POST':
         if cert.cloudinary_url and is_cloudinary_configured():
             try:
@@ -2340,7 +2468,7 @@ def delete_certificate(request, certificate_id):
 @login_required
 def edit_certificate(request, certificate_id):
     cert = get_object_or_404(Certificate, id=certificate_id)
-    fid  = cert.faculty.id
+    fid = cert.faculty.id
     if request.method == 'POST':
         form = CertificateForm(request.POST, instance=cert)
         if form.is_valid():
@@ -2350,7 +2478,7 @@ def edit_certificate(request, certificate_id):
                     cr = cloudinary.uploader.upload(
                         request.FILES['certificate_file'], resource_type="raw",
                         folder=f"certificates/{cert.faculty.employee_code}",
-                        public_id=f"cert_{cert.certificate_type.replace(' ','_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        public_id=f"cert_{cert.certificate_type.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=True
                     )
                     cert.cloudinary_url = cr['secure_url']
@@ -2374,7 +2502,7 @@ def edit_certificate(request, certificate_id):
 @login_required
 def merge_certificates(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
-    certs   = Certificate.objects.filter(faculty=faculty)
+    certs = Certificate.objects.filter(faculty=faculty)
     if not certs.exists():
         messages.error(request, 'No certificates found to merge.')
         return redirect('dashboard:view_certificates', faculty_id=faculty_id)
@@ -2384,7 +2512,8 @@ def merge_certificates(request, faculty_id):
             r = requests.get(faculty.cloudinary_pdf_url)
             if r.status_code == 200:
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                    tf.write(r.content); tfp = tf.name
+                    tf.write(r.content);
+                    tfp = tf.name
                 for pg in PdfReader(tfp).pages: writer.add_page(pg)
                 os.unlink(tfp)
         for cert in certs:
@@ -2392,16 +2521,19 @@ def merge_certificates(request, faculty_id):
                 try:
                     if os.path.exists(cert.certificate_file.path):
                         for pg in PdfReader(cert.certificate_file.path).pages: writer.add_page(pg)
-                except Exception: pass
+                except Exception:
+                    pass
             elif cert.cloudinary_url:
                 r = requests.get(cert.cloudinary_url)
                 if r.status_code == 200:
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                        tf.write(r.content); tfp = tf.name
+                        tf.write(r.content);
+                        tfp = tf.name
                     for pg in PdfReader(tfp).pages: writer.add_page(pg)
                     os.unlink(tfp)
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-            writer.write(mf.name); merged_path = mf.name
+            writer.write(mf.name);
+            merged_path = mf.name
         merged_url = None
         if is_cloudinary_configured():
             try:
@@ -2448,7 +2580,8 @@ def merge_certificates_with_pdf(request, faculty_id):
         merged = merge_certificates_with_pdf_bytes(pdf_bytes, faculty)
         if merged:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                tf.write(merged); tfp = tf.name
+                tf.write(merged);
+                tfp = tf.name
             merged_url = None
             if is_cloudinary_configured():
                 try:
@@ -2500,7 +2633,8 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
         writer = PdfWriter()
         if pdf_bytes:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
-                tf.write(pdf_bytes); tfp = tf.name
+                tf.write(pdf_bytes);
+                tfp = tf.name
             for pg in PdfReader(tfp).pages: writer.add_page(pg)
         for cert in Certificate.objects.filter(faculty=faculty):
             if cert.cloudinary_url:
@@ -2508,24 +2642,30 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
                     r = requests.get(cert.cloudinary_url)
                     if r.status_code == 200 and r.content[:4] == b'%PDF':
                         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tc:
-                            tc.write(r.content); tcp = tc.name
+                            tc.write(r.content);
+                            tcp = tc.name
                         for pg in PdfReader(tcp).pages: writer.add_page(pg)
-                        try: os.unlink(tcp)
-                        except Exception: pass
+                        try:
+                            os.unlink(tcp)
+                        except Exception:
+                            pass
                 except Exception as e:
                     logger.error(f"Error merging cert: {e}")
             elif cert.certificate_file:
                 try:
                     if os.path.exists(cert.certificate_file.path):
                         for pg in PdfReader(cert.certificate_file.path).pages: writer.add_page(pg)
-                except Exception: pass
+                except Exception:
+                    pass
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
             writer.write(mf.name)
             with open(mf.name, 'rb') as f: merged = f.read()
             os.unlink(mf.name)
         if pdf_bytes and 'tfp' in dir():
-            try: os.unlink(tfp)
-            except Exception: pass
+            try:
+                os.unlink(tfp)
+            except Exception:
+                pass
         return merged
     except Exception as e:
         logger.error(f"Error in merge_certificates_with_pdf_bytes: {e}")
@@ -2537,7 +2677,7 @@ def preview_merged_pdf(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     recent = CloudinaryUpload.objects.filter(
         faculty=faculty,
-        upload_type__in=['merged','merged_certificates','merged_faculty_certs'],
+        upload_type__in=['merged', 'merged_certificates', 'merged_faculty_certs'],
         public_id__contains='merged'
     ).order_by('-upload_date').first()
     if recent and recent.cloudinary_url:
@@ -2569,7 +2709,7 @@ def faculty_statistics_api(request, faculty_id):
 def bulk_faculty_actions(request):
     if request.method != 'POST':
         return redirect('dashboard:faculty_list')
-    action     = request.POST.get('bulk_action')
+    action = request.POST.get('bulk_action')
     faculty_ids = request.POST.getlist('faculty_ids')
     if not faculty_ids:
         messages.error(request, 'No faculty members selected.')
@@ -2577,11 +2717,13 @@ def bulk_faculty_actions(request):
     if action == 'delete':
         cnt = 0
         for fid in faculty_ids:
-            try: Faculty.objects.get(id=fid).delete(); cnt += 1
-            except Faculty.DoesNotExist: pass
+            try:
+                Faculty.objects.get(id=fid).delete(); cnt += 1
+            except Faculty.DoesNotExist:
+                pass
         FacultyLog.objects.create(faculty=None, action='Bulk Faculty Delete',
-            details=f'{cnt} faculty deleted in bulk', performed_by=request.user.username,
-            ip_address=request.META.get('REMOTE_ADDR'))
+                                  details=f'{cnt} faculty deleted in bulk', performed_by=request.user.username,
+                                  ip_address=request.META.get('REMOTE_ADDR'))
         messages.success(request, f'Deleted {cnt} faculty member(s).')
     elif action == 'activate':
         cnt = Faculty.objects.filter(id__in=faculty_ids).update(is_active=True)
@@ -2606,25 +2748,25 @@ def export_faculty_csv(request, faculty_ids=None):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="faculty_export_{date.today().strftime("%Y%m%d")}.csv"'
     w = csv.writer(response)
-    w.writerow(['Employee Code','Staff Name','Department','Designation','Email','Phone',
-                'Date of Birth','Joining Date','UG Degree','UG Year','PG Degree','PG Year',
-                'PhD Status','Total Experience','Current Status','Cloudinary PDF URL','Cloudinary Photo URL'])
+    w.writerow(['Employee Code', 'Staff Name', 'Department', 'Designation', 'Email', 'Phone',
+                'Date of Birth', 'Joining Date', 'UG Degree', 'UG Year', 'PG Degree', 'PG Year',
+                'PhD Status', 'Total Experience', 'Current Status', 'Cloudinary PDF URL', 'Cloudinary Photo URL'])
     for f in qs:
         w.writerow([
             f.employee_code, f.staff_name, f.department, f.designation,
             f.email, f.mobile,
             f.dob.strftime('%Y-%m-%d') if f.dob else '',
             f.joining_date.strftime('%Y-%m-%d') if f.joining_date else '',
-            getattr(f,'ug_degree',''), getattr(f,'ug_year',''),
-            getattr(f,'pg_degree',''), getattr(f,'pg_year',''),
-            getattr(f,'phd_degree',''),
+            getattr(f, 'ug_degree', ''), getattr(f, 'ug_year', ''),
+            getattr(f, 'pg_degree', ''), getattr(f, 'pg_year', ''),
+            getattr(f, 'phd_degree', ''),
             calculate_experience(f.joining_date) if f.joining_date else 'N/A',
             'Active' if f.is_active else 'Inactive',
             f.cloudinary_pdf_url or '', f.cloudinary_photo_url or '',
         ])
     FacultyLog.objects.create(faculty=None, action='Faculty CSV Export',
-        details=f'Exported {qs.count()} faculty to CSV',
-        performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+                              details=f'Exported {qs.count()} faculty to CSV',
+                              performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
     return response
 
 
@@ -2643,7 +2785,7 @@ def bulk_upload(request):
                 fn = f.name.lower()
                 if fn.endswith('.csv'):
                     df = pd.read_csv(f)
-                elif fn.endswith(('.xlsx','.xls')):
+                elif fn.endswith(('.xlsx', '.xls')):
                     df = pd.read_excel(f)
                 else:
                     messages.error(request, 'Unsupported format. Use CSV or Excel.')
@@ -2652,8 +2794,9 @@ def bulk_upload(request):
                 if ok:  messages.success(request, f'Imported {ok} faculty records.')
                 if err: messages.warning(request, f'{err} records had errors.')
                 FacultyLog.objects.create(faculty=None, action='Bulk Faculty Upload',
-                    details=f'Bulk upload: {ok} ok, {err} failed',
-                    performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+                                          details=f'Bulk upload: {ok} ok, {err} failed',
+                                          performed_by=request.user.username,
+                                          ip_address=request.META.get('REMOTE_ADDR'))
                 return redirect('dashboard:faculty_list')
             except Exception as e:
                 logger.error(f"Bulk upload error: {e}")
@@ -2668,7 +2811,7 @@ def bulk_upload(request):
 
 def process_csv_faculty_data(df, user):
     ok = err = 0
-    required = ['employee_code','staff_name','department','designation']
+    required = ['employee_code', 'staff_name', 'department', 'designation']
     for col in required:
         if col not in df.columns:
             raise ValueError(f"Required column '{col}' not found.")
@@ -2679,28 +2822,36 @@ def process_csv_faculty_data(df, user):
             if fac:
                 for col in df.columns:
                     if hasattr(fac, col) and not pd.isna(row[col]):
-                        if col in ['dob','joining_date']:
-                            try: setattr(fac, col, pd.to_datetime(row[col]).date())
-                            except Exception: pass
-                        else: setattr(fac, col, row[col])
-                fac.save(); act = 'updated'
+                        if col in ['dob', 'joining_date']:
+                            try:
+                                setattr(fac, col, pd.to_datetime(row[col]).date())
+                            except Exception:
+                                pass
+                        else:
+                            setattr(fac, col, row[col])
+                fac.save();
+                act = 'updated'
             else:
                 fd = {}
                 for col in df.columns:
                     if hasattr(Faculty, col) and not pd.isna(row[col]):
-                        if col in ['dob','joining_date']:
-                            try: fd[col] = pd.to_datetime(row[col]).date()
-                            except Exception: fd[col] = None
-                        else: fd[col] = row[col]
+                        if col in ['dob', 'joining_date']:
+                            try:
+                                fd[col] = pd.to_datetime(row[col]).date()
+                            except Exception:
+                                fd[col] = None
+                        else:
+                            fd[col] = row[col]
                 fac = Faculty.objects.create(**fd)
                 FacultyProfile.objects.create(faculty=fac)
                 act = 'created'
             FacultyLog.objects.create(faculty=fac, action=f'Bulk Upload - {act}',
-                details=f'Faculty {act} via bulk upload: {fac.employee_code}',
-                performed_by=user.username if user else 'System', ip_address='127.0.0.1')
+                                      details=f'Faculty {act} via bulk upload: {fac.employee_code}',
+                                      performed_by=user.username if user else 'System', ip_address='127.0.0.1')
             ok += 1
         except Exception as e:
-            logger.error(f"Error row {i}: {e}"); err += 1
+            logger.error(f"Error row {i}: {e}");
+            err += 1
     return ok, err
 
 
@@ -2719,14 +2870,17 @@ def system_status(request):
                 'python_version': os.sys.version,
                 'django_version': django.get_version(),
             }
-        except Exception: system_info = {'error': 'Unable to retrieve system info'}
+        except Exception:
+            system_info = {'error': 'Unable to retrieve system info'}
     cs = {'connected': False, 'error': ''}
     if is_cloudinary_configured():
         try:
             r = cloudinary.api.ping()
             cs['connected'] = r.get('status') == 'ok'
-        except Exception as e: cs['error'] = str(e)
-    else: cs['error'] = 'Cloudinary not configured'
+        except Exception as e:
+            cs['error'] = str(e)
+    else:
+        cs['error'] = 'Cloudinary not configured'
     return render(request, 'dashboard/system_status.html', {
         'title': 'System Status',
         'stats': {
@@ -2761,8 +2915,8 @@ def clear_logs(request):
             cutoff = timezone.now() - timedelta(days=days)
             cnt, _ = FacultyLog.objects.filter(created_at__lt=cutoff).delete()
             FacultyLog.objects.create(faculty=None, action='Logs Cleared',
-                details=f'Cleared {cnt} logs older than {days} days',
-                performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+                                      details=f'Cleared {cnt} logs older than {days} days',
+                                      performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
             messages.success(request, f'Deleted {cnt} logs older than {days} days.')
             return redirect('dashboard:system_status')
         except Exception as e:
@@ -2779,13 +2933,15 @@ def backup_database(request):
         os.makedirs(backup_dir, exist_ok=True)
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
         bf = os.path.join(backup_dir, f'db_backup_{ts}.json')
-        with open(bf, 'w') as f: call_command('dumpdata', stdout=f)
+        with open(bf, 'w') as f:
+            call_command('dumpdata', stdout=f)
         FacultyLog.objects.create(faculty=None, action='Database Backup',
-            details=f'Backup created: {bf}',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+                                  details=f'Backup created: {bf}',
+                                  performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
         messages.success(request, f'Backup created: {os.path.basename(bf)}')
     except Exception as e:
-        logger.error(f"Backup error: {e}"); messages.error(request, f'Error creating backup: {e}')
+        logger.error(f"Backup error: {e}");
+        messages.error(request, f'Error creating backup: {e}')
     return redirect('dashboard:system_status')
 
 
@@ -2795,8 +2951,8 @@ def backup_database(request):
 @require_GET
 def api_faculty_list(request):
     data = list(Faculty.objects.all().values(
-        'id','employee_code','staff_name','department','designation',
-        'email','mobile','is_active','cloudinary_pdf_url','cloudinary_photo_url'
+        'id', 'employee_code', 'staff_name', 'department', 'designation',
+        'email', 'mobile', 'is_active', 'cloudinary_pdf_url', 'cloudinary_photo_url'
     ))
     return JsonResponse(data, safe=False)
 
@@ -2811,9 +2967,9 @@ def api_faculty_detail(request, faculty_id):
         'email': f.email, 'mobile': f.mobile,
         'dob': f.dob.strftime('%Y-%m-%d') if f.dob else None,
         'joining_date': f.joining_date.strftime('%Y-%m-%d') if f.joining_date else None,
-        'ug_degree': getattr(f,'ug_degree',None), 'ug_year': getattr(f,'ug_year',None),
-        'pg_degree': getattr(f,'pg_degree',None), 'pg_year': getattr(f,'pg_year',None),
-        'phd_degree': getattr(f,'phd_degree',None),
+        'ug_degree': getattr(f, 'ug_degree', None), 'ug_year': getattr(f, 'ug_year', None),
+        'pg_degree': getattr(f, 'pg_degree', None), 'pg_year': getattr(f, 'pg_year', None),
+        'phd_degree': getattr(f, 'phd_degree', None),
         'is_active': f.is_active,
         'experience': calculate_experience(f.joining_date) if f.joining_date else "N/A",
         'cloudinary_pdf_url': f.cloudinary_pdf_url,
@@ -2832,10 +2988,12 @@ def api_update_faculty_status(request, faculty_id):
         ns = data.get('is_active')
         if ns is None:
             return JsonResponse({'success': False, 'error': 'Missing is_active'}, status=400)
-        old = f.is_active; f.is_active = bool(ns); f.save()
+        old = f.is_active;
+        f.is_active = bool(ns);
+        f.save()
         FacultyLog.objects.create(faculty=f, action='Status Updated via API',
-            details=f'Status: {"Active" if old else "Inactive"} -> {"Active" if f.is_active else "Inactive"}',
-            performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+                                  details=f'Status: {"Active" if old else "Inactive"} -> {"Active" if f.is_active else "Inactive"}',
+                                  performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
         return JsonResponse({'success': True, 'message': 'Status updated', 'is_active': f.is_active})
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
@@ -2848,9 +3006,9 @@ def api_student_list(request):
     if not (request.user.is_authenticated or request.session.get('student_logged_in')):
         return JsonResponse({'error': 'Authentication required'}, status=401)
     data = list(Student.objects.all().values(
-        'id','ht_no','student_name','father_name','mother_name','gender','dob','age',
-        'category','year','sem','email','student_phone','parent_phone',
-        'ssc_marks','inter_marks','cgpa','created_at'
+        'id', 'ht_no', 'student_name', 'father_name', 'mother_name', 'gender', 'dob', 'age',
+        'category', 'year', 'sem', 'email', 'student_phone', 'parent_phone',
+        'ssc_marks', 'inter_marks', 'cgpa', 'created_at'
     ))
     return JsonResponse(data, safe=False)
 
@@ -2870,9 +3028,9 @@ def api_student_detail(request, student_id):
         'parent_phone': s.parent_phone, 'student_phone': s.student_phone,
         'email': s.email, 'year': s.year, 'sem': s.sem,
         'ssc_marks': s.ssc_marks, 'inter_marks': s.inter_marks, 'cgpa': s.cgpa,
-        'photo_url': getattr(s,'photo_url',None),
-        'pdf_url': getattr(s,'pdf_url',None),
-        'pdf_generated': getattr(s,'pdf_generated',None),
+        'photo_url': getattr(s, 'photo_url', None),
+        'pdf_url': getattr(s, 'pdf_url', None),
+        'pdf_generated': getattr(s, 'pdf_generated', None),
         'created_at': s.created_at.strftime('%Y-%m-%d %H:%M:%S') if s.created_at else None,
     })
 
@@ -2888,64 +3046,75 @@ def faculty_charts(request):
         charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
         os.makedirs(charts_dir, exist_ok=True)
 
-        dept_data  = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:10]
+        dept_data = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:10]
         depts = [d['department'] for d in dept_data]
-        cnts  = [d['count'] for d in dept_data]
+        cnts = [d['count'] for d in dept_data]
 
-        plt.figure(figsize=(10,6))
+        plt.figure(figsize=(10, 6))
         bars = plt.bar(depts, cnts)
         plt.title('Faculty Distribution by Department')
-        plt.xlabel('Department'); plt.ylabel('Number of Faculty')
+        plt.xlabel('Department');
+        plt.ylabel('Number of Faculty')
         plt.xticks(rotation=45, ha='right')
         for bar in bars:
             h = bar.get_height()
-            plt.text(bar.get_x()+bar.get_width()/2., h+0.1, f'{int(h)}', ha='center', va='bottom')
+            plt.text(bar.get_x() + bar.get_width() / 2., h + 0.1, f'{int(h)}', ha='center', va='bottom')
         plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'dept_distribution.png'), dpi=100); plt.close()
+        plt.savefig(os.path.join(charts_dir, 'dept_distribution.png'), dpi=100);
+        plt.close()
 
         qual_data = {
             'PhD Completed': Faculty.objects.filter(phd_degree='Completed').count(),
-            'PhD Pursuing':  Faculty.objects.filter(phd_degree='Pursuing').count(),
-            'PG Only':       Faculty.objects.filter(pg_year__isnull=False, phd_degree__in=['','Not Started','None']).count(),
-            'UG Only':       Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True).count(),
+            'PhD Pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
+            'PG Only': Faculty.objects.filter(pg_year__isnull=False,
+                                              phd_degree__in=['', 'Not Started', 'None']).count(),
+            'UG Only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True).count(),
         }
-        plt.figure(figsize=(8,8))
+        plt.figure(figsize=(8, 8))
         plt.pie(list(qual_data.values()), labels=list(qual_data.keys()),
-                colors=['#ff9999','#66b3ff','#99ff99','#ffcc99'], autopct='%1.1f%%', startangle=90)
-        plt.axis('equal'); plt.title('Faculty Qualification Distribution')
-        plt.savefig(os.path.join(charts_dir, 'qualification_distribution.png'), dpi=100); plt.close()
+                colors=['#ff9999', '#66b3ff', '#99ff99', '#ffcc99'], autopct='%1.1f%%', startangle=90)
+        plt.axis('equal');
+        plt.title('Faculty Qualification Distribution')
+        plt.savefig(os.path.join(charts_dir, 'qualification_distribution.png'), dpi=100);
+        plt.close()
 
         today = date.today()
-        exp_ranges = ['0-5 years','5-10 years','10-15 years','15+ years']
-        exp_counts = [0,0,0,0]
+        exp_ranges = ['0-5 years', '5-10 years', '10-15 years', '15+ years']
+        exp_counts = [0, 0, 0, 0]
         for f in Faculty.objects.all():
             if f.joining_date:
                 yrs = (today - f.joining_date).days / 365.25
-                if yrs <= 5:        exp_counts[0] += 1
-                elif yrs <= 10:     exp_counts[1] += 1
-                elif yrs <= 15:     exp_counts[2] += 1
-                else:               exp_counts[3] += 1
-        plt.figure(figsize=(10,6))
+                if yrs <= 5:
+                    exp_counts[0] += 1
+                elif yrs <= 10:
+                    exp_counts[1] += 1
+                elif yrs <= 15:
+                    exp_counts[2] += 1
+                else:
+                    exp_counts[3] += 1
+        plt.figure(figsize=(10, 6))
         bars = plt.bar(range(len(exp_ranges)), exp_counts,
-                       color=['#3498db','#2ecc71','#e74c3c','#f39c12'])
+                       color=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'])
         plt.title('Faculty Experience Distribution')
-        plt.xlabel('Experience Range'); plt.ylabel('Number of Faculty')
+        plt.xlabel('Experience Range');
+        plt.ylabel('Number of Faculty')
         plt.xticks(range(len(exp_ranges)), exp_ranges)
-        for i,(bar,cnt) in enumerate(zip(bars,exp_counts)):
-            plt.text(bar.get_x()+bar.get_width()/2., cnt+0.1, f'{cnt}', ha='center', va='bottom')
+        for i, (bar, cnt) in enumerate(zip(bars, exp_counts)):
+            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
         plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'experience_distribution.png'), dpi=100); plt.close()
+        plt.savefig(os.path.join(charts_dir, 'experience_distribution.png'), dpi=100);
+        plt.close()
 
         return render(request, 'dashboard/charts.html', {
             'title': 'Faculty Analytics Charts',
             'chart_urls': {
                 'dept_chart': os.path.join(settings.MEDIA_URL, 'charts', 'dept_distribution.png'),
                 'qual_chart': os.path.join(settings.MEDIA_URL, 'charts', 'qualification_distribution.png'),
-                'exp_chart':  os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
+                'exp_chart': os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
             },
-            'dept_data': list(zip(depts,cnts)),
+            'dept_data': list(zip(depts, cnts)),
             'qual_data': qual_data,
-            'exp_data':  list(zip(exp_ranges,exp_counts)),
+            'exp_data': list(zip(exp_ranges, exp_counts)),
         })
     except Exception as e:
         logger.error(f"Chart error: {e}")
@@ -2963,46 +3132,55 @@ def student_charts(request):
         os.makedirs(charts_dir, exist_ok=True)
 
         gd = Student.objects.values('gender').annotate(count=Count('id')).order_by('-count')
-        gs = [d['gender'] for d in gd]; gc = [d['count'] for d in gd]
-        plt.figure(figsize=(8,8))
-        plt.pie(gc, labels=gs, colors=['#66b3ff','#ff9999','#99ff99'][:len(gs)],
+        gs = [d['gender'] for d in gd];
+        gc = [d['count'] for d in gd]
+        plt.figure(figsize=(8, 8))
+        plt.pie(gc, labels=gs, colors=['#66b3ff', '#ff9999', '#99ff99'][:len(gs)],
                 autopct='%1.1f%%', startangle=90)
-        plt.axis('equal'); plt.title('Student Gender Distribution')
-        plt.savefig(os.path.join(charts_dir,'student_gender_distribution.png'), dpi=100); plt.close()
+        plt.axis('equal');
+        plt.title('Student Gender Distribution')
+        plt.savefig(os.path.join(charts_dir, 'student_gender_distribution.png'), dpi=100);
+        plt.close()
 
         yd = Student.objects.values('year').annotate(count=Count('id')).order_by('year')
-        ys = [d['year'] for d in yd]; yc = [d['count'] for d in yd]
-        plt.figure(figsize=(10,6))
+        ys = [d['year'] for d in yd];
+        yc = [d['count'] for d in yd]
+        plt.figure(figsize=(10, 6))
         bars = plt.bar(ys, yc)
         plt.title('Student Distribution by Year')
-        plt.xlabel('Year'); plt.ylabel('Number of Students')
-        for bar,cnt in zip(bars,yc):
-            plt.text(bar.get_x()+bar.get_width()/2., cnt+0.1, f'{cnt}', ha='center', va='bottom')
+        plt.xlabel('Year');
+        plt.ylabel('Number of Students')
+        for bar, cnt in zip(bars, yc):
+            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
         plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir,'student_year_distribution.png'), dpi=100); plt.close()
+        plt.savefig(os.path.join(charts_dir, 'student_year_distribution.png'), dpi=100);
+        plt.close()
 
         cd = Student.objects.values('category').annotate(count=Count('id')).order_by('-count')[:10]
-        cs = [d['category'] for d in cd]; cc = [d['count'] for d in cd]
-        plt.figure(figsize=(10,6))
+        cs = [d['category'] for d in cd];
+        cc = [d['count'] for d in cd]
+        plt.figure(figsize=(10, 6))
         bars = plt.bar(range(len(cs)), cc)
         plt.title('Student Category Distribution (Top 10)')
-        plt.xlabel('Category'); plt.ylabel('Number of Students')
+        plt.xlabel('Category');
+        plt.ylabel('Number of Students')
         plt.xticks(range(len(cs)), cs, rotation=45, ha='right')
-        for bar,cnt in zip(bars,cc):
-            plt.text(bar.get_x()+bar.get_width()/2., cnt+0.1, f'{cnt}', ha='center', va='bottom')
+        for bar, cnt in zip(bars, cc):
+            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
         plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir,'student_category_distribution.png'), dpi=100); plt.close()
+        plt.savefig(os.path.join(charts_dir, 'student_category_distribution.png'), dpi=100);
+        plt.close()
 
         return render(request, 'dashboard/student_charts.html', {
             'title': 'Student Analytics Charts',
             'chart_urls': {
-                'gender_chart':   os.path.join(settings.MEDIA_URL,'charts','student_gender_distribution.png'),
-                'year_chart':     os.path.join(settings.MEDIA_URL,'charts','student_year_distribution.png'),
-                'category_chart': os.path.join(settings.MEDIA_URL,'charts','student_category_distribution.png'),
+                'gender_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_gender_distribution.png'),
+                'year_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_year_distribution.png'),
+                'category_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_category_distribution.png'),
             },
-            'gender_data': list(zip(gs,gc)),
-            'year_data':   list(zip(ys,yc)),
-            'category_data': list(zip(cs,cc)),
+            'gender_data': list(zip(gs, gc)),
+            'year_data': list(zip(ys, yc)),
+            'category_data': list(zip(cs, cc)),
         })
     except Exception as e:
         logger.error(f"Student chart error: {e}")
@@ -3014,7 +3192,7 @@ def student_charts(request):
 
 @login_required
 def recent_activity(request):
-    acts = FacultyLog.objects.select_related('faculty','student').order_by('-created_at')[:50]
+    acts = FacultyLog.objects.select_related('faculty', 'student').order_by('-created_at')[:50]
     return render(request, 'dashboard/recent_activity.html', {
         'title': 'Recent Activities', 'activities': acts,
         'total_activities': FacultyLog.objects.count(),
@@ -3025,14 +3203,16 @@ def recent_activity(request):
 def search_faculty(request):
     q = request.GET.get('q', '')
     qs = Faculty.objects.filter(
-        Q(staff_name__icontains=q)|Q(employee_code__icontains=q)|
-        Q(department__icontains=q)|Q(designation__icontains=q)|Q(email__icontains=q)
+        Q(staff_name__icontains=q) | Q(employee_code__icontains=q) |
+        Q(department__icontains=q) | Q(designation__icontains=q) | Q(email__icontains=q)
     ).order_by('staff_name')[:20] if q else Faculty.objects.none()
     results = []
     for f in qs:
         pu = None
-        try: pu = f.cloudinary_photo_url or (f.photo.url if f.photo else None)
-        except Exception: pass
+        try:
+            pu = f.cloudinary_photo_url or (f.photo.url if f.photo else None)
+        except Exception:
+            pass
         results.append({
             'id': f.id, 'name': f.staff_name, 'employee_code': f.employee_code,
             'department': f.department, 'designation': f.designation, 'photo_url': pu,
@@ -3045,17 +3225,17 @@ def search_faculty(request):
 def search_students(request):
     q = request.GET.get('q', '')
     qs = Student.objects.filter(
-        Q(student_name__icontains=q)|Q(ht_no__icontains=q)|
-        Q(father_name__icontains=q)|Q(email__icontains=q)
+        Q(student_name__icontains=q) | Q(ht_no__icontains=q) |
+        Q(father_name__icontains=q) | Q(email__icontains=q)
     ).order_by('student_name')[:20] if q else Student.objects.none()
     results = [
         {
             'id': s.id, 'name': s.student_name, 'ht_no': s.ht_no,
             'year': s.year, 'sem': s.sem,
-            'branch':       getattr(s, 'branch', ''),
-            'roll_number':  getattr(s, 'roll_number', ''),
-            'photo_url':    getattr(s, 'photo_url', None),
-            'detail_url':   reverse('dashboard:students_data'),
+            'branch': getattr(s, 'branch', ''),
+            'roll_number': getattr(s, 'roll_number', ''),
+            'photo_url': getattr(s, 'photo_url', None),
+            'detail_url': reverse('dashboard:students_data'),
         }
         for s in qs
     ]
@@ -3065,11 +3245,11 @@ def search_students(request):
 @login_required
 def quick_stats(request):
     return JsonResponse({
-        'total_faculty':    Faculty.objects.count(),
-        'active_faculty':   Faculty.objects.filter(is_active=True).count(),
-        'total_students':   Student.objects.count(),
+        'total_faculty': Faculty.objects.count(),
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
+        'total_students': Student.objects.count(),
         'total_certificates': Certificate.objects.count(),
-        'recent_uploads':   Faculty.objects.order_by('-created_at').count(),
+        'recent_uploads': Faculty.objects.order_by('-created_at').count(),
         'cloudinary_uploads': CloudinaryUpload.objects.count(),
     })
 
@@ -3117,14 +3297,14 @@ def application_home(request):
 def profile_settings(request):
     user = request.user
     if request.method == 'POST':
-        fn = request.POST.get('first_name','').strip()
-        ln = request.POST.get('last_name','').strip()
-        em = request.POST.get('email','').strip().lower()
+        fn = request.POST.get('first_name', '').strip()
+        ln = request.POST.get('last_name', '').strip()
+        em = request.POST.get('email', '').strip().lower()
         if fn: user.first_name = fn
-        if ln: user.last_name  = ln
+        if ln: user.last_name = ln
         if em: user.email = em
-        np = request.POST.get('new_password','').strip()
-        cp = request.POST.get('confirm_password','').strip()
+        np = request.POST.get('new_password', '').strip()
+        cp = request.POST.get('confirm_password', '').strip()
         if np and np == cp:
             user.set_password(np)
             from django.contrib.auth import update_session_auth_hash
@@ -3162,7 +3342,8 @@ def help_documentation(request):
     return render(request, 'dashboard/help.html', {
         'title': 'Help & Documentation',
         'sections': [
-            {'title': 'Faculty Management', 'content': 'Add, edit, delete faculty. Generate PDF profiles and upload to Cloudinary.'},
+            {'title': 'Faculty Management',
+             'content': 'Add, edit, delete faculty. Generate PDF profiles and upload to Cloudinary.'},
             {'title': 'Student Management', 'content': 'Register students, manage data, generate student PDFs.'},
             {'title': 'Certificate Management', 'content': 'Upload, view, and manage certificates for faculty.'},
             {'title': 'Cloudinary Integration', 'content': 'Sync faculty PDFs and photos to Cloudinary.'},
@@ -3175,10 +3356,10 @@ def help_documentation(request):
 @login_required
 def contact_support(request):
     if request.method == 'POST':
-        name    = request.POST.get('name','').strip()
-        email   = request.POST.get('email','').strip()
-        subject = request.POST.get('subject','').strip()
-        msg     = request.POST.get('message','').strip()
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        msg = request.POST.get('message', '').strip()
         if name and email and subject and msg:
             logger.info(f"Support request from {name} ({email}): {subject}")
             messages.success(request, 'Message sent to support. We will get back to you soon.')
@@ -3200,15 +3381,15 @@ def session_info(request):
     return render(request, 'dashboard/session_info.html', {
         'title': 'Session Information',
         'session_info': {
-            'session_key':         request.session.session_key,
-            'session_expiry_age':  request.session.get_expiry_age(),
+            'session_key': request.session.session_key,
+            'session_expiry_age': request.session.get_expiry_age(),
             'session_expiry_date': request.session.get_expiry_date(),
-            'session_data':        dict(request.session.items()),
-            'user_authenticated':  request.user.is_authenticated,
-            'user_username':       request.user.username,
-            'user_email':          request.user.email,
-            'user_is_staff':       request.user.is_staff,
-            'user_is_superuser':   request.user.is_superuser,
+            'session_data': dict(request.session.items()),
+            'user_authenticated': request.user.is_authenticated,
+            'user_username': request.user.username,
+            'user_email': request.user.email,
+            'user_is_staff': request.user.is_staff,
+            'user_is_superuser': request.user.is_superuser,
         }
     })
 
@@ -3216,7 +3397,7 @@ def session_info(request):
 @login_required
 def clear_session(request):
     auth = {k: request.session.get(k) for k in
-            ('_auth_user_id','_auth_user_backend','_auth_user_hash')}
+            ('_auth_user_id', '_auth_user_backend', '_auth_user_hash')}
     request.session.clear()
     for k, v in auth.items():
         if v: request.session[k] = v
