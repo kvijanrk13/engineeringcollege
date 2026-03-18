@@ -1168,12 +1168,15 @@ def edit_student(request, student_id):
 
 # ==================== PDF MERGE UTILITY ====================
 
+# ==================== PDF MERGE UTILITY ====================
+
 def merge_files(file_list):
     from pypdf import PdfMerger
     from PIL import Image
     import tempfile
     import os
     import requests
+    import io
     import logging
 
     logger = logging.getLogger(__name__)
@@ -1205,29 +1208,105 @@ def merge_files(file_list):
             # Download file if it's a URL
             if isinstance(file_url, str) and file_url.startswith(('http://', 'https://')):
                 print(f"  - Downloading from URL: {file_url[:100]}...")
-                response = requests.get(file_url, timeout=30)
-                print(f"  - Download status: {response.status_code}, Size: {len(response.content)} bytes")
+                response = requests.get(file_url, timeout=30, stream=True)
+                print(f"  - Download status: {response.status_code}, Headers: {dict(response.headers)}")
 
                 if response.status_code != 200:
                     print(f"  - ERROR: HTTP {response.status_code}")
                     error_count += 1
                     continue
 
-                # Check if content is empty
-                if len(response.content) == 0:
+                # Check content type from headers
+                content_type = response.headers.get('content-type', '').lower()
+                print(f"  - Content-Type: {content_type}")
+
+                # Read first few bytes to detect file type
+                content = response.content
+                if len(content) == 0:
                     print(f"  - ERROR: Empty file content")
                     error_count += 1
                     continue
 
-                # Save to temp file
-                temp = tempfile.NamedTemporaryFile(delete=False)
-                temp.write(response.content)
+                # Check file signature
+                is_pdf = content.startswith(b'%PDF')
+                is_image = content.startswith(b'\x89PNG') or content.startswith(b'\xff\xd8') or content.startswith(
+                    b'GIF8')
+
+                print(f"  - File signature: PDF={is_pdf}, Image={is_image}")
+
+                # Save to temp file with appropriate extension
+                if is_pdf or 'pdf' in content_type:
+                    suffix = ".pdf"
+                    file_type = "PDF"
+                elif is_image or 'image' in content_type:
+                    if content.startswith(b'\x89PNG'):
+                        suffix = ".png"
+                    elif content.startswith(b'\xff\xd8'):
+                        suffix = ".jpg"
+                    else:
+                        suffix = ".img"
+                    file_type = "Image"
+                else:
+                    # Default to PDF if we can't determine
+                    suffix = ".pdf"
+                    file_type = "Unknown (treating as PDF)"
+
+                print(f"  - Detected as: {file_type}")
+
+                temp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                temp.write(content)
                 temp.close()
                 file_path = temp.name
                 temp_files.append(file_path)
                 print(f"  - Saved to temp file: {file_path}")
+
+                # Process based on file type
+                if file_type == "PDF" or (not is_image and not is_pdf):
+                    # Add PDF directly
+                    try:
+                        merger.append(file_path)
+                        processed_count += 1
+                        print(f"  - SUCCESS: Added as PDF")
+                    except Exception as pdf_error:
+                        print(f"  - ERROR adding PDF: {pdf_error}")
+                        error_count += 1
+
+                elif file_type == "Image":
+                    # Convert image to PDF
+                    try:
+                        img = Image.open(file_path)
+                        print(f"    Image mode: {img.mode}, size: {img.size}")
+
+                        # Convert to RGB if needed
+                        if img.mode in ('RGBA', 'LA', 'P'):
+                            print(f"    Converting from {img.mode} to RGB")
+                            bg = Image.new('RGB', img.size, (255, 255, 255))
+                            if img.mode == 'RGBA':
+                                bg.paste(img, mask=img.split()[3])
+                            else:
+                                bg.paste(img)
+                            img = bg
+                        elif img.mode != 'RGB':
+                            print(f"    Converting from {img.mode} to RGB")
+                            img = img.convert('RGB')
+
+                        # Save as PDF
+                        temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                        img.save(temp_pdf.name, 'PDF', resolution=150.0)
+                        temp_pdf.close()
+                        print(f"    Saved image PDF to: {temp_pdf.name}")
+
+                        # Add to merger
+                        merger.append(temp_pdf.name)
+                        temp_files.append(temp_pdf.name)
+                        processed_count += 1
+                        print(f"  - SUCCESS: Added image as PDF")
+
+                    except Exception as img_error:
+                        print(f"  - ERROR converting image: {img_error}")
+                        error_count += 1
             else:
-                # Try to get file path
+                # Local file - check by extension and content
                 if hasattr(file, 'path'):
                     file_path = file.path
                     print(f"  - Using file.path: {file_path}")
@@ -1240,81 +1319,41 @@ def merge_files(file_list):
                     error_count += 1
                     continue
 
-            # Check if it's an image based on extension or content
-            is_image = False
-            if file_url.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
-                is_image = True
-                print(f"  - Identified as image by extension")
-            else:
-                # Try to detect by reading first few bytes
+                # Check file content
                 with open(file_path, 'rb') as f:
                     header = f.read(4)
-                    if header.startswith(b'\x89PNG') or header.startswith(b'\xff\xd8'):
-                        is_image = True
-                        print(f"  - Identified as image by header: {header.hex()}")
-                    elif header.startswith(b'%PDF'):
-                        print(f"  - Identified as PDF by header")
-                    else:
-                        print(f"  - Unknown file type, header: {header.hex()}")
 
-            if is_image:
-                print(f"  - Converting image to PDF")
-                try:
+                if header.startswith(b'%PDF'):
+                    merger.append(file_path)
+                    processed_count += 1
+                    print(f"  - SUCCESS: Added local PDF")
+                elif header.startswith(b'\x89PNG') or header.startswith(b'\xff\xd8'):
+                    # Convert image to PDF
                     img = Image.open(file_path)
-                    print(f"    Image mode: {img.mode}, size: {img.size}")
-
-                    # Convert to RGB if needed
-                    if img.mode in ('RGBA', 'LA', 'P'):
-                        print(f"    Converting from {img.mode} to RGB")
-                        bg = Image.new('RGB', img.size, (255, 255, 255))
-                        if img.mode == 'RGBA':
-                            bg.paste(img, mask=img.split()[3])
-                        else:
-                            bg.paste(img)
-                        img = bg
-                    elif img.mode != 'RGB':
-                        print(f"    Converting from {img.mode} to RGB")
+                    if img.mode != 'RGB':
                         img = img.convert('RGB')
-
-                    # Save as PDF
                     temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    img.save(temp_pdf.name, 'PDF', resolution=150.0)
+                    img.save(temp_pdf.name, 'PDF')
                     temp_pdf.close()
-                    print(f"    Saved image PDF to: {temp_pdf.name}")
-
-                    # Add to merger
                     merger.append(temp_pdf.name)
                     temp_files.append(temp_pdf.name)
                     processed_count += 1
-                    print(f"  - SUCCESS: Added image as PDF")
-
-                except Exception as img_error:
-                    print(f"  - ERROR converting image: {img_error}")
-                    error_count += 1
-
-            elif file_url.lower().endswith('.pdf') or header.startswith(b'%PDF'):
-                print(f"  - Adding PDF directly")
-                try:
-                    merger.append(file_path)
-                    processed_count += 1
-                    print(f"  - SUCCESS: Added PDF")
-                except Exception as pdf_error:
-                    print(f"  - ERROR adding PDF: {pdf_error}")
-                    error_count += 1
-
-            else:
-                print(f"  - WARNING: Unknown file type, attempting as PDF")
-                try:
-                    merger.append(file_path)
-                    processed_count += 1
-                    print(f"  - SUCCESS: Added as PDF (attempted)")
-                except Exception as e:
-                    print(f"  - ERROR: Cannot add file: {e}")
-                    error_count += 1
+                    print(f"  - SUCCESS: Added local image as PDF")
+                else:
+                    # Try as PDF anyway
+                    try:
+                        merger.append(file_path)
+                        processed_count += 1
+                        print(f"  - SUCCESS: Added local file as PDF (attempted)")
+                    except:
+                        print(f"  - ERROR: Cannot process local file")
+                        error_count += 1
 
         except Exception as e:
             print(f"  - ERROR processing file: {e}")
             error_count += 1
+            import traceback
+            traceback.print_exc()
 
     print(f"\n=== MERGE SUMMARY ===")
     print(f"Processed: {processed_count} files")
