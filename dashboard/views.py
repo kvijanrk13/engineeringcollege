@@ -741,15 +741,25 @@ def faculty_list(request):
 # ==================== ADD FACULTY ====================
 
 @login_required
+# ==================== ADD FACULTY ====================
+
+@login_required
 def add_faculty(request):
     if request.method == "POST":
         try:
+            # Handle empty numeric fields by converting empty strings to None
+            def get_int_or_none(value):
+                return int(value) if value and value.strip() else None
+
+            def get_float_or_none(value):
+                return float(value) if value and value.strip() else None
+
             faculty = Faculty.objects.create(
                 staff_name=request.POST.get("staff_name"),
                 employee_code=request.POST.get("employee_code"),
                 father_name=request.POST.get("father_name"),
                 mother_name=request.POST.get("mother_name"),
-                dob=request.POST.get("dob"),
+                dob=request.POST.get("dob") or None,
                 gender=request.POST.get("gender"),
                 state=request.POST.get("state"),
                 caste=request.POST.get("caste"),
@@ -761,31 +771,31 @@ def add_faculty(request):
                 email=request.POST.get("email"),
                 department=request.POST.get("department"),
                 designation=request.POST.get("designation"),
-                joining_date=request.POST.get("joining_date"),
+                joining_date=request.POST.get("joining_date") or None,
                 jntuh_id=request.POST.get("jntuh_id"),
                 aicte_id=request.POST.get("aicte_id"),
                 pan=request.POST.get("pan"),
                 aadhar=request.POST.get("aadhar"),
                 apaar_id=request.POST.get("apaar_id"),
                 orcid_id=request.POST.get("orcid_id"),
-                ssc_year=request.POST.get("ssc_year"),
-                ssc_percent=request.POST.get("ssc_percent"),
+                ssc_year=get_int_or_none(request.POST.get("ssc_year")),
+                ssc_percent=get_float_or_none(request.POST.get("ssc_percent")),
                 ssc_school=request.POST.get("ssc_school"),
-                inter_year=request.POST.get("inter_year"),
-                inter_percent=request.POST.get("inter_percent"),
+                inter_year=get_int_or_none(request.POST.get("inter_year")),
+                inter_percent=get_float_or_none(request.POST.get("inter_percent")),
                 inter_college=request.POST.get("inter_college"),
                 ug_degree=request.POST.get("ug_degree"),
-                ug_year=request.POST.get("ug_year"),
-                ug_percentage=request.POST.get("ug_percentage"),
+                ug_year=get_int_or_none(request.POST.get("ug_year")),
+                ug_percentage=get_float_or_none(request.POST.get("ug_percentage")),
                 ug_college=request.POST.get("ug_college"),
                 ug_spec=request.POST.get("ug_spec"),
                 pg_degree=request.POST.get("pg_degree"),
-                pg_year=request.POST.get("pg_year"),
-                pg_percentage=request.POST.get("pg_percentage"),
+                pg_year=get_int_or_none(request.POST.get("pg_year")),
+                pg_percentage=get_float_or_none(request.POST.get("pg_percentage")),
                 pg_college=request.POST.get("pg_college"),
                 pg_spec=request.POST.get("pg_spec"),
                 phd_degree=request.POST.get("phd_degree"),
-                phd_year=request.POST.get("phd_year"),
+                phd_year=get_int_or_none(request.POST.get("phd_year")),
                 phd_university=request.POST.get("phd_university"),
                 phd_spec=request.POST.get("phd_spec"),
                 subjects_dealt=request.POST.get("subjects_dealt"),
