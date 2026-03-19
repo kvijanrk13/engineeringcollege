@@ -46,6 +46,7 @@ from PIL import Image as PILImage
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from cloudinary.utils import cloudinary_url
 
 # Local imports
 from .models import (
@@ -849,13 +850,21 @@ def add_faculty(request):
                             # For PDFs, use resource_type="raw", for images use "auto"
                             resource_type = "raw" if is_pdf else "auto"
 
-                            result = cloudinary.uploader.upload(
-                                uploaded_file,
-                                resource_type=resource_type,
-                                folder=f"faculty_documents/{faculty.employee_code}",
-                                public_id=f"{doc_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                                overwrite=True
-                            )
+                            # Upload with explicit public access to avoid 401 errors
+                            upload_options = {
+                                'resource_type': resource_type,
+                                'folder': f"faculty_documents/{faculty.employee_code}",
+                                'public_id': f"{doc_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                                'overwrite': True,
+                                'type': 'upload',  # This makes it public
+                                'access_mode': 'public',  # Explicitly set public access
+                            }
+
+                            # For raw files (PDFs), ensure they're publicly accessible
+                            if resource_type == "raw":
+                                upload_options['access_control'] = None  # Remove any access restrictions
+
+                            result = cloudinary.uploader.upload(uploaded_file, **upload_options)
 
                             # Store the Cloudinary URL in the field
                             # Add file extension for raw files to ensure proper downloading
@@ -863,8 +872,14 @@ def add_faculty(request):
                                 # Get the original file extension
                                 file_ext = os.path.splitext(uploaded_file.name)[1]
                                 if file_ext:
-                                    # Add extension to the URL
-                                    url = result['secure_url'] + file_ext
+                                    # For raw files, Cloudinary returns URL without extension
+                                    # Add extension to ensure proper downloading
+                                    base_url = result['secure_url']
+                                    # Check if URL already has extension
+                                    if not base_url.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
+                                        url = base_url + file_ext
+                                    else:
+                                        url = base_url
                                 else:
                                     url = result['secure_url']
                             else:
