@@ -1858,27 +1858,52 @@ def generate_faculty_pdf(request, faculty_id):
             experience = f"{yrs} Years {mths} Months {dys} Days"
             print(f"Experience: {experience}")
 
-        # ---- 2. DOWNLOAD PHOTO ----
+        # ---- 2. DOWNLOAD PHOTO ---- (FIXED VERSION)
+        import io as _photo_io
         temp_photo_path = None
         photo_url = None
+
+        # Try cloudinary_photo_url first (explicit stored URL), then photo field
         try:
-            photo_url = faculty.photo.url if faculty.photo else None
+            photo_url = faculty.cloudinary_photo_url or None
         except Exception:
             photo_url = None
+
         if not photo_url:
-            photo_url = getattr(faculty, 'cloudinary_photo_url', None)
+            try:
+                photo_url = faculty.photo.url if faculty.photo else None
+            except Exception:
+                photo_url = None
 
         if photo_url:
             try:
                 r = requests.get(photo_url, timeout=15)
                 if r.status_code == 200:
+                    # KEY FIX: Use PIL to open + convert to RGB JPEG
+                    # This handles PNG, WEBP, RGBA, P mode etc.
+                    img = PILImage.open(_photo_io.BytesIO(r.content))
+                    print(f"  Photo format: {img.format}, mode: {img.mode}, size: {img.size}")
+
+                    # Handle transparency
+                    if img.mode in ('RGBA', 'P', 'LA'):
+                        bg = PILImage.new('RGB', img.size, (255, 255, 255))
+                        if img.mode == 'RGBA':
+                            bg.paste(img, mask=img.split()[3])
+                        else:
+                            bg.paste(img.convert('RGBA'), mask=img.convert('RGBA').split()[3])
+                        img = bg
+                    elif img.mode != 'RGB':
+                        img = img.convert('RGB')
+
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tp:
-                        tp.write(r.content)
+                        img.save(tp.name, 'JPEG', quality=90)
                         temp_photo_path = tp.name
                     temp_files.append(temp_photo_path)
-                    print(f"Photo downloaded: {temp_photo_path}")
+                    print(f"  Photo saved as RGB JPEG: {temp_photo_path}")
+                else:
+                    print(f"  Photo HTTP {r.status_code}: {photo_url}")
             except Exception as e:
-                print(f"Photo download error: {e}")
+                print(f"  Photo download/convert error: {e}")
 
         # ---- 3. GET RELATED DATA ----
         certificates = Certificate.objects.filter(faculty=faculty)
@@ -2159,20 +2184,20 @@ def generate_faculty_pdf(request, faculty_id):
         merger.append(main_pdf_path)
         print("Added main PDF to merger.")
 
-        # ---- 6. MERGE ALL FACULTY DOCUMENTS ----
+        # ---- 6. MERGE ALL FACULTY DOCUMENTS ---- (FIXED VERSION)
         all_doc_fields = [
             # Identity / KYC Documents
-            ('aadhar_file', 'Aadhar Card'),
-            ('pan_file', 'PAN Card'),
-            ('apaar_file', 'APAAR Document'),
-            ('scm_file', 'SCM Document'),
-            ('jntuh_biodata', 'JNTUH Bio-Data'),
+            ('aadhar_file',       'Aadhar Card'),
+            ('pan_file',          'PAN Card'),
+            ('apaar_file',        'APAAR Document'),
+            ('scm_file',          'SCM Document'),
+            ('jntuh_biodata',     'JNTUH Bio-Data'),   # ← ADDED
             # Education Certificates
-            ('ssc_certificate', 'SSC Certificate'),
+            ('ssc_certificate',   'SSC Certificate'),
             ('inter_certificate', 'Intermediate Certificate'),
-            ('ug_certificate', 'UG Certificate'),
-            ('pg_certificate', 'PG Certificate'),
-            ('phd_certificate', 'PhD Certificate'),
+            ('ug_certificate',    'UG Certificate'),
+            ('pg_certificate',    'PG Certificate'),
+            ('phd_certificate',   'PhD Certificate'),
         ]
 
         cert_count = 0
@@ -2189,17 +2214,18 @@ def generate_faculty_pdf(request, faculty_id):
                 print(f"  [SKIP] {field_label}: cannot get URL ({e})")
                 continue
 
-            print(f"Processing {field_label}: {doc_url}")
+            print(f"  Processing {field_label}: {doc_url}")
 
             try:
                 r = requests.get(doc_url, timeout=30)
                 if r.status_code != 200:
-                    print(f"  [ERROR] HTTP {r.status_code}")
+                    print(f"  [ERROR] HTTP {r.status_code} for {field_label}")
                     continue
 
                 content = r.content
+                print(f"  Downloaded {len(content)} bytes, starts: {content[:4]}")
 
-                # Case 1: PDF file
+                # Case 1: PDF
                 if content.startswith(b'%PDF'):
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
                         tc.write(content)
@@ -2207,22 +2233,22 @@ def generate_faculty_pdf(request, faculty_id):
                     temp_files.append(tc_path)
                     merger.append(tc_path)
                     cert_count += 1
-                    print(f"  [OK] Added PDF: {field_label}")
+                    print(f"  [OK] PDF merged: {field_label}")
 
-                # Case 2: Image file -> convert to PDF
+                # Case 2: Image — convert to PDF (with proper RGB handling)
                 else:
                     try:
                         import io as _io
                         img = PILImage.open(_io.BytesIO(content))
-                        print(f"  Image detected: {img.format} {img.size}")
+                        print(f"  Image: {img.format} {img.mode} {img.size}")
 
-                        # Handle transparency (RGBA/P/LA)
+                        # Handle all transparency modes
                         if img.mode in ('RGBA', 'P', 'LA'):
                             bg = PILImage.new('RGB', img.size, (255, 255, 255))
                             if img.mode == 'RGBA':
                                 bg.paste(img, mask=img.split()[3])
                             else:
-                                bg.paste(img)
+                                bg.paste(img.convert('RGBA'), mask=img.convert('RGBA').split()[3])
                             img = bg
                         elif img.mode != 'RGB':
                             img = img.convert('RGB')
@@ -2233,13 +2259,13 @@ def generate_faculty_pdf(request, faculty_id):
                         temp_files.append(ti_path)
                         merger.append(ti_path)
                         cert_count += 1
-                        print(f"  [OK] Converted image to PDF: {field_label}")
+                        print(f"  [OK] Image→PDF merged: {field_label}")
 
-                    except Exception as img_error:
-                        print(f"  [ERROR] Cannot process as image: {img_error}")
+                    except Exception as img_err:
+                        print(f"  [ERROR] Cannot process as image for {field_label}: {img_err}")
 
             except Exception as e:
-                print(f"  [ERROR] Processing {field_label}: {e}")
+                print(f"  [ERROR] Failed to process {field_label}: {e}")
 
         # Also merge Certificate model records (from certificate management)
         for cert in certificates:
