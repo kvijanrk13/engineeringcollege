@@ -741,9 +741,6 @@ def faculty_list(request):
 # ==================== ADD FACULTY ====================
 
 @login_required
-# ==================== ADD FACULTY ====================
-
-@login_required
 def add_faculty(request):
     if request.method == "POST":
         try:
@@ -827,18 +824,59 @@ def add_faculty(request):
                     messages.warning(request, "Faculty added but Cloudinary photo upload failed.")
 
             # Save ALL document & certificate fields uploaded via the form
+            # With proper Cloudinary handling for PDFs
             doc_fields = [
-                'aadhar_file', 'pan_file', 'apaar_file', 'scm_file',
-                'ssc_certificate', 'inter_certificate',
-                'ug_certificate', 'pg_certificate', 'phd_certificate',
+                ('aadhar_file', 'aadhar'),
+                ('pan_file', 'pan'),
+                ('apaar_file', 'apaar'),
+                ('scm_file', 'scm'),
+                ('ssc_certificate', 'ssc'),
+                ('inter_certificate', 'inter'),
+                ('ug_certificate', 'ug'),
+                ('pg_certificate', 'pg'),
+                ('phd_certificate', 'phd'),
             ]
-            needs_save = False
-            for ffile in doc_fields:
-                if request.FILES.get(ffile):
-                    setattr(faculty, ffile, request.FILES[ffile])
-                    needs_save = True
-            if needs_save:
-                faculty.save()
+
+            for field_name, doc_type in doc_fields:
+                uploaded_file = request.FILES.get(field_name)
+                if uploaded_file:
+                    # Check if it's a PDF
+                    file_name = uploaded_file.name.lower()
+                    is_pdf = file_name.endswith('.pdf')
+
+                    if is_cloudinary_configured():
+                        try:
+                            # For PDFs, use resource_type="raw", for images use "image"
+                            resource_type = "raw" if is_pdf else "auto"
+
+                            result = cloudinary.uploader.upload(
+                                uploaded_file,
+                                resource_type=resource_type,
+                                folder=f"faculty_documents/{faculty.employee_code}",
+                                public_id=f"{doc_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                                overwrite=True
+                            )
+                            # Store the Cloudinary URL in the field
+                            setattr(faculty, field_name, result['secure_url'])
+
+                            CloudinaryUpload.objects.create(
+                                faculty=faculty,
+                                upload_type=field_name,
+                                cloudinary_url=result['secure_url'],
+                                public_id=result['public_id'],
+                                resource_type=resource_type,
+                                uploaded_by=request.user.username if request.user.is_authenticated else 'System'
+                            )
+                            print(f"Uploaded {field_name} as {resource_type} to Cloudinary")
+                        except Exception as e:
+                            logger.error(f"Cloudinary upload error for {field_name}: {e}")
+                            # Fall back to local storage
+                            setattr(faculty, field_name, uploaded_file)
+                    else:
+                        # Store locally
+                        setattr(faculty, field_name, uploaded_file)
+
+            faculty.save()
 
             messages.success(request, "Faculty added successfully.")
             return redirect("dashboard:faculty_dashboard")
@@ -2787,7 +2825,8 @@ def bulk_faculty_actions(request):
         cnt = 0
         for fid in faculty_ids:
             try:
-                Faculty.objects.get(id=fid).delete(); cnt += 1
+                Faculty.objects.get(id=fid).delete();
+                cnt += 1
             except Faculty.DoesNotExist:
                 pass
         FacultyLog.objects.create(faculty=None, action='Bulk Faculty Delete',
