@@ -846,7 +846,7 @@ def add_faculty(request):
 
                     if is_cloudinary_configured():
                         try:
-                            # For PDFs, use resource_type="raw", for images use "image"
+                            # For PDFs, use resource_type="raw", for images use "auto"
                             resource_type = "raw" if is_pdf else "auto"
 
                             result = cloudinary.uploader.upload(
@@ -856,13 +856,26 @@ def add_faculty(request):
                                 public_id=f"{doc_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                                 overwrite=True
                             )
+
                             # Store the Cloudinary URL in the field
-                            setattr(faculty, field_name, result['secure_url'])
+                            # Add file extension for raw files to ensure proper downloading
+                            if resource_type == "raw" and uploaded_file.name:
+                                # Get the original file extension
+                                file_ext = os.path.splitext(uploaded_file.name)[1]
+                                if file_ext:
+                                    # Add extension to the URL
+                                    url = result['secure_url'] + file_ext
+                                else:
+                                    url = result['secure_url']
+                            else:
+                                url = result['secure_url']
+
+                            setattr(faculty, field_name, url)
 
                             CloudinaryUpload.objects.create(
                                 faculty=faculty,
                                 upload_type=field_name,
-                                cloudinary_url=result['secure_url'],
+                                cloudinary_url=url,
                                 public_id=result['public_id'],
                                 resource_type=resource_type,
                                 uploaded_by=request.user.username if request.user.is_authenticated else 'System'
