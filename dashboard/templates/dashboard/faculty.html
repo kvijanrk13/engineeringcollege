@@ -301,6 +301,17 @@
                                         {% endif %}
                                     </div>
                                 </div>
+                                <!-- JNTUH One Page Bio-Data Upload Button -->
+                                <div class="row mt-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">JNTUH One Page Bio-Data</label>
+                                        <input type="file" class="form-control" name="jntuh_biodata" accept=".pdf">
+                                        {% if faculty.jntuh_biodata %}
+                                        <small class="text-muted">Current: <a href="{{ faculty.jntuh_biodata.url }}" target="_blank">View</a></small>
+                                        {% endif %}
+                                        <small class="text-muted d-block">Upload your one-page bio-data as PDF</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -313,11 +324,12 @@
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Joining Date</label>
-                                        <input type="date" class="form-control" name="joining_date" value="{{ faculty.joining_date|date:'Y-m-d'|default:'' }}">
+                                        <input type="date" class="form-control" name="joining_date" id="joiningDate" value="{{ faculty.joining_date|date:'Y-m-d'|default:'' }}" onchange="calculateExperience()">
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Experience at Anurag</label>
-                                        <input type="text" class="form-control" name="exp_anurag" value="{{ faculty.exp_anurag|default:'' }}">
+                                        <input type="text" class="form-control" name="exp_anurag" id="expAnurag" value="{{ faculty.exp_anurag|default:'' }}" readonly>
+                                        <small class="text-muted">Auto-calculated from joining date</small>
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label">Experience (Other)</label>
@@ -492,6 +504,764 @@
                             </div>
                         </div>
 
+                        <!-- Research & Publications Section -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Research & Publications</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Primary Dropdown for Research Type -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Research Type <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="research_type" id="researchType" onchange="showResearchFields()">
+                                            <option value="">Select Research Type</option>
+                                            <option value="journal">Journal Article</option>
+                                            <option value="conference">Conference Paper</option>
+                                            <option value="book">Book</option>
+                                            <option value="book_chapter">Book Chapter</option>
+                                            <option value="patent">Patent</option>
+                                            <option value="project">Research Project / Grant</option>
+                                            <option value="copyright">Copyright / IP</option>
+                                            <option value="award">Award / Recognition</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Common Fields (Always Visible) -->
+                                <div id="commonFields">
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Title</label>
+                                            <input type="text" class="form-control" name="research_title" id="researchTitle">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Authors</label>
+                                            <input type="text" class="form-control" name="research_authors" id="researchAuthors">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Department</label>
+                                            <input type="text" class="form-control" name="research_dept" id="researchDept" value="{{ faculty.department|default:'' }}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Publication Year</label>
+                                            <input type="number" class="form-control" name="research_year" id="researchYear">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Publisher Name</label>
+                                            <input type="text" class="form-control" name="research_publisher" id="researchPublisher">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Status</label>
+                                            <select class="form-control" name="research_status" id="researchStatus">
+                                                <option value="">Select Status</option>
+                                                <option value="published">Published</option>
+                                                <option value="accepted">Accepted</option>
+                                                <option value="submitted">Submitted</option>
+                                                <option value="in_progress">In Progress</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">DOI</label>
+                                            <input type="text" class="form-control" name="research_doi" id="researchDoi">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">URL</label>
+                                            <input type="url" class="form-control" name="research_url" id="researchUrl">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Abstract</label>
+                                            <textarea class="form-control" name="research_abstract" id="researchAbstract" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Keywords</label>
+                                            <input type="text" class="form-control" name="research_keywords" id="researchKeywords">
+                                            <small class="text-muted">Separate keywords with commas</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Proof Document</label>
+                                            <input type="file" class="form-control" name="research_proof" accept=".pdf,.jpg,.jpeg,.png">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Journal Article Fields -->
+                                <div id="journalFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Journal Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Journal Name</label>
+                                            <input type="text" class="form-control" name="journal_name">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">ISSN</label>
+                                            <input type="text" class="form-control" name="journal_issn">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">E-ISSN</label>
+                                            <input type="text" class="form-control" name="journal_e_issn">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Volume</label>
+                                            <input type="text" class="form-control" name="journal_volume">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Issue</label>
+                                            <input type="text" class="form-control" name="journal_issue">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Page Numbers</label>
+                                            <input type="text" class="form-control" name="journal_pages">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Impact Factor</label>
+                                            <input type="text" class="form-control" name="journal_impact_factor">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Quartile</label>
+                                            <select class="form-control" name="journal_quartile">
+                                                <option value="">Select</option>
+                                                <option value="Q1">Q1</option>
+                                                <option value="Q2">Q2</option>
+                                                <option value="Q3">Q3</option>
+                                                <option value="Q4">Q4</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <label class="form-label">Indexed In</label>
+                                            <input type="text" class="form-control" name="journal_indexed_in">
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" class="form-check-input" name="journal_ugc_care" id="journalUgcCare">
+                                                <label class="form-check-label" for="journalUgcCare">UGC CARE Listed</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" class="form-check-input" name="journal_open_access" id="journalOpenAccess">
+                                                <label class="form-check-label" for="journalOpenAccess">Open Access</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Conference Paper Fields -->
+                                <div id="conferenceFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Conference Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Conference Name</label>
+                                            <input type="text" class="form-control" name="conference_name">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Conference Type</label>
+                                            <select class="form-control" name="conference_type">
+                                                <option value="">Select</option>
+                                                <option value="national">National</option>
+                                                <option value="international">International</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Organizer</label>
+                                            <input type="text" class="form-control" name="conference_organizer">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Location</label>
+                                            <input type="text" class="form-control" name="conference_location">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Conference Dates</label>
+                                            <input type="text" class="form-control" name="conference_dates" placeholder="e.g., 10-12 Jan 2024">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">ISBN</label>
+                                            <input type="text" class="form-control" name="conference_isbn">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Proceedings Title</label>
+                                            <input type="text" class="form-control" name="conference_proceedings">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Presentation Type</label>
+                                            <select class="form-control" name="conference_presentation_type">
+                                                <option value="">Select</option>
+                                                <option value="oral">Oral</option>
+                                                <option value="poster">Poster</option>
+                                                <option value="keynote">Keynote</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" class="form-check-input" name="conference_best_paper" id="conferenceBestPaper">
+                                                <label class="form-check-label" for="conferenceBestPaper">Best Paper Award</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Book Fields -->
+                                <div id="bookFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Book Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Book Title</label>
+                                            <input type="text" class="form-control" name="book_title">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">ISBN</label>
+                                            <input type="text" class="form-control" name="book_isbn">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Edition</label>
+                                            <input type="text" class="form-control" name="book_edition">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Volume</label>
+                                            <input type="text" class="form-control" name="book_volume">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Number of Pages</label>
+                                            <input type="number" class="form-control" name="book_pages">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Publication Place</label>
+                                            <input type="text" class="form-control" name="book_place">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Book Type</label>
+                                            <select class="form-control" name="book_type">
+                                                <option value="">Select</option>
+                                                <option value="authored">Authored</option>
+                                                <option value="edited">Edited</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Role</label>
+                                            <input type="text" class="form-control" name="book_role">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Book Chapter Fields -->
+                                <div id="bookChapterFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Book Chapter Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Chapter Title</label>
+                                            <input type="text" class="form-control" name="chapter_title">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Book Title</label>
+                                            <input type="text" class="form-control" name="chapter_book_title">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">ISBN</label>
+                                            <input type="text" class="form-control" name="chapter_isbn">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Chapter Number</label>
+                                            <input type="text" class="form-control" name="chapter_number">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Page Numbers</label>
+                                            <input type="text" class="form-control" name="chapter_pages">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Editors</label>
+                                            <input type="text" class="form-control" name="chapter_editors">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Indexed In</label>
+                                            <input type="text" class="form-control" name="chapter_indexed_in">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Patent Fields -->
+                                <div id="patentFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Patent Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Patent Title</label>
+                                            <input type="text" class="form-control" name="patent_title">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Inventors</label>
+                                            <input type="text" class="form-control" name="patent_inventors">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Applicant Name</label>
+                                            <input type="text" class="form-control" name="patent_applicant">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Patent Number</label>
+                                            <input type="text" class="form-control" name="patent_number">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Application Number</label>
+                                            <input type="text" class="form-control" name="patent_application_number">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Filing Date</label>
+                                            <input type="date" class="form-control" name="patent_filing_date">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Publication Date</label>
+                                            <input type="date" class="form-control" name="patent_publication_date">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Grant Date</label>
+                                            <input type="date" class="form-control" name="patent_grant_date">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Patent Status</label>
+                                            <select class="form-control" name="patent_status">
+                                                <option value="">Select</option>
+                                                <option value="filed">Filed</option>
+                                                <option value="published">Published</option>
+                                                <option value="granted">Granted</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Patent Office</label>
+                                            <input type="text" class="form-control" name="patent_office">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Country</label>
+                                            <input type="text" class="form-control" name="patent_country">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Patent Type</label>
+                                            <select class="form-control" name="patent_type">
+                                                <option value="">Select</option>
+                                                <option value="utility">Utility</option>
+                                                <option value="design">Design</option>
+                                                <option value="plant">Plant</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" class="form-check-input" name="patent_commercialized" id="patentCommercialized">
+                                                <label class="form-check-label" for="patentCommercialized">Commercialized</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">License Details</label>
+                                            <input type="text" class="form-control" name="patent_license">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Research Project Fields -->
+                                <div id="projectFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Research Project Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Project Title</label>
+                                            <input type="text" class="form-control" name="project_title">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Principal Investigator</label>
+                                            <input type="text" class="form-control" name="project_pi">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Co-Investigators</label>
+                                            <input type="text" class="form-control" name="project_co_investigators">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Funding Agency</label>
+                                            <input type="text" class="form-control" name="project_funding_agency">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Project Type</label>
+                                            <select class="form-control" name="project_type">
+                                                <option value="">Select</option>
+                                                <option value="minor">Minor</option>
+                                                <option value="major">Major</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Sanction Number</label>
+                                            <input type="text" class="form-control" name="project_sanction_number">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Sanction Amount</label>
+                                            <input type="number" step="0.01" class="form-control" name="project_sanction_amount">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" name="project_start_date">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">End Date</label>
+                                            <input type="date" class="form-control" name="project_end_date">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Project Status</label>
+                                            <select class="form-control" name="project_status">
+                                                <option value="">Select</option>
+                                                <option value="ongoing">Ongoing</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Fund Received</label>
+                                            <input type="number" step="0.01" class="form-control" name="project_fund_received">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Outcomes</label>
+                                            <input type="text" class="form-control" name="project_outcomes">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Copyright Fields -->
+                                <div id="copyrightFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Copyright Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Registration Number</label>
+                                            <input type="text" class="form-control" name="copyright_registration_number">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Registration Date</label>
+                                            <input type="date" class="form-control" name="copyright_registration_date">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Copyright Office</label>
+                                            <input type="text" class="form-control" name="copyright_office">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label class="form-label">Description</label>
+                                            <textarea class="form-control" name="copyright_description" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Award Fields -->
+                                <div id="awardFields" style="display: none;">
+                                    <h6 class="bg-light p-2 mt-3">Award Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Award Title</label>
+                                            <input type="text" class="form-control" name="award_title">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Awarding Body</label>
+                                            <input type="text" class="form-control" name="award_body">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Award Date</label>
+                                            <input type="date" class="form-control" name="award_date">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Award Level</label>
+                                            <select class="form-control" name="award_level">
+                                                <option value="">Select</option>
+                                                <option value="national">National</option>
+                                                <option value="international">International</option>
+                                                <option value="institutional">Institutional</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Description</label>
+                                            <input type="text" class="form-control" name="award_description">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Add Research Button -->
+                                <div class="row mt-4">
+                                    <div class="col-md-12 text-center">
+                                        <button type="button" class="btn btn-success" onclick="addResearchEntry()">
+                                            <i class="fas fa-plus me-2"></i>Add Research Entry
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Research Entries Table -->
+                                <div class="row mt-4" id="researchEntriesSection" style="display: none;">
+                                    <div class="col-md-12">
+                                        <h6 class="bg-light p-2">Added Research Entries</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm" id="researchEntriesTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Title</th>
+                                                        <th>Year</th>
+                                                        <th>Status</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="researchEntriesBody">
+                                                    <!-- Research entries will be added here dynamically -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FDP / Workshops Section -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">FDP / Workshops Attended</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- FDP Type Dropdown -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">FDP Type</label>
+                                        <select class="form-control" name="fdp_type" id="fdpType">
+                                            <option value="">Select Type</option>
+                                            <option value="fdp">Faculty Development Program</option>
+                                            <option value="workshop">Workshop</option>
+                                            <option value="seminar">Seminar</option>
+                                            <option value="conference">Conference</option>
+                                            <option value="sttp">Short Term Training Program (STTP)</option>
+                                            <option value="webinar">Webinar</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Mandatory FDP Fields -->
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Title</label>
+                                        <input type="text" class="form-control" name="fdp_title" id="fdpTitle">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">From Date</label>
+                                        <input type="date" class="form-control" name="fdp_from_date" id="fdpFromDate">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">To Date</label>
+                                        <input type="date" class="form-control" name="fdp_to_date" id="fdpToDate" onchange="calculateDuration()">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Organized By</label>
+                                        <input type="text" class="form-control" name="fdp_organized_by" id="fdpOrganizedBy">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Place</label>
+                                        <input type="text" class="form-control" name="fdp_place" id="fdpPlace">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Certificate Upload</label>
+                                        <input type="file" class="form-control" name="fdp_certificate" accept=".pdf,.jpg,.jpeg,.png">
+                                    </div>
+                                </div>
+
+                                <!-- Additional Fields (Optional) -->
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Mode</label>
+                                        <select class="form-control" name="fdp_mode">
+                                            <option value="">Select</option>
+                                            <option value="online">Online</option>
+                                            <option value="offline">Offline</option>
+                                            <option value="hybrid">Hybrid</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Duration (Days)</label>
+                                        <input type="number" class="form-control" name="fdp_duration" id="fdpDuration" readonly>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Sponsored By</label>
+                                        <input type="text" class="form-control" name="fdp_sponsored_by">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Level</label>
+                                        <select class="form-control" name="fdp_level">
+                                            <option value="">Select</option>
+                                            <option value="national">National</option>
+                                            <option value="international">International</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Role</label>
+                                        <select class="form-control" name="fdp_role">
+                                            <option value="">Select</option>
+                                            <option value="participant">Participant</option>
+                                            <option value="coordinator">Coordinator</option>
+                                            <option value="resource_person">Resource Person</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label">Remarks</label>
+                                        <input type="text" class="form-control" name="fdp_remarks">
+                                    </div>
+                                </div>
+
+                                <!-- Add FDP Button -->
+                                <div class="row mt-4">
+                                    <div class="col-md-12 text-center">
+                                        <button type="button" class="btn btn-success" onclick="addFDPEntry()">
+                                            <i class="fas fa-plus me-2"></i>Add FDP Entry
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- FDP Entries Table -->
+                                <div class="row mt-4" id="fdpEntriesSection" style="display: none;">
+                                    <div class="col-md-12">
+                                        <h6 class="bg-light p-2">Added FDP Entries</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm" id="fdpEntriesTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Title</th>
+                                                        <th>Duration</th>
+                                                        <th>Organized By</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="fdpEntriesBody">
+                                                    <!-- FDP entries will be added here dynamically -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- B.Tech Projects Handled -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">B.Tech Projects Handled</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">H.T.No.</label>
+                                        <input type="text" class="form-control" name="project_ht_no" id="projectHtNo">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Name of the Student</label>
+                                        <input type="text" class="form-control" name="project_student_name" id="projectStudentName">
+                                    </div>
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">Batch Number</label>
+                                        <input type="text" class="form-control" name="project_batch" id="projectBatch">
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Title of the Project</label>
+                                        <input type="text" class="form-control" name="project_title" id="projectTitle">
+                                    </div>
+                                    <div class="col-md-1 mb-3">
+                                        <label class="form-label">Approved</label>
+                                        <select class="form-control" name="project_approved" id="projectApproved">
+                                            <option value="">Select</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 mb-3">
+                                        <label class="form-label">Marks</label>
+                                        <input type="number" class="form-control" name="project_marks" id="projectMarks">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 text-center">
+                                        <button type="button" class="btn btn-success" onclick="addProjectEntry()">
+                                            <i class="fas fa-plus me-2"></i>Add Project
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Projects Table -->
+                                <div class="row mt-4" id="projectsSection" style="display: none;">
+                                    <div class="col-md-12">
+                                        <h6 class="bg-light p-2">Added Projects</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm" id="projectsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>H.T.No.</th>
+                                                        <th>Student Name</th>
+                                                        <th>Batch</th>
+                                                        <th>Project Title</th>
+                                                        <th>Approved</th>
+                                                        <th>Marks</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="projectsBody">
+                                                    <!-- Projects will be added here dynamically -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Additional Information -->
                         <div class="card mb-3">
                             <div class="card-header bg-info text-white">
@@ -509,12 +1279,6 @@
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">SCM (Service/Consultancy/MOU) Details</label>
                                         <textarea class="form-control" name="scm" rows="3">{{ faculty.scm|default:'' }}</textarea>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">Research & Publications</label>
-                                        <textarea class="form-control" name="about_yourself" rows="4">{{ faculty.about_yourself|default:'' }}</textarea>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -796,7 +1560,361 @@
         });
     });
 
-    // ==================== HELPERS ====================
+    // ==================== EXPERIENCE CALCULATION ====================
+    function calculateExperience() {
+        var joiningDate = document.getElementById('joiningDate')?.value;
+        if (!joiningDate) return;
+
+        var join = new Date(joiningDate);
+        var today = new Date();
+
+        var years = today.getFullYear() - join.getFullYear();
+        var months = today.getMonth() - join.getMonth();
+        var days = today.getDate() - join.getDate();
+
+        if (days < 0) {
+            months--;
+            var lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+            days += lastMonth.getDate();
+        }
+        if (months < 0) {
+            years--;
+            months += 12;
+        }
+
+        var experience = years + " Years " + months + " Months";
+        document.getElementById('expAnurag').value = experience;
+    }
+
+    // Call on page load if joining date exists
+    window.onload = function() {
+        calculateExperience();
+    };
+
+    // ==================== RESEARCH FIELDS TOGGLE ====================
+    window.showResearchFields = function() {
+        var researchType = document.getElementById('researchType').value;
+
+        // Hide all specific field sets
+        document.getElementById('journalFields').style.display = 'none';
+        document.getElementById('conferenceFields').style.display = 'none';
+        document.getElementById('bookFields').style.display = 'none';
+        document.getElementById('bookChapterFields').style.display = 'none';
+        document.getElementById('patentFields').style.display = 'none';
+        document.getElementById('projectFields').style.display = 'none';
+        document.getElementById('copyrightFields').style.display = 'none';
+        document.getElementById('awardFields').style.display = 'none';
+
+        // Show the selected field set
+        if (researchType === 'journal') {
+            document.getElementById('journalFields').style.display = 'block';
+        } else if (researchType === 'conference') {
+            document.getElementById('conferenceFields').style.display = 'block';
+        } else if (researchType === 'book') {
+            document.getElementById('bookFields').style.display = 'block';
+        } else if (researchType === 'book_chapter') {
+            document.getElementById('bookChapterFields').style.display = 'block';
+        } else if (researchType === 'patent') {
+            document.getElementById('patentFields').style.display = 'block';
+        } else if (researchType === 'project') {
+            document.getElementById('projectFields').style.display = 'block';
+        } else if (researchType === 'copyright') {
+            document.getElementById('copyrightFields').style.display = 'block';
+        } else if (researchType === 'award') {
+            document.getElementById('awardFields').style.display = 'block';
+        }
+    };
+
+    // ==================== RESEARCH ENTRIES ====================
+    var researchEntries = [];
+
+    window.addResearchEntry = function() {
+        var researchType = document.getElementById('researchType').value;
+        if (!researchType) {
+            alert('Please select research type');
+            return;
+        }
+
+        var title = document.getElementById('researchTitle').value;
+        if (!title) {
+            alert('Please enter title');
+            return;
+        }
+
+        var entry = {
+            type: researchType,
+            type_display: document.getElementById('researchType').selectedOptions[0].text,
+            title: title,
+            year: document.getElementById('researchYear').value,
+            status: document.getElementById('researchStatus').selectedOptions[0]?.text || '',
+            authors: document.getElementById('researchAuthors').value,
+            department: document.getElementById('researchDept').value,
+            publisher: document.getElementById('researchPublisher').value,
+            doi: document.getElementById('researchDoi').value,
+            url: document.getElementById('researchUrl').value,
+            abstract: document.getElementById('researchAbstract').value,
+            keywords: document.getElementById('researchKeywords').value
+        };
+
+        // Add type-specific fields
+        if (researchType === 'journal') {
+            entry.journal_name = document.querySelector('[name="journal_name"]').value;
+            entry.issn = document.querySelector('[name="journal_issn"]').value;
+            entry.volume = document.querySelector('[name="journal_volume"]').value;
+            entry.issue = document.querySelector('[name="journal_issue"]').value;
+            entry.pages = document.querySelector('[name="journal_pages"]').value;
+        } else if (researchType === 'conference') {
+            entry.conference_name = document.querySelector('[name="conference_name"]').value;
+            entry.location = document.querySelector('[name="conference_location"]').value;
+            entry.dates = document.querySelector('[name="conference_dates"]').value;
+        } else if (researchType === 'book') {
+            entry.book_title = document.querySelector('[name="book_title"]').value;
+            entry.isbn = document.querySelector('[name="book_isbn"]').value;
+            entry.edition = document.querySelector('[name="book_edition"]').value;
+        }
+
+        researchEntries.push(entry);
+        updateResearchTable();
+        clearResearchForm();
+    };
+
+    function updateResearchTable() {
+        var tbody = document.getElementById('researchEntriesBody');
+        if (!tbody) return;
+
+        if (researchEntries.length > 0) {
+            document.getElementById('researchEntriesSection').style.display = 'block';
+        }
+
+        tbody.innerHTML = '';
+        researchEntries.forEach(function(entry, index) {
+            var row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${entry.type_display}</td>
+                <td>${entry.title}</td>
+                <td>${entry.year || '-'}</td>
+                <td>${entry.status || '-'}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeResearchEntry(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+        });
+    }
+
+    window.removeResearchEntry = function(index) {
+        researchEntries.splice(index, 1);
+        updateResearchTable();
+        if (researchEntries.length === 0) {
+            document.getElementById('researchEntriesSection').style.display = 'none';
+        }
+    };
+
+    function clearResearchForm() {
+        // Clear common fields
+        document.getElementById('researchTitle').value = '';
+        document.getElementById('researchAuthors').value = '';
+        document.getElementById('researchYear').value = '';
+        document.getElementById('researchPublisher').value = '';
+        document.getElementById('researchStatus').value = '';
+        document.getElementById('researchDoi').value = '';
+        document.getElementById('researchUrl').value = '';
+        document.getElementById('researchAbstract').value = '';
+        document.getElementById('researchKeywords').value = '';
+
+        // Clear type-specific fields
+        document.querySelectorAll('[name^="journal_"], [name^="conference_"], [name^="book_"], [name^="chapter_"], [name^="patent_"], [name^="project_"], [name^="copyright_"], [name^="award_"]').forEach(function(input) {
+            if (input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+        });
+    }
+
+    // ==================== FDP DURATION CALCULATION ====================
+    function calculateDuration() {
+        var fromDate = document.getElementById('fdpFromDate')?.value;
+        var toDate = document.getElementById('fdpToDate')?.value;
+
+        if (fromDate && toDate) {
+            var from = new Date(fromDate);
+            var to = new Date(toDate);
+            var diffTime = Math.abs(to - from);
+            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('fdpDuration').value = diffDays;
+        }
+    }
+
+    // ==================== FDP ENTRIES ====================
+    var fdpEntries = [];
+
+    window.addFDPEntry = function() {
+        var fdpType = document.getElementById('fdpType').value;
+        if (!fdpType) {
+            alert('Please select FDP type');
+            return;
+        }
+
+        var title = document.getElementById('fdpTitle').value;
+        if (!title) {
+            alert('Please enter title');
+            return;
+        }
+
+        var fromDate = document.getElementById('fdpFromDate').value;
+        var toDate = document.getElementById('fdpToDate').value;
+        if (!fromDate || !toDate) {
+            alert('Please select from and to dates');
+            return;
+        }
+
+        var entry = {
+            type: fdpType,
+            type_display: document.getElementById('fdpType').selectedOptions[0].text,
+            title: title,
+            from_date: fromDate,
+            to_date: toDate,
+            organized_by: document.getElementById('fdpOrganizedBy').value,
+            place: document.getElementById('fdpPlace').value,
+            duration: document.getElementById('fdpDuration').value,
+            mode: document.querySelector('[name="fdp_mode"]').value,
+            sponsored_by: document.querySelector('[name="fdp_sponsored_by"]').value,
+            level: document.querySelector('[name="fdp_level"]').value,
+            role: document.querySelector('[name="fdp_role"]').value,
+            remarks: document.querySelector('[name="fdp_remarks"]').value
+        };
+
+        fdpEntries.push(entry);
+        updateFDPTable();
+        clearFDPForm();
+    };
+
+    function updateFDPTable() {
+        var tbody = document.getElementById('fdpEntriesBody');
+        if (!tbody) return;
+
+        if (fdpEntries.length > 0) {
+            document.getElementById('fdpEntriesSection').style.display = 'block';
+        }
+
+        tbody.innerHTML = '';
+        fdpEntries.forEach(function(entry, index) {
+            var row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${entry.type_display}</td>
+                <td>${entry.title}</td>
+                <td>${entry.duration} days</td>
+                <td>${entry.organized_by || '-'}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeFDPEntry(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+        });
+    }
+
+    window.removeFDPEntry = function(index) {
+        fdpEntries.splice(index, 1);
+        updateFDPTable();
+        if (fdpEntries.length === 0) {
+            document.getElementById('fdpEntriesSection').style.display = 'none';
+        }
+    };
+
+    function clearFDPForm() {
+        document.getElementById('fdpType').value = '';
+        document.getElementById('fdpTitle').value = '';
+        document.getElementById('fdpFromDate').value = '';
+        document.getElementById('fdpToDate').value = '';
+        document.getElementById('fdpOrganizedBy').value = '';
+        document.getElementById('fdpPlace').value = '';
+        document.getElementById('fdpDuration').value = '';
+        document.querySelector('[name="fdp_mode"]').value = '';
+        document.querySelector('[name="fdp_sponsored_by"]').value = '';
+        document.querySelector('[name="fdp_level"]').value = '';
+        document.querySelector('[name="fdp_role"]').value = '';
+        document.querySelector('[name="fdp_remarks"]').value = '';
+        document.querySelector('[name="fdp_certificate"]').value = '';
+    }
+
+    // ==================== PROJECT ENTRIES ====================
+    var projectEntries = [];
+
+    window.addProjectEntry = function() {
+        var htNo = document.getElementById('projectHtNo').value;
+        var studentName = document.getElementById('projectStudentName').value;
+        var batch = document.getElementById('projectBatch').value;
+        var title = document.getElementById('projectTitle').value;
+        var approved = document.getElementById('projectApproved').value;
+        var marks = document.getElementById('projectMarks').value;
+
+        if (!htNo || !studentName || !title) {
+            alert('Please fill in H.T.No., Student Name, and Project Title');
+            return;
+        }
+
+        var entry = {
+            ht_no: htNo,
+            student_name: studentName,
+            batch: batch,
+            title: title,
+            approved: approved,
+            marks: marks
+        };
+
+        projectEntries.push(entry);
+        updateProjectsTable();
+        clearProjectForm();
+    };
+
+    function updateProjectsTable() {
+        var tbody = document.getElementById('projectsBody');
+        if (!tbody) return;
+
+        if (projectEntries.length > 0) {
+            document.getElementById('projectsSection').style.display = 'block';
+        }
+
+        tbody.innerHTML = '';
+        projectEntries.forEach(function(entry, index) {
+            var row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${entry.ht_no}</td>
+                <td>${entry.student_name}</td>
+                <td>${entry.batch || '-'}</td>
+                <td>${entry.title}</td>
+                <td>${entry.approved || '-'}</td>
+                <td>${entry.marks || '-'}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeProjectEntry(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+        });
+    }
+
+    window.removeProjectEntry = function(index) {
+        projectEntries.splice(index, 1);
+        updateProjectsTable();
+        if (projectEntries.length === 0) {
+            document.getElementById('projectsSection').style.display = 'none';
+        }
+    };
+
+    function clearProjectForm() {
+        document.getElementById('projectHtNo').value = '';
+        document.getElementById('projectStudentName').value = '';
+        document.getElementById('projectBatch').value = '';
+        document.getElementById('projectTitle').value = '';
+        document.getElementById('projectApproved').value = '';
+        document.getElementById('projectMarks').value = '';
+    }
+
+    // ==================== HELPER FUNCTIONS ====================
 
     // Read a cookie value by name (used for CSRF token)
     function getCookie(name) {

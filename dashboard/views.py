@@ -51,11 +51,13 @@ from cloudinary.utils import cloudinary_url
 # Local imports
 from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
-    Subject, FacultyProfile, ResearchProject, Student
+    Subject, FacultyProfile, ResearchProject, Student,
+    ResearchPublication, FDP, BTechProject  # New models
 )
 from .forms import (
     LoginForm, StudentForm, FacultyForm, CertificateForm,
-    BulkUploadForm, FacultyProfileForm, ResearchProjectForm
+    BulkUploadForm, FacultyProfileForm, ResearchProjectForm,
+    ResearchPublicationForm, FDPForm, BTechProjectForm  # New forms
 )
 from .utils import (
     calculate_experience, generate_pdf_from_html, merge_pdfs,
@@ -216,6 +218,12 @@ def debug_faculty_data(request, faculty_id):
         for c in certificates
     ]
     data['subjects'] = [s.name for s in faculty.subjects.all()]
+
+    # Add new related data
+    data['research_publications'] = list(ResearchPublication.objects.filter(faculty=faculty).values())
+    data['fdps'] = list(FDP.objects.filter(faculty=faculty).values())
+    data['btech_projects'] = list(BTechProject.objects.filter(faculty=faculty).values())
+
     return JsonResponse(data, safe=False, json_dumps_params={'indent': 2})
 
 
@@ -261,60 +269,158 @@ def faculty_profile_view(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     profile, _ = FacultyProfile.objects.get_or_create(faculty=faculty)
     research_projects = ResearchProject.objects.filter(faculty=faculty)
+    research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
+    fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
+    btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
 
     if request.method == "POST":
         profile_form = FacultyProfileForm(request.POST, request.FILES, instance=profile)
         if profile_form.is_valid():
             profile = profile_form.save()
-            research_types = request.POST.getlist('research_type[]')
-            titles = request.POST.getlist('title_of_project[]')
-            marks = request.POST.getlist('marks_awarded[]')
-            dois = request.POST.getlist('doi[]')
-            volumes = request.POST.getlist('volume[]')
-            issns = request.POST.getlist('issn_number[]')
-            journals = request.POST.getlist('journal_name[]')
-            publishers = request.POST.getlist('publisher_name[]')
-            project_ids = request.POST.getlist('project_id[]')
 
-            for i in range(len(titles)):
-                if not titles[i]:
-                    continue
-                pid = project_ids[i] if i < len(project_ids) else None
-                if pid and pid.isdigit():
-                    proj = get_object_or_404(ResearchProject, id=int(pid), faculty=faculty)
-                    proj.research_type = research_types[i] if i < len(research_types) else ''
-                    proj.title_of_project = titles[i]
-                    proj.marks_awarded = marks[i] if i < len(marks) and marks[i] else None
-                    proj.doi = dois[i] if i < len(dois) else ''
-                    proj.volume = volumes[i] if i < len(volumes) else ''
-                    proj.issn_number = issns[i] if i < len(issns) else ''
-                    proj.journal_name = journals[i] if i < len(journals) else ''
-                    proj.publisher_name = publishers[i] if i < len(publishers) else ''
-                    if request.FILES.get(f'upload_pdf_{i}'):
-                        proj.upload_pdf = request.FILES[f'upload_pdf_{i}']
-                    proj.save()
-                else:
-                    ResearchProject.objects.create(
-                        faculty=faculty,
-                        faculty_profile=profile,
-                        research_type=research_types[i] if i < len(research_types) else '',
-                        title_of_project=titles[i],
-                        marks_awarded=marks[i] if i < len(marks) and marks[i] else None,
-                        doi=dois[i] if i < len(dois) else '',
-                        volume=volumes[i] if i < len(volumes) else '',
-                        issn_number=issns[i] if i < len(issns) else '',
-                        journal_name=journals[i] if i < len(journals) else '',
-                        publisher_name=publishers[i] if i < len(publishers) else '',
-                        upload_pdf=request.FILES.get(f'upload_pdf_{i}') or None,
-                    )
+            # Handle Research Publications from JSON data
+            research_data = request.POST.get('research_publications')
+            if research_data:
+                try:
+                    research_list = json.loads(research_data)
+                    # Clear existing and save new
+                    ResearchPublication.objects.filter(faculty=faculty).delete()
+                    for item in research_list:
+                        ResearchPublication.objects.create(
+                            faculty=faculty,
+                            research_type=item.get('type'),
+                            title=item.get('title'),
+                            authors=item.get('authors'),
+                            department=item.get('department'),
+                            publication_year=item.get('year'),
+                            publisher_name=item.get('publisher'),
+                            status=item.get('status'),
+                            doi=item.get('doi'),
+                            url=item.get('url'),
+                            abstract=item.get('abstract'),
+                            keywords=item.get('keywords'),
+                            journal_name=item.get('journal_name'),
+                            issn=item.get('issn'),
+                            volume=item.get('volume'),
+                            issue=item.get('issue'),
+                            page_numbers=item.get('pages'),
+                            conference_name=item.get('conference_name'),
+                            conference_location=item.get('location'),
+                            book_title=item.get('book_title'),
+                            isbn=item.get('isbn'),
+                            edition=item.get('edition'),
+                            patent_number=item.get('patent_number'),
+                            filing_date=item.get('filing_date'),
+                            grant_date=item.get('grant_date'),
+                            project_title=item.get('project_title'),
+                            funding_agency=item.get('funding_agency'),
+                            sanction_amount=item.get('sanction_amount'),
+                            award_title=item.get('award_title'),
+                            awarding_body=item.get('award_body'),
+                            award_date=item.get('award_date'),
+                        )
+                except json.JSONDecodeError as e:
+                    logger.error(f"Error parsing research publications JSON: {e}")
+
+            # Handle FDP entries from JSON data
+            fdp_data = request.POST.get('fdp_entries')
+            if fdp_data:
+                try:
+                    fdp_list = json.loads(fdp_data)
+                    FDP.objects.filter(faculty=faculty).delete()
+                    for item in fdp_list:
+                        FDP.objects.create(
+                            faculty=faculty,
+                            fdp_type=item.get('type'),
+                            title=item.get('title'),
+                            from_date=datetime.strptime(item.get('from_date'), '%Y-%m-%d').date(),
+                            to_date=datetime.strptime(item.get('to_date'), '%Y-%m-%d').date(),
+                            organized_by=item.get('organized_by'),
+                            place=item.get('place'),
+                            mode=item.get('mode'),
+                            level=item.get('level'),
+                            role=item.get('role'),
+                            sponsored_by=item.get('sponsored_by'),
+                            remarks=item.get('remarks')
+                        )
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.error(f"Error parsing FDP entries JSON: {e}")
+
+            # Handle B.Tech Projects from JSON data
+            project_data = request.POST.get('btech_projects')
+            if project_data:
+                try:
+                    project_list = json.loads(project_data)
+                    BTechProject.objects.filter(faculty=faculty).delete()
+                    for item in project_list:
+                        BTechProject.objects.create(
+                            faculty=faculty,
+                            ht_no=item.get('ht_no'),
+                            student_name=item.get('student_name'),
+                            batch=item.get('batch'),
+                            project_title=item.get('title'),
+                            approved=item.get('approved') == 'Yes',
+                            marks=item.get('marks')
+                        )
+                except json.JSONDecodeError as e:
+                    logger.error(f"Error parsing B.Tech projects JSON: {e}")
+
             messages.success(request, 'Faculty profile updated successfully!')
             return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
     else:
         profile_form = FacultyProfileForm(instance=profile)
 
+    # Prepare data for template
+    research_publications_json = json.dumps([{
+        'type': r.research_type,
+        'type_display': r.get_research_type_display(),
+        'title': r.title,
+        'authors': r.authors,
+        'year': r.publication_year,
+        'status': r.status,
+        'doi': r.doi,
+        'journal_name': r.journal_name,
+        'conference_name': r.conference_name,
+        'book_title': r.book_title,
+        'patent_number': r.patent_number,
+        'project_title': r.project_title,
+        'award_title': r.award_title,
+    } for r in research_publications])
+
+    fdp_entries_json = json.dumps([{
+        'type': f.fdp_type,
+        'type_display': f.get_fdp_type_display(),
+        'title': f.title,
+        'from_date': f.from_date.strftime('%Y-%m-%d'),
+        'to_date': f.to_date.strftime('%Y-%m-%d'),
+        'organized_by': f.organized_by,
+        'place': f.place,
+        'duration': f.duration_days(),
+        'mode': f.mode,
+        'level': f.level,
+        'role': f.role,
+    } for f in fdps])
+
+    btech_projects_json = json.dumps([{
+        'ht_no': p.ht_no,
+        'student_name': p.student_name,
+        'batch': p.batch,
+        'title': p.project_title,
+        'approved': 'Yes' if p.approved else 'No',
+        'marks': p.marks,
+    } for p in btech_projects])
+
     return render(request, 'dashboard/faculty_profile.html', {
-        'faculty': faculty, 'profile': profile,
-        'profile_form': profile_form, 'research_projects': research_projects,
+        'faculty': faculty,
+        'profile': profile,
+        'profile_form': profile_form,
+        'research_projects': research_projects,
+        'research_publications': research_publications,
+        'research_publications_json': research_publications_json,
+        'fdps': fdps,
+        'fdp_entries_json': fdp_entries_json,
+        'btech_projects': btech_projects,
+        'btech_projects_json': btech_projects_json,
         'title': f'Profile - {faculty.staff_name}',
     })
 
@@ -326,6 +432,42 @@ def delete_research_project(request, project_id):
     project.delete()
     messages.success(request, 'Research project deleted successfully.')
     return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
+def delete_research_publication(request, publication_id):
+    publication = get_object_or_404(ResearchPublication, id=publication_id)
+    faculty_id = publication.faculty.id
+    publication.delete()
+    messages.success(request, 'Research publication deleted successfully.')
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    return redirect('dashboard:faculty_profile_view', faculty_id=faculty_id)
+
+
+@login_required
+@require_POST
+def delete_fdp(request, fdp_id):
+    fdp = get_object_or_404(FDP, id=fdp_id)
+    faculty_id = fdp.faculty.id
+    fdp.delete()
+    messages.success(request, 'FDP entry deleted successfully.')
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    return redirect('dashboard:faculty_profile_view', faculty_id=faculty_id)
+
+
+@login_required
+@require_POST
+def delete_btech_project(request, project_id):
+    project = get_object_or_404(BTechProject, id=project_id)
+    faculty_id = project.faculty.id
+    project.delete()
+    messages.success(request, 'B.Tech project deleted successfully.')
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    return redirect('dashboard:faculty_profile_view', faculty_id=faculty_id)
 
 
 def laboratory(request):
@@ -690,6 +832,22 @@ def faculty_analytics(request):
                 exp_stats['5_10'] += 1
             else:
                 exp_stats['10_plus'] += 1
+
+    # Research publication stats
+    research_stats = {
+        'total': ResearchPublication.objects.count(),
+        'journal': ResearchPublication.objects.filter(research_type='journal').count(),
+        'conference': ResearchPublication.objects.filter(research_type='conference').count(),
+        'patent': ResearchPublication.objects.filter(research_type='patent').count(),
+    }
+
+    # FDP stats
+    fdp_stats = {
+        'total': FDP.objects.count(),
+        'fdp': FDP.objects.filter(fdp_type='fdp').count(),
+        'workshop': FDP.objects.filter(fdp_type='workshop').count(),
+    }
+
     return render(request, 'dashboard/faculty.html', {
         'is_analytics': True, 'total_faculty': total,
         'qualification_stats': {
@@ -700,8 +858,12 @@ def faculty_analytics(request):
             'ug_only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True,
                                               phd_degree__in=['', 'Not Started', 'None']).count(),
         },
-        'departments': departments, 'experience_stats': exp_stats,
-        'faculties': Faculty.objects.all()[:10], 'title': 'Faculty Analytics',
+        'departments': departments,
+        'experience_stats': exp_stats,
+        'research_stats': research_stats,
+        'fdp_stats': fdp_stats,
+        'faculties': Faculty.objects.all()[:10],
+        'title': 'Faculty Analytics',
     })
 
 
@@ -825,12 +987,12 @@ def add_faculty(request):
                     messages.warning(request, "Faculty added but Cloudinary photo upload failed.")
 
             # Save ALL document & certificate fields uploaded via the form
-            # With proper Cloudinary handling for PDFs
             doc_fields = [
                 ('aadhar_file', 'aadhar'),
                 ('pan_file', 'pan'),
                 ('apaar_file', 'apaar'),
                 ('scm_file', 'scm'),
+                ('jntuh_biodata', 'jntuh_biodata'),
                 ('ssc_certificate', 'ssc'),
                 ('inter_certificate', 'inter'),
                 ('ug_certificate', 'ug'),
@@ -922,12 +1084,6 @@ def edit_faculty(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     if request.method == "POST":
         # ── SIMPLE & ROBUST: setattr all form fields, then call save()
-        # Django's save() internally uses _meta.concrete_fields to build
-        # the SQL UPDATE, so any extra Python attributes that don't map
-        # to DB columns are simply ignored — no errors, no data loss.
-        # This is SAFER than filtering with _meta.get_fields() which can
-        # miss fields or produce false negatives.
-
         # All text/char/number fields the edit form submits
         text_fields = [
             # Personal
@@ -949,6 +1105,8 @@ def edit_faculty(request, faculty_id):
             'phd_degree', 'phd_year', 'phd_university', 'phd_spec',
             # Additional info
             'subjects_dealt', 'scm', 'about_yourself', 'results',
+            # Experience fields
+            'exp_anurag', 'exp_other',
         ]
 
         for attr in text_fields:
@@ -998,7 +1156,7 @@ def edit_faculty(request, faculty_id):
 
         # Save ALL document fields — identity docs + education certificates
         all_doc_fields = [
-            'aadhar_file', 'pan_file', 'apaar_file', 'scm_file',
+            'aadhar_file', 'pan_file', 'apaar_file', 'scm_file', 'jntuh_biodata',
             'ssc_certificate', 'inter_certificate',
             'ug_certificate', 'pg_certificate', 'phd_certificate',
         ]
@@ -1665,6 +1823,7 @@ def generate_faculty_pdf(request, faculty_id):
         print(f"Has PAN File: {bool(faculty.pan_file)}")
         print(f"Has APAAR File: {bool(faculty.apaar_file)}")
         print(f"Has SCM File: {bool(faculty.scm_file)}")
+        print(f"Has JNTUH Bio-Data: {bool(faculty.jntuh_biodata)}")
         print(f"Has SSC Certificate: {bool(faculty.ssc_certificate)}")
         print(f"Has Inter Certificate: {bool(faculty.inter_certificate)}")
         print(f"Has UG Certificate: {bool(faculty.ug_certificate)}")
@@ -1724,6 +1883,10 @@ def generate_faculty_pdf(request, faculty_id):
         # ---- 3. GET RELATED DATA ----
         certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
+        research_publications = ResearchPublication.objects.filter(faculty=faculty)
+        fdps = FDP.objects.filter(faculty=faculty)
+        btech_projects = BTechProject.objects.filter(faculty=faculty)
+
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
         except FacultyProfile.DoesNotExist:
@@ -1739,6 +1902,9 @@ def generate_faculty_pdf(request, faculty_id):
             'faculty': faculty,
             'profile': profile,
             'research_projects': research_projects,
+            'research_publications': research_publications,
+            'fdps': fdps,
+            'btech_projects': btech_projects,
             'certificates': certificates,
             'subjects_list': subjects_list,
             'experience': experience,
@@ -1760,6 +1926,8 @@ def generate_faculty_pdf(request, faculty_id):
             'department': faculty.department,
             'designation': faculty.designation,
             'joining_date': faculty.joining_date,
+            'exp_anurag': faculty.exp_anurag,
+            'exp_other': faculty.exp_other,
             'email': faculty.email,
             'mobile': faculty.mobile,
             'phone': faculty.phone,
@@ -1801,6 +1969,7 @@ def generate_faculty_pdf(request, faculty_id):
             'has_pan': bool(faculty.pan_file),
             'has_apaar': bool(faculty.apaar_file),
             'has_scm': bool(faculty.scm_file),
+            'has_jntuh_biodata': bool(faculty.jntuh_biodata),
             'has_ssc_cert': bool(faculty.ssc_certificate),
             'has_inter_cert': bool(faculty.inter_certificate),
             'has_ug_cert': bool(faculty.ug_certificate),
@@ -1896,6 +2065,8 @@ def generate_faculty_pdf(request, faculty_id):
                 ("Nationality", faculty.nationality or "N/A"),
                 ("Address", faculty.address or "N/A"),
                 ("Joining Date", faculty.joining_date.strftime('%d-%m-%Y') if faculty.joining_date else "N/A"),
+                ("Experience at Anurag", faculty.exp_anurag or "N/A"),
+                ("Experience (Other)", faculty.exp_other or "N/A"),
                 ("Total Experience", experience),
                 ("Status", "Active" if faculty.is_active else "Inactive"),
                 ("JNTUH ID", faculty.jntuh_id or "N/A"),
@@ -1932,6 +2103,7 @@ def generate_faculty_pdf(request, faculty_id):
                 ("PAN Document", "Uploaded" if bool(faculty.pan_file) else "Not Uploaded"),
                 ("APAAR Document", "Uploaded" if bool(faculty.apaar_file) else "Not Uploaded"),
                 ("SCM Document", "Uploaded" if bool(faculty.scm_file) else "Not Uploaded"),
+                ("JNTUH Bio-Data", "Uploaded" if bool(faculty.jntuh_biodata) else "Not Uploaded"),
             ]
 
             td = [
@@ -1988,14 +2160,13 @@ def generate_faculty_pdf(request, faculty_id):
         print("Added main PDF to merger.")
 
         # ---- 6. MERGE ALL FACULTY DOCUMENTS ----
-        # KEY FIX: Now includes aadhar_file, pan_file, apaar_file, scm_file
-        # in addition to education certificates - same image/PDF handling as student PDF
         all_doc_fields = [
             # Identity / KYC Documents
             ('aadhar_file', 'Aadhar Card'),
             ('pan_file', 'PAN Card'),
             ('apaar_file', 'APAAR Document'),
             ('scm_file', 'SCM Document'),
+            ('jntuh_biodata', 'JNTUH Bio-Data'),
             # Education Certificates
             ('ssc_certificate', 'SSC Certificate'),
             ('inter_certificate', 'Intermediate Certificate'),
@@ -2826,6 +2997,10 @@ def preview_merged_pdf(request, faculty_id):
 def faculty_statistics_api(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     rc = ResearchProject.objects.filter(faculty=faculty).count()
+    rp = ResearchPublication.objects.filter(faculty=faculty).count()
+    fdp_count = FDP.objects.filter(faculty=faculty).count()
+    project_count = BTechProject.objects.filter(faculty=faculty).count()
+
     return JsonResponse({
         'total_subjects': faculty.subjects.count(),
         'total_students': 0,
@@ -2834,8 +3009,10 @@ def faculty_statistics_api(request, faculty_id):
         'research_output': 60,
         'attendance_rate': 95,
         'publications': rc,
+        'research_publications': rp,
+        'fdps': fdp_count,
+        'projects': project_count,
         'conferences': rc,
-        'projects': 3,
         'awards': 2,
     })
 
@@ -2886,8 +3063,13 @@ def export_faculty_csv(request, faculty_ids=None):
     w = csv.writer(response)
     w.writerow(['Employee Code', 'Staff Name', 'Department', 'Designation', 'Email', 'Phone',
                 'Date of Birth', 'Joining Date', 'UG Degree', 'UG Year', 'PG Degree', 'PG Year',
-                'PhD Status', 'Total Experience', 'Current Status', 'Cloudinary PDF URL', 'Cloudinary Photo URL'])
+                'PhD Status', 'Total Experience', 'Current Status', 'Cloudinary PDF URL', 'Cloudinary Photo URL',
+                'JNTUH Bio-Data', 'Research Publications', 'FDPs', 'B.Tech Projects'])
     for f in qs:
+        rp_count = ResearchPublication.objects.filter(faculty=f).count()
+        fdp_count = FDP.objects.filter(faculty=f).count()
+        project_count = BTechProject.objects.filter(faculty=f).count()
+
         w.writerow([
             f.employee_code, f.staff_name, f.department, f.designation,
             f.email, f.mobile,
@@ -2899,6 +3081,8 @@ def export_faculty_csv(request, faculty_ids=None):
             calculate_experience(f.joining_date) if f.joining_date else 'N/A',
             'Active' if f.is_active else 'Inactive',
             f.cloudinary_pdf_url or '', f.cloudinary_photo_url or '',
+            'Yes' if f.jntuh_biodata else 'No',
+            rp_count, fdp_count, project_count,
         ])
     FacultyLog.objects.create(faculty=None, action='Faculty CSV Export',
                               details=f'Exported {qs.count()} faculty to CSV',
@@ -3024,6 +3208,9 @@ def system_status(request):
             'active_faculty': Faculty.objects.filter(is_active=True).count(),
             'total_students': Student.objects.count(),
             'total_certificates': Certificate.objects.count(),
+            'research_publications': ResearchPublication.objects.count(),
+            'fdps': FDP.objects.count(),
+            'btech_projects': BTechProject.objects.count(),
             'cloudinary_uploads': CloudinaryUpload.objects.count(),
             'total_logs': FacultyLog.objects.count(),
             'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
@@ -3033,6 +3220,9 @@ def system_status(request):
             'faculty_table': Faculty.objects.count(),
             'student_table': Student.objects.count(),
             'certificate_table': Certificate.objects.count(),
+            'research_publication_table': ResearchPublication.objects.count(),
+            'fdp_table': FDP.objects.count(),
+            'btech_project_table': BTechProject.objects.count(),
             'log_table': FacultyLog.objects.count(),
             'cloudinary_table': CloudinaryUpload.objects.count(),
         },
@@ -3110,6 +3300,10 @@ def api_faculty_detail(request, faculty_id):
         'experience': calculate_experience(f.joining_date) if f.joining_date else "N/A",
         'cloudinary_pdf_url': f.cloudinary_pdf_url,
         'cloudinary_photo_url': f.cloudinary_photo_url,
+        'has_jntuh_biodata': bool(f.jntuh_biodata),
+        'research_publications_count': ResearchPublication.objects.filter(faculty=f).count(),
+        'fdps_count': FDP.objects.filter(faculty=f).count(),
+        'btech_projects_count': BTechProject.objects.filter(faculty=f).count(),
         'created_at': f.created_at.strftime('%Y-%m-%d %H:%M:%S') if f.created_at else None,
         'updated_at': f.updated_at.strftime('%Y-%m-%d %H:%M:%S') if f.updated_at else None,
     })
@@ -3241,16 +3435,33 @@ def faculty_charts(request):
         plt.savefig(os.path.join(charts_dir, 'experience_distribution.png'), dpi=100);
         plt.close()
 
+        # Research publications chart
+        research_data = {
+            'Journal Articles': ResearchPublication.objects.filter(research_type='journal').count(),
+            'Conference Papers': ResearchPublication.objects.filter(research_type='conference').count(),
+            'Books': ResearchPublication.objects.filter(research_type='book').count(),
+            'Patents': ResearchPublication.objects.filter(research_type='patent').count(),
+        }
+        plt.figure(figsize=(8, 8))
+        plt.pie(list(research_data.values()), labels=list(research_data.keys()),
+                colors=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'], autopct='%1.1f%%', startangle=90)
+        plt.axis('equal');
+        plt.title('Research Publications Distribution')
+        plt.savefig(os.path.join(charts_dir, 'research_distribution.png'), dpi=100);
+        plt.close()
+
         return render(request, 'dashboard/charts.html', {
             'title': 'Faculty Analytics Charts',
             'chart_urls': {
                 'dept_chart': os.path.join(settings.MEDIA_URL, 'charts', 'dept_distribution.png'),
                 'qual_chart': os.path.join(settings.MEDIA_URL, 'charts', 'qualification_distribution.png'),
                 'exp_chart': os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
+                'research_chart': os.path.join(settings.MEDIA_URL, 'charts', 'research_distribution.png'),
             },
             'dept_data': list(zip(depts, cnts)),
             'qual_data': qual_data,
             'exp_data': list(zip(exp_ranges, exp_counts)),
+            'research_data': research_data,
         })
     except Exception as e:
         logger.error(f"Chart error: {e}")
@@ -3352,6 +3563,10 @@ def search_faculty(request):
         results.append({
             'id': f.id, 'name': f.staff_name, 'employee_code': f.employee_code,
             'department': f.department, 'designation': f.designation, 'photo_url': pu,
+            'has_jntuh_biodata': bool(f.jntuh_biodata),
+            'research_count': ResearchPublication.objects.filter(faculty=f).count(),
+            'fdp_count': FDP.objects.filter(faculty=f).count(),
+            'project_count': BTechProject.objects.filter(faculty=f).count(),
             'detail_url': reverse('dashboard:faculty_dashboard') + f'?id={f.id}',
         })
     return JsonResponse({'results': results, 'count': len(results)})
@@ -3385,6 +3600,9 @@ def quick_stats(request):
         'active_faculty': Faculty.objects.filter(is_active=True).count(),
         'total_students': Student.objects.count(),
         'total_certificates': Certificate.objects.count(),
+        'total_research_publications': ResearchPublication.objects.count(),
+        'total_fdps': FDP.objects.count(),
+        'total_btech_projects': BTechProject.objects.count(),
         'recent_uploads': Faculty.objects.order_by('-created_at').count(),
         'cloudinary_uploads': CloudinaryUpload.objects.count(),
     })
@@ -3466,6 +3684,9 @@ def about_system(request):
             'Student Registration and Management',
             'Cloudinary Integration for file storage',
             'Certificate Management',
+            'Research Publications Management',
+            'FDP / Workshops Tracking',
+            'B.Tech Projects Management',
             'Analytics and Reporting',
             'Bulk Operations',
             'System Monitoring',
@@ -3482,6 +3703,11 @@ def help_documentation(request):
              'content': 'Add, edit, delete faculty. Generate PDF profiles and upload to Cloudinary.'},
             {'title': 'Student Management', 'content': 'Register students, manage data, generate student PDFs.'},
             {'title': 'Certificate Management', 'content': 'Upload, view, and manage certificates for faculty.'},
+            {'title': 'Research Publications',
+             'content': 'Manage journal articles, conference papers, books, patents.'},
+            {'title': 'FDP / Workshops',
+             'content': 'Track faculty development programs, workshops, seminars attended.'},
+            {'title': 'B.Tech Projects', 'content': 'Manage student projects guided by faculty.'},
             {'title': 'Cloudinary Integration', 'content': 'Sync faculty PDFs and photos to Cloudinary.'},
             {'title': 'Analytics', 'content': 'View charts and statistics about faculty and students.'},
             {'title': 'System Tools', 'content': 'Backup database, clear logs, check system status.'},

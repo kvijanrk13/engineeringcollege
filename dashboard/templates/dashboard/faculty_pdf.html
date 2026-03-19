@@ -17,8 +17,8 @@
         .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
         .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; }
-        .data-table td { padding: 6px; border: 1px solid #ddd; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
         .certificate-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
         .signature-section { margin-top: 30px; border-top: 2px solid #2c3e50; padding-top: 20px; }
         .signature-box { width: 250px; text-align: center; }
@@ -39,6 +39,31 @@
             border-radius: 5px;
             border: 1px solid #dee2e6;
             white-space: pre-line;
+        }
+        .research-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        .journal-badge {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .conference-badge {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        .patent-badge {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .project-badge {
+            background-color: #e1f5fe;
+            color: #01579b;
         }
     </style>
 </head>
@@ -89,6 +114,8 @@
         <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Joining Date</td><td>{% if faculty.joining_date %}{{ faculty.joining_date|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Experience at Anurag</td><td>{{ faculty.exp_anurag|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Experience (Other)</td><td>{{ faculty.exp_other|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Total Experience</td><td>{{ experience }}</td></tr>
         <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Mobile</td><td>{{ faculty.mobile|default:"Not Specified" }}</td></tr>
@@ -178,29 +205,88 @@
         {% endif %}
     </div>
 
-    <!-- 11. RESEARCH & PUBLICATIONS -->
+    <!-- 11. RESEARCH & PUBLICATIONS (STRUCTURED) -->
     <div class="section-title">11. RESEARCH & PUBLICATIONS</div>
-    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
-        {% if faculty.about_yourself %}
-            <div style="white-space: pre-line;">{{ faculty.about_yourself }}</div>
-        {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">Research and publication data not available</p>
-        {% endif %}
-    </div>
+    {% if research_publications %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pub in research_publications %}
+                <tr>
+                    <td>
+                        <span class="research-type-badge
+                            {% if pub.research_type == 'journal' %}journal-badge{% endif %}
+                            {% if pub.research_type == 'conference' %}conference-badge{% endif %}
+                            {% if pub.research_type == 'patent' %}patent-badge{% endif %}
+                            {% if pub.research_type == 'project' %}project-badge{% endif %}">
+                            {{ pub.get_research_type_display }}
+                        </span>
+                    </td>
+                    <td>{{ pub.title|default:"—" }}</td>
+                    <td>{{ pub.publication_year|default:"—" }}</td>
+                    <td>{{ pub.status|default:"—" }}</td>
+                    <td>
+                        {% if pub.authors %}
+                            <strong>Authors:</strong> {{ pub.authors }}<br>
+                        {% endif %}
+                        {% if pub.journal_name %}
+                            <strong>Journal:</strong> {{ pub.journal_name }}<br>
+                            {% if pub.issn %}<strong>ISSN:</strong> {{ pub.issn }}<br>{% endif %}
+                            {% if pub.volume %}<strong>Vol:</strong> {{ pub.volume }}{% endif %}
+                            {% if pub.issue %}({{ pub.issue }}){% endif %}
+                            {% if pub.page_numbers %}, <strong>pp:</strong> {{ pub.page_numbers }}{% endif %}
+                        {% endif %}
+                        {% if pub.conference_name %}
+                            <strong>Conference:</strong> {{ pub.conference_name }}<br>
+                            {% if pub.conference_location %}<strong>Location:</strong> {{ pub.conference_location }}<br>{% endif %}
+                            {% if pub.conference_dates %}<strong>Dates:</strong> {{ pub.conference_dates }}{% endif %}
+                        {% endif %}
+                        {% if pub.book_title %}
+                            <strong>Book:</strong> {{ pub.book_title }}<br>
+                            {% if pub.isbn %}<strong>ISBN:</strong> {{ pub.isbn }}<br>{% endif %}
+                            {% if pub.edition %}<strong>Edition:</strong> {{ pub.edition }}{% endif %}
+                        {% endif %}
+                        {% if pub.patent_number %}
+                            <strong>Patent No:</strong> {{ pub.patent_number }}<br>
+                            {% if pub.filing_date %}<strong>Filed:</strong> {{ pub.filing_date|date:"d M Y" }}{% endif %}
+                        {% endif %}
+                        {% if pub.project_title %}
+                            <strong>Project:</strong> {{ pub.project_title }}<br>
+                            {% if pub.funding_agency %}<strong>Funding:</strong> {{ pub.funding_agency }}<br>{% endif %}
+                            {% if pub.sanction_amount %}<strong>Amount:</strong> ₹{{ pub.sanction_amount }}{% endif %}
+                        {% endif %}
+                        {% if pub.award_title %}
+                            <strong>Award:</strong> {{ pub.award_title }}<br>
+                            {% if pub.awarding_body %}<strong>By:</strong> {{ pub.awarding_body }}{% endif %}
+                        {% endif %}
+                        {% if pub.doi %}
+                            <strong>DOI:</strong> {{ pub.doi }}<br>
+                        {% endif %}
+                        {% if pub.publisher_name %}
+                            <strong>Publisher:</strong> {{ pub.publisher_name }}<br>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No research publications data available</p>
+        </div>
+    {% endif %}
 
-    <!-- 12. RESULTS / ACADEMIC PERFORMANCE -->
-    <div class="section-title">12. RESULTS / ACADEMIC PERFORMANCE</div>
-    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
-        {% if faculty.results %}
-            <div style="white-space: pre-line;">{{ faculty.results }}</div>
-        {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">No results data specified</p>
-        {% endif %}
-    </div>
-
-    <!-- 13. RESEARCH PROJECTS -->
+    <!-- 12. RESEARCH PROJECTS (FROM EXISTING MODEL) -->
     {% if research_projects %}
-    <div class="section-title">13. RESEARCH PROJECTS</div>
+    <div class="section-title">12. RESEARCH PROJECTS</div>
     <table class="data-table">
         <thead>
             <tr>
@@ -242,8 +328,96 @@
     </table>
     {% endif %}
 
-    <!-- 14. UPLOADED DOCUMENTS -->
-    <div class="section-title">14. UPLOADED DOCUMENTS</div>
+    <!-- 13. FDP / WORKSHOPS ATTENDED -->
+    <div class="section-title">13. FDP / WORKSHOPS ATTENDED</div>
+    {% if fdps %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Duration</th>
+                <th>Organized By</th>
+                <th>Place</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fdp in fdps %}
+            <tr>
+                <td>{{ fdp.get_fdp_type_display }}</td>
+                <td>{{ fdp.title }}</td>
+                <td>{{ fdp.from_date|date:"d M Y" }} to {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
+                <td>{{ fdp.organized_by|default:"—" }}</td>
+                <td>{{ fdp.place|default:"—" }}</td>
+                <td>{{ fdp.get_role_display|default:"—" }}</td>
+            </tr>
+            <tr>
+                <td colspan="6" style="background-color: #f9f9f9; padding: 4px 10px;">
+                    <small>
+                        {% if fdp.mode %}<strong>Mode:</strong> {{ fdp.get_mode_display }} | {% endif %}
+                        {% if fdp.level %}<strong>Level:</strong> {{ fdp.get_level_display }} | {% endif %}
+                        {% if fdp.sponsored_by %}<strong>Sponsored by:</strong> {{ fdp.sponsored_by }} | {% endif %}
+                        {% if fdp.remarks %}<strong>Remarks:</strong> {{ fdp.remarks }}{% endif %}
+                    </small>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No FDP/Workshop data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 14. B.TECH PROJECTS HANDLED -->
+    <div class="section-title">14. B.TECH PROJECTS HANDLED</div>
+    {% if btech_projects %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>H.T.No.</th>
+                <th>Student Name</th>
+                <th>Batch</th>
+                <th>Project Title</th>
+                <th>Approved</th>
+                <th>Marks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in btech_projects %}
+            <tr>
+                <td>{{ project.ht_no }}</td>
+                <td>{{ project.student_name }}</td>
+                <td>{{ project.batch|default:"—" }}</td>
+                <td>{{ project.project_title }}</td>
+                <td style="color: {% if project.approved %}green{% else %}red{% endif %};">
+                    {% if project.approved %}Yes{% else %}No{% endif %}
+                </td>
+                <td>{{ project.marks|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No project data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 15. RESULTS / ACADEMIC PERFORMANCE -->
+    <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if faculty.results %}
+            <div style="white-space: pre-line;">{{ faculty.results }}</div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No results data specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 16. UPLOADED DOCUMENTS -->
+    <div class="section-title">16. UPLOADED DOCUMENTS</div>
     <div style="padding: 10px;">
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             <div class="document-box">
@@ -278,11 +452,19 @@
                     <span style="color: #999;">✗ Not Uploaded</span>
                 {% endif %}
             </div>
+            <div class="document-box">
+                <strong>JNTUH Bio-Data:</strong>
+                {% if has_jntuh_biodata or faculty.jntuh_biodata %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <!-- 15. CERTIFICATES -->
-    <div class="section-title">15. CERTIFICATES</div>
+    <!-- 17. CERTIFICATES -->
+    <div class="section-title">17. CERTIFICATES</div>
     <div style="padding: 10px; margin-bottom: 15px;">
         {% if certificates %}
             <table class="data-table">
@@ -313,8 +495,8 @@
         {% endif %}
     </div>
 
-    <!-- 16. VERIFICATION & AUTHORIZATION -->
-    <div class="section-title">16. VERIFICATION & AUTHORIZATION</div>
+    <!-- 18. VERIFICATION & AUTHORIZATION -->
+    <div class="section-title">18. VERIFICATION & AUTHORIZATION</div>
     <div style="margin: 20px 0; text-align: center; font-size: 10px;">
         This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
     </div>
