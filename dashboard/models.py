@@ -581,8 +581,8 @@ class Student(models.Model):
 
     ht_no = models.CharField(max_length=20, unique=True)
     student_name = models.CharField(max_length=200)
-    father_name = models.CharField(max_length=200)
-    mother_name = models.CharField(max_length=200)
+    father_name = models.CharField(max_length=200, default='')
+    mother_name = models.CharField(max_length=200, default='')
 
     gender = models.CharField(
         max_length=20,
