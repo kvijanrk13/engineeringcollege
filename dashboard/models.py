@@ -166,10 +166,10 @@ class CloudinaryUpload(models.Model):
         null=True, blank=True,
         related_name='cloudinary_uploads'
     )
-    upload_type = models.CharField(max_length=50)  # 'photo', 'pdf', 'certificate', etc.
+    upload_type = models.CharField(max_length=50)
     cloudinary_url = models.URLField(max_length=500)
     public_id = models.CharField(max_length=200)
-    resource_type = models.CharField(max_length=50)  # 'image', 'raw', etc.
+    resource_type = models.CharField(max_length=50)
     uploaded_by = models.CharField(max_length=150, default='System')
     upload_date = models.DateTimeField(auto_now_add=True)
 
@@ -590,7 +590,7 @@ class Student(models.Model):
         default='Male'
     )
 
-    dob = models.CharField(max_length=20)
+    dob = models.CharField(max_length=20, default='')
     age = models.IntegerField(default=18)
 
     nationality = models.CharField(
