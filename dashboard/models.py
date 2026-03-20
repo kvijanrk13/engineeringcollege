@@ -42,9 +42,9 @@ class Faculty(models.Model):
     father_name = models.CharField(max_length=200, blank=True, null=True)
     mother_name = models.CharField(max_length=200, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
-    caste = models.CharField(max_length=100, blank=True, null=True)       # ← ADDED
-    sub_caste = models.CharField(max_length=100, blank=True, null=True)   # ← ADDED
-    nationality = models.CharField(max_length=100, blank=True, null=True, default='Indian')  # ← ADDED
+    caste = models.CharField(max_length=100, blank=True, null=True)
+    sub_caste = models.CharField(max_length=100, blank=True, null=True)
+    nationality = models.CharField(max_length=100, blank=True, null=True, default='Indian')
 
     # Identity Numbers
     aadhar = models.CharField(max_length=20, blank=True, null=True)
@@ -107,7 +107,7 @@ class Faculty(models.Model):
     pan_file = CloudinaryField("raw", blank=True, null=True)
     apaar_file = CloudinaryField("raw", blank=True, null=True)
     scm_file = CloudinaryField("raw", blank=True, null=True)
-    jntuh_biodata = CloudinaryField("raw", blank=True, null=True)  # ← ADDED (already in DB)
+    jntuh_biodata = CloudinaryField("raw", blank=True, null=True)
 
     # Education Certificates (Images)
     ssc_certificate = CloudinaryField("image", blank=True, null=True)
@@ -129,7 +129,7 @@ class Faculty(models.Model):
 
 
 # =====================================================
-# CLOUDINARY UPLOAD MODEL
+# CLOUDINARY UPLOAD MODEL (FIXED - WITH DEFAULTS)
 # =====================================================
 
 class CloudinaryUpload(models.Model):
@@ -166,11 +166,11 @@ class CloudinaryUpload(models.Model):
         null=True, blank=True,
         related_name='cloudinary_uploads'
     )
-    upload_type = models.CharField(max_length=50)       # 'photo', 'pdf', 'certificate', etc.
+    upload_type = models.CharField(max_length=50)  # 'photo', 'pdf', 'certificate', etc.
     cloudinary_url = models.URLField(max_length=500)
     public_id = models.CharField(max_length=200)
-    resource_type = models.CharField(max_length=50)     # 'image', 'raw', etc.
-    uploaded_by = models.CharField(max_length=150)
+    resource_type = models.CharField(max_length=50)  # 'image', 'raw', etc.
+    uploaded_by = models.CharField(max_length=150, default='System')  # ← FIXED: Added default
     upload_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -555,7 +555,7 @@ class BTechProject(models.Model):
 
 
 # =====================================================
-# STUDENT MODEL
+# STUDENT MODEL (UPDATED - SAFE FOR MIGRATIONS)
 # =====================================================
 
 class Student(models.Model):
@@ -577,38 +577,68 @@ class Student(models.Model):
         ('Other', 'Other'),
     ]
 
-    # Basic Info
+    # ================= BASIC INFO =================
+
     ht_no = models.CharField(max_length=20, unique=True)
     student_name = models.CharField(max_length=200)
     father_name = models.CharField(max_length=200)
     mother_name = models.CharField(max_length=200)
-    gender = models.CharField(max_length=20)
-    dob = models.CharField(max_length=20)
-    age = models.IntegerField()
 
-    nationality = models.CharField(max_length=100, blank=True, null=True, default="Indian")
+    gender = models.CharField(
+        max_length=20,
+        choices=GENDER_CHOICES,
+        default='Male'
+    )
+
+    dob = models.CharField(max_length=20)
+    age = models.IntegerField(default=18)
+
+    nationality = models.CharField(
+        max_length=100,
+        default="Indian"
+    )
+
     category = models.CharField(max_length=50, blank=True, null=True)
     religion = models.CharField(max_length=100, blank=True, null=True)
     blood_group = models.CharField(max_length=10, blank=True, null=True)
+
     aadhar = models.CharField(max_length=20)
     apaar_id = models.CharField(max_length=50, blank=True, null=True)
 
     address = models.TextField()
-    parent_phone = models.CharField(max_length=15)
-    student_phone = models.CharField(max_length=15)
-    email = models.EmailField()
 
-    # Academic / Registration Info
+    # FIXED FIELDS (WITH DEFAULTS)
+
+    parent_phone = models.CharField(
+        max_length=15,
+        default="0000000000"
+    )
+
+    student_phone = models.CharField(
+        max_length=15,
+        default="0000000000"
+    )
+
+    email = models.EmailField(
+        default="noemail@example.com"
+    )
+
+    # ================= ACADEMIC INFO =================
+
     task_registered = models.CharField(max_length=10, blank=True, null=True)
     task_username = models.CharField(max_length=100, blank=True, null=True)
+
     csi_registered = models.CharField(max_length=10, blank=True, null=True)
     csi_membership_id = models.CharField(max_length=100, blank=True, null=True)
+
     admission_type = models.CharField(max_length=50, blank=True, null=True)
     other_admission_details = models.TextField(blank=True, null=True)
+
     eamcet_rank = models.IntegerField(blank=True, null=True)
 
-    year = models.IntegerField(blank=True, null=True)
-    sem = models.IntegerField(blank=True, null=True)
+    year = models.IntegerField(choices=YEAR_CHOICES, blank=True, null=True)
+    sem = models.IntegerField(choices=SEM_CHOICES, blank=True, null=True)
+
     branch = models.CharField(max_length=100, blank=True, null=True)
     roll_number = models.CharField(max_length=50, blank=True, null=True)
 
@@ -616,13 +646,16 @@ class Student(models.Model):
     inter_marks = models.CharField(max_length=50, blank=True, null=True)
     cgpa = models.FloatField(blank=True, null=True)
 
-    # Project Info
+    # ================= PROJECT INFO =================
+
     rtrp_project_title = models.CharField(max_length=500, blank=True, null=True)
     intern_title = models.CharField(max_length=500, blank=True, null=True)
     final_project_title = models.CharField(max_length=500, blank=True, null=True)
+
     other_training = models.TextField(blank=True, null=True)
 
-    # Photo
+    # ================= FILES =================
+
     photo = CloudinaryField("image", blank=True, null=True)
     photo_url = models.URLField(blank=True, null=True)
 
@@ -635,11 +668,15 @@ class Student(models.Model):
     cert_placement = CloudinaryField("image", blank=True, null=True)
     cert_national = CloudinaryField("image", blank=True, null=True)
 
-    # Generated PDF
+    # ================= PDF =================
+
     pdf_file = models.URLField(blank=True, null=True)
     pdf_url = models.URLField(blank=True, null=True)
+
     pdf_generated = models.BooleanField(default=False)
     pdf_generation_time = models.DateTimeField(blank=True, null=True)
+
+    # ================= META =================
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -648,7 +685,7 @@ class Student(models.Model):
 
 
 # =====================================================
-# CERTIFICATE MODEL (FACULTY)
+# CERTIFICATE MODEL (FACULTY) - FIXED WITH DEFAULTS
 # =====================================================
 
 class Certificate(models.Model):
@@ -664,9 +701,9 @@ class Certificate(models.Model):
     certificate_file = CloudinaryField("raw", blank=True, null=True)
     cloudinary_url = models.URLField(max_length=500, blank=True, null=True)
 
-    issued_by = models.CharField(max_length=200, blank=True)
+    issued_by = models.CharField(max_length=200, blank=True, default='')  # ← FIXED: Added default
     issue_date = models.DateField(blank=True, null=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True, default='')  # ← FIXED: Added default
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -675,7 +712,7 @@ class Certificate(models.Model):
 
 
 # =====================================================
-# FACULTY LOG
+# FACULTY LOG - FIXED WITH DEFAULTS
 # =====================================================
 
 class FacultyLog(models.Model):
@@ -692,8 +729,8 @@ class FacultyLog(models.Model):
         related_name='logs'
     )
     action = models.CharField(max_length=100)
-    details = models.TextField(blank=True)
-    performed_by = models.CharField(max_length=150)
+    details = models.TextField(blank=True, default='')  # ← FIXED: Added default
+    performed_by = models.CharField(max_length=150, default='System')  # ← FIXED: Added default
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
