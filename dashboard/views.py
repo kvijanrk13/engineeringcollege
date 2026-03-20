@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION
+# dashboard/views.py - COMPLETE MERGED VERSION WITH CLOUDINARY FIX
 # ============================================================================
 
 import os
@@ -2184,14 +2184,14 @@ def generate_faculty_pdf(request, faculty_id):
         merger.append(main_pdf_path)
         print("Added main PDF to merger.")
 
-        # ---- 6. MERGE ALL FACULTY DOCUMENTS ---- (FIXED VERSION)
+        # ---- 6. MERGE ALL FACULTY DOCUMENTS ---- (FIXED VERSION WITH CLOUDINARY FL_ATTACHMENT)
         all_doc_fields = [
             # Identity / KYC Documents
             ('aadhar_file',       'Aadhar Card'),
             ('pan_file',          'PAN Card'),
             ('apaar_file',        'APAAR Document'),
             ('scm_file',          'SCM Document'),
-            ('jntuh_biodata',     'JNTUH Bio-Data'),   # ← ADDED
+            ('jntuh_biodata',     'JNTUH Bio-Data'),
             # Education Certificates
             ('ssc_certificate',   'SSC Certificate'),
             ('inter_certificate', 'Intermediate Certificate'),
@@ -2208,8 +2208,14 @@ def generate_faculty_pdf(request, faculty_id):
                 print(f"  [SKIP] {field_label}: not uploaded")
                 continue
 
+            # FIXED: Add fl_attachment to Cloudinary raw URLs to bypass HTML wrapper
             try:
-                doc_url = doc_field.url if hasattr(doc_field, 'url') else str(doc_field)
+                raw_url = doc_field.url if hasattr(doc_field, 'url') else str(doc_field)
+                # For Cloudinary raw files, add fl_attachment to force direct download
+                if 'cloudinary.com' in raw_url and '/raw/upload/' in raw_url:
+                    doc_url = raw_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                else:
+                    doc_url = raw_url
             except Exception as e:
                 print(f"  [SKIP] {field_label}: cannot get URL ({e})")
                 continue
@@ -2274,11 +2280,21 @@ def generate_faculty_pdf(request, faculty_id):
 
             if cert.certificate_file:
                 try:
-                    cert_url = cert.certificate_file.url
+                    raw_url = cert.certificate_file.url if hasattr(cert.certificate_file, 'url') else str(cert.certificate_file)
+                    # For Cloudinary raw files, add fl_attachment to force direct download
+                    if 'cloudinary.com' in raw_url and '/raw/upload/' in raw_url:
+                        cert_url = raw_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                    else:
+                        cert_url = raw_url
                 except Exception:
                     pass
             elif cert.cloudinary_url:
-                cert_url = cert.cloudinary_url
+                raw_url = cert.cloudinary_url
+                # For Cloudinary raw files, add fl_attachment to force direct download
+                if 'cloudinary.com' in raw_url and '/raw/upload/' in raw_url:
+                    cert_url = raw_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                else:
+                    cert_url = raw_url
 
             if not cert_url:
                 continue
