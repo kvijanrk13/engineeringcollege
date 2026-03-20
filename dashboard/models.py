@@ -170,7 +170,7 @@ class CloudinaryUpload(models.Model):
     cloudinary_url = models.URLField(max_length=500)
     public_id = models.CharField(max_length=200)
     resource_type = models.CharField(max_length=50)  # 'image', 'raw', etc.
-    uploaded_by = models.CharField(max_length=150, default='System')  # ← FIXED: Added default
+    uploaded_by = models.CharField(max_length=150, default='System')
     upload_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -278,7 +278,7 @@ class ResearchProject(models.Model):
 
 
 # =====================================================
-# NEW RESEARCH PUBLICATION MODEL
+# RESEARCH PUBLICATION MODEL
 # =====================================================
 
 class ResearchPublication(models.Model):
@@ -602,12 +602,10 @@ class Student(models.Model):
     religion = models.CharField(max_length=100, blank=True, null=True)
     blood_group = models.CharField(max_length=10, blank=True, null=True)
 
-    aadhar = models.CharField(max_length=20)
+    aadhar = models.CharField(max_length=20, default='')
     apaar_id = models.CharField(max_length=50, blank=True, null=True)
 
-    address = models.TextField()
-
-    # FIXED FIELDS (WITH DEFAULTS)
+    address = models.TextField(default='')
 
     parent_phone = models.CharField(
         max_length=15,
@@ -701,9 +699,9 @@ class Certificate(models.Model):
     certificate_file = CloudinaryField("raw", blank=True, null=True)
     cloudinary_url = models.URLField(max_length=500, blank=True, null=True)
 
-    issued_by = models.CharField(max_length=200, blank=True, default='')  # ← FIXED: Added default
+    issued_by = models.CharField(max_length=200, blank=True, default='')
     issue_date = models.DateField(blank=True, null=True)
-    description = models.TextField(blank=True, default='')  # ← FIXED: Added default
+    description = models.TextField(blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -729,8 +727,8 @@ class FacultyLog(models.Model):
         related_name='logs'
     )
     action = models.CharField(max_length=100)
-    details = models.TextField(blank=True, default='')  # ← FIXED: Added default
-    performed_by = models.CharField(max_length=150, default='System')  # ← FIXED: Added default
+    details = models.TextField(blank=True, default='')
+    performed_by = models.CharField(max_length=150, default='System')
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
