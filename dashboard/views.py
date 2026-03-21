@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH CLOUDINARY FIX
+# dashboard/views.py - COMPLETE MERGED VERSION WITH FIXED IMPORTS
 # ============================================================================
 
 import os
@@ -46,18 +46,16 @@ from PIL import Image as PILImage
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
-from cloudinary.utils import cloudinary_url
 
-# Local imports
+# Local imports - FIXED: Removed non-existent form imports
 from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
-    ResearchPublication, FDP, BTechProject  # New models
+    ResearchPublication, FDP, BTechProject
 )
 from .forms import (
     LoginForm, StudentForm, FacultyForm, CertificateForm,
     BulkUploadForm, FacultyProfileForm, ResearchProjectForm,
-    ResearchPublicationForm, FDPForm, BTechProjectForm  # New forms
 )
 from .utils import (
     calculate_experience, generate_pdf_from_html, merge_pdfs,
