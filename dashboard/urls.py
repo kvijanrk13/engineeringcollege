@@ -44,6 +44,7 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/assign-subjects/', views.assign_subjects, name='assign_subjects'),
     path('faculty/<int:faculty_id>/pdf/', views.faculty_pdf, name='faculty_pdf'),
     path('faculty/<int:faculty_id>/generate-pdf/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
+    path('faculty/<int:faculty_id>/generate-pdf-clean/', views.generate_faculty_pdf_clean, name='generate_faculty_pdf_clean'),  # NEW CLEAN PDF ROUTE
     path('faculty/<int:faculty_id>/download-pdf/', views.download_faculty_pdf, name='download_faculty_pdf'),
     path('faculty/<int:faculty_id>/preview-pdf/', views.preview_faculty_pdf, name='preview_faculty_pdf'),
     path('faculty/<int:faculty_id>/check-pdf-status/', views.ajax_check_pdf_status, name='ajax_check_pdf_status'),
