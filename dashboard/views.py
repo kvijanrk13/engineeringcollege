@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH FIXED IMPORTS
+# dashboard/views.py - COMPLETE MERGED VERSION WITH IMPROVED PDF MERGE
 # ============================================================================
 
 import os
@@ -38,6 +38,7 @@ from reportlab.lib.pagesizes import A4, letter
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 from pypdf import PdfWriter, PdfReader
 from PyPDF2 import PdfMerger
 from PIL import Image as PILImage
@@ -47,7 +48,7 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-# Local imports - FIXED: Removed non-existent form imports
+# Local imports
 from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
@@ -116,6 +117,127 @@ if is_cloudinary_configured():
         logger.error(f"Failed to initialize Cloudinary: {e}")
 else:
     logger.warning("Cloudinary credentials not found.")
+
+
+# ==================== IMPROVED PDF MERGE FUNCTION ====================
+
+def merge_documents(output_path, image_files=None, pdf_files=None):
+    """
+    Merge multiple images and PDFs into a single PDF.
+
+    Args:
+        output_path: Path to save the final merged PDF
+        image_files: List of image file paths to convert and merge
+        pdf_files: List of PDF file paths to merge directly
+
+    Returns:
+        True if successful, False otherwise
+    """
+    if image_files is None:
+        image_files = []
+    if pdf_files is None:
+        pdf_files = []
+
+    writer = PdfWriter()
+    temp_files = []
+
+    print(f"\n{'=' * 60}")
+    print(f"MERGING DOCUMENTS")
+    print(f"  Images: {len(image_files)}")
+    print(f"  PDFs: {len(pdf_files)}")
+    print(f"{'=' * 60}")
+
+    # Process each PDF file directly
+    for pdf_path in pdf_files:
+        if not pdf_path or not os.path.exists(pdf_path):
+            print(f"  [SKIP] PDF not found: {pdf_path}")
+            continue
+
+        try:
+            reader = PdfReader(pdf_path)
+            for page in reader.pages:
+                writer.add_page(page)
+            print(f"  [OK] Added PDF: {os.path.basename(pdf_path)} ({len(reader.pages)} pages)")
+        except Exception as e:
+            print(f"  [ERROR] Failed to add PDF {pdf_path}: {e}")
+
+    # Process each image file (convert to PDF)
+    for img_path in image_files:
+        if not img_path or not os.path.exists(img_path):
+            print(f"  [SKIP] Image not found: {img_path}")
+            continue
+
+        try:
+            # Create a temporary PDF for this image
+            img_buffer = BytesIO()
+            c = canvas.Canvas(img_buffer, pagesize=letter)
+
+            # Open image and get dimensions
+            img = PILImage.open(img_path)
+
+            # Handle transparency
+            if img.mode in ('RGBA', 'P', 'LA'):
+                bg = PILImage.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'RGBA':
+                    bg.paste(img, mask=img.split()[3])
+                else:
+                    bg.paste(img.convert('RGBA'), mask=img.convert('RGBA').split()[3])
+                img = bg
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+
+            # Save as temporary file for ImageReader
+            temp_img = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+            img.save(temp_img.name, 'JPEG', quality=95)
+            temp_files.append(temp_img.name)
+            temp_img.close()
+
+            # Calculate image dimensions to fit on page
+            img_width, img_height = img.size
+            page_width, page_height = letter
+            available_width = page_width - 100  # 50px margins on each side
+            available_height = page_height - 100  # 50px margins on top/bottom
+
+            scale = min(available_width / img_width, available_height / img_height)
+            draw_width = img_width * scale
+            draw_height = img_height * scale
+            x = (page_width - draw_width) / 2
+            y = (page_height - draw_height) / 2
+
+            # Draw image on canvas
+            image = ImageReader(temp_img.name)
+            c.drawImage(image, x, y, width=draw_width, height=draw_height)
+            c.showPage()
+            c.save()
+
+            img_buffer.seek(0)
+            img_pdf = PdfReader(img_buffer)
+            for page in img_pdf.pages:
+                writer.add_page(page)
+
+            print(f"  [OK] Added image: {os.path.basename(img_path)}")
+
+        except Exception as e:
+            print(f"  [ERROR] Failed to add image {img_path}: {e}")
+
+    # Save final PDF
+    try:
+        with open(output_path, "wb") as f:
+            writer.write(f)
+        print(f"  [OK] Final PDF saved: {output_path}")
+        print(f"{'=' * 60}\n")
+        return True
+    except Exception as e:
+        print(f"  [ERROR] Failed to save final PDF: {e}")
+        return False
+    finally:
+        # Cleanup temporary files
+        for tmp in temp_files:
+            try:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+            except Exception:
+                pass
 
 
 # ==================== DEBUG / TEST VIEWS ====================
@@ -1396,7 +1518,7 @@ def edit_student(request, student_id):
     return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student'})
 
 
-# ==================== PDF MERGE UTILITY ====================
+# ==================== PDF MERGE UTILITY (LEGACY - KEPT FOR COMPATIBILITY) ====================
 
 def merge_files(file_list):
     from pypdf import PdfMerger
@@ -1829,9 +1951,6 @@ def generate_faculty_pdf(request, faculty_id):
         print(f"Has PhD Certificate: {bool(faculty.phd_certificate)}")
         print("---------------------------\n")
 
-        merger = PdfMerger()
-        temp_files = []
-
         # ---- 1. CALCULATE EXPERIENCE ----
         experience = "N/A"
         if faculty.joining_date:
@@ -2178,49 +2297,51 @@ def generate_faculty_pdf(request, faculty_id):
             docrl.build(el)
             print(f"Main PDF (ReportLab): {main_pdf_path}")
 
-        # Add main profile PDF to merger
-        merger.append(main_pdf_path)
-        print("Added main PDF to merger.")
+        # ---- 6. COLLECT IMAGES AND PDFS FOR MERGE ----
+        image_files = []
+        pdf_files = []
 
-        # ---- 6. MERGE ALL FACULTY DOCUMENTS ---- (FIXED VERSION WITH CLOUDINARY FL_ATTACHMENT)
-        all_doc_fields = [
-            # Identity / KYC Documents
-            ('aadhar_file',       'Aadhar Card'),
-            ('pan_file',          'PAN Card'),
-            ('apaar_file',        'APAAR Document'),
-            ('scm_file',          'SCM Document'),
-            ('jntuh_biodata',     'JNTUH Bio-Data'),
-            # Education Certificates
-            ('ssc_certificate',   'SSC Certificate'),
+        # Add photo if available
+        if temp_photo_path and os.path.exists(temp_photo_path):
+            image_files.append(temp_photo_path)
+            print(f"  [ADDED] Photo image: {temp_photo_path}")
+
+        # Process document fields
+        doc_fields = [
+            ('aadhar_file', 'Aadhar Card'),
+            ('pan_file', 'PAN Card'),
+            ('apaar_file', 'APAAR Document'),
+            ('scm_file', 'SCM Document'),
+            ('jntuh_biodata', 'JNTUH Bio-Data'),
+            ('ssc_certificate', 'SSC Certificate'),
             ('inter_certificate', 'Intermediate Certificate'),
-            ('ug_certificate',    'UG Certificate'),
-            ('pg_certificate',    'PG Certificate'),
-            ('phd_certificate',   'PhD Certificate'),
+            ('ug_certificate', 'UG Certificate'),
+            ('pg_certificate', 'PG Certificate'),
+            ('phd_certificate', 'PhD Certificate'),
         ]
 
-        cert_count = 0
-        for field_name, field_label in all_doc_fields:
+        for field_name, field_label in doc_fields:
             doc_field = getattr(faculty, field_name, None)
-
             if not doc_field:
                 print(f"  [SKIP] {field_label}: not uploaded")
                 continue
 
-            # FIXED: Add fl_attachment to Cloudinary raw URLs to bypass HTML wrapper
             try:
-                raw_url = doc_field.url if hasattr(doc_field, 'url') else str(doc_field)
-                # For Cloudinary raw files, add fl_attachment to force direct download
-                if 'cloudinary.com' in raw_url and '/raw/upload/' in raw_url:
-                    doc_url = raw_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                # Get the file URL or path
+                if hasattr(doc_field, 'url'):
+                    file_url = doc_field.url
                 else:
-                    doc_url = raw_url
-            except Exception as e:
-                print(f"  [SKIP] {field_label}: cannot get URL ({e})")
-                continue
+                    file_url = str(doc_field)
 
-            print(f"  Processing {field_label}: {doc_url}")
+                # For Cloudinary raw files, add fl_attachment to bypass HTML wrapper
+                if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
+                    doc_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                else:
+                    doc_url = file_url
 
-            try:
+                print(f"  Processing {field_label}: {doc_url}")
+
+                # Download the file
                 r = requests.get(doc_url, timeout=30)
                 if r.status_code != 200:
                     print(f"  [ERROR] HTTP {r.status_code} for {field_label}")
@@ -2229,70 +2350,55 @@ def generate_faculty_pdf(request, faculty_id):
                 content = r.content
                 print(f"  Downloaded {len(content)} bytes, starts: {content[:4]}")
 
-                # Case 1: PDF
+                # Check if it's a PDF or image
                 if content.startswith(b'%PDF'):
+                    # Save as PDF file
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
                         tc.write(content)
                         tc_path = tc.name
+                    pdf_files.append(tc_path)
                     temp_files.append(tc_path)
-                    merger.append(tc_path)
-                    cert_count += 1
-                    print(f"  [OK] PDF merged: {field_label}")
-
-                # Case 2: Image — convert to PDF (with proper RGB handling)
+                    print(f"  [OK] Added PDF: {field_label}")
                 else:
+                    # Save as image file
                     try:
-                        import io as _io
-                        img = PILImage.open(_io.BytesIO(content))
-                        print(f"  Image: {img.format} {img.mode} {img.size}")
-
-                        # Handle all transparency modes
-                        if img.mode in ('RGBA', 'P', 'LA'):
-                            bg = PILImage.new('RGB', img.size, (255, 255, 255))
-                            if img.mode == 'RGBA':
-                                bg.paste(img, mask=img.split()[3])
-                            else:
-                                bg.paste(img.convert('RGBA'), mask=img.convert('RGBA').split()[3])
-                            img = bg
-                        elif img.mode != 'RGB':
-                            img = img.convert('RGB')
-
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as ti:
-                            ti_path = ti.name
-                        img.save(ti_path, 'PDF', resolution=150.0)
-                        temp_files.append(ti_path)
-                        merger.append(ti_path)
-                        cert_count += 1
-                        print(f"  [OK] Image→PDF merged: {field_label}")
-
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as ti:
+                            ti.write(content)
+                            img_path = ti.name
+                        image_files.append(img_path)
+                        temp_files.append(img_path)
+                        print(f"  [OK] Added image: {field_label}")
                     except Exception as img_err:
-                        print(f"  [ERROR] Cannot process as image for {field_label}: {img_err}")
+                        print(f"  [ERROR] Cannot save as image: {img_err}")
 
             except Exception as e:
                 print(f"  [ERROR] Failed to process {field_label}: {e}")
 
-        # Also merge Certificate model records (from certificate management)
+        # Process certificates from Certificate model
         for cert in certificates:
             cert_label = f"Certificate: {cert.certificate_type}"
             cert_url = None
 
             if cert.certificate_file:
                 try:
-                    raw_url = cert.certificate_file.url if hasattr(cert.certificate_file, 'url') else str(cert.certificate_file)
-                    # For Cloudinary raw files, add fl_attachment to force direct download
-                    if 'cloudinary.com' in raw_url and '/raw/upload/' in raw_url:
-                        cert_url = raw_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                    if hasattr(cert.certificate_file, 'url'):
+                        file_url = cert.certificate_file.url
                     else:
-                        cert_url = raw_url
+                        file_url = str(cert.certificate_file)
+
+                    # Add fl_attachment for Cloudinary raw files
+                    if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
+                        cert_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                    else:
+                        cert_url = file_url
                 except Exception:
                     pass
             elif cert.cloudinary_url:
-                raw_url = cert.cloudinary_url
-                # For Cloudinary raw files, add fl_attachment to force direct download
-                if 'cloudinary.com' in raw_url and '/raw/upload/' in raw_url:
-                    cert_url = raw_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                file_url = cert.cloudinary_url
+                if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
+                    cert_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
                 else:
-                    cert_url = raw_url
+                    cert_url = file_url
 
             if not cert_url:
                 continue
@@ -2307,36 +2413,40 @@ def generate_faculty_pdf(request, faculty_id):
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
                         tc.write(content)
                         tc_path = tc.name
+                    pdf_files.append(tc_path)
                     temp_files.append(tc_path)
-                    merger.append(tc_path)
-                    cert_count += 1
-                    print(f"  [OK] Added Certificate record PDF: {cert_label}")
+                    print(f"  [OK] Added certificate PDF: {cert_label}")
                 else:
-                    try:
-                        import io as _io
-                        img = PILImage.open(_io.BytesIO(content))
-                        if img.mode != 'RGB':
-                            img = img.convert('RGB')
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as ti:
-                            ti_path = ti.name
-                        img.save(ti_path, 'PDF', resolution=150.0)
-                        temp_files.append(ti_path)
-                        merger.append(ti_path)
-                        cert_count += 1
-                        print(f"  [OK] Converted Certificate record image: {cert_label}")
-                    except Exception:
-                        pass
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as ti:
+                        ti.write(content)
+                        img_path = ti.name
+                    image_files.append(img_path)
+                    temp_files.append(img_path)
+                    print(f"  [OK] Added certificate image: {cert_label}")
             except Exception as e:
-                print(f"  [ERROR] Certificate record {cert_label}: {e}")
+                print(f"  [ERROR] Certificate {cert_label}: {e}")
 
-        print(f"Total documents merged: {cert_count}")
+        # ---- 7. MERGE ALL DOCUMENTS ----
+        print("\n--- MERGING DOCUMENTS ---")
+        print(f"  Images to merge: {len(image_files)}")
+        print(f"  PDFs to merge: {len(pdf_files)}")
 
-        # ---- 7. SAVE FINAL MERGED PDF ----
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as ot:
-            merger.write(ot.name)
-            final_pdf_path = ot.name
+        # Create final output path
+        final_output = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        final_pdf_path = final_output.name
+        final_output.close()
         temp_files.append(final_pdf_path)
-        merger.close()
+
+        # Use the improved merge function
+        merge_success = merge_documents(
+            output_path=final_pdf_path,
+            image_files=image_files,
+            pdf_files=pdf_files
+        )
+
+        if not merge_success:
+            raise Exception("Failed to merge documents")
+
         print(f"Final merged PDF: {final_pdf_path}")
 
         # ---- 8. UPLOAD TO CLOUDINARY ----
@@ -2381,12 +2491,13 @@ def generate_faculty_pdf(request, faculty_id):
         FacultyLog.objects.create(
             faculty=faculty,
             action='PDF Generated',
-            details=f'PDF generated for {faculty.employee_code} with {cert_count} documents merged',
+            details=f'PDF generated for {faculty.employee_code} with {len(image_files)} images and {len(pdf_files)} PDFs merged',
             performed_by=request.user.username if request.user.is_authenticated else 'Anonymous',
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
-        print(f"{'=' * 60}\nPDF GENERATION COMPLETE - {cert_count} docs merged\n{'=' * 60}")
+        print(
+            f"{'=' * 60}\nPDF GENERATION COMPLETE - {len(image_files)} images, {len(pdf_files)} PDFs merged\n{'=' * 60}")
         return response
 
     except Exception as e:
