@@ -2017,6 +2017,7 @@ def export_students_csv(request):
 # ==================== GENERATE FACULTY PDF ====================
 
 @login_required
+@login_required
 def generate_faculty_pdf(request, faculty_id):
     """Enhanced faculty PDF generation with better validation"""
     import io
@@ -2024,6 +2025,10 @@ def generate_faculty_pdf(request, faculty_id):
 
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
+
+        # Initialize temp_files list at the beginning
+        temp_files = []
+
         print(f"\n{'=' * 60}")
         print(f"ENHANCED FACULTY PDF GENERATION FOR: {faculty.staff_name}")
         print(f"Employee Code: {faculty.employee_code}")
