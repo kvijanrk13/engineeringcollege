@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH IMPROVED PDF MERGE
+# dashboard/views.py - COMPLETE MERGED VERSION WITH ENHANCED PDF MERGE
 # ============================================================================
 
 import os
@@ -62,7 +62,8 @@ from .utils import (
     calculate_experience, generate_pdf_from_html, merge_pdfs,
     extract_text_from_pdf, validate_faculty_data, calculate_age,
     format_date, get_academic_year, send_email_notification,
-    generate_qr_code, export_to_excel, validate_student_data
+    generate_qr_code, export_to_excel, validate_student_data,
+    validate_pdf_file, validate_image_file
 )
 
 logger = logging.getLogger(__name__)
@@ -119,19 +120,11 @@ else:
     logger.warning("Cloudinary credentials not found.")
 
 
-# ==================== IMPROVED PDF MERGE FUNCTION ====================
+# ==================== ENHANCED PDF MERGE FUNCTION ====================
 
 def merge_documents(output_path, image_files=None, pdf_files=None):
     """
-    Merge multiple images and PDFs into a single PDF.
-
-    Args:
-        output_path: Path to save the final merged PDF
-        image_files: List of image file paths to convert and merge
-        pdf_files: List of PDF file paths to merge directly
-
-    Returns:
-        True if successful, False otherwise
+    Enhanced merge function with comprehensive validation
     """
     if image_files is None:
         image_files = []
@@ -140,31 +133,44 @@ def merge_documents(output_path, image_files=None, pdf_files=None):
 
     writer = PdfWriter()
     temp_files = []
+    merged_count = 0
+    skipped_count = 0
 
     print(f"\n{'=' * 60}")
-    print(f"MERGING DOCUMENTS")
+    print(f"ENHANCED PDF MERGE")
     print(f"  Images: {len(image_files)}")
     print(f"  PDFs: {len(pdf_files)}")
     print(f"{'=' * 60}")
 
-    # Process each PDF file directly
+    # Validate and process PDF files
     for pdf_path in pdf_files:
-        if not pdf_path or not os.path.exists(pdf_path):
-            print(f"  [SKIP] PDF not found: {pdf_path}")
+        is_valid, error = validate_pdf_file(pdf_path)
+        if not is_valid:
+            print(f"  [SKIP] PDF validation failed: {pdf_path} - {error}")
+            skipped_count += 1
             continue
 
         try:
             reader = PdfReader(pdf_path)
+            if len(reader.pages) == 0:
+                print(f"  [SKIP] PDF has no pages: {os.path.basename(pdf_path)}")
+                skipped_count += 1
+                continue
+
             for page in reader.pages:
                 writer.add_page(page)
+            merged_count += 1
             print(f"  [OK] Added PDF: {os.path.basename(pdf_path)} ({len(reader.pages)} pages)")
         except Exception as e:
             print(f"  [ERROR] Failed to add PDF {pdf_path}: {e}")
+            skipped_count += 1
 
-    # Process each image file (convert to PDF)
+    # Validate and process image files
     for img_path in image_files:
-        if not img_path or not os.path.exists(img_path):
-            print(f"  [SKIP] Image not found: {img_path}")
+        is_valid, error = validate_image_file(img_path)
+        if not is_valid:
+            print(f"  [SKIP] Image validation failed: {img_path} - {error}")
+            skipped_count += 1
             continue
 
         try:
@@ -172,7 +178,7 @@ def merge_documents(output_path, image_files=None, pdf_files=None):
             img_buffer = BytesIO()
             c = canvas.Canvas(img_buffer, pagesize=letter)
 
-            # Open image and get dimensions
+            # Open and process image
             img = PILImage.open(img_path)
 
             # Handle transparency
@@ -192,11 +198,11 @@ def merge_documents(output_path, image_files=None, pdf_files=None):
             temp_files.append(temp_img.name)
             temp_img.close()
 
-            # Calculate image dimensions to fit on page
+            # Calculate image dimensions
             img_width, img_height = img.size
             page_width, page_height = letter
-            available_width = page_width - 100  # 50px margins on each side
-            available_height = page_height - 100  # 50px margins on top/bottom
+            available_width = page_width - 100
+            available_height = page_height - 100
 
             scale = min(available_width / img_width, available_height / img_height)
             draw_width = img_width * scale
@@ -215,16 +221,19 @@ def merge_documents(output_path, image_files=None, pdf_files=None):
             for page in img_pdf.pages:
                 writer.add_page(page)
 
+            merged_count += 1
             print(f"  [OK] Added image: {os.path.basename(img_path)}")
 
         except Exception as e:
             print(f"  [ERROR] Failed to add image {img_path}: {e}")
+            skipped_count += 1
 
     # Save final PDF
     try:
         with open(output_path, "wb") as f:
             writer.write(f)
         print(f"  [OK] Final PDF saved: {output_path}")
+        print(f"  Summary: {merged_count} files merged, {skipped_count} files skipped")
         print(f"{'=' * 60}\n")
         return True
     except Exception as e:
@@ -238,6 +247,121 @@ def merge_documents(output_path, image_files=None, pdf_files=None):
                     os.remove(tmp)
             except Exception:
                 pass
+
+
+# ==================== ENHANCED STUDENT PDF MERGE ====================
+
+def merge_files(file_list):
+    """Enhanced student PDF merge with better validation"""
+    from pypdf import PdfMerger
+    from PIL import Image
+    import tempfile
+    import os
+    import requests
+
+    merger = PdfMerger()
+    temp_files = []
+    valid_files = 0
+    skipped_files = 0
+
+    print("\n========== ENHANCED PDF MERGE START ==========")
+
+    for idx, file in enumerate(file_list):
+        if not file:
+            print(f"[{idx}] Skipped (empty)")
+            skipped_files += 1
+            continue
+
+        try:
+            # Get URL or path
+            file_url = file.url if hasattr(file, "url") else str(file)
+            print(f"[{idx}] Processing: {file_url}")
+
+            # Download if URL
+            if file_url.startswith("http"):
+                response = requests.get(file_url, timeout=20)
+                if response.status_code != 200:
+                    print("  ❌ Download failed")
+                    skipped_files += 1
+                    continue
+
+                suffix = ".pdf" if file_url.lower().endswith(".pdf") else ".img"
+                temp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                temp.write(response.content)
+                temp.close()
+                file_path = temp.name
+                temp_files.append(file_path)
+            else:
+                file_path = file.path
+
+            # Validate file type and content
+            with open(file_path, "rb") as f:
+                header = f.read(4)
+
+            is_pdf = header.startswith(b"%PDF")
+            is_valid = False
+
+            if is_pdf:
+                # Validate PDF
+                is_valid, error = validate_pdf_file(file_path)
+                if is_valid:
+                    print("  ✔ PDF detected and validated")
+                    merger.append(file_path)
+                    valid_files += 1
+                else:
+                    print(f"  ❌ PDF validation failed: {error}")
+                    skipped_files += 1
+            else:
+                # Validate image
+                is_valid, error = validate_image_file(file_path)
+                if is_valid:
+                    print("  ✔ Image detected and validated")
+
+                    img = Image.open(file_path)
+
+                    # Fix transparency
+                    if img.mode in ("RGBA", "LA", "P"):
+                        bg = Image.new("RGB", img.size, (255, 255, 255))
+                        if img.mode == "RGBA":
+                            bg.paste(img, mask=img.split()[3])
+                        else:
+                            bg.paste(img)
+                        img = bg
+                    else:
+                        img = img.convert("RGB")
+
+                    temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                    img.save(temp_pdf.name, "PDF")
+                    temp_pdf.close()
+
+                    merger.append(temp_pdf.name)
+                    temp_files.append(temp_pdf.name)
+                    valid_files += 1
+                else:
+                    print(f"  ❌ Image validation failed: {error}")
+                    skipped_files += 1
+
+        except Exception as e:
+            print(f"  ❌ Error: {e}")
+            skipped_files += 1
+
+    # Final PDF
+    final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    merger.write(final_pdf.name)
+    merger.close()
+
+    print(f"✅ Final PDF: {final_pdf.name}")
+    print(f"📊 Summary: {valid_files} files merged, {skipped_files} files skipped")
+    print("========== ENHANCED PDF MERGE END ==========\n")
+
+    # Cleanup
+    for f in temp_files:
+        try:
+            os.remove(f)
+        except:
+            pass
+
+    return final_pdf.name
 
 
 # ==================== DEBUG / TEST VIEWS ====================
@@ -1520,7 +1644,8 @@ def edit_student(request, student_id):
 
 # ==================== PDF MERGE UTILITY (LEGACY - KEPT FOR COMPATIBILITY) ====================
 
-def merge_files(file_list):
+def merge_files_legacy(file_list):
+    """Legacy merge function - kept for backward compatibility"""
     from pypdf import PdfMerger
     from PIL import Image
     import tempfile
@@ -1654,7 +1779,7 @@ def generate_student_pdf(student):
         else:
             print(f"  - {name}: None")
 
-    final_pdf_path = merge_files(files)
+    final_pdf_path = merge_files(file_list=files)
 
     # Save final PDF path
     student.pdf_url = final_pdf_path
@@ -1893,14 +2018,14 @@ def export_students_csv(request):
 
 @login_required
 def generate_faculty_pdf(request, faculty_id):
-    """Generate PDF for a faculty member with ALL documents merged (identity + education certificates)."""
+    """Enhanced faculty PDF generation with better validation"""
     import io
     import shutil
 
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'=' * 60}")
-        print(f"GENERATING FACULTY PDF FOR: {faculty.staff_name}")
+        print(f"ENHANCED FACULTY PDF GENERATION FOR: {faculty.staff_name}")
         print(f"Employee Code: {faculty.employee_code}")
         print(f"{'=' * 60}")
 
@@ -1951,7 +2076,7 @@ def generate_faculty_pdf(request, faculty_id):
         print(f"Has PhD Certificate: {bool(faculty.phd_certificate)}")
         print("---------------------------\n")
 
-        # ---- 1. CALCULATE EXPERIENCE ----
+        # Calculate experience
         experience = "N/A"
         if faculty.joining_date:
             today = date.today()
@@ -1975,12 +2100,11 @@ def generate_faculty_pdf(request, faculty_id):
             experience = f"{yrs} Years {mths} Months {dys} Days"
             print(f"Experience: {experience}")
 
-        # ---- 2. DOWNLOAD PHOTO ---- (FIXED VERSION)
+        # Download photo
         import io as _photo_io
         temp_photo_path = None
         photo_url = None
 
-        # Try cloudinary_photo_url first (explicit stored URL), then photo field
         try:
             photo_url = faculty.cloudinary_photo_url or None
         except Exception:
@@ -1996,12 +2120,9 @@ def generate_faculty_pdf(request, faculty_id):
             try:
                 r = requests.get(photo_url, timeout=15)
                 if r.status_code == 200:
-                    # KEY FIX: Use PIL to open + convert to RGB JPEG
-                    # This handles PNG, WEBP, RGBA, P mode etc.
                     img = PILImage.open(_photo_io.BytesIO(r.content))
                     print(f"  Photo format: {img.format}, mode: {img.mode}, size: {img.size}")
 
-                    # Handle transparency
                     if img.mode in ('RGBA', 'P', 'LA'):
                         bg = PILImage.new('RGB', img.size, (255, 255, 255))
                         if img.mode == 'RGBA':
@@ -2022,7 +2143,7 @@ def generate_faculty_pdf(request, faculty_id):
             except Exception as e:
                 print(f"  Photo download/convert error: {e}")
 
-        # ---- 3. GET RELATED DATA ----
+        # Get related data
         certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
         research_publications = ResearchPublication.objects.filter(faculty=faculty)
@@ -2039,7 +2160,7 @@ def generate_faculty_pdf(request, faculty_id):
         if sd:
             subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
 
-        # ---- 4. BUILD CONTEXT ----
+        # Build context
         context = {
             'faculty': faculty,
             'profile': profile,
@@ -2052,7 +2173,6 @@ def generate_faculty_pdf(request, faculty_id):
             'experience': experience,
             'current_date': datetime.now(),
             'local_photo_path': temp_photo_path,
-            # Personal Information
             'staff_name': faculty.staff_name,
             'employee_code': faculty.employee_code,
             'father_name': faculty.father_name,
@@ -2064,7 +2184,6 @@ def generate_faculty_pdf(request, faculty_id):
             'sub_caste': faculty.sub_caste,
             'nationality': faculty.nationality,
             'address': faculty.address,
-            # Professional Information
             'department': faculty.department,
             'designation': faculty.designation,
             'joining_date': faculty.joining_date,
@@ -2073,14 +2192,12 @@ def generate_faculty_pdf(request, faculty_id):
             'email': faculty.email,
             'mobile': faculty.mobile,
             'phone': faculty.phone,
-            # Professional IDs
             'jntuh_id': faculty.jntuh_id,
             'aicte_id': faculty.aicte_id,
             'pan': faculty.pan,
             'aadhar': faculty.aadhar,
             'apaar_id': faculty.apaar_id,
             'orcid_id': faculty.orcid_id,
-            # Educational Qualifications
             'ssc_year': faculty.ssc_year,
             'ssc_percent': faculty.ssc_percent,
             'ssc_school': faculty.ssc_school,
@@ -2101,12 +2218,10 @@ def generate_faculty_pdf(request, faculty_id):
             'phd_year': faculty.phd_year,
             'phd_university': faculty.phd_university,
             'phd_spec': faculty.phd_spec,
-            # Additional Information
             'subjects_dealt': faculty.subjects_dealt,
             'about_yourself': faculty.about_yourself,
             'results': faculty.results,
             'scm': faculty.scm,
-            # Document flags
             'has_aadhar': bool(faculty.aadhar_file),
             'has_pan': bool(faculty.pan_file),
             'has_apaar': bool(faculty.apaar_file),
@@ -2119,7 +2234,7 @@ def generate_faculty_pdf(request, faculty_id):
             'has_phd_cert': bool(faculty.phd_certificate),
         }
 
-        # ---- 5. GENERATE MAIN PROFILE PDF ----
+        # Generate main profile PDF
         print("Generating main profile PDF...")
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
         main_pdf_path = None
@@ -2297,16 +2412,20 @@ def generate_faculty_pdf(request, faculty_id):
             docrl.build(el)
             print(f"Main PDF (ReportLab): {main_pdf_path}")
 
-        # ---- 6. COLLECT IMAGES AND PDFS FOR MERGE ----
+        # Collect documents with enhanced validation
         image_files = []
         pdf_files = []
 
         # Add photo if available
         if temp_photo_path and os.path.exists(temp_photo_path):
-            image_files.append(temp_photo_path)
-            print(f"  [ADDED] Photo image: {temp_photo_path}")
+            is_valid, error = validate_image_file(temp_photo_path)
+            if is_valid:
+                image_files.append(temp_photo_path)
+                print(f"  [OK] Photo added: {temp_photo_path}")
+            else:
+                print(f"  [SKIP] Photo invalid: {error}")
 
-        # Process document fields
+        # Process document fields with enhanced validation
         doc_fields = [
             ('aadhar_file', 'Aadhar Card'),
             ('pan_file', 'PAN Card'),
@@ -2341,7 +2460,7 @@ def generate_faculty_pdf(request, faculty_id):
 
                 print(f"  Processing {field_label}: {doc_url}")
 
-                # Download the file
+                # Download with validation
                 r = requests.get(doc_url, timeout=30)
                 if r.status_code != 200:
                     print(f"  [ERROR] HTTP {r.status_code} for {field_label}")
@@ -2350,24 +2469,41 @@ def generate_faculty_pdf(request, faculty_id):
                 content = r.content
                 print(f"  Downloaded {len(content)} bytes, starts: {content[:4]}")
 
-                # Check if it's a PDF or image
+                # Skip if empty
+                if len(content) == 0:
+                    print(f"  [SKIP] {field_label}: empty file")
+                    continue
+
+                # Check if it's a PDF
                 if content.startswith(b'%PDF'):
-                    # Save as PDF file
+                    # Save as PDF and validate
                     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
                         tc.write(content)
                         tc_path = tc.name
-                    pdf_files.append(tc_path)
-                    temp_files.append(tc_path)
-                    print(f"  [OK] Added PDF: {field_label}")
+
+                    is_valid, error = validate_pdf_file(tc_path)
+                    if is_valid:
+                        pdf_files.append(tc_path)
+                        temp_files.append(tc_path)
+                        print(f"  [OK] Added PDF: {field_label}")
+                    else:
+                        print(f"  [SKIP] PDF validation failed: {field_label} - {error}")
+                        os.unlink(tc_path)
                 else:
-                    # Save as image file
+                    # Try to save as image
                     try:
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as ti:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".img") as ti:
                             ti.write(content)
                             img_path = ti.name
-                        image_files.append(img_path)
-                        temp_files.append(img_path)
-                        print(f"  [OK] Added image: {field_label}")
+
+                        is_valid, error = validate_image_file(img_path)
+                        if is_valid:
+                            image_files.append(img_path)
+                            temp_files.append(img_path)
+                            print(f"  [OK] Added image: {field_label}")
+                        else:
+                            print(f"  [SKIP] Image validation failed: {field_label} - {error}")
+                            os.unlink(img_path)
                     except Exception as img_err:
                         print(f"  [ERROR] Cannot save as image: {img_err}")
 
@@ -2426,7 +2562,7 @@ def generate_faculty_pdf(request, faculty_id):
             except Exception as e:
                 print(f"  [ERROR] Certificate {cert_label}: {e}")
 
-        # ---- 7. MERGE ALL DOCUMENTS ----
+        # Merge all documents
         print("\n--- MERGING DOCUMENTS ---")
         print(f"  Images to merge: {len(image_files)}")
         print(f"  PDFs to merge: {len(pdf_files)}")
@@ -2437,7 +2573,7 @@ def generate_faculty_pdf(request, faculty_id):
         final_output.close()
         temp_files.append(final_pdf_path)
 
-        # Use the improved merge function
+        # Use the enhanced merge function
         merge_success = merge_documents(
             output_path=final_pdf_path,
             image_files=image_files,
@@ -2445,11 +2581,11 @@ def generate_faculty_pdf(request, faculty_id):
         )
 
         if not merge_success:
-            raise Exception("Failed to merge documents")
+            raise Exception("Failed to merge documents with enhanced validation")
 
         print(f"Final merged PDF: {final_pdf_path}")
 
-        # ---- 8. UPLOAD TO CLOUDINARY ----
+        # Upload to Cloudinary
         if is_cloudinary_configured():
             try:
                 ur = cloudinary.uploader.upload(
@@ -2473,13 +2609,13 @@ def generate_faculty_pdf(request, faculty_id):
             except Exception as e:
                 print(f"Cloudinary upload error: {e}")
 
-        # ---- 9. RETURN PDF ----
+        # Return PDF
         with open(final_pdf_path, 'rb') as pf:
             response = HttpResponse(pf.read(), content_type='application/pdf')
             fname = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
             response['Content-Disposition'] = f'attachment; filename="{fname}"'
 
-        # ---- 10. CLEANUP ----
+        # Cleanup
         for tmp in temp_files:
             try:
                 if os.path.exists(tmp):
@@ -2491,17 +2627,17 @@ def generate_faculty_pdf(request, faculty_id):
         FacultyLog.objects.create(
             faculty=faculty,
             action='PDF Generated',
-            details=f'PDF generated for {faculty.employee_code} with {len(image_files)} images and {len(pdf_files)} PDFs merged',
+            details=f'Enhanced PDF generated for {faculty.employee_code} with {len(image_files)} images and {len(pdf_files)} PDFs merged',
             performed_by=request.user.username if request.user.is_authenticated else 'Anonymous',
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
         print(
-            f"{'=' * 60}\nPDF GENERATION COMPLETE - {len(image_files)} images, {len(pdf_files)} PDFs merged\n{'=' * 60}")
+            f"{'=' * 60}\nENHANCED PDF GENERATION COMPLETE - {len(image_files)} images, {len(pdf_files)} PDFs merged\n{'=' * 60}")
         return response
 
     except Exception as e:
-        logger.error(f"PDF Generation Error: {e}")
+        logger.error(f"Enhanced PDF Generation Error: {e}")
         import traceback
         traceback.print_exc()
         messages.error(request, f'Error generating faculty PDF: {e}')
