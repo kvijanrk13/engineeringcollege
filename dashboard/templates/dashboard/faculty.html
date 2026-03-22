@@ -71,11 +71,11 @@
                                 <div class="card-body">
                                     <table class="table table-bordered">
                                         <thead>
-                                            <tr>
+                                             <tr>
                                                 <th>Department</th>
                                                 <th>Count</th>
                                                 <th>Percentage</th>
-                                            </tr>
+                                             </tr>
                                         </thead>
                                         <tbody>
                                             {% for dept in departments %}
@@ -1459,7 +1459,8 @@
                                             <a href="{% url 'dashboard:edit_faculty' fac.id %}" class="btn btn-warning" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="{% url 'dashboard:generate_faculty_pdf' fac.id %}" class="btn btn-success" title="PDF" target="_blank">
+                                            <!-- CHANGED: Now using generate_faculty_pdf_clean for proper PDF merging -->
+                                            <a href="{% url 'dashboard:generate_faculty_pdf_clean' fac.id %}" class="btn btn-success" title="PDF" target="_blank">
                                                 <i class="fas fa-file-pdf"></i>
                                             </a>
                                             <button onclick="deleteFaculty({{ fac.id }})" class="btn btn-danger" title="Delete">

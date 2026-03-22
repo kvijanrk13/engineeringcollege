@@ -2864,9 +2864,16 @@ def generate_faculty_pdf(request, faculty_id):
         return redirect('dashboard:faculty_dashboard')
 
 
+# dashboard/views.py - Add this debug print at the top of generate_faculty_pdf_clean
+
 @login_required
 def generate_faculty_pdf_clean(request, faculty_id):
     """Clean PDF generation - alias for generate_faculty_pdf"""
+    print("\n🔥🔥🔥 NEW PDF FUNCTION CALLED 🔥🔥🔥")
+    print(f"🔥 Faculty ID: {faculty_id}")
+    print(f"🔥 Request method: {request.method}")
+    print(f"🔥 User: {request.user}")
+    print("🔥🔥🔥 ================================= 🔥🔥🔥\n")
     return generate_faculty_pdf(request, faculty_id)
 
 
