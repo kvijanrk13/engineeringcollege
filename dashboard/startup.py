@@ -1,17 +1,13 @@
 # dashboard/startup.py
 from django.db import connection
-from django.core.exceptions import ImproperlyConfigured
 import sys
-import traceback
 
 
 def check_pdf_url_column():
-    """Check if pdf_url column exists and add it if missing"""
-    print("=== CHECK_PDF_URL_COLUMN STARTING ===", file=sys.stderr)
+    """Check if pdf_url column exists - for information only"""
     try:
         with connection.cursor() as cursor:
             db_engine = connection.vendor
-            print(f"[CHECKING] pdf_url column on {db_engine}...", file=sys.stderr)
 
             if db_engine == 'postgresql':
                 cursor.execute("""
@@ -26,22 +22,14 @@ def check_pdf_url_column():
                     columns = cursor.fetchall()
                     exists = any(col[1] == 'pdf_url' for col in columns)
                 except Exception:
-                    # If we can't check, assume it exists to avoid potential issues
-                    print("[WARNING] Could not check column existence, assuming it exists", file=sys.stderr)
+                    # If we can't check, assume it exists
                     return True
 
-            if not exists:
-                print("[INFO] pdf_url column missing - this should be handled by migrations", file=sys.stderr)
-            else:
-                print("[SUCCESS] pdf_url column already exists!", file=sys.stderr)
+            return True  # Column check completed (existence verified by migration system)
 
     except Exception as e:
-        print(f"[WARNING] Error checking pdf_url column: {e}", file=sys.stderr)
-        # Don't fail the startup for this - just warn
+        # Don't fail startup for this check
         return True
-
-    print("=== CHECK_PDF_URL_COLUMN COMPLETED ===", file=sys.stderr)
-    return True
 
 
 # Only run if this file is executed directly
