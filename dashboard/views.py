@@ -1005,9 +1005,11 @@ def redirect_to_dashboard(request):
     return redirect('dashboard:login')
 
 
+# ==================== UPDATED SYLLABUS VIEW ====================
+
 @login_required
 def syllabus_view(request):
-    return render(request, 'dashboard/students.html', {
+    return render(request, 'dashboard/syllabus.html', {
         'title': 'Syllabus & Common Subjects - ANURAG Engineering College',
     })
 
