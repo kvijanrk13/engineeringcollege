@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH ENHANCED PDF MERGE
+# dashboard/views.py - COMPLETE MERGED VERSION WITH ALL URLS SUPPORTED
 # ============================================================================
 
 import os
@@ -281,7 +281,7 @@ def merge_files(file_list):
             if file_url.startswith("http"):
                 response = requests.get(file_url, timeout=20)
                 if response.status_code != 200:
-                    print("  ❌ Download failed")
+                    print("  [X] Download failed")
                     skipped_files += 1
                     continue
 
@@ -305,17 +305,17 @@ def merge_files(file_list):
                 # Validate PDF
                 is_valid, error = validate_pdf_file(file_path)
                 if is_valid:
-                    print("  ✔ PDF detected and validated")
+                    print("  [OK] PDF detected and validated")
                     merger.append(file_path)
                     valid_files += 1
                 else:
-                    print(f"  ❌ PDF validation failed: {error}")
+                    print(f"  [X] PDF validation failed: {error}")
                     skipped_files += 1
             else:
                 # Validate image
                 is_valid, error = validate_image_file(file_path)
                 if is_valid:
-                    print("  ✔ Image detected and validated")
+                    print("  [OK] Image detected and validated")
 
                     img = Image.open(file_path)
 
@@ -338,11 +338,11 @@ def merge_files(file_list):
                     temp_files.append(temp_pdf.name)
                     valid_files += 1
                 else:
-                    print(f"  ❌ Image validation failed: {error}")
+                    print(f"  [X] Image validation failed: {error}")
                     skipped_files += 1
 
         except Exception as e:
-            print(f"  ❌ Error: {e}")
+            print(f"  [X] Error: {e}")
             skipped_files += 1
 
     # Final PDF
@@ -350,7 +350,7 @@ def merge_files(file_list):
     merger.write(final_pdf.name)
     merger.close()
 
-    print(f"✅ Final PDF: {final_pdf.name}")
+    print(f"[OK] Final PDF: {final_pdf.name}")
     print(f"📊 Summary: {valid_files} files merged, {skipped_files} files skipped")
     print("========== ENHANCED PDF MERGE END ==========\n")
 
@@ -1672,7 +1672,7 @@ def merge_files_legacy(file_list):
             if file_url.startswith("http"):
                 response = requests.get(file_url, timeout=20)
                 if response.status_code != 200:
-                    print("  ❌ Download failed")
+                    print("  [X] Download failed")
                     continue
 
                 suffix = ".pdf" if file_url.lower().endswith(".pdf") else ".img"
@@ -1693,11 +1693,11 @@ def merge_files_legacy(file_list):
 
             # Step 3: Process PDF
             if is_pdf:
-                print("  ✔ PDF detected")
+                print("  [OK] PDF detected")
                 merger.append(file_path)
 
             else:
-                print("  ✔ Image detected → converting to PDF")
+                print("  [OK] Image detected → converting to PDF")
 
                 img = Image.open(file_path)
 
@@ -1720,14 +1720,14 @@ def merge_files_legacy(file_list):
                 temp_files.append(temp_pdf.name)
 
         except Exception as e:
-            print(f"  ❌ Error: {e}")
+            print(f"  [X] Error: {e}")
 
     # Step 4: Final PDF
     final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     merger.write(final_pdf.name)
     merger.close()
 
-    print(f"✅ Final PDF: {final_pdf.name}")
+    print(f"[OK] Final PDF: {final_pdf.name}")
 
     # Step 5: Cleanup
     for f in temp_files:
@@ -2016,19 +2016,69 @@ def export_students_csv(request):
 
 # ==================== GENERATE FACULTY PDF ====================
 
-# Add this function to your views.py file
-
 @login_required
-def generate_faculty_pdf_clean(request, faculty_id):
-    """Generate a clean, structured faculty profile PDF similar to the example"""
+def generate_faculty_pdf(request, faculty_id):
+    """Enhanced faculty PDF generation with better validation"""
+    import io
+    import shutil
+
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
+
+        # Initialize temp_files list at the beginning
         temp_files = []
 
         print(f"\n{'=' * 60}")
-        print(f"GENERATING CLEAN FACULTY PDF FOR: {faculty.staff_name}")
+        print(f"ENHANCED FACULTY PDF GENERATION FOR: {faculty.staff_name}")
         print(f"Employee Code: {faculty.employee_code}")
         print(f"{'=' * 60}")
+
+        # Debug print to verify all fields have data
+        print("\n--- FACULTY DATA CHECK ---")
+        print(f"Caste: {faculty.caste}")
+        print(f"Sub-Caste: {faculty.sub_caste}")
+        print(f"Nationality: {faculty.nationality}")
+        print(f"JNTUH ID: {faculty.jntuh_id}")
+        print(f"AICTE ID: {faculty.aicte_id}")
+        print(f"PAN: {faculty.pan}")
+        print(f"Aadhar: {faculty.aadhar}")
+        print(f"APAAR ID: {faculty.apaar_id}")
+        print(f"ORCID ID: {faculty.orcid_id}")
+        print(f"SSC Year: {faculty.ssc_year}")
+        print(f"SSC Percent: {faculty.ssc_percent}")
+        print(f"SSC School: {faculty.ssc_school}")
+        print(f"Inter Year: {faculty.inter_year}")
+        print(f"Inter Percent: {faculty.inter_percent}")
+        print(f"Inter College: {faculty.inter_college}")
+        print(f"UG Degree: {faculty.ug_degree}")
+        print(f"UG Year: {faculty.ug_year}")
+        print(f"UG Percentage: {faculty.ug_percentage}")
+        print(f"UG College: {faculty.ug_college}")
+        print(f"UG Spec: {faculty.ug_spec}")
+        print(f"PG Degree: {faculty.pg_degree}")
+        print(f"PG Year: {faculty.pg_year}")
+        print(f"PG Percentage: {faculty.pg_percentage}")
+        print(f"PG College: {faculty.pg_college}")
+        print(f"PG Spec: {faculty.pg_spec}")
+        print(f"PhD Status: {faculty.phd_degree}")
+        print(f"PhD Year: {faculty.phd_year}")
+        print(f"PhD University: {faculty.phd_university}")
+        print(f"PhD Spec: {faculty.phd_spec}")
+        print(f"Subjects Dealt: {faculty.subjects_dealt}")
+        print(f"SCM: {faculty.scm}")
+        print(f"About: {faculty.about_yourself}")
+        print(f"Results: {faculty.results}")
+        print(f"Has Aadhar File: {bool(faculty.aadhar_file)}")
+        print(f"Has PAN File: {bool(faculty.pan_file)}")
+        print(f"Has APAAR File: {bool(faculty.apaar_file)}")
+        print(f"Has SCM File: {bool(faculty.scm_file)}")
+        print(f"Has JNTUH Bio-Data: {bool(faculty.jntuh_biodata)}")
+        print(f"Has SSC Certificate: {bool(faculty.ssc_certificate)}")
+        print(f"Has Inter Certificate: {bool(faculty.inter_certificate)}")
+        print(f"Has UG Certificate: {bool(faculty.ug_certificate)}")
+        print(f"Has PG Certificate: {bool(faculty.pg_certificate)}")
+        print(f"Has PhD Certificate: {bool(faculty.phd_certificate)}")
+        print("---------------------------\n")
 
         # Calculate experience
         experience = "N/A"
@@ -2054,444 +2104,504 @@ def generate_faculty_pdf_clean(request, faculty_id):
             experience = f"{yrs} Years {mths} Months {dys} Days"
             print(f"Experience: {experience}")
 
+        # Download photo
+        import io as _photo_io
+        temp_photo_path = None
+        photo_url = None
+
+        try:
+            photo_url = faculty.cloudinary_photo_url or None
+        except Exception:
+            photo_url = None
+
+        if not photo_url:
+            try:
+                photo_url = faculty.photo.url if faculty.photo else None
+            except Exception:
+                photo_url = None
+
+        if photo_url:
+            try:
+                r = requests.get(photo_url, timeout=15)
+                if r.status_code == 200:
+                    img = PILImage.open(_photo_io.BytesIO(r.content))
+                    print(f"  Photo format: {img.format}, mode: {img.mode}, size: {img.size}")
+
+                    if img.mode in ('RGBA', 'P', 'LA'):
+                        bg = PILImage.new('RGB', img.size, (255, 255, 255))
+                        if img.mode == 'RGBA':
+                            bg.paste(img, mask=img.split()[3])
+                        else:
+                            bg.paste(img.convert('RGBA'), mask=img.convert('RGBA').split()[3])
+                        img = bg
+                    elif img.mode != 'RGB':
+                        img = img.convert('RGB')
+
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tp:
+                        img.save(tp.name, 'JPEG', quality=90)
+                        temp_photo_path = tp.name
+                    temp_files.append(temp_photo_path)
+                    print(f"  Photo saved as RGB JPEG: {temp_photo_path}")
+                else:
+                    print(f"  Photo HTTP {r.status_code}: {photo_url}")
+            except Exception as e:
+                print(f"  Photo download/convert error: {e}")
+
         # Get related data
+        certificates = Certificate.objects.filter(faculty=faculty)
+        research_projects = ResearchProject.objects.filter(faculty=faculty)
+        research_publications = ResearchPublication.objects.filter(faculty=faculty)
+        fdps = FDP.objects.filter(faculty=faculty)
+        btech_projects = BTechProject.objects.filter(faculty=faculty)
+
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
         except FacultyProfile.DoesNotExist:
             profile = None
 
-        research_publications = ResearchPublication.objects.filter(faculty=faculty)
-        fdps = FDP.objects.filter(faculty=faculty)
-        btech_projects = BTechProject.objects.filter(faculty=faculty)
-        certificates = Certificate.objects.filter(faculty=faculty)
+        subjects_list = []
+        sd = getattr(faculty, 'subjects_dealt', None)
+        if sd:
+            subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
 
-        # Create PDF
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4,
-                                topMargin=0.5 * inch, bottomMargin=0.5 * inch,
-                                leftMargin=0.75 * inch, rightMargin=0.75 * inch)
+        # Build context
+        context = {
+            'faculty': faculty,
+            'profile': profile,
+            'research_projects': research_projects,
+            'research_publications': research_publications,
+            'fdps': fdps,
+            'btech_projects': btech_projects,
+            'certificates': certificates,
+            'subjects_list': subjects_list,
+            'experience': experience,
+            'current_date': datetime.now(),
+            'local_photo_path': temp_photo_path,
+            'staff_name': faculty.staff_name,
+            'employee_code': faculty.employee_code,
+            'father_name': faculty.father_name,
+            'mother_name': faculty.mother_name,
+            'dob': faculty.dob,
+            'gender': faculty.gender,
+            'state': faculty.state,
+            'caste': faculty.caste,
+            'sub_caste': faculty.sub_caste,
+            'nationality': faculty.nationality,
+            'address': faculty.address,
+            'department': faculty.department,
+            'designation': faculty.designation,
+            'joining_date': faculty.joining_date,
+            'exp_anurag': faculty.exp_anurag,
+            'exp_other': faculty.exp_other,
+            'email': faculty.email,
+            'mobile': faculty.mobile,
+            'phone': faculty.phone,
+            'jntuh_id': faculty.jntuh_id,
+            'aicte_id': faculty.aicte_id,
+            'pan': faculty.pan,
+            'aadhar': faculty.aadhar,
+            'apaar_id': faculty.apaar_id,
+            'orcid_id': faculty.orcid_id,
+            'ssc_year': faculty.ssc_year,
+            'ssc_percent': faculty.ssc_percent,
+            'ssc_school': faculty.ssc_school,
+            'inter_year': faculty.inter_year,
+            'inter_percent': faculty.inter_percent,
+            'inter_college': faculty.inter_college,
+            'ug_degree': faculty.ug_degree,
+            'ug_year': faculty.ug_year,
+            'ug_percentage': faculty.ug_percentage,
+            'ug_college': faculty.ug_college,
+            'ug_spec': faculty.ug_spec,
+            'pg_degree': faculty.pg_degree,
+            'pg_year': faculty.pg_year,
+            'pg_percentage': faculty.pg_percentage,
+            'pg_college': faculty.pg_college,
+            'pg_spec': faculty.pg_spec,
+            'phd_degree': faculty.phd_degree,
+            'phd_year': faculty.phd_year,
+            'phd_university': faculty.phd_university,
+            'phd_spec': faculty.phd_spec,
+            'subjects_dealt': faculty.subjects_dealt,
+            'about_yourself': faculty.about_yourself,
+            'results': faculty.results,
+            'scm': faculty.scm,
+            'has_aadhar': bool(faculty.aadhar_file),
+            'has_pan': bool(faculty.pan_file),
+            'has_apaar': bool(faculty.apaar_file),
+            'has_scm': bool(faculty.scm_file),
+            'has_jntuh_biodata': bool(faculty.jntuh_biodata),
+            'has_ssc_cert': bool(faculty.ssc_certificate),
+            'has_inter_cert': bool(faculty.inter_certificate),
+            'has_ug_cert': bool(faculty.ug_certificate),
+            'has_pg_cert': bool(faculty.pg_certificate),
+            'has_phd_cert': bool(faculty.phd_certificate),
+        }
 
-        styles = getSampleStyleSheet()
-        story = []
+        # Generate main profile PDF
+        print("Generating main profile PDF...")
+        html_string = render_to_string('dashboard/faculty_pdf.html', context)
+        main_pdf_path = None
 
-        # Custom styles
-        title_style = ParagraphStyle(
-            'CustomTitle',
-            parent=styles['Heading1'],
-            fontSize=16,
-            leading=20,
-            spaceAfter=6,
-            alignment=1,  # Center alignment
-            textColor=colors.darkblue
+        # Try pdfkit first (works on Windows with wkhtmltopdf)
+        if pdfkit is not None:
+            try:
+                opts = {
+                    'page-size': 'A4',
+                    'margin-top': '15mm', 'margin-right': '15mm',
+                    'margin-bottom': '15mm', 'margin-left': '15mm',
+                    'encoding': 'UTF-8', 'enable-local-file-access': '', 'quiet': ''
+                }
+                wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+                cfg = pdfkit.configuration(wkhtmltopdf=wk) if os.path.exists(wk) else pdfkit.configuration()
+                pdf_bytes = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tm:
+                    tm.write(pdf_bytes)
+                    main_pdf_path = tm.name
+                temp_files.append(main_pdf_path)
+                print(f"Main PDF (pdfkit): {main_pdf_path}")
+            except Exception as e:
+                print(f"pdfkit failed ({e}), using ReportLab fallback.")
+                main_pdf_path = None
+
+        # ReportLab fallback (works on Render/Linux)
+        if main_pdf_path is None:
+            tm = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+            main_pdf_path = tm.name
+            tm.close()
+            temp_files.append(main_pdf_path)
+
+            s = getSampleStyleSheet()
+            hs = ParagraphStyle('h', fontSize=16, fontName='Helvetica-Bold',
+                                textColor=colors.darkblue, alignment=1)
+            ts = ParagraphStyle('t', fontSize=14, alignment=1)
+            docrl = SimpleDocTemplate(
+                main_pdf_path, pagesize=A4,
+                topMargin=0.75 * inch, bottomMargin=0.75 * inch,
+                leftMargin=0.75 * inch, rightMargin=0.75 * inch
+            )
+            el = []
+            el.append(Paragraph("ANURAG ENGINEERING COLLEGE", hs))
+            el.append(Spacer(1, 0.1 * inch))
+            el.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
+            el.append(Spacer(1, 0.1 * inch))
+            el.append(Paragraph("FACULTY PROFILE", ts))
+            el.append(Spacer(1, 0.2 * inch))
+
+            # Photo in header if available
+            if temp_photo_path:
+                try:
+                    photo_rl = Image(temp_photo_path, width=1.2 * inch, height=1.4 * inch)
+                    hdr = Table(
+                        [[Paragraph(
+                            f"<b>{faculty.staff_name}</b><br/>{faculty.designation}<br/>{faculty.department}",
+                            s['Normal']), photo_rl]],
+                        colWidths=[5 * inch, 1.5 * inch]
+                    )
+                    hdr.setStyle(TableStyle([
+                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                    ]))
+                    el.append(hdr)
+                except Exception:
+                    el.append(Paragraph(f"<b>{faculty.staff_name}</b>", s['Normal']))
+            else:
+                el.append(Paragraph(f"<b>{faculty.staff_name}</b>", s['Normal']))
+            el.append(Spacer(1, 0.2 * inch))
+
+            # Info table rows
+            rows = [
+                ("Employee Code", faculty.employee_code),
+                ("Department", faculty.department),
+                ("Designation", faculty.designation),
+                ("Email", faculty.email),
+                ("Mobile", faculty.mobile),
+                ("Gender", faculty.gender),
+                ("Date of Birth", faculty.dob.strftime('%d-%m-%Y') if faculty.dob else "N/A"),
+                ("Father's Name", faculty.father_name or "N/A"),
+                ("Mother's Name", faculty.mother_name or "N/A"),
+                ("State", faculty.state or "N/A"),
+                ("Caste", faculty.caste or "N/A"),
+                ("Sub-Caste", faculty.sub_caste or "N/A"),
+                ("Nationality", faculty.nationality or "N/A"),
+                ("Address", faculty.address or "N/A"),
+                ("Joining Date", faculty.joining_date.strftime('%d-%m-%Y') if faculty.joining_date else "N/A"),
+                ("Experience at Anurag", faculty.exp_anurag or "N/A"),
+                ("Experience (Other)", faculty.exp_other or "N/A"),
+                ("Total Experience", experience),
+                ("Status", "Active" if faculty.is_active else "Inactive"),
+                ("JNTUH ID", faculty.jntuh_id or "N/A"),
+                ("AICTE ID", faculty.aicte_id or "N/A"),
+                ("PAN Number", faculty.pan or "N/A"),
+                ("Aadhar Number", faculty.aadhar or "N/A"),
+                ("APAAR ID", faculty.apaar_id or "N/A"),
+                ("ORCID ID", faculty.orcid_id or "N/A"),
+                ("SSC Year", str(faculty.ssc_year or "N/A")),
+                ("SSC %", str(faculty.ssc_percent or "N/A")),
+                ("SSC School", faculty.ssc_school or "N/A"),
+                ("Inter Year", str(faculty.inter_year or "N/A")),
+                ("Inter %", str(faculty.inter_percent or "N/A")),
+                ("Inter College", faculty.inter_college or "N/A"),
+                ("UG Degree", faculty.ug_degree or "N/A"),
+                ("UG Year", str(faculty.ug_year or "N/A")),
+                ("UG %", str(faculty.ug_percentage or "N/A")),
+                ("UG College", faculty.ug_college or "N/A"),
+                ("UG Specialization", faculty.ug_spec or "N/A"),
+                ("PG Degree", faculty.pg_degree or "N/A"),
+                ("PG Year", str(faculty.pg_year or "N/A")),
+                ("PG %", str(faculty.pg_percentage or "N/A")),
+                ("PG College", faculty.pg_college or "N/A"),
+                ("PG Specialization", faculty.pg_spec or "N/A"),
+                ("PhD Status", faculty.phd_degree or "N/A"),
+                ("PhD Year", str(faculty.phd_year or "N/A")),
+                ("PhD University", faculty.phd_university or "N/A"),
+                ("PhD Specialization", faculty.phd_spec or "N/A"),
+                ("Subjects Dealt", faculty.subjects_dealt or "N/A"),
+                ("About / Research", faculty.about_yourself or "N/A"),
+                ("Results", faculty.results or "N/A"),
+                ("SCM Details", faculty.scm or "N/A"),
+                ("Aadhar Document", "Uploaded" if bool(faculty.aadhar_file) else "Not Uploaded"),
+                ("PAN Document", "Uploaded" if bool(faculty.pan_file) else "Not Uploaded"),
+                ("APAAR Document", "Uploaded" if bool(faculty.apaar_file) else "Not Uploaded"),
+                ("SCM Document", "Uploaded" if bool(faculty.scm_file) else "Not Uploaded"),
+                ("JNTUH Bio-Data", "Uploaded" if bool(faculty.jntuh_biodata) else "Not Uploaded"),
+            ]
+
+            td = [
+                [Paragraph(f"<b>{l}</b>", s['Normal']),
+                 Paragraph(str(v) if v else "N/A", s['Normal'])]
+                for l, v in rows
+            ]
+            tbl = Table(td, colWidths=[2.2 * inch, 4.3 * inch])
+            tbl.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('PADDING', (0, 0), (-1, -1), 5),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ]))
+            el.append(tbl)
+
+            # Research projects table
+            if research_projects:
+                el.append(Spacer(1, 0.2 * inch))
+                el.append(Paragraph("<b>RESEARCH PROJECTS</b>",
+                                    ParagraphStyle('rh', fontSize=12, fontName='Helvetica-Bold')))
+                el.append(Spacer(1, 0.1 * inch))
+                rp_data = [['Type', 'Title', 'Journal/Publisher', 'DOI/ISSN']]
+                for rp in research_projects:
+                    rp_data.append([
+                        rp.research_type or '',
+                        rp.title_of_project or '',
+                        (rp.journal_name or rp.publisher_name or ''),
+                        (rp.doi or rp.issn_number or '')
+                    ])
+                rp_tbl = Table(rp_data, colWidths=[1.2 * inch, 2.5 * inch, 2 * inch, 1 * inch])
+                rp_tbl.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('PADDING', (0, 0), (-1, -1), 4),
+                ]))
+                el.append(rp_tbl)
+
+            el.append(Spacer(1, 0.2 * inch))
+            el.append(Paragraph(
+                f"Generated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
+                s['Normal']
+            ))
+            docrl.build(el)
+            print(f"Main PDF (ReportLab): {main_pdf_path}")
+
+        # Collect documents with enhanced validation
+        image_files = []
+        pdf_files = []
+
+        # Add photo if available
+        if temp_photo_path and os.path.exists(temp_photo_path):
+            is_valid, error = validate_image_file(temp_photo_path)
+            if is_valid:
+                image_files.append(temp_photo_path)
+                print(f"  [OK] Photo added: {temp_photo_path}")
+            else:
+                print(f"  [SKIP] Photo invalid: {error}")
+
+        # Process document fields with enhanced validation
+        doc_fields = [
+            ('aadhar_file', 'Aadhar Card'),
+            ('pan_file', 'PAN Card'),
+            ('apaar_file', 'APAAR Document'),
+            ('scm_file', 'SCM Document'),
+            ('jntuh_biodata', 'JNTUH Bio-Data'),
+            ('ssc_certificate', 'SSC Certificate'),
+            ('inter_certificate', 'Intermediate Certificate'),
+            ('ug_certificate', 'UG Certificate'),
+            ('pg_certificate', 'PG Certificate'),
+            ('phd_certificate', 'PhD Certificate'),
+        ]
+
+        for field_name, field_label in doc_fields:
+            doc_field = getattr(faculty, field_name, None)
+            if not doc_field:
+                print(f"  [SKIP] {field_label}: not uploaded")
+                continue
+
+            try:
+                # Get the file URL or path
+                if hasattr(doc_field, 'url'):
+                    file_url = doc_field.url
+                else:
+                    file_url = str(doc_field)
+
+                # For Cloudinary raw files, add fl_attachment to bypass HTML wrapper
+                if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
+                    doc_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                else:
+                    doc_url = file_url
+
+                print(f"  Processing {field_label}: {doc_url}")
+
+                # Download with validation
+                r = requests.get(doc_url, timeout=30)
+                if r.status_code != 200:
+                    print(f"  [ERROR] HTTP {r.status_code} for {field_label}")
+                    continue
+
+                content = r.content
+                print(f"  Downloaded {len(content)} bytes, starts: {content[:4]}")
+
+                # Skip if empty
+                if len(content) == 0:
+                    print(f"  [SKIP] {field_label}: empty file")
+                    continue
+
+                # Check if it's a PDF
+                if content.startswith(b'%PDF'):
+                    # Save as PDF and validate
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
+                        tc.write(content)
+                        tc_path = tc.name
+
+                    is_valid, error = validate_pdf_file(tc_path)
+                    if is_valid:
+                        pdf_files.append(tc_path)
+                        temp_files.append(tc_path)
+                        print(f"  [OK] Added PDF: {field_label}")
+                    else:
+                        print(f"  [SKIP] PDF validation failed: {field_label} - {error}")
+                        os.unlink(tc_path)
+                else:
+                    # Try to save as image
+                    try:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".img") as ti:
+                            ti.write(content)
+                            img_path = ti.name
+
+                        is_valid, error = validate_image_file(img_path)
+                        if is_valid:
+                            image_files.append(img_path)
+                            temp_files.append(img_path)
+                            print(f"  [OK] Added image: {field_label}")
+                        else:
+                            print(f"  [SKIP] Image validation failed: {field_label} - {error}")
+                            os.unlink(img_path)
+                    except Exception as img_err:
+                        print(f"  [ERROR] Cannot save as image: {img_err}")
+
+            except Exception as e:
+                print(f"  [ERROR] Failed to process {field_label}: {e}")
+
+        # Process certificates from Certificate model
+        for cert in certificates:
+            cert_label = f"Certificate: {cert.certificate_type}"
+            cert_url = None
+
+            if cert.certificate_file:
+                try:
+                    if hasattr(cert.certificate_file, 'url'):
+                        file_url = cert.certificate_file.url
+                    else:
+                        file_url = str(cert.certificate_file)
+
+                    # Add fl_attachment for Cloudinary raw files
+                    if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
+                        cert_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                    else:
+                        cert_url = file_url
+                except Exception:
+                    pass
+            elif cert.cloudinary_url:
+                file_url = cert.cloudinary_url
+                if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
+                    cert_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
+                else:
+                    cert_url = file_url
+
+            if not cert_url:
+                continue
+
+            try:
+                r = requests.get(cert_url, timeout=30)
+                if r.status_code != 200:
+                    continue
+
+                content = r.content
+                if content.startswith(b'%PDF'):
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
+                        tc.write(content)
+                        tc_path = tc.name
+                    pdf_files.append(tc_path)
+                    temp_files.append(tc_path)
+                    print(f"  [OK] Added certificate PDF: {cert_label}")
+                else:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as ti:
+                        ti.write(content)
+                        img_path = ti.name
+                    image_files.append(img_path)
+                    temp_files.append(img_path)
+                    print(f"  [OK] Added certificate image: {cert_label}")
+            except Exception as e:
+                print(f"  [ERROR] Certificate {cert_label}: {e}")
+
+        # Merge all documents
+        print("\n--- MERGING DOCUMENTS ---")
+        print(f"  Images to merge: {len(image_files)}")
+        print(f"  PDFs to merge: {len(pdf_files)}")
+
+        # Create final output path
+        final_output = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+        final_pdf_path = final_output.name
+        final_output.close()
+        temp_files.append(final_pdf_path)
+
+        # Use the enhanced merge function
+        merge_success = merge_documents(
+            output_path=final_pdf_path,
+            image_files=image_files,
+            pdf_files=pdf_files
         )
 
-        subtitle_style = ParagraphStyle(
-            'CustomSubtitle',
-            parent=styles['Normal'],
-            fontSize=12,
-            leading=14,
-            spaceAfter=12,
-            alignment=1,  # Center alignment
-            textColor=colors.navy
-        )
+        if not merge_success:
+            raise Exception("Failed to merge documents with enhanced validation")
 
-        section_style = ParagraphStyle(
-            'SectionHeader',
-            parent=styles['Normal'],
-            fontSize=12,
-            leading=14,
-            spaceBefore=12,
-            spaceAfter=6,
-            fontWeight='bold',
-            textColor=colors.darkblue
-        )
-
-        normal_style = ParagraphStyle(
-            'CustomNormal',
-            parent=styles['Normal'],
-            fontSize=10,
-            leading=12,
-            spaceAfter=3
-        )
-
-        table_style = TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ])
-
-        # Header
-        story.append(Paragraph("ANURAG ENGINEERING COLLEGE", title_style))
-        story.append(Paragraph("DEPARTMENT OF INFORMATION TECHNOLOGY", subtitle_style))
-        story.append(Paragraph("FACULTY PROFILE REPORT", title_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # Employee info table
-        employee_data = [
-            [Paragraph("<b>Employee Code:</b>", normal_style),
-             Paragraph(str(faculty.employee_code), normal_style),
-             Paragraph("<b>Generated:</b>", normal_style),
-             Paragraph(datetime.now().strftime("%d-%m-%Y"), normal_style)]
-        ]
-        employee_table = Table(employee_data, colWidths=[1.5 * inch, 2 * inch, 1.5 * inch, 1.5 * inch])
-        employee_table.setStyle(table_style)
-        story.append(employee_table)
-        story.append(Spacer(1, 0.3 * inch))
-
-        # 1. PERSONAL INFORMATION
-        story.append(Paragraph("1. PERSONAL INFORMATION", section_style))
-        personal_data = [
-            [Paragraph("<b>Full Name</b>", normal_style), Paragraph(faculty.staff_name or "N/A", normal_style)],
-            [Paragraph("<b>Employee Code</b>", normal_style), Paragraph(faculty.employee_code or "N/A", normal_style)],
-            [Paragraph("<b>Father's Name</b>", normal_style), Paragraph(faculty.father_name or "N/A", normal_style)],
-            [Paragraph("<b>Mother's Name</b>", normal_style), Paragraph(faculty.mother_name or "N/A", normal_style)],
-            [Paragraph("<b>Date of Birth</b>", normal_style),
-             Paragraph(faculty.dob.strftime('%d %B %Y') if faculty.dob else "N/A", normal_style)],
-            [Paragraph("<b>Gender</b>", normal_style), Paragraph(faculty.gender or "N/A", normal_style)],
-            [Paragraph("<b>State</b>", normal_style), Paragraph(faculty.state or "N/A", normal_style)],
-            [Paragraph("<b>Caste</b>", normal_style), Paragraph(faculty.caste or "N/A", normal_style)],
-            [Paragraph("<b>Sub-Caste</b>", normal_style), Paragraph(faculty.sub_caste or "N/A", normal_style)],
-            [Paragraph("<b>Nationality</b>", normal_style), Paragraph(faculty.nationality or "N/A", normal_style)],
-            [Paragraph("<b>Permanent Address</b>", normal_style), Paragraph(faculty.address or "N/A", normal_style)],
-        ]
-        personal_table = Table(personal_data, colWidths=[2 * inch, 4.5 * inch])
-        personal_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(personal_table)
-        story.append(PageBreak())
-
-        # 2. PROFESSIONAL INFORMATION
-        story.append(Paragraph("2. PROFESSIONAL INFORMATION", section_style))
-        professional_data = [
-            [Paragraph("<b>Department</b>", normal_style), Paragraph(faculty.department or "N/A", normal_style)],
-            [Paragraph("<b>Designation</b>", normal_style), Paragraph(faculty.designation or "N/A", normal_style)],
-            [Paragraph("<b>Joining Date</b>", normal_style),
-             Paragraph(faculty.joining_date.strftime('%d %B %Y') if faculty.joining_date else "N/A", normal_style)],
-            [Paragraph("<b>Experience at Anurag</b>", normal_style),
-             Paragraph(faculty.exp_anurag or "Not Specified", normal_style)],
-            [Paragraph("<b>Experience (Other)</b>", normal_style),
-             Paragraph(faculty.exp_other or "Not Specified", normal_style)],
-            [Paragraph("<b>Total Experience</b>", normal_style), Paragraph(experience, normal_style)],
-            [Paragraph("<b>Email</b>", normal_style), Paragraph(faculty.email or "N/A", normal_style)],
-            [Paragraph("<b>Mobile</b>", normal_style), Paragraph(faculty.mobile or "N/A", normal_style)],
-            [Paragraph("<b>Phone</b>", normal_style), Paragraph(faculty.phone or "N/A", normal_style)],
-            [Paragraph("<b>Current Status</b>", normal_style),
-             Paragraph("ACTIVE" if faculty.is_active else "INACTIVE", normal_style)],
-        ]
-        professional_table = Table(professional_data, colWidths=[2 * inch, 4.5 * inch])
-        professional_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(professional_table)
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 3. PROFESSIONAL IDs
-        story.append(Paragraph("3. PROFESSIONAL IDs", section_style))
-        ids_data = [
-            [Paragraph("<b>JNTUH ID</b>", normal_style), Paragraph(faculty.jntuh_id or "N/A", normal_style)],
-            [Paragraph("<b>AICTE ID</b>", normal_style), Paragraph(faculty.aicte_id or "N/A", normal_style)],
-            [Paragraph("<b>PAN Number</b>", normal_style), Paragraph(faculty.pan or "N/A", normal_style)],
-            [Paragraph("<b>Aadhar Number</b>", normal_style), Paragraph(faculty.aadhar or "N/A", normal_style)],
-            [Paragraph("<b>APAAR ID</b>", normal_style), Paragraph(faculty.apaar_id or "N/A", normal_style)],
-            [Paragraph("<b>ORCID ID</b>", normal_style), Paragraph(faculty.orcid_id or "N/A", normal_style)],
-        ]
-        ids_table = Table(ids_data, colWidths=[2 * inch, 4.5 * inch])
-        ids_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(ids_table)
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH
-        story.append(Paragraph("4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH", section_style))
-        ssc_data = [
-            [Paragraph("<b>Year</b>", normal_style),
-             Paragraph(str(faculty.ssc_year) if faculty.ssc_year else "N/A", normal_style)],
-            [Paragraph("<b>Percentage</b>", normal_style),
-             Paragraph(str(faculty.ssc_percent) if faculty.ssc_percent else "N/A", normal_style)],
-            [Paragraph("<b>School</b>", normal_style), Paragraph(faculty.ssc_school or "N/A", normal_style)],
-        ]
-        ssc_table = Table(ssc_data, colWidths=[2 * inch, 4.5 * inch])
-        ssc_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(ssc_table)
-        story.append(PageBreak())
-
-        # 5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE
-        story.append(Paragraph("5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE", section_style))
-        inter_data = [
-            [Paragraph("<b>Year</b>", normal_style),
-             Paragraph(str(faculty.inter_year) if faculty.inter_year else "N/A", normal_style)],
-            [Paragraph("<b>Percentage</b>", normal_style),
-             Paragraph(str(faculty.inter_percent) if faculty.inter_percent else "N/A", normal_style)],
-            [Paragraph("<b>College</b>", normal_style), Paragraph(faculty.inter_college or "N/A", normal_style)],
-        ]
-        inter_table = Table(inter_data, colWidths=[2 * inch, 4.5 * inch])
-        inter_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(inter_table)
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 6. EDUCATIONAL QUALIFICATIONS - UG
-        story.append(Paragraph("6. EDUCATIONAL QUALIFICATIONS - UG", section_style))
-        ug_data = [
-            [Paragraph("<b>Degree</b>", normal_style), Paragraph(faculty.ug_degree or "N/A", normal_style)],
-            [Paragraph("<b>Year</b>", normal_style),
-             Paragraph(str(faculty.ug_year) if faculty.ug_year else "N/A", normal_style)],
-            [Paragraph("<b>Percentage</b>", normal_style),
-             Paragraph(str(faculty.ug_percentage) if faculty.ug_percentage else "N/A", normal_style)],
-            [Paragraph("<b>College</b>", normal_style), Paragraph(faculty.ug_college or "N/A", normal_style)],
-            [Paragraph("<b>Specialization</b>", normal_style), Paragraph(faculty.ug_spec or "N/A", normal_style)],
-        ]
-        ug_table = Table(ug_data, colWidths=[2 * inch, 4.5 * inch])
-        ug_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(ug_table)
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 7. EDUCATIONAL QUALIFICATIONS - PG
-        story.append(Paragraph("7. EDUCATIONAL QUALIFICATIONS - PG", section_style))
-        pg_data = [
-            [Paragraph("<b>Degree</b>", normal_style), Paragraph(faculty.pg_degree or "N/A", normal_style)],
-            [Paragraph("<b>Year</b>", normal_style),
-             Paragraph(str(faculty.pg_year) if faculty.pg_year else "N/A", normal_style)],
-            [Paragraph("<b>Percentage</b>", normal_style),
-             Paragraph(str(faculty.pg_percentage) if faculty.pg_percentage else "N/A", normal_style)],
-            [Paragraph("<b>College</b>", normal_style), Paragraph(faculty.pg_college or "N/A", normal_style)],
-            [Paragraph("<b>Specialization</b>", normal_style), Paragraph(faculty.pg_spec or "N/A", normal_style)],
-        ]
-        pg_table = Table(pg_data, colWidths=[2 * inch, 4.5 * inch])
-        pg_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(pg_table)
-        story.append(PageBreak())
-
-        # 8. EDUCATIONAL QUALIFICATIONS - PhD
-        story.append(Paragraph("8. EDUCATIONAL QUALIFICATIONS - PhD", section_style))
-        phd_data = [
-            [Paragraph("<b>Status</b>", normal_style), Paragraph(faculty.phd_degree or "N/A", normal_style)],
-            [Paragraph("<b>Year</b>", normal_style),
-             Paragraph(str(faculty.phd_year) if faculty.phd_year else "N/A", normal_style)],
-            [Paragraph("<b>University</b>", normal_style), Paragraph(faculty.phd_university or "N/A", normal_style)],
-            [Paragraph("<b>Specialization</b>", normal_style), Paragraph(faculty.phd_spec or "N/A", normal_style)],
-        ]
-        phd_table = Table(phd_data, colWidths=[2 * inch, 4.5 * inch])
-        phd_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(phd_table)
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 9. SUBJECTS DEALT
-        story.append(Paragraph("9. SUBJECTS DEALT", section_style))
-        subjects = faculty.subjects_dealt or "N/A"
-        story.append(Paragraph(subjects.replace(',', ' '), normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 10. SCM (SERVICE/CONSULTANCY/MOU)
-        story.append(Paragraph("10. SCM (SERVICE/CONSULTANCY/MOU)", section_style))
-        scm = faculty.scm or "N/A"
-        story.append(Paragraph(scm, normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 11. RESEARCH & PUBLICATIONS
-        story.append(Paragraph("11. RESEARCH & PUBLICATIONS", section_style))
-        if research_publications.exists():
-            for pub in research_publications:
-                pub_text = f"• {pub.title} ({pub.publication_year})"
-                if pub.journal_name:
-                    pub_text += f" - {pub.journal_name}"
-                story.append(Paragraph(pub_text, normal_style))
-        else:
-            story.append(Paragraph("No research publications data available", normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 12. CERTIFICATES
-        story.append(Paragraph("12. CERTIFICATES", section_style))
-        if certificates.exists():
-            for cert in certificates:
-                cert_text = f"• {cert.certificate_type} ({cert.issue_date})"
-                story.append(Paragraph(cert_text, normal_style))
-        else:
-            story.append(Paragraph("No certificates uploaded", normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 13. FDP / WORKSHOPS ATTENDED
-        story.append(Paragraph("13. FDP / WORKSHOPS ATTENDED", section_style))
-        if fdps.exists():
-            for fdp in fdps:
-                fdp_text = f"• {fdp.title} ({fdp.from_date} to {fdp.to_date})"
-                story.append(Paragraph(fdp_text, normal_style))
-        else:
-            story.append(Paragraph("No FDP/Workshop data available", normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 14. B.TECH PROJECTS HANDLED
-        story.append(Paragraph("14. B.TECH PROJECTS HANDLED", section_style))
-        if btech_projects.exists():
-            for project in btech_projects:
-                project_text = f"• {project.student_name} - {project.project_title}"
-                story.append(Paragraph(project_text, normal_style))
-        else:
-            story.append(Paragraph("No project data available", normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 15. RESULTS / ACADEMIC PERFORMANCE
-        story.append(Paragraph("15. RESULTS / ACADEMIC PERFORMANCE", section_style))
-        results = faculty.results or "N/A"
-        story.append(Paragraph(results, normal_style))
-        story.append(Spacer(1, 0.2 * inch))
-
-        # 16. UPLOADED DOCUMENTS
-        story.append(Paragraph("16. UPLOADED DOCUMENTS", section_style))
-        docs_data = [
-            [Paragraph("<b>Aadhar Card:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.aadhar_file else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>PAN Card:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.pan_file else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>APAAR Document:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.apaar_file else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>SCM Document:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.scm_file else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>JNTUH Bio-Data:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.jntuh_biodata else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>SSC Certificate:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.ssc_certificate else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>Inter Certificate:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.inter_certificate else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>UG Certificate:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.ug_certificate else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>PG Certificate:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.pg_certificate else "✗ Not Uploaded", normal_style)],
-            [Paragraph("<b>PhD Certificate:</b>", normal_style),
-             Paragraph("✓ Uploaded" if faculty.phd_certificate else "✗ Not Uploaded", normal_style)],
-        ]
-        docs_table = Table(docs_data, colWidths=[2.5 * inch, 4 * inch])
-        docs_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ]))
-        story.append(docs_table)
-        story.append(PageBreak())
-
-        # 17. VERIFICATION & AUTHORIZATION
-        story.append(Paragraph("17. VERIFICATION & AUTHORIZATION", section_style))
-        story.append(Paragraph(
-            "This document verifies that the information contained herein is accurate and complete to the best of our knowledge.",
-            normal_style))
-        story.append(Spacer(1, 0.3 * inch))
-
-        signature_data = [
-            [Paragraph("_________________________", normal_style),
-             Paragraph("_________________________", normal_style)],
-            [Paragraph("KAMBHAMPATI VIJAY KUMAR", normal_style),
-             Paragraph("Head of Department", normal_style)],
-            [Paragraph("Faculty Member", normal_style),
-             Paragraph("INFORMATION TECHNOLOGY", normal_style)],
-            [Paragraph("", normal_style),
-             Paragraph("", normal_style)],
-            [Paragraph("_________________________", normal_style),
-             Paragraph("_________________________", normal_style)],
-            [Paragraph("Principal", normal_style),
-             Paragraph("Anurag Engineering College", normal_style)],
-        ]
-        signature_table = Table(signature_data, colWidths=[3 * inch, 3 * inch])
-        signature_table.setStyle(TableStyle([
-            ('FONT', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ]))
-        story.append(signature_table)
-        story.append(Spacer(1, 0.3 * inch))
-
-        story.append(
-            Paragraph(f"*ANURAG-FAC-{faculty.employee_code}-{datetime.now().strftime('%Y%m%d')}*", normal_style))
-        story.append(Spacer(1, 0.1 * inch))
-        story.append(Paragraph("This is an electronically generated official document of Anurag Engineering College.",
-                               normal_style))
-        story.append(Spacer(1, 0.1 * inch))
-        story.append(Paragraph("ANURAG ENGINEERING COLLEGE | © 2026", normal_style))
-
-        # Build PDF
-        doc.build(story)
-        pdf_value = buffer.getvalue()
-        buffer.close()
+        print(f"Final merged PDF: {final_pdf_path}")
 
         # Upload to Cloudinary
         if is_cloudinary_configured():
             try:
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp:
-                    tmp.write(pdf_value)
-                    tmp_path = tmp.name
-
-                temp_files.append(tmp_path)
-
                 ur = cloudinary.uploader.upload(
-                    tmp_path,
+                    final_pdf_path,
                     resource_type="raw",
                     folder="faculty_generated_pdfs",
                     public_id=f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}",
                     overwrite=True
                 )
-
                 faculty.cloudinary_pdf_url = ur["secure_url"]
                 faculty.save()
                 print(f"Uploaded to Cloudinary: {ur['secure_url']}")
-
                 CloudinaryUpload.objects.create(
                     faculty=faculty,
                     upload_type='pdf',
@@ -2500,35 +2610,51 @@ def generate_faculty_pdf_clean(request, faculty_id):
                     resource_type=ur['resource_type'],
                     uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                 )
-
-                os.unlink(tmp_path)
-
             except Exception as e:
                 print(f"Cloudinary upload error: {e}")
 
         # Return PDF
-        response = HttpResponse(pdf_value, content_type='application/pdf')
-        fname = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
-        response['Content-Disposition'] = f'attachment; filename="{fname}"'
+        with open(final_pdf_path, 'rb') as pf:
+            response = HttpResponse(pf.read(), content_type='application/pdf')
+            fname = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{fname}"'
+
+        # Cleanup
+        for tmp in temp_files:
+            try:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+                    print(f"Cleaned: {tmp}")
+            except Exception:
+                pass
 
         FacultyLog.objects.create(
             faculty=faculty,
-            action='PDF Generated (Clean)',
-            details=f'Clean PDF generated for {faculty.employee_code}',
+            action='PDF Generated',
+            details=f'Enhanced PDF generated for {faculty.employee_code} with {len(image_files)} images and {len(pdf_files)} PDFs merged',
             performed_by=request.user.username if request.user.is_authenticated else 'Anonymous',
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
-        print(f"{'=' * 60}\nCLEAN PDF GENERATION COMPLETE\n{'=' * 60}")
+        print(
+            f"{'=' * 60}\nENHANCED PDF GENERATION COMPLETE - {len(image_files)} images, {len(pdf_files)} PDFs merged\n{'=' * 60}")
         return response
 
     except Exception as e:
-        logger.error(f"Clean PDF Generation Error: {e}")
+        logger.error(f"Enhanced PDF Generation Error: {e}")
         import traceback
         traceback.print_exc()
         messages.error(request, f'Error generating faculty PDF: {e}')
         return redirect('dashboard:faculty_dashboard')
 
+
+@login_required
+def generate_faculty_pdf_clean(request, faculty_id):
+    """Clean PDF generation - alias for generate_faculty_pdf"""
+    return generate_faculty_pdf(request, faculty_id)
+
+
+# ==================== PDF GENERATION HELPERS ====================
 
 def generate_pdf_with_data(request):
     if request.method == 'POST':
@@ -2627,7 +2753,28 @@ def bulk_generate_faculty_pdfs(request):
     return redirect('dashboard:faculty_list')
 
 
-# ==================== CLOUDINARY MANAGEMENT ====================
+# ==================== FACULTY PDF HELPERS ====================
+
+@login_required
+def faculty_pdf(request, faculty_id):
+    """Redirect to generate faculty PDF"""
+    return redirect('dashboard:generate_faculty_pdf', faculty_id=faculty_id)
+
+
+@login_required
+def ajax_check_pdf_status(request, faculty_id):
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+    has_pdf = bool(faculty.cloudinary_pdf_url)
+    return JsonResponse({
+        'success': True,
+        'status': {
+            'has_cloudinary_pdf': has_pdf,
+            'cloudinary_url': faculty.cloudinary_pdf_url if has_pdf else None,
+        }
+    })
+
+
+# ==================== CLOUDINARY MANAGEMENT (CONTINUED) ====================
 
 @login_required
 @csrf_exempt
@@ -3938,23 +4085,3 @@ def clear_session(request):
         if v: request.session[k] = v
     messages.success(request, 'Session data cleared successfully.')
     return redirect('dashboard:session_info')
-
-
-# ==================== FACULTY PDF HELPERS ====================
-
-@login_required
-def faculty_pdf(request, faculty_id):
-    return redirect('dashboard:generate_faculty_pdf', faculty_id=faculty_id)
-
-
-@login_required
-def ajax_check_pdf_status(request, faculty_id):
-    faculty = get_object_or_404(Faculty, id=faculty_id)
-    has_pdf = bool(faculty.cloudinary_pdf_url)
-    return JsonResponse({
-        'success': True,
-        'status': {
-            'has_cloudinary_pdf': has_pdf,
-            'cloudinary_url': faculty.cloudinary_pdf_url if has_pdf else None,
-        }
-    })
