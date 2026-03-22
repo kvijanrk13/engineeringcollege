@@ -1262,7 +1262,89 @@
                             </div>
                         </div>
 
-                        <!-- Additional Information -->
+                        <!-- NEW: Detailed Results Section -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Results / Academic Performance</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Subject Name</label>
+                                        <input type="text" class="form-control" name="result_subject_name" id="resultSubjectName">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Subject Code</label>
+                                        <input type="text" class="form-control" name="result_subject_code" id="resultSubjectCode">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Number of Students Attempted</label>
+                                        <input type="number" class="form-control" name="result_students_attempted" id="resultStudentsAttempted" oninput="calculateResultPercentage()">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Number of Students Passed</label>
+                                        <input type="number" class="form-control" name="result_students_passed" id="resultStudentsPassed" oninput="calculateResultPercentage()">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Result (%)</label>
+                                        <input type="text" class="form-control" name="result_percentage" id="resultPercentage" readonly>
+                                        <small class="text-muted">Auto-calculated from Attempted and Passed</small>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 text-center">
+                                        <button type="button" class="btn btn-success" onclick="addResultEntry()">
+                                            <i class="fas fa-plus me-2"></i>Add Result Entry
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Results Table -->
+                                <div class="row mt-4" id="resultsSection" style="display: none;">
+                                    <div class="col-md-12">
+                                        <h6 class="bg-light p-2">Added Results</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm" id="resultsTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Subject Name</th>
+                                                        <th>Subject Code</th>
+                                                        <th>Attempted</th>
+                                                        <th>Passed</th>
+                                                        <th>Result (%)</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="resultsBody">
+                                                    <!-- Results will be added here dynamically -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NEW: About Yourself TextBox -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">About Yourself</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">About Yourself</label>
+                                        <textarea class="form-control" name="about_yourself" rows="5" maxlength="1000" placeholder="Tell us about yourself (max 1000 characters)">{{ faculty.about_yourself|default:'' }}</textarea>
+                                        <small class="text-muted">Maximum 1000 characters</small>
+                                        <div id="charCount" class="text-muted mt-1">0 / 1000 characters</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information (Original) -->
                         <div class="card mb-3">
                             <div class="card-header bg-info text-white">
                                 <h5 class="mb-0">Additional Information</h5>
@@ -1279,12 +1361,6 @@
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">SCM (Service/Consultancy/MOU) Details</label>
                                         <textarea class="form-control" name="scm" rows="3">{{ faculty.scm|default:'' }}</textarea>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">Results / Academic Performance</label>
-                                        <textarea class="form-control" name="results" rows="3">{{ faculty.results|default:'' }}</textarea>
                                     </div>
                                 </div>
                             </div>
@@ -1508,19 +1584,15 @@
 
         fetch('/faculty/' + deleteId + '/delete/', {
             method: 'POST',
-            // FIX 1: credentials ensures the session cookie is sent
             credentials: 'same-origin',
             headers: {
-                // FIX 2: reads CSRF from cookie (not template tag, which breaks in JS)
                 'X-CSRFToken': getCookie('csrftoken'),
-                // FIX 3: tells the view to return JSON instead of redirecting
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json',
             }
         })
         .then(function (response) {
             if (response.redirected || response.status === 302) {
-                // Session expired - redirected to login
                 window.location.href = '/login/';
                 return null;
             }
@@ -1533,7 +1605,6 @@
             if (!data) return;
 
             if (data.success) {
-                // Remove the deleted row from the table
                 var row = document.querySelector('tr[data-faculty-id="' + deleteId + '"]');
                 if (row) {
                     row.style.transition = 'opacity 0.3s';
@@ -1586,16 +1657,119 @@
         document.getElementById('expAnurag').value = experience;
     }
 
-    // Call on page load if joining date exists
     window.onload = function() {
         calculateExperience();
+        // Character counter for About Yourself
+        var aboutTextarea = document.querySelector('textarea[name="about_yourself"]');
+        if (aboutTextarea) {
+            var charCount = document.getElementById('charCount');
+            aboutTextarea.addEventListener('input', function() {
+                var length = this.value.length;
+                charCount.textContent = length + ' / 1000 characters';
+                if (length > 1000) {
+                    charCount.style.color = 'red';
+                } else {
+                    charCount.style.color = '';
+                }
+            });
+            charCount.textContent = aboutTextarea.value.length + ' / 1000 characters';
+        }
     };
+
+    // ==================== RESULT PERCENTAGE CALCULATION ====================
+    function calculateResultPercentage() {
+        var attempted = document.getElementById('resultStudentsAttempted')?.value;
+        var passed = document.getElementById('resultStudentsPassed')?.value;
+
+        if (attempted && passed && parseFloat(attempted) > 0) {
+            var percentage = (parseFloat(passed) / parseFloat(attempted)) * 100;
+            document.getElementById('resultPercentage').value = percentage.toFixed(2);
+        } else {
+            document.getElementById('resultPercentage').value = '';
+        }
+    }
+
+    // ==================== RESULT ENTRIES ====================
+    var resultEntries = [];
+
+    window.addResultEntry = function() {
+        var subjectName = document.getElementById('resultSubjectName').value;
+        var subjectCode = document.getElementById('resultSubjectCode').value;
+        var attempted = document.getElementById('resultStudentsAttempted').value;
+        var passed = document.getElementById('resultStudentsPassed').value;
+        var percentage = document.getElementById('resultPercentage').value;
+
+        if (!subjectName || !subjectCode || !attempted || !passed) {
+            alert('Please fill all result fields (Subject Name, Subject Code, Attempted, Passed)');
+            return;
+        }
+
+        var entry = {
+            subject_name: subjectName,
+            subject_code: subjectCode,
+            attempted: attempted,
+            passed: passed,
+            percentage: percentage
+        };
+
+        resultEntries.push(entry);
+        updateResultsTable();
+        clearResultForm();
+    };
+
+    function updateResultsTable() {
+        var tbody = document.getElementById('resultsBody');
+        if (!tbody) return;
+
+        if (resultEntries.length > 0) {
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        tbody.innerHTML = '';
+        resultEntries.forEach(function(entry, index) {
+            var row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${escapeHtml(entry.subject_name)}</td>
+                <td>${escapeHtml(entry.subject_code)}</td>
+                <td>${entry.attempted}</td>
+                <td>${entry.passed}</td>
+                <td>${entry.percentage}%</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeResultEntry(${index})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+        });
+    }
+
+    window.removeResultEntry = function(index) {
+        resultEntries.splice(index, 1);
+        updateResultsTable();
+        if (resultEntries.length === 0) {
+            document.getElementById('resultsSection').style.display = 'none';
+        }
+    };
+
+    function clearResultForm() {
+        document.getElementById('resultSubjectName').value = '';
+        document.getElementById('resultSubjectCode').value = '';
+        document.getElementById('resultStudentsAttempted').value = '';
+        document.getElementById('resultStudentsPassed').value = '';
+        document.getElementById('resultPercentage').value = '';
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 
     // ==================== RESEARCH FIELDS TOGGLE ====================
     window.showResearchFields = function() {
         var researchType = document.getElementById('researchType').value;
 
-        // Hide all specific field sets
         document.getElementById('journalFields').style.display = 'none';
         document.getElementById('conferenceFields').style.display = 'none';
         document.getElementById('bookFields').style.display = 'none';
@@ -1605,7 +1779,6 @@
         document.getElementById('copyrightFields').style.display = 'none';
         document.getElementById('awardFields').style.display = 'none';
 
-        // Show the selected field set
         if (researchType === 'journal') {
             document.getElementById('journalFields').style.display = 'block';
         } else if (researchType === 'conference') {
@@ -1656,7 +1829,6 @@
             keywords: document.getElementById('researchKeywords').value
         };
 
-        // Add type-specific fields
         if (researchType === 'journal') {
             entry.journal_name = document.querySelector('[name="journal_name"]').value;
             entry.issn = document.querySelector('[name="journal_issn"]').value;
@@ -1690,8 +1862,8 @@
         researchEntries.forEach(function(entry, index) {
             var row = tbody.insertRow();
             row.innerHTML = `
-                <td>${entry.type_display}</td>
-                <td>${entry.title}</td>
+                <td>${escapeHtml(entry.type_display)}</td>
+                <td>${escapeHtml(entry.title)}</td>
                 <td>${entry.year || '-'}</td>
                 <td>${entry.status || '-'}</td>
                 <td>
@@ -1712,7 +1884,6 @@
     };
 
     function clearResearchForm() {
-        // Clear common fields
         document.getElementById('researchTitle').value = '';
         document.getElementById('researchAuthors').value = '';
         document.getElementById('researchYear').value = '';
@@ -1723,7 +1894,6 @@
         document.getElementById('researchAbstract').value = '';
         document.getElementById('researchKeywords').value = '';
 
-        // Clear type-specific fields
         document.querySelectorAll('[name^="journal_"], [name^="conference_"], [name^="book_"], [name^="chapter_"], [name^="patent_"], [name^="project_"], [name^="copyright_"], [name^="award_"]').forEach(function(input) {
             if (input.type === 'checkbox') {
                 input.checked = false;
@@ -1803,10 +1973,10 @@
         fdpEntries.forEach(function(entry, index) {
             var row = tbody.insertRow();
             row.innerHTML = `
-                <td>${entry.type_display}</td>
-                <td>${entry.title}</td>
+                <td>${escapeHtml(entry.type_display)}</td>
+                <td>${escapeHtml(entry.title)}</td>
                 <td>${entry.duration} days</td>
-                <td>${entry.organized_by || '-'}</td>
+                <td>${escapeHtml(entry.organized_by || '-')}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-danger" onclick="removeFDPEntry(${index})">
                         <i class="fas fa-trash"></i>
@@ -1882,10 +2052,10 @@
         projectEntries.forEach(function(entry, index) {
             var row = tbody.insertRow();
             row.innerHTML = `
-                <td>${entry.ht_no}</td>
-                <td>${entry.student_name}</td>
-                <td>${entry.batch || '-'}</td>
-                <td>${entry.title}</td>
+                <td>${escapeHtml(entry.ht_no)}</td>
+                <td>${escapeHtml(entry.student_name)}</td>
+                <td>${escapeHtml(entry.batch || '-')}</td>
+                <td>${escapeHtml(entry.title)}</td>
                 <td>${entry.approved || '-'}</td>
                 <td>${entry.marks || '-'}</td>
                 <td>
@@ -1915,8 +2085,6 @@
     }
 
     // ==================== HELPER FUNCTIONS ====================
-
-    // Read a cookie value by name (used for CSRF token)
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -1932,22 +2100,19 @@
         return cookieValue;
     }
 
-    // Show a dismissible Bootstrap alert at top of card
     function showAlert(type, message) {
         var container = document.getElementById('alertContainer');
         if (!container) return;
 
-        var alertDiv        = document.createElement('div');
-        alertDiv.className  = 'alert alert-' + type + ' alert-dismissible fade show';
+        var alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
         alertDiv.setAttribute('role', 'alert');
-        alertDiv.innerHTML  =
+        alertDiv.innerHTML =
             '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + ' me-2"></i>' +
             message +
             '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
 
         container.appendChild(alertDiv);
-
-        // Auto-remove after 4 seconds
         setTimeout(function () {
             if (alertDiv.parentNode) alertDiv.remove();
         }, 4000);
