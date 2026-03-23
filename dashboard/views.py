@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH RESULTS AND ABOUT YOURSELF SUPPORT
+# dashboard/views.py - COMPLETE MERGED VERSION WITH PROPER DATA HANDLING
 # ============================================================================
 
 import os
@@ -143,7 +143,7 @@ def convert_pdf_to_images(pdf_path):
             img_path = f"{pdf_path}_page_{i}.png"
             pix.save(img_path)
             images.append(img_path)
-            print(f"  Converted PDF page {i+1} to image: {img_path}")
+            print(f"  Converted PDF page {i + 1} to image: {img_path}")
 
         doc.close()
 
@@ -1349,6 +1349,8 @@ def faculty_list(request):
 
 # ==================== ADD FACULTY ====================
 
+# ==================== ADD FACULTY ====================
+
 @login_required
 def add_faculty(request):
     if request.method == "POST":
@@ -1360,12 +1362,17 @@ def add_faculty(request):
             def get_float_or_none(value):
                 return float(value) if value and value.strip() else None
 
+            def get_date_or_none(value):
+                """Convert empty string to None for date fields"""
+                return value if value and value.strip() else None
+
+            # Create faculty with all form data
             faculty = Faculty.objects.create(
                 staff_name=request.POST.get("staff_name"),
                 employee_code=request.POST.get("employee_code"),
                 father_name=request.POST.get("father_name"),
                 mother_name=request.POST.get("mother_name"),
-                dob=request.POST.get("dob") or None,
+                dob=get_date_or_none(request.POST.get("dob")),
                 gender=request.POST.get("gender"),
                 state=request.POST.get("state"),
                 caste=request.POST.get("caste"),
@@ -1377,7 +1384,7 @@ def add_faculty(request):
                 email=request.POST.get("email"),
                 department=request.POST.get("department"),
                 designation=request.POST.get("designation"),
-                joining_date=request.POST.get("joining_date") or None,
+                joining_date=get_date_or_none(request.POST.get("joining_date")),
                 jntuh_id=request.POST.get("jntuh_id"),
                 aicte_id=request.POST.get("aicte_id"),
                 pan=request.POST.get("pan"),
@@ -1409,6 +1416,8 @@ def add_faculty(request):
                 about_yourself=request.POST.get("about_yourself"),
                 results=request.POST.get("results"),
                 photo=request.FILES.get("photo"),
+                exp_anurag=request.POST.get("exp_anurag"),
+                exp_other=request.POST.get("exp_other"),
             )
             FacultyProfile.objects.create(faculty=faculty)
 
@@ -1428,9 +1437,10 @@ def add_faculty(request):
                         resource_type=cr["resource_type"],
                         uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                     )
+                    print(f"✅ Photo uploaded to Cloudinary: {cr['secure_url']}")
                 except Exception as e:
                     logger.error(f"Cloudinary upload error: {e}")
-                    messages.warning(request, "Faculty added but Cloudinary photo upload failed.")
+                    messages.warning(request, "Faculty added but Cloudinary photo upload failed. You can upload photo later.")
 
             # Save ALL document & certificate fields uploaded via the form
             doc_fields = [
@@ -1455,35 +1465,26 @@ def add_faculty(request):
 
                     if is_cloudinary_configured():
                         try:
-                            # For PDFs, use resource_type="raw", for images use "auto"
                             resource_type = "raw" if is_pdf else "auto"
 
-                            # Upload with explicit public access to avoid 401 errors
                             upload_options = {
                                 'resource_type': resource_type,
                                 'folder': f"faculty_documents/{faculty.employee_code}",
                                 'public_id': f"{doc_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                                 'overwrite': True,
-                                'type': 'upload',  # This makes it public
-                                'access_mode': 'public',  # Explicitly set public access
+                                'type': 'upload',
+                                'access_mode': 'public',
                             }
 
-                            # For raw files (PDFs), ensure they're publicly accessible
                             if resource_type == "raw":
-                                upload_options['access_control'] = None  # Remove any access restrictions
+                                upload_options['access_control'] = None
 
                             result = cloudinary.uploader.upload(uploaded_file, **upload_options)
 
-                            # Store the Cloudinary URL in the field
-                            # Add file extension for raw files to ensure proper downloading
                             if resource_type == "raw" and uploaded_file.name:
-                                # Get the original file extension
                                 file_ext = os.path.splitext(uploaded_file.name)[1]
                                 if file_ext:
-                                    # For raw files, Cloudinary returns URL without extension
-                                    # Add extension to ensure proper downloading
                                     base_url = result['secure_url']
-                                    # Check if URL already has extension
                                     if not base_url.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
                                         url = base_url + file_ext
                                     else:
@@ -1506,18 +1507,130 @@ def add_faculty(request):
                             print(f"Uploaded {field_name} as {resource_type} to Cloudinary")
                         except Exception as e:
                             logger.error(f"Cloudinary upload error for {field_name}: {e}")
-                            # Fall back to local storage
                             setattr(faculty, field_name, uploaded_file)
                     else:
-                        # Store locally
                         setattr(faculty, field_name, uploaded_file)
 
             faculty.save()
 
-            messages.success(request, "Faculty added successfully.")
+            # Handle Research Publications from form data
+            research_type = request.POST.get('research_type')
+            if research_type and research_type.strip():
+                research_title = request.POST.get('research_title')
+                if research_title and research_title.strip():
+                    try:
+                        ResearchPublication.objects.create(
+                            faculty=faculty,
+                            research_type=research_type,
+                            title=research_title,
+                            authors=request.POST.get('research_authors'),
+                            department=request.POST.get('research_dept') or faculty.department,
+                            publication_year=get_int_or_none(request.POST.get('research_year')),
+                            publisher_name=request.POST.get('research_publisher'),
+                            status=request.POST.get('research_status'),
+                            doi=request.POST.get('research_doi'),
+                            url=request.POST.get('research_url'),
+                            abstract=request.POST.get('research_abstract'),
+                            keywords=request.POST.get('research_keywords'),
+                            journal_name=request.POST.get('journal_name'),
+                            issn=request.POST.get('journal_issn'),
+                            volume=request.POST.get('journal_volume'),
+                            issue=request.POST.get('journal_issue'),
+                            page_numbers=request.POST.get('journal_pages'),
+                            conference_name=request.POST.get('conference_name'),
+                            conference_location=request.POST.get('conference_location'),
+                            book_title=request.POST.get('book_title'),
+                            isbn=request.POST.get('book_isbn'),
+                            edition=request.POST.get('book_edition'),
+                            patent_number=request.POST.get('patent_number'),
+                            filing_date=get_date_or_none(request.POST.get('patent_filing_date')),
+                            grant_date=get_date_or_none(request.POST.get('patent_grant_date')),
+                            project_title=request.POST.get('project_title'),
+                            funding_agency=request.POST.get('project_funding_agency'),
+                            sanction_amount=request.POST.get('project_sanction_amount'),
+                            award_title=request.POST.get('award_title'),
+                            awarding_body=request.POST.get('award_body'),
+                            award_date=get_date_or_none(request.POST.get('award_date')),
+                        )
+                        print(f"✅ Research publication added: {research_title}")
+                    except Exception as e:
+                        logger.error(f"Error adding research publication: {e}")
+
+            # Handle FDP entries from form data
+            fdp_type = request.POST.get('fdp_type')
+            if fdp_type and fdp_type.strip():
+                fdp_title = request.POST.get('fdp_title')
+                if fdp_title and fdp_title.strip():
+                    try:
+                        FDP.objects.create(
+                            faculty=faculty,
+                            fdp_type=fdp_type,
+                            title=fdp_title,
+                            from_date=get_date_or_none(request.POST.get('fdp_from_date')),
+                            to_date=get_date_or_none(request.POST.get('fdp_to_date')),
+                            organized_by=request.POST.get('fdp_organized_by'),
+                            place=request.POST.get('fdp_place'),
+                            mode=request.POST.get('fdp_mode'),
+                            level=request.POST.get('fdp_level'),
+                            role=request.POST.get('fdp_role'),
+                            sponsored_by=request.POST.get('fdp_sponsored_by'),
+                            remarks=request.POST.get('fdp_remarks')
+                        )
+                        print(f"✅ FDP entry added: {fdp_title}")
+                    except Exception as e:
+                        logger.error(f"Error adding FDP entry: {e}")
+
+            # Handle B.Tech Projects from form data
+            project_ht_no = request.POST.get('project_ht_no')
+            if project_ht_no and project_ht_no.strip():
+                project_title = request.POST.get('project_title')
+                if project_title and project_title.strip():
+                    try:
+                        BTechProject.objects.create(
+                            faculty=faculty,
+                            ht_no=project_ht_no,
+                            student_name=request.POST.get('project_student_name'),
+                            batch=request.POST.get('project_batch'),
+                            project_title=project_title,
+                            approved=request.POST.get('project_approved') == 'Yes',
+                            marks=request.POST.get('project_marks')
+                        )
+                        print(f"✅ B.Tech project added: {project_title}")
+                    except Exception as e:
+                        logger.error(f"Error adding B.Tech project: {e}")
+
+            # Handle Results from form data
+            result_subject_name = request.POST.get('result_subject_name')
+            if result_subject_name and result_subject_name.strip():
+                result_subject_code = request.POST.get('result_subject_code')
+                if result_subject_code and result_subject_code.strip():
+                    try:
+                        # Store as JSON in results field
+                        results_list = []
+                        if faculty.results:
+                            try:
+                                results_list = json.loads(faculty.results)
+                            except:
+                                results_list = []
+                        results_list.append({
+                            'subject_name': result_subject_name,
+                            'subject_code': result_subject_code,
+                            'students_attempted': request.POST.get('result_students_attempted'),
+                            'students_passed': request.POST.get('result_students_passed'),
+                            'percentage': request.POST.get('result_percentage')
+                        })
+                        faculty.results = json.dumps(results_list)
+                        faculty.save()
+                        print(f"✅ Result entry added for: {result_subject_name}")
+                    except Exception as e:
+                        logger.error(f"Error adding result entry: {e}")
+
+            messages.success(request, f"Faculty {faculty.staff_name} added successfully!")
             return redirect("dashboard:faculty_dashboard")
         except Exception as e:
             logger.error(f"Error adding faculty: {e}")
+            import traceback
+            traceback.print_exc()
             messages.error(request, f"Error adding faculty: {e}")
             return redirect("dashboard:add_faculty")
     return render(request, "dashboard/faculty.html", {"add_mode": True, "faculty": None, "title": "Add Faculty"})
@@ -1550,7 +1663,7 @@ def edit_faculty(request, faculty_id):
             # Education — PhD
             'phd_degree', 'phd_year', 'phd_university', 'phd_spec',
             # Additional info
-            'subjects_dealt', 'scm', 'about_yourself', 'results',
+            'subjects_dealt', 'scm', 'about_yourself',
             # Experience fields
             'exp_anurag', 'exp_other',
         ]
@@ -2352,9 +2465,9 @@ def generate_faculty_pdf(request, faculty_id):
         # Get related data
         certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
-        research_publications = ResearchPublication.objects.filter(faculty=faculty)
-        fdps = FDP.objects.filter(faculty=faculty)
-        btech_projects = BTechProject.objects.filter(faculty=faculty)
+        research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
+        fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
+        btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
 
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
@@ -2376,7 +2489,7 @@ def generate_faculty_pdf(request, faculty_id):
                 # If not JSON, treat as plain text
                 results_data = faculty.results
 
-        # Build context
+        # Build context with ALL faculty data
         context = {
             'faculty': faculty,
             'profile': profile,
@@ -2864,17 +2977,28 @@ def generate_faculty_pdf(request, faculty_id):
         return redirect('dashboard:faculty_dashboard')
 
 
-# dashboard/views.py - Add this debug print at the top of generate_faculty_pdf_clean
+# ==================== GENERATE FACULTY PDF CLEAN (ROBUST VERSION - WORKS WITH BOTH ID AND EMPLOYEE CODE) ====================
 
 @login_required
 def generate_faculty_pdf_clean(request, faculty_id):
-    """Clean PDF generation - alias for generate_faculty_pdf"""
+    """Clean PDF generation - works with both ID and employee_code"""
     print("\n🔥🔥🔥 NEW PDF FUNCTION CALLED 🔥🔥🔥")
-    print(f"🔥 Faculty ID: {faculty_id}")
+    print(f"🔥 Faculty identifier: {faculty_id}")
     print(f"🔥 Request method: {request.method}")
     print(f"🔥 User: {request.user}")
     print("🔥🔥🔥 ================================= 🔥🔥🔥\n")
-    return generate_faculty_pdf(request, faculty_id)
+
+    # Try to find faculty by ID first, then by employee_code
+    try:
+        # Try as ID (integer)
+        faculty = get_object_or_404(Faculty, id=int(faculty_id))
+        print(f"✅ Found faculty by ID: {faculty.staff_name} (ID: {faculty.id})")
+    except (ValueError, TypeError):
+        # If not an integer, try as employee_code (string)
+        faculty = get_object_or_404(Faculty, employee_code=str(faculty_id))
+        print(f"✅ Found faculty by employee_code: {faculty.staff_name} (ID: {faculty.id})")
+
+    return generate_faculty_pdf(request, faculty.id)
 
 
 # ==================== PDF GENERATION HELPERS ====================
