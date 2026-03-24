@@ -1,4 +1,4 @@
-# dashboard/views.py - COMPLETE MERGED VERSION WITH PROPER DATA HANDLING
+# dashboard/views.py - COMPLETE MERGED VERSION WITH ALL FUNCTIONS
 # ============================================================================
 
 import os
@@ -562,6 +562,129 @@ def merge_files(file_list):
             pass
 
     return final_pdf.name
+
+
+# ==================== FILE COLLECTION FUNCTION ====================
+
+def collect_faculty_files(faculty):
+    """
+    Collect all faculty documents (images and PDFs) for merging
+    This function properly handles both local files and Cloudinary URLs
+    """
+    image_files = []
+    pdf_files = []
+    temp_files = []
+
+    print("\n========== FILE COLLECTION DEBUG ==========")
+
+    # -------------------------
+    # IMAGE FILES
+    # -------------------------
+    if faculty.photo:
+        try:
+            if hasattr(faculty.photo, 'path'):
+                image_files.append(faculty.photo.path)
+                print(f"  📷 Photo (local): {faculty.photo.path}")
+            elif hasattr(faculty.photo, 'url'):
+                print(f"  📷 Photo (URL): {faculty.photo.url}")
+                r = requests.get(faculty.photo.url, timeout=30)
+                if r.status_code == 200:
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+                    tmp.write(r.content)
+                    tmp.close()
+                    image_files.append(tmp.name)
+                    temp_files.append(tmp.name)
+                    print(f"  ✅ Downloaded photo: {tmp.name}")
+                else:
+                    print(f"  ❌ Failed to download photo: HTTP {r.status_code}")
+        except Exception as e:
+            print(f"  ❌ Image load error: {e}")
+
+    # -------------------------
+    # PDF FILES (CRITICAL FIX)
+    # -------------------------
+    pdf_fields = [
+        faculty.aadhar_file,
+        faculty.pan_file,
+        faculty.apaar_file,
+        faculty.scm_file,
+        faculty.jntuh_biodata,
+        faculty.ssc_certificate,
+        faculty.inter_certificate,
+        faculty.ug_certificate,
+        faculty.pg_certificate,
+        faculty.phd_certificate,
+    ]
+
+    pdf_field_names = [
+        "Aadhar Card",
+        "PAN Card",
+        "APAAR Document",
+        "SCM Document",
+        "JNTUH Bio-Data",
+        "SSC Certificate",
+        "Intermediate Certificate",
+        "UG Certificate",
+        "PG Certificate",
+        "PhD Certificate",
+    ]
+
+    for idx, f in enumerate(pdf_fields):
+        if not f:
+            print(f"  ❌ {pdf_field_names[idx] if idx < len(pdf_field_names) else 'Document'}: Not uploaded")
+            continue
+
+        try:
+            # Local file with path attribute
+            if hasattr(f, 'path'):
+                if os.path.exists(f.path):
+                    pdf_files.append(f.path)
+                    print(f"  📄 {pdf_field_names[idx] if idx < len(pdf_field_names) else 'Document'} (local): {f.path}")
+                else:
+                    print(
+                        f"  ⚠️ {pdf_field_names[idx] if idx < len(pdf_field_names) else 'Document'} path exists but file not found: {f.path}")
+
+            # Cloudinary or URL string
+            elif hasattr(f, 'url'):
+                print(f"  📄 {pdf_field_names[idx] if idx < len(pdf_field_names) else 'Document'} (URL): {f.url}")
+                r = requests.get(f.url, timeout=30)
+                if r.status_code == 200:
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                    tmp.write(r.content)
+                    tmp.close()
+                    pdf_files.append(tmp.name)
+                    temp_files.append(tmp.name)
+                    print(f"  ✅ Downloaded: {tmp.name} ({len(r.content)} bytes)")
+                else:
+                    print(f"  ❌ Failed to download: HTTP {r.status_code}")
+
+            # String URL
+            elif isinstance(f, str) and f.startswith("http"):
+                print(f"  📄 {pdf_field_names[idx] if idx < len(pdf_field_names) else 'Document'} (string URL): {f}")
+                r = requests.get(f, timeout=30)
+                if r.status_code == 200:
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                    tmp.write(r.content)
+                    tmp.close()
+                    pdf_files.append(tmp.name)
+                    temp_files.append(tmp.name)
+                    print(f"  ✅ Downloaded: {tmp.name} ({len(r.content)} bytes)")
+                else:
+                    print(f"  ❌ Failed to download: HTTP {r.status_code}")
+
+        except Exception as e:
+            print(f"  ❌ PDF load error for {pdf_field_names[idx] if idx < len(pdf_field_names) else 'document'}: {e}")
+
+    print("\n========== FILE COLLECTION SUMMARY ==========")
+    print(f"  Images: {len(image_files)} files")
+    for img in image_files:
+        print(f"    - {os.path.basename(img)}")
+    print(f"  PDFs: {len(pdf_files)} files")
+    for pdf in pdf_files:
+        print(f"    - {os.path.basename(pdf)}")
+    print("==========================================\n")
+
+    return image_files, pdf_files, temp_files
 
 
 # ==================== DEBUG / TEST VIEWS ====================
@@ -1349,8 +1472,6 @@ def faculty_list(request):
 
 # ==================== ADD FACULTY ====================
 
-# ==================== ADD FACULTY ====================
-
 @login_required
 def add_faculty(request):
     if request.method == "POST":
@@ -1363,10 +1484,8 @@ def add_faculty(request):
                 return float(value) if value and value.strip() else None
 
             def get_date_or_none(value):
-                """Convert empty string to None for date fields"""
                 return value if value and value.strip() else None
 
-            # Create faculty with all form data
             faculty = Faculty.objects.create(
                 staff_name=request.POST.get("staff_name"),
                 employee_code=request.POST.get("employee_code"),
@@ -1437,10 +1556,9 @@ def add_faculty(request):
                         resource_type=cr["resource_type"],
                         uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                     )
-                    print(f"✅ Photo uploaded to Cloudinary: {cr['secure_url']}")
                 except Exception as e:
                     logger.error(f"Cloudinary upload error: {e}")
-                    messages.warning(request, "Faculty added but Cloudinary photo upload failed. You can upload photo later.")
+                    messages.warning(request, "Faculty added but Cloudinary photo upload failed.")
 
             # Save ALL document & certificate fields uploaded via the form
             doc_fields = [
@@ -1465,26 +1583,35 @@ def add_faculty(request):
 
                     if is_cloudinary_configured():
                         try:
+                            # For PDFs, use resource_type="raw", for images use "auto"
                             resource_type = "raw" if is_pdf else "auto"
 
+                            # Upload with explicit public access to avoid 401 errors
                             upload_options = {
                                 'resource_type': resource_type,
                                 'folder': f"faculty_documents/{faculty.employee_code}",
                                 'public_id': f"{doc_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                                 'overwrite': True,
-                                'type': 'upload',
-                                'access_mode': 'public',
+                                'type': 'upload',  # This makes it public
+                                'access_mode': 'public',  # Explicitly set public access
                             }
 
+                            # For raw files (PDFs), ensure they're publicly accessible
                             if resource_type == "raw":
-                                upload_options['access_control'] = None
+                                upload_options['access_control'] = None  # Remove any access restrictions
 
                             result = cloudinary.uploader.upload(uploaded_file, **upload_options)
 
+                            # Store the Cloudinary URL in the field
+                            # Add file extension for raw files to ensure proper downloading
                             if resource_type == "raw" and uploaded_file.name:
+                                # Get the original file extension
                                 file_ext = os.path.splitext(uploaded_file.name)[1]
                                 if file_ext:
+                                    # For raw files, Cloudinary returns URL without extension
+                                    # Add extension to ensure proper downloading
                                     base_url = result['secure_url']
+                                    # Check if URL already has extension
                                     if not base_url.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
                                         url = base_url + file_ext
                                     else:
@@ -1507,8 +1634,10 @@ def add_faculty(request):
                             print(f"Uploaded {field_name} as {resource_type} to Cloudinary")
                         except Exception as e:
                             logger.error(f"Cloudinary upload error for {field_name}: {e}")
+                            # Fall back to local storage
                             setattr(faculty, field_name, uploaded_file)
                     else:
+                        # Store locally
                         setattr(faculty, field_name, uploaded_file)
 
             faculty.save()
@@ -1605,7 +1734,6 @@ def add_faculty(request):
                 result_subject_code = request.POST.get('result_subject_code')
                 if result_subject_code and result_subject_code.strip():
                     try:
-                        # Store as JSON in results field
                         results_list = []
                         if faculty.results:
                             try:
@@ -1663,7 +1791,7 @@ def edit_faculty(request, faculty_id):
             # Education — PhD
             'phd_degree', 'phd_year', 'phd_university', 'phd_spec',
             # Additional info
-            'subjects_dealt', 'scm', 'about_yourself',
+            'subjects_dealt', 'scm', 'about_yourself', 'results',
             # Experience fields
             'exp_anurag', 'exp_other',
         ]
@@ -2333,67 +2461,24 @@ def export_students_csv(request):
 
 @login_required
 def generate_faculty_pdf(request, faculty_id):
-    """Enhanced faculty PDF generation with better validation"""
+    """Enhanced faculty PDF generation with proper file collection and merging"""
     import io
     import shutil
 
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
 
-        # Initialize temp_files list at the beginning
-        temp_files = []
-
         print(f"\n{'=' * 60}")
         print(f"ENHANCED FACULTY PDF GENERATION FOR: {faculty.staff_name}")
         print(f"Employee Code: {faculty.employee_code}")
+        print(f"Faculty ID: {faculty.id}")
         print(f"{'=' * 60}")
 
-        # Debug print to verify all fields have data
-        print("\n--- FACULTY DATA CHECK ---")
-        print(f"Caste: {faculty.caste}")
-        print(f"Sub-Caste: {faculty.sub_caste}")
-        print(f"Nationality: {faculty.nationality}")
-        print(f"JNTUH ID: {faculty.jntuh_id}")
-        print(f"AICTE ID: {faculty.aicte_id}")
-        print(f"PAN: {faculty.pan}")
-        print(f"Aadhar: {faculty.aadhar}")
-        print(f"APAAR ID: {faculty.apaar_id}")
-        print(f"ORCID ID: {faculty.orcid_id}")
-        print(f"SSC Year: {faculty.ssc_year}")
-        print(f"SSC Percent: {faculty.ssc_percent}")
-        print(f"SSC School: {faculty.ssc_school}")
-        print(f"Inter Year: {faculty.inter_year}")
-        print(f"Inter Percent: {faculty.inter_percent}")
-        print(f"Inter College: {faculty.inter_college}")
-        print(f"UG Degree: {faculty.ug_degree}")
-        print(f"UG Year: {faculty.ug_year}")
-        print(f"UG Percentage: {faculty.ug_percentage}")
-        print(f"UG College: {faculty.ug_college}")
-        print(f"UG Spec: {faculty.ug_spec}")
-        print(f"PG Degree: {faculty.pg_degree}")
-        print(f"PG Year: {faculty.pg_year}")
-        print(f"PG Percentage: {faculty.pg_percentage}")
-        print(f"PG College: {faculty.pg_college}")
-        print(f"PG Spec: {faculty.pg_spec}")
-        print(f"PhD Status: {faculty.phd_degree}")
-        print(f"PhD Year: {faculty.phd_year}")
-        print(f"PhD University: {faculty.phd_university}")
-        print(f"PhD Spec: {faculty.phd_spec}")
-        print(f"Subjects Dealt: {faculty.subjects_dealt}")
-        print(f"SCM: {faculty.scm}")
-        print(f"About Yourself: {faculty.about_yourself}")
-        print(f"Results: {faculty.results}")
-        print(f"Has Aadhar File: {bool(faculty.aadhar_file)}")
-        print(f"Has PAN File: {bool(faculty.pan_file)}")
-        print(f"Has APAAR File: {bool(faculty.apaar_file)}")
-        print(f"Has SCM File: {bool(faculty.scm_file)}")
-        print(f"Has JNTUH Bio-Data: {bool(faculty.jntuh_biodata)}")
-        print(f"Has SSC Certificate: {bool(faculty.ssc_certificate)}")
-        print(f"Has Inter Certificate: {bool(faculty.inter_certificate)}")
-        print(f"Has UG Certificate: {bool(faculty.ug_certificate)}")
-        print(f"Has PG Certificate: {bool(faculty.pg_certificate)}")
-        print(f"Has PhD Certificate: {bool(faculty.phd_certificate)}")
-        print("---------------------------\n")
+        # ==================== COLLECT FILES USING THE NEW FUNCTION ====================
+        image_files, pdf_files, temp_files = collect_faculty_files(faculty)
+
+        # ==================== GENERATE MAIN PROFILE PDF ====================
+        print("\n--- GENERATING MAIN PROFILE PDF ---")
 
         # Calculate experience
         experience = "N/A"
@@ -2417,10 +2502,8 @@ def generate_faculty_pdf(request, faculty_id):
                 yrs -= 1
                 mths += 12
             experience = f"{yrs} Years {mths} Months {dys} Days"
-            print(f"Experience: {experience}")
 
-        # Download photo
-        import io as _photo_io
+        # Download photo for the PDF template
         temp_photo_path = None
         photo_url = None
 
@@ -2439,9 +2522,7 @@ def generate_faculty_pdf(request, faculty_id):
             try:
                 r = requests.get(photo_url, timeout=15)
                 if r.status_code == 200:
-                    img = PILImage.open(_photo_io.BytesIO(r.content))
-                    print(f"  Photo format: {img.format}, mode: {img.mode}, size: {img.size}")
-
+                    img = PILImage.open(io.BytesIO(r.content))
                     if img.mode in ('RGBA', 'P', 'LA'):
                         bg = PILImage.new('RGB', img.size, (255, 255, 255))
                         if img.mode == 'RGBA':
@@ -2456,18 +2537,16 @@ def generate_faculty_pdf(request, faculty_id):
                         img.save(tp.name, 'JPEG', quality=90)
                         temp_photo_path = tp.name
                     temp_files.append(temp_photo_path)
-                    print(f"  Photo saved as RGB JPEG: {temp_photo_path}")
-                else:
-                    print(f"  Photo HTTP {r.status_code}: {photo_url}")
+                    print(f"✅ Photo saved: {temp_photo_path}")
             except Exception as e:
-                print(f"  Photo download/convert error: {e}")
+                print(f"Photo download error: {e}")
 
         # Get related data
         certificates = Certificate.objects.filter(faculty=faculty)
         research_projects = ResearchProject.objects.filter(faculty=faculty)
-        research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
-        fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
-        btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
+        research_publications = ResearchPublication.objects.filter(faculty=faculty)
+        fdps = FDP.objects.filter(faculty=faculty)
+        btech_projects = BTechProject.objects.filter(faculty=faculty)
 
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
@@ -2479,17 +2558,14 @@ def generate_faculty_pdf(request, faculty_id):
         if sd:
             subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
 
-        # Parse results data (for structured results entries)
         results_data = []
         if faculty.results:
             try:
-                # Try to parse as JSON if stored as JSON string
                 results_data = json.loads(faculty.results)
             except (json.JSONDecodeError, TypeError):
-                # If not JSON, treat as plain text
                 results_data = faculty.results
 
-        # Build context with ALL faculty data
+        # Build context
         context = {
             'faculty': faculty,
             'profile': profile,
@@ -2550,7 +2626,7 @@ def generate_faculty_pdf(request, faculty_id):
             'subjects_dealt': faculty.subjects_dealt,
             'about_yourself': faculty.about_yourself,
             'results': faculty.results,
-            'results_data': results_data,  # Structured results data for the PDF
+            'results_data': results_data,
             'scm': faculty.scm,
             'has_aadhar': bool(faculty.aadhar_file),
             'has_pan': bool(faculty.pan_file),
@@ -2565,11 +2641,9 @@ def generate_faculty_pdf(request, faculty_id):
         }
 
         # Generate main profile PDF
-        print("Generating main profile PDF...")
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
         main_pdf_path = None
 
-        # Try pdfkit first (works on Windows with wkhtmltopdf)
         if pdfkit is not None:
             try:
                 opts = {
@@ -2585,12 +2659,12 @@ def generate_faculty_pdf(request, faculty_id):
                     tm.write(pdf_bytes)
                     main_pdf_path = tm.name
                 temp_files.append(main_pdf_path)
-                print(f"Main PDF (pdfkit): {main_pdf_path}")
+                print(f"✅ Main PDF (pdfkit): {main_pdf_path}")
             except Exception as e:
                 print(f"pdfkit failed ({e}), using ReportLab fallback.")
                 main_pdf_path = None
 
-        # ReportLab fallback (works on Render/Linux)
+        # ReportLab fallback
         if main_pdf_path is None:
             tm = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
             main_pdf_path = tm.name
@@ -2614,7 +2688,6 @@ def generate_faculty_pdf(request, faculty_id):
             el.append(Paragraph("FACULTY PROFILE", ts))
             el.append(Spacer(1, 0.2 * inch))
 
-            # Photo in header if available
             if temp_photo_path:
                 try:
                     photo_rl = Image(temp_photo_path, width=1.2 * inch, height=1.4 * inch)
@@ -2635,7 +2708,6 @@ def generate_faculty_pdf(request, faculty_id):
                 el.append(Paragraph(f"<b>{faculty.staff_name}</b>", s['Normal']))
             el.append(Spacer(1, 0.2 * inch))
 
-            # Info table rows
             rows = [
                 ("Employee Code", faculty.employee_code),
                 ("Department", faculty.department),
@@ -2662,36 +2734,7 @@ def generate_faculty_pdf(request, faculty_id):
                 ("Aadhar Number", faculty.aadhar or "N/A"),
                 ("APAAR ID", faculty.apaar_id or "N/A"),
                 ("ORCID ID", faculty.orcid_id or "N/A"),
-                ("SSC Year", str(faculty.ssc_year or "N/A")),
-                ("SSC %", str(faculty.ssc_percent or "N/A")),
-                ("SSC School", faculty.ssc_school or "N/A"),
-                ("Inter Year", str(faculty.inter_year or "N/A")),
-                ("Inter %", str(faculty.inter_percent or "N/A")),
-                ("Inter College", faculty.inter_college or "N/A"),
-                ("UG Degree", faculty.ug_degree or "N/A"),
-                ("UG Year", str(faculty.ug_year or "N/A")),
-                ("UG %", str(faculty.ug_percentage or "N/A")),
-                ("UG College", faculty.ug_college or "N/A"),
-                ("UG Specialization", faculty.ug_spec or "N/A"),
-                ("PG Degree", faculty.pg_degree or "N/A"),
-                ("PG Year", str(faculty.pg_year or "N/A")),
-                ("PG %", str(faculty.pg_percentage or "N/A")),
-                ("PG College", faculty.pg_college or "N/A"),
-                ("PG Specialization", faculty.pg_spec or "N/A"),
-                ("PhD Status", faculty.phd_degree or "N/A"),
-                ("PhD Year", str(faculty.phd_year or "N/A")),
-                ("PhD University", faculty.phd_university or "N/A"),
-                ("PhD Specialization", faculty.phd_spec or "N/A"),
-                ("Subjects Dealt", faculty.subjects_dealt or "N/A"),
-                ("About Yourself", faculty.about_yourself or "N/A"),
-                ("SCM Details", faculty.scm or "N/A"),
-                ("Aadhar Document", "Uploaded" if bool(faculty.aadhar_file) else "Not Uploaded"),
-                ("PAN Document", "Uploaded" if bool(faculty.pan_file) else "Not Uploaded"),
-                ("APAAR Document", "Uploaded" if bool(faculty.apaar_file) else "Not Uploaded"),
-                ("SCM Document", "Uploaded" if bool(faculty.scm_file) else "Not Uploaded"),
-                ("JNTUH Bio-Data", "Uploaded" if bool(faculty.jntuh_biodata) else "Not Uploaded"),
             ]
-
             td = [
                 [Paragraph(f"<b>{l}</b>", s['Normal']),
                  Paragraph(str(v) if v else "N/A", s['Normal'])]
@@ -2706,195 +2749,23 @@ def generate_faculty_pdf(request, faculty_id):
                 ('FONTSIZE', (0, 0), (-1, -1), 9),
             ]))
             el.append(tbl)
-
-            # Research projects table
-            if research_projects:
-                el.append(Spacer(1, 0.2 * inch))
-                el.append(Paragraph("<b>RESEARCH PROJECTS</b>",
-                                    ParagraphStyle('rh', fontSize=12, fontName='Helvetica-Bold')))
-                el.append(Spacer(1, 0.1 * inch))
-                rp_data = [['Type', 'Title', 'Journal/Publisher', 'DOI/ISSN']]
-                for rp in research_projects:
-                    rp_data.append([
-                        rp.research_type or '',
-                        rp.title_of_project or '',
-                        (rp.journal_name or rp.publisher_name or ''),
-                        (rp.doi or rp.issn_number or '')
-                    ])
-                rp_tbl = Table(rp_data, colWidths=[1.2 * inch, 2.5 * inch, 2 * inch, 1 * inch])
-                rp_tbl.setStyle(TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, -1), 8),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('PADDING', (0, 0), (-1, -1), 4),
-                ]))
-                el.append(rp_tbl)
-
             el.append(Spacer(1, 0.2 * inch))
             el.append(Paragraph(
                 f"Generated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
                 s['Normal']
             ))
             docrl.build(el)
-            print(f"Main PDF (ReportLab): {main_pdf_path}")
-
-        # Initialize lists for images and PDFs
-        image_files = []
-        pdf_files = []
+            print(f"✅ Main PDF (ReportLab): {main_pdf_path}")
 
         # Add main profile PDF to the files to merge
         if main_pdf_path and os.path.exists(main_pdf_path):
             pdf_files.append(main_pdf_path)
-            print(f"  [OK] Added main profile PDF to merge list")
+            print(f"✅ Added main profile PDF to merge list")
 
-        # Add photo if available
-        if temp_photo_path and os.path.exists(temp_photo_path):
-            is_valid, error = validate_image_file(temp_photo_path)
-            if is_valid:
-                image_files.append(temp_photo_path)
-                print(f"  [OK] Photo added: {temp_photo_path}")
-            else:
-                print(f"  [SKIP] Photo invalid: {error}")
-
-        # Process document fields with enhanced validation
-        doc_fields = [
-            ('aadhar_file', 'Aadhar Card'),
-            ('pan_file', 'PAN Card'),
-            ('apaar_file', 'APAAR Document'),
-            ('scm_file', 'SCM Document'),
-            ('jntuh_biodata', 'JNTUH Bio-Data'),
-            ('ssc_certificate', 'SSC Certificate'),
-            ('inter_certificate', 'Intermediate Certificate'),
-            ('ug_certificate', 'UG Certificate'),
-            ('pg_certificate', 'PG Certificate'),
-            ('phd_certificate', 'PhD Certificate'),
-        ]
-
-        for field_name, field_label in doc_fields:
-            doc_field = getattr(faculty, field_name, None)
-            if not doc_field:
-                print(f"  [SKIP] {field_label}: not uploaded")
-                continue
-
-            try:
-                # Get the file URL or path
-                if hasattr(doc_field, 'url'):
-                    file_url = doc_field.url
-                else:
-                    file_url = str(doc_field)
-
-                # For Cloudinary raw files, add fl_attachment to bypass HTML wrapper
-                if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
-                    doc_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
-                else:
-                    doc_url = file_url
-
-                print(f"  Processing {field_label}: {doc_url}")
-
-                # Download with validation
-                r = requests.get(doc_url, timeout=30)
-                if r.status_code != 200:
-                    print(f"  [ERROR] HTTP {r.status_code} for {field_label}")
-                    continue
-
-                content = r.content
-                print(f"  Downloaded {len(content)} bytes, starts: {content[:4]}")
-
-                # Skip if empty
-                if len(content) == 0:
-                    print(f"  [SKIP] {field_label}: empty file")
-                    continue
-
-                # Check if it's a PDF
-                if content.startswith(b'%PDF'):
-                    # Save as PDF and validate
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
-                        tc.write(content)
-                        tc_path = tc.name
-
-                    is_valid, error = validate_pdf_file(tc_path)
-                    if is_valid:
-                        pdf_files.append(tc_path)
-                        temp_files.append(tc_path)
-                        print(f"  [OK] Added PDF: {field_label}")
-                    else:
-                        print(f"  [SKIP] PDF validation failed: {field_label} - {error}")
-                        os.unlink(tc_path)
-                else:
-                    # Try to save as image
-                    try:
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".img") as ti:
-                            ti.write(content)
-                            img_path = ti.name
-
-                        is_valid, error = validate_image_file(img_path)
-                        if is_valid:
-                            image_files.append(img_path)
-                            temp_files.append(img_path)
-                            print(f"  [OK] Added image: {field_label}")
-                        else:
-                            print(f"  [SKIP] Image validation failed: {field_label} - {error}")
-                            os.unlink(img_path)
-                    except Exception as img_err:
-                        print(f"  [ERROR] Cannot save as image: {img_err}")
-
-            except Exception as e:
-                print(f"  [ERROR] Failed to process {field_label}: {e}")
-
-        # Process certificates from Certificate model
-        for cert in certificates:
-            cert_label = f"Certificate: {cert.certificate_type}"
-            cert_url = None
-
-            if cert.certificate_file:
-                try:
-                    if hasattr(cert.certificate_file, 'url'):
-                        file_url = cert.certificate_file.url
-                    else:
-                        file_url = str(cert.certificate_file)
-
-                    # Add fl_attachment for Cloudinary raw files
-                    if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
-                        cert_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
-                    else:
-                        cert_url = file_url
-                except Exception:
-                    pass
-            elif cert.cloudinary_url:
-                file_url = cert.cloudinary_url
-                if 'cloudinary.com' in file_url and '/raw/upload/' in file_url:
-                    cert_url = file_url.replace('/raw/upload/', '/raw/upload/fl_attachment/')
-                else:
-                    cert_url = file_url
-
-            if not cert_url:
-                continue
-
-            try:
-                r = requests.get(cert_url, timeout=30)
-                if r.status_code != 200:
-                    continue
-
-                content = r.content
-                if content.startswith(b'%PDF'):
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tc:
-                        tc.write(content)
-                        tc_path = tc.name
-                    pdf_files.append(tc_path)
-                    temp_files.append(tc_path)
-                    print(f"  [OK] Added certificate PDF: {cert_label}")
-                else:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as ti:
-                        ti.write(content)
-                        img_path = ti.name
-                    image_files.append(img_path)
-                    temp_files.append(img_path)
-                    print(f"  [OK] Added certificate image: {cert_label}")
-            except Exception as e:
-                print(f"  [ERROR] Certificate {cert_label}: {e}")
+        # ==================== MERGE ALL DOCUMENTS ====================
+        print(f"\n--- MERGING DOCUMENTS ---")
+        print(f"  Images to merge: {len(image_files)}")
+        print(f"  PDFs to merge: {len(pdf_files)}")
 
         # Create final output path
         final_output = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
@@ -2902,20 +2773,17 @@ def generate_faculty_pdf(request, faculty_id):
         final_output.close()
         temp_files.append(final_pdf_path)
 
-        # Use merge_all_documents for proper PDF to image conversion
-        print(f"\n--- MERGING DOCUMENTS WITH merge_all_documents ---")
-        print(f"  Images to merge: {len(image_files)}")
-        print(f"  PDFs to merge: {len(pdf_files)}")
-
         try:
             merge_all_documents(
                 output_path=final_pdf_path,
                 image_files=image_files,
                 pdf_files=pdf_files
             )
-            print(f"Final merged PDF: {final_pdf_path}")
+            print(f"✅ Final merged PDF: {final_pdf_path}")
         except Exception as e:
-            print(f"  [ERROR] merge_all_documents failed: {e}")
+            print(f"❌ merge_all_documents failed: {e}")
+            import traceback
+            traceback.print_exc()
             raise
 
         # Upload to Cloudinary
@@ -2930,7 +2798,7 @@ def generate_faculty_pdf(request, faculty_id):
                 )
                 faculty.cloudinary_pdf_url = ur["secure_url"]
                 faculty.save()
-                print(f"Uploaded to Cloudinary: {ur['secure_url']}")
+                print(f"✅ Uploaded to Cloudinary: {ur['secure_url']}")
                 CloudinaryUpload.objects.create(
                     faculty=faculty,
                     upload_type='pdf',
@@ -2940,7 +2808,7 @@ def generate_faculty_pdf(request, faculty_id):
                     uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                 )
             except Exception as e:
-                print(f"Cloudinary upload error: {e}")
+                print(f"⚠️ Cloudinary upload error: {e}")
 
         # Return PDF
         with open(final_pdf_path, 'rb') as pf:
@@ -2948,14 +2816,15 @@ def generate_faculty_pdf(request, faculty_id):
             fname = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
             response['Content-Disposition'] = f'attachment; filename="{fname}"'
 
-        # Cleanup
+        # Cleanup temporary files
+        print(f"\n--- CLEANING UP TEMP FILES ---")
         for tmp in temp_files:
             try:
                 if os.path.exists(tmp):
                     os.remove(tmp)
-                    print(f"Cleaned: {tmp}")
-            except Exception:
-                pass
+                    print(f"  Cleaned: {os.path.basename(tmp)}")
+            except Exception as e:
+                print(f"  Could not clean {tmp}: {e}")
 
         FacultyLog.objects.create(
             faculty=faculty,
@@ -2965,8 +2834,9 @@ def generate_faculty_pdf(request, faculty_id):
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
-        print(
-            f"{'=' * 60}\nENHANCED PDF GENERATION COMPLETE - {len(image_files)} images, {len(pdf_files)} PDFs merged\n{'=' * 60}")
+        print(f"{'=' * 60}")
+        print(f"✅ PDF GENERATION COMPLETE")
+        print(f"{'=' * 60}")
         return response
 
     except Exception as e:
@@ -2999,6 +2869,251 @@ def generate_faculty_pdf_clean(request, faculty_id):
         print(f"✅ Found faculty by employee_code: {faculty.staff_name} (ID: {faculty.id})")
 
     return generate_faculty_pdf(request, faculty.id)
+
+
+# ==================== CHARTS & ANALYTICS ====================
+
+@login_required
+def faculty_charts(request):
+    if plt is None:
+        messages.error(request, 'Matplotlib not installed.')
+        return redirect('dashboard:dashboard')
+    try:
+        charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
+        os.makedirs(charts_dir, exist_ok=True)
+
+        dept_data = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:10]
+        depts = [d['department'] for d in dept_data]
+        cnts = [d['count'] for d in dept_data]
+
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(depts, cnts)
+        plt.title('Faculty Distribution by Department')
+        plt.xlabel('Department');
+        plt.ylabel('Number of Faculty')
+        plt.xticks(rotation=45, ha='right')
+        for bar in bars:
+            h = bar.get_height()
+            plt.text(bar.get_x() + bar.get_width() / 2., h + 0.1, f'{int(h)}', ha='center', va='bottom')
+        plt.tight_layout()
+        plt.savefig(os.path.join(charts_dir, 'dept_distribution.png'), dpi=100);
+        plt.close()
+
+        qual_data = {
+            'PhD Completed': Faculty.objects.filter(phd_degree='Completed').count(),
+            'PhD Pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
+            'PG Only': Faculty.objects.filter(pg_year__isnull=False,
+                                              phd_degree__in=['', 'Not Started', 'None']).count(),
+            'UG Only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True).count(),
+        }
+        plt.figure(figsize=(8, 8))
+        plt.pie(list(qual_data.values()), labels=list(qual_data.keys()),
+                colors=['#ff9999', '#66b3ff', '#99ff99', '#ffcc99'], autopct='%1.1f%%', startangle=90)
+        plt.axis('equal');
+        plt.title('Faculty Qualification Distribution')
+        plt.savefig(os.path.join(charts_dir, 'qualification_distribution.png'), dpi=100);
+        plt.close()
+
+        today = date.today()
+        exp_ranges = ['0-5 years', '5-10 years', '10-15 years', '15+ years']
+        exp_counts = [0, 0, 0, 0]
+        for f in Faculty.objects.all():
+            if f.joining_date:
+                yrs = (today - f.joining_date).days / 365.25
+                if yrs <= 5:
+                    exp_counts[0] += 1
+                elif yrs <= 10:
+                    exp_counts[1] += 1
+                elif yrs <= 15:
+                    exp_counts[2] += 1
+                else:
+                    exp_counts[3] += 1
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(range(len(exp_ranges)), exp_counts,
+                       color=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'])
+        plt.title('Faculty Experience Distribution')
+        plt.xlabel('Experience Range');
+        plt.ylabel('Number of Faculty')
+        plt.xticks(range(len(exp_ranges)), exp_ranges)
+        for i, (bar, cnt) in enumerate(zip(bars, exp_counts)):
+            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
+        plt.tight_layout()
+        plt.savefig(os.path.join(charts_dir, 'experience_distribution.png'), dpi=100);
+        plt.close()
+
+        # Research publications chart
+        research_data = {
+            'Journal Articles': ResearchPublication.objects.filter(research_type='journal').count(),
+            'Conference Papers': ResearchPublication.objects.filter(research_type='conference').count(),
+            'Books': ResearchPublication.objects.filter(research_type='book').count(),
+            'Patents': ResearchPublication.objects.filter(research_type='patent').count(),
+        }
+        plt.figure(figsize=(8, 8))
+        plt.pie(list(research_data.values()), labels=list(research_data.keys()),
+                colors=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'], autopct='%1.1f%%', startangle=90)
+        plt.axis('equal');
+        plt.title('Research Publications Distribution')
+        plt.savefig(os.path.join(charts_dir, 'research_distribution.png'), dpi=100);
+        plt.close()
+
+        return render(request, 'dashboard/charts.html', {
+            'title': 'Faculty Analytics Charts',
+            'chart_urls': {
+                'dept_chart': os.path.join(settings.MEDIA_URL, 'charts', 'dept_distribution.png'),
+                'qual_chart': os.path.join(settings.MEDIA_URL, 'charts', 'qualification_distribution.png'),
+                'exp_chart': os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
+                'research_chart': os.path.join(settings.MEDIA_URL, 'charts', 'research_distribution.png'),
+            },
+            'dept_data': list(zip(depts, cnts)),
+            'qual_data': qual_data,
+            'exp_data': list(zip(exp_ranges, exp_counts)),
+            'research_data': research_data,
+        })
+    except Exception as e:
+        logger.error(f"Chart error: {e}")
+        messages.error(request, f'Error generating charts: {e}')
+        return redirect('dashboard:dashboard')
+
+
+@login_required
+def student_charts(request):
+    if plt is None:
+        messages.error(request, 'Matplotlib not installed.')
+        return redirect('dashboard:students_data')
+    try:
+        charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
+        os.makedirs(charts_dir, exist_ok=True)
+
+        gd = Student.objects.values('gender').annotate(count=Count('id')).order_by('-count')
+        gs = [d['gender'] for d in gd];
+        gc = [d['count'] for d in gd]
+        plt.figure(figsize=(8, 8))
+        plt.pie(gc, labels=gs, colors=['#66b3ff', '#ff9999', '#99ff99'][:len(gs)],
+                autopct='%1.1f%%', startangle=90)
+        plt.axis('equal');
+        plt.title('Student Gender Distribution')
+        plt.savefig(os.path.join(charts_dir, 'student_gender_distribution.png'), dpi=100);
+        plt.close()
+
+        yd = Student.objects.values('year').annotate(count=Count('id')).order_by('year')
+        ys = [d['year'] for d in yd];
+        yc = [d['count'] for d in yd]
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(ys, yc)
+        plt.title('Student Distribution by Year')
+        plt.xlabel('Year');
+        plt.ylabel('Number of Students')
+        for bar, cnt in zip(bars, yc):
+            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
+        plt.tight_layout()
+        plt.savefig(os.path.join(charts_dir, 'student_year_distribution.png'), dpi=100);
+        plt.close()
+
+        cd = Student.objects.values('category').annotate(count=Count('id')).order_by('-count')[:10]
+        cs = [d['category'] for d in cd];
+        cc = [d['count'] for d in cd]
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(range(len(cs)), cc)
+        plt.title('Student Category Distribution (Top 10)')
+        plt.xlabel('Category');
+        plt.ylabel('Number of Students')
+        plt.xticks(range(len(cs)), cs, rotation=45, ha='right')
+        for bar, cnt in zip(bars, cc):
+            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
+        plt.tight_layout()
+        plt.savefig(os.path.join(charts_dir, 'student_category_distribution.png'), dpi=100);
+        plt.close()
+
+        return render(request, 'dashboard/student_charts.html', {
+            'title': 'Student Analytics Charts',
+            'chart_urls': {
+                'gender_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_gender_distribution.png'),
+                'year_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_year_distribution.png'),
+                'category_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_category_distribution.png'),
+            },
+            'gender_data': list(zip(gs, gc)),
+            'year_data': list(zip(ys, yc)),
+            'category_data': list(zip(cs, cc)),
+        })
+    except Exception as e:
+        logger.error(f"Student chart error: {e}")
+        messages.error(request, f'Error generating charts: {e}')
+        return redirect('dashboard:students_data')
+
+
+# ==================== RECENT ACTIVITY ====================
+
+@login_required
+def recent_activity(request):
+    acts = FacultyLog.objects.select_related('faculty', 'student').order_by('-created_at')[:50]
+    return render(request, 'dashboard/recent_activity.html', {
+        'title': 'Recent Activities', 'activities': acts,
+        'total_activities': FacultyLog.objects.count(),
+    })
+
+
+# ==================== SEARCH FUNCTIONS ====================
+
+@login_required
+def search_faculty(request):
+    q = request.GET.get('q', '')
+    qs = Faculty.objects.filter(
+        Q(staff_name__icontains=q) | Q(employee_code__icontains=q) |
+        Q(department__icontains=q) | Q(designation__icontains=q) | Q(email__icontains=q)
+    ).order_by('staff_name')[:20] if q else Faculty.objects.none()
+    results = []
+    for f in qs:
+        pu = None
+        try:
+            pu = f.cloudinary_photo_url or (f.photo.url if f.photo else None)
+        except Exception:
+            pass
+        results.append({
+            'id': f.id, 'name': f.staff_name, 'employee_code': f.employee_code,
+            'department': f.department, 'designation': f.designation, 'photo_url': pu,
+            'has_jntuh_biodata': bool(f.jntuh_biodata),
+            'research_count': ResearchPublication.objects.filter(faculty=f).count(),
+            'fdp_count': FDP.objects.filter(faculty=f).count(),
+            'project_count': BTechProject.objects.filter(faculty=f).count(),
+            'detail_url': reverse('dashboard:faculty_dashboard') + f'?id={f.id}',
+        })
+    return JsonResponse({'results': results, 'count': len(results)})
+
+
+@login_required
+def search_students(request):
+    q = request.GET.get('q', '')
+    qs = Student.objects.filter(
+        Q(student_name__icontains=q) | Q(ht_no__icontains=q) |
+        Q(father_name__icontains=q) | Q(email__icontains=q)
+    ).order_by('student_name')[:20] if q else Student.objects.none()
+    results = [
+        {
+            'id': s.id, 'name': s.student_name, 'ht_no': s.ht_no,
+            'year': s.year, 'sem': s.sem,
+            'branch': getattr(s, 'branch', ''),
+            'roll_number': getattr(s, 'roll_number', ''),
+            'photo_url': getattr(s, 'photo_url', None),
+            'detail_url': reverse('dashboard:students_data'),
+        }
+        for s in qs
+    ]
+    return JsonResponse({'results': results, 'count': len(results)})
+
+
+@login_required
+def quick_stats(request):
+    return JsonResponse({
+        'total_faculty': Faculty.objects.count(),
+        'active_faculty': Faculty.objects.filter(is_active=True).count(),
+        'total_students': Student.objects.count(),
+        'total_certificates': Certificate.objects.count(),
+        'total_research_publications': ResearchPublication.objects.count(),
+        'total_fdps': FDP.objects.count(),
+        'total_btech_projects': BTechProject.objects.count(),
+        'recent_uploads': Faculty.objects.order_by('-created_at').count(),
+        'cloudinary_uploads': CloudinaryUpload.objects.count(),
+    })
 
 
 # ==================== PDF GENERATION HELPERS ====================
@@ -3658,31 +3773,7 @@ def preview_merged_pdf(request, faculty_id):
     return JsonResponse({'success': False, 'error': 'No merged PDF found.'})
 
 
-# ==================== FACULTY STATISTICS & APIs ====================
-
-@login_required
-def faculty_statistics_api(request, faculty_id):
-    faculty = get_object_or_404(Faculty, id=faculty_id)
-    rc = ResearchProject.objects.filter(faculty=faculty).count()
-    rp = ResearchPublication.objects.filter(faculty=faculty).count()
-    fdp_count = FDP.objects.filter(faculty=faculty).count()
-    project_count = BTechProject.objects.filter(faculty=faculty).count()
-
-    return JsonResponse({
-        'total_subjects': faculty.subjects.count(),
-        'total_students': 0,
-        'avg_rating': 4.5,
-        'teaching_load': 75,
-        'research_output': 60,
-        'attendance_rate': 95,
-        'publications': rc,
-        'research_publications': rp,
-        'fdps': fdp_count,
-        'projects': project_count,
-        'conferences': rc,
-        'awards': 2,
-    })
-
+# ==================== BULK OPERATIONS ====================
 
 @login_required
 def bulk_faculty_actions(request):
@@ -3840,6 +3931,32 @@ def process_csv_faculty_data(df, user):
             logger.error(f"Error row {i}: {e}");
             err += 1
     return ok, err
+
+
+# ==================== FACULTY STATISTICS & APIs ====================
+
+@login_required
+def faculty_statistics_api(request, faculty_id):
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+    rc = ResearchProject.objects.filter(faculty=faculty).count()
+    rp = ResearchPublication.objects.filter(faculty=faculty).count()
+    fdp_count = FDP.objects.filter(faculty=faculty).count()
+    project_count = BTechProject.objects.filter(faculty=faculty).count()
+
+    return JsonResponse({
+        'total_subjects': faculty.subjects.count(),
+        'total_students': 0,
+        'avg_rating': 4.5,
+        'teaching_load': 75,
+        'research_output': 60,
+        'attendance_rate': 95,
+        'publications': rc,
+        'research_publications': rp,
+        'fdps': fdp_count,
+        'projects': project_count,
+        'conferences': rc,
+        'awards': 2,
+    })
 
 
 # ==================== SYSTEM UTILITIES ====================
@@ -4029,249 +4146,6 @@ def api_student_detail(request, student_id):
         'pdf_url': getattr(s, 'pdf_url', None),
         'pdf_generated': getattr(s, 'pdf_generated', None),
         'created_at': s.created_at.strftime('%Y-%m-%d %H:%M:%S') if s.created_at else None,
-    })
-
-
-# ==================== CHARTS & ANALYTICS ====================
-
-@login_required
-def faculty_charts(request):
-    if plt is None:
-        messages.error(request, 'Matplotlib not installed.')
-        return redirect('dashboard:dashboard')
-    try:
-        charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
-        os.makedirs(charts_dir, exist_ok=True)
-
-        dept_data = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:10]
-        depts = [d['department'] for d in dept_data]
-        cnts = [d['count'] for d in dept_data]
-
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(depts, cnts)
-        plt.title('Faculty Distribution by Department')
-        plt.xlabel('Department');
-        plt.ylabel('Number of Faculty')
-        plt.xticks(rotation=45, ha='right')
-        for bar in bars:
-            h = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width() / 2., h + 0.1, f'{int(h)}', ha='center', va='bottom')
-        plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'dept_distribution.png'), dpi=100);
-        plt.close()
-
-        qual_data = {
-            'PhD Completed': Faculty.objects.filter(phd_degree='Completed').count(),
-            'PhD Pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
-            'PG Only': Faculty.objects.filter(pg_year__isnull=False,
-                                              phd_degree__in=['', 'Not Started', 'None']).count(),
-            'UG Only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True).count(),
-        }
-        plt.figure(figsize=(8, 8))
-        plt.pie(list(qual_data.values()), labels=list(qual_data.keys()),
-                colors=['#ff9999', '#66b3ff', '#99ff99', '#ffcc99'], autopct='%1.1f%%', startangle=90)
-        plt.axis('equal');
-        plt.title('Faculty Qualification Distribution')
-        plt.savefig(os.path.join(charts_dir, 'qualification_distribution.png'), dpi=100);
-        plt.close()
-
-        today = date.today()
-        exp_ranges = ['0-5 years', '5-10 years', '10-15 years', '15+ years']
-        exp_counts = [0, 0, 0, 0]
-        for f in Faculty.objects.all():
-            if f.joining_date:
-                yrs = (today - f.joining_date).days / 365.25
-                if yrs <= 5:
-                    exp_counts[0] += 1
-                elif yrs <= 10:
-                    exp_counts[1] += 1
-                elif yrs <= 15:
-                    exp_counts[2] += 1
-                else:
-                    exp_counts[3] += 1
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(range(len(exp_ranges)), exp_counts,
-                       color=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'])
-        plt.title('Faculty Experience Distribution')
-        plt.xlabel('Experience Range');
-        plt.ylabel('Number of Faculty')
-        plt.xticks(range(len(exp_ranges)), exp_ranges)
-        for i, (bar, cnt) in enumerate(zip(bars, exp_counts)):
-            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
-        plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'experience_distribution.png'), dpi=100);
-        plt.close()
-
-        # Research publications chart
-        research_data = {
-            'Journal Articles': ResearchPublication.objects.filter(research_type='journal').count(),
-            'Conference Papers': ResearchPublication.objects.filter(research_type='conference').count(),
-            'Books': ResearchPublication.objects.filter(research_type='book').count(),
-            'Patents': ResearchPublication.objects.filter(research_type='patent').count(),
-        }
-        plt.figure(figsize=(8, 8))
-        plt.pie(list(research_data.values()), labels=list(research_data.keys()),
-                colors=['#3498db', '#2ecc71', '#e74c3c', '#f39c12'], autopct='%1.1f%%', startangle=90)
-        plt.axis('equal');
-        plt.title('Research Publications Distribution')
-        plt.savefig(os.path.join(charts_dir, 'research_distribution.png'), dpi=100);
-        plt.close()
-
-        return render(request, 'dashboard/charts.html', {
-            'title': 'Faculty Analytics Charts',
-            'chart_urls': {
-                'dept_chart': os.path.join(settings.MEDIA_URL, 'charts', 'dept_distribution.png'),
-                'qual_chart': os.path.join(settings.MEDIA_URL, 'charts', 'qualification_distribution.png'),
-                'exp_chart': os.path.join(settings.MEDIA_URL, 'charts', 'experience_distribution.png'),
-                'research_chart': os.path.join(settings.MEDIA_URL, 'charts', 'research_distribution.png'),
-            },
-            'dept_data': list(zip(depts, cnts)),
-            'qual_data': qual_data,
-            'exp_data': list(zip(exp_ranges, exp_counts)),
-            'research_data': research_data,
-        })
-    except Exception as e:
-        logger.error(f"Chart error: {e}")
-        messages.error(request, f'Error generating charts: {e}')
-        return redirect('dashboard:dashboard')
-
-
-@login_required
-def student_charts(request):
-    if plt is None:
-        messages.error(request, 'Matplotlib not installed.')
-        return redirect('dashboard:students_data')
-    try:
-        charts_dir = os.path.join(settings.MEDIA_ROOT, 'charts')
-        os.makedirs(charts_dir, exist_ok=True)
-
-        gd = Student.objects.values('gender').annotate(count=Count('id')).order_by('-count')
-        gs = [d['gender'] for d in gd];
-        gc = [d['count'] for d in gd]
-        plt.figure(figsize=(8, 8))
-        plt.pie(gc, labels=gs, colors=['#66b3ff', '#ff9999', '#99ff99'][:len(gs)],
-                autopct='%1.1f%%', startangle=90)
-        plt.axis('equal');
-        plt.title('Student Gender Distribution')
-        plt.savefig(os.path.join(charts_dir, 'student_gender_distribution.png'), dpi=100);
-        plt.close()
-
-        yd = Student.objects.values('year').annotate(count=Count('id')).order_by('year')
-        ys = [d['year'] for d in yd];
-        yc = [d['count'] for d in yd]
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(ys, yc)
-        plt.title('Student Distribution by Year')
-        plt.xlabel('Year');
-        plt.ylabel('Number of Students')
-        for bar, cnt in zip(bars, yc):
-            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
-        plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'student_year_distribution.png'), dpi=100);
-        plt.close()
-
-        cd = Student.objects.values('category').annotate(count=Count('id')).order_by('-count')[:10]
-        cs = [d['category'] for d in cd];
-        cc = [d['count'] for d in cd]
-        plt.figure(figsize=(10, 6))
-        bars = plt.bar(range(len(cs)), cc)
-        plt.title('Student Category Distribution (Top 10)')
-        plt.xlabel('Category');
-        plt.ylabel('Number of Students')
-        plt.xticks(range(len(cs)), cs, rotation=45, ha='right')
-        for bar, cnt in zip(bars, cc):
-            plt.text(bar.get_x() + bar.get_width() / 2., cnt + 0.1, f'{cnt}', ha='center', va='bottom')
-        plt.tight_layout()
-        plt.savefig(os.path.join(charts_dir, 'student_category_distribution.png'), dpi=100);
-        plt.close()
-
-        return render(request, 'dashboard/student_charts.html', {
-            'title': 'Student Analytics Charts',
-            'chart_urls': {
-                'gender_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_gender_distribution.png'),
-                'year_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_year_distribution.png'),
-                'category_chart': os.path.join(settings.MEDIA_URL, 'charts', 'student_category_distribution.png'),
-            },
-            'gender_data': list(zip(gs, gc)),
-            'year_data': list(zip(ys, yc)),
-            'category_data': list(zip(cs, cc)),
-        })
-    except Exception as e:
-        logger.error(f"Student chart error: {e}")
-        messages.error(request, f'Error generating charts: {e}')
-        return redirect('dashboard:students_data')
-
-
-# ==================== MISCELLANEOUS ====================
-
-@login_required
-def recent_activity(request):
-    acts = FacultyLog.objects.select_related('faculty', 'student').order_by('-created_at')[:50]
-    return render(request, 'dashboard/recent_activity.html', {
-        'title': 'Recent Activities', 'activities': acts,
-        'total_activities': FacultyLog.objects.count(),
-    })
-
-
-@login_required
-def search_faculty(request):
-    q = request.GET.get('q', '')
-    qs = Faculty.objects.filter(
-        Q(staff_name__icontains=q) | Q(employee_code__icontains=q) |
-        Q(department__icontains=q) | Q(designation__icontains=q) | Q(email__icontains=q)
-    ).order_by('staff_name')[:20] if q else Faculty.objects.none()
-    results = []
-    for f in qs:
-        pu = None
-        try:
-            pu = f.cloudinary_photo_url or (f.photo.url if f.photo else None)
-        except Exception:
-            pass
-        results.append({
-            'id': f.id, 'name': f.staff_name, 'employee_code': f.employee_code,
-            'department': f.department, 'designation': f.designation, 'photo_url': pu,
-            'has_jntuh_biodata': bool(f.jntuh_biodata),
-            'research_count': ResearchPublication.objects.filter(faculty=f).count(),
-            'fdp_count': FDP.objects.filter(faculty=f).count(),
-            'project_count': BTechProject.objects.filter(faculty=f).count(),
-            'detail_url': reverse('dashboard:faculty_dashboard') + f'?id={f.id}',
-        })
-    return JsonResponse({'results': results, 'count': len(results)})
-
-
-@login_required
-def search_students(request):
-    q = request.GET.get('q', '')
-    qs = Student.objects.filter(
-        Q(student_name__icontains=q) | Q(ht_no__icontains=q) |
-        Q(father_name__icontains=q) | Q(email__icontains=q)
-    ).order_by('student_name')[:20] if q else Student.objects.none()
-    results = [
-        {
-            'id': s.id, 'name': s.student_name, 'ht_no': s.ht_no,
-            'year': s.year, 'sem': s.sem,
-            'branch': getattr(s, 'branch', ''),
-            'roll_number': getattr(s, 'roll_number', ''),
-            'photo_url': getattr(s, 'photo_url', None),
-            'detail_url': reverse('dashboard:students_data'),
-        }
-        for s in qs
-    ]
-    return JsonResponse({'results': results, 'count': len(results)})
-
-
-@login_required
-def quick_stats(request):
-    return JsonResponse({
-        'total_faculty': Faculty.objects.count(),
-        'active_faculty': Faculty.objects.filter(is_active=True).count(),
-        'total_students': Student.objects.count(),
-        'total_certificates': Certificate.objects.count(),
-        'total_research_publications': ResearchPublication.objects.count(),
-        'total_fdps': FDP.objects.count(),
-        'total_btech_projects': BTechProject.objects.count(),
-        'recent_uploads': Faculty.objects.order_by('-created_at').count(),
-        'cloudinary_uploads': CloudinaryUpload.objects.count(),
     })
 
 
