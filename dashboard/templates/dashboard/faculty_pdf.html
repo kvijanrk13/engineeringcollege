@@ -134,7 +134,7 @@
         <tr><td class="label">ORCID ID</td><td>{{ faculty.orcid_id|default:"Not Specified" }}</td></tr>
     </table>
 
-    <!-- 4. EDUCATIONAL QUALIFICATIONS - SSC -->
+    <!-- 4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH -->
     <div class="section-title">4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH</div>
     <table class="info-table">
         <tr><td class="label">Year</td><td>{{ faculty.ssc_year|default:"Not Specified" }}</td></tr>
@@ -273,6 +273,15 @@
                         {% if pub.publisher_name %}
                             <strong>Publisher:</strong> {{ pub.publisher_name }}<br>
                         {% endif %}
+                        {% if pub.abstract %}
+                            <strong>Abstract:</strong> {{ pub.abstract }}<br>
+                        {% endif %}
+                        {% if pub.keywords %}
+                            <strong>Keywords:</strong> {{ pub.keywords }}<br>
+                        {% endif %}
+                        {% if pub.proof_document %}
+                            <strong>Proof:</strong> <a href="{{ pub.proof_document.url }}" target="_blank">View Document</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -359,6 +368,9 @@
                         {% if fdp.level %}<strong>Level:</strong> {{ fdp.get_level_display }} | {% endif %}
                         {% if fdp.sponsored_by %}<strong>Sponsored by:</strong> {{ fdp.sponsored_by }} | {% endif %}
                         {% if fdp.remarks %}<strong>Remarks:</strong> {{ fdp.remarks }}{% endif %}
+                        {% if fdp.certificate %}
+                            | <strong>Certificate:</strong> <a href="{{ fdp.certificate.url }}" target="_blank">View</a>
+                        {% endif %}
                     </small>
                 </td>
             </tr>
@@ -416,8 +428,18 @@
         {% endif %}
     </div>
 
-    <!-- 16. UPLOADED DOCUMENTS -->
-    <div class="section-title">16. UPLOADED DOCUMENTS</div>
+    <!-- 16. ABOUT YOURSELF -->
+    <div class="section-title">16. ABOUT YOURSELF</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if faculty.about_yourself %}
+            <div style="white-space: pre-line;">{{ faculty.about_yourself }}</div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No information provided</p>
+        {% endif %}
+    </div>
+
+    <!-- 17. UPLOADED DOCUMENTS -->
+    <div class="section-title">17. UPLOADED DOCUMENTS</div>
     <div style="padding: 10px;">
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             <div class="document-box">
@@ -460,11 +482,51 @@
                     <span style="color: #999;">✗ Not Uploaded</span>
                 {% endif %}
             </div>
+            <div class="document-box">
+                <strong>SSC Certificate:</strong>
+                {% if has_ssc_cert or faculty.ssc_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>Intermediate Certificate:</strong>
+                {% if has_inter_cert or faculty.inter_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>UG Certificate:</strong>
+                {% if has_ug_cert or faculty.ug_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PG Certificate:</strong>
+                {% if has_pg_cert or faculty.pg_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PhD Certificate:</strong>
+                {% if has_phd_cert or faculty.phd_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <!-- 17. CERTIFICATES -->
-    <div class="section-title">17. CERTIFICATES</div>
+    <!-- 18. CERTIFICATES -->
+    <div class="section-title">18. CERTIFICATES</div>
     <div style="padding: 10px; margin-bottom: 15px;">
         {% if certificates %}
             <table class="data-table">
@@ -495,8 +557,8 @@
         {% endif %}
     </div>
 
-    <!-- 18. VERIFICATION & AUTHORIZATION -->
-    <div class="section-title">18. VERIFICATION & AUTHORIZATION</div>
+    <!-- 19. VERIFICATION & AUTHORIZATION -->
+    <div class="section-title">19. VERIFICATION & AUTHORIZATION</div>
     <div style="margin: 20px 0; text-align: center; font-size: 10px;">
         This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
     </div>

@@ -2565,7 +2565,7 @@ def generate_faculty_pdf(request, faculty_id):
             except (json.JSONDecodeError, TypeError):
                 results_data = faculty.results
 
-        # Build context
+        # Build context with all fields for PDF template
         context = {
             'faculty': faculty,
             'profile': profile,

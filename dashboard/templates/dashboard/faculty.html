@@ -1,2122 +1,592 @@
-{% extends "dashboard/base.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Profile - {{ faculty.staff_name }}</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.4; color: #333; font-size: 11px; }
+        .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
+        .college-name { font-size: 22px; font-weight: bold; color: #2c3e50; }
+        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; }
+        .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; }
+        .faculty-photo { width: 100%; height: 100%; object-fit: cover; }
+        .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
+        .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
+        .certificate-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
+        .signature-section { margin-top: 30px; border-top: 2px solid #2c3e50; padding-top: 20px; }
+        .signature-box { width: 250px; text-align: center; }
+        .signature-line { width: 100%; height: 1px; border-top: 1px solid #333; margin: 40px auto 5px; }
+        .footer { text-align: center; margin-top: 30px; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd; padding-top: 10px; }
+        .barcode { text-align: center; font-family: 'Libre Barcode 128', cursive; font-size: 16px; margin: 10px 0; }
+        .document-box {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .scm-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            white-space: pre-line;
+        }
+        .research-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        .journal-badge {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .conference-badge {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        .patent-badge {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .project-badge {
+            background-color: #e1f5fe;
+            color: #01579b;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 75%; text-align: center; vertical-align: middle;">
+                <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+                <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
+                <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
+                <div style="font-size: 10px;">Employee Code: {{ faculty.employee_code }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <div class="photo-box">
+                    {% if local_photo_path %}
+                        <img src="file:///{{ local_photo_path }}" class="faculty-photo">
+                    {% elif faculty.photo %}
+                        <img src="{{ faculty.photo.url }}" class="faculty-photo">
+                    {% elif faculty.cloudinary_photo_url %}
+                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo">
+                    {% else %}
+                        <div style="padding-top: 55px; color: #ccc; font-size: 10px;">NO PHOTO</div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
 
-{% block title %}Faculty Dashboard{% endblock %}
+    <!-- 1. PERSONAL INFORMATION -->
+    <div class="section-title">1. PERSONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Full Name</td><td>{{ faculty.staff_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Employee Code</td><td>{{ faculty.employee_code|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Father's Name</td><td>{{ faculty.father_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mother's Name</td><td>{{ faculty.mother_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Date of Birth</td><td>{% if faculty.dob %}{{ faculty.dob|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Gender</td><td>{{ faculty.gender|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">State</td><td>{{ faculty.state|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Caste</td><td>{{ faculty.caste|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Sub-Caste</td><td>{{ faculty.sub_caste|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Nationality</td><td>{{ faculty.nationality|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Permanent Address</td><td>{{ faculty.address|default:"Not Specified" }}</td></tr>
+    </table>
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- Navigation Tabs -->
-    <div class="d-flex justify-content-center mb-4">
-        <a href="{% url 'dashboard:faculty_dashboard' %}" class="btn btn-outline-primary mx-1 {% if not add_mode and not is_analytics %}active{% endif %}">
-            <i class="fas fa-users me-2"></i>Faculty List
-        </a>
-        <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-outline-success mx-1 {% if add_mode %}active{% endif %}">
-            <i class="fas fa-user-plus me-2"></i>Add Faculty
-        </a>
-        <a href="{% url 'dashboard:faculty_analytics' %}" class="btn btn-outline-info mx-1 {% if is_analytics %}active{% endif %}">
-            <i class="fas fa-chart-bar me-2"></i>Analytics
-        </a>
+    <!-- 2. PROFESSIONAL INFORMATION -->
+    <div class="section-title">2. PROFESSIONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Joining Date</td><td>{% if faculty.joining_date %}{{ faculty.joining_date|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Experience at Anurag</td><td>{{ faculty.exp_anurag|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Experience (Other)</td><td>{{ faculty.exp_other|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Total Experience</td><td>{{ experience }}</td></tr>
+        <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mobile</td><td>{{ faculty.mobile|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Phone</td><td>{{ faculty.phone|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Current Status</td><td style="color: green; font-weight: bold;">ACTIVE</td></tr>
+    </table>
+
+    <!-- 3. PROFESSIONAL IDs -->
+    <div class="section-title">3. PROFESSIONAL IDs</div>
+    <table class="info-table">
+        <tr><td class="label">JNTUH ID</td><td>{{ faculty.jntuh_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">AICTE ID</td><td>{{ faculty.aicte_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">PAN Number</td><td>{{ faculty.pan|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Aadhar Number</td><td>{{ faculty.aadhar|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">APAAR ID</td><td>{{ faculty.apaar_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">ORCID ID</td><td>{{ faculty.orcid_id|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH -->
+    <div class="section-title">4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH</div>
+    <table class="info-table">
+        <tr><td class="label">Year</td><td>{{ faculty.ssc_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.ssc_percent|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">School</td><td>{{ faculty.ssc_school|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE -->
+    <div class="section-title">5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE</div>
+    <table class="info-table">
+        <tr><td class="label">Year</td><td>{{ faculty.inter_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.inter_percent|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.inter_college|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 6. EDUCATIONAL QUALIFICATIONS - UG -->
+    <div class="section-title">6. EDUCATIONAL QUALIFICATIONS - UG</div>
+    <table class="info-table">
+        <tr><td class="label">Degree</td><td>{{ faculty.ug_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.ug_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.ug_percentage|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.ug_college|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.ug_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 7. EDUCATIONAL QUALIFICATIONS - PG -->
+    <div class="section-title">7. EDUCATIONAL QUALIFICATIONS - PG</div>
+    <table class="info-table">
+        <tr><td class="label">Degree</td><td>{{ faculty.pg_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.pg_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.pg_percentage|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.pg_college|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.pg_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 8. EDUCATIONAL QUALIFICATIONS - PhD -->
+    <div class="section-title">8. EDUCATIONAL QUALIFICATIONS - PhD</div>
+    <table class="info-table">
+        <tr><td class="label">Status</td><td>{{ faculty.phd_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.phd_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">University</td><td>{{ faculty.phd_university|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.phd_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 9. SUBJECTS DEALT -->
+    <div class="section-title">9. SUBJECTS DEALT</div>
+    <div style="padding: 10px;">
+        {% if subjects_list %}
+            {% for subject in subjects_list %}
+                <span class="certificate-item">{{ subject }}</span>
+            {% endfor %}
+        {% elif faculty.subjects_dealt %}
+            {% for subject in faculty.subjects_dealt.split %}
+                <span class="certificate-item">{{ subject }}</span>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No subjects specified</p>
+        {% endif %}
     </div>
 
-    {% if is_analytics %}
-    <!-- ==================== FACULTY ANALYTICS PAGE ==================== -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Faculty Analytics</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <div class="card bg-primary text-white">
-                                <div class="card-body text-center">
-                                    <h3>{{ total_faculty }}</h3>
-                                    <p class="mb-0">Total Faculty</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card bg-success text-white">
-                                <div class="card-body text-center">
-                                    <h3>{{ qualification_stats.phd_completed }}</h3>
-                                    <p class="mb-0">PhD Completed</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card bg-info text-white">
-                                <div class="card-body text-center">
-                                    <h3>{{ qualification_stats.phd_pursuing }}</h3>
-                                    <p class="mb-0">PhD Pursuing</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card bg-warning text-white">
-                                <div class="card-body text-center">
-                                    <h3>{{ qualification_stats.pg_only }}</h3>
-                                    <p class="mb-0">PG Only</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Department-wise Distribution</h5>
-                                </div>
-                                <div class="card-body">
-                                    <table class="table table-bordered">
-                                        <thead>
-                                             <tr>
-                                                <th>Department</th>
-                                                <th>Count</th>
-                                                <th>Percentage</th>
-                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for dept in departments %}
-                                            <tr>
-                                                <td>{{ dept.department }}</td>
-                                                <td>{{ dept.count }}</td>
-                                                <td>{{ dept.percentage|floatformat:2 }}%</td>
-                                            </tr>
-                                            {% empty %}
-                                            <tr>
-                                                <td colspan="3" class="text-center">No data available</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5>Experience Distribution</h5>
-                                </div>
-                                <div class="card-body" style="position: relative; height: 300px;">
-                                    <canvas id="experienceChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- 10. SCM (SERVICE/CONSULTANCY/MOU) -->
+    <div class="section-title">10. SCM (SERVICE/CONSULTANCY/MOU)</div>
+    <div class="scm-content">
+        {% if faculty.scm %}
+            {{ faculty.scm }}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">No SCM details specified</p>
+        {% endif %}
     </div>
 
-    {% elif add_mode %}
-    <!-- ==================== ADD/EDIT FACULTY FORM ==================== -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>{{ title|default:"Add Faculty" }}</h4>
-                </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" id="facultyForm">
-                        {% csrf_token %}
-
-                        <!-- Personal Information -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Personal Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Staff Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="staff_name" value="{{ faculty.staff_name|default:'' }}" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Employee Code <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="employee_code" value="{{ faculty.employee_code|default:'' }}" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Father's Name</label>
-                                        <input type="text" class="form-control" name="father_name" value="{{ faculty.father_name|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Mother's Name</label>
-                                        <input type="text" class="form-control" name="mother_name" value="{{ faculty.mother_name|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Date of Birth</label>
-                                        <input type="date" class="form-control" name="dob" value="{{ faculty.dob|date:'Y-m-d'|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Gender</label>
-                                        <select class="form-control" name="gender">
-                                            <option value="">Select Gender</option>
-                                            <option value="Male" {% if faculty.gender == "Male" %}selected{% endif %}>Male</option>
-                                            <option value="Female" {% if faculty.gender == "Female" %}selected{% endif %}>Female</option>
-                                            <option value="Other" {% if faculty.gender == "Other" %}selected{% endif %}>Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">State</label>
-                                        <input type="text" class="form-control" name="state" value="{{ faculty.state|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Caste</label>
-                                        <input type="text" class="form-control" name="caste" value="{{ faculty.caste|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Sub-Caste</label>
-                                        <input type="text" class="form-control" name="sub_caste" value="{{ faculty.sub_caste|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">Address</label>
-                                        <textarea class="form-control" name="address" rows="2">{{ faculty.address|default:'' }}</textarea>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Photo</label>
-                                        <input type="file" class="form-control" name="photo" accept="image/*">
-                                        {% if faculty.photo %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.photo.url }}" target="_blank">View Photo</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Information -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Contact Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                                        <input type="email" class="form-control" name="email" value="{{ faculty.email|default:'' }}" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Mobile <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="mobile" value="{{ faculty.mobile|default:'' }}" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Phone</label>
-                                        <input type="text" class="form-control" name="phone" value="{{ faculty.phone|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Department <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="department" value="{{ faculty.department|default:'' }}" required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Designation <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="designation" value="{{ faculty.designation|default:'' }}" required>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Professional IDs -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Professional IDs</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">JNTUH ID</label>
-                                        <input type="text" class="form-control" name="jntuh_id" value="{{ faculty.jntuh_id|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">AICTE ID</label>
-                                        <input type="text" class="form-control" name="aicte_id" value="{{ faculty.aicte_id|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">PAN Number</label>
-                                        <input type="text" class="form-control" name="pan" value="{{ faculty.pan|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Aadhar Number</label>
-                                        <input type="text" class="form-control" name="aadhar" value="{{ faculty.aadhar|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">APAAR ID</label>
-                                        <input type="text" class="form-control" name="apaar_id" value="{{ faculty.apaar_id|default:'' }}">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">ORCID ID</label>
-                                        <input type="text" class="form-control" name="orcid_id" value="{{ faculty.orcid_id|default:'' }}">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Document Uploads -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Document Uploads</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Aadhar Document</label>
-                                        <input type="file" class="form-control" name="aadhar_file" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.aadhar_file %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.aadhar_file.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">PAN Document</label>
-                                        <input type="file" class="form-control" name="pan_file" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.pan_file %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.pan_file.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">APAAR Document</label>
-                                        <input type="file" class="form-control" name="apaar_file" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.apaar_file %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.apaar_file.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">SCM Document</label>
-                                        <input type="file" class="form-control" name="scm_file" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.scm_file %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.scm_file.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <!-- JNTUH One Page Bio-Data Upload Button -->
-                                <div class="row mt-3">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">JNTUH One Page Bio-Data</label>
-                                        <input type="file" class="form-control" name="jntuh_biodata" accept=".pdf">
-                                        {% if faculty.jntuh_biodata %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.jntuh_biodata.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                        <small class="text-muted d-block">Upload your one-page bio-data as PDF</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Joining Date & Experience -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Joining Date & Experience</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Joining Date</label>
-                                        <input type="date" class="form-control" name="joining_date" id="joiningDate" value="{{ faculty.joining_date|date:'Y-m-d'|default:'' }}" onchange="calculateExperience()">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Experience at Anurag</label>
-                                        <input type="text" class="form-control" name="exp_anurag" id="expAnurag" value="{{ faculty.exp_anurag|default:'' }}" readonly>
-                                        <small class="text-muted">Auto-calculated from joining date</small>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Experience (Other)</label>
-                                        <input type="text" class="form-control" name="exp_other" value="{{ faculty.exp_other|default:'' }}">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Educational Qualifications -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Educational Qualifications</h5>
-                            </div>
-                            <div class="card-body">
-
-                                <!-- SSC -->
-                                <h6 class="bg-light p-2">SSC / 10th Standard</h6>
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Year</label>
-                                        <input type="number" class="form-control" name="ssc_year" value="{{ faculty.ssc_year|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Percentage</label>
-                                        <input type="number" step="0.01" class="form-control" name="ssc_percent" value="{{ faculty.ssc_percent|default:'' }}">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">School</label>
-                                        <input type="text" class="form-control" name="ssc_school" value="{{ faculty.ssc_school|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">SSC Certificate</label>
-                                        <input type="file" class="form-control" name="ssc_certificate" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.ssc_certificate %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.ssc_certificate.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- Intermediate -->
-                                <h6 class="bg-light p-2 mt-3">Intermediate / 12th</h6>
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Year</label>
-                                        <input type="number" class="form-control" name="inter_year" value="{{ faculty.inter_year|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Percentage</label>
-                                        <input type="number" step="0.01" class="form-control" name="inter_percent" value="{{ faculty.inter_percent|default:'' }}">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">College</label>
-                                        <input type="text" class="form-control" name="inter_college" value="{{ faculty.inter_college|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Intermediate Certificate</label>
-                                        <input type="file" class="form-control" name="inter_certificate" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.inter_certificate %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.inter_certificate.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- UG -->
-                                <h6 class="bg-light p-2 mt-3">UG (B.Tech/B.E.)</h6>
-                                <div class="row">
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Degree</label>
-                                        <input type="text" class="form-control" name="ug_degree" value="{{ faculty.ug_degree|default:'' }}">
-                                    </div>
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Year</label>
-                                        <input type="number" class="form-control" name="ug_year" value="{{ faculty.ug_year|default:'' }}">
-                                    </div>
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Percentage</label>
-                                        <input type="number" step="0.01" class="form-control" name="ug_percentage" value="{{ faculty.ug_percentage|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">College</label>
-                                        <input type="text" class="form-control" name="ug_college" value="{{ faculty.ug_college|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Specialization</label>
-                                        <input type="text" class="form-control" name="ug_spec" value="{{ faculty.ug_spec|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">UG Certificate</label>
-                                        <input type="file" class="form-control" name="ug_certificate" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.ug_certificate %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.ug_certificate.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- PG -->
-                                <h6 class="bg-light p-2 mt-3">PG (M.Tech/M.E.)</h6>
-                                <div class="row">
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Degree</label>
-                                        <input type="text" class="form-control" name="pg_degree" value="{{ faculty.pg_degree|default:'' }}">
-                                    </div>
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Year</label>
-                                        <input type="number" class="form-control" name="pg_year" value="{{ faculty.pg_year|default:'' }}">
-                                    </div>
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Percentage</label>
-                                        <input type="number" step="0.01" class="form-control" name="pg_percentage" value="{{ faculty.pg_percentage|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">College</label>
-                                        <input type="text" class="form-control" name="pg_college" value="{{ faculty.pg_college|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Specialization</label>
-                                        <input type="text" class="form-control" name="pg_spec" value="{{ faculty.pg_spec|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">PG Certificate</label>
-                                        <input type="file" class="form-control" name="pg_certificate" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.pg_certificate %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.pg_certificate.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                                <!-- PhD -->
-                                <h6 class="bg-light p-2 mt-3">PhD</h6>
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Status</label>
-                                        <select class="form-control" name="phd_degree">
-                                            <option value="">Select</option>
-                                            <option value="Completed" {% if faculty.phd_degree == "Completed" %}selected{% endif %}>Completed</option>
-                                            <option value="Pursuing" {% if faculty.phd_degree == "Pursuing" %}selected{% endif %}>Pursuing</option>
-                                            <option value="Not Applicable" {% if faculty.phd_degree == "Not Applicable" %}selected{% endif %}>Not Applicable</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Year</label>
-                                        <input type="number" class="form-control" name="phd_year" value="{{ faculty.phd_year|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">University</label>
-                                        <input type="text" class="form-control" name="phd_university" value="{{ faculty.phd_university|default:'' }}">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Specialization</label>
-                                        <input type="text" class="form-control" name="phd_spec" value="{{ faculty.phd_spec|default:'' }}">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">PhD Certificate</label>
-                                        <input type="file" class="form-control" name="phd_certificate" accept=".pdf,.jpg,.jpeg,.png">
-                                        {% if faculty.phd_certificate %}
-                                        <small class="text-muted">Current: <a href="{{ faculty.phd_certificate.url }}" target="_blank">View</a></small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <!-- Research & Publications Section -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Research & Publications</h5>
-                            </div>
-                            <div class="card-body">
-                                <!-- Primary Dropdown for Research Type -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Research Type <span class="text-danger">*</span></label>
-                                        <select class="form-control" name="research_type" id="researchType" onchange="showResearchFields()">
-                                            <option value="">Select Research Type</option>
-                                            <option value="journal">Journal Article</option>
-                                            <option value="conference">Conference Paper</option>
-                                            <option value="book">Book</option>
-                                            <option value="book_chapter">Book Chapter</option>
-                                            <option value="patent">Patent</option>
-                                            <option value="project">Research Project / Grant</option>
-                                            <option value="copyright">Copyright / IP</option>
-                                            <option value="award">Award / Recognition</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Common Fields (Always Visible) -->
-                                <div id="commonFields">
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Title</label>
-                                            <input type="text" class="form-control" name="research_title" id="researchTitle">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Authors</label>
-                                            <input type="text" class="form-control" name="research_authors" id="researchAuthors">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Department</label>
-                                            <input type="text" class="form-control" name="research_dept" id="researchDept" value="{{ faculty.department|default:'' }}">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Publication Year</label>
-                                            <input type="number" class="form-control" name="research_year" id="researchYear">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Publisher Name</label>
-                                            <input type="text" class="form-control" name="research_publisher" id="researchPublisher">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Status</label>
-                                            <select class="form-control" name="research_status" id="researchStatus">
-                                                <option value="">Select Status</option>
-                                                <option value="published">Published</option>
-                                                <option value="accepted">Accepted</option>
-                                                <option value="submitted">Submitted</option>
-                                                <option value="in_progress">In Progress</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">DOI</label>
-                                            <input type="text" class="form-control" name="research_doi" id="researchDoi">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">URL</label>
-                                            <input type="url" class="form-control" name="research_url" id="researchUrl">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Abstract</label>
-                                            <textarea class="form-control" name="research_abstract" id="researchAbstract" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Keywords</label>
-                                            <input type="text" class="form-control" name="research_keywords" id="researchKeywords">
-                                            <small class="text-muted">Separate keywords with commas</small>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Proof Document</label>
-                                            <input type="file" class="form-control" name="research_proof" accept=".pdf,.jpg,.jpeg,.png">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Journal Article Fields -->
-                                <div id="journalFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Journal Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Journal Name</label>
-                                            <input type="text" class="form-control" name="journal_name">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">ISSN</label>
-                                            <input type="text" class="form-control" name="journal_issn">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">E-ISSN</label>
-                                            <input type="text" class="form-control" name="journal_e_issn">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Volume</label>
-                                            <input type="text" class="form-control" name="journal_volume">
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Issue</label>
-                                            <input type="text" class="form-control" name="journal_issue">
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Page Numbers</label>
-                                            <input type="text" class="form-control" name="journal_pages">
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Impact Factor</label>
-                                            <input type="text" class="form-control" name="journal_impact_factor">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Quartile</label>
-                                            <select class="form-control" name="journal_quartile">
-                                                <option value="">Select</option>
-                                                <option value="Q1">Q1</option>
-                                                <option value="Q2">Q2</option>
-                                                <option value="Q3">Q3</option>
-                                                <option value="Q4">Q4</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <label class="form-label">Indexed In</label>
-                                            <input type="text" class="form-control" name="journal_indexed_in">
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" class="form-check-input" name="journal_ugc_care" id="journalUgcCare">
-                                                <label class="form-check-label" for="journalUgcCare">UGC CARE Listed</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3 mb-3">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" class="form-check-input" name="journal_open_access" id="journalOpenAccess">
-                                                <label class="form-check-label" for="journalOpenAccess">Open Access</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Conference Paper Fields -->
-                                <div id="conferenceFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Conference Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Conference Name</label>
-                                            <input type="text" class="form-control" name="conference_name">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Conference Type</label>
-                                            <select class="form-control" name="conference_type">
-                                                <option value="">Select</option>
-                                                <option value="national">National</option>
-                                                <option value="international">International</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Organizer</label>
-                                            <input type="text" class="form-control" name="conference_organizer">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Location</label>
-                                            <input type="text" class="form-control" name="conference_location">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Conference Dates</label>
-                                            <input type="text" class="form-control" name="conference_dates" placeholder="e.g., 10-12 Jan 2024">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">ISBN</label>
-                                            <input type="text" class="form-control" name="conference_isbn">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Proceedings Title</label>
-                                            <input type="text" class="form-control" name="conference_proceedings">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Presentation Type</label>
-                                            <select class="form-control" name="conference_presentation_type">
-                                                <option value="">Select</option>
-                                                <option value="oral">Oral</option>
-                                                <option value="poster">Poster</option>
-                                                <option value="keynote">Keynote</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" class="form-check-input" name="conference_best_paper" id="conferenceBestPaper">
-                                                <label class="form-check-label" for="conferenceBestPaper">Best Paper Award</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Book Fields -->
-                                <div id="bookFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Book Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Book Title</label>
-                                            <input type="text" class="form-control" name="book_title">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">ISBN</label>
-                                            <input type="text" class="form-control" name="book_isbn">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Edition</label>
-                                            <input type="text" class="form-control" name="book_edition">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Volume</label>
-                                            <input type="text" class="form-control" name="book_volume">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Number of Pages</label>
-                                            <input type="number" class="form-control" name="book_pages">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Publication Place</label>
-                                            <input type="text" class="form-control" name="book_place">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Book Type</label>
-                                            <select class="form-control" name="book_type">
-                                                <option value="">Select</option>
-                                                <option value="authored">Authored</option>
-                                                <option value="edited">Edited</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Role</label>
-                                            <input type="text" class="form-control" name="book_role">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Book Chapter Fields -->
-                                <div id="bookChapterFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Book Chapter Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Chapter Title</label>
-                                            <input type="text" class="form-control" name="chapter_title">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Book Title</label>
-                                            <input type="text" class="form-control" name="chapter_book_title">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">ISBN</label>
-                                            <input type="text" class="form-control" name="chapter_isbn">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Chapter Number</label>
-                                            <input type="text" class="form-control" name="chapter_number">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Page Numbers</label>
-                                            <input type="text" class="form-control" name="chapter_pages">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Editors</label>
-                                            <input type="text" class="form-control" name="chapter_editors">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Indexed In</label>
-                                            <input type="text" class="form-control" name="chapter_indexed_in">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Patent Fields -->
-                                <div id="patentFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Patent Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Patent Title</label>
-                                            <input type="text" class="form-control" name="patent_title">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Inventors</label>
-                                            <input type="text" class="form-control" name="patent_inventors">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Applicant Name</label>
-                                            <input type="text" class="form-control" name="patent_applicant">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Patent Number</label>
-                                            <input type="text" class="form-control" name="patent_number">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Application Number</label>
-                                            <input type="text" class="form-control" name="patent_application_number">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Filing Date</label>
-                                            <input type="date" class="form-control" name="patent_filing_date">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Publication Date</label>
-                                            <input type="date" class="form-control" name="patent_publication_date">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Grant Date</label>
-                                            <input type="date" class="form-control" name="patent_grant_date">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Patent Status</label>
-                                            <select class="form-control" name="patent_status">
-                                                <option value="">Select</option>
-                                                <option value="filed">Filed</option>
-                                                <option value="published">Published</option>
-                                                <option value="granted">Granted</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Patent Office</label>
-                                            <input type="text" class="form-control" name="patent_office">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Country</label>
-                                            <input type="text" class="form-control" name="patent_country">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Patent Type</label>
-                                            <select class="form-control" name="patent_type">
-                                                <option value="">Select</option>
-                                                <option value="utility">Utility</option>
-                                                <option value="design">Design</option>
-                                                <option value="plant">Plant</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" class="form-check-input" name="patent_commercialized" id="patentCommercialized">
-                                                <label class="form-check-label" for="patentCommercialized">Commercialized</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">License Details</label>
-                                            <input type="text" class="form-control" name="patent_license">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Research Project Fields -->
-                                <div id="projectFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Research Project Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Project Title</label>
-                                            <input type="text" class="form-control" name="project_title">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Principal Investigator</label>
-                                            <input type="text" class="form-control" name="project_pi">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Co-Investigators</label>
-                                            <input type="text" class="form-control" name="project_co_investigators">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Funding Agency</label>
-                                            <input type="text" class="form-control" name="project_funding_agency">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Project Type</label>
-                                            <select class="form-control" name="project_type">
-                                                <option value="">Select</option>
-                                                <option value="minor">Minor</option>
-                                                <option value="major">Major</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Sanction Number</label>
-                                            <input type="text" class="form-control" name="project_sanction_number">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Sanction Amount</label>
-                                            <input type="number" step="0.01" class="form-control" name="project_sanction_amount">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Start Date</label>
-                                            <input type="date" class="form-control" name="project_start_date">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">End Date</label>
-                                            <input type="date" class="form-control" name="project_end_date">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Project Status</label>
-                                            <select class="form-control" name="project_status">
-                                                <option value="">Select</option>
-                                                <option value="ongoing">Ongoing</option>
-                                                <option value="completed">Completed</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Fund Received</label>
-                                            <input type="number" step="0.01" class="form-control" name="project_fund_received">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Outcomes</label>
-                                            <input type="text" class="form-control" name="project_outcomes">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Copyright Fields -->
-                                <div id="copyrightFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Copyright Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Registration Number</label>
-                                            <input type="text" class="form-control" name="copyright_registration_number">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Registration Date</label>
-                                            <input type="date" class="form-control" name="copyright_registration_date">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Copyright Office</label>
-                                            <input type="text" class="form-control" name="copyright_office">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Description</label>
-                                            <textarea class="form-control" name="copyright_description" rows="3"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Award Fields -->
-                                <div id="awardFields" style="display: none;">
-                                    <h6 class="bg-light p-2 mt-3">Award Details</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Award Title</label>
-                                            <input type="text" class="form-control" name="award_title">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Awarding Body</label>
-                                            <input type="text" class="form-control" name="award_body">
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Award Date</label>
-                                            <input type="date" class="form-control" name="award_date">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Award Level</label>
-                                            <select class="form-control" name="award_level">
-                                                <option value="">Select</option>
-                                                <option value="national">National</option>
-                                                <option value="international">International</option>
-                                                <option value="institutional">Institutional</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Description</label>
-                                            <input type="text" class="form-control" name="award_description">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Add Research Button -->
-                                <div class="row mt-4">
-                                    <div class="col-md-12 text-center">
-                                        <button type="button" class="btn btn-success" onclick="addResearchEntry()">
-                                            <i class="fas fa-plus me-2"></i>Add Research Entry
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Research Entries Table -->
-                                <div class="row mt-4" id="researchEntriesSection" style="display: none;">
-                                    <div class="col-md-12">
-                                        <h6 class="bg-light p-2">Added Research Entries</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-sm" id="researchEntriesTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Type</th>
-                                                        <th>Title</th>
-                                                        <th>Year</th>
-                                                        <th>Status</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="researchEntriesBody">
-                                                    <!-- Research entries will be added here dynamically -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- FDP / Workshops Section -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">FDP / Workshops Attended</h5>
-                            </div>
-                            <div class="card-body">
-                                <!-- FDP Type Dropdown -->
-                                <div class="row mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">FDP Type</label>
-                                        <select class="form-control" name="fdp_type" id="fdpType">
-                                            <option value="">Select Type</option>
-                                            <option value="fdp">Faculty Development Program</option>
-                                            <option value="workshop">Workshop</option>
-                                            <option value="seminar">Seminar</option>
-                                            <option value="conference">Conference</option>
-                                            <option value="sttp">Short Term Training Program (STTP)</option>
-                                            <option value="webinar">Webinar</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Mandatory FDP Fields -->
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">Title</label>
-                                        <input type="text" class="form-control" name="fdp_title" id="fdpTitle">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">From Date</label>
-                                        <input type="date" class="form-control" name="fdp_from_date" id="fdpFromDate">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">To Date</label>
-                                        <input type="date" class="form-control" name="fdp_to_date" id="fdpToDate" onchange="calculateDuration()">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Organized By</label>
-                                        <input type="text" class="form-control" name="fdp_organized_by" id="fdpOrganizedBy">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Place</label>
-                                        <input type="text" class="form-control" name="fdp_place" id="fdpPlace">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Certificate Upload</label>
-                                        <input type="file" class="form-control" name="fdp_certificate" accept=".pdf,.jpg,.jpeg,.png">
-                                    </div>
-                                </div>
-
-                                <!-- Additional Fields (Optional) -->
-                                <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Mode</label>
-                                        <select class="form-control" name="fdp_mode">
-                                            <option value="">Select</option>
-                                            <option value="online">Online</option>
-                                            <option value="offline">Offline</option>
-                                            <option value="hybrid">Hybrid</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Duration (Days)</label>
-                                        <input type="number" class="form-control" name="fdp_duration" id="fdpDuration" readonly>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Sponsored By</label>
-                                        <input type="text" class="form-control" name="fdp_sponsored_by">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Level</label>
-                                        <select class="form-control" name="fdp_level">
-                                            <option value="">Select</option>
-                                            <option value="national">National</option>
-                                            <option value="international">International</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Role</label>
-                                        <select class="form-control" name="fdp_role">
-                                            <option value="">Select</option>
-                                            <option value="participant">Participant</option>
-                                            <option value="coordinator">Coordinator</option>
-                                            <option value="resource_person">Resource Person</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-8 mb-3">
-                                        <label class="form-label">Remarks</label>
-                                        <input type="text" class="form-control" name="fdp_remarks">
-                                    </div>
-                                </div>
-
-                                <!-- Add FDP Button -->
-                                <div class="row mt-4">
-                                    <div class="col-md-12 text-center">
-                                        <button type="button" class="btn btn-success" onclick="addFDPEntry()">
-                                            <i class="fas fa-plus me-2"></i>Add FDP Entry
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- FDP Entries Table -->
-                                <div class="row mt-4" id="fdpEntriesSection" style="display: none;">
-                                    <div class="col-md-12">
-                                        <h6 class="bg-light p-2">Added FDP Entries</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-sm" id="fdpEntriesTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Type</th>
-                                                        <th>Title</th>
-                                                        <th>Duration</th>
-                                                        <th>Organized By</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="fdpEntriesBody">
-                                                    <!-- FDP entries will be added here dynamically -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- B.Tech Projects Handled -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">B.Tech Projects Handled</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">H.T.No.</label>
-                                        <input type="text" class="form-control" name="project_ht_no" id="projectHtNo">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Name of the Student</label>
-                                        <input type="text" class="form-control" name="project_student_name" id="projectStudentName">
-                                    </div>
-                                    <div class="col-md-2 mb-3">
-                                        <label class="form-label">Batch Number</label>
-                                        <input type="text" class="form-control" name="project_batch" id="projectBatch">
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">Title of the Project</label>
-                                        <input type="text" class="form-control" name="project_title" id="projectTitle">
-                                    </div>
-                                    <div class="col-md-1 mb-3">
-                                        <label class="form-label">Approved</label>
-                                        <select class="form-control" name="project_approved" id="projectApproved">
-                                            <option value="">Select</option>
-                                            <option value="Yes">Yes</option>
-                                            <option value="No">No</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-1 mb-3">
-                                        <label class="form-label">Marks</label>
-                                        <input type="number" class="form-control" name="project_marks" id="projectMarks">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 text-center">
-                                        <button type="button" class="btn btn-success" onclick="addProjectEntry()">
-                                            <i class="fas fa-plus me-2"></i>Add Project
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Projects Table -->
-                                <div class="row mt-4" id="projectsSection" style="display: none;">
-                                    <div class="col-md-12">
-                                        <h6 class="bg-light p-2">Added Projects</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-sm" id="projectsTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>H.T.No.</th>
-                                                        <th>Student Name</th>
-                                                        <th>Batch</th>
-                                                        <th>Project Title</th>
-                                                        <th>Approved</th>
-                                                        <th>Marks</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="projectsBody">
-                                                    <!-- Projects will be added here dynamically -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- NEW: Detailed Results Section -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Results / Academic Performance</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Subject Name</label>
-                                        <input type="text" class="form-control" name="result_subject_name" id="resultSubjectName">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Subject Code</label>
-                                        <input type="text" class="form-control" name="result_subject_code" id="resultSubjectCode">
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Number of Students Attempted</label>
-                                        <input type="number" class="form-control" name="result_students_attempted" id="resultStudentsAttempted" oninput="calculateResultPercentage()">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Number of Students Passed</label>
-                                        <input type="number" class="form-control" name="result_students_passed" id="resultStudentsPassed" oninput="calculateResultPercentage()">
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label class="form-label">Result (%)</label>
-                                        <input type="text" class="form-control" name="result_percentage" id="resultPercentage" readonly>
-                                        <small class="text-muted">Auto-calculated from Attempted and Passed</small>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 text-center">
-                                        <button type="button" class="btn btn-success" onclick="addResultEntry()">
-                                            <i class="fas fa-plus me-2"></i>Add Result Entry
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Results Table -->
-                                <div class="row mt-4" id="resultsSection" style="display: none;">
-                                    <div class="col-md-12">
-                                        <h6 class="bg-light p-2">Added Results</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered table-sm" id="resultsTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Subject Name</th>
-                                                        <th>Subject Code</th>
-                                                        <th>Attempted</th>
-                                                        <th>Passed</th>
-                                                        <th>Result (%)</th>
-                                                        <th>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="resultsBody">
-                                                    <!-- Results will be added here dynamically -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- NEW: About Yourself TextBox -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">About Yourself</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">About Yourself</label>
-                                        <textarea class="form-control" name="about_yourself" rows="5" maxlength="1000" placeholder="Tell us about yourself (max 1000 characters)">{{ faculty.about_yourself|default:'' }}</textarea>
-                                        <small class="text-muted">Maximum 1000 characters</small>
-                                        <div id="charCount" class="text-muted mt-1">0 / 1000 characters</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Additional Information (Original) -->
-                        <div class="card mb-3">
-                            <div class="card-header bg-info text-white">
-                                <h5 class="mb-0">Additional Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">Subjects Dealt</label>
-                                        <textarea class="form-control" name="subjects_dealt" rows="3">{{ faculty.subjects_dealt|default:'' }}</textarea>
-                                        <small class="text-muted">Separate subjects with commas</small>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label">SCM (Service/Consultancy/MOU) Details</label>
-                                        <textarea class="form-control" name="scm" rows="3">{{ faculty.scm|default:'' }}</textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Submit Buttons -->
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary btn-lg px-5">
-                                <i class="fas fa-save me-2"></i>Save Faculty
-                            </button>
-                            <a href="{% url 'dashboard:faculty_dashboard' %}" class="btn btn-secondary btn-lg px-5">
-                                <i class="fas fa-times me-2"></i>Cancel
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- 11. RESEARCH & PUBLICATIONS (STRUCTURED) -->
+    <div class="section-title">11. RESEARCH & PUBLICATIONS</div>
+    {% if research_publications %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pub in research_publications %}
+                <tr>
+                    <td>
+                        <span class="research-type-badge
+                            {% if pub.research_type == 'journal' %}journal-badge{% endif %}
+                            {% if pub.research_type == 'conference' %}conference-badge{% endif %}
+                            {% if pub.research_type == 'patent' %}patent-badge{% endif %}
+                            {% if pub.research_type == 'project' %}project-badge{% endif %}">
+                            {{ pub.get_research_type_display }}
+                        </span>
+                    </td>
+                    <td>{{ pub.title|default:"—" }}</td>
+                    <td>{{ pub.publication_year|default:"—" }}</td>
+                    <td>{{ pub.status|default:"—" }}</td>
+                    <td>
+                        {% if pub.authors %}
+                            <strong>Authors:</strong> {{ pub.authors }}<br>
+                        {% endif %}
+                        {% if pub.journal_name %}
+                            <strong>Journal:</strong> {{ pub.journal_name }}<br>
+                            {% if pub.issn %}<strong>ISSN:</strong> {{ pub.issn }}<br>{% endif %}
+                            {% if pub.volume %}<strong>Vol:</strong> {{ pub.volume }}{% endif %}
+                            {% if pub.issue %}({{ pub.issue }}){% endif %}
+                            {% if pub.page_numbers %}, <strong>pp:</strong> {{ pub.page_numbers }}{% endif %}
+                        {% endif %}
+                        {% if pub.conference_name %}
+                            <strong>Conference:</strong> {{ pub.conference_name }}<br>
+                            {% if pub.conference_location %}<strong>Location:</strong> {{ pub.conference_location }}<br>{% endif %}
+                            {% if pub.conference_dates %}<strong>Dates:</strong> {{ pub.conference_dates }}{% endif %}
+                        {% endif %}
+                        {% if pub.book_title %}
+                            <strong>Book:</strong> {{ pub.book_title }}<br>
+                            {% if pub.isbn %}<strong>ISBN:</strong> {{ pub.isbn }}<br>{% endif %}
+                            {% if pub.edition %}<strong>Edition:</strong> {{ pub.edition }}{% endif %}
+                        {% endif %}
+                        {% if pub.patent_number %}
+                            <strong>Patent No:</strong> {{ pub.patent_number }}<br>
+                            {% if pub.filing_date %}<strong>Filed:</strong> {{ pub.filing_date|date:"d M Y" }}{% endif %}
+                        {% endif %}
+                        {% if pub.project_title %}
+                            <strong>Project:</strong> {{ pub.project_title }}<br>
+                            {% if pub.funding_agency %}<strong>Funding:</strong> {{ pub.funding_agency }}<br>{% endif %}
+                            {% if pub.sanction_amount %}<strong>Amount:</strong> ₹{{ pub.sanction_amount }}{% endif %}
+                        {% endif %}
+                        {% if pub.award_title %}
+                            <strong>Award:</strong> {{ pub.award_title }}<br>
+                            {% if pub.awarding_body %}<strong>By:</strong> {{ pub.awarding_body }}{% endif %}
+                        {% endif %}
+                        {% if pub.doi %}
+                            <strong>DOI:</strong> {{ pub.doi }}<br>
+                        {% endif %}
+                        {% if pub.publisher_name %}
+                            <strong>Publisher:</strong> {{ pub.publisher_name }}<br>
+                        {% endif %}
+                        {% if pub.abstract %}
+                            <strong>Abstract:</strong> {{ pub.abstract }}<br>
+                        {% endif %}
+                        {% if pub.keywords %}
+                            <strong>Keywords:</strong> {{ pub.keywords }}<br>
+                        {% endif %}
+                        {% if pub.proof_document %}
+                            <strong>Proof:</strong> <a href="{{ pub.proof_document.url }}" target="_blank">View Document</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-    <!-- ==================== FACULTY LIST VIEW ==================== -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0"><i class="fas fa-users me-2"></i>Faculty Directory</h4>
-                    <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-light btn-sm">
-                        <i class="fas fa-plus me-1"></i>Add New Faculty
-                    </a>
-                </div>
-                <div class="card-body">
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No research publications data available</p>
+        </div>
+    {% endif %}
 
-                    <!-- Alert container for success/error messages -->
-                    <div id="alertContainer"></div>
+    <!-- 12. RESEARCH PROJECTS (FROM EXISTING MODEL) -->
+    {% if research_projects %}
+    <div class="section-title">12. RESEARCH PROJECTS</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Marks</th>
+                <th>Journal/Publisher</th>
+                <th>DOI/ISSN</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in research_projects %}
+            <tr>
+                <td>{{ project.get_research_type_display }}</td>
+                <td>{{ project.title_of_project }}</td>
+                <td>{{ project.marks_awarded|default:"—" }}</td>
+                <td>
+                    {% if project.journal_name %}
+                        Journal: {{ project.journal_name }}<br>
+                    {% endif %}
+                    {% if project.publisher_name %}
+                        Publisher: {{ project.publisher_name }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if project.doi %}
+                        DOI: {{ project.doi }}<br>
+                    {% endif %}
+                    {% if project.issn_number %}
+                        ISSN: {{ project.issn_number }}<br>
+                    {% endif %}
+                    {% if project.volume %}
+                        Vol: {{ project.volume }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
 
-                    <!-- Search and Filter -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, code, department...">
-                        </div>
-                        <div class="col-md-3">
-                            <select id="deptFilter" class="form-control">
-                                <option value="">All Departments</option>
-                                {% for dept in departments %}
-                                <option value="{{ dept }}">{{ dept }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select id="statusFilter" class="form-control">
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
+    <!-- 13. FDP / WORKSHOPS ATTENDED -->
+    <div class="section-title">13. FDP / WORKSHOPS ATTENDED</div>
+    {% if fdps %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Duration</th>
+                <th>Organized By</th>
+                <th>Place</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fdp in fdps %}
+            <tr>
+                <td>{{ fdp.get_fdp_type_display }}</td>
+                <td>{{ fdp.title }}</td>
+                <td>{{ fdp.from_date|date:"d M Y" }} to {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
+                <td>{{ fdp.organized_by|default:"—" }}</td>
+                <td>{{ fdp.place|default:"—" }}</td>
+                <td>{{ fdp.get_role_display|default:"—" }}</td>
+            </tr>
+            <tr>
+                <td colspan="6" style="background-color: #f9f9f9; padding: 4px 10px;">
+                    <small>
+                        {% if fdp.mode %}<strong>Mode:</strong> {{ fdp.get_mode_display }} | {% endif %}
+                        {% if fdp.level %}<strong>Level:</strong> {{ fdp.get_level_display }} | {% endif %}
+                        {% if fdp.sponsored_by %}<strong>Sponsored by:</strong> {{ fdp.sponsored_by }} | {% endif %}
+                        {% if fdp.remarks %}<strong>Remarks:</strong> {{ fdp.remarks }}{% endif %}
+                        {% if fdp.certificate %}
+                            | <strong>Certificate:</strong> <a href="{{ fdp.certificate.url }}" target="_blank">View</a>
+                        {% endif %}
+                    </small>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No FDP/Workshop data available</p>
+        </div>
+    {% endif %}
 
-                    <!-- Faculty Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover" id="facultyTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Employee Code</th>
-                                    <th>Name</th>
-                                    <th>Department</th>
-                                    <th>Designation</th>
-                                    <th>Email</th>
-                                    <th>Mobile</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for fac in faculties %}
-                                {# FIX: data-faculty-id used by JS to remove row after delete #}
-                                <tr data-faculty-id="{{ fac.id }}">
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ fac.employee_code }}</td>
-                                    <td>{{ fac.staff_name }}</td>
-                                    <td>{{ fac.department }}</td>
-                                    <td>{{ fac.designation }}</td>
-                                    <td>{{ fac.email }}</td>
-                                    <td>{{ fac.mobile }}</td>
-                                    <td>
-                                        <span class="badge bg-{% if fac.is_active %}success{% else %}danger{% endif %}">
-                                            {{ fac.is_active|yesno:"Active,Inactive" }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'dashboard:faculty_dashboard' %}?id={{ fac.id }}" class="btn btn-info" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{% url 'dashboard:edit_faculty' fac.id %}" class="btn btn-warning" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <!-- CHANGED: Now using generate_faculty_pdf_clean for proper PDF merging -->
-                                            <a href="{% url 'dashboard:generate_faculty_pdf_clean' fac.id %}" class="btn btn-success" title="PDF" target="_blank">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </a>
-                                            <button onclick="deleteFaculty({{ fac.id }})" class="btn btn-danger" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="9" class="text-center py-4">
-                                        <i class="fas fa-users fa-3x text-muted mb-3 d-block"></i>
-                                        <p class="mb-0">No faculty members found.</p>
-                                        <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary mt-3">
-                                            <i class="fas fa-plus me-2"></i>Add First Faculty
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- 14. B.TECH PROJECTS HANDLED -->
+    <div class="section-title">14. B.TECH PROJECTS HANDLED</div>
+    {% if btech_projects %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>H.T.No.</th>
+                <th>Student Name</th>
+                <th>Batch</th>
+                <th>Project Title</th>
+                <th>Approved</th>
+                <th>Marks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in btech_projects %}
+            <tr>
+                <td>{{ project.ht_no }}</td>
+                <td>{{ project.student_name }}</td>
+                <td>{{ project.batch|default:"—" }}</td>
+                <td>{{ project.project_title }}</td>
+                <td style="color: {% if project.approved %}green{% else %}red{% endif %};">
+                    {% if project.approved %}Yes{% else %}No{% endif %}
+                </td>
+                <td>{{ project.marks|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No project data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 15. RESULTS / ACADEMIC PERFORMANCE -->
+    <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if faculty.results %}
+            <div style="white-space: pre-line;">{{ faculty.results }}</div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No results data specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 16. ABOUT YOURSELF -->
+    <div class="section-title">16. ABOUT YOURSELF</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if faculty.about_yourself %}
+            <div style="white-space: pre-line;">{{ faculty.about_yourself }}</div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No information provided</p>
+        {% endif %}
+    </div>
+
+    <!-- 17. UPLOADED DOCUMENTS -->
+    <div class="section-title">17. UPLOADED DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div class="document-box">
+                <strong>Aadhar Card:</strong>
+                {% if has_aadhar or faculty.aadhar_file %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PAN Card:</strong>
+                {% if has_pan or faculty.pan_file %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>APAAR Document:</strong>
+                {% if has_apaar or faculty.apaar_file %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>SCM Document:</strong>
+                {% if has_scm or faculty.scm_file %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>JNTUH Bio-Data:</strong>
+                {% if has_jntuh_biodata or faculty.jntuh_biodata %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>SSC Certificate:</strong>
+                {% if has_ssc_cert or faculty.ssc_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>Intermediate Certificate:</strong>
+                {% if has_inter_cert or faculty.inter_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>UG Certificate:</strong>
+                {% if has_ug_cert or faculty.ug_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PG Certificate:</strong>
+                {% if has_pg_cert or faculty.pg_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PhD Certificate:</strong>
+                {% if has_phd_cert or faculty.phd_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
             </div>
         </div>
     </div>
-    {% endif %}
-</div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this faculty member?</p>
-                <p class="text-danger mb-0"><strong>This action cannot be undone.</strong></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cancel
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
-                    <i class="fas fa-trash me-1"></i>Delete
-                </button>
-            </div>
+    <!-- 18. CERTIFICATES -->
+    <div class="section-title">18. CERTIFICATES</div>
+    <div style="padding: 10px; margin-bottom: 15px;">
+        {% if certificates %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Certificate Type</th>
+                        <th>Issued By</th>
+                        <th>Issue Date</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                    <tr>
+                        <td><strong>{{ cert.certificate_type }}</strong></td>
+                        <td>{{ cert.issued_by|default:"—" }}</td>
+                        <td>{% if cert.issue_date %}{{ cert.issue_date|date:"d M Y" }}{% else %}—{% endif %}</td>
+                        <td>{{ cert.description|truncatechars:50|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p style="text-align: right; font-size: 9px; margin-top: 5px;">
+                <em>Total {{ certificates|length }} certificate(s) merged with this document</em>
+            </p>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No certificates uploaded</p>
+        {% endif %}
+    </div>
+
+    <!-- 19. VERIFICATION & AUTHORIZATION -->
+    <div class="section-title">19. VERIFICATION & AUTHORIZATION</div>
+    <div style="margin: 20px 0; text-align: center; font-size: 10px;">
+        This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
+    </div>
+
+    <div class="signature-section">
+        <table style="width: 100%;">
+            <tr>
+                <td class="signature-box">
+                    <div class="signature-line"></div>
+                    <div>{{ faculty.staff_name }}<br>Faculty Member<br>Date: _________</div>
+                </td>
+                <td class="signature-box">
+                    <div class="signature-line"></div>
+                    <div>Head of Department<br>{{ faculty.department }}<br>Date: _________</div>
+                </td>
+            </tr>
+        </table>
+        <div style="text-align: center; margin-top: 40px;">
+            <div style="width: 300px; margin: 0 auto 5px; border-top: 2px solid #333;"></div>
+            <div>Principal<br>Anurag Engineering College<br>Date: _________</div>
         </div>
     </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // ==================== ANALYTICS CHART ====================
-    {% if is_analytics %}
-    var ctx = document.getElementById('experienceChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: ['0-5 Years', '5-10 Years', '10+ Years'],
-            datasets: [{
-                data: [
-                    {{ experience_stats.0_5 }},
-                    {{ experience_stats.5_10 }},
-                    {{ experience_stats.10_plus }}
-                ],
-                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-    {% endif %}
-
-    // ==================== SEARCH & FILTER ====================
-    document.getElementById('searchInput')?.addEventListener('keyup', filterTable);
-    document.getElementById('deptFilter')?.addEventListener('change', filterTable);
-    document.getElementById('statusFilter')?.addEventListener('change', filterTable);
-
-    function filterTable() {
-        var searchText  = document.getElementById('searchInput')?.value.toLowerCase()  || '';
-        var deptFilter  = document.getElementById('deptFilter')?.value.toLowerCase()   || '';
-        var statusFilter = document.getElementById('statusFilter')?.value.toLowerCase() || '';
-        var rows = document.querySelectorAll('#facultyTable tbody tr');
-
-        rows.forEach(function(row) {
-            var text   = row.textContent.toLowerCase();
-            var dept   = row.cells[3]?.textContent.toLowerCase() || '';
-            var status = row.cells[7]?.textContent.toLowerCase() || '';
-
-            var matchesSearch = text.includes(searchText);
-            var matchesDept   = deptFilter === ''   || dept.includes(deptFilter);
-            var matchesStatus = statusFilter === '' || status.includes(statusFilter);
-
-            row.style.display = matchesSearch && matchesDept && matchesStatus ? '' : 'none';
-        });
-    }
-
-    // ==================== DELETE FACULTY (FIXED) ====================
-    var deleteId    = null;
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-
-    window.deleteFaculty = function(id) {
-        deleteId = id;
-        deleteModal.show();
-    };
-
-    document.getElementById('confirmDeleteBtn')?.addEventListener('click', function () {
-        if (!deleteId) return;
-
-        var btn = document.getElementById('confirmDeleteBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Deleting...';
-
-        fetch('/faculty/' + deleteId + '/delete/', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(function (response) {
-            if (response.redirected || response.status === 302) {
-                window.location.href = '/login/';
-                return null;
-            }
-            if (!response.ok) {
-                throw new Error('Server returned status ' + response.status);
-            }
-            return response.json();
-        })
-        .then(function (data) {
-            if (!data) return;
-
-            if (data.success) {
-                var row = document.querySelector('tr[data-faculty-id="' + deleteId + '"]');
-                if (row) {
-                    row.style.transition = 'opacity 0.3s';
-                    row.style.opacity    = '0';
-                    setTimeout(function () { row.remove(); }, 300);
-                } else {
-                    location.reload();
-                }
-                deleteModal.hide();
-                showAlert('success', data.message || 'Faculty deleted successfully.');
-            } else {
-                showAlert('danger', 'Error: ' + (data.error || 'Could not delete faculty.'));
-            }
-        })
-        .catch(function (err) {
-            console.error('Delete error:', err);
-            showAlert('danger', 'An error occurred while deleting. Please try again.');
-        })
-        .finally(function () {
-            btn.disabled  = false;
-            btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
-            deleteId      = null;
-            deleteModal.hide();
-        });
-    });
-
-    // ==================== EXPERIENCE CALCULATION ====================
-    function calculateExperience() {
-        var joiningDate = document.getElementById('joiningDate')?.value;
-        if (!joiningDate) return;
-
-        var join = new Date(joiningDate);
-        var today = new Date();
-
-        var years = today.getFullYear() - join.getFullYear();
-        var months = today.getMonth() - join.getMonth();
-        var days = today.getDate() - join.getDate();
-
-        if (days < 0) {
-            months--;
-            var lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-            days += lastMonth.getDate();
-        }
-        if (months < 0) {
-            years--;
-            months += 12;
-        }
-
-        var experience = years + " Years " + months + " Months";
-        document.getElementById('expAnurag').value = experience;
-    }
-
-    window.onload = function() {
-        calculateExperience();
-        // Character counter for About Yourself
-        var aboutTextarea = document.querySelector('textarea[name="about_yourself"]');
-        if (aboutTextarea) {
-            var charCount = document.getElementById('charCount');
-            aboutTextarea.addEventListener('input', function() {
-                var length = this.value.length;
-                charCount.textContent = length + ' / 1000 characters';
-                if (length > 1000) {
-                    charCount.style.color = 'red';
-                } else {
-                    charCount.style.color = '';
-                }
-            });
-            charCount.textContent = aboutTextarea.value.length + ' / 1000 characters';
-        }
-    };
-
-    // ==================== RESULT PERCENTAGE CALCULATION ====================
-    function calculateResultPercentage() {
-        var attempted = document.getElementById('resultStudentsAttempted')?.value;
-        var passed = document.getElementById('resultStudentsPassed')?.value;
-
-        if (attempted && passed && parseFloat(attempted) > 0) {
-            var percentage = (parseFloat(passed) / parseFloat(attempted)) * 100;
-            document.getElementById('resultPercentage').value = percentage.toFixed(2);
-        } else {
-            document.getElementById('resultPercentage').value = '';
-        }
-    }
-
-    // ==================== RESULT ENTRIES ====================
-    var resultEntries = [];
-
-    window.addResultEntry = function() {
-        var subjectName = document.getElementById('resultSubjectName').value;
-        var subjectCode = document.getElementById('resultSubjectCode').value;
-        var attempted = document.getElementById('resultStudentsAttempted').value;
-        var passed = document.getElementById('resultStudentsPassed').value;
-        var percentage = document.getElementById('resultPercentage').value;
-
-        if (!subjectName || !subjectCode || !attempted || !passed) {
-            alert('Please fill all result fields (Subject Name, Subject Code, Attempted, Passed)');
-            return;
-        }
-
-        var entry = {
-            subject_name: subjectName,
-            subject_code: subjectCode,
-            attempted: attempted,
-            passed: passed,
-            percentage: percentage
-        };
-
-        resultEntries.push(entry);
-        updateResultsTable();
-        clearResultForm();
-    };
-
-    function updateResultsTable() {
-        var tbody = document.getElementById('resultsBody');
-        if (!tbody) return;
-
-        if (resultEntries.length > 0) {
-            document.getElementById('resultsSection').style.display = 'block';
-        }
-
-        tbody.innerHTML = '';
-        resultEntries.forEach(function(entry, index) {
-            var row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${escapeHtml(entry.subject_name)}</td>
-                <td>${escapeHtml(entry.subject_code)}</td>
-                <td>${entry.attempted}</td>
-                <td>${entry.passed}</td>
-                <td>${entry.percentage}%</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removeResultEntry(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-        });
-    }
-
-    window.removeResultEntry = function(index) {
-        resultEntries.splice(index, 1);
-        updateResultsTable();
-        if (resultEntries.length === 0) {
-            document.getElementById('resultsSection').style.display = 'none';
-        }
-    };
-
-    function clearResultForm() {
-        document.getElementById('resultSubjectName').value = '';
-        document.getElementById('resultSubjectCode').value = '';
-        document.getElementById('resultStudentsAttempted').value = '';
-        document.getElementById('resultStudentsPassed').value = '';
-        document.getElementById('resultPercentage').value = '';
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        var div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ==================== RESEARCH FIELDS TOGGLE ====================
-    window.showResearchFields = function() {
-        var researchType = document.getElementById('researchType').value;
-
-        document.getElementById('journalFields').style.display = 'none';
-        document.getElementById('conferenceFields').style.display = 'none';
-        document.getElementById('bookFields').style.display = 'none';
-        document.getElementById('bookChapterFields').style.display = 'none';
-        document.getElementById('patentFields').style.display = 'none';
-        document.getElementById('projectFields').style.display = 'none';
-        document.getElementById('copyrightFields').style.display = 'none';
-        document.getElementById('awardFields').style.display = 'none';
-
-        if (researchType === 'journal') {
-            document.getElementById('journalFields').style.display = 'block';
-        } else if (researchType === 'conference') {
-            document.getElementById('conferenceFields').style.display = 'block';
-        } else if (researchType === 'book') {
-            document.getElementById('bookFields').style.display = 'block';
-        } else if (researchType === 'book_chapter') {
-            document.getElementById('bookChapterFields').style.display = 'block';
-        } else if (researchType === 'patent') {
-            document.getElementById('patentFields').style.display = 'block';
-        } else if (researchType === 'project') {
-            document.getElementById('projectFields').style.display = 'block';
-        } else if (researchType === 'copyright') {
-            document.getElementById('copyrightFields').style.display = 'block';
-        } else if (researchType === 'award') {
-            document.getElementById('awardFields').style.display = 'block';
-        }
-    };
-
-    // ==================== RESEARCH ENTRIES ====================
-    var researchEntries = [];
-
-    window.addResearchEntry = function() {
-        var researchType = document.getElementById('researchType').value;
-        if (!researchType) {
-            alert('Please select research type');
-            return;
-        }
-
-        var title = document.getElementById('researchTitle').value;
-        if (!title) {
-            alert('Please enter title');
-            return;
-        }
-
-        var entry = {
-            type: researchType,
-            type_display: document.getElementById('researchType').selectedOptions[0].text,
-            title: title,
-            year: document.getElementById('researchYear').value,
-            status: document.getElementById('researchStatus').selectedOptions[0]?.text || '',
-            authors: document.getElementById('researchAuthors').value,
-            department: document.getElementById('researchDept').value,
-            publisher: document.getElementById('researchPublisher').value,
-            doi: document.getElementById('researchDoi').value,
-            url: document.getElementById('researchUrl').value,
-            abstract: document.getElementById('researchAbstract').value,
-            keywords: document.getElementById('researchKeywords').value
-        };
-
-        if (researchType === 'journal') {
-            entry.journal_name = document.querySelector('[name="journal_name"]').value;
-            entry.issn = document.querySelector('[name="journal_issn"]').value;
-            entry.volume = document.querySelector('[name="journal_volume"]').value;
-            entry.issue = document.querySelector('[name="journal_issue"]').value;
-            entry.pages = document.querySelector('[name="journal_pages"]').value;
-        } else if (researchType === 'conference') {
-            entry.conference_name = document.querySelector('[name="conference_name"]').value;
-            entry.location = document.querySelector('[name="conference_location"]').value;
-            entry.dates = document.querySelector('[name="conference_dates"]').value;
-        } else if (researchType === 'book') {
-            entry.book_title = document.querySelector('[name="book_title"]').value;
-            entry.isbn = document.querySelector('[name="book_isbn"]').value;
-            entry.edition = document.querySelector('[name="book_edition"]').value;
-        }
-
-        researchEntries.push(entry);
-        updateResearchTable();
-        clearResearchForm();
-    };
-
-    function updateResearchTable() {
-        var tbody = document.getElementById('researchEntriesBody');
-        if (!tbody) return;
-
-        if (researchEntries.length > 0) {
-            document.getElementById('researchEntriesSection').style.display = 'block';
-        }
-
-        tbody.innerHTML = '';
-        researchEntries.forEach(function(entry, index) {
-            var row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${escapeHtml(entry.type_display)}</td>
-                <td>${escapeHtml(entry.title)}</td>
-                <td>${entry.year || '-'}</td>
-                <td>${entry.status || '-'}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removeResearchEntry(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-        });
-    }
-
-    window.removeResearchEntry = function(index) {
-        researchEntries.splice(index, 1);
-        updateResearchTable();
-        if (researchEntries.length === 0) {
-            document.getElementById('researchEntriesSection').style.display = 'none';
-        }
-    };
-
-    function clearResearchForm() {
-        document.getElementById('researchTitle').value = '';
-        document.getElementById('researchAuthors').value = '';
-        document.getElementById('researchYear').value = '';
-        document.getElementById('researchPublisher').value = '';
-        document.getElementById('researchStatus').value = '';
-        document.getElementById('researchDoi').value = '';
-        document.getElementById('researchUrl').value = '';
-        document.getElementById('researchAbstract').value = '';
-        document.getElementById('researchKeywords').value = '';
-
-        document.querySelectorAll('[name^="journal_"], [name^="conference_"], [name^="book_"], [name^="chapter_"], [name^="patent_"], [name^="project_"], [name^="copyright_"], [name^="award_"]').forEach(function(input) {
-            if (input.type === 'checkbox') {
-                input.checked = false;
-            } else {
-                input.value = '';
-            }
-        });
-    }
-
-    // ==================== FDP DURATION CALCULATION ====================
-    function calculateDuration() {
-        var fromDate = document.getElementById('fdpFromDate')?.value;
-        var toDate = document.getElementById('fdpToDate')?.value;
-
-        if (fromDate && toDate) {
-            var from = new Date(fromDate);
-            var to = new Date(toDate);
-            var diffTime = Math.abs(to - from);
-            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            document.getElementById('fdpDuration').value = diffDays;
-        }
-    }
-
-    // ==================== FDP ENTRIES ====================
-    var fdpEntries = [];
-
-    window.addFDPEntry = function() {
-        var fdpType = document.getElementById('fdpType').value;
-        if (!fdpType) {
-            alert('Please select FDP type');
-            return;
-        }
-
-        var title = document.getElementById('fdpTitle').value;
-        if (!title) {
-            alert('Please enter title');
-            return;
-        }
-
-        var fromDate = document.getElementById('fdpFromDate').value;
-        var toDate = document.getElementById('fdpToDate').value;
-        if (!fromDate || !toDate) {
-            alert('Please select from and to dates');
-            return;
-        }
-
-        var entry = {
-            type: fdpType,
-            type_display: document.getElementById('fdpType').selectedOptions[0].text,
-            title: title,
-            from_date: fromDate,
-            to_date: toDate,
-            organized_by: document.getElementById('fdpOrganizedBy').value,
-            place: document.getElementById('fdpPlace').value,
-            duration: document.getElementById('fdpDuration').value,
-            mode: document.querySelector('[name="fdp_mode"]').value,
-            sponsored_by: document.querySelector('[name="fdp_sponsored_by"]').value,
-            level: document.querySelector('[name="fdp_level"]').value,
-            role: document.querySelector('[name="fdp_role"]').value,
-            remarks: document.querySelector('[name="fdp_remarks"]').value
-        };
-
-        fdpEntries.push(entry);
-        updateFDPTable();
-        clearFDPForm();
-    };
-
-    function updateFDPTable() {
-        var tbody = document.getElementById('fdpEntriesBody');
-        if (!tbody) return;
-
-        if (fdpEntries.length > 0) {
-            document.getElementById('fdpEntriesSection').style.display = 'block';
-        }
-
-        tbody.innerHTML = '';
-        fdpEntries.forEach(function(entry, index) {
-            var row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${escapeHtml(entry.type_display)}</td>
-                <td>${escapeHtml(entry.title)}</td>
-                <td>${entry.duration} days</td>
-                <td>${escapeHtml(entry.organized_by || '-')}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removeFDPEntry(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-        });
-    }
-
-    window.removeFDPEntry = function(index) {
-        fdpEntries.splice(index, 1);
-        updateFDPTable();
-        if (fdpEntries.length === 0) {
-            document.getElementById('fdpEntriesSection').style.display = 'none';
-        }
-    };
-
-    function clearFDPForm() {
-        document.getElementById('fdpType').value = '';
-        document.getElementById('fdpTitle').value = '';
-        document.getElementById('fdpFromDate').value = '';
-        document.getElementById('fdpToDate').value = '';
-        document.getElementById('fdpOrganizedBy').value = '';
-        document.getElementById('fdpPlace').value = '';
-        document.getElementById('fdpDuration').value = '';
-        document.querySelector('[name="fdp_mode"]').value = '';
-        document.querySelector('[name="fdp_sponsored_by"]').value = '';
-        document.querySelector('[name="fdp_level"]').value = '';
-        document.querySelector('[name="fdp_role"]').value = '';
-        document.querySelector('[name="fdp_remarks"]').value = '';
-        document.querySelector('[name="fdp_certificate"]').value = '';
-    }
-
-    // ==================== PROJECT ENTRIES ====================
-    var projectEntries = [];
-
-    window.addProjectEntry = function() {
-        var htNo = document.getElementById('projectHtNo').value;
-        var studentName = document.getElementById('projectStudentName').value;
-        var batch = document.getElementById('projectBatch').value;
-        var title = document.getElementById('projectTitle').value;
-        var approved = document.getElementById('projectApproved').value;
-        var marks = document.getElementById('projectMarks').value;
-
-        if (!htNo || !studentName || !title) {
-            alert('Please fill in H.T.No., Student Name, and Project Title');
-            return;
-        }
-
-        var entry = {
-            ht_no: htNo,
-            student_name: studentName,
-            batch: batch,
-            title: title,
-            approved: approved,
-            marks: marks
-        };
-
-        projectEntries.push(entry);
-        updateProjectsTable();
-        clearProjectForm();
-    };
-
-    function updateProjectsTable() {
-        var tbody = document.getElementById('projectsBody');
-        if (!tbody) return;
-
-        if (projectEntries.length > 0) {
-            document.getElementById('projectsSection').style.display = 'block';
-        }
-
-        tbody.innerHTML = '';
-        projectEntries.forEach(function(entry, index) {
-            var row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${escapeHtml(entry.ht_no)}</td>
-                <td>${escapeHtml(entry.student_name)}</td>
-                <td>${escapeHtml(entry.batch || '-')}</td>
-                <td>${escapeHtml(entry.title)}</td>
-                <td>${entry.approved || '-'}</td>
-                <td>${entry.marks || '-'}</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="removeProjectEntry(${index})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            `;
-        });
-    }
-
-    window.removeProjectEntry = function(index) {
-        projectEntries.splice(index, 1);
-        updateProjectsTable();
-        if (projectEntries.length === 0) {
-            document.getElementById('projectsSection').style.display = 'none';
-        }
-    };
-
-    function clearProjectForm() {
-        document.getElementById('projectHtNo').value = '';
-        document.getElementById('projectStudentName').value = '';
-        document.getElementById('projectBatch').value = '';
-        document.getElementById('projectTitle').value = '';
-        document.getElementById('projectApproved').value = '';
-        document.getElementById('projectMarks').value = '';
-    }
-
-    // ==================== HELPER FUNCTIONS ====================
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
-    function showAlert(type, message) {
-        var container = document.getElementById('alertContainer');
-        if (!container) return;
-
-        var alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-' + type + ' alert-dismissible fade show';
-        alertDiv.setAttribute('role', 'alert');
-        alertDiv.innerHTML =
-            '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + ' me-2"></i>' +
-            message +
-            '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-
-        container.appendChild(alertDiv);
-        setTimeout(function () {
-            if (alertDiv.parentNode) alertDiv.remove();
-        }, 4000);
-    }
-</script>
-{% endblock %}
+    <div class="barcode">*ANURAG-FAC-{{ faculty.employee_code }}-{{ current_date|date:"Ymd" }}*</div>
+
+    <div class="footer">
+        <p>This is an electronically generated official document of Anurag Engineering College.</p>
+        <p>ANURAG ENGINEERING COLLEGE | &copy; {{ current_date|date:"Y" }}</p>
+    </div>
+</body>
+</html>

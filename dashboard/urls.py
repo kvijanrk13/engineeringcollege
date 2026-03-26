@@ -44,7 +44,7 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/assign-subjects/', views.assign_subjects, name='assign_subjects'),
     path('faculty/<int:faculty_id>/pdf/', views.faculty_pdf, name='faculty_pdf'),
     path('faculty/<int:faculty_id>/generate-pdf/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
-    path('faculty/<int:faculty_id>/generate-pdf-clean/', views.generate_faculty_pdf_clean, name='generate_faculty_pdf_clean'),  # NEW CLEAN PDF ROUTE
+    path('faculty/<int:faculty_id>/generate-pdf-clean/', views.generate_faculty_pdf_clean, name='generate_faculty_pdf_clean'),
     path('faculty/<int:faculty_id>/download-pdf/', views.download_faculty_pdf, name='download_faculty_pdf'),
     path('faculty/<int:faculty_id>/preview-pdf/', views.preview_faculty_pdf, name='preview_faculty_pdf'),
     path('faculty/<int:faculty_id>/check-pdf-status/', views.ajax_check_pdf_status, name='ajax_check_pdf_status'),
@@ -116,6 +116,11 @@ urlpatterns = [
     path('about/', views.about_system, name='about_system'),
     path('help/', views.help_documentation, name='help_documentation'),
     path('contact/', views.contact_support, name='contact_support'),
+
+    # ==================== Exam Branch URLs ====================
+    path('exam-branch/', views.exam_branch, name='exam_branch'),
+    path('exam-branch/generate-report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
+    path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
 
     # ==================== PDF Generation ====================
     path('generate-pdf/', views.generate_pdf_with_data, name='generate_pdf_with_data'),
