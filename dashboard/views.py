@@ -40,7 +40,7 @@ from pypdf import PdfWriter, PdfReader
 from PyPDF2 import PdfMerger
 from PIL import Image as PILImage
 # Additional imports for PDF to image conversion
-import fitz # PyMuPDF
+import fitz  # PyMuPDF
 # Cloudinary imports
 import cloudinary
 import cloudinary.uploader
@@ -2262,8 +2262,10 @@ def generate_faculty_pdf(request, faculty_id):
         print(f"Employee Code: {faculty.employee_code}")
         print(f"Faculty ID: {faculty.id}")
         print(f"{'=' * 60}")
+
         # ==================== COLLECT FILES ====================
         image_files, pdf_files, temp_files = collect_faculty_files(faculty)
+
         # ==================== ADD CERTIFICATE FILES ====================
         print("\n--- ADDING CERTIFICATES ---")
         certificates = Certificate.objects.filter(faculty=faculty)
@@ -2300,31 +2302,39 @@ def generate_faculty_pdf(request, faculty_id):
                             print(f" ✅ Certificate Image (local): {cert.certificate_file.path}")
             except Exception as e:
                 print(f" ❌ Error processing certificate {cert.certificate_type}: {e}")
+
         # ==================== GET ALL RELATED DATA ====================
         print("\n--- LOADING FACULTY DATA ---")
+
         # Research Publications
         research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
         print(f"📊 Research Publications: {research_publications.count()}")
+
         # FDP/Workshops
         fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
         print(f"📊 FDP/Workshop entries: {fdps.count()}")
         for f in fdps:
             print(f" - {f.get_fdp_type_display()}: {f.title} ({f.from_date} to {f.to_date})")
+
         # B.Tech Projects
         btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
         print(f"📊 B.Tech Projects: {btech_projects.count()}")
+
         # Research Projects
         research_projects = ResearchProject.objects.filter(faculty=faculty)
+
         # Faculty Profile
         try:
             profile = FacultyProfile.objects.get(faculty=faculty)
         except FacultyProfile.DoesNotExist:
             profile = None
+
         # Process subjects list
         subjects_list = []
         sd = getattr(faculty, 'subjects_dealt', None)
         if sd:
             subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
+
         # ==================== PROCESS RESULTS DATA - FIX THIS PART ====================
         results_display = []
         if faculty.results:
@@ -2332,6 +2342,7 @@ def generate_faculty_pdf(request, faculty_id):
                 results_data = json.loads(faculty.results)
                 print(f"📊 Raw results data type: {type(results_data)}")
                 print(f"📊 Raw results data: {results_data}")
+
                 if isinstance(results_data, list):
                     for result in results_data:
                         if isinstance(result, dict):
@@ -2340,8 +2351,10 @@ def generate_faculty_pdf(request, faculty_id):
                             attempted = result.get('students_attempted') or result.get('attempted') or result.get('total') or 0
                             passed = result.get('students_passed') or result.get('passed') or 0
                             percentage = result.get('percentage') or result.get('pass_percentage') or 0
+
                             if attempted > 0 and percentage == 0:
                                 percentage = round((passed / attempted) * 100, 2)
+
                             results_display.append({
                                 'subject_name': subject_name,
                                 'subject_code': subject_code,
@@ -2360,8 +2373,10 @@ def generate_faculty_pdf(request, faculty_id):
                     attempted = results_data.get('students_attempted') or results_data.get('attempted') or 0
                     passed = results_data.get('students_passed') or results_data.get('passed') or 0
                     percentage = results_data.get('percentage') or 0
+
                     if attempted > 0 and percentage == 0:
                         percentage = round((passed / attempted) * 100, 2)
+
                     results_display.append({
                         'subject_name': subject_name,
                         'subject_code': results_data.get('subject_code', ''),
@@ -2373,27 +2388,17 @@ def generate_faculty_pdf(request, faculty_id):
                 else:
                     results_display = [{'text': str(faculty.results)}]
                     print(f"📊 Results as plain text: {faculty.results[:100]}")
+
             except (json.JSONDecodeError, TypeError) as e:
                 results_display = [{'text': faculty.results}]
                 print(f"📊 Results as plain text (JSON error): {faculty.results[:100]}")
                 print(f"JSON error: {e}")
         else:
             print("📊 No results data found")
+
         print(f"📊 Final results_display count: {len(results_display)}")
         for rd in results_display:
             print(f" - {rd}")
-
-        # ==================== MERGE CLASSES TAKEN WITH RESULTS (per requirement) ====================
-        classes_taken = getattr(faculty, 'classes_taken', None)
-        if classes_taken is not None:
-            results_display.append({
-                'subject_name': 'CLASSES TAKEN',
-                'subject_code': '',
-                'students_attempted': classes_taken,
-                'students_passed': classes_taken,
-                'percentage': 100,
-            })
-            print(f" - Merged Classes Taken: {classes_taken}")
 
         # Calculate experience
         experience = "N/A"
@@ -2416,6 +2421,7 @@ def generate_faculty_pdf(request, faculty_id):
                 yrs -= 1
                 mths += 12
             experience = f"{yrs} Years {mths} Months {dys} Days"
+
         # Check document upload status
         has_aadhar = bool(faculty.aadhar_file or faculty.aadhar_url)
         has_pan = bool(faculty.pan_file or faculty.pan_url)
@@ -2427,13 +2433,18 @@ def generate_faculty_pdf(request, faculty_id):
         has_ug_cert = bool(faculty.ug_certificate or faculty.ug_certificate_url)
         has_pg_cert = bool(faculty.pg_certificate or faculty.pg_certificate_url)
         has_phd_cert = bool(faculty.phd_certificate or faculty.phd_certificate_url)
+
         # NEW: Experience Certificates
         has_experience_certificates = bool(getattr(faculty, 'experience_certificates', None) or
                                            getattr(faculty, 'experience_certificates_url', None))
+
         # NEW: Other Documents
         has_other_documents = bool(getattr(faculty, 'other_documents', None) or
                                    getattr(faculty, 'other_documents_url', None))
-        # NEW: Classes Taken (already merged above)
+
+        # NEW: Classes Taken
+        classes_taken = getattr(faculty, 'classes_taken', None)
+
         # Build context for PDF template
         context = {
             'faculty': faculty,
@@ -2510,6 +2521,7 @@ def generate_faculty_pdf(request, faculty_id):
             'has_experience_certificates': has_experience_certificates,
             'has_other_documents': has_other_documents,
         }
+
         print("\n" + "=" * 60)
         print("PDF CONTEXT DATA SUMMARY")
         print("=" * 60)
@@ -2526,10 +2538,13 @@ def generate_faculty_pdf(request, faculty_id):
             elif 'text' in res:
                 print(f" - Text: {res['text'][:50]}")
         print("=" * 60 + "\n")
+
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
+
         if pdfkit is None:
             messages.error(request, 'PDF generation library not installed. Please install pdfkit.')
             return redirect('dashboard:faculty_dashboard')
+
         options = {
             'page-size': 'A4',
             'margin-top': '15mm',
@@ -2544,6 +2559,7 @@ def generate_faculty_pdf(request, faculty_id):
             'javascript-delay': '1000',
             'load-error-handling': 'ignore',
         }
+
         wkhtmltopdf_path = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
         if os.path.exists(wkhtmltopdf_path):
             config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
@@ -2555,9 +2571,11 @@ def generate_faculty_pdf(request, faculty_id):
                 logger.error(f"pdfkit error: {e}")
                 messages.error(request, f'PDF generation error: {e}')
                 return redirect('dashboard:faculty_dashboard')
+
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         filename = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
         FacultyLog.objects.create(
             faculty=faculty,
             action='PDF Generated',
@@ -2565,8 +2583,10 @@ def generate_faculty_pdf(request, faculty_id):
             performed_by=request.user.username if request.user.is_authenticated else 'Anonymous',
             ip_address=request.META.get('REMOTE_ADDR')
         )
+
         print(f"✅ PDF generated successfully: {filename}")
         return response
+
     except Exception as e:
         logger.error(f"PDF Generation Error: {e}")
         import traceback
