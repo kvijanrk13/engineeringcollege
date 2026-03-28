@@ -65,6 +65,44 @@
             background-color: #e1f5fe;
             color: #01579b;
         }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .status-published {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-accepted {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-under_review {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-submitted {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .status-in_progress {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .classes-taken-box {
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        .classes-taken-number {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -79,11 +117,11 @@
             <td style="width: 25%; text-align: right;">
                 <div class="photo-box">
                     {% if local_photo_path %}
-                        <img src="file:///{{ local_photo_path }}" class="faculty-photo">
-                    {% elif faculty.photo %}
-                        <img src="{{ faculty.photo.url }}" class="faculty-photo">
+                        <img src="file:///{{ local_photo_path }}" class="faculty-photo" style="width: 100%; height: auto;">
                     {% elif faculty.cloudinary_photo_url %}
-                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo">
+                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo" style="width: 100%; height: auto;">
+                    {% elif faculty.photo %}
+                        <img src="{{ faculty.photo.url }}" class="faculty-photo" style="width: 100%; height: auto;">
                     {% else %}
                         <div style="padding-top: 55px; color: #ccc; font-size: 10px;">NO PHOTO</div>
                     {% endif %}
@@ -199,13 +237,13 @@
     <div class="section-title">10. SCM (SERVICE/CONSULTANCY/MOU)</div>
     <div class="scm-content">
         {% if faculty.scm %}
-            {{ faculty.scm }}
+            {{ faculty.scm|linebreaks }}
         {% else %}
             <p style="text-align: center; color: #888; font-style: italic; margin: 0;">No SCM details specified</p>
         {% endif %}
     </div>
 
-    <!-- 11. RESEARCH & PUBLICATIONS (STRUCTURED) -->
+    <!-- 11. RESEARCH & PUBLICATIONS -->
     <div class="section-title">11. RESEARCH & PUBLICATIONS</div>
     {% if research_publications %}
         <table class="data-table">
@@ -232,56 +270,18 @@
                     </td>
                     <td>{{ pub.title|default:"—" }}</td>
                     <td>{{ pub.publication_year|default:"—" }}</td>
-                    <td>{{ pub.status|default:"—" }}</td>
                     <td>
-                        {% if pub.authors %}
-                            <strong>Authors:</strong> {{ pub.authors }}<br>
-                        {% endif %}
-                        {% if pub.journal_name %}
-                            <strong>Journal:</strong> {{ pub.journal_name }}<br>
-                            {% if pub.issn %}<strong>ISSN:</strong> {{ pub.issn }}<br>{% endif %}
-                            {% if pub.volume %}<strong>Vol:</strong> {{ pub.volume }}{% endif %}
-                            {% if pub.issue %}({{ pub.issue }}){% endif %}
-                            {% if pub.page_numbers %}, <strong>pp:</strong> {{ pub.page_numbers }}{% endif %}
-                        {% endif %}
-                        {% if pub.conference_name %}
-                            <strong>Conference:</strong> {{ pub.conference_name }}<br>
-                            {% if pub.conference_location %}<strong>Location:</strong> {{ pub.conference_location }}<br>{% endif %}
-                            {% if pub.conference_dates %}<strong>Dates:</strong> {{ pub.conference_dates }}{% endif %}
-                        {% endif %}
-                        {% if pub.book_title %}
-                            <strong>Book:</strong> {{ pub.book_title }}<br>
-                            {% if pub.isbn %}<strong>ISBN:</strong> {{ pub.isbn }}<br>{% endif %}
-                            {% if pub.edition %}<strong>Edition:</strong> {{ pub.edition }}{% endif %}
-                        {% endif %}
-                        {% if pub.patent_number %}
-                            <strong>Patent No:</strong> {{ pub.patent_number }}<br>
-                            {% if pub.filing_date %}<strong>Filed:</strong> {{ pub.filing_date|date:"d M Y" }}{% endif %}
-                        {% endif %}
-                        {% if pub.project_title %}
-                            <strong>Project:</strong> {{ pub.project_title }}<br>
-                            {% if pub.funding_agency %}<strong>Funding:</strong> {{ pub.funding_agency }}<br>{% endif %}
-                            {% if pub.sanction_amount %}<strong>Amount:</strong> ₹{{ pub.sanction_amount }}{% endif %}
-                        {% endif %}
-                        {% if pub.award_title %}
-                            <strong>Award:</strong> {{ pub.award_title }}<br>
-                            {% if pub.awarding_body %}<strong>By:</strong> {{ pub.awarding_body }}{% endif %}
-                        {% endif %}
-                        {% if pub.doi %}
-                            <strong>DOI:</strong> {{ pub.doi }}<br>
-                        {% endif %}
-                        {% if pub.publisher_name %}
-                            <strong>Publisher:</strong> {{ pub.publisher_name }}<br>
-                        {% endif %}
-                        {% if pub.abstract %}
-                            <strong>Abstract:</strong> {{ pub.abstract }}<br>
-                        {% endif %}
-                        {% if pub.keywords %}
-                            <strong>Keywords:</strong> {{ pub.keywords }}<br>
-                        {% endif %}
-                        {% if pub.proof_document %}
-                            <strong>Proof:</strong> <a href="{{ pub.proof_document.url }}" target="_blank">View Document</a>
-                        {% endif %}
+                        {% if pub.status %}
+                        <span class="status-badge status-{{ pub.status }}">
+                            {{ pub.get_status_display }}
+                        </span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if pub.authors %}<strong>Authors:</strong> {{ pub.authors }}<br>{% endif %}
+                        {% if pub.journal_name %}<strong>Journal:</strong> {{ pub.journal_name }}<br>{% endif %}
+                        {% if pub.conference_name %}<strong>Conference:</strong> {{ pub.conference_name }}<br>{% endif %}
+                        {% if pub.doi %}<strong>DOI:</strong> {{ pub.doi }}<br>{% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -293,7 +293,7 @@
         </div>
     {% endif %}
 
-    <!-- 12. RESEARCH PROJECTS (FROM EXISTING MODEL) -->
+    <!-- 12. RESEARCH PROJECTS -->
     {% if research_projects %}
     <div class="section-title">12. RESEARCH PROJECTS</div>
     <table class="data-table">
@@ -303,7 +303,6 @@
                 <th>Title</th>
                 <th>Marks</th>
                 <th>Journal/Publisher</th>
-                <th>DOI/ISSN</th>
             </tr>
         </thead>
         <tbody>
@@ -313,23 +312,8 @@
                 <td>{{ project.title_of_project }}</td>
                 <td>{{ project.marks_awarded|default:"—" }}</td>
                 <td>
-                    {% if project.journal_name %}
-                        Journal: {{ project.journal_name }}<br>
-                    {% endif %}
-                    {% if project.publisher_name %}
-                        Publisher: {{ project.publisher_name }}
-                    {% endif %}
-                </td>
-                <td>
-                    {% if project.doi %}
-                        DOI: {{ project.doi }}<br>
-                    {% endif %}
-                    {% if project.issn_number %}
-                        ISSN: {{ project.issn_number }}<br>
-                    {% endif %}
-                    {% if project.volume %}
-                        Vol: {{ project.volume }}
-                    {% endif %}
+                    {% if project.journal_name %}{{ project.journal_name }}{% endif %}
+                    {% if project.publisher_name %}{{ project.publisher_name }}{% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -348,7 +332,6 @@
                 <th>Duration</th>
                 <th>Organized By</th>
                 <th>Place</th>
-                <th>Role</th>
             </tr>
         </thead>
         <tbody>
@@ -359,20 +342,6 @@
                 <td>{{ fdp.from_date|date:"d M Y" }} to {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
                 <td>{{ fdp.organized_by|default:"—" }}</td>
                 <td>{{ fdp.place|default:"—" }}</td>
-                <td>{{ fdp.get_role_display|default:"—" }}</td>
-            </tr>
-            <tr>
-                <td colspan="6" style="background-color: #f9f9f9; padding: 4px 10px;">
-                    <small>
-                        {% if fdp.mode %}<strong>Mode:</strong> {{ fdp.get_mode_display }} | {% endif %}
-                        {% if fdp.level %}<strong>Level:</strong> {{ fdp.get_level_display }} | {% endif %}
-                        {% if fdp.sponsored_by %}<strong>Sponsored by:</strong> {{ fdp.sponsored_by }} | {% endif %}
-                        {% if fdp.remarks %}<strong>Remarks:</strong> {{ fdp.remarks }}{% endif %}
-                        {% if fdp.certificate %}
-                            | <strong>Certificate:</strong> <a href="{{ fdp.certificate.url }}" target="_blank">View</a>
-                        {% endif %}
-                    </small>
-                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -421,7 +390,21 @@
     <!-- 15. RESULTS / ACADEMIC PERFORMANCE -->
     <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
     <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
-        {% if faculty.results %}
+        {% if results_data %}
+            {% if results_data is iterable and results_data is not string %}
+                <div>
+                    {% for result in results_data %}
+                    <div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px;">
+                        <strong>{{ result.subject_name }}</strong> ({{ result.subject_code }})<br>
+                        Students Attempted: {{ result.students_attempted }} | Passed: {{ result.students_passed }}<br>
+                        <strong>Pass Percentage: {{ result.percentage }}%</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="white-space: pre-line;">{{ results_data }}</div>
+            {% endif %}
+        {% elif faculty.results %}
             <div style="white-space: pre-line;">{{ faculty.results }}</div>
         {% else %}
             <p style="text-align: center; color: #888; font-style: italic;">No results data specified</p>
@@ -444,7 +427,7 @@
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             <div class="document-box">
                 <strong>Aadhar Card:</strong>
-                {% if has_aadhar or faculty.aadhar_file %}
+                {% if faculty.aadhar_file or faculty.aadhar_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -452,7 +435,7 @@
             </div>
             <div class="document-box">
                 <strong>PAN Card:</strong>
-                {% if has_pan or faculty.pan_file %}
+                {% if faculty.pan_file or faculty.pan_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -460,7 +443,7 @@
             </div>
             <div class="document-box">
                 <strong>APAAR Document:</strong>
-                {% if has_apaar or faculty.apaar_file %}
+                {% if faculty.apaar_file or faculty.apaar_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -468,7 +451,7 @@
             </div>
             <div class="document-box">
                 <strong>SCM Document:</strong>
-                {% if has_scm or faculty.scm_file %}
+                {% if faculty.scm_file or faculty.scm_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -476,7 +459,7 @@
             </div>
             <div class="document-box">
                 <strong>JNTUH Bio-Data:</strong>
-                {% if has_jntuh_biodata or faculty.jntuh_biodata %}
+                {% if faculty.jntuh_biodata or faculty.jntuh_biodata_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -484,7 +467,7 @@
             </div>
             <div class="document-box">
                 <strong>SSC Certificate:</strong>
-                {% if has_ssc_cert or faculty.ssc_certificate %}
+                {% if faculty.ssc_certificate or faculty.ssc_certificate_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -492,7 +475,7 @@
             </div>
             <div class="document-box">
                 <strong>Intermediate Certificate:</strong>
-                {% if has_inter_cert or faculty.inter_certificate %}
+                {% if faculty.inter_certificate or faculty.inter_certificate_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -500,7 +483,7 @@
             </div>
             <div class="document-box">
                 <strong>UG Certificate:</strong>
-                {% if has_ug_cert or faculty.ug_certificate %}
+                {% if faculty.ug_certificate or faculty.ug_certificate_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -508,7 +491,7 @@
             </div>
             <div class="document-box">
                 <strong>PG Certificate:</strong>
-                {% if has_pg_cert or faculty.pg_certificate %}
+                {% if faculty.pg_certificate or faculty.pg_certificate_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -516,7 +499,7 @@
             </div>
             <div class="document-box">
                 <strong>PhD Certificate:</strong>
-                {% if has_phd_cert or faculty.phd_certificate %}
+                {% if faculty.phd_certificate or faculty.phd_certificate_url %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -525,8 +508,41 @@
         </div>
     </div>
 
-    <!-- 18. CERTIFICATES -->
-    <div class="section-title">18. CERTIFICATES</div>
+    <!-- 18. ADDITIONAL DOCUMENTS -->
+    <div class="section-title">18. ADDITIONAL DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div class="document-box">
+            <strong>Experience Certificates:</strong>
+            {% if faculty.experience_certificates or faculty.experience_certificates_url %}
+                <span style="color: green;">✓ Uploaded</span>
+            {% else %}
+                <span style="color: #999;">✗ Not Uploaded</span>
+            {% endif %}
+        </div>
+        <div class="document-box">
+            <strong>Other Documents:</strong>
+            {% if faculty.other_documents or faculty.other_documents_url %}
+                <span style="color: green;">✓ Uploaded</span>
+            {% else %}
+                <span style="color: #999;">✗ Not Uploaded</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 19. CLASSES TAKEN -->
+    <div class="section-title">19. CLASSES TAKEN</div>
+    <div class="classes-taken-box">
+        {% if faculty.classes_taken %}
+            <div class="classes-taken-number">
+                {{ faculty.classes_taken }} Classes
+            </div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">Not specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 20. CERTIFICATES -->
+    <div class="section-title">20. CERTIFICATES</div>
     <div style="padding: 10px; margin-bottom: 15px;">
         {% if certificates %}
             <table class="data-table">
@@ -553,12 +569,12 @@
                 <em>Total {{ certificates|length }} certificate(s) merged with this document</em>
             </p>
         {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">No certificates uploaded</p>
+            <p style="text-align: center; color: #888; font-style: italic;">No additional certificates uploaded</p>
         {% endif %}
     </div>
 
-    <!-- 19. VERIFICATION & AUTHORIZATION -->
-    <div class="section-title">19. VERIFICATION & AUTHORIZATION</div>
+    <!-- 21. VERIFICATION & AUTHORIZATION -->
+    <div class="section-title">21. VERIFICATION & AUTHORIZATION</div>
     <div style="margin: 20px 0; text-align: center; font-size: 10px;">
         This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
     </div>
