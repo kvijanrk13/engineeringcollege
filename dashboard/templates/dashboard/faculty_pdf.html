@@ -20,11 +20,6 @@
         .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
         .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
         .certificate-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
-        .signature-section { margin-top: 30px; border-top: 2px solid #2c3e50; padding-top: 20px; }
-        .signature-box { width: 250px; text-align: center; }
-        .signature-line { width: 100%; height: 1px; border-top: 1px solid #333; margin: 40px auto 5px; }
-        .footer { text-align: center; margin-top: 30px; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd; padding-top: 10px; }
-        .barcode { text-align: center; font-family: 'Libre Barcode 128', cursive; font-size: 16px; margin: 10px 0; }
         .document-box {
             display: inline-block;
             padding: 8px 15px;
@@ -93,27 +88,57 @@
             color: #004085;
         }
         .classes-taken-box {
-            padding: 10px;
-            background: #f9f9f9;
-            border: 1px solid #eee;
+            padding: 15px;
+            background: #f0f7ff;
+            border: 1px solid #c5e0ff;
+            border-radius: 8px;
             text-align: center;
         }
         .classes-taken-number {
-            font-size: 16px;
+            font-size: 28px;
             font-weight: bold;
+            color: #2c3e50;
             text-align: center;
+        }
+        .classes-taken-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 9px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+        }
+        .about-content {
+            white-space: pre-line;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
     <table class="header-table">
-         <tr>
+        <tr>
             <td style="width: 75%; text-align: center; vertical-align: middle;">
                 <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
                 <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
                 <div style="font-size: 10px;">Employee Code: {{ faculty.employee_code }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
-             </td>
+            </td>
             <td style="width: 25%; text-align: right;">
                 <div class="photo-box">
                     {% if local_photo_path %}
@@ -126,9 +151,9 @@
                         <div style="padding-top: 55px; color: #ccc; font-size: 10px;">NO PHOTO</div>
                     {% endif %}
                 </div>
-             </td>
-         </tr>
-     </table>
+            </td>
+        </tr>
+    </table>
 
     <!-- 1. PERSONAL INFORMATION -->
     <div class="section-title">1. PERSONAL INFORMATION</div>
@@ -229,7 +254,7 @@
                 <span class="certificate-item">{{ subject }}</span>
             {% endfor %}
         {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">No subjects specified</p>
+            <p class="no-data" style="margin: 0;">No subjects specified</p>
         {% endif %}
     </div>
 
@@ -248,13 +273,13 @@
     {% if research_publications %}
         <table class="data-table">
             <thead>
-                 <tr>
+                <tr>
                     <th>Type</th>
                     <th>Title</th>
                     <th>Year</th>
                     <th>Status</th>
                     <th>Details</th>
-                 </tr>
+                </tr>
             </thead>
             <tbody>
                 {% for pub in research_publications %}
@@ -286,10 +311,10 @@
                 </tr>
                 {% endfor %}
             </tbody>
-         </table>
+        </table>
     {% else %}
-        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
-            <p style="color: #888; font-style: italic; margin: 0;">No research publications data available</p>
+        <div class="no-data">
+            <p style="margin: 0;">No research publications data available</p>
         </div>
     {% endif %}
 
@@ -298,12 +323,12 @@
     <div class="section-title">12. RESEARCH PROJECTS</div>
     <table class="data-table">
         <thead>
-             <tr>
+            <tr>
                 <th>Type</th>
                 <th>Title</th>
                 <th>Marks</th>
                 <th>Journal/Publisher</th>
-             </tr>
+            </tr>
         </thead>
         <tbody>
             {% for project in research_projects %}
@@ -318,7 +343,7 @@
             </tr>
             {% endfor %}
         </tbody>
-     </table>
+    </table>
     {% endif %}
 
     <!-- 13. FDP / WORKSHOPS ATTENDED -->
@@ -326,13 +351,13 @@
     {% if fdps %}
     <table class="data-table">
         <thead>
-             <tr>
+            <tr>
                 <th>Type</th>
                 <th>Title</th>
                 <th>Duration</th>
                 <th>Organized By</th>
                 <th>Place</th>
-             </tr>
+            </tr>
         </thead>
         <tbody>
             {% for fdp in fdps %}
@@ -345,10 +370,10 @@
             </tr>
             {% endfor %}
         </tbody>
-     </table>
+    </table>
     {% else %}
-        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
-            <p style="color: #888; font-style: italic; margin: 0;">No FDP/Workshop data available</p>
+        <div class="no-data">
+            <p style="margin: 0;">No FDP/Workshop data available</p>
         </div>
     {% endif %}
 
@@ -357,14 +382,14 @@
     {% if btech_projects %}
     <table class="data-table">
         <thead>
-             <tr>
+            <tr>
                 <th>H.T.No.</th>
                 <th>Student Name</th>
                 <th>Batch</th>
                 <th>Project Title</th>
                 <th>Approved</th>
                 <th>Marks</th>
-             </tr>
+            </tr>
         </thead>
         <tbody>
             {% for project in btech_projects %}
@@ -380,10 +405,10 @@
             </tr>
             {% endfor %}
         </tbody>
-     </table>
+    </table>
     {% else %}
-        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
-            <p style="color: #888; font-style: italic; margin: 0;">No project data available</p>
+        <div class="no-data">
+            <p style="margin: 0;">No project data available</p>
         </div>
     {% endif %}
 
@@ -407,17 +432,20 @@
         {% elif faculty.results %}
             <div style="white-space: pre-line;">{{ faculty.results }}</div>
         {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">No results data specified</p>
+            <p class="no-data" style="margin: 0;">No results data specified</p>
         {% endif %}
     </div>
 
-    <!-- 16. ABOUT YOURSELF -->
-    <div class="section-title">16. ABOUT YOURSELF</div>
-    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
-        {% if faculty.about_yourself %}
-            <div style="white-space: pre-line;">{{ faculty.about_yourself }}</div>
+    <!-- ==================== SECTION 16: CLASSES TAKEN ==================== -->
+    <div class="section-title">16. CLASSES TAKEN</div>
+    <div class="classes-taken-box">
+        {% if classes_taken %}
+            <div class="classes-taken-number">
+                {{ classes_taken }}
+            </div>
+            <div class="classes-taken-label">Total Classes Conducted / Handled</div>
         {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">No information provided</p>
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">Not specified</p>
         {% endif %}
     </div>
 
@@ -427,7 +455,7 @@
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             <div class="document-box">
                 <strong>Aadhar Card:</strong>
-                {% if faculty.aadhar_file or faculty.aadhar_url %}
+                {% if has_aadhar %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -435,7 +463,7 @@
             </div>
             <div class="document-box">
                 <strong>PAN Card:</strong>
-                {% if faculty.pan_file or faculty.pan_url %}
+                {% if has_pan %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -443,7 +471,7 @@
             </div>
             <div class="document-box">
                 <strong>APAAR Document:</strong>
-                {% if faculty.apaar_file or faculty.apaar_url %}
+                {% if has_apaar %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -451,7 +479,7 @@
             </div>
             <div class="document-box">
                 <strong>SCM Document:</strong>
-                {% if faculty.scm_file or faculty.scm_url %}
+                {% if has_scm %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -459,7 +487,7 @@
             </div>
             <div class="document-box">
                 <strong>JNTUH Bio-Data:</strong>
-                {% if faculty.jntuh_biodata or faculty.jntuh_biodata_url %}
+                {% if has_jntuh_biodata %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -467,7 +495,7 @@
             </div>
             <div class="document-box">
                 <strong>SSC Certificate:</strong>
-                {% if faculty.ssc_certificate or faculty.ssc_certificate_url %}
+                {% if has_ssc_cert %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -475,7 +503,7 @@
             </div>
             <div class="document-box">
                 <strong>Intermediate Certificate:</strong>
-                {% if faculty.inter_certificate or faculty.inter_certificate_url %}
+                {% if has_inter_cert %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -483,7 +511,7 @@
             </div>
             <div class="document-box">
                 <strong>UG Certificate:</strong>
-                {% if faculty.ug_certificate or faculty.ug_certificate_url %}
+                {% if has_ug_cert %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -491,7 +519,7 @@
             </div>
             <div class="document-box">
                 <strong>PG Certificate:</strong>
-                {% if faculty.pg_certificate or faculty.pg_certificate_url %}
+                {% if has_pg_cert %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -499,7 +527,7 @@
             </div>
             <div class="document-box">
                 <strong>PhD Certificate:</strong>
-                {% if faculty.phd_certificate or faculty.phd_certificate_url %}
+                {% if has_phd_cert %}
                     <span style="color: green;">✓ Uploaded</span>
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
@@ -511,94 +539,54 @@
     <!-- 18. ADDITIONAL DOCUMENTS -->
     <div class="section-title">18. ADDITIONAL DOCUMENTS</div>
     <div style="padding: 10px;">
-        <div class="document-box">
-            <strong>Experience Certificates:</strong>
-            {% if has_experience_certificates %}
-                <span style="color: green;">✓ Uploaded</span>
-            {% else %}
-                <span style="color: #999;">✗ Not Uploaded</span>
-            {% endif %}
-        </div>
-        <div class="document-box">
-            <strong>Other Documents:</strong>
-            {% if has_other_documents %}
-                <span style="color: green;">✓ Uploaded</span>
-            {% else %}
-                <span style="color: #999;">✗ Not Uploaded</span>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- 19. CLASSES TAKEN -->
-    <div class="section-title">19. CLASSES TAKEN</div>
-    <div class="classes-taken-box">
-        {% if classes_taken %}
-            <div class="classes-taken-number">
-                {{ classes_taken }} Classes
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div class="document-box">
+                <strong>Research Publications Proof:</strong>
+                {% if has_research_proof %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
             </div>
-        {% else %}
-            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">Not specified</p>
-        {% endif %}
-    </div>
-
-    <!-- 20. CERTIFICATES -->
-    <div class="section-title">20. CERTIFICATES</div>
-    <div style="padding: 10px; margin-bottom: 15px;">
-        {% if certificates %}
-            <table class="data-table">
-                <thead>
-                     <tr>
-                        <th>Certificate Type</th>
-                        <th>Issued By</th>
-                        <th>Issue Date</th>
-                        <th>Description</th>
-                     </tr>
-                </thead>
-                <tbody>
-                    {% for cert in certificates %}
-                    <tr>
-                        <td><strong>{{ cert.certificate_type }}</strong></td>
-                        <td>{{ cert.issued_by|default:"—" }}</td>
-                        <td>{% if cert.issue_date %}{{ cert.issue_date|date:"d M Y" }}{% else %}—{% endif %}</td>
-                        <td>{{ cert.description|truncatechars:50|default:"—" }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-             </table>
-            <p style="text-align: right; font-size: 9px; margin-top: 5px;">
-                <em>Total {{ certificates|length }} certificate(s) merged with this document</em>
-            </p>
-        {% else %}
-            <p style="text-align: center; color: #888; font-style: italic;">No additional certificates uploaded</p>
-        {% endif %}
-    </div>
-
-    <!-- 21. VERIFICATION & AUTHORIZATION -->
-    <div class="section-title">21. VERIFICATION & AUTHORIZATION</div>
-    <div style="margin: 20px 0; text-align: center; font-size: 10px;">
-        This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
-    </div>
-
-    <div class="signature-section">
-        <table style="width: 100%;">
-             <tr>
-                <td class="signature-box">
-                    <div class="signature-line"></div>
-                    <div>{{ faculty.staff_name }}<br>Faculty Member<br>Date: _________</div>
-                 </td>
-                <td class="signature-box">
-                    <div class="signature-line"></div>
-                    <div>Head of Department<br>{{ faculty.department }}<br>Date: _________</div>
-                 </td>
-             </tr>
-         </table>
-        <div style="text-align: center; margin-top: 40px;">
-            <div style="width: 300px; margin: 0 auto 5px; border-top: 2px solid #333;"></div>
-            <div>Principal<br>Anurag Engineering College<br>Date: _________</div>
+            <div class="document-box">
+                <strong>FDP Certificate:</strong>
+                {% if has_fdp_certificate %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>Experience Certificates:</strong>
+                {% if has_experience_certificates %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>Other Documents:</strong>
+                {% if has_other_documents %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    <div class="barcode">*ANURAG-FAC-{{ faculty.employee_code }}-{{ current_date|date:"Ymd" }}*</div>
+    <!-- 19. ABOUT YOURSELF -->
+    <div class="section-title">19. ABOUT YOURSELF</div>
+    <div class="about-content">
+        {% if faculty.about_yourself %}
+            {{ faculty.about_yourself|linebreaks }}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">No information provided</p>
+        {% endif %}
+    </div>
+
+    <!-- ==================== SECTIONS 20 AND 21 REMOVED ==================== -->
+    <!-- Section 20 (CERTIFICATES) and Section 21 (VERIFICATION & AUTHORIZATION) have been removed as requested -->
 
     <div class="footer">
         <p>This is an electronically generated official document of Anurag Engineering College.</p>

@@ -1,3 +1,5 @@
+add_faculty_form.html
+
 {% extends 'dashboard/base.html' %}
 {% load static %}
 {% block title %}Add New Faculty | ANURAG Engineering College{% endblock %}
@@ -59,6 +61,40 @@
     .fdp-badge-seminar { background-color: #fff3e0; color: #e65100; }
     .fdp-badge-conference { background-color: #f3e5f5; color: #7b1fa2; }
     .fdp-badge-training { background-color: #e1f5fe; color: #01579b; }
+    .document-card {
+        background: #f8f9fa;
+        border-left: 4px solid #28a745;
+        margin-bottom: 15px;
+        padding: 12px;
+        border-radius: 5px;
+    }
+    .btn-add-doc {
+        margin-top: 10px;
+        width: 100%;
+    }
+    .documents-list {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+    }
+    .document-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .document-item .doc-name {
+        font-weight: 500;
+        word-break: break-all;
+    }
+    .document-item .doc-actions .btn-sm {
+        padding: 2px 8px;
+        font-size: 12px;
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -81,7 +117,13 @@
                         <input type="hidden" name="results_json" id="results_json" value="[]">
                         <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="[]">
 
-                        <!-- Tabs Navigation -->
+                        <!-- Hidden fields for additional documents (stores file paths) -->
+                        <input type="hidden" name="research_proof_files" id="research_proof_files" value="[]">
+                        <input type="hidden" name="fdp_certificate_files" id="fdp_certificate_files" value="[]">
+                        <input type="hidden" name="experience_certificate_files" id="experience_certificate_files" value="[]">
+                        <input type="hidden" name="other_document_files" id="other_document_files" value="[]">
+
+                        <!-- Tabs Navigation - DOCUMENTS TAB MOVED TO LAST -->
                         <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
                             <li class="nav-item">
                                 <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
@@ -96,11 +138,6 @@
                             <li class="nav-item">
                                 <button class="nav-link" id="education-tab" data-bs-toggle="tab" data-bs-target="#education" type="button">
                                     <i class="fas fa-graduation-cap me-1"></i>Education
-                                </button>
-                            </li>
-                            <li class="nav-item">
-                                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
-                                    <i class="fas fa-file-alt me-1"></i>Documents
                                 </button>
                             </li>
                             <li class="nav-item">
@@ -126,6 +163,11 @@
                             <li class="nav-item">
                                 <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#tab-results" type="button">
                                     <i class="fas fa-chart-line me-1"></i>Results
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                                    <i class="fas fa-file-alt me-1"></i>Documents
                                 </button>
                             </li>
                         </ul>
@@ -367,72 +409,7 @@
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 4: DOCUMENTS ==================== -->
-                            <div class="tab-pane fade" id="documents">
-                                <div class="form-section">
-                                    <h4><i class="fas fa-file-alt me-2"></i>Documents</h4>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label>Aadhar Card</label>
-                                            <input type="file" name="aadhar_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label>PAN Card</label>
-                                            <input type="file" name="pan_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label>APAAR Document</label>
-                                            <input type="file" name="apaar_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label>SCM Document</label>
-                                            <input type="file" name="scm_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>JNTUH Bio-Data</label>
-                                            <input type="file" name="jntuh_biodata" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>SSC Certificate</label>
-                                            <input type="file" name="ssc_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>Intermediate Certificate</label>
-                                            <input type="file" name="inter_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>UG Certificate</label>
-                                            <input type="file" name="ug_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>PG Certificate</label>
-                                            <input type="file" name="pg_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>PhD Certificate</label>
-                                            <input type="file" name="phd_certificate" class="form-control">
-                                        </div>
-                                        <!-- NEW: Experience Certificates Upload Button -->
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Experience Certificates</label>
-                                            <input type="file" name="experience_certificates" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                            <div class="help-text">
-                                                Upload experience certificates (PDF, JPG, or PNG). This document will be automatically merged into the final faculty PDF.
-                                            </div>
-                                        </div>
-                                        <!-- NEW: Any Other Documents Upload Button -->
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Any Other Documents</label>
-                                            <input type="file" name="other_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                            <div class="help-text">
-                                                Upload any other relevant documents (PDF, JPG, or PNG). This document will be automatically merged into the final faculty PDF.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ==================== TAB 5: ADDITIONAL ==================== -->
+                            <!-- ==================== TAB 4: ADDITIONAL ==================== -->
                             <div class="tab-pane fade" id="additional">
                                 <div class="form-section">
                                     <h4><i class="fas fa-info-circle me-2"></i>Additional Information</h4>
@@ -456,13 +433,31 @@
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 6: RESEARCH & PUBLICATIONS ==================== -->
+                            <!-- ==================== TAB 5: RESEARCH & PUBLICATIONS ==================== -->
                             <div class="tab-pane fade" id="tab-research">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1">
                                         <i class="fas fa-book-open me-2"></i>Research &amp; Publications
                                     </h5>
                                     <p class="text-muted small mb-3">Add journal papers, conference papers, books, or patents.</p>
+
+                                    <!-- ADD BUTTON FOR RESEARCH PUBLICATIONS PROOF -->
+                                    <div class="card border-info mb-3">
+                                        <div class="card-header bg-info text-white py-2">
+                                            <i class="fas fa-upload me-1"></i>Research Publications Proof Documents
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="research-proof-list" class="documents-list"></div>
+                                            <div class="input-group">
+                                                <input type="file" id="research-proof-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                                <button type="button" class="btn btn-info" onclick="addResearchProofDocument()">
+                                                    <i class="fas fa-plus"></i> Add Document
+                                                </button>
+                                            </div>
+                                            <div class="help-text mt-2">Upload supporting proof for research publications (PDF, JPG, or PNG).</div>
+                                        </div>
+                                    </div>
+
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="research-table">
                                             <thead class="table-light">
@@ -475,14 +470,12 @@
                                                     <th>Journal / Conference</th>
                                                     <th>Status</th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="research-tbody">
                                                 <tr id="no-research-row">
                                                     <td colspan="8" class="text-center text-muted fst-italic py-3">
                                                         No publications added yet. Use the form below.
-                                                    </td>
-                                                </tr>
+                                                     </td>
                                             </tbody>
                                         </table>
                                     </div>
@@ -541,27 +534,10 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="card border-primary mt-4">
-                                        <div class="card-header bg-primary text-white py-2">
-                                            <i class="fas fa-upload me-1"></i>Upload Research &amp; Publications Proof
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <label class="form-label">Proof Document</label>
-                                                    <input type="file" name="research_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                                    <div class="help-text">
-                                                        Upload supporting proof (PDF, JPG, or PNG) for the research publications.
-                                                        This document will be automatically merged into the final faculty PDF.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 7: B.TECH PROJECTS ==================== -->
+                            <!-- ==================== TAB 6: B.TECH PROJECTS ==================== -->
                             <div class="tab-pane fade" id="tab-projects">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1">
@@ -580,14 +556,12 @@
                                                     <th>Approved</th>
                                                     <th>Marks</th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="projects-tbody">
                                                 <tr id="no-projects-row">
                                                     <td colspan="8" class="text-center text-muted fst-italic py-3">
                                                         No projects added yet. Use the form below.
-                                                    </td>
-                                                </tr>
+                                                     </td>
                                             </tbody>
                                         </table>
                                     </div>
@@ -638,13 +612,31 @@
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 8: FDP / WORKSHOPS ==================== -->
+                            <!-- ==================== TAB 7: FDP / WORKSHOPS ==================== -->
                             <div class="tab-pane fade" id="tab-fdp">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1">
                                         <i class="fas fa-chalkboard-user me-2"></i>FDP / Workshops Attended
                                     </h5>
                                     <p class="text-muted small mb-3">Add Faculty Development Programs, Workshops, Seminars, Conferences, and Training Programs attended by this faculty.</p>
+
+                                    <!-- ADD BUTTON FOR FDP CERTIFICATES -->
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-white py-2">
+                                            <i class="fas fa-certificate me-1"></i>FDP Certificates
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="fdp-cert-list" class="documents-list"></div>
+                                            <div class="input-group">
+                                                <input type="file" id="fdp-cert-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                                <button type="button" class="btn btn-warning" onclick="addFDPCertificate()">
+                                                    <i class="fas fa-plus"></i> Add Certificate
+                                                </button>
+                                            </div>
+                                            <div class="help-text mt-2">Upload FDP/Workshop certificate (PDF, JPG, or PNG).</div>
+                                        </div>
+                                    </div>
+
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="fdp-table">
                                             <thead class="table-light">
@@ -658,14 +650,12 @@
                                                     <th>Place</th>
                                                     <th>Role</th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="fdp-tbody">
                                                 <tr id="no-fdp-row">
                                                     <td colspan="9" class="text-center text-muted fst-italic py-3">
                                                         No FDP/Workshop entries added yet. Use the form below.
-                                                    </td>
-                                                </tr>
+                                                     </td>
                                             </tbody>
                                         </table>
                                     </div>
@@ -753,43 +743,19 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="card border-info mt-4">
-                                        <div class="card-header bg-info text-white py-2">
-                                            <i class="fas fa-upload me-1"></i>Upload FDP Certificate
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-12">
-                                                    <label class="form-label">FDP Certificate</label>
-                                                    <input type="file" name="fdp_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                                    <div class="help-text">
-                                                        Upload certificate for the FDP/Workshop (optional).
-                                                        This document will be automatically merged into the final faculty PDF.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 9: RESULTS (AUTO-CALCULATED) ==================== -->
+                            <!-- ==================== TAB 8: RESULTS (AUTO-CALCULATED WITH CLASSES TAKEN) ==================== -->
                             <div class="tab-pane fade" id="tab-results">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1">
                                         <i class="fas fa-chart-line me-2"></i>Results / Academic Performance
                                     </h5>
                                     <p class="text-muted small mb-3">
-                                        Enter students attempted and passed. <strong class="text-success">Pass percentage is calculated automatically.</strong>
+                                        Enter subject-wise results. <strong class="text-success">Pass percentage is calculated automatically.</strong>
                                     </p>
-                                    <!-- NEW: Number of Classes Taken Field -->
-                                    <div class="row mb-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label">Number of Classes Taken</label>
-                                            <input type="number" name="classes_taken" id="classes_taken" class="form-control" min="0" placeholder="Enter number of classes taken">
-                                            <div class="help-text">Enter the total number of classes taken by the faculty member.</div>
-                                        </div>
-                                    </div>
+
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="results-table">
                                             <thead class="table-light">
@@ -797,20 +763,19 @@
                                                     <th>#</th>
                                                     <th>Subject Name</th>
                                                     <th>Subject Code</th>
+                                                    <th>Classes Taken</th>
                                                     <th>Attempted</th>
                                                     <th>Passed</th>
                                                     <th class="text-success">Pass % <small>(Auto)</small></th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="results-tbody">
                                                 <tr id="no-results-row">
-                                                    <td colspan="7" class="text-center text-muted fst-italic py-3">
+                                                    <td colspan="8" class="text-center text-muted fst-italic py-3">
                                                         No results added yet. Use the form below.
-                                                    </td>
-                                                </tr>
+                                                      </td>
                                             </tbody>
-                                        </table>
+                                         </table>
                                     </div>
                                     <div class="card border-success">
                                         <div class="card-header bg-success text-white py-2">
@@ -818,13 +783,17 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row g-2 align-items-end">
-                                                <div class="col-md-4">
+                                                <div class="col-md-3">
                                                     <label class="form-label small fw-bold">Subject Name *</label>
                                                     <input type="text" class="form-control form-control-sm" id="rs-subject" placeholder="e.g. DBMS">
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label class="form-label small fw-bold">Subject Code</label>
                                                     <input type="text" class="form-control form-control-sm" id="rs-code" placeholder="e.g. CS501">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold">Classes Taken *</label>
+                                                    <input type="number" class="form-control form-control-sm" id="rs-classes" min="0" placeholder="e.g. 45">
                                                 </div>
                                                 <div class="col-md-2">
                                                     <label class="form-label small fw-bold">Attempted *</label>
@@ -834,9 +803,9 @@
                                                     <label class="form-label small fw-bold">Passed *</label>
                                                     <input type="number" class="form-control form-control-sm" id="rs-passed" min="0" placeholder="54" oninput="autoCalculatePercent()">
                                                 </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold text-success">Pass % (Auto)</label>
-                                                    <input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0.00%">
+                                                <div class="col-md-1">
+                                                    <label class="form-label small fw-bold text-success">Pass %</label>
+                                                    <input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0%">
                                                 </div>
                                             </div>
                                             <div class="mt-3">
@@ -848,6 +817,91 @@
                                                 </button>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 9: DOCUMENTS (MOVED TO LAST) ==================== -->
+                            <div class="tab-pane fade" id="documents">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-file-alt me-2"></i>Identity Documents</h4>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label>Aadhar Card</label>
+                                            <input type="file" name="aadhar_file" class="form-control">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>PAN Card</label>
+                                            <input type="file" name="pan_file" class="form-control">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>APAAR Document</label>
+                                            <input type="file" name="apaar_file" class="form-control">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>SCM Document</label>
+                                            <input type="file" name="scm_file" class="form-control">
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>JNTUH Bio-Data</label>
+                                            <input type="file" name="jntuh_biodata" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-section">
+                                    <h4><i class="fas fa-graduation-cap me-2"></i>Educational Certificates</h4>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label>SSC Certificate</label>
+                                            <input type="file" name="ssc_certificate" class="form-control">
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>Intermediate Certificate</label>
+                                            <input type="file" name="inter_certificate" class="form-control">
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>UG Certificate</label>
+                                            <input type="file" name="ug_certificate" class="form-control">
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>PG Certificate</label>
+                                            <input type="file" name="pg_certificate" class="form-control">
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>PhD Certificate</label>
+                                            <input type="file" name="phd_certificate" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ADD BUTTON FOR EXPERIENCE CERTIFICATES -->
+                                <div class="form-section">
+                                    <h4><i class="fas fa-briefcase me-2"></i>Experience Certificates</h4>
+                                    <div class="document-card">
+                                        <div id="experience-cert-list" class="documents-list"></div>
+                                        <div class="input-group">
+                                            <input type="file" id="experience-cert-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                            <button type="button" class="btn btn-success" onclick="addExperienceCertificate()">
+                                                <i class="fas fa-plus"></i> Add Experience Certificate
+                                            </button>
+                                        </div>
+                                        <div class="help-text mt-2">Upload experience certificates (PDF, JPG, or PNG).</div>
+                                    </div>
+                                </div>
+
+                                <!-- ADD BUTTON FOR OTHER DOCUMENTS -->
+                                <div class="form-section">
+                                    <h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
+                                    <div class="document-card">
+                                        <div id="other-doc-list" class="documents-list"></div>
+                                        <div class="input-group">
+                                            <input type="file" id="other-doc-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                            <button type="button" class="btn btn-secondary" onclick="addOtherDocument()">
+                                                <i class="fas fa-plus"></i> Add Other Document
+                                            </button>
+                                        </div>
+                                        <div class="help-text mt-2">Upload any other relevant documents (PDF, JPG, or PNG).</div>
                                     </div>
                                 </div>
                             </div>
@@ -872,7 +926,211 @@
 
 <script>
     // ============================================================
-    // RESEARCH PUBLICATIONS
+    // RESEARCH PUBLICATIONS PROOF DOCUMENTS (ADD BUTTON)
+    // ============================================================
+    let researchProofFiles = [];
+    function addResearchProofDocument() {
+        const input = document.getElementById('research-proof-input');
+        if (!input.files || input.files.length === 0) {
+            alert('Please select a file to upload.');
+            return;
+        }
+        const file = input.files[0];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            alert('File size should not exceed 10MB.');
+            return;
+        }
+        researchProofFiles.push(file);
+        renderResearchProofList();
+        input.value = '';
+        updateResearchProofHiddenField();
+    }
+    function removeResearchProofFile(index) {
+        researchProofFiles.splice(index, 1);
+        renderResearchProofList();
+        updateResearchProofHiddenField();
+    }
+    function renderResearchProofList() {
+        const container = document.getElementById('research-proof-list');
+        if (researchProofFiles.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center py-2">No documents added yet.</div>';
+            return;
+        }
+        container.innerHTML = researchProofFiles.map((file, i) => `
+            <div class="document-item">
+                <div class="doc-name">
+                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
+                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
+                </div>
+                <div class="doc-actions">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeResearchProofFile(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    function updateResearchProofHiddenField() {
+        const fileNames = researchProofFiles.map(f => f.name);
+        document.getElementById('research_proof_files').value = JSON.stringify(fileNames);
+    }
+
+    // ============================================================
+    // FDP CERTIFICATES (ADD BUTTON)
+    // ============================================================
+    let fdpCertFiles = [];
+    function addFDPCertificate() {
+        const input = document.getElementById('fdp-cert-input');
+        if (!input.files || input.files.length === 0) {
+            alert('Please select a certificate file to upload.');
+            return;
+        }
+        const file = input.files[0];
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File size should not exceed 10MB.');
+            return;
+        }
+        fdpCertFiles.push(file);
+        renderFDPCertList();
+        input.value = '';
+        updateFDPCertHiddenField();
+    }
+    function removeFDPCertFile(index) {
+        fdpCertFiles.splice(index, 1);
+        renderFDPCertList();
+        updateFDPCertHiddenField();
+    }
+    function renderFDPCertList() {
+        const container = document.getElementById('fdp-cert-list');
+        if (fdpCertFiles.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center py-2">No certificates added yet.</div>';
+            return;
+        }
+        container.innerHTML = fdpCertFiles.map((file, i) => `
+            <div class="document-item">
+                <div class="doc-name">
+                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
+                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
+                </div>
+                <div class="doc-actions">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeFDPCertFile(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    function updateFDPCertHiddenField() {
+        const fileNames = fdpCertFiles.map(f => f.name);
+        document.getElementById('fdp_certificate_files').value = JSON.stringify(fileNames);
+    }
+
+    // ============================================================
+    // EXPERIENCE CERTIFICATES (ADD BUTTON)
+    // ============================================================
+    let experienceCertFiles = [];
+    function addExperienceCertificate() {
+        const input = document.getElementById('experience-cert-input');
+        if (!input.files || input.files.length === 0) {
+            alert('Please select an experience certificate file to upload.');
+            return;
+        }
+        const file = input.files[0];
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File size should not exceed 10MB.');
+            return;
+        }
+        experienceCertFiles.push(file);
+        renderExperienceCertList();
+        input.value = '';
+        updateExperienceCertHiddenField();
+    }
+    function removeExperienceCertFile(index) {
+        experienceCertFiles.splice(index, 1);
+        renderExperienceCertList();
+        updateExperienceCertHiddenField();
+    }
+    function renderExperienceCertList() {
+        const container = document.getElementById('experience-cert-list');
+        if (experienceCertFiles.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center py-2">No experience certificates added yet.</div>';
+            return;
+        }
+        container.innerHTML = experienceCertFiles.map((file, i) => `
+            <div class="document-item">
+                <div class="doc-name">
+                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
+                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
+                </div>
+                <div class="doc-actions">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeExperienceCertFile(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    function updateExperienceCertHiddenField() {
+        const fileNames = experienceCertFiles.map(f => f.name);
+        document.getElementById('experience_certificate_files').value = JSON.stringify(fileNames);
+    }
+
+    // ============================================================
+    // OTHER DOCUMENTS (ADD BUTTON)
+    // ============================================================
+    let otherDocFiles = [];
+    function addOtherDocument() {
+        const input = document.getElementById('other-doc-input');
+        if (!input.files || input.files.length === 0) {
+            alert('Please select a document file to upload.');
+            return;
+        }
+        const file = input.files[0];
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('File size should not exceed 10MB.');
+            return;
+        }
+        otherDocFiles.push(file);
+        renderOtherDocList();
+        input.value = '';
+        updateOtherDocHiddenField();
+    }
+    function removeOtherDocFile(index) {
+        otherDocFiles.splice(index, 1);
+        renderOtherDocList();
+        updateOtherDocHiddenField();
+    }
+    function renderOtherDocList() {
+        const container = document.getElementById('other-doc-list');
+        if (otherDocFiles.length === 0) {
+            container.innerHTML = '<div class="text-muted text-center py-2">No other documents added yet.</div>';
+            return;
+        }
+        container.innerHTML = otherDocFiles.map((file, i) => `
+            <div class="document-item">
+                <div class="doc-name">
+                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
+                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
+                </div>
+                <div class="doc-actions">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeOtherDocFile(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    function updateOtherDocHiddenField() {
+        const fileNames = otherDocFiles.map(f => f.name);
+        document.getElementById('other_document_files').value = JSON.stringify(fileNames);
+    }
+
+    // ============================================================
+    // RESEARCH PUBLICATIONS (Existing functions)
     // ============================================================
     let researchList = [];
     function addResearchPublication() {
@@ -907,7 +1165,7 @@
     function renderResearchTable() {
         const tbody = document.getElementById('research-tbody');
         if (researchList.length === 0) {
-            tbody.innerHTML = `<tr id="no-research-row"> <td colspan="8" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td> </tr>`;
+            tbody.innerHTML = `<tr id="no-research-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below. Neutron</td></tr>`;
             return;
         }
         tbody.innerHTML = researchList.map((r, i) => `
@@ -919,11 +1177,7 @@
                 <td>${r.publication_year || '—'}</td>
                 <td>${r.journal_name || r.conference_name || '—'}</td>
                 <td><span class="badge bg-success">${r.status}</span></td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch(${i})"><i class="fas fa-trash"></i></button></td>
             </tr>
         `).join('');
     }
@@ -937,7 +1191,7 @@
     }
 
     // ============================================================
-    // B.TECH PROJECTS
+    // B.TECH PROJECTS (Existing functions)
     // ============================================================
     let projectList = [];
     function addBTechProject() {
@@ -968,7 +1222,7 @@
     function renderProjectTable() {
         const tbody = document.getElementById('projects-tbody');
         if (projectList.length === 0) {
-            tbody.innerHTML = `<tr id="no-projects-row"> <td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below.</td> </tr>`;
+            tbody.innerHTML = `<tr id="no-projects-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below. Neutron</td></tr>`;
             return;
         }
         tbody.innerHTML = projectList.map((p, i) => `
@@ -978,17 +1232,9 @@
                 <td>${p.student_name}</td>
                 <td>${p.batch || '—'}</td>
                 <td>${p.project_title}</td>
-                <td>
-                    <span class="badge ${p.approved ? 'bg-success' : 'bg-warning text-dark'}">
-                        ${p.approved ? 'Yes' : 'No'}
-                    </span>
-                </td>
+                <td><span class="badge ${p.approved ? 'bg-success' : 'bg-warning text-dark'}">${p.approved ? 'Yes' : 'No'}</span></td>
                 <td>${p.marks || '—'}</td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm py-0" onclick="removeProject(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeProject(${i})"><i class="fas fa-trash"></i></button></td>
             </tr>
         `).join('');
     }
@@ -1003,7 +1249,7 @@
     }
 
     // ============================================================
-    // FDP / WORKSHOPS
+    // FDP / WORKSHOPS (Existing functions)
     // ============================================================
     let fdpList = [];
     function addFDP() {
@@ -1051,7 +1297,7 @@
     function renderFDPTable() {
         const tbody = document.getElementById('fdp-tbody');
         if (fdpList.length === 0) {
-            tbody.innerHTML = `<tr id="no-fdp-row"> <td colspan="9" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td> </tr>`;
+            tbody.innerHTML = `<tr id="no-fdp-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below. Neutron</td></tr>`;
             return;
         }
         tbody.innerHTML = fdpList.map((f, i) => {
@@ -1071,11 +1317,7 @@
                 <td>${f.organized_by || '—'}</td>
                 <td>${f.place || '—'}</td>
                 <td>${f.role || '—'}</td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm py-0" onclick="removeFDP(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeFDP(${i})"><i class="fas fa-trash"></i></button></td>
             </tr>`;
         }).join('');
     }
@@ -1093,7 +1335,7 @@
     }
 
     // ============================================================
-    // RESULTS — AUTO-CALCULATED PERCENTAGE
+    // RESULTS (WITH CLASSES TAKEN INTEGRATED)
     // ============================================================
     let resultsList = [];
     function autoCalculatePercent() {
@@ -1117,11 +1359,17 @@
     }
     function addResult() {
         const subject = document.getElementById('rs-subject').value.trim();
+        const classesTaken = parseInt(document.getElementById('rs-classes').value) || 0;
         const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
         const passed = parseInt(document.getElementById('rs-passed').value) || 0;
         if (!subject) {
             alert('Subject name is required.');
             document.getElementById('rs-subject').focus();
+            return;
+        }
+        if (classesTaken < 0) {
+            alert('Classes Taken must be 0 or greater.');
+            document.getElementById('rs-classes').focus();
             return;
         }
         if (attempted <= 0) {
@@ -1138,6 +1386,7 @@
         const entry = {
             subject_name: subject,
             subject_code: document.getElementById('rs-code').value.trim(),
+            classes_taken: classesTaken,
             students_attempted: attempted,
             students_passed: passed,
             percentage: percentage,
@@ -1155,7 +1404,7 @@
     function renderResultsTable() {
         const tbody = document.getElementById('results-tbody');
         if (resultsList.length === 0) {
-            tbody.innerHTML = `<tr id="no-results-row"> <td colspan="7" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below.</td> </tr>`;
+            tbody.innerHTML = `<tr id="no-results-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below. Neutron</td></tr>`;
             return;
         }
         tbody.innerHTML = resultsList.map((r, i) => {
@@ -1164,14 +1413,11 @@
                 <td>${i + 1}</td>
                 <td><strong>${r.subject_name}</strong></td>
                 <td>${r.subject_code || '—'}</td>
+                <td class="text-center">${r.classes_taken || 0}</td>
                 <td class="text-center">${r.students_attempted}</td>
                 <td class="text-center">${r.students_passed}</td>
                 <td class="text-center fw-bold" style="color:${color};">${r.percentage}%</td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResult(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResult(${i})"><i class="fas fa-trash"></i></button></td>
             </tr>`;
         }).join('');
     }
@@ -1179,7 +1425,7 @@
         document.getElementById('results_json').value = JSON.stringify(resultsList);
     }
     function clearResultForm() {
-        ['rs-subject', 'rs-code', 'rs-attempted', 'rs-passed'].forEach(id => {
+        ['rs-subject', 'rs-code', 'rs-classes', 'rs-attempted', 'rs-passed'].forEach(id => {
             document.getElementById(id).value = '';
         });
         const pctField = document.getElementById('rs-percentage');
@@ -1188,7 +1434,7 @@
     }
 
     // ============================================================
-    // NEW DELETE BUTTON FUNCTION (added without changing any other lines)
+    // CLEAR ALL FORM FUNCTION
     // ============================================================
     function clearAllForm() {
         if (!confirm('Are you sure you want to delete/clear ALL form data? This cannot be undone.')) return;
@@ -1199,6 +1445,12 @@
         fdpList = []; renderFDPTable(); updateFDPJSON();
         resultsList = []; renderResultsTable(); updateResultsJSON();
 
+        // Clear document lists
+        researchProofFiles = []; renderResearchProofList(); updateResearchProofHiddenField();
+        fdpCertFiles = []; renderFDPCertList(); updateFDPCertHiddenField();
+        experienceCertFiles = []; renderExperienceCertList(); updateExperienceCertHiddenField();
+        otherDocFiles = []; renderOtherDocList(); updateOtherDocHiddenField();
+
         // Reset all visible input fields
         document.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], input[type="tel"], textarea, select').forEach(el => {
             if (el.type === 'select-one') el.selectedIndex = 0;
@@ -1207,10 +1459,6 @@
 
         // Clear file inputs
         document.querySelectorAll('input[type="file"]').forEach(el => el.value = '');
-
-        // Clear the Number of Classes Taken field
-        const classesTaken = document.getElementById('classes_taken');
-        if (classesTaken) classesTaken.value = '';
 
         alert('✅ Entire form has been cleared!');
     }
@@ -1226,3 +1474,12 @@
     });
 </script>
 {% endblock %}
+
+
+Like above do the same Grid Process for
+
+Research and Publications
+
+FDP/Workshops
+
+like done for Results above without changing the other lines of code
