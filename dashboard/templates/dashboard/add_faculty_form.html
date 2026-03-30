@@ -126,15 +126,15 @@
                         <input type="hidden" name="results_json" id="results_json" value="[]">
                         <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="[]">
 
-                        <!-- Hidden fields for additional documents (stores file paths and academic years) -->
-                        <input type="hidden" name="research_proof_files" id="research_proof_files" value="[]">
-                        <input type="hidden" name="research_proof_academic_years" id="research_proof_academic_years" value="[]">
-                        <input type="hidden" name="fdp_certificate_files" id="fdp_certificate_files" value="[]">
-                        <input type="hidden" name="fdp_certificate_academic_years" id="fdp_certificate_academic_years" value="[]">
-                        <input type="hidden" name="experience_certificate_files" id="experience_certificate_files" value="[]">
-                        <input type="hidden" name="experience_certificate_academic_years" id="experience_certificate_academic_years" value="[]">
-                        <input type="hidden" name="other_document_files" id="other_document_files" value="[]">
-                        <input type="hidden" name="other_document_academic_years" id="other_document_academic_years" value="[]">
+                        <!-- Hidden fields for additional documents – REMOVED: replaced by simple file inputs -->
+                        <!-- <input type="hidden" name="research_proof_files" id="research_proof_files" value="[]"> -->
+                        <!-- <input type="hidden" name="research_proof_academic_years" id="research_proof_academic_years" value="[]"> -->
+                        <!-- <input type="hidden" name="fdp_certificate_files" id="fdp_certificate_files" value="[]"> -->
+                        <!-- <input type="hidden" name="fdp_certificate_academic_years" id="fdp_certificate_academic_years" value="[]"> -->
+                        <!-- <input type="hidden" name="experience_certificate_files" id="experience_certificate_files" value="[]"> -->
+                        <!-- <input type="hidden" name="experience_certificate_academic_years" id="experience_certificate_academic_years" value="[]"> -->
+                        <!-- <input type="hidden" name="other_document_files" id="other_document_files" value="[]"> -->
+                        <!-- <input type="hidden" name="other_document_academic_years" id="other_document_academic_years" value="[]"> -->
 
                         <!-- Tabs Navigation - DOCUMENTS TAB MOVED TO LAST -->
                         <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
@@ -454,21 +454,23 @@
                                     </h5>
                                     <p class="text-muted small mb-3">Add journal papers, conference papers, books, or patents.</p>
 
-                                    <!-- ADD BUTTON FOR RESEARCH PUBLICATIONS PROOF (WITH ACADEMIC YEAR) -->
+                                    <!-- Simple file upload for Research Publications Proof (replaces dynamic list) -->
                                     <div class="card border-info mb-3">
                                         <div class="card-header bg-info text-white py-2">
-                                            <i class="fas fa-upload me-1"></i>Research Publications Proof Documents
+                                            <i class="fas fa-upload me-1"></i>Research Publications Proof Document
                                         </div>
                                         <div class="card-body">
-                                            <div id="research-proof-list" class="documents-list"></div>
-                                            <div class="input-group mb-2">
-                                                <input type="file" id="research-proof-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                                <input type="text" id="research-proof-academic-year" class="form-control academic-year-input" placeholder="Academic Year (e.g., 2023-24)">
-                                                <button type="button" class="btn btn-info" onclick="addResearchProofDocument()">
-                                                    <i class="fas fa-plus"></i> Add Document
-                                                </button>
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Upload Proof (PDF, JPG, PNG)</label>
+                                                    <input type="file" name="research_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Academic Year</label>
+                                                    <input type="text" name="research_proof_academic_year" class="form-control" placeholder="e.g., 2023-24">
+                                                </div>
                                             </div>
-                                            <div class="help-text mt-2">Upload supporting proof for research publications (PDF, JPG, or PNG). Enter Academic Year (e.g., 2023-24).</div>
+                                            <div class="help-text mt-2">Upload supporting proof for research publications.</div>
                                         </div>
                                     </div>
 
@@ -485,8 +487,7 @@
                                                     <th>Journal / Conference</th>
                                                     <th>Status</th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="research-tbody">
                                                 <tr id="no-research-row">
                                                     <td colspan="9" class="text-center text-muted fst-italic py-3">
@@ -577,13 +578,12 @@
                                                     <th>Approved</th>
                                                     <th>Marks</th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="projects-tbody">
                                                 <tr id="no-projects-row">
                                                     <td colspan="8" class="text-center text-muted fst-italic py-3">
                                                         No projects added yet. Use the form below.
-                                                    </td>
+                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -643,21 +643,23 @@
                                     </h5>
                                     <p class="text-muted small mb-3">Add Faculty Development Programs, Workshops, Seminars, Conferences, and Training Programs attended by this faculty.</p>
 
-                                    <!-- ADD BUTTON FOR FDP CERTIFICATES (WITH ACADEMIC YEAR) -->
+                                    <!-- Simple file upload for FDP Certificate (replaces dynamic list) -->
                                     <div class="card border-warning mb-3">
                                         <div class="card-header bg-warning text-white py-2">
-                                            <i class="fas fa-certificate me-1"></i>FDP Certificates
+                                            <i class="fas fa-certificate me-1"></i>FDP Certificate
                                         </div>
                                         <div class="card-body">
-                                            <div id="fdp-cert-list" class="documents-list"></div>
-                                            <div class="input-group mb-2">
-                                                <input type="file" id="fdp-cert-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                                <input type="text" id="fdp-cert-academic-year" class="form-control academic-year-input" placeholder="Academic Year (e.g., 2023-24)">
-                                                <button type="button" class="btn btn-warning" onclick="addFDPCertificate()">
-                                                    <i class="fas fa-plus"></i> Add Certificate
-                                                </button>
+                                            <div class="row g-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Upload Certificate (PDF, JPG, PNG)</label>
+                                                    <input type="file" name="fdp_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Academic Year</label>
+                                                    <input type="text" name="fdp_certificate_academic_year" class="form-control" placeholder="e.g., 2023-24">
+                                                </div>
                                             </div>
-                                            <div class="help-text mt-2">Upload FDP/Workshop certificate (PDF, JPG, or PNG). Enter Academic Year (e.g., 2023-24).</div>
+                                            <div class="help-text mt-2">Upload FDP/Workshop certificate.</div>
                                         </div>
                                     </div>
 
@@ -675,13 +677,12 @@
                                                     <th>Place</th>
                                                     <th>Role</th>
                                                     <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                                 </thead>
                                             <tbody id="fdp-tbody">
                                                 <tr id="no-fdp-row">
                                                     <td colspan="10" class="text-center text-muted fst-italic py-3">
                                                         No FDP/Workshop entries added yet. Use the form below.
-                                                    </td>
+                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -805,7 +806,7 @@
                                                 <tr id="no-results-row">
                                                     <td colspan="9" class="text-center text-muted fst-italic py-3">
                                                         No results added yet. Use the form below.
-                                                    </td>
+                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -912,35 +913,39 @@
                                     </div>
                                 </div>
 
-                                <!-- ADD BUTTON FOR EXPERIENCE CERTIFICATES (WITH ACADEMIC YEAR) -->
+                                <!-- Simple file upload for Experience Certificates (replaces dynamic list) -->
                                 <div class="form-section">
                                     <h4><i class="fas fa-briefcase me-2"></i>Experience Certificates</h4>
                                     <div class="document-card">
-                                        <div id="experience-cert-list" class="documents-list"></div>
-                                        <div class="input-group mb-2">
-                                            <input type="file" id="experience-cert-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                            <input type="text" id="experience-cert-academic-year" class="form-control academic-year-input" placeholder="Academic Year (e.g., 2023-24)">
-                                            <button type="button" class="btn btn-success" onclick="addExperienceCertificate()">
-                                                <i class="fas fa-plus"></i> Add Experience Certificate
-                                            </button>
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label>Upload Experience Certificate (PDF, JPG, PNG)</label>
+                                                <input type="file" name="experience_certificates" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Academic Year</label>
+                                                <input type="text" name="experience_certificates_academic_year" class="form-control" placeholder="e.g., 2023-24">
+                                            </div>
                                         </div>
-                                        <div class="help-text mt-2">Upload experience certificates (PDF, JPG, or PNG). Enter Academic Year (e.g., 2023-24).</div>
+                                        <div class="help-text mt-2">Upload experience certificates.</div>
                                     </div>
                                 </div>
 
-                                <!-- ADD BUTTON FOR OTHER DOCUMENTS (WITH ACADEMIC YEAR) -->
+                                <!-- Simple file upload for Other Documents (replaces dynamic list) -->
                                 <div class="form-section">
                                     <h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
                                     <div class="document-card">
-                                        <div id="other-doc-list" class="documents-list"></div>
-                                        <div class="input-group mb-2">
-                                            <input type="file" id="other-doc-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                            <input type="text" id="other-doc-academic-year" class="form-control academic-year-input" placeholder="Academic Year (e.g., 2023-24)">
-                                            <button type="button" class="btn btn-secondary" onclick="addOtherDocument()">
-                                                <i class="fas fa-plus"></i> Add Other Document
-                                            </button>
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label>Upload Other Document (PDF, JPG, PNG)</label>
+                                                <input type="file" name="other_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label>Academic Year</label>
+                                                <input type="text" name="other_documents_academic_year" class="form-control" placeholder="e.g., 2023-24">
+                                            </div>
                                         </div>
-                                        <div class="help-text mt-2">Upload any other relevant documents (PDF, JPG, or PNG). Enter Academic Year (e.g., 2023-24).</div>
+                                        <div class="help-text mt-2">Upload any other relevant documents.</div>
                                     </div>
                                 </div>
                             </div>
@@ -964,258 +969,6 @@
 </div>
 
 <script>
-    // ============================================================
-    // RESEARCH PUBLICATIONS PROOF DOCUMENTS (WITH ACADEMIC YEAR)
-    // ============================================================
-    let researchProofFiles = [];
-    let researchProofAcademicYears = [];
-
-    function addResearchProofDocument() {
-        const input = document.getElementById('research-proof-input');
-        const academicYear = document.getElementById('research-proof-academic-year').value.trim();
-
-        if (!input.files || input.files.length === 0) {
-            alert('Please select a file to upload.');
-            return;
-        }
-        const file = input.files[0];
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('File size should not exceed 10MB.');
-            return;
-        }
-        researchProofFiles.push(file);
-        researchProofAcademicYears.push(academicYear);
-        renderResearchProofList();
-        input.value = '';
-        document.getElementById('research-proof-academic-year').value = '';
-        updateResearchProofHiddenField();
-    }
-
-    function removeResearchProofFile(index) {
-        researchProofFiles.splice(index, 1);
-        researchProofAcademicYears.splice(index, 1);
-        renderResearchProofList();
-        updateResearchProofHiddenField();
-    }
-
-    function renderResearchProofList() {
-        const container = document.getElementById('research-proof-list');
-        if (researchProofFiles.length === 0) {
-            container.innerHTML = '<div class="text-muted text-center py-2">No documents added yet.</div>';
-            return;
-        }
-        container.innerHTML = researchProofFiles.map((file, i) => `
-            <div class="document-item">
-                <div class="doc-name">
-                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
-                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
-                    ${researchProofAcademicYears[i] ? `<span class="badge bg-info ms-2">${researchProofAcademicYears[i]}</span>` : ''}
-                </div>
-                <div class="doc-actions">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeResearchProofFile(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function updateResearchProofHiddenField() {
-        const fileNames = researchProofFiles.map(f => f.name);
-        document.getElementById('research_proof_files').value = JSON.stringify(fileNames);
-        document.getElementById('research_proof_academic_years').value = JSON.stringify(researchProofAcademicYears);
-    }
-
-    // ============================================================
-    // FDP CERTIFICATES (WITH ACADEMIC YEAR)
-    // ============================================================
-    let fdpCertFiles = [];
-    let fdpCertAcademicYears = [];
-
-    function addFDPCertificate() {
-        const input = document.getElementById('fdp-cert-input');
-        const academicYear = document.getElementById('fdp-cert-academic-year').value.trim();
-
-        if (!input.files || input.files.length === 0) {
-            alert('Please select a certificate file to upload.');
-            return;
-        }
-        const file = input.files[0];
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('File size should not exceed 10MB.');
-            return;
-        }
-        fdpCertFiles.push(file);
-        fdpCertAcademicYears.push(academicYear);
-        renderFDPCertList();
-        input.value = '';
-        document.getElementById('fdp-cert-academic-year').value = '';
-        updateFDPCertHiddenField();
-    }
-
-    function removeFDPCertFile(index) {
-        fdpCertFiles.splice(index, 1);
-        fdpCertAcademicYears.splice(index, 1);
-        renderFDPCertList();
-        updateFDPCertHiddenField();
-    }
-
-    function renderFDPCertList() {
-        const container = document.getElementById('fdp-cert-list');
-        if (fdpCertFiles.length === 0) {
-            container.innerHTML = '<div class="text-muted text-center py-2">No certificates added yet.</div>';
-            return;
-        }
-        container.innerHTML = fdpCertFiles.map((file, i) => `
-            <div class="document-item">
-                <div class="doc-name">
-                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
-                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
-                    ${fdpCertAcademicYears[i] ? `<span class="badge bg-warning ms-2">${fdpCertAcademicYears[i]}</span>` : ''}
-                </div>
-                <div class="doc-actions">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeFDPCertFile(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function updateFDPCertHiddenField() {
-        const fileNames = fdpCertFiles.map(f => f.name);
-        document.getElementById('fdp_certificate_files').value = JSON.stringify(fileNames);
-        document.getElementById('fdp_certificate_academic_years').value = JSON.stringify(fdpCertAcademicYears);
-    }
-
-    // ============================================================
-    // EXPERIENCE CERTIFICATES (WITH ACADEMIC YEAR)
-    // ============================================================
-    let experienceCertFiles = [];
-    let experienceCertAcademicYears = [];
-
-    function addExperienceCertificate() {
-        const input = document.getElementById('experience-cert-input');
-        const academicYear = document.getElementById('experience-cert-academic-year').value.trim();
-
-        if (!input.files || input.files.length === 0) {
-            alert('Please select an experience certificate file to upload.');
-            return;
-        }
-        const file = input.files[0];
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('File size should not exceed 10MB.');
-            return;
-        }
-        experienceCertFiles.push(file);
-        experienceCertAcademicYears.push(academicYear);
-        renderExperienceCertList();
-        input.value = '';
-        document.getElementById('experience-cert-academic-year').value = '';
-        updateExperienceCertHiddenField();
-    }
-
-    function removeExperienceCertFile(index) {
-        experienceCertFiles.splice(index, 1);
-        experienceCertAcademicYears.splice(index, 1);
-        renderExperienceCertList();
-        updateExperienceCertHiddenField();
-    }
-
-    function renderExperienceCertList() {
-        const container = document.getElementById('experience-cert-list');
-        if (experienceCertFiles.length === 0) {
-            container.innerHTML = '<div class="text-muted text-center py-2">No experience certificates added yet.</div>';
-            return;
-        }
-        container.innerHTML = experienceCertFiles.map((file, i) => `
-            <div class="document-item">
-                <div class="doc-name">
-                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
-                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
-                    ${experienceCertAcademicYears[i] ? `<span class="badge bg-success ms-2">${experienceCertAcademicYears[i]}</span>` : ''}
-                </div>
-                <div class="doc-actions">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeExperienceCertFile(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function updateExperienceCertHiddenField() {
-        const fileNames = experienceCertFiles.map(f => f.name);
-        document.getElementById('experience_certificate_files').value = JSON.stringify(fileNames);
-        document.getElementById('experience_certificate_academic_years').value = JSON.stringify(experienceCertAcademicYears);
-    }
-
-    // ============================================================
-    // OTHER DOCUMENTS (WITH ACADEMIC YEAR)
-    // ============================================================
-    let otherDocFiles = [];
-    let otherDocAcademicYears = [];
-
-    function addOtherDocument() {
-        const input = document.getElementById('other-doc-input');
-        const academicYear = document.getElementById('other-doc-academic-year').value.trim();
-
-        if (!input.files || input.files.length === 0) {
-            alert('Please select a document file to upload.');
-            return;
-        }
-        const file = input.files[0];
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            alert('File size should not exceed 10MB.');
-            return;
-        }
-        otherDocFiles.push(file);
-        otherDocAcademicYears.push(academicYear);
-        renderOtherDocList();
-        input.value = '';
-        document.getElementById('other-doc-academic-year').value = '';
-        updateOtherDocHiddenField();
-    }
-
-    function removeOtherDocFile(index) {
-        otherDocFiles.splice(index, 1);
-        otherDocAcademicYears.splice(index, 1);
-        renderOtherDocList();
-        updateOtherDocHiddenField();
-    }
-
-    function renderOtherDocList() {
-        const container = document.getElementById('other-doc-list');
-        if (otherDocFiles.length === 0) {
-            container.innerHTML = '<div class="text-muted text-center py-2">No other documents added yet.</div>';
-            return;
-        }
-        container.innerHTML = otherDocFiles.map((file, i) => `
-            <div class="document-item">
-                <div class="doc-name">
-                    <i class="fas fa-file-pdf text-danger"></i> ${file.name}
-                    <small class="text-muted">(${(file.size / 1024).toFixed(2)} KB)</small>
-                    ${otherDocAcademicYears[i] ? `<span class="badge bg-secondary ms-2">${otherDocAcademicYears[i]}</span>` : ''}
-                </div>
-                <div class="doc-actions">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeOtherDocFile(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function updateOtherDocHiddenField() {
-        const fileNames = otherDocFiles.map(f => f.name);
-        document.getElementById('other_document_files').value = JSON.stringify(fileNames);
-        document.getElementById('other_document_academic_years').value = JSON.stringify(otherDocAcademicYears);
-    }
-
     // ============================================================
     // RESEARCH PUBLICATIONS (WITH ACADEMIC YEAR)
     // ============================================================
@@ -1547,7 +1300,7 @@
                 <td class="text-center">${r.students_passed}</td>
                 <td class="text-center" style="color: ${color}; font-weight: bold;">${r.percentage}%</td>
                 <td class="text-center"><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResult(${i})"><i class="fas fa-trash"></i></button></td>
-             </tr>`;
+            </tr>`;
         }).join('');
     }
 
@@ -1590,34 +1343,18 @@
             projectList = [];
             fdpList = [];
             resultsList = [];
-            researchProofFiles = [];
-            researchProofAcademicYears = [];
-            fdpCertFiles = [];
-            fdpCertAcademicYears = [];
-            experienceCertFiles = [];
-            experienceCertAcademicYears = [];
-            otherDocFiles = [];
-            otherDocAcademicYears = [];
 
-            // Re-render all tables and lists
+            // Re-render all tables
             renderResearchTable();
             renderProjectTable();
             renderFDPTable();
             renderResultsTable();
-            renderResearchProofList();
-            renderFDPCertList();
-            renderExperienceCertList();
-            renderOtherDocList();
 
             // Update hidden fields
             updateResearchJSON();
             updateProjectJSON();
             updateFDPJSON();
             updateResultsJSON();
-            updateResearchProofHiddenField();
-            updateFDPCertHiddenField();
-            updateExperienceCertHiddenField();
-            updateOtherDocHiddenField();
 
             alert('All form data has been cleared.');
         }
