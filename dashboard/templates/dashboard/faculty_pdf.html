@@ -87,23 +87,22 @@
             background-color: #cce5ff;
             color: #004085;
         }
-        .classes-taken-box {
-            padding: 15px;
-            background: #f0f7ff;
-            border: 1px solid #c5e0ff;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .classes-taken-number {
-            font-size: 28px;
+        .academic-year-badge {
+            display: inline-block;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
             font-weight: bold;
-            color: #2c3e50;
-            text-align: center;
+            margin-left: 8px;
         }
-        .classes-taken-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-top: 5px;
+        .result-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
         }
         .footer {
             text-align: center;
@@ -128,17 +127,22 @@
             border: 1px solid #eee;
             border-radius: 5px;
         }
+        .document-detail {
+            margin-top: 5px;
+            font-size: 9px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <table class="header-table">
-        <tr>
+          <tr>
             <td style="width: 75%; text-align: center; vertical-align: middle;">
                 <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
                 <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
                 <div style="font-size: 10px;">Employee Code: {{ faculty.employee_code }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
-            </td>
+             </td>
             <td style="width: 25%; text-align: right;">
                 <div class="photo-box">
                     {% if local_photo_path %}
@@ -151,9 +155,9 @@
                         <div style="padding-top: 55px; color: #ccc; font-size: 10px;">NO PHOTO</div>
                     {% endif %}
                 </div>
-            </td>
-        </tr>
-    </table>
+             </td>
+          </tr>
+     </table>
 
     <!-- 1. PERSONAL INFORMATION -->
     <div class="section-title">1. PERSONAL INFORMATION</div>
@@ -268,7 +272,7 @@
         {% endif %}
     </div>
 
-    <!-- 11. RESEARCH & PUBLICATIONS -->
+    <!-- 11. RESEARCH & PUBLICATIONS (WITH ACADEMIC YEAR) -->
     <div class="section-title">11. RESEARCH & PUBLICATIONS</div>
     {% if research_publications %}
         <table class="data-table">
@@ -276,6 +280,7 @@
                 <tr>
                     <th>Type</th>
                     <th>Title</th>
+                    <th>Academic Year</th>
                     <th>Year</th>
                     <th>Status</th>
                     <th>Details</th>
@@ -294,6 +299,13 @@
                         </span>
                     </td>
                     <td>{{ pub.title|default:"—" }}</td>
+                    <td>
+                        {% if pub.academic_year %}
+                            <span class="academic-year-badge">{{ pub.academic_year }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
                     <td>{{ pub.publication_year|default:"—" }}</td>
                     <td>
                         {% if pub.status %}
@@ -346,7 +358,7 @@
     </table>
     {% endif %}
 
-    <!-- 13. FDP / WORKSHOPS ATTENDED -->
+    <!-- 13. FDP / WORKSHOPS ATTENDED (WITH ACADEMIC YEAR) -->
     <div class="section-title">13. FDP / WORKSHOPS ATTENDED</div>
     {% if fdps %}
     <table class="data-table">
@@ -354,6 +366,7 @@
             <tr>
                 <th>Type</th>
                 <th>Title</th>
+                <th>Academic Year</th>
                 <th>Duration</th>
                 <th>Organized By</th>
                 <th>Place</th>
@@ -364,6 +377,13 @@
             <tr>
                 <td>{{ fdp.get_fdp_type_display }}</td>
                 <td>{{ fdp.title }}</td>
+                <td>
+                    {% if fdp.academic_year %}
+                        <span class="academic-year-badge">{{ fdp.academic_year }}</span>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
                 <td>{{ fdp.from_date|date:"d M Y" }} to {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
                 <td>{{ fdp.organized_by|default:"—" }}</td>
                 <td>{{ fdp.place|default:"—" }}</td>
@@ -412,15 +432,20 @@
         </div>
     {% endif %}
 
-    <!-- 15. RESULTS / ACADEMIC PERFORMANCE -->
+    <!-- 15. RESULTS / ACADEMIC PERFORMANCE (WITH ACADEMIC YEAR) -->
     <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
     <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
         {% if results_data %}
             {% if results_data is iterable and results_data is not string %}
                 <div>
                     {% for result in results_data %}
-                    <div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px;">
-                        <strong>{{ result.subject_name }}</strong> {% if result.subject_code %}({{ result.subject_code }}){% endif %}<br>
+                    <div class="result-item">
+                        <strong>{{ result.subject_name }}</strong>
+                        {% if result.subject_code %}({{ result.subject_code }}){% endif %}
+                        {% if result.academic_year %}
+                            <span class="academic-year-badge">{{ result.academic_year }}</span>
+                        {% endif %}
+                        <br>
                         Students Attempted: {{ result.students_attempted }} | Passed: {{ result.students_passed }}<br>
                         <strong>Pass Percentage: {{ result.percentage }}%</strong>
                     </div>
@@ -436,114 +461,34 @@
         {% endif %}
     </div>
 
-    <!-- ==================== SECTION 16: CLASSES TAKEN ==================== -->
-    <div class="section-title">16. CLASSES TAKEN</div>
-    <div class="classes-taken-box">
-        {% if classes_taken %}
-            <div class="classes-taken-number">
-                {{ classes_taken }}
-            </div>
-            <div class="classes-taken-label">Total Classes Conducted / Handled</div>
-        {% else %}
-            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">Not specified</p>
-        {% endif %}
-    </div>
-
-    <!-- 17. UPLOADED DOCUMENTS -->
-    <div class="section-title">17. UPLOADED DOCUMENTS</div>
+    <!-- 16. UPLOADED DOCUMENTS (WITH ACADEMIC YEAR FOR EXPERIENCE CERTIFICATES AND OTHER DOCUMENTS) -->
+    <div class="section-title">16. UPLOADED DOCUMENTS</div>
     <div style="padding: 10px;">
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-            <div class="document-box">
-                <strong>Aadhar Card:</strong>
-                {% if has_aadhar %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>PAN Card:</strong>
-                {% if has_pan %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>APAAR Document:</strong>
-                {% if has_apaar %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>SCM Document:</strong>
-                {% if has_scm %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>JNTUH Bio-Data:</strong>
-                {% if has_jntuh_biodata %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>SSC Certificate:</strong>
-                {% if has_ssc_cert %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>Intermediate Certificate:</strong>
-                {% if has_inter_cert %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>UG Certificate:</strong>
-                {% if has_ug_cert %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>PG Certificate:</strong>
-                {% if has_pg_cert %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
-            <div class="document-box">
-                <strong>PhD Certificate:</strong>
-                {% if has_phd_cert %}
-                    <span style="color: green;">✓ Uploaded</span>
-                {% else %}
-                    <span style="color: #999;">✗ Not Uploaded</span>
-                {% endif %}
-            </div>
+            <div class="document-box"><strong>Aadhar Card:</strong> {% if has_aadhar %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>PAN Card:</strong> {% if has_pan %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>APAAR Document:</strong> {% if has_apaar %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>SCM Document:</strong> {% if has_scm %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>JNTUH Bio-Data:</strong> {% if has_jntuh_biodata %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>SSC Certificate:</strong> {% if has_ssc_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Intermediate Certificate:</strong> {% if has_inter_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>UG Certificate:</strong> {% if has_ug_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>PG Certificate:</strong> {% if has_pg_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>PhD Certificate:</strong> {% if has_phd_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
         </div>
     </div>
 
-    <!-- 18. ADDITIONAL DOCUMENTS -->
-    <div class="section-title">18. ADDITIONAL DOCUMENTS</div>
+    <!-- 17. ADDITIONAL DOCUMENTS (WITH ACADEMIC YEAR) -->
+    <div class="section-title">17. ADDITIONAL DOCUMENTS</div>
     <div style="padding: 10px;">
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             <div class="document-box">
                 <strong>Research Publications Proof:</strong>
                 {% if has_research_proof %}
                     <span style="color: green;">✓ Uploaded</span>
+                    {% if research_proof_academic_year %}
+                        <div class="document-detail">Academic Year: {{ research_proof_academic_year }}</div>
+                    {% endif %}
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
                 {% endif %}
@@ -552,6 +497,9 @@
                 <strong>FDP Certificate:</strong>
                 {% if has_fdp_certificate %}
                     <span style="color: green;">✓ Uploaded</span>
+                    {% if fdp_certificate_academic_year %}
+                        <div class="document-detail">Academic Year: {{ fdp_certificate_academic_year }}</div>
+                    {% endif %}
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
                 {% endif %}
@@ -560,6 +508,9 @@
                 <strong>Experience Certificates:</strong>
                 {% if has_experience_certificates %}
                     <span style="color: green;">✓ Uploaded</span>
+                    {% if experience_certificates_academic_year %}
+                        <div class="document-detail">Academic Year: {{ experience_certificates_academic_year }}</div>
+                    {% endif %}
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
                 {% endif %}
@@ -568,6 +519,9 @@
                 <strong>Other Documents:</strong>
                 {% if has_other_documents %}
                     <span style="color: green;">✓ Uploaded</span>
+                    {% if other_documents_academic_year %}
+                        <div class="document-detail">Academic Year: {{ other_documents_academic_year }}</div>
+                    {% endif %}
                 {% else %}
                     <span style="color: #999;">✗ Not Uploaded</span>
                 {% endif %}
@@ -575,8 +529,8 @@
         </div>
     </div>
 
-    <!-- 19. ABOUT YOURSELF -->
-    <div class="section-title">19. ABOUT YOURSELF</div>
+    <!-- 18. ABOUT YOURSELF -->
+    <div class="section-title">18. ABOUT YOURSELF</div>
     <div class="about-content">
         {% if faculty.about_yourself %}
             {{ faculty.about_yourself|linebreaks }}
@@ -585,8 +539,8 @@
         {% endif %}
     </div>
 
-    <!-- ==================== SECTIONS 20 AND 21 REMOVED ==================== -->
-    <!-- Section 20 (CERTIFICATES) and Section 21 (VERIFICATION & AUTHORIZATION) have been removed as requested -->
+    <!-- ==================== SECTIONS 19 AND 20 REMOVED ==================== -->
+    <!-- Section 19 (CERTIFICATES) and Section 20 (VERIFICATION & AUTHORIZATION) have been removed as requested -->
 
     <div class="footer">
         <p>This is an electronically generated official document of Anurag Engineering College.</p>

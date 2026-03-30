@@ -471,8 +471,8 @@ def collect_faculty_files(faculty):
     certificates = Certificate.objects.filter(faculty=faculty)
     print(f"📊 Found {certificates.count()} certificates")
     for cert in certificates:
-        if cert.cloudinary_url:
-            try:
+        try:
+            if cert.cloudinary_url:
                 print(f" 🌐 Downloading certificate ({cert.certificate_type}): {cert.cloudinary_url}")
                 response = requests.get(cert.cloudinary_url, timeout=30)
                 if response.status_code == 200:
@@ -482,30 +482,30 @@ def collect_faculty_files(faculty):
                     pdf_files.append(tmp.name)
                     temp_files.append(tmp.name)
                     print(f" ✅ Downloaded certificate: {tmp.name}")
-            except Exception as e:
-                print(f" ❌ Error downloading certificate {cert.certificate_type}: {e}")
-        elif cert.certificate_file:
-            file_path, file_url = get_file_from_field(cert.certificate_file, None)
-            if file_path and os.path.exists(file_path):
-                if file_path.lower().endswith('.pdf'):
-                    pdf_files.append(file_path)
-                    print(f" ✅ Certificate (local PDF): {file_path}")
-                else:
-                    image_files.append(file_path)
-                    print(f" ✅ Certificate (local image): {file_path}")
-            elif file_url:
-                try:
-                    print(f" 🌐 Downloading certificate ({cert.certificate_type}) from: {file_url}")
-                    response = requests.get(file_url, timeout=30)
-                    if response.status_code == 200:
-                        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                        tmp.write(response.content)
-                        tmp.close()
-                        pdf_files.append(tmp.name)
-                        temp_files.append(tmp.name)
-                        print(f" ✅ Downloaded certificate: {tmp.name}")
-                except Exception as e:
-                    print(f" ❌ Error: {e}")
+            elif cert.certificate_file:
+                file_path, file_url = get_file_from_field(cert.certificate_file, None)
+                if file_path and os.path.exists(file_path):
+                    if file_path.lower().endswith('.pdf'):
+                        pdf_files.append(file_path)
+                        print(f" ✅ Certificate (local PDF): {file_path}")
+                    else:
+                        image_files.append(file_path)
+                        print(f" ✅ Certificate (local image): {file_path}")
+                elif file_url:
+                    try:
+                        print(f" 🌐 Downloading certificate ({cert.certificate_type}) from: {file_url}")
+                        response = requests.get(file_url, timeout=30)
+                        if response.status_code == 200:
+                            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                            tmp.write(response.content)
+                            tmp.close()
+                            pdf_files.append(tmp.name)
+                            temp_files.append(tmp.name)
+                            print(f" ✅ Downloaded certificate: {tmp.name}")
+                    except Exception as e:
+                        print(f" ❌ Error: {e}")
+        except Exception as e:
+            print(f" ❌ Error processing certificate {cert.certificate_type}: {e}")
     print("\n" + "=" * 60)
     print("FILE COLLECTION SUMMARY")
     print("=" * 60)
@@ -1447,8 +1447,11 @@ def add_faculty(request):
                     else:
                         setattr(faculty, field_name, uploaded_file)
             faculty.save()
+            # NEW: Research Proof with Academic Year
             research_proof = request.FILES.get("research_proof")
             if research_proof:
+                research_proof_academic_year = request.POST.get("research_proof_academic_year", "").strip()
+                faculty.research_proof_academic_year = research_proof_academic_year
                 if is_cloudinary_configured():
                     try:
                         is_pdf = research_proof.name.lower().endswith('.pdf')
@@ -1470,15 +1473,17 @@ def add_faculty(request):
                             resource_type=resource_type,
                             uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                         )
-                        print(f"✅ Research Proof uploaded to Cloudinary")
+                        print(f"✅ Research Proof uploaded to Cloudinary with academic year: {research_proof_academic_year}")
                     except Exception as e:
                         logger.error(f"Cloudinary upload error for research_proof: {e}")
                         faculty.research_proof = research_proof
                 else:
                     faculty.research_proof = research_proof
-            # ==================== NEW: FDP CERTIFICATE ====================
+            # NEW: FDP Certificate with Academic Year
             fdp_certificate = request.FILES.get("fdp_certificate")
             if fdp_certificate:
+                fdp_certificate_academic_year = request.POST.get("fdp_certificate_academic_year", "").strip()
+                faculty.fdp_certificate_academic_year = fdp_certificate_academic_year
                 if is_cloudinary_configured():
                     try:
                         is_pdf = fdp_certificate.name.lower().endswith('.pdf')
@@ -1500,13 +1505,13 @@ def add_faculty(request):
                             resource_type=resource_type,
                             uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                         )
-                        print(f"✅ FDP Certificate uploaded to Cloudinary")
+                        print(f"✅ FDP Certificate uploaded to Cloudinary with academic year: {fdp_certificate_academic_year}")
                     except Exception as e:
                         logger.error(f"Cloudinary upload error for fdp_certificate: {e}")
                         faculty.fdp_certificate = fdp_certificate
                 else:
                     faculty.fdp_certificate = fdp_certificate
-            # ==================== NEW: CLASSES TAKEN ====================
+            # NEW: Classes Taken
             classes_taken = request.POST.get('classes_taken')
             if classes_taken:
                 try:
@@ -1515,9 +1520,11 @@ def add_faculty(request):
                     faculty.classes_taken = None
             else:
                 faculty.classes_taken = None
-            # ==================== NEW: EXPERIENCE CERTIFICATES ====================
+            # NEW: Experience Certificates with Academic Year
             experience_certificates = request.FILES.get('experience_certificates')
             if experience_certificates:
+                experience_certificates_academic_year = request.POST.get("experience_certificates_academic_year", "").strip()
+                faculty.experience_certificates_academic_year = experience_certificates_academic_year
                 if is_cloudinary_configured():
                     try:
                         is_pdf = experience_certificates.name.lower().endswith('.pdf')
@@ -1539,15 +1546,17 @@ def add_faculty(request):
                             resource_type=resource_type,
                             uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                         )
-                        print(f"✅ Experience Certificates uploaded to Cloudinary")
+                        print(f"✅ Experience Certificates uploaded to Cloudinary with academic year: {experience_certificates_academic_year}")
                     except Exception as e:
                         logger.error(f"Cloudinary upload error for experience_certificates: {e}")
                         faculty.experience_certificates = experience_certificates
                 else:
                     faculty.experience_certificates = experience_certificates
-            # ==================== NEW: OTHER DOCUMENTS ====================
+            # NEW: Other Documents with Academic Year
             other_documents = request.FILES.get('other_documents')
             if other_documents:
+                other_documents_academic_year = request.POST.get("other_documents_academic_year", "").strip()
+                faculty.other_documents_academic_year = other_documents_academic_year
                 if is_cloudinary_configured():
                     try:
                         is_pdf = other_documents.name.lower().endswith('.pdf')
@@ -1569,13 +1578,14 @@ def add_faculty(request):
                             resource_type=resource_type,
                             uploaded_by=request.user.username if request.user.is_authenticated else 'System'
                         )
-                        print(f"✅ Other Documents uploaded to Cloudinary")
+                        print(f"✅ Other Documents uploaded to Cloudinary with academic year: {other_documents_academic_year}")
                     except Exception as e:
                         logger.error(f"Cloudinary upload error for other_documents: {e}")
                         faculty.other_documents = other_documents
                 else:
                     faculty.other_documents = other_documents
             faculty.save()
+            # Research Publications (with academic_year)
             research_data_raw = request.POST.get('research_publications_json', '[]').strip()
             if research_data_raw and research_data_raw != '[]':
                 try:
@@ -1588,6 +1598,7 @@ def add_faculty(request):
                                 research_type=item.get('research_type', 'journal'),
                                 title=item.get('title', '').strip(),
                                 authors=item.get('authors', '').strip(),
+                                academic_year=item.get('academic_year', '').strip(),
                                 publication_year=item.get('publication_year'),
                                 journal_name=item.get('journal_name', '').strip(),
                                 conference_name=item.get('conference_name', '').strip(),
@@ -1599,6 +1610,7 @@ def add_faculty(request):
                 except (json.JSONDecodeError, Exception) as e:
                     logger.error(f"Error saving research publications: {e}")
                     messages.warning(request, "Faculty added but some research publications could not be saved.")
+            # B.Tech Projects
             btech_data_raw = request.POST.get('btech_projects_json', '[]').strip()
             if btech_data_raw and btech_data_raw != '[]':
                 try:
@@ -1620,6 +1632,7 @@ def add_faculty(request):
                 except (json.JSONDecodeError, Exception) as e:
                     logger.error(f"Error saving B.Tech projects: {e}")
                     messages.warning(request, "Faculty added but some B.Tech projects could not be saved.")
+            # FDP/Workshops (with academic_year)
             fdp_data_raw = request.POST.get('fdp_entries_json', '[]').strip()
             if fdp_data_raw and fdp_data_raw != '[]':
                 try:
@@ -1631,10 +1644,9 @@ def add_faculty(request):
                                 faculty=faculty,
                                 fdp_type=item.get('fdp_type', 'fdp'),
                                 title=item.get('title', '').strip(),
-                                from_date=datetime.strptime(item.get('from_date'), '%Y-%m-%d').date() if item.get(
-                                    'from_date') else None,
-                                to_date=datetime.strptime(item.get('to_date'), '%Y-%m-%d').date() if item.get(
-                                    'to_date') else None,
+                                academic_year=item.get('academic_year', '').strip(),
+                                from_date=datetime.strptime(item.get('from_date'), '%Y-%m-%d').date() if item.get('from_date') else None,
+                                to_date=datetime.strptime(item.get('to_date'), '%Y-%m-%d').date() if item.get('to_date') else None,
                                 organized_by=item.get('organized_by', '').strip(),
                                 place=item.get('place', '').strip(),
                                 mode=item.get('mode', 'offline'),
@@ -1648,7 +1660,7 @@ def add_faculty(request):
                 except Exception as e:
                     logger.error(f"Error saving FDP entries: {e}")
                     messages.warning(request, "Faculty added but some FDP entries could not be saved.")
-            # ==================== RESULTS (AUTO-CALCULATED) ====================
+            # Results (with academic_year and classes_taken)
             results_data_raw = request.POST.get('results_json', '[]').strip()
             if results_data_raw and results_data_raw != '[]':
                 try:
@@ -1662,6 +1674,8 @@ def add_faculty(request):
                             processed_results.append({
                                 'subject_name': item.get('subject_name', '').strip(),
                                 'subject_code': item.get('subject_code', '').strip(),
+                                'academic_year': item.get('academic_year', '').strip(),
+                                'classes_taken': int(item.get('classes_taken', 0) or 0),
                                 'students_attempted': attempted,
                                 'students_passed': passed,
                                 'percentage': percentage,
@@ -2422,7 +2436,8 @@ def export_students_csv(request):
 def generate_faculty_pdf(request, faculty_id):
     """Enhanced faculty PDF generation with complete data including FDP, Results, and Certificates.
        Sections 20 (CERTIFICATES) and 21 (VERIFICATION & AUTHORIZATION) are REMOVED.
-       Classes Taken (Section 16) is displayed with user-provided value."""
+       Classes Taken (Section 16) is displayed with user-provided value.
+       Academic Year fields added for RESEARCH, FDP, RESULTS, and DOCUMENTS."""
     import io
     import shutil
     try:
@@ -2476,15 +2491,15 @@ def generate_faculty_pdf(request, faculty_id):
         # ==================== GET ALL RELATED DATA ====================
         print("\n--- LOADING FACULTY DATA ---")
 
-        # Research Publications
+        # Research Publications (with academic_year)
         research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
         print(f"📊 Research Publications: {research_publications.count()}")
 
-        # FDP/Workshops
+        # FDP/Workshops (with academic_year)
         fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
         print(f"📊 FDP/Workshop entries: {fdps.count()}")
         for f in fdps:
-            print(f" - {f.get_fdp_type_display()}: {f.title} ({f.from_date} to {f.to_date})")
+            print(f" - {f.get_fdp_type_display()}: {f.title} ({f.from_date} to {f.to_date}) - Academic Year: {getattr(f, 'academic_year', 'N/A')}")
 
         # B.Tech Projects
         btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
@@ -2505,7 +2520,7 @@ def generate_faculty_pdf(request, faculty_id):
         if sd:
             subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
 
-        # ==================== PROCESS RESULTS DATA ====================
+        # ==================== PROCESS RESULTS DATA (with academic_year) ====================
         results_display = []
         if faculty.results:
             try:
@@ -2516,13 +2531,13 @@ def generate_faculty_pdf(request, faculty_id):
                 if isinstance(results_data, list):
                     for result in results_data:
                         if isinstance(result, dict):
-                            subject_name = result.get('subject_name') or result.get('subject') or result.get(
-                                'name') or 'N/A'
+                            subject_name = result.get('subject_name') or result.get('subject') or result.get('name') or 'N/A'
                             subject_code = result.get('subject_code') or result.get('code') or ''
-                            attempted = result.get('students_attempted') or result.get('attempted') or result.get(
-                                'total') or 0
+                            attempted = result.get('students_attempted') or result.get('attempted') or result.get('total') or 0
                             passed = result.get('students_passed') or result.get('passed') or 0
                             percentage = result.get('percentage') or result.get('pass_percentage') or 0
+                            academic_year = result.get('academic_year') or result.get('year') or ''
+                            classes_taken = result.get('classes_taken') or 0
 
                             if attempted > 0 and percentage == 0:
                                 percentage = round((passed / attempted) * 100, 2)
@@ -2530,11 +2545,13 @@ def generate_faculty_pdf(request, faculty_id):
                             results_display.append({
                                 'subject_name': subject_name,
                                 'subject_code': subject_code,
+                                'academic_year': academic_year,
+                                'classes_taken': classes_taken,
                                 'students_attempted': attempted,
                                 'students_passed': passed,
                                 'percentage': percentage,
                             })
-                            print(f" - Added result: {subject_name} - {percentage}%")
+                            print(f" - Added result: {subject_name} - {percentage}% (Year: {academic_year}, Classes: {classes_taken})")
                         elif isinstance(result, str):
                             results_display.append({'text': result})
                             print(f" - Added text result: {result[:50]}")
@@ -2545,6 +2562,8 @@ def generate_faculty_pdf(request, faculty_id):
                     attempted = results_data.get('students_attempted') or results_data.get('attempted') or 0
                     passed = results_data.get('students_passed') or results_data.get('passed') or 0
                     percentage = results_data.get('percentage') or 0
+                    academic_year = results_data.get('academic_year') or results_data.get('year') or ''
+                    classes_taken = results_data.get('classes_taken') or 0
 
                     if attempted > 0 and percentage == 0:
                         percentage = round((passed / attempted) * 100, 2)
@@ -2552,11 +2571,13 @@ def generate_faculty_pdf(request, faculty_id):
                     results_display.append({
                         'subject_name': subject_name,
                         'subject_code': results_data.get('subject_code', ''),
+                        'academic_year': academic_year,
+                        'classes_taken': classes_taken,
                         'students_attempted': attempted,
                         'students_passed': passed,
                         'percentage': percentage,
                     })
-                    print(f" - Added single result: {subject_name} - {percentage}%")
+                    print(f" - Added single result: {subject_name} - {percentage}% (Year: {academic_year}, Classes: {classes_taken})")
                 else:
                     results_display = [{'text': str(faculty.results)}]
                     print(f"📊 Results as plain text: {faculty.results[:100]}")
@@ -2606,21 +2627,25 @@ def generate_faculty_pdf(request, faculty_id):
         has_pg_cert = bool(faculty.pg_certificate or faculty.pg_certificate_url)
         has_phd_cert = bool(faculty.phd_certificate or faculty.phd_certificate_url)
 
-        # NEW: Research Publications Proof
+        # NEW: Research Publications Proof (with academic_year)
         has_research_proof = bool(getattr(faculty, 'research_proof', None) or
                                   getattr(faculty, 'research_proof_url', None))
+        research_proof_academic_year = getattr(faculty, 'research_proof_academic_year', None) or ''
 
-        # NEW: FDP Certificate
+        # NEW: FDP Certificate (with academic_year)
         has_fdp_certificate = bool(getattr(faculty, 'fdp_certificate', None) or
                                    getattr(faculty, 'fdp_certificate_url', None))
+        fdp_certificate_academic_year = getattr(faculty, 'fdp_certificate_academic_year', None) or ''
 
-        # NEW: Experience Certificates
+        # NEW: Experience Certificates (with academic_year)
         has_experience_certificates = bool(getattr(faculty, 'experience_certificates', None) or
                                            getattr(faculty, 'experience_certificates_url', None))
+        experience_certificates_academic_year = getattr(faculty, 'experience_certificates_academic_year', None) or ''
 
-        # NEW: Other Documents
+        # NEW: Other Documents (with academic_year)
         has_other_documents = bool(getattr(faculty, 'other_documents', None) or
                                    getattr(faculty, 'other_documents_url', None))
+        other_documents_academic_year = getattr(faculty, 'other_documents_academic_year', None) or ''
 
         # ==================== CLASSES TAKEN - IMPORTANT FIX ====================
         # Get the classes_taken value from the faculty model
@@ -2632,11 +2657,10 @@ def generate_faculty_pdf(request, faculty_id):
         print(f"Raw classes_taken value: {classes_taken}")
         print(f"Type: {type(classes_taken)}")
         print(f"Has classes_taken attribute: {hasattr(faculty, 'classes_taken')}")
-        print(f"All faculty attributes: {[attr for attr in dir(faculty) if not attr.startswith('_')][:50]}")
         print(f"{'=' * 60}\n")
 
         # Format classes_taken for display
-        if classes_taken:
+        if classes_taken is not None:
             try:
                 # If it's a number, format it nicely
                 classes_taken_display = f"{int(classes_taken)}"
@@ -2718,12 +2742,15 @@ def generate_faculty_pdf(request, faculty_id):
             'has_pg_cert': has_pg_cert,
             'has_phd_cert': has_phd_cert,
             'has_research_proof': has_research_proof,
+            'research_proof_academic_year': research_proof_academic_year,
             'has_fdp_certificate': has_fdp_certificate,
+            'fdp_certificate_academic_year': fdp_certificate_academic_year,
             'has_experience_certificates': has_experience_certificates,
+            'experience_certificates_academic_year': experience_certificates_academic_year,
             'has_other_documents': has_other_documents,
+            'other_documents_academic_year': other_documents_academic_year,
             # ==================== CLASSES TAKEN - CRITICAL FIX ====================
-            'classes_taken': classes_taken,  # Raw value
-            'classes_taken_display': classes_taken_display,  # Formatted display value
+            'classes_taken': classes_taken_display,  # Formatted display value
         }
 
         print("\n" + "=" * 60)
@@ -2731,23 +2758,22 @@ def generate_faculty_pdf(request, faculty_id):
         print("=" * 60)
         print(f"FDP Entries: {fdps.count()}")
         for fdp in fdps:
-            print(f" - {fdp.get_fdp_type_display()}: {fdp.title}")
+            print(f" - {fdp.get_fdp_type_display()}: {fdp.title} (Year: {getattr(fdp, 'academic_year', 'N/A')})")
         print(f"Certificates: {certificates.count()}")
         for cert in certificates:
             print(f" - {cert.certificate_type}")
         print(f"Results: {len(results_display)} entries")
         for res in results_display:
             if 'subject_name' in res:
-                print(f" - {res['subject_name']}: {res['percentage']}%")
+                print(f" - {res['subject_name']}: {res['percentage']}% (Year: {res.get('academic_year', 'N/A')})")
             elif 'text' in res:
                 print(f" - Text: {res['text'][:50]}")
         # IMPORTANT: Print classes_taken value for debugging
-        print(f"CLASSES TAKEN VALUE: {classes_taken}")
-        print(f"CLASSES TAKEN DISPLAY: {classes_taken_display}")
-        print(f"Research Proof: {has_research_proof}")
-        print(f"FDP Certificate: {has_fdp_certificate}")
-        print(f"Experience Certificates: {has_experience_certificates}")
-        print(f"Other Documents: {has_other_documents}")
+        print(f"CLASSES TAKEN VALUE: {classes_taken_display}")
+        print(f"Research Proof: {has_research_proof} (Year: {research_proof_academic_year})")
+        print(f"FDP Certificate: {has_fdp_certificate} (Year: {fdp_certificate_academic_year})")
+        print(f"Experience Certificates: {has_experience_certificates} (Year: {experience_certificates_academic_year})")
+        print(f"Other Documents: {has_other_documents} (Year: {other_documents_academic_year})")
         print("=" * 60 + "\n")
 
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
@@ -4039,7 +4065,7 @@ def api_faculty_detail(request, faculty_id):
 def api_faculty_research(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     publications = ResearchPublication.objects.filter(faculty=faculty).values(
-        'id', 'research_type', 'title', 'authors', 'publication_year',
+        'id', 'research_type', 'title', 'authors', 'publication_year', 'academic_year',
         'journal_name', 'doi', 'status'
     )
     return JsonResponse({
@@ -4055,7 +4081,7 @@ def api_faculty_research(request, faculty_id):
 def api_faculty_fdps(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     fdps = FDP.objects.filter(faculty=faculty).values(
-        'id', 'fdp_type', 'title', 'from_date', 'to_date',
+        'id', 'fdp_type', 'title', 'academic_year', 'from_date', 'to_date',
         'organized_by', 'place', 'mode', 'level', 'role'
     )
     return JsonResponse({

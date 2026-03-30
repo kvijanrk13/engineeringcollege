@@ -102,15 +102,25 @@ class Faculty(models.Model):
     # Classes Taken
     classes_taken = models.IntegerField(blank=True, null=True, help_text="Number of classes taken by the faculty")
 
+    # Research Publications Proof
+    research_proof = models.FileField(upload_to='faculty_docs/research_proofs/', blank=True, null=True)
+    research_proof_url = models.URLField(blank=True, null=True, max_length=500)
+    research_proof_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for research proof document")
+
+    # FDP Certificate
+    fdp_certificate = models.FileField(upload_to='faculty_docs/fdp_certificates/', blank=True, null=True)
+    fdp_certificate_url = models.URLField(blank=True, null=True, max_length=500)
+    fdp_certificate_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for FDP certificate")
+
     # Experience Certificates
     experience_certificates = models.FileField(upload_to='faculty_docs/experience_certs/', blank=True, null=True)
+    experience_certificates_url = models.URLField(blank=True, null=True, max_length=500)
+    experience_certificates_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for experience certificates")
 
     # Other Documents
     other_documents = models.FileField(upload_to='faculty_docs/other_docs/', blank=True, null=True)
-
-    # Cloudinary URLs for new fields
-    experience_certificates_url = models.URLField(blank=True, null=True, max_length=500)
     other_documents_url = models.URLField(blank=True, null=True, max_length=500)
+    other_documents_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for other documents")
     # ==================== END NEW FIELDS ====================
 
     # Document Files - Local Storage
@@ -258,6 +268,7 @@ class ResearchPublication(models.Model):
     authors = models.TextField(blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
     publication_year = models.IntegerField(blank=True, null=True)
+    academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year (e.g., 2023-24)")   # ADDED
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True, null=True)
     doi = models.CharField(max_length=100, blank=True, null=True)
     url = models.URLField(blank=True, null=True)
@@ -316,6 +327,7 @@ class FDP(models.Model):
     title = models.CharField(max_length=300)
     from_date = models.DateField()
     to_date = models.DateField()
+    academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year (e.g., 2023-24)")   # ADDED
     organized_by = models.CharField(max_length=200, blank=True, null=True)
     place = models.CharField(max_length=200, blank=True, null=True)
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, blank=True, null=True)
