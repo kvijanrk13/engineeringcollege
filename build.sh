@@ -4,6 +4,11 @@ echo "========================================"
 
 set -o errexit
 
+# Install wkhtmltopdf (required for PDF generation)
+echo "📦 Installing wkhtmltopdf..."
+apt-get update
+apt-get install -y wkhtmltopdf
+
 # Upgrade pip
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
@@ -24,7 +29,7 @@ python manage.py showmigrations
 echo "🔄 Applying all migrations..."
 python manage.py migrate --no-input
 
-# If migration 0013 still didn't run, add column directly
+# Ensure pdf_url column exists (legacy check)
 echo "========================================"
 echo "🔧 ENSURING PDF_URL COLUMN EXISTS"
 echo "========================================"
