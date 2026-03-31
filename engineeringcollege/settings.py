@@ -22,7 +22,12 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
-ALLOWED_HOSTS = ['*'] if DEBUG else ['.onrender.com']
+ALLOWED_HOSTS = ['*'] if DEBUG else [
+    'localhost',
+    '127.0.0.1',
+    'anrkitdept.onrender.com',
+    '.onrender.com',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
@@ -90,7 +95,8 @@ if ON_RENDER:
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600
+            conn_max_age=600,
+            ssl_require=True
         )
     }
     print("[OK] PostgreSQL connected")
@@ -131,18 +137,23 @@ MEDIA_URL = '/media/'
 if ON_RENDER:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+CLOUDINARY_CONFIGURED = bool(os.environ.get('CLOUDINARY_CLOUD_NAME') and
+                              os.environ.get('CLOUDINARY_API_KEY') and
+                              os.environ.get('CLOUDINARY_API_SECRET'))
+
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
     api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
 )
 
 # ================================
 # AUTH REDIRECTS (OPTIONAL BUT GOOD)
 # ================================
-LOGIN_URL = '/admin/login/'
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # ================================
 # TIMEZONE
@@ -156,3 +167,8 @@ USE_TZ = True
 # DEFAULT PRIMARY KEY
 # ================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ================================
+# FILE UPLOAD SETTINGS
+# ================================
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000

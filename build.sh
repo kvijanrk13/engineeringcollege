@@ -57,6 +57,34 @@ with connection.cursor() as cursor:
         print("✅ pdf_url column already exists!")
 EOF
 
+# Ensure classes_taken column exists
+python manage.py shell << EOF
+from django.db import connection
+
+with connection.cursor() as cursor:
+    try:
+        cursor.execute("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name='dashboard_faculty' AND column_name='classes_taken'
+        """)
+        exists = cursor.fetchone()
+    except:
+        # fallback for sqlite
+        cursor.execute("PRAGMA table_info(dashboard_faculty)")
+        exists = any(col[1] == 'classes_taken' for col in cursor.fetchall())
+
+    if not exists:
+        print("⚠️ classes_taken column missing! Adding now...")
+        try:
+            cursor.execute("ALTER TABLE dashboard_faculty ADD COLUMN classes_taken integer NULL;")
+            print("✅ classes_taken column added!")
+        except Exception as e:
+            print(f"⚠️ Could not add column: {e}")
+    else:
+        print("✅ classes_taken column already exists!")
+EOF
+
 echo "========================================"
 echo "✅ Build completed successfully!"
 echo "========================================"

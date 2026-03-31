@@ -1,28 +1,59 @@
-# Create .gitignore file
-cat > .gitignore << EOF
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 *.so
+*.pyd
+*.pyo
+
+# Distribution / packaging
 .Python
-*.egg
-*.egg-info/
-dist/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
 *.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual Environment
-.env
-.venv
-venv/
-ENV/
-env/
-myenv/
-virtualenv/
+# PyInstaller
+*.manifest
+*.spec
 
-# Django
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
 *.log
 local_settings.py
 db.sqlite3
@@ -30,11 +61,87 @@ db.sqlite3-journal
 media/
 staticfiles/
 static_root/
+static/
 
-# Database
-*.sqlite3
+# Flask stuff:
+instance/
+.webassets-cache
 
-# IDE
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+myenv/
+virtualenv/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# IDE files
 .vscode/
 .idea/
 *.swp
@@ -42,8 +149,126 @@ static_root/
 *~
 .DS_Store
 Thumbs.db
+desktop.ini
+*.sublime-*
+*.sublime-project
+*.sublime-workspace
 
 # Project specific
 *.bak
 *.pid
-EOF
+*.log
+*.tmp
+*.temp
+backups/
+backup_*.sql
+backup_*.json
+*.zip
+*.tar.gz
+*.sqlite3
+
+# Render specific
+.render/
+.render.yaml
+
+# Cloudinary temporary files
+cloudinary_*.tmp
+
+# PDF temporary files
+temp_pdfs/
+merged_pdfs/
+
+# Secret keys and sensitive data
+.env.local
+.env.production
+.env.development
+secrets.json
+config.json
+*.key
+*.pem
+*.crt
+
+# Node modules (if any)
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Database backups
+*.dump
+*.sql
+
+# Media files (uploaded by users)
+media/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+
+# Static files collected by Django
+staticfiles/
+static_root/
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# Django migrations backup
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Cache
+.cache/
+__pycache__/
+
+# Test files
+test_*.py
+*_test.py
+tests/__pycache__/
+
+# Coverage reports
+.coverage
+.coverage.*
+htmlcov/
+
+# Debug files
+debug.log
+debug.txt

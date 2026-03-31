@@ -29,3 +29,7 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: ALLOWED_HOSTS
+        value: "anrkitdept.onrender.com"
+      - key: PYTHON_VERSION
+        value: "3.10.11"
