@@ -1020,35 +1020,49 @@ def home(request):
     })
 
 
-@login_required
 def dashboard(request):
-    total_faculty = Faculty.objects.count()
-    with_phd = Faculty.objects.exclude(phd_degree__isnull=True).exclude(phd_degree__exact='').count()
-    today = date.today()
-    exp_distribution = {'0-5': 0, '5-10': 0, '10-15': 0, '15+': 0}
-    for f in Faculty.objects.all():
-        if f.joining_date:
-            yrs = (today - f.joining_date).days / 365.25
-            if yrs <= 5:
-                exp_distribution['0-5'] += 1
-            elif yrs <= 10:
-                exp_distribution['5-10'] += 1
-            elif yrs <= 15:
-                exp_distribution['10-15'] += 1
-            else:
-                exp_distribution['15+'] += 1
-    return render(request, "dashboard/dashboard.html", {
-        'title': 'Dashboard',
-        'total_faculty': total_faculty,
-        'with_phd': with_phd,
-        'active_faculty': Faculty.objects.filter(is_active=True).count(),
-        'total_certificates': Certificate.objects.count(),
-        'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
-        'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
-        'recent_logs': FacultyLog.objects.order_by('-created_at')[:5],
-        'exp_distribution': exp_distribution,
-        'today': today, 'user': request.user,
-    })
+    """
+    Root URL view:
+    - If user is authenticated (admin), show the dashboard.
+    - Otherwise, show the login selection page.
+    """
+    if request.user.is_authenticated:
+        # User is an admin – show the full dashboard
+        total_faculty = Faculty.objects.count()
+        with_phd = Faculty.objects.exclude(phd_degree__isnull=True).exclude(phd_degree__exact='').count()
+        today = date.today()
+        exp_distribution = {'0-5': 0, '5-10': 0, '10-15': 0, '15+': 0}
+        for f in Faculty.objects.all():
+            if f.joining_date:
+                yrs = (today - f.joining_date).days / 365.25
+                if yrs <= 5:
+                    exp_distribution['0-5'] += 1
+                elif yrs <= 10:
+                    exp_distribution['5-10'] += 1
+                elif yrs <= 15:
+                    exp_distribution['10-15'] += 1
+                else:
+                    exp_distribution['15+'] += 1
+        return render(request, "dashboard/dashboard.html", {
+            'title': 'Dashboard',
+            'total_faculty': total_faculty,
+            'with_phd': with_phd,
+            'active_faculty': Faculty.objects.filter(is_active=True).count(),
+            'total_certificates': Certificate.objects.count(),
+            'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
+            'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
+            'recent_logs': FacultyLog.objects.order_by('-created_at')[:5],
+            'exp_distribution': exp_distribution,
+            'today': today,
+            'user': request.user,
+        })
+    else:
+        # No admin logged in – show the login selection page
+        return render(request, 'dashboard/login.html', {
+            'title': 'Login - ANURAG ENGINEERING COLLEGE',
+            'student_login': False,
+            'admin_login': False,
+        })
 
 
 @login_required
