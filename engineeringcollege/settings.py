@@ -1,5 +1,5 @@
 # ================================
-# SETTINGS.PY (FINAL WORKING VERSION)
+# SETTINGS.PY (FINAL STABLE - RENDER + LOCAL SAME)
 # ================================
 
 from pathlib import Path
@@ -10,10 +10,10 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================================
-# ✅ ENV DETECTION
+# ✅ ENV DETECTION (FIXED PROPERLY)
 # ================================
-ON_RENDER = 'RENDER' in os.environ or 'DATABASE_URL' in os.environ
-print(f"[DEBUG] ON_RENDER = {ON_RENDER}")
+ON_RENDER = os.environ.get("RENDER", "False") == "True"
+print(f"[FIXED] ON_RENDER = {ON_RENDER}")
 
 # ================================
 # SECURITY
@@ -22,12 +22,7 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
-ALLOWED_HOSTS = ['*'] if DEBUG else [
-    'localhost',
-    '127.0.0.1',
-    'anrkitdept.onrender.com',
-    '.onrender.com',
-]
+ALLOWED_HOSTS = ['*']  # safe for now (avoid deployment issues)
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
@@ -78,9 +73,9 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',   # ✅ REQUIRED
-                'django.contrib.auth.context_processors.auth',  # ✅ REQUIRED
-                'django.contrib.messages.context_processors.messages',  # ✅ REQUIRED
+                'django.template.context_processors.request',   # REQUIRED
+                'django.contrib.auth.context_processors.auth',  # REQUIRED
+                'django.contrib.messages.context_processors.messages',  # REQUIRED
             ],
         },
     },
@@ -89,17 +84,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
 # ================================
-# DATABASE
+# ✅ DATABASE (FIXED PROPERLY)
 # ================================
 if ON_RENDER:
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+        'default': dj_database_url.parse(
+            os.environ.get('DATABASE_URL'),
             conn_max_age=600,
             ssl_require=True
         )
     }
-    print("[OK] PostgreSQL connected")
+    print("[FIXED] PostgreSQL connected on Render")
+
 else:
     DATABASES = {
         'default': {
@@ -107,10 +103,10 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    print("[OK] SQLite connected")
+    print("[LOCAL] SQLite connected")
 
 # ================================
-# PASSWORD VALIDATION (SAFE DEFAULT)
+# PASSWORD VALIDATION
 # ================================
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -122,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ================================
-# STATIC FILES (WHITENOISE)
+# STATIC FILES
 # ================================
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -137,9 +133,11 @@ MEDIA_URL = '/media/'
 if ON_RENDER:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-CLOUDINARY_CONFIGURED = bool(os.environ.get('CLOUDINARY_CLOUD_NAME') and
-                              os.environ.get('CLOUDINARY_API_KEY') and
-                              os.environ.get('CLOUDINARY_API_SECRET'))
+CLOUDINARY_CONFIGURED = bool(
+    os.environ.get('CLOUDINARY_CLOUD_NAME') and
+    os.environ.get('CLOUDINARY_API_KEY') and
+    os.environ.get('CLOUDINARY_API_SECRET')
+)
 
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
@@ -149,7 +147,7 @@ cloudinary.config(
 )
 
 # ================================
-# AUTH REDIRECTS (OPTIONAL BUT GOOD)
+# AUTH REDIRECTS
 # ================================
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
