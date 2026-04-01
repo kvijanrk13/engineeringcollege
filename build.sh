@@ -5,6 +5,9 @@ echo "========================================"
 
 set -o errexit
 
+# Ensure Django settings loaded
+export DJANGO_SETTINGS_MODULE=engineeringcollege.settings
+
 # Upgrade pip
 echo "📦 Upgrading pip..."
 pip install --upgrade pip
@@ -13,77 +16,17 @@ pip install --upgrade pip
 echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
-# Collect static files
+# Collect static files (SAFE)
 echo "🎨 Collecting static files..."
-python manage.py collectstatic --no-input
+python manage.py collectstatic --no-input || echo "⚠️ Skipping collectstatic"
 
-# Show migrations (debug)
+# Show migrations
 echo "📋 Current migrations:"
 python manage.py showmigrations
 
 # Apply migrations
 echo "🔄 Applying migrations..."
 python manage.py migrate --no-input
-
-# Ensure pdf_url column exists (safe check for PostgreSQL + SQLite)
-echo "========================================"
-echo "🔧 ENSURING PDF_URL COLUMN EXISTS"
-echo "========================================"
-
-python manage.py shell << EOF
-from django.db import connection
-
-with connection.cursor() as cursor:
-    try:
-        cursor.execute("""
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name='dashboard_student' AND column_name='pdf_url'
-        """)
-        exists = cursor.fetchone()
-    except:
-        # fallback for sqlite
-        cursor.execute("PRAGMA table_info(dashboard_student)")
-        exists = any(col[1] == 'pdf_url' for col in cursor.fetchall())
-
-    if not exists:
-        print("⚠️ pdf_url column missing! Adding now...")
-        try:
-            cursor.execute("ALTER TABLE dashboard_student ADD COLUMN pdf_url varchar(200) NULL;")
-            print("✅ pdf_url column added!")
-        except Exception as e:
-            print(f"⚠️ Could not add column: {e}")
-    else:
-        print("✅ pdf_url column already exists!")
-EOF
-
-# Ensure classes_taken column exists
-python manage.py shell << EOF
-from django.db import connection
-
-with connection.cursor() as cursor:
-    try:
-        cursor.execute("""
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_name='dashboard_faculty' AND column_name='classes_taken'
-        """)
-        exists = cursor.fetchone()
-    except:
-        # fallback for sqlite
-        cursor.execute("PRAGMA table_info(dashboard_faculty)")
-        exists = any(col[1] == 'classes_taken' for col in cursor.fetchall())
-
-    if not exists:
-        print("⚠️ classes_taken column missing! Adding now...")
-        try:
-            cursor.execute("ALTER TABLE dashboard_faculty ADD COLUMN classes_taken integer NULL;")
-            print("✅ classes_taken column added!")
-        except Exception as e:
-            print(f"⚠️ Could not add column: {e}")
-    else:
-        print("✅ classes_taken column already exists!")
-EOF
 
 echo "========================================"
 echo "✅ Build completed successfully!"

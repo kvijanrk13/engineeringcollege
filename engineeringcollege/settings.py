@@ -10,10 +10,10 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================================
-# ✅ ENV DETECTION (FIXED PROPERLY)
+# ✅ ENV DETECTION (FINAL FIX)
 # ================================
-ON_RENDER = os.environ.get("RENDER", "False") == "True"
-print(f"[FIXED] ON_RENDER = {ON_RENDER}")
+ON_RENDER = os.environ.get("RENDER", "False") == "True" or os.environ.get("DATABASE_URL") is not None
+print(f"[FINAL] ON_RENDER = {ON_RENDER}")
 
 # ================================
 # SECURITY
@@ -22,7 +22,7 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
 
-ALLOWED_HOSTS = ['*']  # safe for now (avoid deployment issues)
+ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles',   # ✅ REQUIRED
 
     'cloudinary',
     'cloudinary_storage',
@@ -63,7 +63,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'engineeringcollege.urls'
 
 # ================================
-# ✅ TEMPLATES (FIXED)
+# TEMPLATES
 # ================================
 TEMPLATES = [
     {
@@ -73,9 +73,9 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',   # REQUIRED
-                'django.contrib.auth.context_processors.auth',  # REQUIRED
-                'django.contrib.messages.context_processors.messages',  # REQUIRED
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
             ],
         },
     },
@@ -84,7 +84,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
 # ================================
-# ✅ DATABASE (FIXED PROPERLY)
+# DATABASE
 # ================================
 if ON_RENDER:
     DATABASES = {
@@ -94,7 +94,7 @@ if ON_RENDER:
             ssl_require=True
         )
     }
-    print("[FIXED] PostgreSQL connected on Render")
+    print("[FINAL] PostgreSQL connected")
 
 else:
     DATABASES = {
@@ -104,18 +104,6 @@ else:
         }
     }
     print("[LOCAL] SQLite connected")
-
-# ================================
-# PASSWORD VALIDATION
-# ================================
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-]
 
 # ================================
 # STATIC FILES
@@ -133,12 +121,6 @@ MEDIA_URL = '/media/'
 if ON_RENDER:
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-CLOUDINARY_CONFIGURED = bool(
-    os.environ.get('CLOUDINARY_CLOUD_NAME') and
-    os.environ.get('CLOUDINARY_API_KEY') and
-    os.environ.get('CLOUDINARY_API_SECRET')
-)
-
 cloudinary.config(
     cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
     api_key=os.environ.get('CLOUDINARY_API_KEY'),
@@ -147,26 +129,7 @@ cloudinary.config(
 )
 
 # ================================
-# AUTH REDIRECTS
-# ================================
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
-
-# ================================
-# TIMEZONE
-# ================================
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Kolkata'
-USE_I18N = True
-USE_TZ = True
-
-# ================================
-# DEFAULT PRIMARY KEY
+# OTHER SETTINGS
 # ================================
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# ================================
-# FILE UPLOAD SETTINGS
-# ================================
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
