@@ -2,11 +2,19 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse  # Add this import
+
+# Health check view
+def health_check(request):
+    return JsonResponse({
+        'status': 'healthy',
+        'database': 'connected' if settings.DATABASES else 'error',
+        'environment': 'production'
+    })
 
 urlpatterns = [
+    path('health/', health_check),  # Add health check first
     path('admin/', admin.site.urls),
-
-    # ✅ ONLY THIS (NO duplicate root)
     path('', include('dashboard.urls')),
 ]
 

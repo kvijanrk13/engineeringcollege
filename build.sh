@@ -7,6 +7,7 @@ set -o errexit
 
 # Ensure Django settings loaded
 export DJANGO_SETTINGS_MODULE=engineeringcollege.settings
+export PYTHONUNBUFFERED=1
 
 # Upgrade pip
 echo "📦 Upgrading pip..."
@@ -16,17 +17,28 @@ pip install --upgrade pip
 echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
-# Collect static files (SAFE)
-echo "🎨 Collecting static files..."
-python manage.py collectstatic --no-input || echo "⚠️ Skipping collectstatic"
+# Check if we're on Render
+if [ -n "$RENDER" ]; then
+    echo "🖥️  Running on Render - using PostgreSQL"
+else
+    echo "💻 Running locally - using SQLite"
+fi
 
-# Show migrations
-echo "📋 Current migrations:"
+# Create necessary directories
+echo "📁 Creating necessary directories..."
+mkdir -p staticfiles media
+
+# Run migrations first (critical for PostgreSQL)
+echo "🔄 Applying database migrations..."
+python manage.py migrate --noinput
+
+# Show migration status (debugging)
+echo "📋 Migration status:"
 python manage.py showmigrations
 
-# Apply migrations
-echo "🔄 Applying migrations..."
-python manage.py migrate --no-input
+# Collect static files
+echo "🎨 Collecting static files..."
+python manage.py collectstatic --noinput
 
 echo "========================================"
 echo "✅ Build completed successfully!"

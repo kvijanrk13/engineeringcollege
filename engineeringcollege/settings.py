@@ -101,7 +101,7 @@ if ON_RENDER:
             ssl_require=True
         )
     }
-    print(f"[OK] PostgreSQL connected: {DATABASES['default']['ENGINE']}")
+    print(f"[OK] PostgreSQL connected")
 else:
     DATABASES = {
         'default': {
@@ -139,7 +139,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-]
+] if (BASE_DIR / 'static').exists() else []
 
 # Use WhiteNoise for static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
@@ -151,36 +151,40 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ================================
-# CLOUDINARY CONFIGURATION
+# CLOUDINARY CONFIGURATION (FIXED - No Circular Reference)
 # ================================
 CLOUDINARY_CONFIGURED = False
 
-if ON_RENDER:
-    # On Render, use environment variables
-    if os.environ.get('CLOUDINARY_CLOUD_NAME'):
+# Get Cloudinary credentials from environment variables only
+cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+api_key = os.environ.get('CLOUDINARY_API_KEY')
+api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+
+if cloud_name and api_key and api_secret:
+    try:
         CLOUDINARY_CONFIGURED = True
         cloudinary.config(
-            cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-            api_key=os.environ.get('CLOUDINARY_API_KEY'),
-            api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret,
             secure=True
         )
+
         # Use Cloudinary for media storage in production
-        DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-        print("[OK] Cloudinary configured successfully")
-    else:
-        print("[WARNING] Cloudinary credentials not found - using local storage")
+        if ON_RENDER:
+            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+            print("[OK] Cloudinary configured successfully (Render)")
+        else:
+            print("[OK] Cloudinary configured locally")
+
+    except Exception as e:
+        print(f"[ERROR] Cloudinary configuration failed: {e}")
+        CLOUDINARY_CONFIGURED = False
 else:
-    # Locally, check settings
-    if hasattr(settings, 'CLOUDINARY_CLOUD_NAME') and settings.CLOUDINARY_CLOUD_NAME:
-        CLOUDINARY_CONFIGURED = True
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
-            api_key=settings.CLOUDINARY_API_KEY,
-            api_secret=settings.CLOUDINARY_API_SECRET,
-            secure=True
-        )
-        print("[OK] Cloudinary configured locally")
+    if ON_RENDER:
+        print("[WARNING] Cloudinary credentials not found - using local storage")
+    else:
+        print("[WARNING] Cloudinary not configured - using local storage")
 
 # ================================
 # AUTH REDIRECTS
