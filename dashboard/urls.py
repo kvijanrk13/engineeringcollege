@@ -7,9 +7,9 @@ app_name = 'dashboard'
 
 urlpatterns = [
 
-    # ==================== ✅ FIXED ROOT (NO LOOP) ====================
-    path('', views.dashboard, name='dashboard'),  # MAIN HOME
-    path('home/', views.home, name='home'),
+    # ==================== ✅ FIX ROOT (NO LOOP) ====================
+    path('', views.login_view, name='login'),   # 🔥 FIXED (IMPORTANT)
+    path('home/', views.dashboard, name='dashboard'),
 
     # ==================== Dashboard ====================
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
@@ -47,7 +47,7 @@ urlpatterns = [
     path('faculty/<int:faculty_id>/profile/', views.faculty_profile_view, name='faculty_profile_view'),
     path('faculty/<int:faculty_id>/assign-subjects/', views.assign_subjects, name='assign_subjects'),
 
-    # ✅ PDF
+    # ==================== Faculty PDF ====================
     path('faculty/<int:faculty_id>/pdf/', views.faculty_pdf, name='faculty_pdf'),
     path('faculty/<int:faculty_id>/generate-pdf/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
     path('faculty/<int:faculty_id>/generate-pdf-clean/', views.generate_faculty_pdf_clean,
