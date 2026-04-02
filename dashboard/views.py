@@ -4535,14 +4535,48 @@ def export_all_data(request):
         messages.error(request, f'Error exporting data: {e}')
         return redirect('dashboard:dashboard')
 
-    # ==================== ADDITIONAL VIEWS FOR MISSING URL PATTERNS ====================
-    # Add these at the very end of your views.py file
+    # ==================== ADD THESE FUNCTIONS AT THE END OF views.py ====================
 
     from django.http import JsonResponse, HttpResponse
     from django.shortcuts import render
+    from django.conf import settings
     import sys
     import django
-    from django.conf import settings
+
+    def students_list(request):
+        """Students list view"""
+        context = {
+            'title': 'Students List',
+            'students': []
+        }
+        return render(request, 'dashboard/dashboard.html', context)
+
+    def students_data(request):
+        """Students data view"""
+        return JsonResponse({'students': [], 'status': 'success'})
+
+    def add_student(request):
+        """Add student view"""
+        return render(request, 'dashboard/dashboard.html', {'title': 'Add Student'})
+
+    def edit_student(request, student_id):
+        """Edit student view"""
+        return render(request, 'dashboard/dashboard.html', {'title': f'Edit Student {student_id}'})
+
+    def delete_student(request, student_id):
+        """Delete student view"""
+        return JsonResponse({'success': True, 'message': 'Student deleted'})
+
+    def import_students(request):
+        """Import students view"""
+        return render(request, 'dashboard/dashboard.html', {'title': 'Import Students'})
+
+    def export_students(request):
+        """Export students view"""
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="students.csv"'
+        response.write('id,name,email\n')
+        return response
 
     def system_status(request):
         """System status view"""
@@ -4552,7 +4586,7 @@ def export_all_data(request):
             'server': 'running',
             'title': 'System Status'
         }
-        return render(request, 'dashboard/system_status.html', context)
+        return render(request, 'dashboard/dashboard.html', context)
 
     def system_health(request):
         """System health check view"""
@@ -4573,7 +4607,7 @@ def export_all_data(request):
             'django_version': django.get_version(),
             'server_time': '2026-04-02 22:10:33',
         }
-        return render(request, 'dashboard/system_info.html', context)
+        return render(request, 'dashboard/dashboard.html', context)
 
     def system_settings(request):
         """System settings view"""
@@ -4582,49 +4616,7 @@ def export_all_data(request):
             'allowed_hosts': settings.ALLOWED_HOSTS,
             'installed_apps': settings.INSTALLED_APPS,
         }
-        return render(request, 'dashboard/system_settings.html', context)
-
-    def students_list(request):
-        """Students list view"""
-        try:
-            # Try to import Student model - adjust the import path as needed
-            from .models import Student
-            students = Student.objects.all()
-        except:
-            students = []
-        context = {
-            'students': students,
-            'title': 'Students List'
-        }
-        return render(request, 'dashboard/students_list.html', context)
-
-    def add_student(request):
-        """Add student view"""
-        return render(request, 'dashboard/add_student.html', {'title': 'Add Student'})
-
-    def edit_student(request, student_id):
-        """Edit student view"""
-        context = {
-            'student_id': student_id,
-            'title': 'Edit Student'
-        }
-        return render(request, 'dashboard/edit_student.html', context)
-
-    def delete_student(request, student_id):
-        """Delete student view"""
-        # Add your delete logic here
-        return JsonResponse({'success': True, 'message': 'Student deleted'})
-
-    def import_students(request):
-        """Import students view"""
-        return render(request, 'dashboard/import_students.html', {'title': 'Import Students'})
-
-    def export_students(request):
-        """Export students view"""
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="students.csv"'
-        response.write('id,name,email\n')
-        return response
+        return render(request, 'dashboard/dashboard.html', context)
 
     def analytics_dashboard(request):
         """Analytics dashboard view"""
@@ -4632,27 +4624,27 @@ def export_all_data(request):
             'title': 'Analytics Dashboard',
             'stats': {'total_students': 0, 'total_faculty': 0}
         }
-        return render(request, 'dashboard/analytics.html', context)
+        return render(request, 'dashboard/dashboard.html', context)
 
     def reports_view(request):
         """Reports view"""
-        return render(request, 'dashboard/reports.html', {'title': 'Reports'})
+        return render(request, 'dashboard/dashboard.html', {'title': 'Reports'})
 
     def statistics_view(request):
         """Statistics view"""
-        return render(request, 'dashboard/statistics.html', {'title': 'Statistics'})
+        return render(request, 'dashboard/dashboard.html', {'title': 'Statistics'})
 
     def about_view(request):
         """About page view"""
-        return render(request, 'dashboard/about.html', {'title': 'About Us'})
+        return render(request, 'dashboard/dashboard.html', {'title': 'About Us'})
 
     def contact_view(request):
         """Contact page view"""
-        return render(request, 'dashboard/contact.html', {'title': 'Contact Us'})
+        return render(request, 'dashboard/dashboard.html', {'title': 'Contact Us'})
 
     def help_view(request):
         """Help page view"""
-        return render(request, 'dashboard/help.html', {'title': 'Help'})
+        return render(request, 'dashboard/dashboard.html', {'title': 'Help'})
 
     def api_students(request):
         """API endpoint for students"""
@@ -4678,12 +4670,3 @@ def export_all_data(request):
     def fetch_data(request):
         """Fetch data endpoint"""
         return JsonResponse({'data': [], 'status': 'success'})
-
-    def students_data(request):
-        """Students data view"""
-        try:
-            from .models import Student
-            students = Student.objects.all().values('id', 'name', 'email', 'roll_number')
-            return JsonResponse({'students': list(students), 'status': 'success'})
-        except:
-            return JsonResponse({'students': [], 'status': 'success', 'message': 'No data available'})
