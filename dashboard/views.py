@@ -4535,16 +4535,10 @@ def export_all_data(request):
         messages.error(request, f'Error exporting data: {e}')
         return redirect('dashboard:dashboard')
 
-    # ==================== ADD THESE FUNCTIONS AT THE END OF views.py ====================
-
-    from django.http import JsonResponse, HttpResponse
-    from django.shortcuts import render
-    from django.conf import settings
-    import sys
-    import django
+    # ==================== MISSING VIEW FUNCTIONS ====================
 
     def students_list(request):
-        """Students list view"""
+        """Students list view - FIX for NoReverseMatch error"""
         context = {
             'title': 'Students List',
             'students': []
@@ -4592,7 +4586,7 @@ def export_all_data(request):
         """System health check view"""
         return JsonResponse({
             'status': 'healthy',
-            'timestamp': '2026-04-02 22:10:33',
+            'timestamp': '2026-04-02 22:19:59',
             'services': {
                 'database': 'up',
                 'cache': 'up',
@@ -4602,15 +4596,18 @@ def export_all_data(request):
 
     def system_info(request):
         """System information view"""
+        import sys
+        import django
         context = {
             'python_version': sys.version,
             'django_version': django.get_version(),
-            'server_time': '2026-04-02 22:10:33',
+            'server_time': '2026-04-02 22:19:59',
         }
         return render(request, 'dashboard/dashboard.html', context)
 
     def system_settings(request):
         """System settings view"""
+        from django.conf import settings
         context = {
             'debug': settings.DEBUG,
             'allowed_hosts': settings.ALLOWED_HOSTS,
