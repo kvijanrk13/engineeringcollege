@@ -26,6 +26,7 @@ urlpatterns = [
     path('student/<int:student_id>/', views.student_detail, name='student_detail'),
 
     # ==================== FACULTY ====================
+    path('faculty/', views.faculty_dashboard, name='faculty'),  # ✅ ADDED THIS LINE - fixes the error
     path('faculty/', views.faculty_dashboard, name='faculty_dashboard'),
     path('faculty/<int:faculty_id>/', views.faculty_dashboard, name='faculty_detail'),
     path('faculty/list/', views.faculty_list, name='faculty_list'),
