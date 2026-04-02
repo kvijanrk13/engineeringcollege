@@ -4538,8 +4538,11 @@ def export_all_data(request):
     # ==================== ADDITIONAL VIEWS FOR MISSING URL PATTERNS ====================
     # Add these at the very end of your views.py file
 
-    from django.http import JsonResponse
+    from django.http import JsonResponse, HttpResponse
     from django.shortcuts import render
+    import sys
+    import django
+    from django.conf import settings
 
     def system_status(request):
         """System status view"""
@@ -4565,8 +4568,6 @@ def export_all_data(request):
 
     def system_info(request):
         """System information view"""
-        import sys
-        import django
         context = {
             'python_version': sys.version,
             'django_version': django.get_version(),
@@ -4576,7 +4577,6 @@ def export_all_data(request):
 
     def system_settings(request):
         """System settings view"""
-        from django.conf import settings
         context = {
             'debug': settings.DEBUG,
             'allowed_hosts': settings.ALLOWED_HOSTS,
@@ -4587,8 +4587,9 @@ def export_all_data(request):
     def students_list(request):
         """Students list view"""
         try:
+            # Try to import Student model - adjust the import path as needed
             from .models import Student
-            students = Student.objects.all() if hasattr(Student, 'objects') else []
+            students = Student.objects.all()
         except:
             students = []
         context = {
@@ -4620,10 +4621,9 @@ def export_all_data(request):
 
     def export_students(request):
         """Export students view"""
-        import csv
-        from django.http import HttpResponse
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="students.csv"'
+        response.write('id,name,email\n')
         return response
 
     def analytics_dashboard(request):
@@ -4678,3 +4678,12 @@ def export_all_data(request):
     def fetch_data(request):
         """Fetch data endpoint"""
         return JsonResponse({'data': [], 'status': 'success'})
+
+    def students_data(request):
+        """Students data view"""
+        try:
+            from .models import Student
+            students = Student.objects.all().values('id', 'name', 'email', 'roll_number')
+            return JsonResponse({'students': list(students), 'status': 'success'})
+        except:
+            return JsonResponse({'students': [], 'status': 'success', 'message': 'No data available'})
