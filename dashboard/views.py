@@ -4535,45 +4535,11 @@ def export_all_data(request):
         messages.error(request, f'Error exporting data: {e}')
         return redirect('dashboard:dashboard')
 
-    # ==================== MISSING VIEW FUNCTIONS ====================
-
-    def students_list(request):
-        """Students list view - FIX for NoReverseMatch error"""
-        context = {
-            'title': 'Students List',
-            'students': []
-        }
-        return render(request, 'dashboard/dashboard.html', context)
-
-    def students_data(request):
-        """Students data view"""
-        return JsonResponse({'students': [], 'status': 'success'})
-
-    def add_student(request):
-        """Add student view"""
-        return render(request, 'dashboard/dashboard.html', {'title': 'Add Student'})
-
-    def edit_student(request, student_id):
-        """Edit student view"""
-        return render(request, 'dashboard/dashboard.html', {'title': f'Edit Student {student_id}'})
-
-    def delete_student(request, student_id):
-        """Delete student view"""
-        return JsonResponse({'success': True, 'message': 'Student deleted'})
-
-    def import_students(request):
-        """Import students view"""
-        return render(request, 'dashboard/dashboard.html', {'title': 'Import Students'})
-
-    def export_students(request):
-        """Export students view"""
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="students.csv"'
-        response.write('id,name,email\n')
-        return response
+    # ==================== ADD ALL THESE FUNCTIONS ====================
 
     def system_status(request):
         """System status view"""
+        from django.shortcuts import render
         context = {
             'status': 'healthy',
             'database': 'connected',
@@ -4584,9 +4550,10 @@ def export_all_data(request):
 
     def system_health(request):
         """System health check view"""
+        from django.http import JsonResponse
         return JsonResponse({
             'status': 'healthy',
-            'timestamp': '2026-04-02 22:19:59',
+            'timestamp': '2026-04-02 22:26:43',
             'services': {
                 'database': 'up',
                 'cache': 'up',
@@ -4596,17 +4563,19 @@ def export_all_data(request):
 
     def system_info(request):
         """System information view"""
+        from django.shortcuts import render
         import sys
         import django
         context = {
             'python_version': sys.version,
             'django_version': django.get_version(),
-            'server_time': '2026-04-02 22:19:59',
+            'server_time': '2026-04-02 22:26:43',
         }
         return render(request, 'dashboard/dashboard.html', context)
 
     def system_settings(request):
         """System settings view"""
+        from django.shortcuts import render
         from django.conf import settings
         context = {
             'debug': settings.DEBUG,
@@ -4615,8 +4584,46 @@ def export_all_data(request):
         }
         return render(request, 'dashboard/dashboard.html', context)
 
+    def students_list(request):
+        """Students list view"""
+        from django.shortcuts import render
+        context = {
+            'title': 'Students List',
+            'students': []
+        }
+        return render(request, 'dashboard/dashboard.html', context)
+
+    def add_student(request):
+        """Add student view"""
+        from django.shortcuts import render
+        return render(request, 'dashboard/dashboard.html', {'title': 'Add Student'})
+
+    def edit_student(request, student_id):
+        """Edit student view"""
+        from django.shortcuts import render
+        return render(request, 'dashboard/dashboard.html', {'title': f'Edit Student {student_id}'})
+
+    def delete_student(request, student_id):
+        """Delete student view"""
+        from django.http import JsonResponse
+        return JsonResponse({'success': True, 'message': 'Student deleted'})
+
+    def import_students(request):
+        """Import students view"""
+        from django.shortcuts import render
+        return render(request, 'dashboard/dashboard.html', {'title': 'Import Students'})
+
+    def export_students(request):
+        """Export students view"""
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="students.csv"'
+        response.write('id,name,email\n')
+        return response
+
     def analytics_dashboard(request):
         """Analytics dashboard view"""
+        from django.shortcuts import render
         context = {
             'title': 'Analytics Dashboard',
             'stats': {'total_students': 0, 'total_faculty': 0}
@@ -4625,34 +4632,42 @@ def export_all_data(request):
 
     def reports_view(request):
         """Reports view"""
+        from django.shortcuts import render
         return render(request, 'dashboard/dashboard.html', {'title': 'Reports'})
 
     def statistics_view(request):
         """Statistics view"""
+        from django.shortcuts import render
         return render(request, 'dashboard/dashboard.html', {'title': 'Statistics'})
 
     def about_view(request):
         """About page view"""
+        from django.shortcuts import render
         return render(request, 'dashboard/dashboard.html', {'title': 'About Us'})
 
     def contact_view(request):
         """Contact page view"""
+        from django.shortcuts import render
         return render(request, 'dashboard/dashboard.html', {'title': 'Contact Us'})
 
     def help_view(request):
         """Help page view"""
+        from django.shortcuts import render
         return render(request, 'dashboard/dashboard.html', {'title': 'Help'})
 
     def api_students(request):
         """API endpoint for students"""
+        from django.http import JsonResponse
         return JsonResponse({'students': [], 'count': 0})
 
     def api_faculty(request):
         """API endpoint for faculty"""
+        from django.http import JsonResponse
         return JsonResponse({'faculty': [], 'count': 0})
 
     def api_dashboard_stats(request):
         """API endpoint for dashboard statistics"""
+        from django.http import JsonResponse
         return JsonResponse({
             'total_students': 0,
             'total_faculty': 0,
@@ -4662,8 +4677,10 @@ def export_all_data(request):
 
     def get_data(request):
         """Generic data endpoint"""
+        from django.http import JsonResponse
         return JsonResponse({'data': [], 'status': 'success'})
 
     def fetch_data(request):
         """Fetch data endpoint"""
+        from django.http import JsonResponse
         return JsonResponse({'data': [], 'status': 'success'})
