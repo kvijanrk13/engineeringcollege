@@ -2,9 +2,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse  # Add this import
+from django.http import JsonResponse
 
-# Health check view
+# ==================== HEALTH CHECK ====================
 def health_check(request):
     return JsonResponse({
         'status': 'healthy',
@@ -12,18 +12,17 @@ def health_check(request):
         'environment': 'production'
     })
 
+# ==================== URLS ====================
 urlpatterns = [
-    path('health/', health_check),  # Add health check first
+    path('health/', health_check),
     path('admin/', admin.site.urls),
     path('', include('dashboard.urls')),
 ]
 
+# ==================== STATIC / MEDIA ====================
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# Error handlers
-handler400 = 'dashboard.views.handler400'
-handler403 = 'dashboard.views.handler403'
-handler404 = 'dashboard.views.handler404'
-handler500 = 'dashboard.views.handler500'
+# ==================== ❌ REMOVE ERROR HANDLERS ====================
+# (Do NOT define handlers unless you create them in views.py)
