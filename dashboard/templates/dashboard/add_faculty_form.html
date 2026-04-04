@@ -104,6 +104,23 @@
     .delete-btn {
         margin-right: 10px;
     }
+    .research-proof-item, .fdp-cert-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 12px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+    .research-proof-item .remove-proof, .fdp-cert-item .remove-cert {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -126,17 +143,11 @@
                         <input type="hidden" name="results_json" id="results_json" value="[]">
                         <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="[]">
 
-                        <!-- Hidden fields for additional documents – REMOVED: replaced by simple file inputs -->
-                        <!-- <input type="hidden" name="research_proof_files" id="research_proof_files" value="[]"> -->
-                        <!-- <input type="hidden" name="research_proof_academic_years" id="research_proof_academic_years" value="[]"> -->
-                        <!-- <input type="hidden" name="fdp_certificate_files" id="fdp_certificate_files" value="[]"> -->
-                        <!-- <input type="hidden" name="fdp_certificate_academic_years" id="fdp_certificate_academic_years" value="[]"> -->
-                        <!-- <input type="hidden" name="experience_certificate_files" id="experience_certificate_files" value="[]"> -->
-                        <!-- <input type="hidden" name="experience_certificate_academic_years" id="experience_certificate_academic_years" value="[]"> -->
-                        <!-- <input type="hidden" name="other_document_files" id="other_document_files" value="[]"> -->
-                        <!-- <input type="hidden" name="other_document_academic_years" id="other_document_academic_years" value="[]"> -->
+                        <!-- Hidden fields for multiple research proofs and FDP certificates -->
+                        <input type="hidden" name="research_proofs_data" id="research_proofs_data" value="[]">
+                        <input type="hidden" name="fdp_certificates_data" id="fdp_certificates_data" value="[]">
 
-                        <!-- Tabs Navigation - DOCUMENTS TAB MOVED TO LAST -->
+                        <!-- Tabs Navigation -->
                         <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
                             <li class="nav-item">
                                 <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
@@ -333,91 +344,26 @@
                                 <div class="form-section">
                                     <h4><i class="fas fa-graduation-cap me-2"></i>Education Details</h4>
                                     <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label>SSC Year</label>
-                                            <input type="number" name="ssc_year" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>SSC Percentage</label>
-                                            <input type="text" name="ssc_percent" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>School Name</label>
-                                            <input type="text" name="ssc_school" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>Intermediate Year</label>
-                                            <input type="number" name="inter_year" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>Intermediate Percentage</label>
-                                            <input type="text" name="inter_percent" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>College Name</label>
-                                            <input type="text" name="inter_college" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>UG Degree</label>
-                                            <input type="text" name="ug_degree" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>UG Year</label>
-                                            <input type="number" name="ug_year" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>UG Percentage/CGPA</label>
-                                            <input type="text" name="ug_percentage" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>UG College</label>
-                                            <input type="text" name="ug_college" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>UG Specialization</label>
-                                            <input type="text" name="ug_spec" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PG Degree</label>
-                                            <input type="text" name="pg_degree" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PG Year</label>
-                                            <input type="number" name="pg_year" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PG Percentage</label>
-                                            <input type="text" name="pg_percentage" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PG College</label>
-                                            <input type="text" name="pg_college" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PG Specialization</label>
-                                            <input type="text" name="pg_spec" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PhD Status</label>
-                                            <select name="phd_degree" class="form-control">
-                                                <option value="">Select Status</option>
-                                                {% for qual in qualifications %}
-                                                <option value="{{ qual }}">{{ qual }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PhD Year</label>
-                                            <input type="number" name="phd_year" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PhD University</label>
-                                            <input type="text" name="phd_university" class="form-control">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PhD Specialization</label>
-                                            <input type="text" name="phd_spec" class="form-control">
-                                        </div>
+                                        <div class="col-md-4 mb-3"><label>SSC Year</label><input type="number" name="ssc_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>SSC Percentage</label><input type="text" name="ssc_percent" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>School Name</label><input type="text" name="ssc_school" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>Intermediate Year</label><input type="number" name="inter_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>Intermediate Percentage</label><input type="text" name="inter_percent" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>College Name</label><input type="text" name="inter_college" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Degree</label><input type="text" name="ug_degree" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Year</label><input type="number" name="ug_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Percentage/CGPA</label><input type="text" name="ug_percentage" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG College</label><input type="text" name="ug_college" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Specialization</label><input type="text" name="ug_spec" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Degree</label><input type="text" name="pg_degree" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Year</label><input type="number" name="pg_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Percentage</label><input type="text" name="pg_percentage" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG College</label><input type="text" name="pg_college" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Specialization</label><input type="text" name="pg_spec" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Status</label><select name="phd_degree" class="form-control"><option value="">Select Status</option>{% for qual in qualifications %}<option value="{{ qual }}">{{ qual }}</option>{% endfor %}</select></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Year</label><input type="number" name="phd_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD University</label><input type="text" name="phd_university" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Specialization</label><input type="text" name="phd_spec" class="form-control"></div>
                                     </div>
                                 </div>
                             </div>
@@ -427,133 +373,53 @@
                                 <div class="form-section">
                                     <h4><i class="fas fa-info-circle me-2"></i>Additional Information</h4>
                                     <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label>Subjects Dealt</label>
-                                            <textarea name="subjects_dealt" class="form-control" rows="3" placeholder="e.g. DBMS, PPS, DATA MINING (comma separated)"></textarea>
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>SCM (Service Cum Merit)</label>
-                                            <textarea name="scm" class="form-control" rows="3"></textarea>
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>About Yourself (Mention Your Roles and Responsibilities)</label>
-                                            <textarea name="about_yourself" class="form-control" rows="4" placeholder="e.g., HOD of IT Department, Class Coordinator, Examination Coordinator, NBA Coordinator, etc."></textarea>
-                                            <div class="help-text">
-                                                Please mention your roles and responsibilities in the college.
-                                            </div>
-                                        </div>
+                                        <div class="col-md-12 mb-3"><label>Subjects Dealt</label><textarea name="subjects_dealt" class="form-control" rows="3" placeholder="e.g. DBMS, PPS, DATA MINING (comma separated)"></textarea></div>
+                                        <div class="col-md-12 mb-3"><label>SCM (Service Cum Merit)</label><textarea name="scm" class="form-control" rows="3"></textarea></div>
+                                        <div class="col-md-12 mb-3"><label>About Yourself (Mention Your Roles and Responsibilities)</label><textarea name="about_yourself" class="form-control" rows="4" placeholder="e.g., HOD of IT Department, Class Coordinator, Examination Coordinator, NBA Coordinator, etc."></textarea><div class="help-text">Please mention your roles and responsibilities in the college.</div></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 5: RESEARCH & PUBLICATIONS (WITH ACADEMIC YEAR) ==================== -->
+                            <!-- ==================== TAB 5: RESEARCH & PUBLICATIONS ==================== -->
                             <div class="tab-pane fade" id="tab-research">
                                 <div class="p-3">
-                                    <h5 class="text-primary mb-1">
-                                        <i class="fas fa-book-open me-2"></i>Research &amp; Publications
-                                    </h5>
+                                    <h5 class="text-primary mb-1"><i class="fas fa-book-open me-2"></i>Research &amp; Publications</h5>
                                     <p class="text-muted small mb-3">Add journal papers, conference papers, books, or patents.</p>
 
-                                    <!-- Simple file upload for Research Publications Proof (replaces dynamic list) -->
+                                    <!-- Research Publications Proof Documents with ADD BUTTON -->
                                     <div class="card border-info mb-3">
-                                        <div class="card-header bg-info text-white py-2">
-                                            <i class="fas fa-upload me-1"></i>Research Publications Proof Document
+                                        <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-upload me-1"></i>Research Publications Proof Documents</span>
+                                            <button type="button" class="btn btn-sm btn-light" id="addResearchProofBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Proof Document
+                                            </button>
                                         </div>
                                         <div class="card-body">
-                                            <div class="row g-2">
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Upload Proof (PDF, JPG, PNG)</label>
-                                                    <input type="file" name="research_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Academic Year</label>
-                                                    <input type="text" name="research_proof_academic_year" class="form-control" placeholder="e.g., 2023-24">
-                                                </div>
-                                            </div>
-                                            <div class="help-text mt-2">Upload supporting proof for research publications.</div>
+                                            <div id="researchProofsContainer"></div>
+                                            <div class="help-text mt-2">Upload supporting proof documents for research publications. Click "Add Proof Document" to add multiple files.</div>
                                         </div>
                                     </div>
 
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="research-table">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Type</th>
-                                                    <th>Title</th>
-                                                    <th>Authors</th>
-                                                    <th>Academic Year</th>
-                                                    <th>Year</th>
-                                                    <th>Journal / Conference</th>
-                                                    <th>Status</th>
-                                                    <th>Remove</th>
-                                                 </thead>
-                                            <tbody id="research-tbody">
-                                                <tr id="no-research-row">
-                                                    <td colspan="9" class="text-center text-muted fst-italic py-3">
-                                                        No publications added yet. Use the form below.
-                                                    </td>
-                                                </tr>
-                                            </tbody>
+                                            <thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Authors</th><th>Academic Year</th><th>Year</th><th>Journal / Conference</th><th>Status</th><th>Remove</th></tr></thead>
+                                            <tbody id="research-tbody"><tr id="no-research-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr></tbody>
                                         </table>
                                     </div>
                                     <div class="card border-primary">
-                                        <div class="card-header bg-primary text-white py-2">
-                                            <i class="fas fa-plus me-1"></i>Add Publication
-                                        </div>
+                                        <div class="card-header bg-primary text-white py-2"><i class="fas fa-plus me-1"></i>Add Publication</div>
                                         <div class="card-body">
                                             <div class="row g-2">
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Type *</label>
-                                                    <select class="form-select form-select-sm" id="rp-type">
-                                                        <option value="journal">Journal Article</option>
-                                                        <option value="conference">Conference Paper</option>
-                                                        <option value="book">Book / Chapter</option>
-                                                        <option value="patent">Patent</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-9">
-                                                    <label class="form-label small fw-bold">Title *</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication">
-                                                </div>
-                                                <div class="col-md-5">
-                                                    <label class="form-label small fw-bold">Authors</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Academic Year</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-academic-year" placeholder="e.g., 2023-24">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Year</label>
-                                                    <input type="number" class="form-control form-control-sm" id="rp-year" min="1990" max="2030" placeholder="2024">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Status</label>
-                                                    <select class="form-select form-select-sm" id="rp-status">
-                                                        <option value="published">Published</option>
-                                                        <option value="accepted">Accepted</option>
-                                                        <option value="under_review">Under Review</option>
-                                                        <option value="submitted">Submitted</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small fw-bold">Journal / Conference Name</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small fw-bold">DOI / URL</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="https://doi.org/...">
-                                                </div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Type *</label><select class="form-select form-select-sm" id="rp-type"><option value="journal">Journal Article</option><option value="conference">Conference Paper</option><option value="book">Book / Chapter</option><option value="patent">Patent</option></select></div>
+                                                <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication"></div>
+                                                <div class="col-md-5"><label class="form-label small fw-bold">Authors</label><input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rp-academic-year" placeholder="e.g., 2023-24"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Year</label><input type="number" class="form-control form-control-sm" id="rp-year" min="1990" max="2030" placeholder="2024"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Status</label><select class="form-select form-select-sm" id="rp-status"><option value="published">Published</option><option value="accepted">Accepted</option><option value="under_review">Under Review</option><option value="submitted">Submitted</option></select></div>
+                                                <div class="col-md-6"><label class="form-label small fw-bold">Journal / Conference Name</label><input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name"></div>
+                                                <div class="col-md-6"><label class="form-label small fw-bold">DOI / URL</label><input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="https://doi.org/..."></div>
                                             </div>
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="addResearchPublication()">
-                                                    <i class="fas fa-plus me-1"></i>Add Publication
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResearchForm()">
-                                                    Clear
-                                                </button>
-                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-primary btn-sm" onclick="addResearchPublication()"><i class="fas fa-plus me-1"></i>Add Publication</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResearchForm()">Clear</button></div>
                                         </div>
                                     </div>
                                 </div>
@@ -562,404 +428,138 @@
                             <!-- ==================== TAB 6: B.TECH PROJECTS ==================== -->
                             <div class="tab-pane fade" id="tab-projects">
                                 <div class="p-3">
-                                    <h5 class="text-primary mb-1">
-                                        <i class="fas fa-project-diagram me-2"></i>B.Tech Projects Handled
-                                    </h5>
+                                    <h5 class="text-primary mb-1"><i class="fas fa-project-diagram me-2"></i>B.Tech Projects Handled</h5>
                                     <p class="text-muted small mb-3">Add B.Tech student projects supervised by this faculty.</p>
                                     <div class="table-responsive mb-3">
-                                        <table class="table table-bordered table-sm align-middle" id="projects-table">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>H.T. No.</th>
-                                                    <th>Student Name</th>
-                                                    <th>Batch</th>
-                                                    <th>Project Title</th>
-                                                    <th>Approved</th>
-                                                    <th>Marks</th>
-                                                    <th>Remove</th>
-                                                 </thead>
-                                            <tbody id="projects-tbody">
-                                                <tr id="no-projects-row">
-                                                    <td colspan="8" class="text-center text-muted fst-italic py-3">
-                                                        No projects added yet. Use the form below.
-                                                     </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <table class="table table-bordered table-sm align-middle" id="projects-table"><thead class="table-light"><tr><th>#</th><th>H.T. No.</th><th>Student Name</th><th>Batch</th><th>Project Title</th><th>Approved</th><th>Marks</th><th>Remove</th></tr></thead><tbody id="projects-tbody"><tr id="no-projects-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below.</td></tr></tbody></table>
                                     </div>
                                     <div class="card border-primary">
-                                        <div class="card-header bg-primary text-white py-2">
-                                            <i class="fas fa-plus me-1"></i>Add Project
-                                        </div>
+                                        <div class="card-header bg-primary text-white py-2"><i class="fas fa-plus me-1"></i>Add Project</div>
                                         <div class="card-body">
                                             <div class="row g-2">
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">H.T. No. *</label>
-                                                    <input type="text" class="form-control form-control-sm" id="bp-htno" placeholder="e.g. 19A81A0501">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label small fw-bold">Student Name *</label>
-                                                    <input type="text" class="form-control form-control-sm" id="bp-student" placeholder="Full name of student">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Batch</label>
-                                                    <input type="text" class="form-control form-control-sm" id="bp-batch" placeholder="e.g. 2019-23">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Marks (out of 100)</label>
-                                                    <input type="number" class="form-control form-control-sm" id="bp-marks" min="0" max="100" placeholder="Marks">
-                                                </div>
-                                                <div class="col-md-9">
-                                                    <label class="form-label small fw-bold">Project Title *</label>
-                                                    <input type="text" class="form-control form-control-sm" id="bp-title" placeholder="Full project title">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Approved?</label>
-                                                    <select class="form-select form-select-sm" id="bp-approved">
-                                                        <option value="true">Yes</option>
-                                                        <option value="false">No</option>
-                                                    </select>
-                                                </div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">H.T. No. *</label><input type="text" class="form-control form-control-sm" id="bp-htno" placeholder="e.g. 19A81A0501"></div>
+                                                <div class="col-md-4"><label class="form-label small fw-bold">Student Name *</label><input type="text" class="form-control form-control-sm" id="bp-student" placeholder="Full name of student"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Batch</label><input type="text" class="form-control form-control-sm" id="bp-batch" placeholder="e.g. 2019-23"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Marks (out of 100)</label><input type="number" class="form-control form-control-sm" id="bp-marks" min="0" max="100" placeholder="Marks"></div>
+                                                <div class="col-md-9"><label class="form-label small fw-bold">Project Title *</label><input type="text" class="form-control form-control-sm" id="bp-title" placeholder="Full project title"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Approved?</label><select class="form-select form-select-sm" id="bp-approved"><option value="true">Yes</option><option value="false">No</option></select></div>
                                             </div>
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-primary btn-sm" onclick="addBTechProject()">
-                                                    <i class="fas fa-plus me-1"></i>Add Project
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearProjectForm()">
-                                                    Clear
-                                                </button>
-                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-primary btn-sm" onclick="addBTechProject()"><i class="fas fa-plus me-1"></i>Add Project</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearProjectForm()">Clear</button></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 7: FDP / WORKSHOPS (WITH ACADEMIC YEAR) ==================== -->
+                            <!-- ==================== TAB 7: FDP / WORKSHOPS ==================== -->
                             <div class="tab-pane fade" id="tab-fdp">
                                 <div class="p-3">
-                                    <h5 class="text-primary mb-1">
-                                        <i class="fas fa-chalkboard-user me-2"></i>FDP / Workshops Attended
-                                    </h5>
+                                    <h5 class="text-primary mb-1"><i class="fas fa-chalkboard-user me-2"></i>FDP / Workshops Attended</h5>
                                     <p class="text-muted small mb-3">Add Faculty Development Programs, Workshops, Seminars, Conferences, and Training Programs attended by this faculty.</p>
 
-                                    <!-- Simple file upload for FDP Certificate (replaces dynamic list) -->
+                                    <!-- FDP Certificates with ADD BUTTON -->
                                     <div class="card border-warning mb-3">
-                                        <div class="card-header bg-warning text-white py-2">
-                                            <i class="fas fa-certificate me-1"></i>FDP Certificate
+                                        <div class="card-header bg-warning text-white py-2 d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-certificate me-1"></i>FDP Certificates</span>
+                                            <button type="button" class="btn btn-sm btn-light" id="addFDPCertificateBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Certificate
+                                            </button>
                                         </div>
                                         <div class="card-body">
-                                            <div class="row g-2">
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Upload Certificate (PDF, JPG, PNG)</label>
-                                                    <input type="file" name="fdp_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Academic Year</label>
-                                                    <input type="text" name="fdp_certificate_academic_year" class="form-control" placeholder="e.g., 2023-24">
-                                                </div>
-                                            </div>
-                                            <div class="help-text mt-2">Upload FDP/Workshop certificate.</div>
+                                            <div id="fdpCertificatesContainer"></div>
+                                            <div class="help-text mt-2">Upload FDP/Workshop certificates. Click "Add Certificate" to upload multiple files.</div>
                                         </div>
                                     </div>
 
                                     <div class="table-responsive mb-3">
-                                        <table class="table table-bordered table-sm align-middle" id="fdp-table">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Type</th>
-                                                    <th>Title</th>
-                                                    <th>Academic Year</th>
-                                                    <th>From Date</th>
-                                                    <th>To Date</th>
-                                                    <th>Organized By</th>
-                                                    <th>Place</th>
-                                                    <th>Role</th>
-                                                    <th>Remove</th>
-                                                 </thead>
-                                            <tbody id="fdp-tbody">
-                                                <tr id="no-fdp-row">
-                                                    <td colspan="10" class="text-center text-muted fst-italic py-3">
-                                                        No FDP/Workshop entries added yet. Use the form below.
-                                                     </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <table class="table table-bordered table-sm align-middle" id="fdp-table"><thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Academic Year</th><th>From Date</th><th>To Date</th><th>Organized By</th><th>Place</th><th>Role</th><th>Remove</th></tr></thead><tbody id="fdp-tbody"><tr id="no-fdp-row"><td colspan="10" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td></tr></tbody></table>
                                     </div>
                                     <div class="card border-info">
-                                        <div class="card-header bg-info text-white py-2">
-                                            <i class="fas fa-plus me-1"></i>Add FDP / Workshop
-                                        </div>
+                                        <div class="card-header bg-info text-white py-2"><i class="fas fa-plus me-1"></i>Add FDP / Workshop</div>
                                         <div class="card-body">
                                             <div class="row g-2">
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Type *</label>
-                                                    <select class="form-select form-select-sm" id="fdp-type">
-                                                        <option value="fdp">FDP</option>
-                                                        <option value="workshop">Workshop</option>
-                                                        <option value="seminar">Seminar</option>
-                                                        <option value="conference">Conference</option>
-                                                        <option value="training">Training Program</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-9">
-                                                    <label class="form-label small fw-bold">Title *</label>
-                                                    <input type="text" class="form-control form-control-sm" id="fdp-title" placeholder="Title of FDP/Workshop">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Academic Year</label>
-                                                    <input type="text" class="form-control form-control-sm" id="fdp-academic-year" placeholder="e.g., 2023-24">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">From Date *</label>
-                                                    <input type="date" class="form-control form-control-sm" id="fdp-from">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">To Date *</label>
-                                                    <input type="date" class="form-control form-control-sm" id="fdp-to">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Organized By</label>
-                                                    <input type="text" class="form-control form-control-sm" id="fdp-organized" placeholder="Organizing institution">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Place</label>
-                                                    <input type="text" class="form-control form-control-sm" id="fdp-place" placeholder="Location">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Mode</label>
-                                                    <select class="form-select form-select-sm" id="fdp-mode">
-                                                        <option value="offline">Offline</option>
-                                                        <option value="online">Online</option>
-                                                        <option value="hybrid">Hybrid</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Level</label>
-                                                    <select class="form-select form-select-sm" id="fdp-level">
-                                                        <option value="institute">Institute Level</option>
-                                                        <option value="college">College Level</option>
-                                                        <option value="university">University Level</option>
-                                                        <option value="state">State Level</option>
-                                                        <option value="national">National Level</option>
-                                                        <option value="international">International Level</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Role</label>
-                                                    <select class="form-select form-select-sm" id="fdp-role">
-                                                        <option value="participant">Participant</option>
-                                                        <option value="presenter">Presenter</option>
-                                                        <option value="resource_person">Resource Person</option>
-                                                        <option value="organizer">Organizer</option>
-                                                        <option value="coordinator">Coordinator</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Sponsored By</label>
-                                                    <input type="text" class="form-control form-control-sm" id="fdp-sponsored" placeholder="Sponsoring agency">
-                                                </div>
-                                                <div class="col-md-12">
-                                                    <label class="form-label small fw-bold">Remarks</label>
-                                                    <input type="text" class="form-control form-control-sm" id="fdp-remarks" placeholder="Any remarks">
-                                                </div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Type *</label><select class="form-select form-select-sm" id="fdp-type"><option value="fdp">FDP</option><option value="workshop">Workshop</option><option value="seminar">Seminar</option><option value="conference">Conference</option><option value="training">Training Program</option></select></div>
+                                                <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="fdp-title" placeholder="Title of FDP/Workshop"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="fdp-academic-year" placeholder="e.g., 2023-24"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">From Date *</label><input type="date" class="form-control form-control-sm" id="fdp-from"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">To Date *</label><input type="date" class="form-control form-control-sm" id="fdp-to"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Organized By</label><input type="text" class="form-control form-control-sm" id="fdp-organized" placeholder="Organizing institution"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Place</label><input type="text" class="form-control form-control-sm" id="fdp-place" placeholder="Location"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Mode</label><select class="form-select form-select-sm" id="fdp-mode"><option value="offline">Offline</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Level</label><select class="form-select form-select-sm" id="fdp-level"><option value="institute">Institute Level</option><option value="college">College Level</option><option value="university">University Level</option><option value="state">State Level</option><option value="national">National Level</option><option value="international">International Level</option></select></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Role</label><select class="form-select form-select-sm" id="fdp-role"><option value="participant">Participant</option><option value="presenter">Presenter</option><option value="resource_person">Resource Person</option><option value="organizer">Organizer</option><option value="coordinator">Coordinator</option></select></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Sponsored By</label><input type="text" class="form-control form-control-sm" id="fdp-sponsored" placeholder="Sponsoring agency"></div>
+                                                <div class="col-md-12"><label class="form-label small fw-bold">Remarks</label><input type="text" class="form-control form-control-sm" id="fdp-remarks" placeholder="Any remarks"></div>
                                             </div>
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-info btn-sm" onclick="addFDP()">
-                                                    <i class="fas fa-plus me-1"></i>Add FDP / Workshop
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearFDPForm()">
-                                                    Clear
-                                                </button>
-                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-info btn-sm" onclick="addFDP()"><i class="fas fa-plus me-1"></i>Add FDP / Workshop</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearFDPForm()">Clear</button></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 8: RESULTS (WITH ACADEMIC YEAR) ==================== -->
+                            <!-- ==================== TAB 8: RESULTS ==================== -->
                             <div class="tab-pane fade" id="tab-results">
                                 <div class="p-3">
-                                    <h5 class="text-primary mb-1">
-                                        <i class="fas fa-chart-line me-2"></i>Results / Academic Performance
-                                    </h5>
-                                    <p class="text-muted small mb-3">
-                                        Enter subject-wise results. <strong class="text-success">Pass percentage is calculated automatically.</strong>
-                                    </p>
+                                    <h5 class="text-primary mb-1"><i class="fas fa-chart-line me-2"></i>Results / Academic Performance</h5>
+                                    <p class="text-muted small mb-3">Enter subject-wise results. <strong class="text-success">Pass percentage is calculated automatically.</strong></p>
 
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="results-table">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Subject Name</th>
-                                                    <th>Subject Code</th>
-                                                    <th>Academic Year</th>
-                                                    <th>Classes Taken</th>
-                                                    <th>Attempted</th>
-                                                    <th>Passed</th>
-                                                    <th class="text-success">Pass % <small>(Auto)</small></th>
-                                                    <th>Remove</th>
-                                                 </thead>
-                                            <tbody id="results-tbody">
-                                                <tr id="no-results-row">
-                                                    <td colspan="9" class="text-center text-muted fst-italic py-3">
-                                                        No results added yet. Use the form below.
-                                                     </td>
-                                                </tr>
-                                            </tbody>
+                                            <thead class="table-light"><tr><th>#</th><th>Subject Name</th><th>Subject Code</th><th>Academic Year</th><th>Classes Taken</th><th>Attempted</th><th>Passed</th><th class="text-success">Pass % <small>(Auto)</small></th><th>Remove</th></tr></thead>
+                                            <tbody id="results-tbody"><tr id="no-results-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below.</td></tr></tbody>
                                         </table>
                                     </div>
                                     <div class="card border-success">
-                                        <div class="card-header bg-success text-white py-2">
-                                            <i class="fas fa-plus me-1"></i>Add Subject Result
-                                        </div>
+                                        <div class="card-header bg-success text-white py-2"><i class="fas fa-plus me-1"></i>Add Subject Result</div>
                                         <div class="card-body">
                                             <div class="row g-2 align-items-end">
-                                                <div class="col-md-3">
-                                                    <label class="form-label small fw-bold">Subject Name *</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rs-subject" placeholder="e.g. DBMS">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Subject Code</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rs-code" placeholder="e.g. CS501">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Academic Year</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rs-academic-year" placeholder="e.g., 2023-24">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Classes Taken *</label>
-                                                    <input type="number" class="form-control form-control-sm" id="rs-classes" min="0" placeholder="e.g. 45">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Attempted *</label>
-                                                    <input type="number" class="form-control form-control-sm" id="rs-attempted" min="0" placeholder="60" oninput="autoCalculatePercent()">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="form-label small fw-bold">Passed *</label>
-                                                    <input type="number" class="form-control form-control-sm" id="rs-passed" min="0" placeholder="54" oninput="autoCalculatePercent()">
-                                                </div>
-                                                <div class="col-md-1">
-                                                    <label class="form-label small fw-bold text-success">Pass %</label>
-                                                    <input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0%">
-                                                </div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Subject Name *</label><input type="text" class="form-control form-control-sm" id="rs-subject" placeholder="e.g. DBMS"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Subject Code</label><input type="text" class="form-control form-control-sm" id="rs-code" placeholder="e.g. CS501"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rs-academic-year" placeholder="e.g., 2023-24"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Classes Taken *</label><input type="number" class="form-control form-control-sm" id="rs-classes" min="0" placeholder="e.g. 45"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Attempted *</label><input type="number" class="form-control form-control-sm" id="rs-attempted" min="0" placeholder="60" oninput="autoCalculatePercent()"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Passed *</label><input type="number" class="form-control form-control-sm" id="rs-passed" min="0" placeholder="54" oninput="autoCalculatePercent()"></div>
+                                                <div class="col-md-1"><label class="form-label small fw-bold text-success">Pass %</label><input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0%"></div>
                                             </div>
-                                            <div class="mt-3">
-                                                <button type="button" class="btn btn-success btn-sm" onclick="addResult()">
-                                                    <i class="fas fa-plus me-1"></i>Add Result
-                                                </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResultForm()">
-                                                    Clear
-                                                </button>
-                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-success btn-sm" onclick="addResult()"><i class="fas fa-plus me-1"></i>Add Result</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResultForm()">Clear</button></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ==================== TAB 9: DOCUMENTS (WITH ACADEMIC YEAR) ==================== -->
+                            <!-- ==================== TAB 9: DOCUMENTS ==================== -->
                             <div class="tab-pane fade" id="documents">
-                                <div class="form-section">
-                                    <h4><i class="fas fa-file-alt me-2"></i>Identity Documents</h4>
+                                <div class="form-section"><h4><i class="fas fa-file-alt me-2"></i>Identity Documents</h4>
                                     <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label>Aadhar Card</label>
-                                            <input type="file" name="aadhar_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label>PAN Card</label>
-                                            <input type="file" name="pan_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label>APAAR Document</label>
-                                            <input type="file" name="apaar_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label>SCM Document</label>
-                                            <input type="file" name="scm_file" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>JNTUH Bio-Data</label>
-                                            <input type="file" name="jntuh_biodata" class="form-control">
-                                        </div>
+                                        <div class="col-md-6 mb-3"><label>Aadhar Card</label><input type="file" name="aadhar_file" class="form-control"></div>
+                                        <div class="col-md-6 mb-3"><label>PAN Card</label><input type="file" name="pan_file" class="form-control"></div>
+                                        <div class="col-md-6 mb-3"><label>APAAR Document</label><input type="file" name="apaar_file" class="form-control"></div>
+                                        <div class="col-md-6 mb-3"><label>SCM Document</label><input type="file" name="scm_file" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>JNTUH Bio-Data</label><input type="file" name="jntuh_biodata" class="form-control"></div>
                                     </div>
                                 </div>
-
-                                <div class="form-section">
-                                    <h4><i class="fas fa-graduation-cap me-2"></i>Educational Certificates</h4>
+                                <div class="form-section"><h4><i class="fas fa-graduation-cap me-2"></i>Educational Certificates</h4>
                                     <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label>SSC Certificate</label>
-                                            <input type="file" name="ssc_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>Intermediate Certificate</label>
-                                            <input type="file" name="inter_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>UG Certificate</label>
-                                            <input type="file" name="ug_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>PG Certificate</label>
-                                            <input type="file" name="pg_certificate" class="form-control">
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label>PhD Certificate</label>
-                                            <input type="file" name="phd_certificate" class="form-control">
-                                        </div>
+                                        <div class="col-md-12 mb-3"><label>SSC Certificate</label><input type="file" name="ssc_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>Intermediate Certificate</label><input type="file" name="inter_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>UG Certificate</label><input type="file" name="ug_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>PG Certificate</label><input type="file" name="pg_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>PhD Certificate</label><input type="file" name="phd_certificate" class="form-control"></div>
                                     </div>
                                 </div>
-
-                                <!-- Simple file upload for Experience Certificates (replaces dynamic list) -->
-                                <div class="form-section">
-                                    <h4><i class="fas fa-briefcase me-2"></i>Experience Certificates</h4>
-                                    <div class="document-card">
-                                        <div class="row g-2">
-                                            <div class="col-md-6">
-                                                <label>Upload Experience Certificate (PDF, JPG, PNG)</label>
-                                                <input type="file" name="experience_certificates" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label>Academic Year</label>
-                                                <input type="text" name="experience_certificates_academic_year" class="form-control" placeholder="e.g., 2023-24">
-                                            </div>
-                                        </div>
-                                        <div class="help-text mt-2">Upload experience certificates.</div>
-                                    </div>
+                                <div class="form-section"><h4><i class="fas fa-briefcase me-2"></i>Experience Certificates</h4>
+                                    <div class="document-card"><div class="row g-2"><div class="col-md-6"><label>Upload Experience Certificate (PDF, JPG, PNG)</label><input type="file" name="experience_certificates" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div><div class="col-md-6"><label>Academic Year</label><input type="text" name="experience_certificates_academic_year" class="form-control" placeholder="e.g., 2023-24"></div></div><div class="help-text mt-2">Upload experience certificates.</div></div>
                                 </div>
-
-                                <!-- Simple file upload for Other Documents (replaces dynamic list) -->
-                                <div class="form-section">
-                                    <h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
-                                    <div class="document-card">
-                                        <div class="row g-2">
-                                            <div class="col-md-6">
-                                                <label>Upload Other Document (PDF, JPG, PNG)</label>
-                                                <input type="file" name="other_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label>Academic Year</label>
-                                                <input type="text" name="other_documents_academic_year" class="form-control" placeholder="e.g., 2023-24">
-                                            </div>
-                                        </div>
-                                        <div class="help-text mt-2">Upload any other relevant documents.</div>
-                                    </div>
+                                <div class="form-section"><h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
+                                    <div class="document-card"><div class="row g-2"><div class="col-md-6"><label>Upload Other Document (PDF, JPG, PNG)</label><input type="file" name="other_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div><div class="col-md-6"><label>Academic Year</label><input type="text" name="other_documents_academic_year" class="form-control" placeholder="e.g., 2023-24"></div></div><div class="help-text mt-2">Upload any other relevant documents.</div></div>
                                 </div>
                             </div>
-                        </div><!-- end tab-content -->
+                        </div>
 
                         <!-- Form Actions -->
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
-                            <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg">
-                                <i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form
-                            </button>
-                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                                <i class="fas fa-save me-1"></i>Save Faculty
-                            </button>
+                            <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg"><i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form</button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-save me-1"></i>Save Faculty</button>
                         </div>
                     </form>
                 </div>
@@ -969,6 +569,108 @@
 </div>
 
 <script>
+    // ============================================================
+    // MULTIPLE RESEARCH PROOFS WITH ADD BUTTON - WORKING VERSION
+    // ============================================================
+    let researchProofCounter = 0;
+
+    function addResearchProof() {
+        researchProofCounter++;
+        const container = document.getElementById('researchProofsContainer');
+        const newId = 'research-proof-' + researchProofCounter;
+
+        const newItem = document.createElement('div');
+        newItem.className = 'research-proof-item';
+        newItem.id = newId;
+        newItem.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm remove-proof" onclick="removeResearchProof(this)">×</button>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Upload Proof (PDF, JPG, PNG)</label>
+                    <input type="file" class="form-control research-proof-file" name="research_proof_files_${researchProofCounter}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateResearchProofsData()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control research-proof-academic-year" placeholder="e.g., 2023-24" onchange="updateResearchProofsData()">
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        updateResearchProofsData();
+    }
+
+    function removeResearchProof(btn) {
+        btn.closest('.research-proof-item').remove();
+        updateResearchProofsData();
+    }
+
+    function updateResearchProofsData() {
+        const proofs = [];
+        document.querySelectorAll('#researchProofsContainer .research-proof-item').forEach(item => {
+            const fileInput = item.querySelector('.research-proof-file');
+            const academicYear = item.querySelector('.research-proof-academic-year').value;
+            if (fileInput.files.length > 0) {
+                proofs.push({
+                    file: fileInput.files[0],
+                    academic_year: academicYear
+                });
+            }
+        });
+        const proofsData = proofs.map(p => ({ academic_year: p.academic_year, file_name: p.file ? p.file.name : '' }));
+        document.getElementById('research_proofs_data').value = JSON.stringify(proofsData);
+    }
+
+    // ============================================================
+    // MULTIPLE FDP CERTIFICATES WITH ADD BUTTON - WORKING VERSION
+    // ============================================================
+    let fdpCertCounter = 0;
+
+    function addFDPCertificate() {
+        fdpCertCounter++;
+        const container = document.getElementById('fdpCertificatesContainer');
+        const newId = 'fdp-cert-' + fdpCertCounter;
+
+        const newItem = document.createElement('div');
+        newItem.className = 'fdp-cert-item';
+        newItem.id = newId;
+        newItem.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm remove-cert" onclick="removeFDPCertificate(this)">×</button>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Upload Certificate (PDF, JPG, PNG)</label>
+                    <input type="file" class="form-control fdp-cert-file" name="fdp_cert_files_${fdpCertCounter}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFDPCertificatesData()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control fdp-cert-academic-year" placeholder="e.g., 2023-24" onchange="updateFDPCertificatesData()">
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        updateFDPCertificatesData();
+    }
+
+    function removeFDPCertificate(btn) {
+        btn.closest('.fdp-cert-item').remove();
+        updateFDPCertificatesData();
+    }
+
+    function updateFDPCertificatesData() {
+        const certs = [];
+        document.querySelectorAll('#fdpCertificatesContainer .fdp-cert-item').forEach(item => {
+            const fileInput = item.querySelector('.fdp-cert-file');
+            const academicYear = item.querySelector('.fdp-cert-academic-year').value;
+            if (fileInput.files.length > 0) {
+                certs.push({
+                    file: fileInput.files[0],
+                    academic_year: academicYear
+                });
+            }
+        });
+        const certsData = certs.map(c => ({ academic_year: c.academic_year, file_name: c.file ? c.file.name : '' }));
+        document.getElementById('fdp_certificates_data').value = JSON.stringify(certsData);
+    }
+
     // ============================================================
     // RESEARCH PUBLICATIONS (WITH ACADEMIC YEAR)
     // ============================================================
@@ -1323,7 +1025,6 @@
     // ============================================================
     function clearAllForm() {
         if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
-            // Clear all text inputs, textareas, selects, and files
             const form = document.getElementById('addFacultyForm');
             const inputs = form.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
@@ -1338,29 +1039,47 @@
                 }
             });
 
-            // Clear all arrays
             researchList = [];
             projectList = [];
             fdpList = [];
             resultsList = [];
+            researchProofCounter = 0;
+            fdpCertCounter = 0;
 
-            // Re-render all tables
+            const researchProofsContainer = document.getElementById('researchProofsContainer');
+            const fdpCertContainer = document.getElementById('fdpCertificatesContainer');
+            if (researchProofsContainer) {
+                researchProofsContainer.innerHTML = '';
+            }
+            if (fdpCertContainer) {
+                fdpCertContainer.innerHTML = '';
+            }
+
             renderResearchTable();
             renderProjectTable();
             renderFDPTable();
             renderResultsTable();
 
-            // Update hidden fields
             updateResearchJSON();
             updateProjectJSON();
             updateFDPJSON();
             updateResultsJSON();
+            updateResearchProofsData();
+            updateFDPCertificatesData();
 
             alert('All form data has been cleared.');
         }
     }
 
-    // Form submission validation
+    // ============================================================
+    // INITIALIZE ADD BUTTONS
+    // ============================================================
+    document.getElementById('addResearchProofBtn').addEventListener('click', addResearchProof);
+    document.getElementById('addFDPCertificateBtn').addEventListener('click', addFDPCertificate);
+
+    // ============================================================
+    // FORM SUBMISSION
+    // ============================================================
     document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
         const requiredFields = document.querySelectorAll('[required]');
         let isValid = true;
@@ -1369,8 +1088,6 @@
             if (!field.value.trim()) {
                 isValid = false;
                 field.classList.add('is-invalid');
-
-                // Find the tab containing this field
                 const tabPane = field.closest('.tab-pane');
                 if (tabPane) {
                     const tabId = tabPane.getAttribute('id');
@@ -1390,7 +1107,9 @@
             return;
         }
 
-        // Show loading message
+        updateResearchProofsData();
+        updateFDPCertificatesData();
+
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
