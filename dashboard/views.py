@@ -933,8 +933,9 @@ def login_view(request):
     if request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
     return render(request, 'dashboard/login.html', {
-        'title': 'Login - ANURAG ENGINEERING COLLEGE',
-        'student_login': False, 'admin_login': False,
+        'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
+        'student_login': False,
+        'admin_login': True,
     })
 
 
@@ -1052,9 +1053,9 @@ def dashboard(request):
     else:
         # No admin logged in – show the login selection page
         return render(request, 'dashboard/login.html', {
-            'title': 'Login - ANURAG ENGINEERING COLLEGE',
+            'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
             'student_login': False,
-            'admin_login': False,
+            'admin_login': True,
         })
 
 

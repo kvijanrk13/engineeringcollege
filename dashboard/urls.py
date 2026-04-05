@@ -132,6 +132,7 @@ urlpatterns = [
 
     # ==================== EXAM BRANCH ====================
     path('exam-branch/', views.exam_branch, name='exam_branch'),
+    path('exam-branch/', views.exam_branch, name='exambranch'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
     path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
 

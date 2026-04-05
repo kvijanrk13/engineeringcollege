@@ -247,10 +247,10 @@
                         <div class="suggested-links">
                             <p class="text-muted mb-2">Suggested Pages:</p>
                             <div class="list-group">
-                                <a href="{% url 'dashboard:exambranch' %}" class="list-group-item list-group-item-action">
+                                <a href="{% url 'dashboard:exam_branch' %}" class="list-group-item list-group-item-action">
                                     <i class="fas fa-file-alt me-2"></i> Exam Branch
                                 </a>
-                                <a href="{% url 'dashboard:reports_dashboard' %}" class="list-group-item list-group-item-action">
+                                <a href="{% url 'dashboard:faculty_analytics' %}" class="list-group-item list-group-item-action">
                                     <i class="fas fa-chart-bar me-2"></i> Reports & Analytics
                                 </a>
                                 <a href="{% url 'dashboard:login' %}" class="list-group-item list-group-item-action">
@@ -330,8 +330,8 @@
     const suggestions = {
         'faculty': "{% url 'dashboard:faculty_list' %}",
         'dashboard': "{% url 'dashboard:dashboard' %}",
-        'exam': "{% url 'dashboard:exambranch' %}",
-        'report': "{% url 'dashboard:reports_dashboard' %}",
+        'exam': "{% url 'dashboard:exam_branch' %}",
+        'report': "{% url 'dashboard:faculty_analytics' %}",
         'admin': "{% url 'admin:index' %}",
         'login': "{% url 'dashboard:login' %}",
     };
