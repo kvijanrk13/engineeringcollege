@@ -1010,15 +1010,7 @@ def home(request):
         return redirect('dashboard:student_dashboard')
     if request.user.is_authenticated:
         return redirect('dashboard:admin_dashboard' if request.user.is_superuser else 'dashboard:dashboard')
-    return render(request, 'dashboard/home.html', {
-        'title': 'Faculty Management System - Home',
-        'total_faculty': Faculty.objects.count(),
-        'active_faculty': Faculty.objects.filter(is_active=True).count(),
-        'total_students': Student.objects.count(),
-        'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')[:5],
-        'recent_activities': FacultyLog.objects.order_by('-created_at')[:5],
-        'show_hero': True,
-    })
+    return redirect('dashboard:login')
 
 
 def dashboard(request):

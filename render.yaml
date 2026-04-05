@@ -30,6 +30,6 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
       - key: ALLOWED_HOSTS
-        value: "anrkitdept.onrender.com"
+        value: "engineeringcollege.onrender.com,anrkitdept.onrender.com"
       - key: PYTHON_VERSION
         value: "3.10.11"
