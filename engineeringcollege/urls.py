@@ -16,11 +16,12 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
+    # Public entry points
+    path('', dashboard_views.login_view, name='root_login'),
+    path('home/', dashboard_views.login_view, name='home_root'),
+
     # Dashboard app (includes all functionality) - ONLY ONCE to avoid namespace warning
     path('', include('dashboard.urls')),
-
-    # Simple home page route (redirects to dashboard)
-    path('home/', dashboard_views.home, name='home_root'),
 
     # Direct login routes for convenience
     path('login/', dashboard_views.login_view, name='login_root'),
