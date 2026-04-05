@@ -24,17 +24,26 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-for-local-only')
 
 # Allowed hosts for Render
-ALLOWED_HOSTS = ['*'] if DEBUG else [
+default_hosts = [
     'localhost',
     '127.0.0.1',
     '.onrender.com',
     'engineeringcollege.onrender.com',
+    'anrkitdept.onrender.com',
 ]
+env_hosts = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host.strip()]
+ALLOWED_HOSTS = ['*'] if DEBUG else list(dict.fromkeys(default_hosts + env_hosts))
 
-CSRF_TRUSTED_ORIGINS = [
+default_origins = [
     'https://*.onrender.com',
     'https://engineeringcollege.onrender.com',
+    'https://anrkitdept.onrender.com',
 ]
+env_origins = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(default_origins + env_origins))
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 # ================================
 # INSTALLED APPS
