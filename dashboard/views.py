@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Count, Sum, Avg, Max, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.files import File
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -1336,6 +1337,138 @@ def add_faculty(request):
             def get_date_or_none(value):
                 return value if value and value.strip() else None
 
+            def get_dynamic_files(prefix):
+                matched = [
+                    (key, request.FILES[key])
+                    for key in request.FILES.keys()
+                    if key.startswith(prefix)
+                ]
+                matched.sort(key=lambda item: item[0])
+                return [uploaded for _, uploaded in matched]
+
+            def get_first_dynamic_academic_year(post_key):
+                raw = request.POST.get(post_key, '[]').strip()
+                if not raw or raw == '[]':
+                    return ''
+                try:
+                    items = json.loads(raw)
+                except json.JSONDecodeError:
+                    return ''
+                for item in items:
+                    year = (item.get('academic_year') or '').strip()
+                    if year:
+                        return year
+                return ''
+
+            def save_uploaded_bundle(
+                *,
+                singular_file_key,
+                dynamic_prefix,
+                academic_year_value,
+                file_attr,
+                url_attr,
+                upload_type,
+                cloudinary_folder,
+                public_id_prefix,
+            ):
+                uploaded_files = []
+                direct_file = request.FILES.get(singular_file_key)
+                if direct_file:
+                    uploaded_files.append(direct_file)
+                else:
+                    uploaded_files.extend(get_dynamic_files(dynamic_prefix))
+
+                if not uploaded_files:
+                    return False
+
+                if academic_year_value is not None:
+                    setattr(faculty, f"{file_attr}_academic_year", academic_year_value)
+
+                temp_paths = []
+                try:
+                    if len(uploaded_files) == 1 and direct_file:
+                        file_to_store = uploaded_files[0]
+                        is_pdf = file_to_store.name.lower().endswith('.pdf')
+                        if is_cloudinary_configured():
+                            resource_type = "raw" if is_pdf else "auto"
+                            result = cloudinary.uploader.upload(
+                                file_to_store,
+                                resource_type=resource_type,
+                                folder=cloudinary_folder,
+                                public_id=f"{public_id_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                                overwrite=True
+                            )
+                            setattr(faculty, url_attr, result['secure_url'])
+                            setattr(faculty, file_attr, file_to_store)
+                            CloudinaryUpload.objects.create(
+                                faculty=faculty,
+                                upload_type=upload_type,
+                                cloudinary_url=result['secure_url'],
+                                public_id=result['public_id'],
+                                resource_type=resource_type,
+                                uploaded_by=request.user.username if request.user.is_authenticated else 'System'
+                            )
+                        else:
+                            setattr(faculty, file_attr, file_to_store)
+                        return True
+
+                    image_files = []
+                    pdf_files = []
+                    for uploaded_file in uploaded_files:
+                        ext = os.path.splitext(uploaded_file.name)[1].lower() or '.bin'
+                        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                        for chunk in uploaded_file.chunks():
+                            tmp.write(chunk)
+                        tmp.close()
+                        temp_paths.append(tmp.name)
+                        if ext == '.pdf':
+                            pdf_files.append(tmp.name)
+                        else:
+                            image_files.append(tmp.name)
+
+                    merged_output = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                    merged_output.close()
+                    temp_paths.append(merged_output.name)
+
+                    if not merge_all_documents(merged_output.name, image_files, pdf_files):
+                        return False
+
+                    merged_filename = f"{public_id_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    if is_cloudinary_configured():
+                        with open(merged_output.name, 'rb') as merged_handle:
+                            result = cloudinary.uploader.upload(
+                                merged_handle,
+                                resource_type="raw",
+                                folder=cloudinary_folder,
+                                public_id=os.path.splitext(merged_filename)[0],
+                                overwrite=True
+                            )
+                        setattr(faculty, url_attr, result['secure_url'])
+                        with open(merged_output.name, 'rb') as merged_handle:
+                            getattr(faculty, file_attr).save(merged_filename, File(merged_handle), save=False)
+                        CloudinaryUpload.objects.create(
+                            faculty=faculty,
+                            upload_type=upload_type,
+                            cloudinary_url=result['secure_url'],
+                            public_id=result['public_id'],
+                            resource_type='raw',
+                            uploaded_by=request.user.username if request.user.is_authenticated else 'System'
+                        )
+                    else:
+                        with open(merged_output.name, 'rb') as merged_handle:
+                            getattr(faculty, file_attr).save(merged_filename, File(merged_handle), save=False)
+                    return True
+                except Exception as e:
+                    logger.error(f"Document bundle save error for {file_attr}: {e}")
+                    return False
+                finally:
+                    for temp_path in temp_paths:
+                        try:
+                            if temp_path and os.path.exists(temp_path):
+                                os.remove(temp_path)
+                        except Exception:
+                            pass
+
             staff_name = request.POST.get("staff_name", "").strip()
             employee_code = request.POST.get("employee_code", "").strip()
             if not staff_name or not employee_code:
@@ -1525,6 +1658,28 @@ def add_faculty(request):
                         faculty.fdp_certificate = fdp_certificate
                 else:
                     faculty.fdp_certificate = fdp_certificate
+            if not request.FILES.get("research_proof"):
+                save_uploaded_bundle(
+                    singular_file_key='research_proof',
+                    dynamic_prefix='research_proof_files_',
+                    academic_year_value=get_first_dynamic_academic_year('research_proofs_data'),
+                    file_attr='research_proof',
+                    url_attr='research_proof_url',
+                    upload_type='research_proof',
+                    cloudinary_folder=f"faculty_documents/{faculty.employee_code}/research_proofs",
+                    public_id_prefix='research_proof',
+                )
+            if not request.FILES.get("fdp_certificate"):
+                save_uploaded_bundle(
+                    singular_file_key='fdp_certificate',
+                    dynamic_prefix='fdp_cert_files_',
+                    academic_year_value=get_first_dynamic_academic_year('fdp_certificates_data'),
+                    file_attr='fdp_certificate',
+                    url_attr='fdp_certificate_url',
+                    upload_type='fdp_certificate',
+                    cloudinary_folder=f"faculty_documents/{faculty.employee_code}/fdp_certificates",
+                    public_id_prefix='fdp_cert',
+                )
             # NEW: Classes Taken
             classes_taken = request.POST.get('classes_taken')
             if classes_taken:
@@ -1598,6 +1753,17 @@ def add_faculty(request):
                         faculty.other_documents = other_documents
                 else:
                     faculty.other_documents = other_documents
+            if not request.FILES.get('other_documents'):
+                save_uploaded_bundle(
+                    singular_file_key='other_documents',
+                    dynamic_prefix='other_doc_files_',
+                    academic_year_value=get_first_dynamic_academic_year('other_documents_data'),
+                    file_attr='other_documents',
+                    url_attr='other_documents_url',
+                    upload_type='other_documents',
+                    cloudinary_folder=f"faculty_documents/{faculty.employee_code}",
+                    public_id_prefix='other_docs',
+                )
             faculty.save()
             # Research Publications (with academic_year)
             research_data_raw = request.POST.get('research_publications_json', '[]').strip()
@@ -2661,11 +2827,17 @@ def generate_faculty_pdf(request, faculty_id):
                 pass
             return False
 
+        def _related_file_exists(items, field_name):
+            for item in items:
+                related_file = getattr(item, field_name, None)
+                if related_file and getattr(related_file, 'name', ''):
+                    return True
+            return False
+
         # NEW: Research Publications Proof (with academic_year)
-        # True if: bulk file uploaded OR any ResearchPublication record exists
         has_research_proof = (
             _has_file('research_proof_url', 'research_proof')
-            or research_publications.exists()
+            or _related_file_exists(research_publications, 'proof_document')
         )
         research_proof_academic_year = getattr(faculty, 'research_proof_academic_year', None) or ''
         if not research_proof_academic_year:
@@ -2674,10 +2846,9 @@ def generate_faculty_pdf(request, faculty_id):
                 research_proof_academic_year = first_pub.academic_year or ''
 
         # NEW: FDP Certificate (with academic_year)
-        # True if: bulk file uploaded OR any FDP record exists
         has_fdp_certificate = (
             _has_file('fdp_certificate_url', 'fdp_certificate')
-            or fdps.exists()
+            or _related_file_exists(fdps, 'certificate')
         )
         fdp_certificate_academic_year = getattr(faculty, 'fdp_certificate_academic_year', None) or ''
         if not fdp_certificate_academic_year:
