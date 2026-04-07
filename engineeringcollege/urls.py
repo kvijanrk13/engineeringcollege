@@ -14,7 +14,7 @@ handler400 = dashboard_views.handler400
 
 
 def root_redirect(request):
-    """Redirect root to admin login page"""
+    """Redirect root to admin login"""
     return redirect('dashboard:admin_login')
 
 
@@ -33,13 +33,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-    # Debug toolbar if installed (optional)
-    try:
-        import debug_toolbar
-
-        urlpatterns = [
-                          path('__debug__/', include(debug_toolbar.urls)),
-                      ] + urlpatterns
-    except ImportError:
-        pass

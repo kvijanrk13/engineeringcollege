@@ -17,13 +17,6 @@ pip install --upgrade pip
 echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
-# Check if we're on Render
-if [ -n "$RENDER" ]; then
-    echo "🖥️  Running on Render - using PostgreSQL"
-else
-    echo "💻 Running locally - using SQLite"
-fi
-
 # Create necessary directories
 echo "📁 Creating necessary directories..."
 mkdir -p staticfiles media

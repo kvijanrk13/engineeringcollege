@@ -24,12 +24,14 @@ services:
       - key: RENDER
         value: "True"
       - key: CLOUDINARY_CLOUD_NAME
-        sync: false
+        value: "dsndiruhe"  # ← Fixed - removed the 'h'
       - key: CLOUDINARY_API_KEY
-        sync: false
+        value: "473455725389669"  # ← Your actual API key
       - key: CLOUDINARY_API_SECRET
-        sync: false
+        value: "vztmkO4bDwTVvVNG7Mah9yPmkdY"  # ← Your actual secret
       - key: ALLOWED_HOSTS
         value: "engineeringcollege.onrender.com,anrkitdept.onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://engineeringcollege.onrender.com,https://anrkitdept.onrender.com"
       - key: PYTHON_VERSION
         value: "3.10.11"

@@ -5579,3 +5579,22 @@ def handler400(request, exception):
         'title': 'Bad Request',
     }, status=400)
 
+def test_render(request):
+    """Simple test view to check if Django is working"""
+    return HttpResponse("""
+    <html>
+    <head><title>Test Page</title></head>
+    <body style="font-family: Arial; padding: 50px; text-align: center;">
+        <h1>✅ Django is Working!</h1>
+        <p>Your application is running successfully on Render.</p>
+        <p>Time: """ + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + """</p>
+        <hr>
+        <h2>Navigation:</h2>
+        <ul style="list-style: none; padding: 0;">
+            <li><a href="/admin-login/">Admin Login</a></li>
+            <li><a href="/student-login/">Student Login</a></li>
+            <li><a href="/admin/">Django Admin</a></li>
+        </ul>
+    </body>
+    </html>
+    """)
