@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib.auth import views as auth_views
+from django.shortcuts import redirect
 from dashboard import views as dashboard_views
 
 # Define handler404, handler500, etc. at module level for the project
@@ -12,22 +12,21 @@ handler500 = dashboard_views.handler500
 handler403 = dashboard_views.handler403
 handler400 = dashboard_views.handler400
 
+
+def root_redirect(request):
+    """Redirect root to admin login page"""
+    return redirect('dashboard:admin_login')
+
+
 urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
-    # Public entry points
-    path('', dashboard_views.login_view, name='root_login'),
-    path('home/', dashboard_views.login_view, name='home_root'),
+    # Root path - redirect to admin login
+    path('', root_redirect, name='root'),
 
-    # Dashboard app (includes all functionality) - ONLY ONCE to avoid namespace warning
+    # Dashboard app (includes all functionality)
     path('', include('dashboard.urls')),
-
-    # Direct login routes for convenience
-    path('login/', dashboard_views.login_view, name='login_root'),
-    path('admin-login/', dashboard_views.admin_login, name='admin_login_root'),
-    path('student-login/', dashboard_views.student_login, name='student_login_root'),
-    path('logout/', dashboard_views.logout_view, name='logout_root'),
 ]
 
 # Serve static and media files in development

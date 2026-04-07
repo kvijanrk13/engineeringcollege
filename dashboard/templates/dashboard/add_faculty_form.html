@@ -37,6 +37,12 @@
         color: #007bff;
         font-weight: 600;
     }
+    .tab-content > .tab-pane {
+        display: none;
+    }
+    .tab-content > .active {
+        display: block;
+    }
     .tab-content {
         padding: 20px 0;
     }
@@ -121,6 +127,24 @@
         padding: 5px 10px;
         font-size: 12px;
     }
+    .other-doc-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 12px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+    .other-doc-item .remove-other {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .tab-navigation {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -136,17 +160,17 @@
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data" action="/faculty/add/" id="addFacultyForm">
                         {% csrf_token %}
-
                         <!-- Hidden JSON fields submitted with the form -->
                         <input type="hidden" name="research_publications_json" id="research_publications_json" value="[]">
                         <input type="hidden" name="btech_projects_json" id="btech_projects_json" value="[]">
                         <input type="hidden" name="results_json" id="results_json" value="[]">
                         <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="[]">
-
                         <!-- Hidden fields for multiple research proofs and FDP certificates -->
                         <input type="hidden" name="research_proofs_data" id="research_proofs_data" value="[]">
                         <input type="hidden" name="fdp_certificates_data" id="fdp_certificates_data" value="[]">
 
+                        <!-- Hidden field for multiple other documents -->
+                        <input type="hidden" name="other_documents_data" id="other_documents_data" value="[]">
                         <!-- Tabs Navigation -->
                         <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
                             <li class="nav-item">
@@ -195,7 +219,6 @@
                                 </button>
                             </li>
                         </ul>
-
                         <div class="tab-content">
                             <!-- ==================== TAB 1: PERSONAL ==================== -->
                             <div class="tab-pane fade show active" id="personal">
@@ -274,8 +297,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('professional')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 2: PROFESSIONAL ==================== -->
                             <div class="tab-pane fade" id="professional">
                                 <div class="form-section">
@@ -337,8 +364,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('education')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 3: EDUCATION ==================== -->
                             <div class="tab-pane fade" id="education">
                                 <div class="form-section">
@@ -366,8 +397,12 @@
                                         <div class="col-md-4 mb-3"><label>PhD Specialization</label><input type="text" name="phd_spec" class="form-control"></div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('additional')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 4: ADDITIONAL ==================== -->
                             <div class="tab-pane fade" id="additional">
                                 <div class="form-section">
@@ -378,14 +413,17 @@
                                         <div class="col-md-12 mb-3"><label>About Yourself (Mention Your Roles and Responsibilities)</label><textarea name="about_yourself" class="form-control" rows="4" placeholder="e.g., HOD of IT Department, Class Coordinator, Examination Coordinator, NBA Coordinator, etc."></textarea><div class="help-text">Please mention your roles and responsibilities in the college.</div></div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-research')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 5: RESEARCH & PUBLICATIONS ==================== -->
                             <div class="tab-pane fade" id="tab-research">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1"><i class="fas fa-book-open me-2"></i>Research &amp; Publications</h5>
                                     <p class="text-muted small mb-3">Add journal papers, conference papers, books, or patents.</p>
-
                                     <!-- Research Publications Proof Documents with ADD BUTTON -->
                                     <div class="card border-info mb-3">
                                         <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
@@ -399,7 +437,6 @@
                                             <div class="help-text mt-2">Upload supporting proof documents for research publications. Click "Add Proof Document" to add multiple files.</div>
                                         </div>
                                     </div>
-
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="research-table">
                                             <thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Authors</th><th>Academic Year</th><th>Year</th><th>Journal / Conference</th><th>Status</th><th>Remove</th></tr></thead>
@@ -423,8 +460,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-projects')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 6: B.TECH PROJECTS ==================== -->
                             <div class="tab-pane fade" id="tab-projects">
                                 <div class="p-3">
@@ -448,14 +489,17 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-fdp')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 7: FDP / WORKSHOPS ==================== -->
                             <div class="tab-pane fade" id="tab-fdp">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1"><i class="fas fa-chalkboard-user me-2"></i>FDP / Workshops Attended</h5>
                                     <p class="text-muted small mb-3">Add Faculty Development Programs, Workshops, Seminars, Conferences, and Training Programs attended by this faculty.</p>
-
                                     <!-- FDP Certificates with ADD BUTTON -->
                                     <div class="card border-warning mb-3">
                                         <div class="card-header bg-warning text-white py-2 d-flex justify-content-between align-items-center">
@@ -469,7 +513,6 @@
                                             <div class="help-text mt-2">Upload FDP/Workshop certificates. Click "Add Certificate" to upload multiple files.</div>
                                         </div>
                                     </div>
-
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="fdp-table"><thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Academic Year</th><th>From Date</th><th>To Date</th><th>Organized By</th><th>Place</th><th>Role</th><th>Remove</th></tr></thead><tbody id="fdp-tbody"><tr id="no-fdp-row"><td colspan="10" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td></tr></tbody></table>
                                     </div>
@@ -494,14 +537,17 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-results')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 8: RESULTS ==================== -->
                             <div class="tab-pane fade" id="tab-results">
                                 <div class="p-3">
                                     <h5 class="text-primary mb-1"><i class="fas fa-chart-line me-2"></i>Results / Academic Performance</h5>
                                     <p class="text-muted small mb-3">Enter subject-wise results. <strong class="text-success">Pass percentage is calculated automatically.</strong></p>
-
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="results-table">
                                             <thead class="table-light"><tr><th>#</th><th>Subject Name</th><th>Subject Code</th><th>Academic Year</th><th>Classes Taken</th><th>Attempted</th><th>Passed</th><th class="text-success">Pass % <small>(Auto)</small></th><th>Remove</th></tr></thead>
@@ -524,8 +570,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('documents')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
                             </div>
-
                             <!-- ==================== TAB 9: DOCUMENTS ==================== -->
                             <div class="tab-pane fade" id="documents">
                                 <div class="form-section"><h4><i class="fas fa-file-alt me-2"></i>Identity Documents</h4>
@@ -549,17 +599,28 @@
                                 <div class="form-section"><h4><i class="fas fa-briefcase me-2"></i>Experience Certificates</h4>
                                     <div class="document-card"><div class="row g-2"><div class="col-md-6"><label>Upload Experience Certificate (PDF, JPG, PNG)</label><input type="file" name="experience_certificates" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div><div class="col-md-6"><label>Academic Year</label><input type="text" name="experience_certificates_academic_year" class="form-control" placeholder="e.g., 2023-24"></div></div><div class="help-text mt-2">Upload experience certificates.</div></div>
                                 </div>
-                                <div class="form-section"><h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
-                                    <div class="document-card"><div class="row g-2"><div class="col-md-6"><label>Upload Other Document (PDF, JPG, PNG)</label><input type="file" name="other_documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div><div class="col-md-6"><label>Academic Year</label><input type="text" name="other_documents_academic_year" class="form-control" placeholder="e.g., 2023-24"></div></div><div class="help-text mt-2">Upload any other relevant documents.</div></div>
+                                <!-- ==================== OTHER DOCUMENTS SECTION WITH ADD BUTTON ==================== -->
+                                <div class="form-section">
+                                    <h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
+                                    <div class="card border-secondary mb-3">
+                                        <div class="card-header bg-secondary text-white py-2 d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-upload me-1"></i>Other Documents</span>
+                                            <button type="button" class="btn btn-sm btn-light" id="addOtherDocumentBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Document
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="otherDocumentsContainer"></div>
+                                            <div class="help-text mt-2">Upload any other relevant documents with academic year. Click "Add Document" to add multiple entries.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+                                    <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg"><i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form</button>
+                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-save me-1"></i>Save Faculty</button>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Form Actions -->
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
-                            <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg"><i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form</button>
-                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-save me-1"></i>Save Faculty</button>
                         </div>
                     </form>
                 </div>
@@ -567,18 +628,23 @@
         </div>
     </div>
 </div>
-
 <script>
+    function goToFacultyTab(tabId) {
+        const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
+        if (!tabButton || typeof bootstrap === 'undefined' || !bootstrap.Tab) {
+            return;
+        }
+        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     // ============================================================
     // MULTIPLE RESEARCH PROOFS WITH ADD BUTTON - WORKING VERSION
     // ============================================================
     let researchProofCounter = 0;
-
     function addResearchProof() {
         researchProofCounter++;
         const container = document.getElementById('researchProofsContainer');
         const newId = 'research-proof-' + researchProofCounter;
-
         const newItem = document.createElement('div');
         newItem.className = 'research-proof-item';
         newItem.id = newId;
@@ -598,12 +664,10 @@
         container.appendChild(newItem);
         updateResearchProofsData();
     }
-
     function removeResearchProof(btn) {
         btn.closest('.research-proof-item').remove();
         updateResearchProofsData();
     }
-
     function updateResearchProofsData() {
         const proofs = [];
         document.querySelectorAll('#researchProofsContainer .research-proof-item').forEach(item => {
@@ -619,17 +683,14 @@
         const proofsData = proofs.map(p => ({ academic_year: p.academic_year, file_name: p.file ? p.file.name : '' }));
         document.getElementById('research_proofs_data').value = JSON.stringify(proofsData);
     }
-
     // ============================================================
     // MULTIPLE FDP CERTIFICATES WITH ADD BUTTON - WORKING VERSION
     // ============================================================
     let fdpCertCounter = 0;
-
     function addFDPCertificate() {
         fdpCertCounter++;
         const container = document.getElementById('fdpCertificatesContainer');
         const newId = 'fdp-cert-' + fdpCertCounter;
-
         const newItem = document.createElement('div');
         newItem.className = 'fdp-cert-item';
         newItem.id = newId;
@@ -649,12 +710,10 @@
         container.appendChild(newItem);
         updateFDPCertificatesData();
     }
-
     function removeFDPCertificate(btn) {
         btn.closest('.fdp-cert-item').remove();
         updateFDPCertificatesData();
     }
-
     function updateFDPCertificatesData() {
         const certs = [];
         document.querySelectorAll('#fdpCertificatesContainer .fdp-cert-item').forEach(item => {
@@ -670,12 +729,56 @@
         const certsData = certs.map(c => ({ academic_year: c.academic_year, file_name: c.file ? c.file.name : '' }));
         document.getElementById('fdp_certificates_data').value = JSON.stringify(certsData);
     }
-
+    // ============================================================
+    // OTHER DOCUMENTS - ADD BUTTON + ACADEMIC YEAR (ONLY CHANGE)
+    // ============================================================
+    let otherDocCounter = 0;
+    function addOtherDocument() {
+        otherDocCounter++;
+        const container = document.getElementById('otherDocumentsContainer');
+        const newId = 'other-doc-' + otherDocCounter;
+        const newItem = document.createElement('div');
+        newItem.className = 'other-doc-item';
+        newItem.id = newId;
+        newItem.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm remove-other" onclick="removeOtherDocument(this)">×</button>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Upload Document (PDF, JPG, PNG)</label>
+                    <input type="file" class="form-control other-doc-file" name="other_doc_files_${otherDocCounter}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateOtherDocumentsData()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control other-doc-academic-year" placeholder="e.g., 2023-24" onchange="updateOtherDocumentsData()">
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        updateOtherDocumentsData();
+    }
+    function removeOtherDocument(btn) {
+        btn.closest('.other-doc-item').remove();
+        updateOtherDocumentsData();
+    }
+    function updateOtherDocumentsData() {
+        const docs = [];
+        document.querySelectorAll('#otherDocumentsContainer .other-doc-item').forEach(item => {
+            const fileInput = item.querySelector('.other-doc-file');
+            const academicYear = item.querySelector('.other-doc-academic-year').value;
+            if (fileInput.files.length > 0) {
+                docs.push({
+                    file: fileInput.files[0],
+                    academic_year: academicYear
+                });
+            }
+        });
+        const docsData = docs.map(d => ({ academic_year: d.academic_year, file_name: d.file ? d.file.name : '' }));
+        document.getElementById('other_documents_data').value = JSON.stringify(docsData);
+    }
     // ============================================================
     // RESEARCH PUBLICATIONS (WITH ACADEMIC YEAR)
     // ============================================================
     let researchList = [];
-
     function addResearchPublication() {
         const title = document.getElementById('rp-title').value.trim();
         if (!title) {
@@ -686,7 +789,6 @@
         const type = document.getElementById('rp-type').value;
         const venue = document.getElementById('rp-journal').value.trim();
         const academicYear = document.getElementById('rp-academic-year').value.trim();
-
         const entry = {
             research_type: type,
             title: title,
@@ -703,13 +805,11 @@
         updateResearchJSON();
         clearResearchForm();
     }
-
     function removeResearch(index) {
         researchList.splice(index, 1);
         renderResearchTable();
         updateResearchJSON();
     }
-
     function renderResearchTable() {
         const tbody = document.getElementById('research-tbody');
         if (researchList.length === 0) {
@@ -730,11 +830,9 @@
             </tr>
         `).join('');
     }
-
     function updateResearchJSON() {
         document.getElementById('research_publications_json').value = JSON.stringify(researchList);
     }
-
     function clearResearchForm() {
         document.getElementById('rp-title').value = '';
         document.getElementById('rp-authors').value = '';
@@ -745,12 +843,10 @@
         document.getElementById('rp-type').value = 'journal';
         document.getElementById('rp-status').value = 'published';
     }
-
     // ============================================================
     // B.TECH PROJECTS
     // ============================================================
     let projectList = [];
-
     function addBTechProject() {
         const title = document.getElementById('bp-title').value.trim();
         const student = document.getElementById('bp-student').value.trim();
@@ -771,13 +867,11 @@
         updateProjectJSON();
         clearProjectForm();
     }
-
     function removeProject(index) {
         projectList.splice(index, 1);
         renderProjectTable();
         updateProjectJSON();
     }
-
     function renderProjectTable() {
         const tbody = document.getElementById('projects-tbody');
         if (projectList.length === 0) {
@@ -797,11 +891,9 @@
             </tr>
         `).join('');
     }
-
     function updateProjectJSON() {
         document.getElementById('btech_projects_json').value = JSON.stringify(projectList);
     }
-
     function clearProjectForm() {
         document.getElementById('bp-htno').value = '';
         document.getElementById('bp-student').value = '';
@@ -810,12 +902,10 @@
         document.getElementById('bp-marks').value = '';
         document.getElementById('bp-approved').value = 'true';
     }
-
     // ============================================================
     // FDP / WORKSHOPS (WITH ACADEMIC YEAR)
     // ============================================================
     let fdpList = [];
-
     function addFDP() {
         const title = document.getElementById('fdp-title').value.trim();
         const fromDate = document.getElementById('fdp-from').value;
@@ -854,13 +944,11 @@
         updateFDPJSON();
         clearFDPForm();
     }
-
     function removeFDP(index) {
         fdpList.splice(index, 1);
         renderFDPTable();
         updateFDPJSON();
     }
-
     function renderFDPTable() {
         const tbody = document.getElementById('fdp-tbody');
         if (fdpList.length === 0) {
@@ -889,11 +977,9 @@
             </tr>`;
         }).join('');
     }
-
     function updateFDPJSON() {
         document.getElementById('fdp_entries_json').value = JSON.stringify(fdpList);
     }
-
     function clearFDPForm() {
         document.getElementById('fdp-title').value = '';
         document.getElementById('fdp-academic-year').value = '';
@@ -908,12 +994,10 @@
         document.getElementById('fdp-level').value = 'national';
         document.getElementById('fdp-role').value = 'participant';
     }
-
     // ============================================================
     // RESULTS (WITH ACADEMIC YEAR AND CLASSES TAKEN)
     // ============================================================
     let resultsList = [];
-
     function autoCalculatePercent() {
         const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
         const passed = parseInt(document.getElementById('rs-passed').value) || 0;
@@ -933,14 +1017,12 @@
             pctField.style.color = '';
         }
     }
-
     function addResult() {
         const subject = document.getElementById('rs-subject').value.trim();
         const academicYear = document.getElementById('rs-academic-year').value.trim();
         const classesTaken = parseInt(document.getElementById('rs-classes').value) || 0;
         const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
         const passed = parseInt(document.getElementById('rs-passed').value) || 0;
-
         if (!subject) {
             alert('Subject name is required.');
             document.getElementById('rs-subject').focus();
@@ -976,13 +1058,11 @@
         updateResultsJSON();
         clearResultForm();
     }
-
     function removeResult(index) {
         resultsList.splice(index, 1);
         renderResultsTable();
         updateResultsJSON();
     }
-
     function renderResultsTable() {
         const tbody = document.getElementById('results-tbody');
         if (resultsList.length === 0) {
@@ -1005,11 +1085,9 @@
             </tr>`;
         }).join('');
     }
-
     function updateResultsJSON() {
         document.getElementById('results_json').value = JSON.stringify(resultsList);
     }
-
     function clearResultForm() {
         document.getElementById('rs-subject').value = '';
         document.getElementById('rs-code').value = '';
@@ -1019,7 +1097,6 @@
         document.getElementById('rs-passed').value = '';
         document.getElementById('rs-percentage').value = '';
     }
-
     // ============================================================
     // CLEAR ALL FORM DATA
     // ============================================================
@@ -1038,52 +1115,50 @@
                     }
                 }
             });
-
             researchList = [];
             projectList = [];
             fdpList = [];
             resultsList = [];
             researchProofCounter = 0;
             fdpCertCounter = 0;
-
+            otherDocCounter = 0;
             const researchProofsContainer = document.getElementById('researchProofsContainer');
             const fdpCertContainer = document.getElementById('fdpCertificatesContainer');
-            if (researchProofsContainer) {
-                researchProofsContainer.innerHTML = '';
-            }
-            if (fdpCertContainer) {
-                fdpCertContainer.innerHTML = '';
-            }
-
+            const otherContainer = document.getElementById('otherDocumentsContainer');
+            if (researchProofsContainer) researchProofsContainer.innerHTML = '';
+            if (fdpCertContainer) fdpCertContainer.innerHTML = '';
+            if (otherContainer) otherContainer.innerHTML = '';
             renderResearchTable();
             renderProjectTable();
             renderFDPTable();
             renderResultsTable();
-
             updateResearchJSON();
             updateProjectJSON();
             updateFDPJSON();
             updateResultsJSON();
             updateResearchProofsData();
             updateFDPCertificatesData();
-
+            updateOtherDocumentsData();
             alert('All form data has been cleared.');
         }
     }
-
     // ============================================================
     // INITIALIZE ADD BUTTONS
     // ============================================================
-    document.getElementById('addResearchProofBtn').addEventListener('click', addResearchProof);
-    document.getElementById('addFDPCertificateBtn').addEventListener('click', addFDPCertificate);
-
+    document.addEventListener('DOMContentLoaded', function() {
+        const addResearchBtn = document.getElementById('addResearchProofBtn');
+        const addFDPCertBtn = document.getElementById('addFDPCertificateBtn');
+        const addOtherBtn = document.getElementById('addOtherDocumentBtn');
+        if (addResearchBtn) addResearchBtn.addEventListener('click', addResearchProof);
+        if (addFDPCertBtn) addFDPCertBtn.addEventListener('click', addFDPCertificate);
+        if (addOtherBtn) addOtherBtn.addEventListener('click', addOtherDocument);
+    });
     // ============================================================
     // FORM SUBMISSION
     // ============================================================
     document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
         const requiredFields = document.querySelectorAll('[required]');
         let isValid = true;
-
         requiredFields.forEach(field => {
             if (!field.value.trim()) {
                 isValid = false;
@@ -1100,16 +1175,14 @@
                 field.classList.remove('is-invalid');
             }
         });
-
         if (!isValid) {
             alert('Please fill all required fields (marked with *). Required tabs are highlighted in red.');
             e.preventDefault();
             return;
         }
-
         updateResearchProofsData();
         updateFDPCertificatesData();
-
+        updateOtherDocumentsData();
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';

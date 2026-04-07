@@ -6,8 +6,10 @@ from pathlib import Path
 import os
 import cloudinary
 import dj_database_url
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 # ================================
 # ✅ ENV DETECTION
@@ -164,18 +166,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # ================================
 CLOUDINARY_CONFIGURED = False
 
-# Get Cloudinary credentials from environment variables only
-cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
-api_key = os.environ.get('CLOUDINARY_API_KEY')
-api_secret = os.environ.get('CLOUDINARY_API_SECRET')
+# Expose Cloudinary credentials as Django settings attributes.
+CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-if cloud_name and api_key and api_secret:
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
     try:
         CLOUDINARY_CONFIGURED = True
         cloudinary.config(
-            cloud_name=cloud_name,
-            api_key=api_key,
-            api_secret=api_secret,
+            cloud_name=CLOUDINARY_CLOUD_NAME,
+            api_key=CLOUDINARY_API_KEY,
+            api_secret=CLOUDINARY_API_SECRET,
             secure=True
         )
 

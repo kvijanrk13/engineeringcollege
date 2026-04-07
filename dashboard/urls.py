@@ -7,8 +7,9 @@ app_name = 'dashboard'
 
 urlpatterns = [
     # ==================== AUTHENTICATION ====================
-    path('', views.dashboard, name='dashboard'),
-    path('login/', views.login_view, name='login'),
+    # Note: Root path '/' is handled in main urls.py, not here
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('login/', views.admin_login, name='login'),
     path('admin-login/', views.admin_login, name='admin_login'),
     path('student-login/', views.student_login, name='student_login'),
     path('logout/', views.logout_view, name='logout'),
@@ -132,7 +133,6 @@ urlpatterns = [
 
     # ==================== EXAM BRANCH ====================
     path('exam-branch/', views.exam_branch, name='exam_branch'),
-    path('exam-branch/', views.exam_branch, name='exambranch'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
     path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
 

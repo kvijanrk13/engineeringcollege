@@ -100,13 +100,20 @@ def is_cloudinary_configured():
 
 if is_cloudinary_configured():
     try:
-        cloudinary.config(
-            cloud_name=settings.CLOUDINARY_CLOUD_NAME,
-            api_key=settings.CLOUDINARY_API_KEY,
-            api_secret=settings.CLOUDINARY_API_SECRET,
-            secure=True
-        )
-        logger.info("Cloudinary initialized successfully.")
+        cloud_name = getattr(settings, 'CLOUDINARY_CLOUD_NAME', None)
+        api_key = getattr(settings, 'CLOUDINARY_API_KEY', None)
+        api_secret = getattr(settings, 'CLOUDINARY_API_SECRET', None)
+
+        if all([cloud_name, api_key, api_secret]):
+            cloudinary.config(
+                cloud_name=cloud_name,
+                api_key=api_key,
+                api_secret=api_secret,
+                secure=True
+            )
+            logger.info("Cloudinary initialized successfully.")
+        else:
+            logger.warning("Cloudinary marked configured, but credentials are incomplete.")
     except Exception as e:
         logger.error(f"Failed to initialize Cloudinary: {e}")
 else:
