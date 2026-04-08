@@ -40,12 +40,20 @@ default_origins = [
     'https://*.onrender.com',
     'https://engineeringcollege.onrender.com',
     'https://anrkitdept.onrender.com',
+    'http://*.onrender.com',  # Also allow HTTP for redirect
 ]
 env_origins = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(default_origins + env_origins))
 
+# SSL/HTTPS Settings for Render
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = not DEBUG  # Redirect HTTP to HTTPS in production
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 USE_X_FORWARDED_HOST = True
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year HSTS
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 
 # ================================
 # INSTALLED APPS
@@ -162,7 +170,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ================================
-# CLOUDINARY CONFIGURATION (FIXED - No Circular Reference)
+# CLOUDINARY CONFIGURATION
 # ================================
 CLOUDINARY_CONFIGURED = False
 
@@ -198,10 +206,10 @@ else:
         print("[WARNING] Cloudinary not configured - using local storage")
 
 # ================================
-# AUTH REDIRECTS
+# AUTH REDIRECTS (Updated for engineeringcollege.onrender.com)
 # ================================
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # ================================

@@ -7,7 +7,6 @@ app_name = 'dashboard'
 
 urlpatterns = [
     # ==================== AUTHENTICATION ====================
-    # Note: Root path '/' is handled in main urls.py, not here
     path('dashboard/', views.dashboard, name='dashboard'),
     path('login/', views.admin_login, name='login'),
     path('admin-login/', views.admin_login, name='admin_login'),
