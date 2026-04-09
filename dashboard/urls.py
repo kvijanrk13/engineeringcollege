@@ -1,3 +1,5 @@
+# dashboard/urls.py
+
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
@@ -5,29 +7,31 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
+    # Test routes
     path('test/', views.simple_test, name='test'),
 
+    # Main dashboard routes
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('home/', views.home, name='home'),
+
+    # Authentication routes
     path('login/', views.admin_login, name='login'),
     path('admin-login/', views.admin_login, name='admin_login'),
     path('student-login/', views.student_login, name='student_login'),
     path('logout/', views.logout_view, name='logout'),
     path('student-logout/', views.student_logout, name='student_logout'),
     path('admin-logout/', views.admin_logout, name='admin_logout'),
-
-    path('home/', views.home, name='home'),
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
     path('redirect-dashboard/', views.redirect_to_dashboard, name='redirect_to_dashboard'),
 
+    # Dashboard variants
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
+
+    # Faculty routes (top level)
     path('faculty/', views.faculty_dashboard, name='faculty'),
     path('faculty-list/', views.faculty_list, name='faculty-list'),
-    path('students/', views.students_data, name='students'),
-    path('students-list/', views.students_data, name='students-list'),
-    path('certificates/', views.view_certificates, name='certificates'),
 
-    path('syllabus/', views.syllabus_view, name='syllabus'),
-
+    # Faculty sub-routes
     path('faculty/dashboard/', views.faculty_dashboard, name='faculty_dashboard'),
     path('faculty/list/', views.faculty_list, name='faculty_list'),
     path('faculty/add/', views.add_faculty, name='add_faculty'),
@@ -39,6 +43,8 @@ urlpatterns = [
     path('faculty/assign-subjects/<int:faculty_id>/', views.assign_subjects, name='assign_subjects'),
     path('faculty/analytics/', views.faculty_analytics, name='faculty_analytics'),
     path('faculty/charts/', views.faculty_charts, name='faculty_charts'),
+
+    # Faculty PDF routes
     path('faculty/pdf/<int:faculty_id>/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
     path('faculty/pdf-clean/<int:faculty_id>/', views.generate_faculty_pdf_clean, name='generate_faculty_pdf_clean'),
     path('faculty/pdf-view/<int:faculty_id>/', views.faculty_pdf, name='faculty_pdf'),
@@ -47,33 +53,48 @@ urlpatterns = [
     path('faculty/pdf-status/<int:faculty_id>/', views.ajax_check_pdf_status, name='ajax_check_pdf_status'),
     path('faculty/bulk-pdfs/', views.bulk_generate_faculty_pdfs, name='bulk_generate_faculty_pdfs'),
 
-    path('faculty/research-project/delete/<int:project_id>/', views.delete_research_project, name='delete_research_project'),
-    path('faculty/research-publication/delete/<int:publication_id>/', views.delete_research_publication, name='delete_research_publication'),
+    # Faculty delete routes
+    path('faculty/research-project/delete/<int:project_id>/', views.delete_research_project,
+         name='delete_research_project'),
+    path('faculty/research-publication/delete/<int:publication_id>/', views.delete_research_publication,
+         name='delete_research_publication'),
     path('faculty/fdp/delete/<int:fdp_id>/', views.delete_fdp, name='delete_fdp'),
     path('faculty/btech-project/delete/<int:project_id>/', views.delete_btech_project, name='delete_btech_project'),
 
+    # Students routes
+    path('students/', views.students_data, name='students'),
+    path('students-list/', views.students_data, name='students-list'),
     path('students/data/', views.students_data, name='students_data'),
+    path('student-details/', views.students_data, name='student_details'),
     path('add-student/', views.add_student, name='add_student'),
     path('student/<int:student_id>/', views.student_detail, name='student_detail'),
     path('student/edit/<int:student_id>/', views.edit_student, name='edit_student'),
     path('student/delete/<int:student_id>/', views.delete_student, name='delete_student'),
+
+    # Student PDF routes
     path('student/pdf/<int:student_id>/', views.generate_student_pdf_file, name='generate_student_pdf'),
     path('student/pdf-view/<int:student_id>/', views.view_pdf, name='view_pdf'),
     path('student/pdf-download/<int:student_id>/', views.download_pdf, name='download_pdf'),
     path('student/pdf-regenerate/<int:student_id>/', views.regenerate_student_pdf, name='regenerate_student_pdf'),
     path('student/charts/', views.student_charts, name='student_charts'),
+
+    # Students export
     path('export-students-csv/', views.export_students_csv, name='export_students_csv'),
     path('export-students-excel/', views.export_students_excel, name='export_students_excel'),
 
+    # Certificates routes
+    path('certificates/', views.view_certificates, name='certificates'),
     path('certificate/upload/<int:faculty_id>/', views.upload_certificate, name='upload_certificate'),
     path('certificate/bulk-upload/', views.upload_certificates_bulk, name='upload_certificates_bulk'),
     path('certificate/view/<int:faculty_id>/', views.view_certificates, name='view_certificates'),
     path('certificate/edit/<int:certificate_id>/', views.edit_certificate, name='edit_certificate'),
     path('certificate/delete/<int:certificate_id>/', views.delete_certificate, name='delete_certificate'),
     path('certificate/merge/<int:faculty_id>/', views.merge_certificates, name='merge_certificates'),
-    path('certificate/merge-with-pdf/<int:faculty_id>/', views.merge_certificates_with_pdf, name='merge_certificates_with_pdf'),
+    path('certificate/merge-with-pdf/<int:faculty_id>/', views.merge_certificates_with_pdf,
+         name='merge_certificates_with_pdf'),
     path('certificate/preview-merged/<int:faculty_id>/', views.preview_merged_pdf, name='preview_merged_pdf'),
 
+    # Cloudinary routes
     path('cloudinary/sync/<int:faculty_id>/', views.sync_to_cloudinary, name='sync_to_cloudinary'),
     path('cloudinary/upload/<int:faculty_id>/', views.upload_to_cloudinary, name='upload_to_cloudinary'),
     path('cloudinary/upload-faculty/', views.upload_faculty_pdf, name='upload_faculty_pdf'),
@@ -82,23 +103,29 @@ urlpatterns = [
     path('cloudinary/url/<int:faculty_id>/', views.get_cloudinary_url, name='get_cloudinary_url'),
     path('cloudinary/bulk-sync/', views.bulk_sync_to_cloudinary, name='bulk_sync_to_cloudinary'),
 
+    # Bulk operations
     path('bulk-upload/', views.bulk_upload, name='bulk_upload'),
     path('bulk-faculty-actions/', views.bulk_faculty_actions, name='bulk_faculty_actions'),
     path('export-faculty-csv/', views.export_faculty_csv, name='export_faculty_csv'),
     path('export-faculty-excel/', views.export_faculty_excel, name='export_faculty_excel'),
 
+    # Search
     path('search/faculty/', views.search_faculty, name='search_faculty'),
     path('search/students/', views.search_students, name='search_students'),
 
+    # API routes
     path('api/faculty/list/', views.api_faculty_list, name='api_faculty_list'),
     path('api/faculty/detail/<int:faculty_id>/', views.api_faculty_detail, name='api_faculty_detail'),
     path('api/faculty/research/<int:faculty_id>/', views.api_faculty_research, name='api_faculty_research'),
     path('api/faculty/fdps/<int:faculty_id>/', views.api_faculty_fdps, name='api_faculty_fdps'),
     path('api/faculty/projects/<int:faculty_id>/', views.api_faculty_projects, name='api_faculty_projects'),
     path('api/faculty/subjects/<int:faculty_id>/', views.api_faculty_subjects, name='api_faculty_subjects'),
-    path('api/faculty/assign-subjects/<int:faculty_id>/', views.api_assign_faculty_subjects, name='api_assign_faculty_subjects'),
-    path('api/faculty/update-status/<int:faculty_id>/', views.api_update_faculty_status, name='api_update_faculty_status'),
-    path('api/faculty/bulk-update-status/', views.api_bulk_update_faculty_status, name='api_bulk_update_faculty_status'),
+    path('api/faculty/assign-subjects/<int:faculty_id>/', views.api_assign_faculty_subjects,
+         name='api_assign_faculty_subjects'),
+    path('api/faculty/update-status/<int:faculty_id>/', views.api_update_faculty_status,
+         name='api_update_faculty_status'),
+    path('api/faculty/bulk-update-status/', views.api_bulk_update_faculty_status,
+         name='api_bulk_update_faculty_status'),
     path('api/students/list/', views.api_students_list, name='api_students_list'),
     path('api/student/detail/<int:student_id>/', views.api_student_detail, name='api_student_detail'),
     path('api/student/certificates/<int:student_id>/', views.api_student_certificates, name='api_student_certificates'),
@@ -107,18 +134,20 @@ urlpatterns = [
     path('api/quick-stats/', views.quick_stats, name='quick_stats'),
     path('api/faculty-statistics/<int:faculty_id>/', views.faculty_statistics_api, name='faculty_statistics_api'),
 
+    # Stats & System
     path('stats/recent-activity/', views.recent_activity, name='recent_activity'),
     path('stats/system-status/', views.system_status, name='system_status'),
     path('stats/clear-logs/', views.clear_logs, name='clear_logs'),
     path('stats/backup-database/', views.backup_database, name='backup_database'),
 
+    # Exam & Laboratory
     path('exam-branch/', views.exam_branch, name='exam_branch'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
     path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
-
     path('laboratory/', views.laboratory, name='laboratory'),
     path('gallery/', views.gallery, name='gallery'),
 
+    # System routes
     path('system/session-info/', views.session_info, name='session_info'),
     path('system/clear-session/', views.clear_session, name='clear_session'),
     path('system/about/', views.about_system, name='about_system'),
@@ -127,15 +156,18 @@ urlpatterns = [
     path('system/profile-settings/', views.profile_settings, name='profile_settings'),
     path('system/application-home/', views.application_home, name='application_home'),
 
+    # Debug routes
     path('debug/test-template/', views.test_template, name='test_template'),
     path('debug/test-session/', views.test_session, name='test_session'),
     path('debug/cloudinary/', views.debug_cloudinary, name='debug_cloudinary'),
     path('debug/login/', views.debug_login, name='debug_login'),
     path('debug/faculty/<int:faculty_id>/', views.debug_faculty_data, name='debug_faculty_data'),
 
+    # PDF utilities
     path('pdf/generate-with-data/', views.generate_pdf_with_data, name='generate_pdf_with_data'),
     path('pdf/preview-template/', views.preview_pdf_template, name='preview_pdf_template'),
 
+    # Legacy redirects
     path('faculty-dashboard/', views.faculty_dashboard, name='faculty_dashboard_redirect'),
-    path('student-details/', views.students_data, name='student_details'),
+    path('syllabus/', views.syllabus_view, name='syllabus'),
 ]
