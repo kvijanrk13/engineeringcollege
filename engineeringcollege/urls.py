@@ -33,10 +33,11 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
-    # Root path - redirect based on authentication
+    # Root path - redirect based on authentication (ONLY ONE root path)
     path('', root_redirect, name='root'),
 
-    # Dashboard app (includes all functionality)
+    # Dashboard app URLs (all dashboard functionality)
+    # Note: dashboard.urls does NOT have an empty path, so no conflict
     path('', include('dashboard.urls')),
 ]
 
