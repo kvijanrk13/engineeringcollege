@@ -3,11 +3,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.shortcuts import redirect
 from django.http import HttpResponse
 from dashboard import views as dashboard_views
 
-# Define handler404, handler500, etc. at module level for the project
+# Define error handlers
 handler404 = dashboard_views.handler404
 handler500 = dashboard_views.handler500
 handler403 = dashboard_views.handler403
@@ -19,13 +18,6 @@ def health_check(request):
     return HttpResponse("OK", status=200)
 
 
-def root_redirect(request):
-    """Redirect root to dashboard"""
-    if request.user.is_authenticated:
-        return redirect('dashboard:dashboard')
-    return redirect('dashboard:login')
-
-
 urlpatterns = [
     # Health check for Render
     path('health/', health_check, name='health_check'),
@@ -33,11 +25,10 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
 
-    # Root path - redirect based on authentication (ONLY ONE root path)
-    path('', root_redirect, name='root'),
+    # Root path - direct to admin login
+    path('', dashboard_views.admin_login, name='root'),
 
-    # Dashboard app URLs (all dashboard functionality)
-    # Note: dashboard.urls does NOT have an empty path, so no conflict
+    # Dashboard app URLs
     path('', include('dashboard.urls')),
 ]
 
