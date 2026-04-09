@@ -5553,6 +5553,23 @@ def exam_branch_batch_download(request):
         messages.error(request, f'Error creating ZIP file: {e}')
         return redirect('dashboard:exam_branch')
 
+# Add this to dashboard/views.py - at the end, before the error handlers
+
+def simple_test(request):
+    """Simple test view to verify Django is working"""
+    return HttpResponse("""
+    <html>
+    <head><title>ANURAG Engineering College</title></head>
+    <body style="font-family: Arial; text-align: center; padding: 50px;">
+        <h1>🏫 ANURAG Engineering College</h1>
+        <p>Django is working! Your application is running.</p>
+        <hr>
+        <p><a href="/admin-login/">🔐 Click here for Admin Login</a></p>
+        <p><a href="/student-login/">👨‍🎓 Click here for Student Login</a></p>
+    </body>
+    </html>
+    """)
+
 
 # ==================== ERROR HANDLERS ====================
 def handler404(request, exception):

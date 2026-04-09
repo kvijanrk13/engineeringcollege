@@ -6,6 +6,9 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
+    # ==================== TEST VIEW (for debugging) ====================
+    path('test/', views.simple_test, name='test'),
+
     # ==================== AUTHENTICATION ====================
     path('dashboard/', views.dashboard, name='dashboard'),
     path('login/', views.admin_login, name='login'),
