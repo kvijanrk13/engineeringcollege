@@ -5,8 +5,8 @@ from django.conf.urls.static import static
 from dashboard import views
 
 urlpatterns = [
-    # Home page -> login page
-    path('', views.login_view, name='home'),
+    # Root URL serves the login page directly
+    path('', views.admin_login, name='home'),
     path('login/', views.admin_login, name='login'),
     path('login.html', views.admin_login, name='login_html'),
     path('admin-login/', views.admin_login, name='admin_login'),
