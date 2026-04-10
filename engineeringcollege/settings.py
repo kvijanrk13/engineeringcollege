@@ -208,9 +208,9 @@ else:
 # ================================
 # AUTH REDIRECTS (Updated for engineeringcollege.onrender.com)
 # ================================
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
-LOGOUT_REDIRECT_URL = '/login/'
+LOGIN_URL = '/admin-login/'
+LOGIN_REDIRECT_URL = '/dashboard/dashboard/'
+LOGOUT_REDIRECT_URL = '/admin-login/'
 
 # ================================
 # TIMEZONE & LANGUAGE
