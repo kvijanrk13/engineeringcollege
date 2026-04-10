@@ -1411,6 +1411,22 @@ def faculty_list(request):
 # ==================== ADD FACULTY ====================
 @login_required
 def add_faculty(request):
+    departments = ['CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', 'MCA']
+    designations = ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Senior Professor']
+    genders = ['Male', 'Female', 'Other']
+    caste_list = ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC', 'ST']
+    qualifications = ['Completed', 'Pursuing', 'Not Started']
+
+    def render_add_faculty_form():
+        return render(request, "dashboard/add_faculty_form.html", {
+            "title": "Add New Faculty",
+            "departments": departments,
+            "designations": designations,
+            "genders": genders,
+            "caste_list": caste_list,
+            "qualifications": qualifications,
+        })
+
     print("=" * 60)
     print("ADD FACULTY VIEW CALLED")
     print(f"Request method: {request.method}")
@@ -1423,13 +1439,24 @@ def add_faculty(request):
         print("=" * 60)
         try:
             def get_int_or_none(value):
-                return int(value) if value and value.strip() else None
+                if not value or not str(value).strip():
+                    return None
+                try:
+                    return int(str(value).strip())
+                except (TypeError, ValueError):
+                    return None
 
             def get_float_or_none(value):
-                return float(value) if value and value.strip() else None
+                if not value or not str(value).strip():
+                    return None
+                cleaned = str(value).strip().replace('%', '')
+                try:
+                    return float(cleaned)
+                except (TypeError, ValueError):
+                    return None
 
             def get_date_or_none(value):
-                return value if value and value.strip() else None
+                return str(value).strip() if value and str(value).strip() else None
 
             def get_dynamic_files(prefix):
                 matched = [
@@ -1567,7 +1594,7 @@ def add_faculty(request):
             employee_code = request.POST.get("employee_code", "").strip()
             if not staff_name or not employee_code:
                 messages.error(request, "Staff Name and Employee Code are required!")
-                return redirect("dashboard:add_faculty")
+                return render_add_faculty_form()
             print(f"Creating faculty: {staff_name} ({employee_code})")
             faculty = Faculty.objects.create(
                 staff_name=staff_name,
@@ -1975,20 +2002,8 @@ def add_faculty(request):
             import traceback
             traceback.print_exc()
             messages.error(request, f"Error adding faculty: {str(e)}")
-            return redirect("dashboard:add_faculty")
-    departments = ['CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', 'MCA']
-    designations = ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Senior Professor']
-    genders = ['Male', 'Female', 'Other']
-    caste_list = ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC', 'ST']
-    qualifications = ['Completed', 'Pursuing', 'Not Started']
-    return render(request, "dashboard/add_faculty_form.html", {
-        "title": "Add New Faculty",
-        "departments": departments,
-        "designations": designations,
-        "genders": genders,
-        "caste_list": caste_list,
-        "qualifications": qualifications,
-    })
+            return render_add_faculty_form()
+    return render_add_faculty_form()
 
 
 # ==================== EDIT FACULTY ====================
