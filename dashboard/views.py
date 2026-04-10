@@ -1595,6 +1595,13 @@ def add_faculty(request):
             if not staff_name or not employee_code:
                 messages.error(request, "Staff Name and Employee Code are required!")
                 return render_add_faculty_form()
+            if Faculty.objects.filter(employee_code=employee_code).exists():
+                messages.error(request, f"Employee Code '{employee_code}' already exists. Use a different code.")
+                return render_add_faculty_form()
+            email = request.POST.get("email", "").strip()
+            if email and Faculty.objects.filter(email=email).exists():
+                messages.error(request, f"Email '{email}' is already used by another faculty record.")
+                return render_add_faculty_form()
             print(f"Creating faculty: {staff_name} ({employee_code})")
             faculty = Faculty.objects.create(
                 staff_name=staff_name,
@@ -1610,7 +1617,7 @@ def add_faculty(request):
                 address=request.POST.get("address", "").strip(),
                 mobile=request.POST.get("mobile", "").strip(),
                 phone=request.POST.get("phone", "").strip(),
-                email=request.POST.get("email", "").strip(),
+                email=email,
                 department=request.POST.get("department", "").strip(),
                 designation=request.POST.get("designation", "").strip(),
                 joining_date=get_date_or_none(request.POST.get("joining_date")),
