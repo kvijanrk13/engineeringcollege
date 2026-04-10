@@ -1025,30 +1025,49 @@ def dashboard(request):
     """
     if request.user.is_authenticated:
         # User is an admin – show the full dashboard
-        total_faculty = Faculty.objects.count()
-        with_phd = Faculty.objects.exclude(phd_degree__isnull=True).exclude(phd_degree__exact='').count()
         today = date.today()
         exp_distribution = {'0-5': 0, '5-10': 0, '10-15': 0, '15+': 0}
-        for f in Faculty.objects.all():
-            if f.joining_date:
-                yrs = (today - f.joining_date).days / 365.25
-                if yrs <= 5:
-                    exp_distribution['0-5'] += 1
-                elif yrs <= 10:
-                    exp_distribution['5-10'] += 1
-                elif yrs <= 15:
-                    exp_distribution['10-15'] += 1
-                else:
-                    exp_distribution['15+'] += 1
+        total_faculty = 0
+        with_phd = 0
+        active_faculty = 0
+        total_certificates = 0
+        departments = []
+        recent_uploads = []
+        recent_logs = []
+        try:
+            total_faculty = Faculty.objects.count()
+            with_phd = Faculty.objects.exclude(phd_degree__isnull=True).exclude(phd_degree__exact='').count()
+            active_faculty = Faculty.objects.filter(is_active=True).count()
+            total_certificates = Certificate.objects.count()
+            departments = Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count')
+            recent_uploads = Faculty.objects.order_by('-created_at')[:5]
+            recent_logs = FacultyLog.objects.order_by('-created_at')[:5]
+            for f in Faculty.objects.all():
+                if f.joining_date:
+                    yrs = (today - f.joining_date).days / 365.25
+                    if yrs <= 5:
+                        exp_distribution['0-5'] += 1
+                    elif yrs <= 10:
+                        exp_distribution['5-10'] += 1
+                    elif yrs <= 15:
+                        exp_distribution['10-15'] += 1
+                    else:
+                        exp_distribution['15+'] += 1
+        except Exception as e:
+            logger.exception("Dashboard summary query failed: %s", e)
+            messages.warning(
+                request,
+                'Dashboard data is partially unavailable. Please run the latest migrations on production.'
+            )
         return render(request, "dashboard/dashboard.html", {
             'title': 'Dashboard',
             'total_faculty': total_faculty,
             'with_phd': with_phd,
-            'active_faculty': Faculty.objects.filter(is_active=True).count(),
-            'total_certificates': Certificate.objects.count(),
-            'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
-            'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
-            'recent_logs': FacultyLog.objects.order_by('-created_at')[:5],
+            'active_faculty': active_faculty,
+            'total_certificates': total_certificates,
+            'departments': departments,
+            'recent_uploads': recent_uploads,
+            'recent_logs': recent_logs,
             'exp_distribution': exp_distribution,
             'today': today,
             'user': request.user,
@@ -1063,13 +1082,39 @@ def admin_dashboard(request):
     if not request.user.is_superuser:
         messages.error(request, 'Access denied. Admin privileges required.')
         return redirect('dashboard:dashboard')
-    total_faculty = Faculty.objects.count()
-    departments = list(Faculty.objects.values('department')
-                       .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
-                       .order_by('-count'))
-    for d in departments:
-        d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+    total_faculty = 0
+    active_faculty = 0
+    total_students = 0
+    total_certificates = 0
+    cloudinary_uploads = 0
+    with_phd = 0
+    departments = []
+    recent_logs = []
+    recent_uploads = []
+    active_today = 0
     system_stats = {}
+    try:
+        total_faculty = Faculty.objects.count()
+        active_faculty = Faculty.objects.filter(is_active=True).count()
+        total_students = Student.objects.count()
+        total_certificates = Certificate.objects.count()
+        cloudinary_uploads = CloudinaryUpload.objects.count()
+        with_phd = Faculty.objects.filter(phd_degree='Completed').count()
+        departments = list(Faculty.objects.values('department')
+                           .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
+                           .order_by('-count'))
+        for d in departments:
+            d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+        recent_logs = FacultyLog.objects.order_by('-created_at')[:10]
+        recent_uploads = Faculty.objects.order_by('-created_at')[:5]
+        active_today = FacultyLog.objects.filter(
+            created_at__date=date.today()).values('performed_by').distinct().count()
+    except Exception as e:
+        logger.exception("Admin dashboard summary query failed: %s", e)
+        messages.warning(
+            request,
+            'Admin dashboard data is partially unavailable. Please run the latest migrations on production.'
+        )
     if psutil:
         try:
             system_stats = {
@@ -1083,21 +1128,20 @@ def admin_dashboard(request):
     return render(request, "dashboard/admin_dashboard.html", {
         'title': 'Admin Dashboard',
         'total_faculty': total_faculty,
-        'active_faculty': Faculty.objects.filter(is_active=True).count(),
-        'total_students': Student.objects.count(),
-        'total_certificates': Certificate.objects.count(),
-        'cloudinary_uploads': CloudinaryUpload.objects.count(),
-        'with_phd': Faculty.objects.filter(phd_degree='Completed').count(),
+        'active_faculty': active_faculty,
+        'total_students': total_students,
+        'total_certificates': total_certificates,
+        'cloudinary_uploads': cloudinary_uploads,
+        'with_phd': with_phd,
         'departments': departments,
-        'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
+        'recent_logs': recent_logs,
         'system_stats': system_stats,
         'user_activity': {
             'total_users': User.objects.count(),
-            'active_today': FacultyLog.objects.filter(
-                created_at__date=date.today()).values('performed_by').distinct().count(),
+            'active_today': active_today,
         },
         'has_psutil': psutil is not None,
-        'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
+        'recent_uploads': recent_uploads,
     })
 
 
