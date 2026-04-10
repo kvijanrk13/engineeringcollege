@@ -30,6 +30,14 @@ mkdir -p staticfiles media
 echo "🔄 Applying database migrations..."
 python manage.py migrate --noinput
 
+# Create or update the initial Django superuser when env vars are provided.
+if [ -n "${DJANGO_SUPERUSER_USERNAME:-}" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD:-}" ] && [ -n "${DJANGO_SUPERUSER_EMAIL:-}" ]; then
+  echo "👤 Ensuring Django superuser exists..."
+  python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); username='${DJANGO_SUPERUSER_USERNAME}'; email='${DJANGO_SUPERUSER_EMAIL}'; password='${DJANGO_SUPERUSER_PASSWORD}'; user, created = User.objects.get_or_create(username=username, defaults={'email': email, 'is_staff': True, 'is_superuser': True}); user.email = email; user.is_staff = True; user.is_superuser = True; user.set_password(password); user.save(); print('Superuser created' if created else 'Superuser updated')"
+else
+  echo "ℹ️ DJANGO_SUPERUSER_* env vars not set; skipping superuser bootstrap."
+fi
+
 # Show migration status (debugging)
 echo "📋 Migration status:"
 python manage.py showmigrations
