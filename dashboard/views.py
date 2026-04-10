@@ -1197,193 +1197,215 @@ def syllabus_view(request):
 # ==================== FACULTY DASHBOARD ====================
 @login_required
 def faculty_dashboard(request, faculty_id=None):
-    pdf_mode = request.GET.get("print") == "1"
-    if pdf_mode:
-        fid = request.GET.get("id")
-        if not fid:
-            return HttpResponseBadRequest("Faculty ID required for PDF mode")
-        f = get_object_or_404(Faculty, id=fid)
-        exp = calculate_experience(f.joining_date) if f.joining_date else "N/A"
-        return render(request, "dashboard/faculty_pdf.html", {
-            "faculty": f,
-            "pdf_mode": True,
-            "current_date": timezone.now(),
-            "experience": exp,
-            "cloudinary_status": {"has_pdf": bool(f.cloudinary_pdf_url)},
-        })
-    faculties = []
-    faculty = None
-    certificates = []
-    research_projects = []
-    research_publications = []
-    fdps = []
-    btech_projects = []
-    results_data = None
-    subjects_list = []
-    departments = []
     try:
-        faculties = Faculty.objects.all().order_by('staff_name')
-        if faculty_id:
-            faculty = get_object_or_404(Faculty, id=faculty_id)
-        elif request.GET.get('id'):
-            faculty = get_object_or_404(Faculty, id=request.GET.get('id'))
-        elif faculties.exists():
-            faculty = faculties.first()
-        if faculty:
-            certificates = Certificate.objects.filter(faculty=faculty)
-            research_projects = ResearchProject.objects.filter(faculty=faculty)
-            research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
-            fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
-            btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
-            sd = getattr(faculty, 'subjects_dealt', None)
-            if sd:
-                subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
-            if faculty.results:
-                try:
-                    results_data = json.loads(faculty.results)
-                    if not isinstance(results_data, list):
-                        results_data = [results_data]
-                except (json.JSONDecodeError, TypeError):
-                    results_data = faculty.results
-        if request.GET.get('analytics') == 'true' or (not faculty and faculties.exists()):
-            return faculty_analytics(request)
-        departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
+        pdf_mode = request.GET.get("print") == "1"
+        if pdf_mode:
+            fid = request.GET.get("id")
+            if not fid:
+                return HttpResponseBadRequest("Faculty ID required for PDF mode")
+            f = get_object_or_404(Faculty, id=fid)
+            exp = calculate_experience(f.joining_date) if f.joining_date else "N/A"
+            return render(request, "dashboard/faculty_pdf.html", {
+                "faculty": f,
+                "pdf_mode": True,
+                "current_date": timezone.now(),
+                "experience": exp,
+                "cloudinary_status": {"has_pdf": bool(f.cloudinary_pdf_url)},
+            })
+        faculties = []
+        faculty = None
+        certificates = []
+        research_projects = []
+        research_publications = []
+        fdps = []
+        btech_projects = []
+        results_data = None
+        subjects_list = []
+        departments = []
+        try:
+            faculties = Faculty.objects.all().order_by('staff_name')
+            if faculty_id:
+                faculty = get_object_or_404(Faculty, id=faculty_id)
+            elif request.GET.get('id'):
+                faculty = get_object_or_404(Faculty, id=request.GET.get('id'))
+            elif faculties.exists():
+                faculty = faculties.first()
+            if faculty:
+                certificates = Certificate.objects.filter(faculty=faculty)
+                research_projects = ResearchProject.objects.filter(faculty=faculty)
+                research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
+                fdps = FDP.objects.filter(faculty=faculty).order_by('-from_date')
+                btech_projects = BTechProject.objects.filter(faculty=faculty).order_by('-batch')
+                sd = getattr(faculty, 'subjects_dealt', None)
+                if sd:
+                    subjects_list = [s.strip() for s in sd.split(',') if s.strip()]
+                if faculty.results:
+                    try:
+                        results_data = json.loads(faculty.results)
+                        if not isinstance(results_data, list):
+                            results_data = [results_data]
+                    except (json.JSONDecodeError, TypeError):
+                        results_data = faculty.results
+            if request.GET.get('analytics') == 'true' or (not faculty and faculties.exists()):
+                return faculty_analytics(request)
+            departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
+        except Exception as e:
+            logger.exception("Faculty dashboard query failed: %s", e)
+            messages.warning(
+                request,
+                'Faculty data is partially unavailable. Please run the latest migrations on production.'
+            )
+        experience = calculate_experience(faculty.joining_date) if faculty and faculty.joining_date else "N/A"
+        return render(request, 'dashboard/faculty_dashboard.html', {
+            'faculties': faculties,
+            'faculty': faculty,
+            'certificates': certificates,
+            'research_projects': research_projects,
+            'research_publications': research_publications,
+            'fdps': fdps,
+            'btech_projects': btech_projects,
+            'results_data': results_data,
+            'subjects_list': subjects_list,
+            'experience': experience,
+            'cloudinary_status': {
+                'has_pdf': bool(faculty.cloudinary_pdf_url) if faculty else False,
+                'has_photo': bool(faculty.cloudinary_photo_url) if faculty else False,
+            },
+            'current_date': timezone.now(),
+            'is_analytics': False,
+            'pdf_mode': False,
+            'departments': departments,
+            'title': f'Faculty Profile - {faculty.staff_name}' if faculty else 'Faculty Dashboard',
+        })
     except Exception as e:
-        logger.exception("Faculty dashboard query failed: %s", e)
-        messages.warning(
-            request,
-            'Faculty data is partially unavailable. Please run the latest migrations on production.'
+        logger.exception("Faculty dashboard render failed: %s", e)
+        return HttpResponse(
+            """
+            <html><body style="font-family:Arial;padding:24px">
+            <h2>Faculty Page Unavailable</h2>
+            <p>The faculty page hit a production rendering error.</p>
+            <p><a href="/dashboard/faculty-list/">Open Faculty List</a></p>
+            <p><a href="/dashboard/dashboard/">Back to Dashboard</a></p>
+            </body></html>
+            """,
+            status=200,
         )
-    experience = calculate_experience(faculty.joining_date) if faculty and faculty.joining_date else "N/A"
-    return render(request, 'dashboard/faculty_dashboard.html', {
-        'faculties': faculties,
-        'faculty': faculty,
-        'certificates': certificates,
-        'research_projects': research_projects,
-        'research_publications': research_publications,
-        'fdps': fdps,
-        'btech_projects': btech_projects,
-        'results_data': results_data,
-        'subjects_list': subjects_list,
-        'experience': experience,
-        'cloudinary_status': {
-            'has_pdf': bool(faculty.cloudinary_pdf_url) if faculty else False,
-            'has_photo': bool(faculty.cloudinary_photo_url) if faculty else False,
-        },
-        'current_date': timezone.now(),
-        'is_analytics': False,
-        'pdf_mode': False,
-        'departments': departments,
-        'title': f'Faculty Profile - {faculty.staff_name}' if faculty else 'Faculty Dashboard',
-    })
 
 
 @login_required
 def faculty_analytics(request):
-    total = 0
-    departments = []
-    exp_stats = {'0_5': 0, '5_10': 0, '10_plus': 0}
-    research_stats = {'total': 0, 'journal': 0, 'conference': 0, 'patent': 0}
-    fdp_stats = {'total': 0, 'fdp': 0, 'workshop': 0}
-    qualification_stats = {'phd_completed': 0, 'phd_pursuing': 0, 'pg_only': 0, 'ug_only': 0}
-    faculties = []
     try:
-        total = Faculty.objects.count()
-        departments = list(Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'))
-        for d in departments:
-            d['percentage'] = (d['count'] / total * 100) if total > 0 else 0
-        today = date.today()
-        for f in Faculty.objects.all():
-            if f.joining_date:
-                yrs = today.year - f.joining_date.year
-                if yrs <= 5:
-                    exp_stats['0_5'] += 1
-                elif yrs <= 10:
-                    exp_stats['5_10'] += 1
-                else:
-                    exp_stats['10_plus'] += 1
-        research_stats = {
-            'total': ResearchPublication.objects.count(),
-            'journal': ResearchPublication.objects.filter(research_type='journal').count(),
-            'conference': ResearchPublication.objects.filter(research_type='conference').count(),
-            'patent': ResearchPublication.objects.filter(research_type='patent').count(),
-        }
-        fdp_stats = {
-            'total': FDP.objects.count(),
-            'fdp': FDP.objects.filter(fdp_type='fdp').count(),
-            'workshop': FDP.objects.filter(fdp_type='workshop').count(),
-        }
-        qualification_stats = {
-            'phd_completed': Faculty.objects.filter(phd_degree='Completed').count(),
-            'phd_pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
-            'pg_only': Faculty.objects.filter(pg_year__isnull=False,
-                                              phd_degree__in=['', 'Not Started', 'None']).count(),
-            'ug_only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True,
-                                              phd_degree__in=['', 'Not Started', 'None']).count(),
-        }
-        faculties = Faculty.objects.all()[:10]
+        total = 0
+        departments = []
+        exp_stats = {'0_5': 0, '5_10': 0, '10_plus': 0}
+        research_stats = {'total': 0, 'journal': 0, 'conference': 0, 'patent': 0}
+        fdp_stats = {'total': 0, 'fdp': 0, 'workshop': 0}
+        qualification_stats = {'phd_completed': 0, 'phd_pursuing': 0, 'pg_only': 0, 'ug_only': 0}
+        faculties = []
+        try:
+            total = Faculty.objects.count()
+            departments = list(Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'))
+            for d in departments:
+                d['percentage'] = (d['count'] / total * 100) if total > 0 else 0
+            today = date.today()
+            for f in Faculty.objects.all():
+                if f.joining_date:
+                    yrs = today.year - f.joining_date.year
+                    if yrs <= 5:
+                        exp_stats['0_5'] += 1
+                    elif yrs <= 10:
+                        exp_stats['5_10'] += 1
+                    else:
+                        exp_stats['10_plus'] += 1
+            research_stats = {
+                'total': ResearchPublication.objects.count(),
+                'journal': ResearchPublication.objects.filter(research_type='journal').count(),
+                'conference': ResearchPublication.objects.filter(research_type='conference').count(),
+                'patent': ResearchPublication.objects.filter(research_type='patent').count(),
+            }
+            fdp_stats = {
+                'total': FDP.objects.count(),
+                'fdp': FDP.objects.filter(fdp_type='fdp').count(),
+                'workshop': FDP.objects.filter(fdp_type='workshop').count(),
+            }
+            qualification_stats = {
+                'phd_completed': Faculty.objects.filter(phd_degree='Completed').count(),
+                'phd_pursuing': Faculty.objects.filter(phd_degree='Pursuing').count(),
+                'pg_only': Faculty.objects.filter(pg_year__isnull=False,
+                                                  phd_degree__in=['', 'Not Started', 'None']).count(),
+                'ug_only': Faculty.objects.filter(ug_year__isnull=False, pg_year__isnull=True,
+                                                  phd_degree__in=['', 'Not Started', 'None']).count(),
+            }
+            faculties = Faculty.objects.all()[:10]
+        except Exception as e:
+            logger.exception("Faculty analytics query failed: %s", e)
+            messages.warning(
+                request,
+                'Faculty analytics is partially unavailable. Please run the latest migrations on production.'
+            )
+        return render(request, 'dashboard/faculty.html', {
+            'is_analytics': True, 'total_faculty': total,
+            'qualification_stats': qualification_stats,
+            'departments': departments,
+            'experience_stats': exp_stats,
+            'research_stats': research_stats,
+            'fdp_stats': fdp_stats,
+            'faculties': faculties,
+            'title': 'Faculty Analytics',
+        })
     except Exception as e:
-        logger.exception("Faculty analytics query failed: %s", e)
-        messages.warning(
-            request,
-            'Faculty analytics is partially unavailable. Please run the latest migrations on production.'
-        )
-    return render(request, 'dashboard/faculty.html', {
-        'is_analytics': True, 'total_faculty': total,
-        'qualification_stats': qualification_stats,
-        'departments': departments,
-        'experience_stats': exp_stats,
-        'research_stats': research_stats,
-        'fdp_stats': fdp_stats,
-        'faculties': faculties,
-        'title': 'Faculty Analytics',
-    })
+        logger.exception("Faculty analytics render failed: %s", e)
+        return HttpResponse("<html><body><h2>Faculty Analytics Unavailable</h2></body></html>", status=200)
 
 
 # ==================== FACULTY LIST ====================
 @login_required
 def faculty_list(request):
-    sq = request.GET.get('search', '')
-    df = request.GET.get('department', '')
-    sf = request.GET.get('status', '')
-    qf = request.GET.get('qualification', '')
-    departments = []
-    total_faculty = 0
     try:
-        qs = Faculty.objects.all().order_by('staff_name')
-        if sq:
-            qs = qs.filter(Q(staff_name__icontains=sq) | Q(employee_code__icontains=sq) |
-                           Q(email__icontains=sq) | Q(department__icontains=sq) | Q(designation__icontains=sq))
-        if df:
-            qs = qs.filter(department__icontains=df)
-        if sf == 'active':
-            qs = qs.filter(is_active=True)
-        elif sf == 'inactive':
-            qs = qs.filter(is_active=False)
-        if qf == 'phd':
-            qs = qs.filter(phd_degree='Completed')
-        elif qf == 'pg':
-            qs = qs.filter(pg_year__isnull=False, phd_degree__in=['', 'Not Started', 'None'])
-        paginator = Paginator(qs, 20)
+        sq = request.GET.get('search', '')
+        df = request.GET.get('department', '')
+        sf = request.GET.get('status', '')
+        qf = request.GET.get('qualification', '')
+        departments = []
+        total_faculty = 0
         try:
-            faculties = paginator.page(request.GET.get('page', 1))
-        except (PageNotAnInteger, EmptyPage) as e:
-            faculties = paginator.page(1 if isinstance(e, PageNotAnInteger) else paginator.num_pages)
-        departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
-        total_faculty = qs.count()
+            qs = Faculty.objects.all().order_by('staff_name')
+            if sq:
+                qs = qs.filter(Q(staff_name__icontains=sq) | Q(employee_code__icontains=sq) |
+                               Q(email__icontains=sq) | Q(department__icontains=sq) | Q(designation__icontains=sq))
+            if df:
+                qs = qs.filter(department__icontains=df)
+            if sf == 'active':
+                qs = qs.filter(is_active=True)
+            elif sf == 'inactive':
+                qs = qs.filter(is_active=False)
+            if qf == 'phd':
+                qs = qs.filter(phd_degree='Completed')
+            elif qf == 'pg':
+                qs = qs.filter(pg_year__isnull=False, phd_degree__in=['', 'Not Started', 'None'])
+            paginator = Paginator(qs, 20)
+            try:
+                faculties = paginator.page(request.GET.get('page', 1))
+            except (PageNotAnInteger, EmptyPage) as e:
+                faculties = paginator.page(1 if isinstance(e, PageNotAnInteger) else paginator.num_pages)
+            departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
+            total_faculty = qs.count()
+        except Exception as e:
+            logger.exception("Faculty list query failed: %s", e)
+            messages.warning(
+                request,
+                'Faculty list is partially unavailable. Please run the latest migrations on production.'
+            )
+            faculties = []
+        return render(request, 'dashboard/faculty_list.html', {
+            'faculties': faculties,
+            'departments': departments,
+            'search_query': sq, 'department_filter': df, 'status_filter': sf, 'qualification_filter': qf,
+            'total_faculty': total_faculty, 'page_title': 'Faculty Directory', 'active_page': 'faculty_list',
+        })
     except Exception as e:
-        logger.exception("Faculty list query failed: %s", e)
-        messages.warning(
-            request,
-            'Faculty list is partially unavailable. Please run the latest migrations on production.'
-        )
-        faculties = []
-    return render(request, 'dashboard/faculty_list.html', {
-        'faculties': faculties,
-        'departments': departments,
-        'search_query': sq, 'department_filter': df, 'status_filter': sf, 'qualification_filter': qf,
-        'total_faculty': total_faculty, 'page_title': 'Faculty Directory', 'active_page': 'faculty_list',
-    })
+        logger.exception("Faculty list render failed: %s", e)
+        return HttpResponse("<html><body><h2>Faculty List Unavailable</h2></body></html>", status=200)
 
 
 # ==================== ADD FACULTY ====================
