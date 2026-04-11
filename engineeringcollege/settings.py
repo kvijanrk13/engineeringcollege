@@ -15,7 +15,6 @@ load_dotenv(BASE_DIR / '.env')
 # ✅ ENV DETECTION
 # ================================
 ON_RENDER = 'RENDER' in os.environ or 'DATABASE_URL' in os.environ
-print(f"[DEBUG] ON_RENDER = {ON_RENDER}")
 
 # ================================
 # SECURITY
@@ -120,7 +119,6 @@ if ON_RENDER:
             ssl_require=True
         )
     }
-    print(f"[OK] PostgreSQL connected")
 else:
     DATABASES = {
         'default': {
@@ -128,7 +126,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-    print("[OK] SQLite connected")
 
 # ================================
 # PASSWORD VALIDATION
@@ -192,24 +189,14 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
         # Use Cloudinary for media storage in production
         if ON_RENDER:
             DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-            print("[OK] Cloudinary configured successfully (Render)")
-        else:
-            print("[OK] Cloudinary configured locally")
-
     except Exception as e:
-        print(f"[ERROR] Cloudinary configuration failed: {e}")
         CLOUDINARY_CONFIGURED = False
-else:
-    if ON_RENDER:
-        print("[WARNING] Cloudinary credentials not found - using local storage")
-    else:
-        print("[WARNING] Cloudinary not configured - using local storage")
 
 # ================================
 # AUTH REDIRECTS (Updated for engineeringcollege.onrender.com)
 # ================================
 LOGIN_URL = '/admin-login/'
-LOGIN_REDIRECT_URL = '/dashboard/dashboard/'
+LOGIN_REDIRECT_URL = '/dashboard/faculty/list/'
 LOGOUT_REDIRECT_URL = '/admin-login/'
 
 # ================================

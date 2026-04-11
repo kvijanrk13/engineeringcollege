@@ -30,9 +30,6 @@ class DashboardConfig(AppConfig):
                 # Import and run the startup check
                 from .startup import check_pdf_url_column
                 result = check_pdf_url_column()
-                # Print to stderr so it doesn't interfere with normal output
-                if result:
-                    print("[SUCCESS] PDF URL column check completed", file=sys.stderr)
             except Exception as e:
                 # Don't let startup errors crash the server
-                print(f"[INFO] Startup check completed", file=sys.stderr)
+                pass
