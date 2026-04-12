@@ -31,6 +31,10 @@ echo "🔄 Applying database migrations..."
 python manage.py migrate --noinput
 
 # Create or update the initial Django superuser when env vars are provided.
+python manage.py createsuperuser --noinput \
+  --username $DJANGO_SUPERUSER_USERNAME \
+  --email $DJANGO_SUPERUSER_EMAIL || true
+echo "Superuser created or already exists."
 
 # Collect static files
 echo "🎨 Collecting static files..."
