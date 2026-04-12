@@ -972,9 +972,6 @@ def admin_login(request):
         else:
             # In production, return a proper 500 error
             return HttpResponse("Internal Server Error", status=500)
-        else:
-            # In production, return a proper 500 error
-            return HttpResponse("Internal Server Error", status=500)
 
 
 @login_required
