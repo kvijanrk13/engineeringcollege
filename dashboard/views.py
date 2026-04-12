@@ -7,6 +7,7 @@ import tempfile
 import logging
 import uuid
 import zipfile
+import traceback
 from datetime import datetime, date, timedelta
 from io import BytesIO
 from typing import Dict, List, Optional, Any
@@ -944,113 +945,36 @@ def login_view(request):
 
 @csrf_protect
 def admin_login(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard:dashboard')
-    error = None
-    if request.method == 'POST':
-        user = authenticate(request,
-                            username=request.POST.get('username'),
-                            password=request.POST.get('password'))
-        if user is not None and user.is_staff:
-            login(request, user)
-            # REMOVED success message to avoid extra notification
+    try:
+        if request.user.is_authenticated:
             return redirect('dashboard:dashboard')
-        else:
-            error = 'Invalid admin credentials'
-            messages.error(request, error)
-    return render(request, 'dashboard/login.html', {
-        'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
-        'admin_login': True, 'error': error,
-    })
-
-
-def student_login(request):
-    if request.session.get('student_logged_in'):
-        return redirect('dashboard:students_data')
-    error = None
-    if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        if username == "anrkitstudent" and password == "anrkitstudent":
-            request.session["student_logged_in"] = True
-            request.session["student_username"] = username
-            # REMOVED success message
-            return redirect("dashboard:students_data")
-        error = "Invalid student credentials"
-        messages.error(request, error)
-    return render(request, 'dashboard/login.html', {
-        'student_login': True, 'error': error,
-        'title': 'Student Login - ANURAG ENGINEERING COLLEGE'
-    })
-
-
-def logout_view(request):
-    if request.user.is_authenticated:
-        logout(request)
-    else:
-        pass
-    for key in ('student_logged_in', 'student_username', 'student_role'):
-        request.session.pop(key, None)
-    return redirect('dashboard:admin_login')
-
-
-def student_logout(request):
-    request.session.flush()
-    return redirect('dashboard:student_login')
-
-
-def admin_logout(request):
-    if request.user.is_authenticated:
-        logout(request)
-    return redirect('dashboard:admin_login')
-
-
-# ==================== HOME & DASHBOARD ====================
-def home(request):
-    if request.session.get('student_logged_in'):
-        return redirect('dashboard:student_dashboard')
-    if request.user.is_authenticated:
-        return redirect('dashboard:admin_dashboard' if request.user.is_superuser else 'dashboard:dashboard')
-    return redirect('dashboard:admin_login')
-
-
-def dashboard(request):
-    """
-    Dashboard view for authenticated admin users only.
-    """
-    if not request.user.is_authenticated:
-        return redirect('dashboard:admin_login')
-
-    # User is an admin – show the full dashboard
-    total_faculty = Faculty.objects.count()
-    with_phd = Faculty.objects.exclude(phd_degree__isnull=True).exclude(phd_degree__exact='').count()
-    today = date.today()
-    exp_distribution = {'0-5': 0, '5-10': 0, '10-15': 0, '15+': 0}
-    for f in Faculty.objects.all():
-        if f.joining_date:
-            yrs = (today - f.joining_date).days / 365.25
-            if yrs <= 5:
-                exp_distribution['0-5'] += 1
-            elif yrs <= 10:
-                exp_distribution['5-10'] += 1
-            elif yrs <= 15:
-                exp_distribution['10-15'] += 1
+        error = None
+        if request.method == 'POST':
+            user = authenticate(request,
+                                username=request.POST.get('username'),
+                                password=request.POST.get('password'))
+            if user is not None and user.is_staff:
+                login(request, user)
+                # REMOVED success message to avoid extra notification
+                return redirect('dashboard:dashboard')
             else:
-                exp_distribution['15+'] += 1
-
-    return render(request, "dashboard/dashboard.html", {
-        'title': 'Dashboard',
-        'total_faculty': total_faculty,
-        'with_phd': with_phd,
-        'active_faculty': Faculty.objects.filter(is_active=True).count(),
-        'total_certificates': Certificate.objects.count(),
-        'departments': Faculty.objects.values('department').annotate(count=Count('id')).order_by('-count'),
-        'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
-        'recent_logs': FacultyLog.objects.order_by('-created_at')[:5],
-        'exp_distribution': exp_distribution,
-        'today': today,
-        'user': request.user,
-    })
+                error = 'Invalid admin credentials'
+                messages.error(request, error)
+        return render(request, 'dashboard/login.html', {
+            'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
+            'admin_login': True, 'error': error,
+        })
+    except Exception as e:
+        tb = traceback.format_exc()
+        logger.error(f"Dashboard view error: {e}", exc_info=True)
+        if settings.DEBUG:
+            return HttpResponse(f"<h1>DEBUG 500 ERROR</h1><pre>{tb}</pre>", content_type="text/html")
+        else:
+            # In production, return a proper 500 error
+            return HttpResponse("Internal Server Error", status=500)
+        else:
+            # In production, return a proper 500 error
+            return HttpResponse("Internal Server Error", status=500)
 
 
 @login_required
@@ -5040,9 +4964,13 @@ def handler404(request, exception):
 
 
 def handler500(request):
-    return render(request, 'errors/500.html', {
-        'title': 'Server Error',
-    }, status=500)
+    try:
+        return render(request, 'errors/500.html', {
+            'title': 'Server Error',
+        }, status=500)
+    except Exception:
+        tb = traceback.format_exc()
+        return HttpResponse(f"<h1>DEBUG 500 ERROR (HANDLER)</h1><pre>{tb}</pre>", content_type="text/html")
 
 
 def handler403(request, exception):
