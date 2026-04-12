@@ -203,7 +203,7 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
 # ================================
 # AUTH REDIRECTS (Updated for engineeringcollege.onrender.com)
 # ================================
-LOGIN_URL = '/admin-login/'
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/faculty/list/'
 LOGOUT_REDIRECT_URL = '/admin-login/'
 
