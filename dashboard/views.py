@@ -39,7 +39,7 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 from pypdf import PdfWriter, PdfReader
-from PyPDF2 import PdfMerger
+# from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
 from PIL import Image as PILImage
 # Additional imports for PDF to image conversion
 import fitz  # PyMuPDF
@@ -276,9 +276,9 @@ def merge_documents(output_path, image_files=None, pdf_files=None):
 
 
 def merge_files(file_list):
-    from pypdf import PdfMerger
+    from pypdf import PdfWriter
     from PIL import Image
-    merger = PdfMerger()
+    merger = PdfWriter()
     temp_files = []
     valid_files = 0
     skipped_files = 0
@@ -344,8 +344,8 @@ def merge_files(file_list):
             print(f" [X] Error: {e}")
             skipped_files += 1
     final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    merger.write(final_pdf.name)
-    merger.close()
+    merger.write(final_pdf)
+    final_pdf.close()
     print(f"[OK] Final PDF: {final_pdf.name}")
     print(f"📊 Summary: {valid_files} files merged, {skipped_files} files skipped")
     print("========== ENHANCED PDF MERGE END ==========\n")
@@ -1748,9 +1748,9 @@ def regenerate_student_pdf(request, student_id):
 
 # ==================== PDF MERGE UTILITY (LEGACY) ====================
 def merge_files_legacy(file_list):
-    from pypdf import PdfMerger
+    from pypdf import PdfWriter
     from PIL import Image
-    merger = PdfMerger()
+    merger = PdfWriter()
     temp_files = []
     print("\n========== PDF MERGE START ==========")
     for idx, file in enumerate(file_list):
@@ -1799,8 +1799,8 @@ def merge_files_legacy(file_list):
         except Exception as e:
             print(f" [X] Error: {e}")
     final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    merger.write(final_pdf.name)
-    merger.close()
+    merger.write(final_pdf)
+    final_pdf.close()
     print(f"[OK] Final PDF: {final_pdf.name}")
     for f in temp_files:
         try:
