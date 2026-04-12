@@ -88,6 +88,13 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'engineeringcollege.urls'
 
 # ================================
+# COLLEGE SETTINGS
+# ================================
+COLLEGE_NAME = "ANURAG Engineering College"
+DEPARTMENT_NAME = "Information Technology"
+ACADEMIC_YEAR = "2023-24"
+
+# ================================
 # ✅ TEMPLATES
 # ================================
 TEMPLATES = [
@@ -101,6 +108,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'dashboard.context_processors.college_info',
             ],
         },
     },

@@ -1033,7 +1033,11 @@ def home(request):
         return redirect('dashboard:dashboard')
     if request.session.get('student_logged_in'):
         return redirect('dashboard:student_dashboard')
-    return redirect('dashboard:admin_login')
+    # Directly render login page instead of redirecting
+    return render(request, 'dashboard/login.html', {
+        'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
+        'admin_login': True,
+    })
 
 
 @login_required

@@ -6,6 +6,9 @@ from . import views
 app_name = 'dashboard'
 
 urlpatterns = [
+    # Main entry point
+    path('', views.home, name='index'),
+
     # Test routes
     path('test/', views.simple_test, name='test'),
 
