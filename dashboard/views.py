@@ -946,32 +946,38 @@ def login_view(request):
 @csrf_protect
 def admin_login(request):
     try:
+        logger.info(f"Admin login request - method: {request.method}")
         if request.user.is_authenticated:
+            logger.info(f"User already authenticated: {request.user}")
             return redirect('dashboard:dashboard')
         error = None
         if request.method == 'POST':
-            user = authenticate(request,
-                                username=request.POST.get('username'),
-                                password=request.POST.get('password'))
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            logger.info(f"Login attempt for username: {username}")
+            user = authenticate(request, username=username, password=password)
             if user is not None and user.is_staff:
                 login(request, user)
-                # REMOVED success message to avoid extra notification
+                logger.info(f"Login successful for: {username}")
                 return redirect('dashboard:dashboard')
             else:
                 error = 'Invalid admin credentials'
+                logger.warning(f"Login failed for username: {username}")
                 messages.error(request, error)
+        
+        logger.info("Rendering login page")
         return render(request, 'dashboard/login.html', {
             'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
             'admin_login': True, 'error': error,
         })
     except Exception as e:
-        tb = traceback.format_exc()
         logger.error(f"Dashboard view error: {e}", exc_info=True)
+        tb = traceback.format_exc()
+        logger.error(f"Traceback: {tb}")
         if settings.DEBUG:
             return HttpResponse(f"<h1>DEBUG 500 ERROR</h1><pre>{tb}</pre>", content_type="text/html")
         else:
-            # In production, return a proper 500 error
-            return HttpResponse("Internal Server Error", status=500)
+            return HttpResponse(f"Internal Server Error: {str(e)}", status=500)
 
 
 def logout_view(request):
