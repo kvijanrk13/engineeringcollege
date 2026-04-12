@@ -976,45 +976,69 @@ def admin_login(request):
 
 @login_required
 def admin_dashboard(request):
-    if not request.user.is_superuser:
-        messages.error(request, 'Access denied. Admin privileges required.')
-        return redirect('dashboard:dashboard')
-    total_faculty = Faculty.objects.count()
-    departments = list(Faculty.objects.values('department')
-                       .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
-                       .order_by('-count'))
-    for d in departments:
-        d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
-    system_stats = {}
-    if psutil:
+    try:
+        # Check database connectivity
         try:
-            system_stats = {
-                'cpu_percent': psutil.cpu_percent(interval=1),
-                'memory_percent': psutil.virtual_memory().percent,
-                'disk_usage': psutil.disk_usage('/').percent,
-                'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
-            }
-        except Exception as e:
-            system_stats = {'error': str(e)}
-    return render(request, "dashboard/admin_dashboard.html", {
-        'title': 'Admin Dashboard',
-        'total_faculty': total_faculty,
-        'active_faculty': Faculty.objects.filter(is_active=True).count(),
-        'total_students': Student.objects.count(),
-        'total_certificates': Certificate.objects.count(),
-        'cloudinary_uploads': CloudinaryUpload.objects.count(),
-        'with_phd': Faculty.objects.filter(phd_degree='Completed').count(),
-        'departments': departments,
-        'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
-        'system_stats': system_stats,
-        'user_activity': {
-            'total_users': User.objects.count(),
-            'active_today': FacultyLog.objects.filter(
-                created_at__date=date.today()).values('performed_by').distinct().count(),
-        },
-        'has_psutil': psutil is not None,
-        'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
-    })
+            from django.db import connection
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            logger.info("Database connection successful")
+        except Exception as db_e:
+            logger.error(f"Database connection failed: {db_e}")
+            messages.error(request, f'Database connection error: {db_e}')
+            return redirect('dashboard:admin_login')
+
+        if not request.user.is_superuser:
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('dashboard:dashboard')
+
+        # Database queries with error handling
+        total_faculty = Faculty.objects.count()
+        departments = list(Faculty.objects.values('department')
+                           .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
+                           .order_by('-count'))
+        for d in departments:
+            d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+
+        system_stats = {}
+        if psutil:
+            try:
+                system_stats = {
+                    'cpu_percent': psutil.cpu_percent(interval=1),
+                    'memory_percent': psutil.virtual_memory().percent,
+                    'disk_usage': psutil.disk_usage('/').percent,
+                    'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
+                }
+            except Exception as e:
+                system_stats = {'error': str(e)}
+
+        return render(request, "dashboard/admin_dashboard.html", {
+            'title': 'Admin Dashboard',
+            'total_faculty': total_faculty,
+            'active_faculty': Faculty.objects.filter(is_active=True).count(),
+            'total_students': Student.objects.count(),
+            'total_certificates': Certificate.objects.count(),
+            'cloudinary_uploads': CloudinaryUpload.objects.count(),
+            'with_phd': Faculty.objects.filter(phd_degree='Completed').count(),
+            'departments': departments,
+            'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
+            'system_stats': system_stats,
+            'user_activity': {
+                'total_users': User.objects.count(),
+                'active_today': FacultyLog.objects.filter(
+                    created_at__date=date.today()).values('performed_by').distinct().count(),
+            },
+            'has_psutil': psutil is not None,
+            'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
+        })
+    except Exception as e:
+        logger.error(f"Admin dashboard error: {e}", exc_info=True)
+        if settings.DEBUG:
+            tb = traceback.format_exc()
+            return HttpResponse(f"<h1>DEBUG 500 ERROR</h1><pre>{tb}</pre>", content_type="text/html")
+        else:
+            return HttpResponse("Internal Server Error", status=500)
 
 
 def student_dashboard(request):
