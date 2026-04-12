@@ -1057,7 +1057,7 @@ def admin_dashboard(request):
 
         if not request.user.is_superuser:
             messages.error(request, 'Access denied. Admin privileges required.')
-            return redirect('dashboard:dashboard')
+            return redirect('dashboard:admin_login')
 
         # Database queries with error handling
         total_faculty = Faculty.objects.count()
