@@ -7,7 +7,7 @@ app_name = 'dashboard'
 
 urlpatterns = [
     # Main entry point
-    path('', views.home, name='index'),
+    path('', views.admin_login, name='index'),
 
     # Test routes
     path('test/', views.simple_test, name='test'),
