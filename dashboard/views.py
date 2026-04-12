@@ -974,6 +974,68 @@ def admin_login(request):
             return HttpResponse("Internal Server Error", status=500)
 
 
+def logout_view(request):
+    if request.user.is_authenticated:
+        logout(request)
+    request.session.flush()
+    return redirect('dashboard:admin_login')
+
+
+def admin_logout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    messages.success(request, "Admin logged out successfully.")
+    return redirect('dashboard:admin_login')
+
+
+def student_logout(request):
+    request.session.flush()
+    messages.success(request, "Student logged out successfully.")
+    return redirect('dashboard:student_login')
+
+
+def student_login(request):
+    error = None
+    try:
+        if request.user.is_authenticated:
+            return redirect('dashboard:dashboard')
+        if request.method == 'POST':
+            username = request.POST.get('username', '').strip()
+            password = request.POST.get('password', '').strip()
+            student = Student.objects.filter(ht_no=username).first()
+            if student:
+                valid_passwords = [student.student_phone, student.student_email, student.ht_no]
+                if student.dob:
+                    valid_passwords.append(student.dob.strftime('%Y-%m-%d'))
+                    valid_passwords.append(student.dob.strftime('%d-%m-%Y'))
+                if any(p and password == p for p in valid_passwords):
+                    request.session['student_logged_in'] = True
+                    request.session['student_username'] = username
+                    return redirect('dashboard:student_dashboard')
+            error = 'Invalid student credentials'
+            messages.error(request, error)
+        return render(request, 'login.html', {
+            'title': 'Student Login',
+            'student_login': True,
+            'error': error,
+        })
+    except Exception as e:
+        logger.error(f"Student login error: {e}", exc_info=True)
+        if settings.DEBUG:
+            tb = traceback.format_exc()
+            return HttpResponse(f"<h1>DEBUG 500 ERROR</h1><pre>{tb}</pre>", content_type="text/html")
+        else:
+            return HttpResponse("Internal Server Error", status=500)
+
+
+def home(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard:dashboard')
+    if request.session.get('student_logged_in'):
+        return redirect('dashboard:student_dashboard')
+    return redirect('dashboard:admin_login')
+
+
 @login_required
 def admin_dashboard(request):
     try:

@@ -24,6 +24,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 ]
 
+handler404 = 'dashboard.views.handler404'
+handler500 = 'dashboard.views.handler500'
+
 # Serve static/media only in DEBUG
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

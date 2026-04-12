@@ -3,28 +3,38 @@ import os
 import sys
 import django
 from django.conf import settings
-from django.core.management import execute_from_command_line
+from django.db import connection
 
 
 def debug_startup():
     print("=== DJANGO DIAGNOSTIC STARTUP ===")
-    print("1. About to setup Django...")
+    print(f"DJANGO_SETTINGS_MODULE: {os.environ.get('DJANGO_SETTINGS_MODULE')}")
 
     try:
         django.setup()
-        print("2. Django setup completed successfully!")
+        print("1. Django setup completed successfully!")
     except Exception as e:
-        print(f"2. Django setup FAILED: {e}")
+        print(f"1. Django setup FAILED: {e}")
         import traceback
         traceback.print_exc()
         return
 
-    print("3. About to run server...")
+    print("2. Settings summary:")
+    print(f"   DEBUG: {settings.DEBUG}")
+    print(f"   ALLOWED_HOSTS: {settings.ALLOWED_HOSTS}")
+    print(f"   DATABASE ENGINE: {settings.DATABASES['default']['ENGINE']}")
+    print(f"   DATABASE HOST: {settings.DATABASES['default'].get('HOST')}")
+    print(f"   DATABASE NAME: {settings.DATABASES['default'].get('NAME')}")
+    print(f"   DATABASE USER: {settings.DATABASES['default'].get('USER')}")
+
+    print("3. Checking database connectivity...")
     try:
-        execute_from_command_line(['manage.py', 'runserver'])
-        print("4. Server command completed!")
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            result = cursor.fetchone()
+            print(f"   Database connected successfully, SELECT 1 -> {result}")
     except Exception as e:
-        print(f"4. Server command FAILED: {e}")
+        print(f"   Database connection FAILED: {e}")
         import traceback
         traceback.print_exc()
 
