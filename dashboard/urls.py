@@ -1,6 +1,7 @@
 # dashboard/urls.py
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.http import HttpResponse
 from . import views
 
 app_name = 'dashboard'
@@ -11,6 +12,9 @@ urlpatterns = [
 
     # Test routes
     path('test/', views.simple_test, name='test'),
+
+    # Health check route
+    path('health/', lambda r: HttpResponse(b"OK"), name='health_check'),
 
     # Main dashboard routes
     path('dashboard/', views.admin_dashboard, name='dashboard'),
