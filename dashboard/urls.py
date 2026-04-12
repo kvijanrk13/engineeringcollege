@@ -10,7 +10,7 @@ urlpatterns = [
     path('test/', views.simple_test, name='test'),
 
     # Main dashboard routes
-    path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/', views.admin_dashboard, name='dashboard'),
     path('home/', views.home, name='home'),
 
     # Authentication routes
