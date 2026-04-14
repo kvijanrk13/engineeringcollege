@@ -169,14 +169,13 @@ def merge_all_documents(output_path, image_files, pdf_files):
     print(f" PDFs to merge: {len(pdf_files)}")
     print(f"{'=' * 60}")
     writer = PdfWriter()
+    readers = [] # Keep readers in scope
     temp_files = []
     merged_count = 0
     skipped_count = 0
     for pdf_path in pdf_files:
         try:
-            if not os.path.exists(pdf_path):
-                print(f" [SKIP] PDF does not exist: {pdf_path}")
-                skipped_count += 1
+            if not pdf_path:
                 continue
             if isinstance(pdf_path, str) and pdf_path.startswith('http'):
                 print(f" 🌐 Downloading PDF from URL: {pdf_path}")
@@ -192,8 +191,15 @@ def merge_all_documents(output_path, image_files, pdf_files):
                     print(f" [SKIP] Failed to download PDF: HTTP {response.status_code}")
                     skipped_count += 1
                     continue
+            
+            if not os.path.exists(pdf_path):
+                print(f" [SKIP] PDF does not exist: {pdf_path}")
+                skipped_count += 1
+                continue
+                
             print(f" Processing PDF: {os.path.basename(pdf_path)}")
             reader = PdfReader(pdf_path)
+            readers.append(reader)
             if len(reader.pages) == 0:
                 print(f" [SKIP] PDF has no pages: {os.path.basename(pdf_path)}")
                 skipped_count += 1
@@ -207,9 +213,7 @@ def merge_all_documents(output_path, image_files, pdf_files):
             skipped_count += 1
     for img_path in image_files:
         try:
-            if not os.path.exists(img_path):
-                print(f" [SKIP] Image does not exist: {img_path}")
-                skipped_count += 1
+            if not img_path:
                 continue
             if isinstance(img_path, str) and img_path.startswith('http'):
                 print(f" 🌐 Downloading image from URL: {img_path}")
@@ -225,6 +229,12 @@ def merge_all_documents(output_path, image_files, pdf_files):
                     print(f" [SKIP] Failed to download image: HTTP {response.status_code}")
                     skipped_count += 1
                     continue
+            
+            if not os.path.exists(img_path):
+                print(f" [SKIP] Image does not exist: {img_path}")
+                skipped_count += 1
+                continue
+                
             print(f" Processing image: {os.path.basename(img_path)}")
             img = PILImage.open(img_path)
             if img.mode in ('RGBA', 'P', 'LA'):
@@ -241,6 +251,7 @@ def merge_all_documents(output_path, image_files, pdf_files):
             temp_files.append(temp_pdf.name)
             temp_pdf.close()
             img_reader = PdfReader(temp_pdf.name)
+            readers.append(img_reader)
             for page in img_reader.pages:
                 writer.add_page(page)
                 merged_count += 1
@@ -259,6 +270,7 @@ def merge_all_documents(output_path, image_files, pdf_files):
         print(f" [ERROR] Failed to save final PDF: {e}")
         return False
     finally:
+        # Cleanup
         for tmp in temp_files:
             try:
                 if os.path.exists(tmp):
@@ -289,22 +301,52 @@ def merge_files(file_list):
             skipped_files += 1
             continue
         try:
-            file_url = file.url if hasattr(file, "url") else str(file)
+            if hasattr(file, "url"):
+                file_url = file.url
+            elif hasattr(file, "path"):
+                file_url = file.path
+            else:
+                file_url = str(file)
             print(f"[{idx}] Processing: {file_url}")
             if file_url.startswith("http"):
                 response = requests.get(file_url, timeout=20)
                 if response.status_code != 200:
-                    print(" [X] Download failed")
-                    skipped_files += 1
-                    continue
-                suffix = ".pdf" if file_url.lower().endswith(".pdf") else ".img"
+                    print(f" [X] Download failed: {response.status_code}")
+                    if 'cloudinary.com' in file_url and response.status_code == 401:
+                        try:
+                            public_id = file_url.split('/upload/')[1].split('/')[1:] if '/upload/' in file_url else None
+                            if public_id:
+                                public_id = '/'.join(public_id).rsplit('.', 1)[0]
+                                resource = cloudinary.api.resource(public_id)
+                                if resource.get('secure_url'):
+                                    file_url = resource['secure_url']
+                                    print(f" [~] Using Cloudinary API resource URL: {file_url}")
+                                    response = requests.get(file_url, timeout=20)
+                        except Exception as cloud_err:
+                            print(f" [X] Cloudinary API error: {cloud_err}")
+                    if response.status_code != 200:
+                        skipped_files += 1
+                        continue
+                content_type = response.headers.get('content-type', '')
+                suffix = ".pdf" if 'pdf' in content_type.lower() else ".img"
+                if 'cloudinary' in file_url and not file_url.endswith(('.pdf', '.png', '.jpg', '.jpeg')):
+                    if 'image' in content_type.lower():
+                        suffix = ".img"
+                    elif 'pdf' in content_type.lower():
+                        suffix = ".pdf"
                 temp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
                 temp.write(response.content)
                 temp.close()
                 file_path = temp.name
                 temp_files.append(file_path)
-            else:
+            elif hasattr(file, "path"):
                 file_path = file.path
+            elif isinstance(file, str) and os.path.exists(file):
+                file_path = file
+            else:
+                print(f"[{idx}] Skipped (not a valid file object or path doesn't exist: {file})")
+                skipped_files += 1
+                continue
             with open(file_path, "rb") as f:
                 header = f.read(4)
             is_pdf = header.startswith(b"%PDF")
@@ -344,7 +386,7 @@ def merge_files(file_list):
             print(f" [X] Error: {e}")
             skipped_files += 1
     final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    merger.write(final_pdf)
+    merger.write(final_pdf.name)
     final_pdf.close()
     print(f"[OK] Final PDF: {final_pdf.name}")
     print(f"📊 Summary: {valid_files} files merged, {skipped_files} files skipped")
@@ -380,6 +422,25 @@ def collect_faculty_files(faculty):
                 image_files.append(tmp.name)
                 temp_files.append(tmp.name)
                 print(f" ✅ Downloaded photo from Cloudinary: {tmp.name}")
+            elif response.status_code == 401:
+                try:
+                    public_id = faculty.cloudinary_photo_url.split('/upload/')[1].split('/')[1:] if '/upload/' in faculty.cloudinary_photo_url else None
+                    if public_id:
+                        public_id = '/'.join(public_id).rsplit('.', 1)[0]
+                        resource = cloudinary.api.resource(public_id)
+                        if resource.get('secure_url'):
+                            photo_url = resource['secure_url']
+                            print(f" [~] Using Cloudinary API resource URL: {photo_url}")
+                            response = requests.get(photo_url, timeout=30)
+                            if response.status_code == 200:
+                                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+                                tmp.write(response.content)
+                                tmp.close()
+                                image_files.append(tmp.name)
+                                temp_files.append(tmp.name)
+                                print(f" ✅ Downloaded photo via API: {tmp.name}")
+                except Exception as cloud_err:
+                    print(f" ❌ Cloudinary API error: {cloud_err}")
         except Exception as e:
             print(f" ❌ Cloudinary photo download error: {e}")
     if faculty.photo:
@@ -440,6 +501,31 @@ def collect_faculty_files(faculty):
                         image_files.append(tmp.name)
                         print(f" ✅ Downloaded Image: {tmp.name} ({len(response.content)} bytes)")
                     temp_files.append(tmp.name)
+                elif response.status_code == 401:
+                    try:
+                        public_id = cloudinary_url.split('/upload/')[1].split('/')[1:] if '/upload/' in cloudinary_url else None
+                        if public_id:
+                            public_id = '/'.join(public_id).rsplit('.', 1)[0]
+                            resource = cloudinary.api.resource(public_id)
+                            if resource.get('secure_url'):
+                                doc_url = resource['secure_url']
+                                print(f" [~] Using Cloudinary API resource URL for {display_name}")
+                                response = requests.get(doc_url, timeout=30)
+                                if response.status_code == 200:
+                                    content_type = response.headers.get('content-type', '').lower()
+                                    is_pdf = 'pdf' in content_type or doc_url.lower().endswith('.pdf')
+                                    suffix = ".pdf" if is_pdf else ".jpg"
+                                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                                    tmp.write(response.content)
+                                    tmp.close()
+                                    if is_pdf:
+                                        pdf_files.append(tmp.name)
+                                    else:
+                                        image_files.append(tmp.name)
+                                    temp_files.append(tmp.name)
+                                    print(f" ✅ Downloaded {display_name} via API")
+                    except Exception as cloud_err:
+                        print(f" ❌ Cloudinary API error for {display_name}: {cloud_err}")
                 else:
                     print(f" ❌ Failed to download {display_name}: HTTP {response.status_code}")
                     if file_field:
@@ -1008,6 +1094,13 @@ def student_login(request):
         if request.method == 'POST':
             username = request.POST.get('username', '').strip()
             password = request.POST.get('password', '').strip()
+
+            # ALLOW IMMEDIATE LOGIN FOR DEMO CREDENTIALS
+            if username == 'anrkitstudent' and password == 'anrkitstudent':
+                request.session['student_logged_in'] = True
+                request.session['student_username'] = username
+                return redirect('dashboard:student_dashboard')
+
             student = Student.objects.filter(ht_no=username).first()
             if student:
                 valid_passwords = [student.student_phone, student.student_email, student.ht_no]
@@ -1331,15 +1424,345 @@ def add_faculty(request):
         print(f"FILES data keys: {list(request.FILES.keys())}")
         print("=" * 60)
         try:
-            # ... (keep all existing add_faculty code exactly as in your original file)
-            # The add_faculty function remains unchanged from your original
-            pass
+            # ==================== CREATE FACULTY OBJECT ====================
+            faculty = Faculty(
+                staff_name=request.POST.get('staff_name', ''),
+                employee_code=request.POST.get('employee_code', ''),
+                father_name=request.POST.get('father_name', ''),
+                mother_name=request.POST.get('mother_name', ''),
+                gender=request.POST.get('gender', ''),
+                dob=request.POST.get('dob') or None,
+                state=request.POST.get('state', ''),
+                caste=request.POST.get('caste', ''),
+                sub_caste=request.POST.get('sub_caste', ''),
+                nationality=request.POST.get('nationality', 'Indian'),
+                mobile=request.POST.get('mobile', ''),
+                phone=request.POST.get('phone', ''),
+                email=request.POST.get('email', ''),
+                address=request.POST.get('address', ''),
+                department=request.POST.get('department', ''),
+                designation=request.POST.get('designation', ''),
+                joining_date=request.POST.get('joining_date') or None,
+                jntuh_id=request.POST.get('jntuh_id', ''),
+                aicte_id=request.POST.get('aicte_id', ''),
+                pan=request.POST.get('pan', ''),
+                aadhar=request.POST.get('aadhar', ''),
+                apaar_id=request.POST.get('apaar_id', ''),
+                orcid_id=request.POST.get('orcid_id', ''),
+                exp_anurag=request.POST.get('exp_anurag', ''),
+                exp_other=request.POST.get('exp_other', ''),
+                ssc_year=request.POST.get('ssc_year') or None,
+                ssc_percent=request.POST.get('ssc_percent', ''),
+                ssc_school=request.POST.get('ssc_school', ''),
+                inter_year=request.POST.get('inter_year') or None,
+                inter_percent=request.POST.get('inter_percent', ''),
+                inter_college=request.POST.get('inter_college', ''),
+                ug_degree=request.POST.get('ug_degree', ''),
+                ug_year=request.POST.get('ug_year') or None,
+                ug_percentage=request.POST.get('ug_percentage', ''),
+                ug_college=request.POST.get('ug_college', ''),
+                ug_spec=request.POST.get('ug_spec', ''),
+                pg_degree=request.POST.get('pg_degree', ''),
+                pg_year=request.POST.get('pg_year') or None,
+                pg_percentage=request.POST.get('pg_percentage', ''),
+                pg_college=request.POST.get('pg_college', ''),
+                pg_spec=request.POST.get('pg_spec', ''),
+                phd_degree=request.POST.get('phd_degree', ''),
+                phd_year=request.POST.get('phd_year') or None,
+                phd_university=request.POST.get('phd_university', ''),
+                phd_spec=request.POST.get('phd_spec', ''),
+                subjects_dealt=request.POST.get('subjects_dealt', ''),
+                scm=request.POST.get('scm', ''),
+                about_yourself=request.POST.get('about_yourself', ''),
+            )
+
+            # ==================== PHOTO ====================
+            if request.FILES.get('photo'):
+                faculty.photo = request.FILES['photo']
+
+            # ==================== SAVE FACULTY FIRST (need PK for related objects) ====================
+            faculty.save()
+            print(f" ✅ Faculty saved with ID: {faculty.id}")
+
+            # ==================== UPLOAD PHOTO TO CLOUDINARY ====================
+            if request.FILES.get('photo') and is_cloudinary_configured():
+                try:
+                    request.FILES['photo'].seek(0)
+                    cr = cloudinary.uploader.upload(
+                        request.FILES['photo'],
+                        folder="faculty_photos",
+                        public_id=f"faculty_{faculty.employee_code}_photo",
+                        overwrite=True,
+                        transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
+                    )
+                    faculty.cloudinary_photo_url = cr['secure_url']
+                    faculty.save(update_fields=['cloudinary_photo_url'])
+                    CloudinaryUpload.objects.create(
+                        faculty=faculty, upload_type='photo',
+                        cloudinary_url=cr['secure_url'], public_id=cr['public_id'],
+                        resource_type=cr['resource_type'], uploaded_by=request.user.username
+                    )
+                    print(f" ✅ Photo uploaded to Cloudinary: {cr['secure_url']}")
+                except Exception as e:
+                    logger.error(f"Cloudinary photo upload error: {e}")
+                    print(f" ⚠️  Photo saved locally, Cloudinary upload failed: {e}")
+
+            # ==================== DOCUMENT FILES ====================
+            doc_file_fields = [
+                'aadhar_file', 'pan_file', 'apaar_file', 'scm_file', 'jntuh_biodata',
+                'ssc_certificate', 'inter_certificate', 'ug_certificate',
+                'pg_certificate', 'phd_certificate', 'experience_certificates',
+                'research_proof', 'fdp_certificate', 'other_documents',
+            ]
+            for field_name in doc_file_fields:
+                if request.FILES.get(field_name):
+                    setattr(faculty, field_name, request.FILES[field_name])
+                    print(f" ✅ Saved file field: {field_name}")
+
+            # Experience certificates academic year
+            exp_cert_ay = request.POST.get('experience_certificates_academic_year', '')
+            if exp_cert_ay and hasattr(faculty, 'experience_certificates_academic_year'):
+                faculty.experience_certificates_academic_year = exp_cert_ay
+
+            faculty.save()
+
+            # ==================== UPLOAD DOCUMENTS TO CLOUDINARY ====================
+            if is_cloudinary_configured():
+                cloudinary_doc_fields = [
+                    ('aadhar_file', 'aadhar_url', 'Aadhar'),
+                    ('pan_file', 'pan_url', 'PAN'),
+                    ('apaar_file', 'apaar_url', 'APAAR'),
+                    ('scm_file', 'scm_url', 'SCM'),
+                    ('jntuh_biodata', 'jntuh_biodata_url', 'JNTUH Bio-Data'),
+                    ('ssc_certificate', 'ssc_certificate_url', 'SSC Certificate'),
+                    ('inter_certificate', 'inter_certificate_url', 'Inter Certificate'),
+                    ('ug_certificate', 'ug_certificate_url', 'UG Certificate'),
+                    ('pg_certificate', 'pg_certificate_url', 'PG Certificate'),
+                    ('phd_certificate', 'phd_certificate_url', 'PhD Certificate'),
+                    ('experience_certificates', 'experience_certificates_url', 'Experience Certificates'),
+                    ('research_proof', 'research_proof_url', 'Research Proof'),
+                    ('fdp_certificate', 'fdp_certificate_url', 'FDP Certificate'),
+                    ('other_documents', 'other_documents_url', 'Other Documents'),
+                ]
+                for file_field, url_field, label in cloudinary_doc_fields:
+                    if request.FILES.get(file_field) and hasattr(faculty, url_field):
+                        try:
+                            request.FILES[file_field].seek(0)
+                            cr = cloudinary.uploader.upload(
+                                request.FILES[file_field],
+                                resource_type='auto',
+                                folder=f"faculty_documents/{faculty.employee_code}",
+                                public_id=f"{file_field}_{faculty.employee_code}",
+                                overwrite=True,
+                            )
+                            setattr(faculty, url_field, cr['secure_url'])
+                            print(f" ✅ {label} uploaded to Cloudinary")
+                        except Exception as e:
+                            logger.error(f"Cloudinary upload error for {label}: {e}")
+                faculty.save()
+
+            # ==================== HANDLE MULTIPLE RESEARCH PROOF FILES ====================
+            proof_counter = 1
+            while request.FILES.get(f'research_proof_files_{proof_counter}'):
+                proof_file = request.FILES[f'research_proof_files_{proof_counter}']
+                ay = ''
+                # academic year comes from the JSON metadata
+                try:
+                    proofs_data = json.loads(request.POST.get('research_proofs_data', '[]'))
+                    if len(proofs_data) >= proof_counter:
+                        ay = proofs_data[proof_counter - 1].get('academic_year', '')
+                except Exception:
+                    pass
+                if is_cloudinary_configured():
+                    try:
+                        cr = cloudinary.uploader.upload(
+                            proof_file, resource_type='auto',
+                            folder=f"faculty_documents/{faculty.employee_code}/research_proofs",
+                            public_id=f"research_proof_{faculty.employee_code}_{proof_counter}",
+                            overwrite=True,
+                        )
+                        # Save first proof to the main field
+                        if proof_counter == 1 and hasattr(faculty, 'research_proof_url'):
+                            faculty.research_proof_url = cr['secure_url']
+                            if ay and hasattr(faculty, 'research_proof_academic_year'):
+                                faculty.research_proof_academic_year = ay
+                            faculty.save()
+                        print(f" ✅ Research proof {proof_counter} uploaded to Cloudinary")
+                    except Exception as e:
+                        logger.error(f"Research proof Cloudinary upload error: {e}")
+                proof_counter += 1
+
+            # ==================== HANDLE MULTIPLE FDP CERT FILES ====================
+            fdp_cert_counter = 1
+            while request.FILES.get(f'fdp_cert_files_{fdp_cert_counter}'):
+                cert_file = request.FILES[f'fdp_cert_files_{fdp_cert_counter}']
+                ay = ''
+                try:
+                    certs_data = json.loads(request.POST.get('fdp_certificates_data', '[]'))
+                    if len(certs_data) >= fdp_cert_counter:
+                        ay = certs_data[fdp_cert_counter - 1].get('academic_year', '')
+                except Exception:
+                    pass
+                if is_cloudinary_configured():
+                    try:
+                        cr = cloudinary.uploader.upload(
+                            cert_file, resource_type='auto',
+                            folder=f"faculty_documents/{faculty.employee_code}/fdp_certs",
+                            public_id=f"fdp_cert_{faculty.employee_code}_{fdp_cert_counter}",
+                            overwrite=True,
+                        )
+                        if fdp_cert_counter == 1 and hasattr(faculty, 'fdp_certificate_url'):
+                            faculty.fdp_certificate_url = cr['secure_url']
+                            if ay and hasattr(faculty, 'fdp_certificate_academic_year'):
+                                faculty.fdp_certificate_academic_year = ay
+                            faculty.save()
+                        print(f" ✅ FDP cert {fdp_cert_counter} uploaded to Cloudinary")
+                    except Exception as e:
+                        logger.error(f"FDP cert Cloudinary upload error: {e}")
+                fdp_cert_counter += 1
+
+            # ==================== HANDLE MULTIPLE OTHER DOC FILES ====================
+            other_doc_counter = 1
+            while request.FILES.get(f'other_doc_files_{other_doc_counter}'):
+                other_file = request.FILES[f'other_doc_files_{other_doc_counter}']
+                ay = ''
+                try:
+                    docs_data = json.loads(request.POST.get('other_documents_data', '[]'))
+                    if len(docs_data) >= other_doc_counter:
+                        ay = docs_data[other_doc_counter - 1].get('academic_year', '')
+                except Exception:
+                    pass
+                if is_cloudinary_configured():
+                    try:
+                        cr = cloudinary.uploader.upload(
+                            other_file, resource_type='auto',
+                            folder=f"faculty_documents/{faculty.employee_code}/other_docs",
+                            public_id=f"other_doc_{faculty.employee_code}_{other_doc_counter}",
+                            overwrite=True,
+                        )
+                        if other_doc_counter == 1 and hasattr(faculty, 'other_documents_url'):
+                            faculty.other_documents_url = cr['secure_url']
+                            if ay and hasattr(faculty, 'other_documents_academic_year'):
+                                faculty.other_documents_academic_year = ay
+                            faculty.save()
+                        print(f" ✅ Other doc {other_doc_counter} uploaded to Cloudinary")
+                    except Exception as e:
+                        logger.error(f"Other doc Cloudinary upload error: {e}")
+                other_doc_counter += 1
+
+            # ==================== RESEARCH PUBLICATIONS ====================
+            research_json = request.POST.get('research_publications_json', '[]')
+            try:
+                research_list = json.loads(research_json)
+                for item in research_list:
+                    if not item.get('title'):
+                        continue
+                    pub_type = item.get('research_type') or item.get('type') or 'journal'
+                    venue = item.get('journal_name') or item.get('conference_name') or ''
+                    ResearchPublication.objects.create(
+                        faculty=faculty,
+                        research_type=pub_type,
+                        title=item.get('title', ''),
+                        authors=item.get('authors', ''),
+                        academic_year=item.get('academic_year', ''),
+                        publication_year=item.get('publication_year') or item.get('year') or None,
+                        journal_name=venue if pub_type != 'conference' else '',
+                        conference_name=venue if pub_type == 'conference' else '',
+                        doi=item.get('doi', ''),
+                        status=item.get('status', 'published'),
+                    )
+                print(f" ✅ Saved {len(research_list)} research publications")
+            except (json.JSONDecodeError, Exception) as e:
+                logger.error(f"Error saving research publications: {e}")
+
+            # ==================== BTECH PROJECTS ====================
+            projects_json = request.POST.get('btech_projects_json', '[]')
+            try:
+                projects_list = json.loads(projects_json)
+                for item in projects_list:
+                    if not item.get('project_title') and not item.get('title'):
+                        continue
+                    BTechProject.objects.create(
+                        faculty=faculty,
+                        ht_no=item.get('ht_no', ''),
+                        student_name=item.get('student_name', ''),
+                        batch=item.get('batch', ''),
+                        project_title=item.get('project_title') or item.get('title', ''),
+                        approved=item.get('approved') is True or str(item.get('approved')).lower() == 'true',
+                        marks=item.get('marks') or None,
+                    )
+                print(f" ✅ Saved {len(projects_list)} B.Tech projects")
+            except (json.JSONDecodeError, Exception) as e:
+                logger.error(f"Error saving B.Tech projects: {e}")
+
+            # ==================== FDP / WORKSHOPS ====================
+            fdp_json = request.POST.get('fdp_entries_json', '[]')
+            try:
+                fdp_list = json.loads(fdp_json)
+                for item in fdp_list:
+                    if not item.get('title'):
+                        continue
+                    FDP.objects.create(
+                        faculty=faculty,
+                        fdp_type=item.get('fdp_type') or item.get('type', 'fdp'),
+                        title=item.get('title', ''),
+                        academic_year=item.get('academic_year', ''),
+                        from_date=item.get('from_date') or date.today().strftime('%Y-%m-%d'),
+                        to_date=item.get('to_date') or date.today().strftime('%Y-%m-%d'),
+                        organized_by=item.get('organized_by', ''),
+                        place=item.get('place', ''),
+                        mode=item.get('mode', 'offline'),
+                        level=item.get('level', 'national'),
+                        role=item.get('role', 'participant'),
+                        sponsored_by=item.get('sponsored_by', ''),
+                        remarks=item.get('remarks', ''),
+                    )
+                print(f" ✅ Saved {len(fdp_list)} FDP entries")
+            except (json.JSONDecodeError, Exception) as e:
+                logger.error(f"Error saving FDP entries: {e}")
+
+            # ==================== RESULTS ====================
+            results_json = request.POST.get('results_json', '[]')
+            try:
+                results_list = json.loads(results_json)
+                if results_list:
+                    faculty.results = results_json
+                    faculty.save(update_fields=['results'])
+                print(f" ✅ Saved {len(results_list)} result entries")
+            except (json.JSONDecodeError, Exception) as e:
+                logger.error(f"Error saving results: {e}")
+
+            # ==================== FACULTY PROFILE ====================
+            try:
+                profile, _ = FacultyProfile.objects.get_or_create(faculty=faculty)
+                if request.POST.get('exp_anurag') and hasattr(profile, 'experience_at_anurag'):
+                    profile.experience_at_anurag = request.POST.get('exp_anurag')
+                if request.POST.get('exp_other') and hasattr(profile, 'experience_other'):
+                    profile.experience_other = request.POST.get('exp_other')
+                profile.save()
+            except Exception as e:
+                logger.error(f"FacultyProfile create error: {e}")
+
+            # ==================== LOG ====================
+            FacultyLog.objects.create(
+                faculty=faculty,
+                action='Faculty Added',
+                details=f'New faculty added: {faculty.staff_name} ({faculty.employee_code})',
+                performed_by=request.user.username,
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
+
+            messages.success(request, f'Faculty {faculty.staff_name} added successfully!')
+            print(f" ✅ Faculty {faculty.employee_code} fully saved. Redirecting to faculty list.")
+            return redirect('dashboard:faculty_list')
+
         except Exception as e:
             logger.error(f"Error adding faculty: {e}")
             import traceback
             traceback.print_exc()
             messages.error(request, f"Error adding faculty: {str(e)}")
             return redirect("dashboard:add_faculty")
+
     departments = ['CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', 'MCA']
     designations = ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Senior Professor']
     genders = ['Male', 'Female', 'Other']
@@ -1380,6 +1803,79 @@ def edit_faculty(request, faculty_id):
         for date_attr in ['dob', 'joining_date']:
             val = request.POST.get(date_attr)
             setattr(faculty, date_attr, val if val else None)
+            
+        # ==================== PROCESS COMPLEX JSON DATA ====================
+        
+        # 1. Research Publications
+        research_data = request.POST.get('research_publications_json')
+        if research_data:
+            try:
+                research_list = json.loads(research_data)
+                # Keep track of existing IDs to know what to delete (optional, or just replace)
+                ResearchPublication.objects.filter(faculty=faculty).delete()
+                for item in research_list:
+                    if not item.get('title'): continue
+                    ResearchPublication.objects.create(
+                        faculty=faculty,
+                        research_type=item.get('type', 'Journal'),
+                        title=item.get('title'),
+                        authors=item.get('authors'),
+                        publication_year=item.get('publication_year') or item.get('year'),
+                        journal_name=item.get('journal_name') or item.get('conference_name'),
+                        status=item.get('status', 'Published'),
+                        doi=item.get('doi')
+                    )
+            except Exception as e:
+                logger.error(f"Error saving research publications: {e}")
+
+        # 2. B.Tech Projects
+        projects_data = request.POST.get('btech_projects_json')
+        if projects_data:
+            try:
+                projects_list = json.loads(projects_data)
+                BTechProject.objects.filter(faculty=faculty).delete()
+                for item in projects_list:
+                    if not item.get('title'): continue
+                    BTechProject.objects.create(
+                        faculty=faculty,
+                        project_title=item.get('title'),
+                        student_name=item.get('student_name', 'N/A'),
+                        ht_no=item.get('ht_no', 'N/A'),
+                        batch=item.get('batch', ''),
+                        approved=item.get('approved') == 'true' or item.get('approved') == True,
+                        marks=item.get('marks', '')
+                    )
+            except Exception as e:
+                logger.error(f"Error saving B.Tech projects: {e}")
+
+        # 3. FDP / Workshops
+        fdp_data = request.POST.get('fdp_entries_json')
+        if fdp_data:
+            try:
+                fdp_list = json.loads(fdp_data)
+                FDP.objects.filter(faculty=faculty).delete()
+                for item in fdp_list:
+                    if not item.get('title'): continue
+                    FDP.objects.create(
+                        faculty=faculty,
+                        fdp_type=item.get('type', 'fdp'),
+                        title=item.get('title'),
+                        from_date=item.get('from_date') or date.today().strftime('%Y-%m-%d'),
+                        to_date=item.get('to_date') or date.today().strftime('%Y-%m-%d'),
+                        organized_by=item.get('organized_by', ''),
+                        place=item.get('place', ''),
+                        mode=item.get('mode', 'offline'),
+                        level=item.get('level', 'national'),
+                        role=item.get('role', 'participant')
+                    )
+            except Exception as e:
+                logger.error(f"Error saving FDP entries: {e}")
+
+        # 4. Results
+        results_json_data = request.POST.get('results_json')
+        if results_json_data:
+            faculty.results = results_json_data
+            
         try:
             profile, _ = FacultyProfile.objects.get_or_create(faculty=faculty)
             for fp_attr in ['experience_other', 'experience_at_anurag', 'batch_number']:
@@ -1614,15 +2110,40 @@ def add_student(request):
                     return None
                 try:
                     res = cloudinary.uploader.upload(
-                        file, resource_type="auto",
+                        file, 
+                        resource_type="auto",
                         folder=f"student_documents/{folder}",
                         public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=True
                     )
-                    return res['secure_url']
+                    return res.get('secure_url')
                 except Exception as e:
                     logger.error(f"Cloudinary upload error ({folder}): {e}")
-                    if hasattr(file, 'seek'): file.seek(0)
+                    return None
+            
+            def _save_local(file, folder):
+                if not file:
+                    return None
+                try:
+                    upload_paths = {
+                        'photos': 'student_photos/',
+                        'achievement': 'student_certs/achievement/',
+                        'internship': 'student_certs/internship/',
+                        'courses': 'student_certs/courses/',
+                        'sdp': 'student_certs/sdp/',
+                        'extra': 'student_certs/extra/',
+                        'placement': 'student_certs/placement/',
+                        'national': 'student_certs/national/',
+                    }
+                    upload_to = upload_paths.get(folder, f'student_{folder}/')
+                    from django.core.files.storage import default_storage
+                    ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
+                    filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+                    path = os.path.join(upload_to, filename)
+                    saved_path = default_storage.save(path, file)
+                    return saved_path
+                except Exception as e:
+                    logger.error(f"Local file save error ({folder}): {e}")
                     return None
 
             student = Student(
@@ -1664,29 +2185,51 @@ def add_student(request):
             )
             student.save()
             files_up, files_lo = [], []
+            
+            # Handle photo
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
-                url = _upload(pf, 'photos')
-                if url:
-                    student.photo_url = url
-                    student.photo = None
-                    files_up.append('photo')
+                if ca: # Cloudinary configured
+                    curl = _upload(pf, 'photos')
+                    if curl:
+                        student.photo_url = curl
+                        files_up.append('photo')
+                    else:
+                        local_path = _save_local(pf, 'photos')
+                        if local_path:
+                            student.photo = local_path
+                            files_lo.append('photo')
                 else:
-                    student.photo = pf
-                    files_lo.append('photo')
-            for fn, folder in [('cert_achieve', 'achievement'), ('cert_intern', 'internship'),
-                               ('cert_courses', 'courses'), ('cert_sdp', 'sdp'),
-                               ('cert_extra', 'extra'), ('cert_placement', 'placement'),
-                               ('cert_national', 'national')]:
+                    local_path = _save_local(pf, 'photos')
+                    if local_path:
+                        student.photo = local_path
+                        files_lo.append('photo')
+            
+            # Handle certificates
+            for fn, folder, fn_url in [('cert_achieve', 'achievement', 'cert_achieve_url'), 
+                              ('cert_intern', 'internship', 'cert_intern_url'),
+                              ('cert_courses', 'courses', 'cert_courses_url'), 
+                              ('cert_sdp', 'sdp', 'cert_sdp_url'),
+                              ('cert_extra', 'extra', 'cert_extra_url'), 
+                              ('cert_placement', 'placement', 'cert_placement_url'),
+                              ('cert_national', 'national', 'cert_national_url')]:
                 if request.FILES.get(fn):
                     cf = request.FILES[fn]
-                    url = _upload(cf, folder)
-                    if url:
-                        setattr(student, fn, url)
-                        files_up.append(fn)
+                    if ca: # Cloudinary configured
+                        curl = _upload(cf, folder)
+                        if curl:
+                            setattr(student, fn_url, curl)
+                            files_up.append(fn)
+                        else:
+                            local_path = _save_local(cf, folder)
+                            if local_path:
+                                setattr(student, fn, local_path)
+                                files_lo.append(fn)
                     else:
-                        setattr(student, fn, cf)
-                        files_lo.append(fn)
+                        local_path = _save_local(cf, folder)
+                        if local_path:
+                            setattr(student, fn, local_path)
+                            files_lo.append(fn)
             student.save()
             if files_up:
                 messages.success(request, f'Student {student.student_name} added! Cloudinary: {", ".join(files_up)}')
@@ -1719,14 +2262,111 @@ def edit_student(request, student_id):
         return redirect('dashboard:students_data')
     student = get_object_or_404(Student, id=student_id)
     if request.method == 'POST':
-        form = StudentForm(request.POST, instance=student)
+        form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
-            form.save()
+            ca = is_cloudinary_configured()
+            
+            def _upload(file, folder):
+                if not file or not ca:
+                    return None
+                try:
+                    res = cloudinary.uploader.upload(
+                        file, 
+                        resource_type="auto",
+                        folder=f"student_documents/{folder}",
+                        public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                        overwrite=True
+                    )
+                    return res.get('secure_url')
+                except Exception as e:
+                    logger.error(f"Cloudinary upload error ({folder}): {e}")
+                    return None
+            
+            def _save_local(file, folder):
+                if not file:
+                    return None
+                try:
+                    upload_paths = {
+                        'photos': 'student_photos/',
+                        'achievement': 'student_certs/achievement/',
+                        'internship': 'student_certs/internship/',
+                        'courses': 'student_certs/courses/',
+                        'sdp': 'student_certs/sdp/',
+                        'extra': 'student_certs/extra/',
+                        'placement': 'student_certs/placement/',
+                        'national': 'student_certs/national/',
+                    }
+                    upload_to = upload_paths.get(folder, f'student_{folder}/')
+                    from django.core.files.storage import default_storage
+                    ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
+                    filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+                    path = os.path.join(upload_to, filename)
+                    saved_path = default_storage.save(path, file)
+                    return saved_path
+                except Exception as e:
+                    logger.error(f"Local file save error ({folder}): {e}")
+                    return None
+
+            # Handle photo manually because we want Cloudinary support
+            if request.FILES.get('photo'):
+                pf = request.FILES['photo']
+                if ca:
+                    curl = _upload(pf, 'photos')
+                    if curl:
+                        student.photo_url = curl
+                        student.photo = None # Clear local file if uploaded to Cloudinary
+                    else:
+                        # Fallback to local handled by form.save() or manual
+                        pass
+                
+            # Handle certificates if they are in the form (they are not currently in StudentForm)
+            # StudentForm only has 'photo'. Certificates are handled separately in add_student.
+            # Let's see if certificates are in request.FILES for editing too.
+            
+            updated_student = form.save()
+            
+            # Check for certificates in POST/FILES even if not in form
+            cert_fields = [
+                ('cert_achieve', 'achievement', 'cert_achieve_url'), 
+                ('cert_intern', 'internship', 'cert_intern_url'),
+                ('cert_courses', 'courses', 'cert_courses_url'), 
+                ('cert_sdp', 'sdp', 'cert_sdp_url'),
+                ('cert_extra', 'extra', 'cert_extra_url'), 
+                ('cert_placement', 'placement', 'cert_placement_url'),
+                ('cert_national', 'national', 'cert_national_url')
+            ]
+            
+            any_cert_updated = False
+            for fn, folder, fn_url in cert_fields:
+                if request.FILES.get(fn):
+                    cf = request.FILES[fn]
+                    if ca:
+                        curl = _upload(cf, folder)
+                        if curl:
+                            setattr(updated_student, fn_url, curl)
+                            setattr(updated_student, fn, None)
+                            any_cert_updated = True
+                        else:
+                            local_path = _save_local(cf, folder)
+                            if local_path:
+                                setattr(updated_student, fn, local_path)
+                                setattr(updated_student, fn_url, None)
+                                any_cert_updated = True
+                    else:
+                        local_path = _save_local(cf, folder)
+                        if local_path:
+                            setattr(updated_student, fn, local_path)
+                            setattr(updated_student, fn_url, None)
+                            any_cert_updated = True
+            
+            if any_cert_updated:
+                updated_student.save()
+                
             messages.success(request, "Student updated successfully.")
             return redirect('dashboard:students_data')
     else:
         form = StudentForm(instance=student)
-    return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student'})
+    return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student', 'student': student})
 
 
 @login_required
@@ -1820,29 +2460,66 @@ def merge_files_legacy(file_list):
 # ==================== GENERATE STUDENT PDF ====================
 def generate_student_pdf(student):
     print(f"\n=== GENERATING STUDENT PDF for {student.student_name} (ID: {student.id}) ===")
-    files = [
-        student.photo,
-        student.cert_achieve,
-        student.cert_intern,
-        student.cert_courses,
-        student.cert_sdp,
-        student.cert_extra,
-        student.cert_placement,
-        student.cert_national,
-        student.pdf_file
+    files = []
+    file_names = []
+    
+    # Get photo path or URL
+    photo_path = None
+    if student.photo:
+        try:
+            if hasattr(student.photo, 'path') and os.path.exists(student.photo.path):
+                photo_path = student.photo.path
+                files.append(photo_path)
+                file_names.append('photo')
+                print(f" [✓] Photo found (local): {photo_path}")
+        except Exception as e:
+            print(f" [X] Photo path error: {e}")
+            
+    if not photo_path:
+        photo_url = student.photo_url or (student.photo.url if student.photo else None)
+        if photo_url:
+            files.append(photo_url)
+            file_names.append('photo')
+            print(f" [✓] Photo URL: {photo_url}")
+    
+    # Get certificate files
+    cert_fields = [
+        ('cert_achieve', 'cert_achieve_url'),
+        ('cert_intern', 'cert_intern_url'),
+        ('cert_courses', 'cert_courses_url'),
+        ('cert_sdp', 'cert_sdp_url'),
+        ('cert_extra', 'cert_extra_url'),
+        ('cert_placement', 'cert_placement_url'),
+        ('cert_national', 'cert_national_url'),
     ]
-    file_names = [
-        'photo', 'cert_achieve', 'cert_intern', 'cert_courses',
-        'cert_sdp', 'cert_extra', 'cert_placement', 'cert_national', 'pdf_file'
-    ]
+    for file_field, url_field in cert_fields:
+        url_val = getattr(student, url_field, None)
+        file_obj = getattr(student, file_field, None)
+        
+        file_path = None
+        if file_obj:
+            try:
+                file_path = file_obj.path if hasattr(file_obj, 'path') else str(file_obj)
+            except:
+                file_path = str(file_obj)
+        
+        if file_path and os.path.exists(file_path):
+            files.append(file_path)
+            file_names.append(file_field)
+            print(f" [✓] {file_field}: {file_path}")
+        elif url_val:
+            files.append(url_val)
+            file_names.append(file_field)
+            print(f" [✓] {file_field} URL: {url_val}")
+    
+    print(f"\n=== FILES TO MERGE: {len(files)} files ===")
     for name, file in zip(file_names, files):
-        if file:
-            if hasattr(file, 'url'):
-                print(f" - {name}: URL = {file.url}")
-            else:
-                print(f" - {name}: {file}")
-        else:
-            print(f" - {name}: None")
+        print(f" - {name}: {file}")
+    
+    if not files:
+        print(" [X] No files to merge!")
+        return None
+        
     final_pdf_path = merge_files(file_list=files)
     student.pdf_url = final_pdf_path
     student.pdf_generated = True
@@ -1871,19 +2548,43 @@ def generate_student_pdf_file(request, student_id):
     elems.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
     elems.append(Spacer(1, 0.2 * inch))
     photo_img = None
-    photo_url = getattr(student, 'photo_url', None) or (student.photo.url if student.photo else None)
-    if photo_url:
+    photo_path = None
+    
+    # 1. Try local file path first
+    if student.photo:
         try:
-            r = requests.get(photo_url, timeout=10)
-            if r.status_code == 200:
-                ext = '.png' if 'png' in r.headers.get('content-type', '') else '.jpg'
-                tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-                tp.write(r.content)
-                tp.close()
-                temp_files.append(tp.name)
-                photo_img = Image(tp.name, width=1.5 * inch, height=1.8 * inch)
+            if hasattr(student.photo, 'path') and os.path.exists(student.photo.path):
+                photo_path = student.photo.path
         except Exception:
             pass
+            
+    # 2. If not found, try to download from URL
+    if not photo_path:
+        photo_url = student.photo_url or (student.photo.url if student.photo else None)
+        if photo_url:
+            # Handle relative URLs
+            if photo_url.startswith('/'):
+                photo_url = request.build_absolute_uri(photo_url)
+            
+            try:
+                r = requests.get(photo_url, timeout=10)
+                if r.status_code == 200:
+                    ext = '.png' if 'png' in r.headers.get('content-type', '') else '.jpg'
+                    tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                    tp.write(r.content)
+                    tp.close()
+                    temp_files.append(tp.name)
+                    photo_path = tp.name
+            except Exception as e:
+                logger.error(f"Error downloading photo for PDF: {e}")
+
+    # 3. Create ReportLab Image if we have a path
+    if photo_path:
+        try:
+            photo_img = Image(photo_path, width=1.5 * inch, height=1.8 * inch)
+        except Exception as e:
+            logger.error(f"Error creating ReportLab image: {e}")
+
     if photo_img:
         ht = Table([[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]],
                    colWidths=[4.5 * inch, 1.5 * inch])
@@ -1917,6 +2618,19 @@ def generate_student_pdf_file(request, student_id):
         ("Final Project Title", student.final_project_title or "N/A"),
         ("Other Training", student.other_training or "N/A"),
     ]
+    
+    # Add Certificates Summary to fields
+    cert_status = []
+    if student.cert_achieve or student.cert_achieve_url: cert_status.append("Achievement")
+    if student.cert_intern or student.cert_intern_url: cert_status.append("Internship")
+    if student.cert_courses or student.cert_courses_url: cert_status.append("Courses")
+    if student.cert_sdp or student.cert_sdp_url: cert_status.append("SDP")
+    if student.cert_extra or student.cert_extra_url: cert_status.append("Extracurricular")
+    if student.cert_placement or student.cert_placement_url: cert_status.append("Placement")
+    if student.cert_national or student.cert_national_url: cert_status.append("National Exam")
+    
+    fields.append(("CERTIFICATES UPLOADED", ", ".join(cert_status) if cert_status else "None"))
+    
     tbl = Table([[Paragraph(f"<b>{l}</b>", styles['Normal']),
                   Paragraph(str(v) if v else "N/A", styles['Normal'])] for l, v in fields],
                 colWidths=[2.2 * inch, 4.3 * inch])
@@ -1932,8 +2646,11 @@ def generate_student_pdf_file(request, student_id):
     elems.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", styles['Normal']))
     doc.build(elems)
     writer = PdfWriter()
+    readers = [] # Keep readers in scope
     try:
-        for pg in PdfReader(main_pdf_path).pages:
+        main_reader = PdfReader(main_pdf_path)
+        readers.append(main_reader)
+        for pg in main_reader.pages:
             writer.add_page(pg)
     except Exception as e:
         logger.error(f"Error adding main PDF: {e}")
@@ -1945,33 +2662,71 @@ def generate_student_pdf_file(request, student_id):
     ]
     for fn, fl in cert_fields:
         cf = getattr(student, fn, None)
-        if not cf:
+        url_val = getattr(student, f"{fn}_url", None)
+        
+        if not cf and not url_val:
             continue
+            
         try:
-            curl = cf.url if hasattr(cf, 'url') else str(cf)
-            r = requests.get(curl, timeout=30)
-            if r.status_code == 200:
-                content = r.content
-                if content.startswith(b'%PDF'):
+            # Get the path or URL
+            curl = None
+            if cf:
+                try:
+                    # Check if local file exists
+                    if hasattr(cf, 'path') and os.path.exists(cf.path):
+                        curl = cf.path
+                    else:
+                        curl = cf.url
+                except Exception:
+                    curl = getattr(cf, 'url', str(cf))
+            
+            if not curl and url_val:
+                curl = url_val
+                
+            if not curl:
+                continue
+
+            # If it's a URL, download it; if it's a relative path, make it absolute if needed
+            # But here we handle local paths directly if they exist
+            if isinstance(curl, str) and (curl.startswith('http') or curl.startswith('/')):
+                if curl.startswith('/'):
+                    curl = request.build_absolute_uri(curl)
+                
+                r = requests.get(curl, timeout=30)
+                if r.status_code == 200:
+                    content = r.content
+                else:
+                    continue
+            elif os.path.exists(str(curl)):
+                with open(str(curl), 'rb') as f:
+                    content = f.read()
+            else:
+                continue
+
+            if content.startswith(b'%PDF'):
+                tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                tp.write(content)
+                tp.close()
+                temp_files.append(tp.name)
+                reader = PdfReader(tp.name)
+                readers.append(reader)
+                for pg in reader.pages:
+                    writer.add_page(pg)
+            else:
+                try:
+                    img = PILImage.open(io.BytesIO(content))
+                    if img.mode != 'RGB':
+                        img = img.convert('RGB')
                     tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    tp.write(content)
+                    img.save(tp.name, 'PDF', resolution=100.0)
                     tp.close()
                     temp_files.append(tp.name)
-                    for pg in PdfReader(tp.name).pages:
+                    reader = PdfReader(tp.name)
+                    readers.append(reader)
+                    for pg in reader.pages:
                         writer.add_page(pg)
-                else:
-                    try:
-                        img = PILImage.open(io.BytesIO(content))
-                        if img.mode != 'RGB':
-                            img = img.convert('RGB')
-                        tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                        img.save(tp.name, 'PDF', resolution=100.0)
-                        tp.close()
-                        temp_files.append(tp.name)
-                        for pg in PdfReader(tp.name).pages:
-                            writer.add_page(pg)
-                    except Exception:
-                        pass
+                except Exception as e:
+                    logger.error(f"Error converting image to PDF: {e}")
         except Exception as e:
             logger.error(f"Error processing {fl}: {e}")
     fp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
@@ -1981,7 +2736,8 @@ def generate_student_pdf_file(request, student_id):
     try:
         with open(final_path, "wb") as out:
             writer.write(out)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error writing final merged PDF: {e}")
         shutil.copy(main_pdf_path, final_path)
     if is_cloudinary_configured():
         try:
@@ -2105,6 +2861,25 @@ def generate_faculty_pdf(request, faculty_id):
                         pdf_files.append(tmp.name)
                         temp_files.append(tmp.name)
                         print(f" ✅ Downloaded certificate: {tmp.name}")
+                    elif response.status_code == 401:
+                        try:
+                            public_id = cert.cloudinary_url.split('/upload/')[1].split('/')[1:] if '/upload/' in cert.cloudinary_url else None
+                            if public_id:
+                                public_id = '/'.join(public_id).rsplit('.', 1)[0]
+                                resource = cloudinary.api.resource(public_id)
+                                if resource.get('secure_url'):
+                                    cert_url = resource['secure_url']
+                                    print(f" [~] Using Cloudinary API for certificate {cert.certificate_type}")
+                                    response = requests.get(cert_url, timeout=30)
+                                    if response.status_code == 200:
+                                        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+                                        tmp.write(response.content)
+                                        tmp.close()
+                                        pdf_files.append(tmp.name)
+                                        temp_files.append(tmp.name)
+                                        print(f" ✅ Downloaded certificate via API: {tmp.name}")
+                        except Exception as cloud_err:
+                            print(f" ❌ Cloudinary API error for {cert.certificate_type}: {cloud_err}")
                 elif cert.certificate_file and hasattr(cert.certificate_file, 'path'):
                     if cert.certificate_file.path.startswith('http'):
                         print(f" 📄 Certificate ({cert.certificate_type}) URL: {cert.certificate_file.path}")
