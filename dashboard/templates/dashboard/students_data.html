@@ -347,6 +347,15 @@ body {
     color: #000;
 }
 
+/* Document indicator */
+.doc-indicator {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 5px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
 /* Pagination */
 .pagination {
     display: flex;
@@ -576,6 +585,13 @@ body {
                             <a href="{{ student.pdf_file.url }}" target="_blank" class="btn btn-success">View PDF</a>
                         {% else %}
                             <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning">Generate</a>
+                        {% endif %}
+                        {% if student.cert_achieve or student.cert_intern or student.cert_courses or student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national %}
+                            <span class="doc-indicator" title="Documents uploaded">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="#0f0">
+                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM13 4H9.5V0H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5L13 4z"/>
+                                </svg>
+                            </span>
                         {% endif %}
                     </td>
 

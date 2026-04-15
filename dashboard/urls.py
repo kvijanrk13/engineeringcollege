@@ -52,10 +52,12 @@ urlpatterns = [
 
     # Faculty PDF routes
     path('faculty/pdf/<int:faculty_id>/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
+    path('faculty/generate-pdf/<int:faculty_id>/', views.generate_faculty_pdf, name='generate_faculty_pdf_alt'),
     path('faculty/pdf-clean/<int:faculty_id>/', views.generate_faculty_pdf_clean, name='generate_faculty_pdf_clean'),
     path('faculty/pdf-view/<int:faculty_id>/', views.faculty_pdf, name='faculty_pdf'),
     path('faculty/pdf-download/<int:faculty_id>/', views.download_faculty_pdf, name='download_faculty_pdf'),
     path('faculty/pdf-preview/<int:faculty_id>/', views.preview_faculty_pdf, name='preview_faculty_pdf'),
+    path('faculty/preview-pdf/<int:faculty_id>/', views.preview_faculty_pdf, name='preview_faculty_pdf_alt'),
     path('faculty/pdf-status/<int:faculty_id>/', views.ajax_check_pdf_status, name='ajax_check_pdf_status'),
     path('faculty/bulk-pdfs/', views.bulk_generate_faculty_pdfs, name='bulk_generate_faculty_pdfs'),
 
@@ -150,6 +152,9 @@ urlpatterns = [
     path('exam-branch/', views.exam_branch, name='exam_branch'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
     path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
+    path('exam-branch/update-attendance/', views.update_attendance, name='update_attendance'),
+    path('exam-branch/save-attendance/', views.save_attendance, name='save_attendance'),
+    path('exam-branch/attendance-report/', views.attendance_report, name='attendance_report'),
     path('laboratory/', views.laboratory, name='laboratory'),
     path('gallery/', views.gallery, name='gallery'),
 

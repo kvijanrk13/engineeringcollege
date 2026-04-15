@@ -12,6 +12,25 @@ from reportlab.pdfgen import canvas
 
 logger = logging.getLogger(__name__)
 
+
+def parse_date(date_str):
+    """
+    Parse and validate date string in YYYY-MM-DD format.
+    Returns None if invalid or empty.
+    Validates reasonable year range (1900-current year).
+    """
+    if not date_str or date_str.strip() == '':
+        return None
+    date_str = date_str.strip()
+    try:
+        parsed = datetime.strptime(date_str, '%Y-%m-%d').date()
+        if parsed.year < 1900 or parsed.year > date.today().year:
+            return None
+        return parsed
+    except ValueError:
+        return None
+
+
 # -------------------------------------------------
 # OPTIONAL DEPENDENCIES (SAFE IMPORTS)
 # -------------------------------------------------

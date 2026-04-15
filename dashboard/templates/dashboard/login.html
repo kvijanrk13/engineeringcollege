@@ -30,7 +30,6 @@
             min-height: 100vh;
         }
 
-        /* Matrix Canvas Background */
         #matrix-canvas {
             position: fixed;
             top: 0;
@@ -41,7 +40,6 @@
             background: #000000;
         }
 
-        /* Semi-transparent overlay for better readability */
         .overlay {
             position: fixed;
             top: 0;
@@ -52,7 +50,6 @@
             z-index: 1;
         }
 
-        /* Page Container */
         .page {
             position: relative;
             z-index: 2;
@@ -63,7 +60,6 @@
             padding: 24px;
         }
 
-        /* Card Container */
         .card {
             width: 100%;
             max-width: 440px;
@@ -87,7 +83,6 @@
             }
         }
 
-        /* Header Image Container */
         .header-image {
             text-align: center;
             margin-bottom: 24px;
@@ -100,7 +95,6 @@
             border-radius: 8px;
         }
 
-        /* Typography */
         h1 {
             margin: 0 0 8px;
             font-size: 28px;
@@ -118,7 +112,6 @@
             font-size: 14px;
         }
 
-        /* Alert Messages */
         .alert {
             margin-bottom: 16px;
             padding: 12px 14px;
@@ -140,7 +133,6 @@
             border-left-color: #00ff41;
         }
 
-        /* Form Elements */
         label {
             display: block;
             margin-bottom: 8px;
@@ -213,7 +205,6 @@
             text-shadow: 0 0 5px #00ff41;
         }
 
-        /* Switch Link */
         .switch {
             margin-top: 20px;
             text-align: center;
@@ -247,7 +238,6 @@
             text-shadow: 0 0 5px #00ff41;
         }
 
-        /* Hint Box */
         .hint {
             margin-top: 20px;
             padding: 12px;
@@ -260,7 +250,6 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* College Name */
         .college-name {
             text-align: center;
             margin-top: 16px;
@@ -269,7 +258,6 @@
             letter-spacing: 1px;
         }
 
-        /* Typing cursor effect */
         .cursor {
             display: inline-block;
             width: 2px;
@@ -291,10 +279,12 @@
 
     <div class="page">
         <div class="card">
-            <!-- IT HEADER.png Image -->
+            <!-- IT HEADER.png Image - Commented out to avoid static file issues -->
             <div class="header-image">
+                {% comment %}
                 {% load static %}
                 <img src="{% static 'images/IT HEADER.png' %}" alt="IT Department Header" onerror="this.style.display='none'">
+                {% endcomment %}
             </div>
 
             {% if student_login %}
@@ -362,51 +352,36 @@
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
 
-        // Set canvas dimensions
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Matrix characters - including letters, numbers, and symbols
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|;:,.<>?/~`アァカサタナハマヤャワガザダバパイィキシチニヒミリヂジビピウゥクスツヌフムユュグズブプエェケセテネヘメレゲゼベペオォコソトノホモヨョヲゴゾボポヴ';
         const charArray = chars.split('');
 
         const fontSize = 16;
         let columns = canvas.width / fontSize;
-
-        // Array to store the current Y position for each column
         let drops = [];
 
-        // Initialize drops
         for (let i = 0; i < columns; i++) {
             drops[i] = Math.random() * -100;
         }
 
-        // Colors for gradient effect
         const colors = ['#00ff41', '#00cc33', '#009926', '#00ff33', '#33ff66'];
 
         function draw() {
-            // Semi-transparent black to create fading trail effect
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Green text
             ctx.font = fontSize + 'px monospace';
 
-            // Draw characters
             for (let i = 0; i < drops.length; i++) {
-                // Random character
                 const char = charArray[Math.floor(Math.random() * charArray.length)];
-
-                // Random color variation
                 const colorIndex = Math.floor(Math.random() * colors.length);
                 ctx.fillStyle = colors[colorIndex];
 
-                // Draw the character
                 const x = i * fontSize;
                 const y = drops[i] * fontSize;
 
                 if (y > 0 && y < canvas.height) {
-                    // Add glow effect for some characters
                     if (Math.random() > 0.95) {
                         ctx.shadowBlur = 10;
                         ctx.shadowColor = '#00ff41';
@@ -417,20 +392,16 @@
                     ctx.shadowBlur = 0;
                 }
 
-                // Reset drop position when it reaches bottom or randomly
                 if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     drops[i] = 0;
                 }
 
-                // Move drop down
                 drops[i] += 0.5 + Math.random() * 0.5;
             }
         }
 
-        // Animation loop
         let interval = setInterval(draw, 35);
 
-        // Handle window resize
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -441,27 +412,10 @@
             }
         });
 
-        // Optional: Add mouse interaction - create ripples
-        let mouseX = null;
-        let mouseY = null;
-
-        canvas.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-
-            // Create a ripple effect by increasing drop speed near mouse
-            const colIndex = Math.floor(mouseX / fontSize);
-            if (colIndex >= 0 && colIndex < drops.length) {
-                drops[colIndex] += 2;
-            }
-        });
-
-        // Cleanup on page unload (optional)
         window.addEventListener('beforeunload', () => {
             if (interval) clearInterval(interval);
         });
 
-        // Clear service workers and caches
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(registrations => {
                 for (let registration of registrations) {
@@ -470,7 +424,6 @@
             });
         }
 
-        // Clear all caches
         if ('caches' in window) {
             caches.keys().then(names => {
                 names.forEach(name => caches.delete(name));

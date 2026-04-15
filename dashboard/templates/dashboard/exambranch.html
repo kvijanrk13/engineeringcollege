@@ -1,12 +1,13 @@
 <!-- faculty/dashboard/templates/exambranch/dashboard.html -->
 {% extends 'base.html' %}
 {% load static %}
+{% load dashboard_filters %}
 
 {% block title %}
     {% if view_mode == 'list' %}
         Exam Branch - Faculty List | Anurag Engineering College
     {% else %}
-        Exam Branch - Faculty Management | Anurag Engineering College
+        Exam Branch - Attendance Management | Anurag Engineering College
     {% endif %}
 {% endblock %}
 
@@ -187,6 +188,153 @@
         border-radius: 5px;
     }
 
+    /* College Header Styles */
+    .college-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .college-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .college-header h4 {
+        font-size: 1.2rem;
+        color: #ffd700;
+        margin-bottom: 10px;
+    }
+
+    .college-header p {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+
+    /* Attendance Sheet Styles */
+    .attendance-sheet {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-top: 20px;
+    }
+
+    .attendance-header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .attendance-header h4 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .attendance-header p {
+        margin: 5px 0 0;
+        opacity: 0.8;
+        font-size: 12px;
+    }
+
+    .attendance-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .attendance-table th {
+        background-color: #34495e;
+        color: white;
+        padding: 12px;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #46637a;
+    }
+
+    .attendance-table td {
+        padding: 10px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+        font-size: 13px;
+    }
+
+    .attendance-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .present-mark {
+        background-color: #d4edda;
+        color: #155724;
+        font-weight: bold;
+    }
+
+    .absent-mark {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+
+    .total-cell {
+        background-color: #e8f4fd;
+        font-weight: bold;
+    }
+
+    .percentage-cell {
+        background-color: #fff3cd;
+        font-weight: bold;
+    }
+
+    .units-covered {
+        background-color: #e2e3e5;
+        font-weight: bold;
+    }
+
+    /* Signature Section */
+    .signature-section {
+        margin-top: 20px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .signature-box {
+        text-align: center;
+        flex: 1;
+    }
+
+    .signature-box .line {
+        border-top: 1px solid #000;
+        width: 80%;
+        margin: 10px auto 5px;
+    }
+
+    /* Batch Operations Panel */
+    .batch-operations {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .batch-operations h6 {
+        color: white;
+        margin-bottom: 15px;
+    }
+
+    .batch-operations .btn-light {
+        background: white;
+        color: #667eea;
+    }
+
     /* List View Specific Styles */
     .coverage-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -225,6 +373,11 @@
             width: 100%;
             justify-content: center;
         }
+
+        .signature-section {
+            flex-direction: column;
+            gap: 15px;
+        }
     }
 
     /* Print styles */
@@ -241,6 +394,12 @@
         .faculty-table th {
             background-color: #f1f1f1 !important;
             -webkit-print-color-adjust: exact;
+        }
+
+        .attendance-table th {
+            background-color: #34495e !important;
+            -webkit-print-color-adjust: exact;
+            color: white;
         }
     }
 
@@ -290,48 +449,74 @@
     .view-toggle-btn:first-child {
         border-right: 1px solid #dee2e6;
     }
+
+    /* Date Picker Styles */
+    .date-range {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .date-range label {
+        font-weight: 600;
+        margin-right: 10px;
+    }
+
+    .date-range input {
+        margin-right: 20px;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
+    <!-- College Header (as per Excel) -->
+    <div class="college-header no-print">
+        <h2>ANURAG ENGINEERING COLLEGE</h2>
+        <h4>An Autonomous Institution</h4>
+        <p>(Affiliated to JNTUH-Hyderabad, Approved by AICTE-New Delhi)</p>
+        <p>ANANTHAGIRI (V) (M), SURYAPET (D), TELANGANA-508206</p>
+        <p>Academic Year: 2025-26</p>
+    </div>
+
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div>
                     <h1 class="h3 mb-0 text-gray-800">
                         <i class="fas fa-file-alt text-primary me-2"></i>
                         {% if view_mode == 'list' %}
                             Exam Branch - Faculty List
                         {% else %}
-                            Exam Branch - Faculty Management
+                            Exam Branch - Attendance Management
                         {% endif %}
                     </h1>
                     <p class="text-muted mb-0">
                         {% if view_mode == 'list' %}
                             View and download faculty PDFs
                         {% else %}
-                            Manage faculty PDFs, certificates, and downloads
+                            IV B.Tech I Semester IT - Monthly Attendance
                         {% endif %}
                     </p>
                 </div>
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3 mt-2 mt-sm-0">
                     <!-- View Toggle -->
                     <div class="view-toggle no-print">
                         <a href="{% url 'dashboard:exam_branch' %}?view=dashboard"
                            class="view-toggle-btn {% if view_mode == 'dashboard' %}active{% endif %}">
-                            <i class="fas fa-tachometer-alt me-1"></i> Dashboard
+                            <i class="fas fa-calendar-alt me-1"></i> Attendance
                         </a>
                         <a href="{% url 'dashboard:exam_branch' %}?view=list"
                            class="view-toggle-btn {% if view_mode == 'list' %}active{% endif %}">
-                            <i class="fas fa-list me-1"></i> List View
+                            <i class="fas fa-list me-1"></i> Faculty List
                         </a>
                     </div>
 
                     <div class="d-flex gap-2">
                         <button class="btn btn-outline-primary no-print" onclick="printPage()">
-                            <i class="fas fa-print me-1"></i> Print Report
+                            <i class="fas fa-print me-1"></i> Print
                         </button>
                         <a href="{% url 'dashboard:exam_branch_generate_report' %}?format=excel" class="btn btn-success no-print">
                             <i class="fas fa-file-excel me-1"></i> Export Excel
@@ -378,7 +563,7 @@
                             <div class="card bg-warning text-white">
                                 <div class="card-body text-center">
                                     <h5 class="card-title">Missing PDFs</h5>
-                                    <h2 class="stats-number">{{ total_count|add:"-available_pdfs" }}</h2>
+                                    <h2 class="stats-number">{{ total_count|add:"-"|add:available_pdfs }}</h2>
                                 </div>
                             </div>
                         </div>
@@ -388,7 +573,7 @@
                                     <h5 class="card-title">Coverage</h5>
                                     <h2 class="stats-number">
                                         {% if total_count > 0 %}
-                                            {{ available_pdfs|floatformat:0 }}%
+                                            {% widthratio available_pdfs total_count 100 %}%
                                         {% else %}
                                             0%
                                         {% endif %}
@@ -403,7 +588,7 @@
                         <table class="table table-bordered table-hover">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>#</th>
+                                    <th>S.No.</th>
                                     <th>Employee Code</th>
                                     <th>Name</th>
                                     <th>Department</th>
@@ -424,9 +609,13 @@
                                     <td>{{ faculty.mobile }}</td>
                                     <td>
                                         {% if faculty.pdf_status == 'Available' %}
-                                            <span class="badge bg-success">Available</span>
+                                            <span class="status-badge status-available">
+                                                <i class="fas fa-check-circle me-1"></i> Available
+                                            </span>
                                         {% else %}
-                                            <span class="badge bg-danger">Not Available</span>
+                                            <span class="status-badge status-unavailable">
+                                                <i class="fas fa-times-circle me-1"></i> Not Available
+                                            </span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -434,7 +623,7 @@
                                             <a href="{{ faculty.cloudinary_pdf_url }}"
                                                target="_blank"
                                                class="btn btn-sm btn-primary">
-                                                <i class="fas fa-eye"></i> View PDF
+                                                <i class="fas fa-eye"></i> View
                                             </a>
                                             <a href="{{ faculty.cloudinary_pdf_url }}"
                                                download
@@ -451,7 +640,7 @@
                                             </button>
                                             <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
                                                class="btn btn-sm btn-warning">
-                                                <i class="fas fa-file-pdf"></i> Generate PDF
+                                                <i class="fas fa-file-pdf"></i> Generate
                                             </a>
                                         {% endif %}
                                     </td>
@@ -486,482 +675,228 @@
             </div>
         </div>
     </div>
-    <!-- ==================== END LIST VIEW ==================== -->
 
     {% else %}
-    <!-- ==================== DASHBOARD VIEW ==================== -->
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-left-primary h-100">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1 stats-label">
-                                Total Faculty
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 stats-number">
-                                {{ stats.total }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users stats-icon text-primary"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- ==================== ATTENDANCE DASHBOARD VIEW ==================== -->
+
+    <!-- Attendance Sheet Header -->
+    <div class="attendance-sheet">
+        <div class="attendance-header">
+            <h4>IV B.Tech I Semester IT - SEPTEMBER Monthly Attendance</h4>
+            <p>Period: 10-07-2025 to 30-09-2025</p>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-left-success h-100">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1 stats-label">
-                                PDFs Available
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 stats-number">
-                                {{ stats.with_pdf }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-file-pdf stats-icon text-success"></i>
-                        </div>
-                    </div>
+        <!-- Date Range Filter -->
+        <div class="date-range no-print">
+            <form method="GET" action="{% url 'dashboard:exam_branch' %}" class="row g-3 align-items-end">
+                <input type="hidden" name="view" value="dashboard">
+                <div class="col-auto">
+                    <label for="from_date">From Date:</label>
+                    <input type="date" name="from_date" id="from_date" class="form-control" value="{{ from_date|default:'2025-07-10' }}">
                 </div>
-            </div>
+                <div class="col-auto">
+                    <label for="to_date">To Date:</label>
+                    <input type="date" name="to_date" id="to_date" class="form-control" value="{{ to_date|default:'2025-09-30' }}">
+                </div>
+                <div class="col-auto">
+                    <label for="branch">Branch:</label>
+                    <select name="branch" id="branch" class="form-control">
+                        <option value="IT" selected>Information Technology (IT)</option>
+                        <option value="CSE">Computer Science (CSE)</option>
+                        <option value="ECE">Electronics (ECE)</option>
+                        <option value="EEE">Electrical (EEE)</option>
+                        <option value="MECH">Mechanical (MECH)</option>
+                        <option value="CIVIL">Civil (CIVIL)</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="year_sem">Year/Semester:</label>
+                    <select name="year_sem" id="year_sem" class="form-control">
+                        <option value="IV-I" selected>IV Year I Semester</option>
+                        <option value="IV-II">IV Year II Semester</option>
+                        <option value="III-I">III Year I Semester</option>
+                        <option value="III-II">III Year II Semester</option>
+                        <option value="II-I">II Year I Semester</option>
+                        <option value="II-II">II Year II Semester</option>
+                        <option value="I-I">I Year I Semester</option>
+                        <option value="I-II">I Year II Semester</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Load Attendance</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetFilters()">Reset</button>
+                </div>
+            </form>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-left-warning h-100">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1 stats-label">
-                                PDFs Pending
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 stats-number">
-                                {{ stats.without_pdf }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock stats-icon text-warning"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card stats-card border-left-info h-100">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1 stats-label">
-                                Departments
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800 stats-number">
-                                {{ stats.by_department|length }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-building stats-icon text-info"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Department-wise Statistics -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-chart-bar me-2"></i>Department-wise Statistics
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Department</th>
-                                    <th>Total Faculty</th>
-                                    <th>PDFs Available</th>
-                                    <th>PDFs Pending</th>
-                                    <th>Percentage</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for dept in stats.by_department %}
-                                <tr>
-                                    <td>
-                                        <span class="department-badge">{{ dept.department }}</span>
-                                    </td>
-                                    <td>{{ dept.count }}</td>
-                                    <td>{{ dept.with_pdf }}</td>
-                                    <td>{{ dept.count|add:"-"|add:dept.with_pdf }}</td>
-                                    <td>
-                                        <div class="progress" style="height: 20px;">
-                                            {% with percentage=dept.with_pdf|floatformat:0 %}
-                                            <div class="progress-bar bg-success" role="progressbar"
-                                                 style="width: {{ percentage }}%"
-                                                 aria-valuenow="{{ dept.with_pdf }}"
-                                                 aria-valuemin="0"
-                                                 aria-valuemax="{{ dept.count }}">
-                                                {{ percentage }}%
-                                            </div>
-                                            {% endwith %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted py-3">
-                                        <i class="fas fa-info-circle me-2"></i>No department data available
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Filters and Search -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-filter me-2"></i>Filters & Search
-                    </h6>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
-                        <i class="fas fa-times me-1"></i> Clear All
-                    </button>
-                </div>
-                <div class="card-body">
-                    <!-- Active Filters -->
-                    <div class="mb-3" id="activeFilters">
-                        {% if request.GET.department %}
-                        <span class="filter-badge">
-                            Department: {{ request.GET.department }}
-                            <span class="close" onclick="removeFilter('department')">&times;</span>
-                        </span>
-                        {% endif %}
-
-                        {% if request.GET.status %}
-                        <span class="filter-badge">
-                            PDF Status: {{ request.GET.status|title }}
-                            <span class="close" onclick="removeFilter('status')">&times;</span>
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Search Faculty</label>
-                            <div class="search-box">
-                                <i class="fas fa-search search-icon"></i>
-                                <input type="text"
-                                       class="form-control"
-                                       id="searchInput"
-                                       placeholder="Search by name, code, or email..."
-                                       value="{{ search_query|default:'' }}">
-                            </div>
-                        </div>
-
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Department</label>
-                            <select class="form-control" id="departmentFilter">
-                                <option value="">All Departments</option>
-                                {% for dept in departments %}
-                                <option value="{{ dept }}" {% if dept == dept_filter %}selected{% endif %}>
-                                    {{ dept }}
-                                </option>
-                                {% endfor %}
+        <!-- Attendance Table -->
+        <div class="table-responsive">
+            <table class="attendance-table" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">S.No.</th>
+                        <th rowspan="2">H.T.No.</th>
+                        <th rowspan="2">Name of the Student</th>
+                        <th colspan="{{ date_list|length|default:31 }}">Days (Date)</th>
+                        <th rowspan="2">TOTAL</th>
+                        <th rowspan="2">%</th>
+                    </tr>
+                    <tr>
+                        {% for date in date_list %}
+                        <th>{{ date|date:"d/m" }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ student.ht_no }}</strong></td>
+                        <td>{{ student.student_name }}</td>
+                        {% for date in date_list %}
+                        <td class="attendance-cell" data-student="{{ student.id }}" data-date="{{ date|date:'Y-m-d' }}">
+                            <select class="attendance-select form-control form-control-sm"
+                                    style="width: 60px; text-align: center;"
+                                    onchange="updateAttendance({{ student.id }}, '{{ date|date:'Y-m-d' }}', this.value)">
+                                <option value="P" {% if attendance_data|get_item:student.id|get_item:date|default:'A' == 'P' %}selected{% endif %}>P</option>
+                                <option value="A" {% if attendance_data|get_item:student.id|get_item:date|default:'A' == 'A' %}selected{% endif %}>A</option>
+                                <option value="OD" {% if attendance_data|get_item:student.id|get_item:date|default:'A' == 'OD' %}selected{% endif %}>OD</option>
+                                <option value="L" {% if attendance_data|get_item:student.id|get_item:date|default:'A' == 'L' %}selected{% endif %}>L</option>
                             </select>
-                        </div>
+                        </td>
+                        {% endfor %}
+                        <td class="total-cell" id="total-{{ student.id }}">{{ student.total_present|default:0 }}</td>
+                        <td class="percentage-cell" id="percentage-{{ student.id }}">{{ student.attendance_percentage|default:0 }}%</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{{ date_list|length|default:31|add:5 }}" class="text-center">No student records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3"><strong>Total Classes</strong></td>
+                        {% for date in date_list %}
+                        <td class="total-classes-cell" id="total-classes-{{ forloop.counter }}">0</td>
+                        {% endfor %}
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
 
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">PDF Status</label>
-                            <select class="form-control" id="statusFilter">
-                                <option value="">All Status</option>
-                                <option value="available" {% if status_filter == 'available' %}selected{% endif %}>
-                                    PDF Available
-                                </option>
-                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>
-                                    PDF Pending
-                                </option>
-                            </select>
-                        </div>
-                    </div>
+        <!-- Units Covered Section -->
+        <div class="attendance-sheet mt-3">
+            <div class="attendance-header" style="background: #6c757d;">
+                <h4>Academic Progress</h4>
+            </div>
+            <div class="table-responsive">
+                <table class="attendance-table">
+                    <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Subject Name</th>
+                            <th>Units Covered</th>
+                            <th>Total Units</th>
+                            <th>Progress %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>IT401</td>
+                            <td>Web Technologies</td>
+                            <td><input type="number" class="form-control form-control-sm units-input" id="units_web" value="3" style="width: 80px;" onchange="updateProgress()"></td>
+                            <td>5</td>
+                            <td class="progress-cell" id="progress_web">60%</td>
+                        </tr>
+                        <tr>
+                            <td>IT402</td>
+                            <td>Cloud Computing</td>
+                            <td><input type="number" class="form-control form-control-sm units-input" id="units_cloud" value="4" style="width: 80px;" onchange="updateProgress()"></td>
+                            <td>5</td>
+                            <td class="progress-cell" id="progress_cloud">80%</td>
+                        </tr>
+                        <tr>
+                            <td>IT403</td>
+                            <td>Machine Learning</td>
+                            <td><input type="number" class="form-control form-control-sm units-input" id="units_ml" value="3" style="width: 80px;" onchange="updateProgress()"></td>
+                            <td>5</td>
+                            <td class="progress-cell" id="progress_ml">60%</td>
+                        </tr>
+                        <tr>
+                            <td>IT404</td>
+                            <td>Cyber Security</td>
+                            <td><input type="number" class="form-control form-control-sm units-input" id="units_security" value="4" style="width: 80px;" onchange="updateProgress()"></td>
+                            <td>5</td>
+                            <td class="progress-cell" id="progress_security">80%</td>
+                        </tr>
+                        <tr>
+                            <td>IT405</td>
+                            <td>Data Science</td>
+                            <td><input type="number" class="form-control form-control-sm units-input" id="units_ds" value="2" style="width: 80px;" onchange="updateProgress()"></td>
+                            <td>5</td>
+                            <td class="progress-cell" id="progress_ds">40%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-primary" onclick="applyFilters()">
-                            <i class="fas fa-filter me-1"></i> Apply Filters
-                        </button>
-
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-success" onclick="batchGeneratePDFs()">
-                                <i class="fas fa-file-pdf me-1"></i> Generate All PDFs
-                            </button>
-                            <a href="{% url 'dashboard:exam_branch_batch_download' %}" class="btn btn-success" id="downloadAllBtn">
-                                <i class="fas fa-download me-1"></i> Download All PDFs
-                            </a>
-                        </div>
-                    </div>
-                </div>
+        <!-- Signature Section (as per Excel) -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <p><strong>No: Units Covered</strong></p>
+                <div class="line"></div>
+                <p>Faculty Signature</p>
+            </div>
+            <div class="signature-box">
+                <p><strong>A.C.</strong></p>
+                <div class="line"></div>
+                <p>Academic Coordinator</p>
+            </div>
+            <div class="signature-box">
+                <p><strong>H.O.D., I.T</strong></p>
+                <div class="line"></div>
+                <p>Head of Department</p>
+            </div>
+            <div class="signature-box">
+                <p><strong>PRINCIPAL</strong></p>
+                <div class="line"></div>
+                <p>Principal</p>
             </div>
         </div>
     </div>
 
-    <!-- Faculty List -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow faculty-table-container">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-list me-2"></i>Faculty Directory
-                        <span class="badge bg-secondary ms-2">{{ total_count }}</span>
-                    </h6>
-                    <div class="text-muted">
-                        Showing {{ faculties.count }} of {{ total_count }} faculty members
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table faculty-table">
-                            <thead>
-                                <tr>
-                                    <th>Employee Code</th>
-                                    <th>Faculty Name</th>
-                                    <th>Department</th>
-                                    <th>Contact</th>
-                                    <th>PDF Status</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for faculty in faculties %}
-                                <tr id="faculty-{{ faculty.id }}">
-                                    <td>
-                                        <strong>{{ faculty.employee_code }}</strong>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            {% if faculty.cloudinary_photo_url %}
-                                            <img src="{{ faculty.cloudinary_photo_url }}"
-                                                 alt="{{ faculty.name }}"
-                                                 class="rounded-circle me-3"
-                                                 style="width: 40px; height: 40px; object-fit: cover;">
-                                            {% else %}
-                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3"
-                                                 style="width: 40px; height: 40px;">
-                                                <i class="fas fa-user text-muted"></i>
-                                            </div>
-                                            {% endif %}
-                                            <div>
-                                                <div class="font-weight-bold">{{ faculty.name }}</div>
-                                                <small class="text-muted">{{ faculty.email }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="department-badge">{{ faculty.department }}</span>
-                                    </td>
-                                    <td>
-                                        <div>{{ faculty.mobile }}</div>
-                                        <small class="text-muted">{{ faculty.email }}</small>
-                                    </td>
-                                    <td>
-                                        {% if faculty.cloudinary_pdf_url %}
-                                        <span class="status-badge status-available">
-                                            <i class="fas fa-check-circle me-1"></i> Available
-                                        </span>
-                                        <div class="mt-1">
-                                            <small class="text-muted">
-                                                <i class="fas fa-calendar me-1"></i>
-                                                {{ faculty.updated_at|date:"d/m/Y" }}
-                                            </small>
-                                        </div>
-                                        {% else %}
-                                        <span class="status-badge status-unavailable">
-                                            <i class="fas fa-times-circle me-1"></i> Not Available
-                                        </span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <!-- View Details Button -->
-                                            <a href="{% url 'dashboard:faculty' %}?id={{ faculty.id }}"
-                                               class="btn btn-sm btn-outline-info btn-action"
-                                               title="View Details">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-
-                                            <!-- Download Button (only if PDF exists) -->
-                                            {% if faculty.cloudinary_pdf_url %}
-                                            <a href="{{ faculty.cloudinary_pdf_url }}"
-                                               class="btn btn-sm btn-primary btn-action"
-                                               download="Faculty_{{ faculty.employee_code }}.pdf"
-                                               target="_blank"
-                                               title="Download PDF from Cloudinary"
-                                               id="downloadBtn-{{ faculty.id }}">
-                                                <i class="fas fa-download"></i> Download
-                                            </a>
-
-                                            <!-- Preview Button -->
-                                            <button class="btn btn-sm btn-outline-success btn-action"
-                                                    onclick="previewPDF('{{ faculty.id }}')"
-                                                    title="Preview PDF">
-                                                <i class="fas fa-eye"></i> Preview
-                                            </button>
-                                            {% else %}
-                                            <!-- Generate PDF Button -->
-                                            <button class="btn btn-sm btn-warning btn-action"
-                                                    onclick="generateAndUploadPDF('{{ faculty.id }}', '{{ faculty.employee_code }}')"
-                                                    title="Generate and Upload PDF"
-                                                    id="generateBtn-{{ faculty.id }}">
-                                                <i class="fas fa-file-pdf"></i> Generate PDF
-                                            </button>
-                                            {% endif %}
-
-                                            <!-- Generate PDF Direct Button -->
-                                            <a href="{% url 'dashboard:generate_faculty_pdf' faculty.id %}"
-                                               class="btn btn-sm btn-outline-secondary btn-action"
-                                               target="_blank"
-                                               title="Generate PDF Directly">
-                                                <i class="fas fa-bolt"></i> Direct PDF
-                                            </a>
-
-                                            <!-- Merge Certificates Button -->
-                                            {% if faculty.total_certificates > 0 %}
-                                            <button class="btn btn-sm btn-outline-dark btn-action"
-                                                    onclick="mergeCertificates('{{ faculty.id }}')"
-                                                    title="Merge Certificates with PDF">
-                                                <i class="fas fa-file-archive"></i> Merge
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="6" class="text-center py-5">
-                                        <div class="text-muted">
-                                            <i class="fas fa-users fa-3x mb-3"></i>
-                                            <h5>No faculty members found</h5>
-                                            <p>Try changing your filters or search criteria</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Pagination (if needed) -->
-                {% if faculties.paginator %}
-                <div class="card-footer">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center mb-0">
-                            {% if faculties.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ faculties.previous_page_number }}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            {% endif %}
-
-                            {% for num in faculties.paginator.page_range %}
-                            {% if num == faculties.number %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ num }}</span>
-                            </li>
-                            {% else %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                            </li>
-                            {% endif %}
-                            {% endfor %}
-
-                            {% if faculties.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ faculties.next_page_number }}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                </div>
-                {% endif %}
-            </div>
+    <!-- Save Button -->
+    <div class="row mt-4 no-print">
+        <div class="col-12 text-center">
+            <button class="btn btn-success btn-lg" onclick="saveAttendance()">
+                <i class="fas fa-save me-2"></i> Save Attendance Record
+            </button>
+            <button class="btn btn-primary btn-lg" onclick="calculateTotals()">
+                <i class="fas fa-calculator me-2"></i> Calculate Totals
+            </button>
+            <button class="btn btn-info btn-lg" onclick="generateAttendanceReport()">
+                <i class="fas fa-chart-line me-2"></i> Generate Report
+            </button>
         </div>
     </div>
 
     <!-- Batch Operations Panel -->
-    <div class="row mt-4 no-print">
-        <div class="col-12">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-cogs me-2"></i>Batch Operations
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Generate All PDFs</h5>
-                                    <p class="card-text text-muted">Generate PDFs for all faculty without one</p>
-                                    <button class="btn btn-warning" onclick="batchGeneratePDFs()">
-                                        <i class="fas fa-file-pdf me-1"></i> Generate PDFs
-                                    </button>
-                                    <div class="mt-2">
-                                        <small class="text-muted">{{ stats.without_pdf }} faculty need PDFs</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Upload to Cloudinary</h5>
-                                    <p class="card-text text-muted">Upload all generated PDFs to Cloudinary</p>
-                                    <button class="btn btn-info" onclick="batchUploadToCloudinary()">
-                                        <i class="fas fa-cloud-upload-alt me-1"></i> Upload All
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title">Download All</h5>
-                                    <p class="card-text text-muted">Download all available PDFs as ZIP</p>
-                                    <a href="{% url 'dashboard:exam_branch_batch_download' %}"
-                                       class="btn btn-success"
-                                       id="batchDownloadBtn">
-                                        <i class="fas fa-download me-1"></i> Download ZIP
-                                    </a>
-                                    <div class="mt-2">
-                                        <small class="text-muted">{{ stats.with_pdf }} PDFs available</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="batch-operations no-print">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h6><i class="fas fa-cogs me-2"></i>Batch Operations</h6>
+                <p class="mb-0 small">Generate attendance reports, export data, and manage faculty PDFs</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'dashboard:exam_branch_batch_download' %}" class="btn btn-light me-2">
+                    <i class="fas fa-download me-1"></i> Download All PDFs
+                </a>
+                <button class="btn btn-light" onclick="batchGenerateReports()">
+                    <i class="fas fa-file-pdf me-1"></i> Generate Reports
+                </button>
             </div>
         </div>
     </div>
@@ -1045,7 +980,6 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -1067,26 +1001,172 @@
 
     const csrftoken = getCookie('csrftoken');
 
-    // Filter Functions
+    // Update Attendance Function
+    function updateAttendance(studentId, date, status) {
+        fetch('/exam-branch/update-attendance/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                date: date,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update total and percentage
+                document.getElementById(`total-${studentId}`).textContent = data.total_present;
+                document.getElementById(`percentage-${studentId}`).textContent = data.percentage + '%';
+                showToast('success', 'Attendance updated successfully');
+            } else {
+                showToast('error', data.error || 'Update failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Network error occurred');
+        });
+    }
+
+    // Calculate Totals Function
+    function calculateTotals() {
+        const rows = document.querySelectorAll('#attendanceTable tbody tr');
+        let totalStudents = rows.length;
+        let totalPresentSum = 0;
+
+        rows.forEach(row => {
+            const presentCell = row.querySelector('.total-cell');
+            if (presentCell) {
+                totalPresentSum += parseInt(presentCell.textContent) || 0;
+            }
+        });
+
+        const overallPercentage = totalStudents > 0 ? (totalPresentSum / (totalStudents * 31) * 100).toFixed(2) : 0;
+
+        showToast('info', `Overall Attendance: ${overallPercentage}% (${totalPresentSum} / ${totalStudents * 31})`);
+    }
+
+    // Update Progress Function
+    function updateProgress() {
+        const subjects = ['web', 'cloud', 'ml', 'security', 'ds'];
+        subjects.forEach(subject => {
+            const units = document.getElementById(`units_${subject}`).value;
+            const totalUnits = 5;
+            const progress = (units / totalUnits * 100).toFixed(0);
+            document.getElementById(`progress_${subject}`).textContent = `${progress}%`;
+
+            // Color code based on progress
+            const progressCell = document.getElementById(`progress_${subject}`);
+            if (progress >= 75) {
+                progressCell.style.backgroundColor = '#d4edda';
+                progressCell.style.color = '#155724';
+            } else if (progress >= 50) {
+                progressCell.style.backgroundColor = '#fff3cd';
+                progressCell.style.color = '#856404';
+            } else {
+                progressCell.style.backgroundColor = '#f8d7da';
+                progressCell.style.color = '#721c24';
+            }
+        });
+    }
+
+    // Save Attendance Function
+    function saveAttendance() {
+        const attendanceData = {};
+        const rows = document.querySelectorAll('#attendanceTable tbody tr');
+
+        rows.forEach(row => {
+            const studentId = row.cells[0]?.textContent;
+            const selects = row.querySelectorAll('.attendance-select');
+            const studentAttendance = {};
+
+            selects.forEach(select => {
+                const date = select.closest('td')?.getAttribute('data-date');
+                if (date) {
+                    studentAttendance[date] = select.value;
+                }
+            });
+
+            if (studentId) {
+                attendanceData[studentId] = studentAttendance;
+            }
+        });
+
+        // Save units progress
+        const unitsData = {
+            web_technologies: document.getElementById('units_web')?.value,
+            cloud_computing: document.getElementById('units_cloud')?.value,
+            machine_learning: document.getElementById('units_ml')?.value,
+            cyber_security: document.getElementById('units_security')?.value,
+            data_science: document.getElementById('units_ds')?.value
+        };
+
+        fetch('/exam-branch/save-attendance/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                attendance: attendanceData,
+                units: unitsData,
+                branch: document.getElementById('branch')?.value,
+                year_sem: document.getElementById('year_sem')?.value,
+                from_date: document.getElementById('from_date')?.value,
+                to_date: document.getElementById('to_date')?.value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Attendance record saved successfully!');
+            } else {
+                showToast('error', data.error || 'Save failed');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Network error occurred');
+        });
+    }
+
+    // Generate Attendance Report
+    function generateAttendanceReport() {
+        const branch = document.getElementById('branch')?.value;
+        const yearSem = document.getElementById('year_sem')?.value;
+        const fromDate = document.getElementById('from_date')?.value;
+        const toDate = document.getElementById('to_date')?.value;
+
+        window.open(`/exam-branch/attendance-report/?branch=${branch}&year_sem=${yearSem}&from_date=${fromDate}&to_date=${toDate}`, '_blank');
+    }
+
+    // Reset Filters
+    function resetFilters() {
+        document.getElementById('from_date').value = '2025-07-10';
+        document.getElementById('to_date').value = '2025-09-30';
+        document.getElementById('branch').value = 'IT';
+        document.getElementById('year_sem').value = 'IV-I';
+        window.location.href = "{% url 'dashboard:exam_branch' %}?view=dashboard";
+    }
+
+    // Filter Functions for List View
     function applyFilters() {
-        const search = document.getElementById('searchInput').value;
-        const department = document.getElementById('departmentFilter').value;
-        const status = document.getElementById('statusFilter').value;
+        const search = document.getElementById('searchInput')?.value;
+        const department = document.getElementById('departmentFilter')?.value;
+        const status = document.getElementById('statusFilter')?.value;
 
         let params = new URLSearchParams(window.location.search);
-
         if (search) params.set('search', search);
         else params.delete('search');
-
         if (department) params.set('department', department);
         else params.delete('department');
-
         if (status) params.set('status', status);
         else params.delete('status');
-
-        // Preserve view mode
         params.set('view', '{{ view_mode }}');
-
         window.location.href = `?${params.toString()}`;
     }
 
@@ -1099,17 +1179,9 @@
     function removeFilter(filterName) {
         const params = new URLSearchParams(window.location.search);
         params.delete(filterName);
-        // Preserve view mode
         params.set('view', '{{ view_mode }}');
         window.location.search = params.toString();
     }
-
-    // Search on Enter key
-    document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            applyFilters();
-        }
-    });
 
     // PDF Preview Function
     function previewPDF(facultyId) {
@@ -1119,24 +1191,18 @@
         const errorDiv = document.getElementById('pdfError');
         const downloadLink = document.getElementById('pdfDownloadLink');
 
-        // Show loading, hide frame and error
         loading.style.display = 'block';
         frame.style.display = 'none';
         errorDiv.style.display = 'none';
 
-        // Fetch PDF URL
         fetch(`/faculty/preview-pdf/${facultyId}/`)
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.pdf_url) {
-                    // Hide loading, show frame
                     loading.style.display = 'none';
                     frame.style.display = 'block';
                     frame.src = data.pdf_url;
-
-                    // Set download link
                     downloadLink.href = data.pdf_url;
-
                     modal.show();
                 } else {
                     throw new Error(data.error || 'PDF not available');
@@ -1155,15 +1221,12 @@
         const button = document.getElementById(`generateBtn-${facultyId}`);
         const originalHTML = button.innerHTML;
 
-        // Disable button and show loading
         button.disabled = true;
         button.innerHTML = '<span class="loading-spinner"></span> Generating...';
 
-        // First generate PDF
         fetch(`/faculty/generate-pdf/${facultyId}/`)
             .then(response => {
                 if (response.ok) {
-                    // Then upload to Cloudinary
                     return fetch(`/faculty/upload-to-cloudinary/${facultyId}/`, {
                         method: 'POST',
                         headers: {
@@ -1178,65 +1241,20 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update UI
                     button.innerHTML = '<i class="fas fa-check"></i> Generated';
                     button.classList.remove('btn-warning');
                     button.classList.add('btn-success');
-
-                    // Reload the row after 2 seconds
-                    setTimeout(() => {
-                        location.reload();
-                    }, 2000);
-
-                    // Show success message
+                    setTimeout(() => location.reload(), 2000);
                     showToast('success', 'PDF generated and uploaded successfully!');
                 } else {
                     throw new Error(data.error || 'Upload failed');
                 }
             })
             .catch(error => {
-                // Reset button
                 button.disabled = false;
                 button.innerHTML = originalHTML;
-
-                // Show error
                 showToast('error', `Error: ${error.message}`);
-                console.error('PDF generation/upload error:', error);
             });
-    }
-
-    // Merge Certificates Function
-    function mergeCertificates(facultyId) {
-        const button = event.target.closest('button');
-        const originalHTML = button.innerHTML;
-
-        button.disabled = true;
-        button.innerHTML = '<span class="loading-spinner"></span> Merging...';
-
-        fetch(`/certificates/merge-with-pdf/${facultyId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                button.innerHTML = '<i class="fas fa-check"></i> Merged';
-                button.classList.add('btn-success');
-
-                showToast('success', 'Certificates merged successfully!');
-                console.log('Merged PDF URL:', data.merged_url);
-            } else {
-                throw new Error(data.error || 'Merge failed');
-            }
-        })
-        .catch(error => {
-            button.disabled = false;
-            button.innerHTML = originalHTML;
-            showToast('error', `Error: ${error.message}`);
-        });
     }
 
     // Batch Generate PDFs
@@ -1248,7 +1266,6 @@
         const failedCount = document.getElementById('failedCount');
         const logsDiv = document.getElementById('batchLogs');
 
-        // Reset progress
         progressBar.style.width = '0%';
         progressBar.textContent = '0%';
         processedCount.textContent = '0';
@@ -1256,7 +1273,6 @@
         failedCount.textContent = '0';
         logsDiv.innerHTML = '';
 
-        // Get faculty without PDFs
         const facultyWithoutPDF = Array.from(document.querySelectorAll('[id^="faculty-"]'))
             .filter(row => !row.querySelector('.status-available'))
             .map(row => row.id.replace('faculty-', ''));
@@ -1271,14 +1287,12 @@
         let failed = 0;
         let cancelled = false;
 
-        // Store cancel function
         window.cancelBatchOperation = function() {
             cancelled = true;
             modal.hide();
             showToast('warning', 'Batch operation cancelled');
         };
 
-        // Process each faculty
         async function processNext() {
             if (cancelled || processed >= facultyWithoutPDF.length) {
                 if (!cancelled) {
@@ -1290,11 +1304,9 @@
             const facultyId = facultyWithoutPDF[processed];
 
             try {
-                // Generate PDF
                 const response = await fetch(`/faculty/generate-pdf/${facultyId}/`);
                 if (!response.ok) throw new Error('Generate failed');
 
-                // Upload to Cloudinary
                 const uploadResponse = await fetch(`/faculty/upload-to-cloudinary/${facultyId}/`, {
                     method: 'POST',
                     headers: {
@@ -1312,38 +1324,29 @@
                     failed++;
                     logsDiv.innerHTML += `<div class="text-danger">✗ Faculty ${facultyId}: ${data.error}</div>`;
                 }
-
             } catch (error) {
                 failed++;
                 logsDiv.innerHTML += `<div class="text-danger">✗ Faculty ${facultyId}: ${error.message}</div>`;
             }
 
             processed++;
-
-            // Update progress
             const progress = Math.round((processed / facultyWithoutPDF.length) * 100);
             progressBar.style.width = `${progress}%`;
             progressBar.textContent = `${progress}%`;
             processedCount.textContent = processed;
             successCount.textContent = successful;
             failedCount.textContent = failed;
-
-            // Scroll logs to bottom
             logsDiv.scrollTop = logsDiv.scrollHeight;
-
-            // Process next with delay
             setTimeout(processNext, 1000);
         }
 
-        // Show modal and start processing
         modal.show();
         processNext();
     }
 
-    // Batch Upload to Cloudinary
-    function batchUploadToCloudinary() {
-        showToast('info', 'Batch upload feature coming soon...');
-        // Implement similar to batchGeneratePDFs but only upload
+    function batchGenerateReports() {
+        showToast('info', 'Generating reports for all subjects...');
+        generateAttendanceReport();
     }
 
     // Print Function
@@ -1351,7 +1354,6 @@
         window.print();
     }
 
-    // Send Reminders Function (for List View)
     function sendReminders() {
         if (confirm('Send email reminders to faculty without PDFs?')) {
             showToast('info', 'Reminder emails would be sent here. This feature is under development.');
@@ -1360,7 +1362,6 @@
 
     // Toast Notification Function
     function showToast(type, message) {
-        // Create toast container if not exists
         let toastContainer = document.getElementById('toastContainer');
         if (!toastContainer) {
             toastContainer = document.createElement('div');
@@ -1372,7 +1373,6 @@
             document.body.appendChild(toastContainer);
         }
 
-        // Create toast
         const toastId = 'toast-' + Date.now();
         const toast = document.createElement('div');
         toast.id = toastId;
@@ -1392,91 +1392,26 @@
         `;
 
         toastContainer.appendChild(toast);
-
-        // Show toast
-        const bsToast = new bootstrap.Toast(toast, {
-            delay: 3000,
-            autohide: true
-        });
+        const bsToast = new bootstrap.Toast(toast, { delay: 3000, autohide: true });
         bsToast.show();
-
-        // Remove toast after hide
-        toast.addEventListener('hidden.bs.toast', function () {
-            toast.remove();
-        });
+        toast.addEventListener('hidden.bs.toast', function () { toast.remove(); });
     }
 
-    // Initialize page
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Add download tracking
-        const downloadButtons = document.querySelectorAll('[id^="downloadBtn-"]');
-        downloadButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const facultyId = this.id.replace('downloadBtn-', '');
-                console.log(`Downloading PDF for faculty ${facultyId}`);
+        updateProgress();
 
-                // You can add analytics tracking here
-                if (typeof gtag !== 'undefined') {
-                    gtag('event', 'pdf_download', {
-                        'event_category': 'exam_branch',
-                        'event_label': facultyId
-                    });
-                }
-            });
-        });
-
-        // Handle batch download button
-        const batchDownloadBtn = document.getElementById('downloadAllBtn');
-        if (batchDownloadBtn) {
-            batchDownloadBtn.addEventListener('click', function(e) {
-                if ({{ available_pdfs }} === 0) {
-                    e.preventDefault();
-                    showToast('warning', 'No PDFs available for download');
-                    return false;
-                }
-
-                // Show loading
-                this.innerHTML = '<span class="loading-spinner"></span> Preparing download...';
-                this.disabled = true;
-
-                // The download will start automatically
-                // Reset button after 5 seconds
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-download me-1"></i> Download All PDFs';
-                    this.disabled = false;
-                }, 5000);
-            });
-        }
-
-        // Handle batch download for list view
-        const listBatchDownloadBtn = document.getElementById('batchDownloadBtn');
-        if (listBatchDownloadBtn) {
-            listBatchDownloadBtn.addEventListener('click', function(e) {
-                if ({{ available_pdfs }} === 0) {
-                    e.preventDefault();
-                    showToast('warning', 'No PDFs available for download');
-                    return false;
-                }
-
-                this.innerHTML = '<span class="loading-spinner"></span> Creating ZIP...';
-                this.disabled = true;
-
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-download"></i> Download All PDFs';
-                    this.disabled = false;
-                }, 5000);
-            });
-        }
-
-        // Auto-refresh every 5 minutes
-        setTimeout(() => {
-            if (!document.hidden) {
-                showToast('info', 'Refreshing data...');
-                // Reload without filters to get latest data
-                let params = new URLSearchParams(window.location.search);
-                window.location.search = params.toString();
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveAttendance();
+            } else if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                printPage();
             }
-        }, 300000); // 5 minutes
+        });
     });
 </script>
+{% endblock %}
 {% endblock %}

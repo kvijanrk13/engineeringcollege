@@ -166,10 +166,10 @@
             </td>
             <td style="width: 25%; text-align: right;">
                 <div class="photo-box">
-                    {% if faculty.cloudinary_photo_url %}
-                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo" alt="Faculty Photo">
-                    {% elif local_photo_path %}
+                    {% if local_photo_path %}
                         <img src="{{ local_photo_path }}" class="faculty-photo" alt="Faculty Photo">
+                    {% elif faculty.cloudinary_photo_url %}
+                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo" alt="Faculty Photo">
                     {% elif faculty.photo and faculty.photo.url %}
                         <img src="{{ faculty.photo.url }}" class="faculty-photo" alt="Faculty Photo">
                     {% else %}
@@ -518,12 +518,10 @@
         {% if has_research_proof %}
         <div style="margin-bottom: 20px; page-break-inside: avoid;">
             <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Research Publications Proof{% if research_proof_academic_year %} ({{ research_proof_academic_year }}){% endif %}:</div>
-            {% if research_proof_display_url %}
-                {% if research_proof_is_image %}
-                    <img src="{{ research_proof_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
-                {% else %}
-                    <img src="{{ research_proof_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
-                {% endif %}
+            {% if research_proof_local_path %}
+                <img src="{{ research_proof_local_path }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
+            {% elif research_proof_display_url %}
+                <img src="{{ research_proof_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
             {% elif research_publications %}
                 <table class="data-table" style="margin-top: 5px;">
                     <thead>
@@ -562,12 +560,10 @@
         {% if has_fdp_certificate %}
         <div style="margin-bottom: 20px; page-break-inside: avoid;">
             <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">FDP / Workshop Certificates{% if fdp_certificate_academic_year %} ({{ fdp_certificate_academic_year }}){% endif %}:</div>
-            {% if fdp_certificate_display_url %}
-                {% if fdp_certificate_is_image %}
-                    <img src="{{ fdp_certificate_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Certificate">
-                {% else %}
-                    <img src="{{ fdp_certificate_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Certificate">
-                {% endif %}
+            {% if fdp_certificate_local_path %}
+                <img src="{{ fdp_certificate_local_path }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Certificate">
+            {% elif fdp_certificate_display_url %}
+                <img src="{{ fdp_certificate_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Certificate">
             {% elif fdps %}
                 <table class="data-table" style="margin-top: 5px;">
                     <thead>

@@ -296,6 +296,7 @@ class ResearchPublication(models.Model):
     award_date = models.DateField(blank=True, null=True)
     publisher_name = models.CharField(max_length=200, blank=True, null=True)
     proof_document = models.FileField(upload_to='research_proofs/', blank=True, null=True)
+    proof_document_url = models.URLField(blank=True, null=True, max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -336,6 +337,7 @@ class FDP(models.Model):
     sponsored_by = models.CharField(max_length=200, blank=True, null=True)
     remarks = models.TextField(blank=True, null=True)
     certificate = models.FileField(upload_to='fdp_certificates/', blank=True, null=True)
+    certificate_url = models.URLField(blank=True, null=True, max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def duration_days(self):
@@ -412,6 +414,13 @@ class Student(models.Model):
     cert_extra = models.FileField(upload_to='student_certs/extra/', blank=True, null=True)
     cert_placement = models.FileField(upload_to='student_certs/placement/', blank=True, null=True)
     cert_national = models.FileField(upload_to='student_certs/national/', blank=True, null=True)
+    cert_achieve_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_intern_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_courses_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_sdp_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_extra_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_placement_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_national_url = models.URLField(blank=True, null=True, max_length=500)
     pdf_file = models.FileField(upload_to='student_pdfs/', blank=True, null=True)
     pdf_url = models.URLField(blank=True, null=True, max_length=500)
     pdf_generated = models.BooleanField(default=False)
