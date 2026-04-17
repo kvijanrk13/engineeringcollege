@@ -1222,24 +1222,32 @@ def admin_dashboard(request):
             messages.error(request, 'Access denied. Admin privileges required.')
             return redirect('dashboard:admin_login')
 
-        # For now, return a simple success message to test if the view works
-        logger.info("Admin dashboard: authentication passed, rendering dashboard")
+        # Test basic database queries
+        logger.info("Admin dashboard: authentication passed, testing database queries")
         try:
+            # Test basic counts
+            total_faculty = Faculty.objects.count()
+            total_students = Student.objects.count()
+            logger.info(f"Database queries successful: faculty={total_faculty}, students={total_students}")
+
             return render(request, "dashboard/admin_dashboard.html", {
                 'title': 'Admin Dashboard',
-                'total_faculty': 0,
-                'active_faculty': 0,
-                'total_students': 0,
-                'total_certificates': 0,
+                'total_faculty': total_faculty,
+                'active_faculty': Faculty.objects.filter(is_active=True).count(),
+                'total_students': total_students,
+                'total_certificates': 0,  # Will add back gradually
                 'cloudinary_uploads': 0,
                 'with_phd': 0,
-                'departments': [],
+                'departments': [],  # Will add back
                 'recent_logs': [],
-                'system_stats': {'status': 'disabled'},
+                'system_stats': {'status': 'basic'},
                 'user_activity': {'total_users': 1, 'active_today': 0},
                 'has_psutil': False,
                 'recent_uploads': [],
             })
+        except Exception as db_e:
+            logger.error(f"Database error: {db_e}")
+            return HttpResponse(f"Database Error: {db_e}", status=500)
         except Exception as template_e:
             logger.error(f"Template rendering error: {template_e}")
             return HttpResponse(f"Template Error: {template_e}", status=500)
