@@ -1199,7 +1199,7 @@ def debug_dashboard(request):
 
 def admin_dashboard(request):
     try:
-        logger.info(f"Admin dashboard accessed by user: {request.user}, authenticated: {request.user.is_authenticated}")
+        logger.info(f"Admin dashboard accessed by user: {request.user}, authenticated: {request.user.is_authenticated}, superuser: {request.user.is_superuser if request.user.is_authenticated else False}")
 
         # Check database connectivity
         try:
@@ -1215,7 +1215,6 @@ def admin_dashboard(request):
 
         if not request.user.is_authenticated:
             logger.warning("User not authenticated, redirecting to login")
-            messages.error(request, 'Please log in to access the dashboard.')
             return redirect('dashboard:admin_login')
 
         if not request.user.is_superuser:
@@ -1223,52 +1222,27 @@ def admin_dashboard(request):
             messages.error(request, 'Access denied. Admin privileges required.')
             return redirect('dashboard:admin_login')
 
-        # Database queries with error handling
+        # For now, return a simple success message to test if the view works
+        logger.info("Admin dashboard: authentication passed, rendering dashboard")
         try:
-            total_faculty = Faculty.objects.count()
-            departments = list(Faculty.objects.values('department')
-                                .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
-                                .order_by('-count'))
-            for d in departments:
-                d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
-        except Exception as db_e:
-            logger.error(f"Database query error: {db_e}")
-            total_faculty = 0
-            departments = []
-
-        system_stats = {}
-        if psutil:
-            try:
-                # Use shorter timeout and handle potential issues
-                system_stats = {
-                    'cpu_percent': psutil.cpu_percent(interval=0.5) if psutil else 0,
-                    'memory_percent': psutil.virtual_memory().percent if psutil else 0,
-                    'disk_usage': psutil.disk_usage('/').percent if psutil else 0,
-                    'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') if psutil else 'N/A',
-                }
-            except Exception as e:
-                logger.warning(f"System stats collection failed: {e}")
-                system_stats = {'error': 'System monitoring unavailable'}
-
-        return render(request, "dashboard/admin_dashboard.html", {
-            'title': 'Admin Dashboard',
-            'total_faculty': total_faculty,
-            'active_faculty': Faculty.objects.filter(is_active=True).count(),
-            'total_students': Student.objects.count(),
-            'total_certificates': Certificate.objects.count(),
-            'cloudinary_uploads': CloudinaryUpload.objects.count(),
-            'with_phd': Faculty.objects.filter(phd_degree='Completed').count(),
-            'departments': departments,
-            'recent_logs': FacultyLog.objects.order_by('-created_at')[:10],
-            'system_stats': system_stats,
-            'user_activity': {
-                'total_users': User.objects.count(),
-                'active_today': FacultyLog.objects.filter(
-                    created_at__date=date.today()).values('performed_by').distinct().count(),
-            },
-            'has_psutil': psutil is not None,
-            'recent_uploads': Faculty.objects.order_by('-created_at')[:5],
-        })
+            return render(request, "dashboard/admin_dashboard.html", {
+                'title': 'Admin Dashboard',
+                'total_faculty': 0,
+                'active_faculty': 0,
+                'total_students': 0,
+                'total_certificates': 0,
+                'cloudinary_uploads': 0,
+                'with_phd': 0,
+                'departments': [],
+                'recent_logs': [],
+                'system_stats': {'status': 'disabled'},
+                'user_activity': {'total_users': 1, 'active_today': 0},
+                'has_psutil': False,
+                'recent_uploads': [],
+            })
+        except Exception as template_e:
+            logger.error(f"Template rendering error: {template_e}")
+            return HttpResponse(f"Template Error: {template_e}", status=500)
     except Exception as e:
         logger.error(f"Admin dashboard error: {e}", exc_info=True)
         if settings.DEBUG:
