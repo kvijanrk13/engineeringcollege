@@ -1251,6 +1251,23 @@ def admin_dashboard(request):
                 logger.error(f"Recent logs query failed: {logs_e}")
                 recent_logs = []
 
+            # Test system stats with psutil (this was likely the original issue)
+            system_stats = {}
+            if psutil:
+                try:
+                    system_stats = {
+                        'cpu_percent': psutil.cpu_percent(interval=0.5),
+                        'memory_percent': psutil.virtual_memory().percent,
+                        'disk_usage': psutil.disk_usage('/').percent,
+                        'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
+                    }
+                    logger.info("System stats collection successful")
+                except Exception as psutil_e:
+                    logger.error(f"psutil error: {psutil_e}")
+                    system_stats = {'error': f'psutil failed: {psutil_e}'}
+            else:
+                system_stats = {'status': 'psutil not available'}
+
             return render(request, "dashboard/admin_dashboard.html", {
                 'title': 'Admin Dashboard',
                 'total_faculty': total_faculty,
@@ -1261,9 +1278,9 @@ def admin_dashboard(request):
                 'with_phd': 0,
                 'departments': departments,
                 'recent_logs': recent_logs,
-                'system_stats': {'status': 'logs_tested'},
+                'system_stats': system_stats,
                 'user_activity': {'total_users': 1, 'active_today': 0},
-                'has_psutil': False,
+                'has_psutil': psutil is not None,
                 'recent_uploads': [],
             })
         except Exception as db_e:
