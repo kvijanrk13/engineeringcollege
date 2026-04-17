@@ -1224,24 +1224,31 @@ def admin_dashboard(request):
             return redirect('dashboard:admin_login')
 
         # Database queries with error handling
-        total_faculty = Faculty.objects.count()
-        departments = list(Faculty.objects.values('department')
-                           .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
-                           .order_by('-count'))
-        for d in departments:
-            d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+        try:
+            total_faculty = Faculty.objects.count()
+            departments = list(Faculty.objects.values('department')
+                                .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
+                                .order_by('-count'))
+            for d in departments:
+                d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+        except Exception as db_e:
+            logger.error(f"Database query error: {db_e}")
+            total_faculty = 0
+            departments = []
 
         system_stats = {}
         if psutil:
             try:
+                # Use shorter timeout and handle potential issues
                 system_stats = {
-                    'cpu_percent': psutil.cpu_percent(interval=1),
-                    'memory_percent': psutil.virtual_memory().percent,
-                    'disk_usage': psutil.disk_usage('/').percent,
-                    'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
+                    'cpu_percent': psutil.cpu_percent(interval=0.5) if psutil else 0,
+                    'memory_percent': psutil.virtual_memory().percent if psutil else 0,
+                    'disk_usage': psutil.disk_usage('/').percent if psutil else 0,
+                    'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') if psutil else 'N/A',
                 }
             except Exception as e:
-                system_stats = {'error': str(e)}
+                logger.warning(f"System stats collection failed: {e}")
+                system_stats = {'error': 'System monitoring unavailable'}
 
         return render(request, "dashboard/admin_dashboard.html", {
             'title': 'Admin Dashboard',
