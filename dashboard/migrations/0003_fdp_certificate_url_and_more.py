@@ -10,10 +10,51 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Ensure FDP table exists before adding fields (for deployment fixes)
+        # Ensure ALL required tables exist before adding fields (for deployment fixes)
         migrations.RunSQL(
             """
-            -- Create FDP table if it doesn't exist (PostgreSQL syntax for Render deployment)
+            -- Create ResearchPublication table if it doesn't exist
+            CREATE TABLE IF NOT EXISTS dashboard_researchpublication (
+                id BIGSERIAL PRIMARY KEY,
+                research_type VARCHAR(20),
+                title VARCHAR(500) NOT NULL,
+                authors TEXT,
+                department VARCHAR(100),
+                publication_year INTEGER,
+                academic_year VARCHAR(20),
+                status VARCHAR(20),
+                doi VARCHAR(100),
+                url VARCHAR(200),
+                abstract TEXT,
+                keywords VARCHAR(500),
+                journal_name VARCHAR(300),
+                issn VARCHAR(20),
+                volume VARCHAR(50),
+                issue VARCHAR(50),
+                page_numbers VARCHAR(50),
+                conference_name VARCHAR(300),
+                conference_location VARCHAR(200),
+                conference_dates VARCHAR(100),
+                book_title VARCHAR(300),
+                isbn VARCHAR(20),
+                edition VARCHAR(50),
+                patent_number VARCHAR(100),
+                filing_date DATE,
+                grant_date DATE,
+                project_title VARCHAR(300),
+                funding_agency VARCHAR(200),
+                sanction_amount VARCHAR(100),
+                award_title VARCHAR(300),
+                awarding_body VARCHAR(200),
+                award_date DATE,
+                publisher_name VARCHAR(200),
+                proof_document VARCHAR(100),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                faculty_id BIGINT REFERENCES dashboard_faculty(id) ON DELETE CASCADE
+            );
+
+            -- Create FDP table if it doesn't exist
             CREATE TABLE IF NOT EXISTS dashboard_fdp (
                 id BIGSERIAL PRIMARY KEY,
                 fdp_type VARCHAR(20),
@@ -34,8 +75,7 @@ class Migration(migrations.Migration):
             );
             """,
             reverse_sql="""
-            -- Don't drop table on reverse migration to avoid data loss
-            -- ALTER TABLE dashboard_fdp DROP COLUMN IF EXISTS certificate_url;
+            -- Don't drop tables on reverse migration to avoid data loss
             """
         ),
         migrations.AddField(
