@@ -1222,25 +1222,38 @@ def admin_dashboard(request):
             messages.error(request, 'Access denied. Admin privileges required.')
             return redirect('dashboard:admin_login')
 
-        # Test basic database queries
+        # Test progressively more complex database queries
         logger.info("Admin dashboard: authentication passed, testing database queries")
         try:
             # Test basic counts
             total_faculty = Faculty.objects.count()
             total_students = Student.objects.count()
-            logger.info(f"Database queries successful: faculty={total_faculty}, students={total_students}")
+            active_faculty = Faculty.objects.filter(is_active=True).count()
+            logger.info(f"Basic queries successful: faculty={total_faculty}, students={total_students}")
+
+            # Test departments query (this was likely the issue)
+            try:
+                departments = list(Faculty.objects.values('department')
+                                    .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
+                                    .order_by('-count'))
+                for d in departments:
+                    d['percentage'] = (d['count'] / total_faculty * 100) if total_faculty > 0 else 0
+                logger.info(f"Departments query successful: {len(departments)} departments")
+            except Exception as dept_e:
+                logger.error(f"Departments query failed: {dept_e}")
+                departments = []
 
             return render(request, "dashboard/admin_dashboard.html", {
                 'title': 'Admin Dashboard',
                 'total_faculty': total_faculty,
-                'active_faculty': Faculty.objects.filter(is_active=True).count(),
+                'active_faculty': active_faculty,
                 'total_students': total_students,
-                'total_certificates': 0,  # Will add back gradually
+                'total_certificates': 0,
                 'cloudinary_uploads': 0,
                 'with_phd': 0,
-                'departments': [],  # Will add back
+                'departments': departments,
                 'recent_logs': [],
-                'system_stats': {'status': 'basic'},
+                'system_stats': {'status': 'departments_tested'},
                 'user_activity': {'total_users': 1, 'active_today': 0},
                 'has_psutil': False,
                 'recent_uploads': [],
