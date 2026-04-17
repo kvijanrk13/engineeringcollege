@@ -1268,20 +1268,46 @@ def admin_dashboard(request):
             else:
                 system_stats = {'status': 'psutil not available'}
 
+            # Add remaining queries with error handling
+            try:
+                total_certificates = Certificate.objects.count()
+                cloudinary_uploads = CloudinaryUpload.objects.count()
+                with_phd = Faculty.objects.filter(phd_degree='Completed').count()
+                recent_uploads = list(Faculty.objects.order_by('-created_at')[:5])
+
+                # User activity stats
+                from django.contrib.auth.models import User
+                user_activity = {
+                    'total_users': User.objects.count(),
+                    'active_today': FacultyLog.objects.filter(
+                        created_at__date=date.today()).values('performed_by').distinct().count(),
+                }
+
+                logger.info("All queries successful, rendering full dashboard")
+
+            except Exception as final_e:
+                logger.error(f"Final queries failed: {final_e}")
+                # Fallback values
+                total_certificates = 0
+                cloudinary_uploads = 0
+                with_phd = 0
+                recent_uploads = []
+                user_activity = {'total_users': 1, 'active_today': 0}
+
             return render(request, "dashboard/admin_dashboard.html", {
                 'title': 'Admin Dashboard',
                 'total_faculty': total_faculty,
                 'active_faculty': active_faculty,
                 'total_students': total_students,
-                'total_certificates': 0,
-                'cloudinary_uploads': 0,
-                'with_phd': 0,
+                'total_certificates': total_certificates,
+                'cloudinary_uploads': cloudinary_uploads,
+                'with_phd': with_phd,
                 'departments': departments,
                 'recent_logs': recent_logs,
                 'system_stats': system_stats,
-                'user_activity': {'total_users': 1, 'active_today': 0},
+                'user_activity': user_activity,
                 'has_psutil': psutil is not None,
-                'recent_uploads': [],
+                'recent_uploads': recent_uploads,
             })
         except Exception as db_e:
             logger.error(f"Database error: {db_e}")
