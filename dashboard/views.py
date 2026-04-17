@@ -3364,9 +3364,29 @@ def generate_faculty_pdf(request, faculty_id):
             'no-outline': None,
         }
 
-        wkhtmltopdf_path = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        # Cross-platform wkhtmltopdf detection
+        wkhtmltopdf_paths = [
+            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+            '/usr/local/bin/wkhtmltopdf',
+            '/usr/bin/wkhtmltopdf',
+            'wkhtmltopdf',
+        ]
+
+        wkhtmltopdf_path = None
+        for path in wkhtmltopdf_paths:
+            if os.path.exists(path) or path == 'wkhtmltopdf':
+                try:
+                    import subprocess
+                    result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0:
+                        wkhtmltopdf_path = path
+                        break
+                except:
+                    continue
+
         try:
-            if os.path.exists(wkhtmltopdf_path):
+            if wkhtmltopdf_path:
                 config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
                 info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
             else:
@@ -3588,20 +3608,8 @@ def generate_faculty_pdf(request, faculty_id):
             'no-outline': None,
         }
 
-        wkhtmltopdf_paths = [
-            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-            '/usr/local/bin/wkhtmltopdf',
-            '/usr/bin/wkhtmltopdf',
-        ]
-        
-        wkhtmltopdf_path = None
-        for path in wkhtmltopdf_paths:
-            if os.path.exists(path):
-                wkhtmltopdf_path = path
-                break
-        
-        if wkhtmltopdf_path and os.path.exists(wkhtmltopdf_path):
+        wkhtmltopdf_path = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        if os.path.exists(wkhtmltopdf_path):
             try:
                 config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
                 pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
@@ -4320,8 +4328,31 @@ def generate_pdf_with_data(request):
             html_string = render_to_string('faculty/custom_pdf_template.html', {'data': request.POST.dict()})
             opts = {'page-size': 'A4', 'margin-top': '0.5in', 'margin-right': '0.5in',
                     'margin-bottom': '0.5in', 'margin-left': '0.5in', 'encoding': 'UTF-8'}
-            wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-            cfg = pdfkit.configuration(wkhtmltopdf=wk)
+            # Cross-platform wkhtmltopdf detection
+            wkhtmltopdf_paths = [
+                r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+                r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+                '/usr/local/bin/wkhtmltopdf',
+                '/usr/bin/wkhtmltopdf',
+                'wkhtmltopdf',
+            ]
+
+            wkhtmltopdf_path = None
+            for path in wkhtmltopdf_paths:
+                if os.path.exists(path) or path == 'wkhtmltopdf':
+                    try:
+                        import subprocess
+                        result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                        if result.returncode == 0:
+                            wkhtmltopdf_path = path
+                            break
+                    except:
+                        continue
+
+            if wkhtmltopdf_path:
+                cfg = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+            else:
+                cfg = pdfkit.configuration()
             pdf = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
             response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="generated_document.pdf"'
@@ -4378,8 +4409,31 @@ def bulk_generate_faculty_pdfs(request):
                     if pdfkit is not None:
                         opts = {'page-size': 'A4', 'margin-top': '20mm', 'margin-right': '20mm',
                                 'margin-bottom': '20mm', 'margin-left': '20mm', 'encoding': 'UTF-8'}
-                        wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-                        cfg = pdfkit.configuration(wkhtmltopdf=wk)
+                        # Cross-platform wkhtmltopdf detection
+                        wkhtmltopdf_paths = [
+                            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+                            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+                            '/usr/local/bin/wkhtmltopdf',
+                            '/usr/bin/wkhtmltopdf',
+                            'wkhtmltopdf',
+                        ]
+
+                        wkhtmltopdf_path = None
+                        for path in wkhtmltopdf_paths:
+                            if os.path.exists(path) or path == 'wkhtmltopdf':
+                                try:
+                                    import subprocess
+                                    result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                                    if result.returncode == 0:
+                                        wkhtmltopdf_path = path
+                                        break
+                                except:
+                                    continue
+
+                        if wkhtmltopdf_path:
+                            cfg = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+                        else:
+                            cfg = pdfkit.configuration()
                         pdf = pdfkit.from_string(html, False, options=opts, configuration=cfg)
                         pname = f"faculty_{fac.employee_code}.pdf"
                         pp = os.path.join(temp_dir, pname)
@@ -6204,8 +6258,31 @@ def exam_branch_generate_report(request):
                 'margin-left': '15mm',
                 'encoding': 'UTF-8',
             }
-            wk = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-            cfg = pdfkit.configuration(wkhtmltopdf=wk) if os.path.exists(wk) else pdfkit.configuration()
+            # Cross-platform wkhtmltopdf detection
+            wkhtmltopdf_paths = [
+                r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+                r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+                '/usr/local/bin/wkhtmltopdf',
+                '/usr/bin/wkhtmltopdf',
+                'wkhtmltopdf',
+            ]
+
+            wkhtmltopdf_path = None
+            for path in wkhtmltopdf_paths:
+                if os.path.exists(path) or path == 'wkhtmltopdf':
+                    try:
+                        import subprocess
+                        result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                        if result.returncode == 0:
+                            wkhtmltopdf_path = path
+                            break
+                    except:
+                        continue
+
+            if wkhtmltopdf_path:
+                cfg = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+            else:
+                cfg = pdfkit.configuration()
             pdf = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
             response = HttpResponse(pdf, content_type='application/pdf')
             response[
