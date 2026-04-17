@@ -1243,6 +1243,14 @@ def admin_dashboard(request):
                 logger.error(f"Departments query failed: {dept_e}")
                 departments = []
 
+            # Test recent logs query
+            try:
+                recent_logs = list(FacultyLog.objects.order_by('-created_at')[:10])
+                logger.info(f"Recent logs query successful: {len(recent_logs)} logs")
+            except Exception as logs_e:
+                logger.error(f"Recent logs query failed: {logs_e}")
+                recent_logs = []
+
             return render(request, "dashboard/admin_dashboard.html", {
                 'title': 'Admin Dashboard',
                 'total_faculty': total_faculty,
@@ -1252,8 +1260,8 @@ def admin_dashboard(request):
                 'cloudinary_uploads': 0,
                 'with_phd': 0,
                 'departments': departments,
-                'recent_logs': [],
-                'system_stats': {'status': 'departments_tested'},
+                'recent_logs': recent_logs,
+                'system_stats': {'status': 'logs_tested'},
                 'user_activity': {'total_users': 1, 'active_today': 0},
                 'has_psutil': False,
                 'recent_uploads': [],
