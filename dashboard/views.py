@@ -1143,6 +1143,48 @@ def home(request):
 
 
 @login_required
+def debug_dashboard(request):
+    """Debug endpoint to diagnose dashboard issues"""
+    try:
+        debug_info = {
+            'database_connection': 'Testing...',
+            'user_authenticated': request.user.is_authenticated,
+            'user_is_superuser': request.user.is_superuser if request.user.is_authenticated else False,
+            'models_exist': {},
+            'psutil_available': psutil is not None,
+        }
+
+        # Test database connection
+        try:
+            from django.db import connection
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            debug_info['database_connection'] = 'SUCCESS'
+        except Exception as e:
+            debug_info['database_connection'] = f'ERROR: {str(e)}'
+
+        # Test model existence
+        model_tests = [
+            ('Faculty', Faculty),
+            ('Student', Student),
+            ('Certificate', Certificate),
+            ('CloudinaryUpload', CloudinaryUpload),
+            ('FacultyLog', FacultyLog),
+        ]
+
+        for name, model in model_tests:
+            try:
+                count = model.objects.count()
+                debug_info['models_exist'][name] = f'SUCCESS: {count} records'
+            except Exception as e:
+                debug_info['models_exist'][name] = f'ERROR: {str(e)}'
+
+        return JsonResponse(debug_info, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
 def admin_dashboard(request):
     try:
         # Check database connectivity
