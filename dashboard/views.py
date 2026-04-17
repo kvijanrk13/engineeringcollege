@@ -1187,6 +1187,8 @@ def debug_dashboard(request):
 
 def admin_dashboard(request):
     try:
+        logger.info(f"Admin dashboard accessed by user: {request.user}, authenticated: {request.user.is_authenticated}")
+
         # Check database connectivity
         try:
             from django.db import connection
@@ -1199,7 +1201,13 @@ def admin_dashboard(request):
             messages.error(request, f'Database connection error: {db_e}')
             return redirect('dashboard:admin_login')
 
+        if not request.user.is_authenticated:
+            logger.warning("User not authenticated, redirecting to login")
+            messages.error(request, 'Please log in to access the dashboard.')
+            return redirect('dashboard:admin_login')
+
         if not request.user.is_superuser:
+            logger.warning(f"User {request.user} is not superuser, access denied")
             messages.error(request, 'Access denied. Admin privileges required.')
             return redirect('dashboard:admin_login')
 
