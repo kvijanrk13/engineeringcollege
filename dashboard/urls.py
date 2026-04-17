@@ -16,6 +16,7 @@ urlpatterns = [
     # Health check route
     path('health/', lambda r: HttpResponse(b"OK"), name='health_check'),
     path('debug-dashboard/', views.debug_dashboard, name='debug_dashboard'),
+    path('db-test/', views.db_test, name='db_test'),
 
     # Main dashboard routes
     path('dashboard/', views.admin_dashboard, name='dashboard'),

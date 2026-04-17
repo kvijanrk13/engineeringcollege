@@ -1143,6 +1143,18 @@ def home(request):
 
 
 @login_required
+def db_test(request):
+    """Simple database test endpoint"""
+    try:
+        from django.db import connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT 1")
+        result = cursor.fetchone()
+        return HttpResponse(f"Database OK: {result}")
+    except Exception as e:
+        return HttpResponse(f"Database ERROR: {str(e)}", status=500)
+
+
 def debug_dashboard(request):
     """Debug endpoint to diagnose dashboard issues"""
     try:
