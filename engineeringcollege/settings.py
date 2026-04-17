@@ -191,11 +191,13 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
             cloud_name=CLOUDINARY_CLOUD_NAME,
             api_key=CLOUDINARY_API_KEY,
             api_secret=CLOUDINARY_API_SECRET,
-            secure=True
+            secure=True,
+            # Ensure resources are publicly accessible
+            api_proxy=None
         )
 
-        # Use Cloudinary for media storage in production
-        if ON_RENDER:
+        # Use Cloudinary for media storage in production OR when explicitly enabled
+        if ON_RENDER or os.environ.get('USE_CLOUDINARY', 'False') == 'True':
             DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
     except Exception as e:
         CLOUDINARY_CONFIGURED = False

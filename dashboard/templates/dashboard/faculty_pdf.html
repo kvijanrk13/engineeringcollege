@@ -456,27 +456,25 @@
     <!-- 15. RESULTS / ACADEMIC PERFORMANCE (WITH ACADEMIC YEAR) -->
     <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
     <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
-        {% if results_data %}
-            {% if results_data is iterable and results_data is not string %}
-                <div>
-                    {% for result in results_data %}
-                    <div class="result-item">
-                        <strong>{{ result.subject_name }}</strong>
-                        {% if result.subject_code %}({{ result.subject_code }}){% endif %}
-                        {% if result.academic_year %}
-                            <span class="academic-year-badge">{{ result.academic_year }}</span>
-                        {% endif %}
-                        <br>
-                        Classes Taken: {{ result.classes_taken|default:0 }} |
-                        Students Attempted: {{ result.students_attempted }} |
-                        Passed: {{ result.students_passed }}<br>
-                        <strong>Pass Percentage: {{ result.percentage }}%</strong>
-                    </div>
-                    {% endfor %}
+        {% if results_data_list %}
+            <div>
+                {% for result in results_data_list %}
+                <div class="result-item">
+                    <strong>{{ result.subject_name }}</strong>
+                    {% if result.subject_code %}({{ result.subject_code }}){% endif %}
+                    {% if result.academic_year %}
+                        <span class="academic-year-badge">{{ result.academic_year }}</span>
+                    {% endif %}
+                    <br>
+                    Classes Taken: {{ result.classes_taken|default:0 }} |
+                    Students Attempted: {{ result.students_attempted }} |
+                    Passed: {{ result.students_passed }}<br>
+                    <strong>Pass Percentage: {{ result.percentage }}%</strong>
                 </div>
-            {% else %}
-                <div style="white-space: pre-line;">{{ results_data }}</div>
-            {% endif %}
+                {% endfor %}
+            </div>
+        {% elif results_text %}
+            <div style="white-space: pre-line;">{{ results_text }}</div>
         {% elif faculty.results %}
             <div style="white-space: pre-line;">{{ faculty.results }}</div>
         {% else %}
@@ -506,94 +504,16 @@
     <div style="padding: 10px;">
         <!-- Status summary row -->
         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-            <div class="document-box"><strong>Research Publications Proof:</strong> {% if has_research_proof %}<span style="color: green;">&#10003; Uploaded</span>{% if research_proof_academic_year %} <span class="document-detail">AY: {{ research_proof_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
-            <div class="document-box"><strong>FDP Certificate:</strong> {% if has_fdp_certificate %}<span style="color: green;">&#10003; Uploaded</span>{% if fdp_certificate_academic_year %} <span class="document-detail">AY: {{ fdp_certificate_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Research Publications Proof:</strong> {% if has_research_proof %}<span style="color: green;">&#10003; {{ research_proof_total_pages }} pages uploaded</span>{% if research_proof_academic_year %} <span class="document-detail">AY: {{ research_proof_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
             <div class="document-box"><strong>Experience Certificates:</strong> {% if has_experience_certificates %}<span style="color: green;">&#10003; Uploaded</span>{% if experience_certificates_academic_year %} <span class="document-detail">AY: {{ experience_certificates_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
             <div class="document-box"><strong>Other Documents:</strong> {% if has_other_documents %}<span style="color: green;">&#10003; Uploaded</span>{% if other_documents_academic_year %} <span class="document-detail">AY: {{ other_documents_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
         </div>
 
         <!-- Embedded document previews -->
 
-        <!-- Research Publications Proof -->
-        {% if has_research_proof %}
-        <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Research Publications Proof{% if research_proof_academic_year %} ({{ research_proof_academic_year }}){% endif %}:</div>
-            {% if research_proof_local_path %}
-                <img src="{{ research_proof_local_path }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
-            {% elif research_proof_display_url %}
-                <img src="{{ research_proof_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
-            {% elif research_publications %}
-                <table class="data-table" style="margin-top: 5px;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Type</th>
-                            <th>Title</th>
-                            <th>Year</th>
-                            <th>Academic Year</th>
-                            <th>Status</th>
-                            <th>Journal / Conference</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pub in research_publications %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ pub.get_research_type_display }}</td>
-                            <td>{{ pub.title|default:"—" }}</td>
-                            <td>{{ pub.publication_year|default:"—" }}</td>
-                            <td>{{ pub.academic_year|default:"—" }}</td>
-                            <td>{% if pub.status %}{{ pub.get_status_display }}{% else %}—{% endif %}</td>
-                            <td>
-                                {% if pub.journal_name %}{{ pub.journal_name }}{% endif %}
-                                {% if pub.conference_name %}{{ pub.conference_name }}{% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% endif %}
-        </div>
-        {% endif %}
 
-        <!-- FDP Certificate -->
-        {% if has_fdp_certificate %}
-        <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">FDP / Workshop Certificates{% if fdp_certificate_academic_year %} ({{ fdp_certificate_academic_year }}){% endif %}:</div>
-            {% if fdp_certificate_local_path %}
-                <img src="{{ fdp_certificate_local_path }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Certificate">
-            {% elif fdp_certificate_display_url %}
-                <img src="{{ fdp_certificate_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Certificate">
-            {% elif fdps %}
-                <table class="data-table" style="margin-top: 5px;">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Type</th>
-                            <th>Title</th>
-                            <th>Academic Year</th>
-                            <th>Duration</th>
-                            <th>Organised By</th>
-                            <th>Place</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fdp in fdps %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ fdp.get_fdp_type_display }}</td>
-                            <td>{{ fdp.title }}</td>
-                            <td>{{ fdp.academic_year|default:"—" }}</td>
-                            <td>{{ fdp.from_date|date:"d M Y" }} – {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
-                            <td>{{ fdp.organized_by|default:"—" }}</td>
-                            <td>{{ fdp.place|default:"—" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% endif %}
-        </div>
-        {% endif %}
+
+
 
         {% if has_experience_certificates and experience_certificates_display_url %}
         <div style="margin-bottom: 20px; page-break-inside: avoid;">
@@ -614,6 +534,35 @@
             {% else %}
                 <iframe src="{{ other_documents_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
             {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Certificate Records (from Certificate model) -->
+        {% if certificates %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Additional Certificates:</div>
+            <table class="data-table" style="margin-top: 5px;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Certificate Type</th>
+                        <th>Issued By</th>
+                        <th>Issue Date</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ cert.certificate_type|default:"—" }}</td>
+                        <td>{{ cert.issued_by|default:"—" }}</td>
+                        <td>{% if cert.issue_date %}{{ cert.issue_date|date:"d M Y" }}{% else %}—{% endif %}</td>
+                        <td>{{ cert.description|default:"—"|truncatechars:50 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         {% endif %}
     </div>
