@@ -10,6 +10,34 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Ensure FDP table exists before adding fields (for deployment fixes)
+        migrations.RunSQL(
+            """
+            -- Create FDP table if it doesn't exist (PostgreSQL syntax for Render deployment)
+            CREATE TABLE IF NOT EXISTS dashboard_fdp (
+                id BIGSERIAL PRIMARY KEY,
+                fdp_type VARCHAR(20),
+                title VARCHAR(300) NOT NULL,
+                from_date DATE NOT NULL,
+                to_date DATE NOT NULL,
+                academic_year VARCHAR(20),
+                organized_by VARCHAR(200),
+                place VARCHAR(200),
+                mode VARCHAR(20),
+                level VARCHAR(20),
+                role VARCHAR(20),
+                sponsored_by VARCHAR(200),
+                remarks TEXT,
+                certificate VARCHAR(100),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                faculty_id BIGINT REFERENCES dashboard_faculty(id) ON DELETE CASCADE
+            );
+            """,
+            reverse_sql="""
+            -- Don't drop table on reverse migration to avoid data loss
+            -- ALTER TABLE dashboard_fdp DROP COLUMN IF EXISTS certificate_url;
+            """
+        ),
         migrations.AddField(
             model_name='fdp',
             name='certificate_url',
