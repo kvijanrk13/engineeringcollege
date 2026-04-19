@@ -6026,123 +6026,129 @@ def contact_support(request):
 def exam_branch(request):
     from django.core.paginator import Paginator
     from datetime import datetime, timedelta
-    
-    view_mode = request.GET.get('view', 'dashboard')
-    search_query = request.GET.get('search', '')
-    department_filter = request.GET.get('department', '')
-    status_filter = request.GET.get('status', '')
-    
-    # Filters for Attendance
-    branch = request.GET.get('branch', 'IT')
-    year_sem = request.GET.get('year_sem', 'IV-I')
-    from_date_str = request.GET.get('from_date', '2025-07-10')
-    to_date_str = request.GET.get('to_date', '2025-09-30')
-    
+
     try:
-        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
-        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-    except (ValueError, TypeError):
-        from_date = date(2025, 7, 10)
-        to_date = date(2025, 9, 30)
+        view_mode = request.GET.get('view', 'dashboard')
+        search_query = request.GET.get('search', '')
+        department_filter = request.GET.get('department', '')
+        status_filter = request.GET.get('status', '')
 
-    # Faculty List Data
-    faculties = Faculty.objects.all().select_related('profile').order_by('staff_name')
-    if search_query:
-        faculties = faculties.filter(
-            Q(staff_name__icontains=search_query) |
-            Q(employee_code__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(department__icontains=search_query)
-        )
-    if department_filter:
-        faculties = faculties.filter(department__icontains=department_filter)
-    
-    if status_filter == 'available':
-        faculties = faculties.exclude(cloudinary_pdf_url__isnull=True).exclude(cloudinary_pdf_url='')
-    elif status_filter == 'pending':
-        faculties = faculties.filter(Q(cloudinary_pdf_url__isnull=True) | Q(cloudinary_pdf_url=''))
-        
-    faculty_data = []
-    for f in faculties:
-        faculty_data.append({
-            'id': f.id,
-            'employee_code': f.employee_code,
-            'name': f.staff_name,
-            'department': f.department or 'Not Assigned',
-            'designation': f.designation or 'Faculty',
-            'email': f.email,
-            'mobile': f.mobile or 'N/A',
-            'cloudinary_pdf_url': f.cloudinary_pdf_url,
-            'cloudinary_photo_url': f.cloudinary_photo_url,
-            'updated_at': f.updated_at if hasattr(f, 'updated_at') else f.created_at,
-            'pdf_status': 'Available' if f.cloudinary_pdf_url else 'Not Available',
-            'total_certificates': Certificate.objects.filter(faculty=f).count(),
-        })
-        
-    total_faculty = Faculty.objects.count()
-    with_pdf = Faculty.objects.exclude(cloudinary_pdf_url__isnull=True).exclude(cloudinary_pdf_url='').count()
-    
-    available_departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
-    
-    # Attendance Dashboard Data
-    date_list = []
-    curr = from_date
-    # Limit to 31 days to keep the table manageable
-    max_days = 31
-    days_added = 0
-    while curr <= to_date and days_added < max_days:
-        date_list.append(curr)
-        curr += timedelta(days=1)
-        days_added += 1
-        
-    students = Student.objects.all()
-    if branch:
-        # Assuming branch is stored in some field or we just filter for demo
-        pass
-        
-    # Mock attendance data for now
-    attendance_data = {}
-    for s in students:
-        attendance_data[s.id] = {}
-        total_p = 0
-        for d in date_list:
-            # Simple logic: Present except Sundays
-            status = 'P' if d.weekday() != 6 else 'A'
-            attendance_data[s.id][d] = status
-            if status == 'P': total_p += 1
-        
-        s.total_present = total_p
-        s.attendance_percentage = int((total_p / len(date_list) * 100)) if date_list else 0
+        # Filters for Attendance
+        branch = request.GET.get('branch', 'IT')
+        year_sem = request.GET.get('year_sem', 'IV-I')
+        from_date_str = request.GET.get('from_date', '2025-07-10')
+        to_date_str = request.GET.get('to_date', '2025-09-30')
 
-    if view_mode == 'list':
-        paginator = Paginator(faculty_data, 20)
-        page = request.GET.get('page', 1)
-        faculties_page = paginator.get_page(page)
-    else:
-        faculties_page = faculty_data[:50]
-        
-    context = {
-        'view_mode': view_mode,
-        'faculties': faculties_page,
-        'total_count': total_faculty,
-        'available_pdfs': with_pdf,
-        'departments': [d for d in available_departments if d],
-        'search_query': search_query,
-        'department_filter': department_filter,
-        'status_filter': status_filter,
-        
-        # Attendance context
-        'students': students,
-        'date_list': date_list,
-        'attendance_data': attendance_data,
-        'from_date': from_date_str,
-        'to_date': to_date_str,
-        'branch': branch,
-        'year_sem': year_sem,
-        
-        'title': 'Exam Branch - Management',
-    }
-    return render(request, 'dashboard/exambranch.html', context)
+        try:
+            from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+            to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            from_date = date(2025, 7, 10)
+            to_date = date(2025, 9, 30)
+
+        # Faculty List Data
+        faculties = Faculty.objects.all().select_related('profile').order_by('staff_name')
+        if search_query:
+            faculties = faculties.filter(
+                Q(staff_name__icontains=search_query) |
+                Q(employee_code__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(department__icontains=search_query)
+            )
+        if department_filter:
+            faculties = faculties.filter(department__icontains=department_filter)
+
+        if status_filter == 'available':
+            faculties = faculties.exclude(cloudinary_pdf_url__isnull=True).exclude(cloudinary_pdf_url='')
+        elif status_filter == 'pending':
+            faculties = faculties.filter(Q(cloudinary_pdf_url__isnull=True) | Q(cloudinary_pdf_url=''))
+
+        faculty_data = []
+        for f in faculties:
+            faculty_data.append({
+                'id': f.id,
+                'employee_code': f.employee_code,
+                'name': f.staff_name,
+                'department': f.department or 'Not Assigned',
+                'designation': f.designation or 'Faculty',
+                'email': f.email,
+                'mobile': f.mobile or 'N/A',
+                'cloudinary_pdf_url': f.cloudinary_pdf_url,
+                'cloudinary_photo_url': f.cloudinary_photo_url,
+                'updated_at': f.updated_at if hasattr(f, 'updated_at') else f.created_at,
+                'pdf_status': 'Available' if f.cloudinary_pdf_url else 'Not Available',
+                'total_certificates': Certificate.objects.filter(faculty=f).count(),
+            })
+
+        total_faculty = Faculty.objects.count()
+        with_pdf = Faculty.objects.exclude(cloudinary_pdf_url__isnull=True).exclude(cloudinary_pdf_url='').count()
+
+        available_departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
+
+        # Attendance Dashboard Data
+        date_list = []
+        curr = from_date
+        # Limit to 31 days to keep the table manageable
+        max_days = 31
+        days_added = 0
+        while curr <= to_date and days_added < max_days:
+            date_list.append(curr)
+            curr += timedelta(days=1)
+            days_added += 1
+
+        students = Student.objects.all()
+        if branch:
+            # Assuming branch is stored in some field or we just filter for demo
+            pass
+
+        # Mock attendance data for now
+        attendance_data = {}
+        for s in students:
+            attendance_data[s.id] = {}
+            total_p = 0
+            for d in date_list:
+                # Simple logic: Present except Sundays
+                status = 'P' if d.weekday() != 6 else 'A'
+                attendance_data[s.id][d] = status
+                if status == 'P': total_p += 1
+
+            s.total_present = total_p
+            s.attendance_percentage = int((total_p / len(date_list) * 100)) if date_list else 0
+
+        if view_mode == 'list':
+            paginator = Paginator(faculty_data, 20)
+            page = request.GET.get('page', 1)
+            faculties_page = paginator.get_page(page)
+        else:
+            faculties_page = faculty_data[:50]
+
+        context = {
+            'view_mode': view_mode,
+            'faculties': faculties_page,
+            'total_count': total_faculty,
+            'available_pdfs': with_pdf,
+            'departments': [d for d in available_departments if d],
+            'search_query': search_query,
+            'department_filter': department_filter,
+            'status_filter': status_filter,
+
+            # Attendance context
+            'students': students,
+            'date_list': date_list,
+            'attendance_data': attendance_data,
+            'from_date': from_date_str,
+            'to_date': to_date_str,
+            'branch': branch,
+            'year_sem': year_sem,
+
+            'title': 'Exam Branch - Management',
+        }
+        return render(request, 'dashboard/exambranch.html', context)
+    except Exception as e:
+        logger.error(f"Error in exam_branch view: {str(e)}", exc_info=True)
+        # Return a simple error page or redirect
+        from django.http import HttpResponseServerError
+        return HttpResponseServerError(f"An error occurred: {str(e)}")
 
 
 @login_required
