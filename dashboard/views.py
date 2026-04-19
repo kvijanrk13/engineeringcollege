@@ -2263,7 +2263,7 @@ def students(request):
 
 
 def students_data(request):
-    if not request.session.get('student_logged_in'):
+    if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
     qs = Student.objects.all().order_by('-created_at')
     paginator = Paginator(qs, 20)
