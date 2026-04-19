@@ -2422,7 +2422,12 @@ def add_student(request):
             traceback.print_exc()
             messages.error(request, f'Error adding student: {e}')
             return redirect('dashboard:add_student')
-    return render(request, 'dashboard/add_student.html')
+    try:
+        return render(request, 'dashboard/add_student.html')
+    except Exception as e:
+        logger.error(f"Error in add_student view: {str(e)}", exc_info=True)
+        from django.http import HttpResponseServerError
+        return HttpResponseServerError(f"An error occurred: {str(e)}")
 
 
 @require_POST
