@@ -960,6 +960,27 @@ def student_detail(request, student_id):
     if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
     student = get_object_or_404(Student, id=student_id)
+
+    # Automatically generate PDF if it doesn't exist and student has photo/certificates
+    if not student.pdf_url and not student.pdf_generated:
+        has_content = bool(
+            student.photo or student.photo_url or
+            student.cert_achieve or student.cert_intern or student.cert_courses or
+            student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
+            student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
+            student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url
+        )
+
+        if has_content:
+            try:
+                logger.info(f"Auto-generating PDF for student {student.student_name} on first view")
+                pdf_url = generate_student_pdf(student)
+                if pdf_url:
+                    messages.info(request, 'Student PDF has been generated and is ready for download.')
+            except Exception as e:
+                logger.error(f"Failed to auto-generate PDF for student {student_id}: {e}")
+                messages.warning(request, 'Could not generate PDF automatically. You can try the DOWNLOAD PDF button.')
+
     return render(request, 'dashboard/student_detail.html', {
         'student': student,
         'title': f'{student.student_name} - Details',
@@ -4980,21 +5001,111 @@ def generate_faculty_pdf_bytes(faculty):
 def merge_student_certificates(request, student_id):
     student = get_object_or_404(Student, id=student_id)
 
-    # Check if student has any certificates
-    has_certs = any([
-        student.cert_achieve, student.cert_intern, student.cert_courses,
-        student.cert_sdp, student.cert_extra, student.cert_placement, student.cert_national,
-        student.cert_achieve_url, student.cert_intern_url, student.cert_courses_url,
-        student.cert_sdp_url, student.cert_extra_url, student.cert_placement_url, student.cert_national_url
-    ])
+    # Check if student has photo or any certificates
+    has_content = bool(
+        student.photo or student.photo_url or
+        student.cert_achieve or student.cert_intern or student.cert_courses or
+        student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
+        student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
+        student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url
+    )
 
-    if not has_certs:
-        messages.error(request, 'No certificates found to merge.')
+    if not has_content:
+        messages.error(request, 'No photo or certificates found to merge.')
         return redirect('dashboard:student_detail', student_id=student_id)
 
     try:
         writer = PdfWriter()
         merged_count = 0
+
+        # First, add the photo if it exists
+        if student.photo_url:
+            try:
+                r = requests.get(student.photo_url, timeout=30)
+                if r.status_code == 200:
+                    # Convert image to PDF page
+                    from PIL import Image
+                    import io
+
+                    image = Image.open(io.BytesIO(r.content))
+                    # Convert to RGB if necessary
+                    if image.mode != 'RGB':
+                        image = image.convert('RGB')
+
+                    # Create a PDF page from the image
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import letter
+
+                    img_pdf_buffer = io.BytesIO()
+                    c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                    img_width, img_height = image.size
+
+                    # Calculate scaling to fit the page
+                    page_width, page_height = letter
+                    scale = min(page_width / img_width, page_height / img_height)
+                    new_width = img_width * scale
+                    new_height = img_height * scale
+
+                    # Center the image
+                    x = (page_width - new_width) / 2
+                    y = (page_height - new_height) / 2
+
+                    c.drawImage(io.BytesIO(r.content), x, y, new_width, new_height)
+                    c.save()
+
+                    # Add the image PDF page to the writer
+                    img_pdf_buffer.seek(0)
+                    img_reader = PdfReader(img_pdf_buffer)
+                    for page in img_reader.pages:
+                        writer.add_page(page)
+
+                    merged_count += 1
+                    logger.info("Successfully merged photo from Cloudinary URL")
+
+            except Exception as e:
+                logger.warning(f"Failed to merge photo from URL: {e}")
+
+        elif student.photo and student.photo.path and os.path.exists(student.photo.path):
+            try:
+                from PIL import Image
+                import io
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.pagesizes import letter
+
+                image = Image.open(student.photo.path)
+                # Convert to RGB if necessary
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+
+                # Create a PDF page from the image
+                img_pdf_buffer = io.BytesIO()
+                c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                img_width, img_height = image.size
+
+                # Calculate scaling to fit the page
+                page_width, page_height = letter
+                scale = min(page_width / img_width, page_height / img_height)
+                new_width = img_width * scale
+                new_height = img_height * scale
+
+                # Center the image
+                x = (page_width - new_width) / 2
+                y = (page_height - new_height) / 2
+
+                c.drawImage(student.photo.path, x, y, new_width, new_height)
+                c.save()
+
+                # Add the image PDF page to the writer
+                img_pdf_buffer.seek(0)
+                img_reader = PdfReader(img_pdf_buffer)
+                for page in img_reader.pages:
+                    writer.add_page(page)
+
+                merged_count += 1
+                logger.info("Successfully merged local photo")
+
+            except Exception as e:
+                logger.warning(f"Failed to merge local photo: {e}")
 
         # Define certificate fields and their types
         cert_fields = [
@@ -5068,10 +5179,18 @@ def merge_student_certificates(request, student_id):
         if os.path.exists(merged_path):
             os.unlink(merged_path)
 
+        content_types = []
+        if student.photo or student.photo_url:
+            content_types.append("photo")
+        if merged_count > (1 if (student.photo or student.photo_url) else 0):
+            content_types.append("certificates")
+
+        content_desc = " and ".join(content_types) if content_types else "content"
+
         if merged_url:
-            messages.success(request, f'Successfully merged {merged_count} certificates. <a href="{merged_url}" target="_blank">Download PDF</a>')
+            messages.success(request, f'Successfully merged {merged_count} items ({content_desc}). <a href="{merged_url}" target="_blank">Download PDF</a>')
         else:
-            messages.warning(request, f'Merged {merged_count} certificates but upload failed. Please try again.')
+            messages.warning(request, f'Merged {merged_count} items ({content_desc}) but upload failed. Please try again.')
 
         return redirect('dashboard:student_detail', student_id=student_id)
 
