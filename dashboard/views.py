@@ -1112,6 +1112,30 @@ def student_detail(request, student_id):
         return redirect('dashboard:student_login')
     student = get_object_or_404(Student, id=student_id)
 
+    # Populate URLs from CloudinaryUpload if not set
+    cloudinary_uploads = CloudinaryUpload.objects.filter(student=student)
+    upload_map = {}
+    for upload in cloudinary_uploads:
+        upload_map[upload.upload_type] = upload.cloudinary_url
+
+    # Set photo_url if not set and we have a Cloudinary upload
+    if not student.photo_url and 'photos' in upload_map:
+        student.photo_url = upload_map['photos']
+
+    # Set cert URLs
+    cert_type_map = {
+        'cert_achieve_url': 'achievement',
+        'cert_intern_url': 'internship',
+        'cert_courses_url': 'courses',
+        'cert_sdp_url': 'sdp',
+        'cert_extra_url': 'extra',
+        'cert_placement_url': 'placement',
+        'cert_national_url': 'national',
+    }
+    for url_field, upload_type in cert_type_map.items():
+        if not getattr(student, url_field) and upload_type in upload_map:
+            setattr(student, url_field, upload_map[upload_type])
+
     # Automatically generate PDF if it doesn't exist and student has photo/certificates
     if not student.pdf_url and not student.pdf_generated:
         has_content = bool(
@@ -2440,6 +2464,21 @@ def students_data(request):
     qs = Student.objects.all().order_by('-created_at')
     paginator = Paginator(qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
+
+    # Populate URLs from CloudinaryUpload for students in this page
+    student_ids = [s.id for s in page_obj]
+    cloudinary_uploads = CloudinaryUpload.objects.filter(student_id__in=student_ids)
+    upload_map = {}
+    for upload in cloudinary_uploads:
+        if upload.student_id not in upload_map:
+            upload_map[upload.student_id] = {}
+        upload_map[upload.student_id][upload.upload_type] = upload.cloudinary_url
+
+    for student in page_obj:
+        student_uploads = upload_map.get(student.id, {})
+        if not student.photo_url and 'photos' in student_uploads:
+            student.photo_url = student_uploads['photos']
+
     return render(request, "dashboard/students_data.html", {
         "title": "Students Data", "students": page_obj,
         "total_students": qs.count(),
