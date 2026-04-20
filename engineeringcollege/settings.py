@@ -178,8 +178,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = True
 
-# Add media files to WhiteNoise for serving in production
-WHITENOISE_ROOT = BASE_DIR / 'media'
+# Configure WhiteNoise to serve media files
+WHITENOISE_ROOT = MEDIA_ROOT
 
 # ================================
 # CLOUDINARY CONFIGURATION
