@@ -372,6 +372,7 @@
 
     <div class="action-buttons">
         <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn">DOWNLOAD PDF</a>
+        <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn">MERGE CERTIFICATES</a>
         <a href="{% url 'dashboard:edit_student' student.id %}" class="btn">EDIT STUDENT</a>
     </div>
 </div>

@@ -4977,6 +4977,110 @@ def generate_faculty_pdf_bytes(faculty):
         return None
 
 
+def merge_student_certificates(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+
+    # Check if student has any certificates
+    has_certs = any([
+        student.cert_achieve, student.cert_intern, student.cert_courses,
+        student.cert_sdp, student.cert_extra, student.cert_placement, student.cert_national,
+        student.cert_achieve_url, student.cert_intern_url, student.cert_courses_url,
+        student.cert_sdp_url, student.cert_extra_url, student.cert_placement_url, student.cert_national_url
+    ])
+
+    if not has_certs:
+        messages.error(request, 'No certificates found to merge.')
+        return redirect('dashboard:student_detail', student_id=student_id)
+
+    try:
+        writer = PdfWriter()
+        merged_count = 0
+
+        # Define certificate fields and their types
+        cert_fields = [
+            ('cert_achieve', 'cert_achieve_url', 'Achievement Certificate'),
+            ('cert_intern', 'cert_intern_url', 'Internship Certificate'),
+            ('cert_courses', 'cert_courses_url', 'Course Certificate'),
+            ('cert_sdp', 'cert_sdp_url', 'SDP Certificate'),
+            ('cert_extra', 'cert_extra_url', 'Extracurricular Certificate'),
+            ('cert_placement', 'cert_placement_url', 'Placement Certificate'),
+            ('cert_national', 'cert_national_url', 'National Exam Certificate'),
+        ]
+
+        for file_field, url_field, cert_type in cert_fields:
+            cert_file = getattr(student, file_field, None)
+            cert_url = getattr(student, url_field, None)
+
+            if cert_file and cert_file.path and os.path.exists(cert_file.path):
+                try:
+                    for pg in PdfReader(cert_file.path).pages:
+                        writer.add_page(pg)
+                    merged_count += 1
+                    logger.info(f"Successfully merged local {cert_type}")
+                except Exception as e:
+                    logger.warning(f"Failed to merge local {cert_type}: {e}")
+
+            elif cert_url:
+                try:
+                    r = requests.get(cert_url, timeout=30)
+                    if r.status_code == 200:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
+                            tf.write(r.content)
+                            tfp = tf.name
+                        for pg in PdfReader(tfp).pages:
+                            writer.add_page(pg)
+                        os.unlink(tfp)
+                        merged_count += 1
+                        logger.info(f"Successfully merged {cert_type} from URL")
+                    else:
+                        logger.warning(f"Failed to download {cert_type}: HTTP {r.status_code}")
+                except Exception as e:
+                    logger.warning(f"Failed to merge {cert_type} from URL: {e}")
+
+        if merged_count == 0:
+            messages.error(request, 'No valid certificates could be merged.')
+            return redirect('dashboard:student_detail', student_id=student_id)
+
+        # Create merged PDF
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
+            writer.write(mf.name)
+            merged_path = mf.name
+
+        # Upload to Cloudinary if configured
+        merged_url = None
+        if is_cloudinary_configured():
+            try:
+                cr = cloudinary.uploader.upload(
+                    merged_path, resource_type="raw", folder="merged_student_certificates",
+                    public_id=f"merged_student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    overwrite=False
+                )
+                merged_url = cr['secure_url']
+                logger.info(f"Uploaded merged certificates to Cloudinary: {merged_url}")
+
+                # Save to database if we have a model for this
+                # For now, we'll just store the URL in a session or pass it to template
+
+            except Exception as e:
+                logger.error(f"Failed to upload merged certificates to Cloudinary: {e}")
+
+        # Clean up temp file
+        if os.path.exists(merged_path):
+            os.unlink(merged_path)
+
+        if merged_url:
+            messages.success(request, f'Successfully merged {merged_count} certificates. <a href="{merged_url}" target="_blank">Download PDF</a>')
+        else:
+            messages.warning(request, f'Merged {merged_count} certificates but upload failed. Please try again.')
+
+        return redirect('dashboard:student_detail', student_id=student_id)
+
+    except Exception as e:
+        logger.error(f"Error merging student certificates: {e}")
+        messages.error(request, f'Error merging certificates: {str(e)}')
+        return redirect('dashboard:student_detail', student_id=student_id)
+
+
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
     try:
         writer = PdfWriter()

@@ -595,6 +595,9 @@ body {
 
                     <td class="action-cell">
                         <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info">View</a>
+                        {% if student.cert_achieve or student.cert_intern or student.cert_courses or student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url %}
+                        <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn btn-success" title="Merge Certificates">Merge Certs</a>
+                        {% endif %}
                         <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-warning">Edit</a>
                         <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="action-form" onsubmit="return confirm('Are you sure you want to delete this student?');">
                             {% csrf_token %}
