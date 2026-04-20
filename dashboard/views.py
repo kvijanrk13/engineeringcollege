@@ -614,6 +614,157 @@ def collect_faculty_files(faculty):
     return image_files, pdf_files, temp_files
 
 
+def collect_student_files(student):
+    """Collect student photo and certificates from Cloudinary or local storage."""
+    photo_file = None
+    image_files = []
+    pdf_files = []
+    temp_files = []
+
+    def _cloudinary_public_id(url):
+        try:
+            if '/upload/' not in url:
+                return None
+            tail = url.split('/upload/', 1)[1]
+            parts = [p for p in tail.split('/') if p]
+            if parts and parts[0].startswith('v') and parts[0][1:].isdigit():
+                parts = parts[1:]
+            if not parts:
+                return None
+            public_id = '/'.join(parts)
+            if '.' in public_id:
+                public_id = public_id.rsplit('.', 1)[0]
+            return public_id
+        except Exception:
+            return None
+
+    def _download_remote_asset(url, default_suffix='.pdf'):
+        if not url or not isinstance(url, str) or not url.startswith('http'):
+            return None, False
+        try:
+            response = requests.get(url, timeout=30)
+            if response.status_code == 401 and 'cloudinary.com' in url:
+                try:
+                    public_id = _cloudinary_public_id(url)
+                    if public_id:
+                        resource = cloudinary.api.resource(public_id)
+                        secure_url = resource.get('secure_url')
+                        if secure_url:
+                            response = requests.get(secure_url, timeout=30)
+                except Exception as cloud_err:
+                    logger.warning(f"Student Cloudinary fallback failed: {cloud_err}")
+
+            if response.status_code != 200:
+                logger.warning(f"Failed to download student asset {url}: HTTP {response.status_code}")
+                return None, False
+
+            content_type = (response.headers.get('content-type') or '').lower()
+            is_pdf = 'pdf' in content_type or url.lower().endswith('.pdf')
+            suffix = '.pdf' if is_pdf else default_suffix
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+            tmp.write(response.content)
+            tmp.close()
+            temp_files.append(tmp.name)
+            return tmp.name, is_pdf
+        except Exception as e:
+            logger.warning(f"Error downloading student asset {url}: {e}")
+            return None, False
+
+    def _collect_asset(file_field, url_value=None, default_suffix='.pdf'):
+        if file_field:
+            try:
+                local_path = file_field.path if hasattr(file_field, 'path') else None
+            except Exception:
+                local_path = None
+            if local_path and os.path.exists(local_path):
+                return local_path, local_path.lower().endswith('.pdf')
+
+        if url_value and isinstance(url_value, str) and url_value.startswith('http'):
+            downloaded_path, is_pdf = _download_remote_asset(url_value, default_suffix=default_suffix)
+            if downloaded_path:
+                return downloaded_path, is_pdf
+
+        file_path, file_url = get_file_from_field(file_field, url_value)
+        if file_path and os.path.exists(file_path):
+            return file_path, file_path.lower().endswith('.pdf')
+
+        if file_url and isinstance(file_url, str) and file_url.startswith('/'):
+            local_media_path = os.path.join(settings.MEDIA_ROOT, file_url.replace(settings.MEDIA_URL, '', 1).lstrip('/'))
+            if os.path.exists(local_media_path):
+                return local_media_path, local_media_path.lower().endswith('.pdf')
+
+        if file_url and isinstance(file_url, str) and file_url.startswith('http'):
+            return _download_remote_asset(file_url, default_suffix=default_suffix)
+
+        return None, False
+
+    photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
+
+    cert_fields = [
+        ('cert_achieve', 'cert_achieve_url'),
+        ('cert_intern', 'cert_intern_url'),
+        ('cert_courses', 'cert_courses_url'),
+        ('cert_sdp', 'cert_sdp_url'),
+        ('cert_extra', 'cert_extra_url'),
+        ('cert_placement', 'cert_placement_url'),
+        ('cert_national', 'cert_national_url'),
+    ]
+
+    for file_field_name, url_field_name in cert_fields:
+        asset_path, is_pdf = _collect_asset(
+            getattr(student, file_field_name, None),
+            getattr(student, url_field_name, None),
+            default_suffix='.jpg'
+        )
+        if not asset_path:
+            continue
+        if is_pdf:
+            pdf_files.append(asset_path)
+        else:
+            image_files.append(asset_path)
+
+    return photo_file, image_files, pdf_files, temp_files
+
+
+def append_assets_to_writer(writer, pdf_files=None, image_files=None):
+    """Append local PDF and image assets to an existing PdfWriter."""
+    pdf_files = pdf_files or []
+    image_files = image_files or []
+    readers = []
+    temp_files = []
+
+    for pdf_path in pdf_files:
+        if not pdf_path or not os.path.exists(pdf_path):
+            continue
+        try:
+            reader = PdfReader(pdf_path)
+            readers.append(reader)
+            for page in reader.pages:
+                writer.add_page(page)
+        except Exception as e:
+            logger.warning(f"Error appending PDF asset {pdf_path}: {e}")
+
+    for image_path in image_files:
+        if not image_path or not os.path.exists(image_path):
+            continue
+        try:
+            img = PILImage.open(image_path)
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+            img.save(temp_pdf.name, 'PDF', resolution=100.0)
+            temp_pdf.close()
+            temp_files.append(temp_pdf.name)
+            reader = PdfReader(temp_pdf.name)
+            readers.append(reader)
+            for page in reader.pages:
+                writer.add_page(page)
+        except Exception as e:
+            logger.warning(f"Error appending image asset {image_path}: {e}")
+
+    return readers, temp_files
+
+
 # ==================== DEBUG / TEST VIEWS ====================
 def test_template(request):
     return render(request, 'test.html', {
@@ -2667,80 +2818,68 @@ def merge_files_legacy(file_list):
 # ==================== GENERATE STUDENT PDF ====================
 def generate_student_pdf(student):
     print(f"\n=== GENERATING STUDENT PDF for {student.student_name} (ID: {student.id}) ===")
-    files = []
-    file_names = []
-    
-    # Get photo path or URL
-    photo_path = None
-    if student.photo:
-        try:
-            if hasattr(student.photo, 'path') and os.path.exists(student.photo.path):
-                photo_path = student.photo.path
-                files.append(photo_path)
-                file_names.append('photo')
-                print(f" [✓] Photo found (local): {photo_path}")
-        except Exception as e:
-            print(f" [X] Photo path error: {e}")
-            
-    if not photo_path:
-        photo_url = student.photo_url or (student.photo.url if student.photo else None)
-        if photo_url:
-            files.append(photo_url)
-            file_names.append('photo')
-            print(f" [✓] Photo URL: {photo_url}")
-    
-    # Get certificate files
-    cert_fields = [
-        ('cert_achieve', 'cert_achieve_url'),
-        ('cert_intern', 'cert_intern_url'),
-        ('cert_courses', 'cert_courses_url'),
-        ('cert_sdp', 'cert_sdp_url'),
-        ('cert_extra', 'cert_extra_url'),
-        ('cert_placement', 'cert_placement_url'),
-        ('cert_national', 'cert_national_url'),
-    ]
-    for file_field, url_field in cert_fields:
-        url_val = getattr(student, url_field, None)
-        file_obj = getattr(student, file_field, None)
-        
-        file_path = None
-        if file_obj:
-            try:
-                file_path = file_obj.path if hasattr(file_obj, 'path') else str(file_obj)
-            except:
-                file_path = str(file_obj)
-        
-        if file_path and os.path.exists(file_path):
-            files.append(file_path)
-            file_names.append(file_field)
-            print(f" [✓] {file_field}: {file_path}")
-        elif url_val:
-            files.append(url_val)
-            file_names.append(file_field)
-            print(f" [✓] {file_field} URL: {url_val}")
-    
-    print(f"\n=== FILES TO MERGE: {len(files)} files ===")
-    for name, file in zip(file_names, files):
-        print(f" - {name}: {file}")
-    
-    if not files:
+    photo_file, image_files, pdf_files, temp_files = collect_student_files(student)
+    merge_image_files = list(image_files)
+    if photo_file:
+        merge_image_files.insert(0, photo_file)
+
+    print(f"\n=== FILES TO MERGE: {len(merge_image_files) + len(pdf_files)} files ===")
+    for image_path in merge_image_files:
+        print(f" - image: {image_path}")
+    for pdf_path in pdf_files:
+        print(f" - pdf: {pdf_path}")
+
+    if not merge_image_files and not pdf_files:
         print(" [X] No files to merge!")
         return None
-        
-    final_pdf_path = merge_files(file_list=files)
-    student.pdf_url = final_pdf_path
-    student.pdf_generated = True
-    student.save()
-    print(f"PDF saved to student record: {final_pdf_path}")
-    print("=== PDF GENERATION COMPLETE ===\n")
-    return final_pdf_path
+
+    final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
+    final_pdf_path = final_pdf.name
+    final_pdf.close()
+
+    try:
+        merged = merge_all_documents(final_pdf_path, merge_image_files, pdf_files)
+        if not merged or not os.path.exists(final_pdf_path):
+            return None
+
+        if is_cloudinary_configured():
+            upload = cloudinary.uploader.upload(
+                final_pdf_path,
+                resource_type="raw",
+                folder="student_generated_pdfs",
+                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                overwrite=True
+            )
+            student.pdf_url = upload["secure_url"]
+            student.pdf_generated = True
+            student.pdf_generation_time = timezone.now()
+            student.save(update_fields=['pdf_url', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
+            print(f"PDF uploaded to Cloudinary: {student.pdf_url}")
+            return student.pdf_url
+
+        with open(final_pdf_path, 'rb') as pdf_handle:
+            student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
+        student.pdf_generated = True
+        student.pdf_generation_time = timezone.now()
+        student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
+        print(f"PDF saved locally to student record: {student.pdf_file.name}")
+        return student.pdf_file.url if student.pdf_file else None
+    finally:
+        for temp_path in temp_files + [final_pdf_path]:
+            try:
+                if temp_path and os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except Exception:
+                pass
+        print("=== PDF GENERATION COMPLETE ===\n")
 
 
 def generate_student_pdf_file(request, student_id):
-    import io, shutil
+    import shutil
     student = get_object_or_404(Student, id=student_id)
     styles = getSampleStyleSheet()
-    temp_files = []
+    photo_path, cert_image_files, cert_pdf_files, collected_temp_files = collect_student_files(student)
+    temp_files = list(collected_temp_files)
     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     main_pdf_path = tmp.name
     tmp.close()
@@ -2755,37 +2894,7 @@ def generate_student_pdf_file(request, student_id):
     elems.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
     elems.append(Spacer(1, 0.2 * inch))
     photo_img = None
-    photo_path = None
-    
-    # 1. Try local file path first
-    if student.photo:
-        try:
-            if hasattr(student.photo, 'path') and os.path.exists(student.photo.path):
-                photo_path = student.photo.path
-        except Exception:
-            pass
-            
-    # 2. If not found, try to download from URL
-    if not photo_path:
-        photo_url = student.photo_url or (student.photo.url if student.photo else None)
-        if photo_url:
-            # Handle relative URLs
-            if photo_url.startswith('/'):
-                photo_url = request.build_absolute_uri(photo_url)
-            
-            try:
-                r = requests.get(photo_url, timeout=10)
-                if r.status_code == 200:
-                    ext = '.png' if 'png' in r.headers.get('content-type', '') else '.jpg'
-                    tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
-                    tp.write(r.content)
-                    tp.close()
-                    temp_files.append(tp.name)
-                    photo_path = tp.name
-            except Exception as e:
-                logger.error(f"Error downloading photo for PDF: {e}")
 
-    # 3. Create ReportLab Image if we have a path
     if photo_path:
         try:
             photo_img = Image(photo_path, width=1.5 * inch, height=1.8 * inch)
@@ -2861,81 +2970,13 @@ def generate_student_pdf_file(request, student_id):
             writer.add_page(pg)
     except Exception as e:
         logger.error(f"Error adding main PDF: {e}")
-    cert_fields = [
-        ('cert_achieve', 'Achievement'), ('cert_intern', 'Internship'),
-        ('cert_courses', 'Courses'), ('cert_sdp', 'SDP'),
-        ('cert_extra', 'Extracurricular'), ('cert_placement', 'Placement'),
-        ('cert_national', 'National Exam'),
-    ]
-    for fn, fl in cert_fields:
-        cf = getattr(student, fn, None)
-        url_val = getattr(student, f"{fn}_url", None)
-        
-        if not cf and not url_val:
-            continue
-            
-        try:
-            # Get the path or URL
-            curl = None
-            if cf:
-                try:
-                    # Check if local file exists
-                    if hasattr(cf, 'path') and os.path.exists(cf.path):
-                        curl = cf.path
-                    else:
-                        curl = cf.url
-                except Exception:
-                    curl = getattr(cf, 'url', str(cf))
-            
-            if not curl and url_val:
-                curl = url_val
-                
-            if not curl:
-                continue
-
-            # If it's a URL, download it; if it's a relative path, make it absolute if needed
-            # But here we handle local paths directly if they exist
-            if isinstance(curl, str) and (curl.startswith('http') or curl.startswith('/')):
-                if curl.startswith('/'):
-                    curl = request.build_absolute_uri(curl)
-                
-                r = requests.get(curl, timeout=30)
-                if r.status_code == 200:
-                    content = r.content
-                else:
-                    continue
-            elif os.path.exists(str(curl)):
-                with open(str(curl), 'rb') as f:
-                    content = f.read()
-            else:
-                continue
-
-            if content.startswith(b'%PDF'):
-                tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                tp.write(content)
-                tp.close()
-                temp_files.append(tp.name)
-                reader = PdfReader(tp.name)
-                readers.append(reader)
-                for pg in reader.pages:
-                    writer.add_page(pg)
-            else:
-                try:
-                    img = PILImage.open(io.BytesIO(content))
-                    if img.mode != 'RGB':
-                        img = img.convert('RGB')
-                    tp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    img.save(tp.name, 'PDF', resolution=100.0)
-                    tp.close()
-                    temp_files.append(tp.name)
-                    reader = PdfReader(tp.name)
-                    readers.append(reader)
-                    for pg in reader.pages:
-                        writer.add_page(pg)
-                except Exception as e:
-                    logger.error(f"Error converting image to PDF: {e}")
-        except Exception as e:
-            logger.error(f"Error processing {fl}: {e}")
+    asset_readers, asset_temp_files = append_assets_to_writer(
+        writer,
+        pdf_files=cert_pdf_files,
+        image_files=cert_image_files
+    )
+    readers.extend(asset_readers)
+    temp_files.extend(asset_temp_files)
     fp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     final_path = fp.name
     fp.close()
@@ -2953,10 +2994,9 @@ def generate_student_pdf_file(request, student_id):
                 public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}", overwrite=True
             )
             student.pdf_url = ur["secure_url"]
-            student.pdf_file = ur["secure_url"]
             student.pdf_generated = True
             student.pdf_generation_time = timezone.now()
-            student.save()
+            student.save(update_fields=['pdf_url', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
             CloudinaryUpload.objects.create(
                 student=student, upload_type='pdf',
                 cloudinary_url=ur['secure_url'], public_id=ur['public_id'],
@@ -2965,6 +3005,15 @@ def generate_student_pdf_file(request, student_id):
             )
         except Exception as e:
             logger.error(f"Error uploading student PDF to Cloudinary: {e}")
+    else:
+        try:
+            with open(final_path, 'rb') as pdf_handle:
+                student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
+            student.pdf_generated = True
+            student.pdf_generation_time = timezone.now()
+            student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
+        except Exception as e:
+            logger.error(f"Error saving local student PDF: {e}")
     try:
         with open(final_path, 'rb') as pf:
             response = HttpResponse(pf.read(), content_type='application/pdf')
