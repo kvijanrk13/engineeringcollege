@@ -2365,20 +2365,22 @@ def add_student(request):
             student.save()
             files_up, files_lo = [], []
             
-            # Handle photo
+            # Handle photo - Always try Cloudinary first if configured
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
-                if ca: # Cloudinary configured
+                if ca: # Cloudinary configured - prioritize Cloudinary
                     curl = _upload(pf, 'photos')
                     if curl:
                         student.photo_url = curl
                         files_up.append('photo')
                     else:
+                        # Fallback to local storage if Cloudinary fails
                         local_path = _save_local(pf, 'photos')
                         if local_path:
                             student.photo = local_path
                             files_lo.append('photo')
                 else:
+                    # Local storage only when Cloudinary not configured
                     local_path = _save_local(pf, 'photos')
                     if local_path:
                         student.photo = local_path

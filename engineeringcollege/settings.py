@@ -168,6 +168,14 @@ STATICFILES_DIRS = [
 # Use WhiteNoise for static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# Configure WhiteNoise to serve media files in production
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
+
+# Add media files to WhiteNoise for serving in production
+if not DEBUG:
+    WHITENOISE_ROOT = MEDIA_ROOT
+
 # ================================
 # MEDIA FILES (Cloudinary for production)
 # ================================

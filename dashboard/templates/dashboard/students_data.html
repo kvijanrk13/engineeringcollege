@@ -535,9 +535,10 @@ body {
                 <tr>
                     <td>
                         {% if student.photo_url %}
-                            <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}">
+                            <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <div class="no-photo" style="display: none;">Photo Error</div>
                         {% elif student.photo and student.photo.url %}
-                            <img src="{% if request.META.HTTP_HOST|slice:':8000' %}http://{{ request.META.HTTP_HOST }}{{ student.photo.url }}{% else %}{{ student.photo.url }}{% endif %}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                            <img src="{{ student.photo.url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <div class="no-photo" style="display: none;">Photo Error</div>
                         {% else %}
                             <div class="no-photo">No Photo</div>
