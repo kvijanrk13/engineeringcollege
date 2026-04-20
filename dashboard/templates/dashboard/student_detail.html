@@ -158,9 +158,11 @@
             <div class="section-title">PHOTO</div>
             <div class="photo-container">
                 {% if student.photo_url %}
-                    <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}">
+                    <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="no-photo" style="display: none;">Photo Load Error</div>
                 {% elif student.photo %}
-                    <img src="{{ student.photo.url }}" class="student-photo" alt="{{ student.student_name }}">
+                    <img src="{{ student.photo.url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="no-photo" style="display: none;">Photo Load Error</div>
                 {% else %}
                     <div class="no-photo">No Photo</div>
                 {% endif %}
