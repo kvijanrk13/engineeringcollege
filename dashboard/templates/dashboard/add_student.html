@@ -230,9 +230,103 @@
     }
 
     .btn-submit {
+        width: 100%;
+        padding: 15px;
         background: transparent;
         color: #0f0;
-        border: 3px solid #0f0;
+        border: 2px solid #0f0;
+        font-weight: bold;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: 0.3s;
+    }
+
+    .btn-submit:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 20px #0f0;
+    }
+
+    .btn-cancel {
+        width: 100%;
+        padding: 15px;
+        background: transparent;
+        color: #f00;
+        border: 2px solid #f00;
+        font-weight: bold;
+        font-size: 1.1rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        border-radius: 8px;
+        transition: 0.3s;
+        margin-top: 10px;
+    }
+
+    .btn-cancel:hover {
+        background: #f00;
+        color: #000;
+        box-shadow: 0 0 20px #f00;
+    }
+
+    /* Certificate Actions */
+    .certificate-actions {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .btn-add-cert {
+        padding: 12px 30px;
+        background: transparent;
+        color: #0ff;
+        border: 2px solid #0ff;
+        font-weight: bold;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: 0.3s;
+    }
+
+    .btn-add-cert:hover {
+        background: #0ff;
+        color: #000;
+        box-shadow: 0 0 15px #0ff;
+    }
+
+    /* Additional Certificate Fields */
+    .additional-cert-group {
+        margin-top: 15px;
+        padding: 15px;
+        background: rgba(0, 50, 0, 0.8);
+        border: 1px solid #0f0;
+        border-radius: 6px;
+    }
+
+    .additional-cert-group .form-group {
+        margin-bottom: 10px;
+    }
+
+    .remove-cert-btn {
+        background: transparent;
+        color: #f00;
+        border: 1px solid #f00;
+        padding: 5px 10px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-top: 5px;
+    }
+
+    .remove-cert-btn:hover {
+        background: #f00;
+        color: #000;
     }
 
     .btn-submit:hover {
@@ -530,42 +624,47 @@
         <!-- Certificates Upload -->
         <div class="form-section">
             <h3 class="section-title">Certificates & Documents</h3>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Achievement Certificates</label>
-                    <input type="file" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload achievement certificates (PDF/Image)</div>
+            <div id="certificates-container">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Achievement Certificates</label>
+                        <input type="file" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload achievement certificates (PDF/Image)</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Internship Certificates</label>
+                        <input type="file" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload internship certificates (PDF/Image)</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Course Certificates</label>
+                        <input type="file" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload course completion certificates</div>
+                    </div>
+                    <div class="form-group">
+                        <label>SDP Certificates</label>
+                        <input type="file" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload Skill Development Program certificates</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Extracurricular Certificates</label>
+                        <input type="file" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload extracurricular activity certificates</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Placement Certificates</label>
+                        <input type="file" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload placement offer letters</div>
+                    </div>
+                    <div class="form-group">
+                        <label>National Exam Certificates</label>
+                        <input type="file" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="help-text">Upload national exam certificates</div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Internship Certificates</label>
-                    <input type="file" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload internship certificates (PDF/Image)</div>
-                </div>
-                <div class="form-group">
-                    <label>Course Certificates</label>
-                    <input type="file" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload course completion certificates</div>
-                </div>
-                <div class="form-group">
-                    <label>SDP Certificates</label>
-                    <input type="file" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload Skill Development Program certificates</div>
-                </div>
-                <div class="form-group">
-                    <label>Extracurricular Certificates</label>
-                    <input type="file" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload extracurricular activity certificates</div>
-                </div>
-                <div class="form-group">
-                    <label>Placement Certificates</label>
-                    <input type="file" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload placement offer letters</div>
-                </div>
-                <div class="form-group">
-                    <label>National Exam Certificates</label>
-                    <input type="file" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="help-text">Upload national exam certificates</div>
-                </div>
+            </div>
+            <div class="certificate-actions">
+                <button type="button" id="add-certificate-btn" class="btn-add-cert">+ ADD MORE CERTIFICATES</button>
             </div>
         </div>
 
@@ -640,5 +739,53 @@
             label.textContent = `Selected: ${fileName}`;
         }
     });
+
+    // Add Certificate Functionality
+    let certCounter = 0;
+
+    document.getElementById('add-certificate-btn').addEventListener('click', function() {
+        certCounter++;
+        const container = document.getElementById('certificates-container');
+
+        const newCertGroup = document.createElement('div');
+        newCertGroup.className = 'additional-cert-group';
+        newCertGroup.id = `cert-group-${certCounter}`;
+
+        newCertGroup.innerHTML = `
+            <div class="form-group">
+                <label>Certificate Type</label>
+                <select name="additional_cert_type_${certCounter}" class="form-control">
+                    <option value="">Select Certificate Type</option>
+                    <option value="achievement">Achievement Certificate</option>
+                    <option value="internship">Internship Certificate</option>
+                    <option value="course">Course Certificate</option>
+                    <option value="sdp">SDP Certificate</option>
+                    <option value="extra">Extracurricular Certificate</option>
+                    <option value="placement">Placement Certificate</option>
+                    <option value="national">National Exam Certificate</option>
+                    <option value="other">Other Certificate</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Certificate Title/Description</label>
+                <input type="text" name="additional_cert_title_${certCounter}" class="form-control" placeholder="Enter certificate title or description">
+            </div>
+            <div class="form-group">
+                <label>Upload Certificate</label>
+                <input type="file" name="additional_cert_file_${certCounter}" accept=".pdf,.jpg,.jpeg,.png" class="form-control">
+                <div class="help-text">Upload certificate file (PDF/Image)</div>
+            </div>
+            <button type="button" class="remove-cert-btn" onclick="removeCertificate(${certCounter})">Remove Certificate</button>
+        `;
+
+        container.appendChild(newCertGroup);
+    });
+
+    function removeCertificate(id) {
+        const certGroup = document.getElementById(`cert-group-${id}`);
+        if (certGroup) {
+            certGroup.remove();
+        }
+    }
 </script>
 {% endblock %}
