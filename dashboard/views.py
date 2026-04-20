@@ -1116,7 +1116,7 @@ def student_login(request):
                     return redirect('dashboard:student_dashboard')
             error = 'Invalid student credentials'
             messages.error(request, error)
-        return render(request, 'login.html', {
+        return render(request, 'dashboard/login.html', {
             'title': 'Student Login',
             'student_login': True,
             'error': error,
