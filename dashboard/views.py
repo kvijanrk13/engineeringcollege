@@ -3223,6 +3223,208 @@ def generate_student_pdf_file(request, student_id):
     return response
 
 
+# ==================== SIMPLIFIED STUDENT PDF GENERATION ====================
+def generate_student_pdf_simple(request, student_id):
+    """Simplified student PDF generation - guarantees photo + certificates merged into single PDF."""
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.pdfgen import canvas
+    from pypdf import PdfWriter, PdfReader
+    from PIL import Image as PILImage
+    import io
+
+    student = get_object_or_404(Student, id=student_id)
+    temp_files = []
+
+    try:
+        # Create output PDF
+        output_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        output_pdf_path = output_pdf.name
+        output_pdf.close()
+        temp_files.append(output_pdf_path)
+
+        # Create PDF writer
+        writer = PdfWriter()
+
+        # ---------- 1. Add photo as first page ----------
+        photo_path = None
+        photo_downloaded = None
+
+        # Check local photo first
+        if student.photo:
+            try:
+                if os.path.exists(student.photo.path):
+                    photo_path = student.photo.path
+            except:
+                pass
+
+        # Check photo_url if no local photo
+        if not photo_path and student.photo_url:
+            photo_downloaded, is_pdf = download_remote_asset(student.photo_url, default_suffix='.jpg')
+            if photo_downloaded and os.path.exists(photo_downloaded):
+                photo_path = photo_downloaded
+                temp_files.append(photo_path)
+
+        # If photo exists, convert to PDF and add as first page
+        if photo_path and os.path.exists(photo_path):
+            try:
+                img = PILImage.open(photo_path)
+                if img.mode not in ('RGB', 'L'):
+                    img = img.convert('RGB')
+
+                # Create a PDF page with the image
+                img_buffer = io.BytesIO()
+                c = canvas.Canvas(img_buffer, pagesize=letter)
+                page_width, page_height = letter
+
+                # Scale image to fit
+                img_w, img_h = img.size
+                scale = min((page_width - 40) / img_w, (page_height - 40) / img_h)
+                new_w = img_w * scale
+                new_h = img_h * scale
+
+                # Center the image
+                x = (page_width - new_w) / 2
+                y = (page_height - new_h) / 2
+
+                c.drawImage(photo_path, x, y, new_w, new_h)
+                c.save()
+
+                img_buffer.seek(0)
+                img_reader = PdfReader(img_buffer)
+                for page in img_reader.pages:
+                    writer.add_page(page)
+                print(f"[PDF] Added photo page")
+            except Exception as e:
+                print(f"[PDF] Photo error: {e}")
+
+        # ---------- 2. Add certificate files ----------
+        cert_fields = [
+            ('cert_achieve', 'cert_achieve_url', 'Achievement'),
+            ('cert_intern', 'cert_intern_url', 'Internship'),
+            ('cert_courses', 'cert_courses_url', 'Courses'),
+            ('cert_sdp', 'cert_sdp_url', 'SDP'),
+            ('cert_extra', 'cert_extra_url', 'Extra'),
+            ('cert_placement', 'cert_placement_url', 'Placement'),
+            ('cert_national', 'cert_national_url', 'National'),
+        ]
+
+        for file_field, url_field, label in cert_fields:
+            file_obj = getattr(student, file_field, None)
+            url_val = getattr(student, url_field, None)
+
+            cert_path = None
+            cert_downloaded = None
+
+            # Check local file first
+            if file_obj:
+                try:
+                    if os.path.exists(file_obj.path):
+                        cert_path = file_obj.path
+                except:
+                    pass
+
+            # Check URL if no local file
+            if not cert_path and url_val:
+                cert_downloaded, is_pdf = download_remote_asset(url_val, default_suffix='.jpg')
+                if cert_downloaded and os.path.exists(cert_downloaded):
+                    cert_path = cert_downloaded
+                    temp_files.append(cert_path)
+
+            if not cert_path or not os.path.exists(cert_path):
+                continue
+
+            try:
+                # Check if it's a PDF or image
+                if cert_path.lower().endswith('.pdf'):
+                    reader = PdfReader(cert_path)
+                    for page in reader.pages:
+                        writer.add_page(page)
+                    print(f"[PDF] Added PDF: {label}")
+                else:
+                    # It's an image - convert to PDF
+                    img = PILImage.open(cert_path)
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+
+                    img_buffer = io.BytesIO()
+                    c = canvas.Canvas(img_buffer, pagesize=letter)
+                    page_width, page_height = letter
+
+                    img_w, img_h = img.size
+                    scale = min((page_width - 40) / img_w, (page_height - 40) / img_h)
+                    new_w = img_w * scale
+                    new_h = img_h * scale
+                    x = (page_width - new_w) / 2
+                    y = (page_height - new_h) / 2
+
+                    c.drawImage(cert_path, x, y, new_w, new_h)
+                    c.save()
+
+                    img_buffer.seek(0)
+                    img_reader = PdfReader(img_buffer)
+                    for page in img_reader.pages:
+                        writer.add_page(page)
+                    print(f"[PDF] Added image: {label}")
+            except Exception as e:
+                print(f"[PDF] Cert error ({label}): {e}")
+
+        # ---------- 3. Write final PDF ----------
+        if len(writer.pages) == 0:
+            # No files - just create a simple info page
+            c = canvas.Canvas(output_pdf_path, pagesize=letter)
+            c.setFont("Helvetica-Bold", 16)
+            c.drawString(100, 750, f"Student: {student.student_name}")
+            c.setFont("Helvetica", 12)
+            c.drawString(100, 720, f"Hall Ticket: {student.ht_no}")
+            c.drawString(100, 700, f"Year: {student.year or 'N/A'}, Semester: {student.sem or 'N/A'}")
+            c.drawString(100, 680, f"No photo or certificates uploaded yet.")
+            c.save()
+            print("[PDF] Created empty info PDF")
+        else:
+            with open(output_pdf_path, 'wb') as f:
+                writer.write(f)
+            print(f"[PDF] Created merged PDF with {len(writer.pages)} pages")
+
+        # ---------- 4. Upload to Cloudinary ----------
+        pdf_url = None
+        if is_cloudinary_configured():
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    output_pdf_path,
+                    resource_type='raw',
+                    folder='student_pdfs',
+                    public_id=f"student_{student.ht_no}_merged",
+                    overwrite=True
+                )
+                pdf_url = upload_result['secure_url']
+                student.pdf_url = pdf_url
+                student.pdf_generated = True
+                student.pdf_generation_time = timezone.now()
+                student.save(update_fields=['pdf_url', 'pdf_generated', 'pdf_generation_time'])
+                print(f"[PDF] Uploaded: {pdf_url}")
+            except Exception as e:
+                print(f"[PDF] Cloudinary error: {e}")
+
+        # ---------- 5. Return response ----------
+        with open(output_pdf_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
+
+    finally:
+        # Clean up temp files
+        for tf in temp_files:
+            try:
+                if os.path.exists(tf):
+                    os.remove(tf)
+            except:
+                pass
+
+    return response
+
+
 def view_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     url = getattr(student, 'pdf_url', None) or getattr(student, 'pdf_file', None)
