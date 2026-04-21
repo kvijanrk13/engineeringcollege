@@ -4951,7 +4951,7 @@ def merge_student_certificates(request, student_id):
                             merged_count += 1
                         else:
                             # Image - convert to PDF page
-                            img = PILImage.open(cert_file.path)
+                            img = Image.open(cert_file.path)
                             if img.mode != 'RGB': img = img.convert('RGB')
                             img_pdf_buffer = io.BytesIO()
                             c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
@@ -4982,7 +4982,7 @@ def merge_student_certificates(request, student_id):
                                 writer.add_page(pg)
                         else:
                             # Image
-                            img = PILImage.open(downloaded_path)
+                            img = Image.open(downloaded_path)
                             if img.mode != 'RGB': img = img.convert('RGB')
                             img_pdf_buffer = io.BytesIO()
                             c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
@@ -4998,9 +4998,9 @@ def merge_student_certificates(request, student_id):
                             img_pdf_buffer.seek(0)
                             for pg in PdfReader(img_pdf_buffer).pages:
                                 writer.add_page(pg)
-                        
-                        os.unlink(downloaded_path)
-                        merged_count += 1
+
+                            os.unlink(downloaded_path)
+                            merged_count += 1
                         logger.info(f"Successfully merged {cert_type} from URL")
                     else:
                         logger.warning(f"Failed to download {cert_type}")
