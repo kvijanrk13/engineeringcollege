@@ -386,7 +386,7 @@
 </div>
 
 <div class="form-container">
-    <h1 class="page-title">ADD NEW STUDENT</h1>
+    <h1 class="page-title">{% if student %}EDIT STUDENT: {{ student.student_name }}{% else %}ADD NEW STUDENT{% endif %}</h1>
 
     <form method="POST" enctype="multipart/form-data" id="addStudentForm">
         {% csrf_token %}
@@ -397,40 +397,40 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="required-field">Hall Ticket Number</label>
-                    <input type="text" name="ht_no" placeholder="e.g., 23C11A1201" required>
+                    <input type="text" name="ht_no" value="{{ student.ht_no|default:'' }}" placeholder="e.g., 23C11A1201" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Student Name</label>
-                    <input type="text" name="student_name" placeholder="Full Name" required>
+                    <input type="text" name="student_name" value="{{ student.student_name|default:'' }}" placeholder="Full Name" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Father's Name</label>
-                    <input type="text" name="father_name" placeholder="Father's Full Name" required>
+                    <input type="text" name="father_name" value="{{ student.father_name|default:'' }}" placeholder="Father's Full Name" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Mother's Name</label>
-                    <input type="text" name="mother_name" placeholder="Mother's Full Name" required>
+                    <input type="text" name="mother_name" value="{{ student.mother_name|default:'' }}" placeholder="Mother's Full Name" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Gender</label>
                     <select name="gender" required>
                         <option value="">Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="Male" {% if student.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if student.gender == 'Female' %}selected{% endif %}>Female</option>
+                        <option value="Other" {% if student.gender == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Date of Birth</label>
-                    <input type="date" name="dob" required>
+                    <input type="date" name="dob" value="{{ student.dob|date:'Y-m-d'|default:'' }}" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Age</label>
-                    <input type="number" name="age" placeholder="Age" required>
+                    <input type="number" name="age" value="{{ student.age|default:'' }}" placeholder="Age" required>
                 </div>
                 <div class="form-group">
                     <label>Nationality</label>
-                    <input type="text" name="nationality" value="Indian">
+                    <input type="text" name="nationality" value="{{ student.nationality|default:'Indian' }}">
                 </div>
             </div>
         </div>
@@ -443,41 +443,41 @@
                     <label>Category</label>
                     <select name="category">
                         <option value="">Select Category</option>
-                        <option value="General">General</option>
-                        <option value="OBC">OBC</option>
-                        <option value="SC">SC</option>
-                        <option value="ST">ST</option>
+                        <option value="General" {% if student.category == 'General' %}selected{% endif %}>General</option>
+                        <option value="OBC" {% if student.category == 'OBC' %}selected{% endif %}>OBC</option>
+                        <option value="SC" {% if student.category == 'SC' %}selected{% endif %}>SC</option>
+                        <option value="ST" {% if student.category == 'ST' %}selected{% endif %}>ST</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Religion</label>
-                    <input type="text" name="religion" placeholder="Religion">
+                    <input type="text" name="religion" value="{{ student.religion|default:'' }}" placeholder="Religion">
                 </div>
                 <div class="form-group">
                     <label>Blood Group</label>
                     <select name="blood_group">
                         <option value="">Select Blood Group</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
+                        <option value="A+" {% if student.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                        <option value="A-" {% if student.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                        <option value="B+" {% if student.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                        <option value="B-" {% if student.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                        <option value="O+" {% if student.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                        <option value="O-" {% if student.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                        <option value="AB+" {% if student.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                        <option value="AB-" {% if student.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Aadhar Number</label>
-                    <input type="text" name="aadhar" placeholder="12-digit Aadhar" required>
+                    <input type="text" name="aadhar" value="{{ student.aadhar|default:'' }}" placeholder="12-digit Aadhar" required>
                 </div>
                 <div class="form-group">
                     <label>APAAR ID</label>
-                    <input type="text" name="apaar_id" placeholder="APAAR ID">
+                    <input type="text" name="apaar_id" value="{{ student.apaar_id|default:'' }}" placeholder="APAAR ID">
                 </div>
                 <div class="form-group">
                     <label class="required-field">Address</label>
-                    <textarea name="address" rows="3" placeholder="Full Address" required></textarea>
+                    <textarea name="address" rows="3" placeholder="Full Address" required>{{ student.address|default:'' }}</textarea>
                 </div>
             </div>
         </div>
@@ -488,15 +488,15 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label class="required-field">Parent Phone</label>
-                    <input type="text" name="parent_phone" placeholder="Parent's Mobile Number" required>
+                    <input type="text" name="parent_phone" value="{{ student.parent_phone|default:'' }}" placeholder="Parent's Mobile Number" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Student Phone</label>
-                    <input type="text" name="student_phone" placeholder="Student's Mobile Number" required>
+                    <input type="text" name="student_phone" value="{{ student.student_phone|default:'' }}" placeholder="Student's Mobile Number" required>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Email</label>
-                    <input type="email" name="email" placeholder="student@anurag.ac.in" required>
+                    <input type="email" name="email" value="{{ student.email|default:'' }}" placeholder="student@anurag.ac.in" required>
                 </div>
             </div>
         </div>
@@ -509,25 +509,25 @@
                     <label>TASK Registered</label>
                     <select name="task_registered">
                         <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+                        <option value="Yes" {% if student.task_registered == 'Yes' %}selected{% endif %}>Yes</option>
+                        <option value="No" {% if student.task_registered == 'No' %}selected{% endif %}>No</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>TASK Username</label>
-                    <input type="text" name="task_username" placeholder="TASK Username">
+                    <input type="text" name="task_username" value="{{ student.task_username|default:'' }}" placeholder="TASK Username">
                 </div>
                 <div class="form-group">
                     <label>CSI Registered</label>
                     <select name="csi_registered">
                         <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
+                        <option value="Yes" {% if student.csi_registered == 'Yes' %}selected{% endif %}>Yes</option>
+                        <option value="No" {% if student.csi_registered == 'No' %}selected{% endif %}>No</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>CSI Membership ID</label>
-                    <input type="text" name="csi_membership_id" placeholder="CSI Membership ID">
+                    <input type="text" name="csi_membership_id" value="{{ student.csi_membership_id|default:'' }}" placeholder="CSI Membership ID">
                 </div>
             </div>
         </div>
@@ -540,49 +540,49 @@
                     <label class="required-field">Admission Type</label>
                     <select name="admission_type" required>
                         <option value="">Select Type</option>
-                        <option value="Management">Management</option>
-                        <option value="EAMCET">EAMCET</option>
-                        <option value="ECET">ECET</option>
-                        <option value="Other">Other</option>
+                        <option value="Management" {% if student.admission_type == 'Management' %}selected{% endif %}>Management</option>
+                        <option value="EAMCET" {% if student.admission_type == 'EAMCET' %}selected{% endif %}>EAMCET</option>
+                        <option value="ECET" {% if student.admission_type == 'ECET' %}selected{% endif %}>ECET</option>
+                        <option value="Other" {% if student.admission_type == 'Other' %}selected{% endif %}>Other</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Other Admission Details</label>
-                    <input type="text" name="other_admission_details" placeholder="If other, specify">
+                    <input type="text" name="other_admission_details" value="{{ student.other_admission_details|default:'' }}" placeholder="If other, specify">
                 </div>
                 <div class="form-group">
                     <label>EAMCET Rank</label>
-                    <input type="number" name="eamcet_rank" placeholder="EAMCET Rank">
+                    <input type="number" name="eamcet_rank" value="{{ student.eamcet_rank|default:'' }}" placeholder="EAMCET Rank">
                 </div>
                 <div class="form-group">
                     <label class="required-field">Year</label>
                     <select name="year" required>
                         <option value="">Select Year</option>
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
+                        <option value="1" {% if student.year == 1 %}selected{% endif %}>1st Year</option>
+                        <option value="2" {% if student.year == 2 %}selected{% endif %}>2nd Year</option>
+                        <option value="3" {% if student.year == 3 %}selected{% endif %}>3rd Year</option>
+                        <option value="4" {% if student.year == 4 %}selected{% endif %}>4th Year</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="required-field">Semester</label>
                     <select name="sem" required>
                         <option value="">Select Semester</option>
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
+                        <option value="1" {% if student.sem == 1 %}selected{% endif %}>Semester 1</option>
+                        <option value="2" {% if student.sem == 2 %}selected{% endif %}>Semester 2</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>SSC Marks (%)</label>
-                    <input type="number" step="0.01" name="ssc_marks" placeholder="SSC Percentage">
+                    <input type="number" step="0.01" name="ssc_marks" value="{{ student.ssc_marks|default:'' }}" placeholder="SSC Percentage">
                 </div>
                 <div class="form-group">
                     <label>Intermediate Marks (%)</label>
-                    <input type="number" step="0.01" name="inter_marks" placeholder="Intermediate Percentage">
+                    <input type="number" step="0.01" name="inter_marks" value="{{ student.inter_marks|default:'' }}" placeholder="Intermediate Percentage">
                 </div>
                 <div class="form-group">
                     <label>CGPA</label>
-                    <input type="number" step="0.01" name="cgpa" placeholder="Current CGPA">
+                    <input type="number" step="0.01" name="cgpa" value="{{ student.cgpa|default:'' }}" placeholder="Current CGPA">
                 </div>
             </div>
         </div>
@@ -593,19 +593,19 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>RTRP Project Title</label>
-                    <input type="text" name="rtrp_project_title" placeholder="RTRP Project Title">
+                    <input type="text" name="rtrp_project_title" value="{{ student.rtrp_project_title|default:'' }}" placeholder="RTRP Project Title">
                 </div>
                 <div class="form-group">
                     <label>Internship Title</label>
-                    <input type="text" name="intern_title" placeholder="Internship Title">
+                    <input type="text" name="intern_title" value="{{ student.intern_title|default:'' }}" placeholder="Internship Title">
                 </div>
                 <div class="form-group">
                     <label>Final Project Title</label>
-                    <input type="text" name="final_project_title" placeholder="Final Year Project Title">
+                    <input type="text" name="final_project_title" value="{{ student.final_project_title|default:'' }}" placeholder="Final Year Project Title">
                 </div>
                 <div class="form-group">
                     <label>Other Training</label>
-                    <textarea name="other_training" rows="2" placeholder="Other training details"></textarea>
+                    <textarea name="other_training" rows="2" placeholder="Other training details">{{ student.other_training|default:'' }}</textarea>
                 </div>
             </div>
         </div>
@@ -613,10 +613,16 @@
         <!-- Photo Upload -->
         <div class="form-section">
             <h3 class="section-title">Student Photo</h3>
+            {% if student.photo_url or student.photo %}
+            <div style="margin-bottom: 15px; text-align: center;">
+                <p>Current Photo:</p>
+                <img src="{% if student.photo_url %}{{ student.photo_url }}{% else %}{{ student.photo.url }}{% endif %}" alt="Current Photo" style="max-width: 150px; border: 1px solid #0f0;">
+            </div>
+            {% endif %}
             <div class="file-upload" onclick="document.getElementById('photoInput').click()">
                 <i>📷</i>
                 <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;">
-                <label for="photoInput">Click to upload student photo</label>
+                <label for="photoInput">{% if student.photo_url or student.photo %}Click to Change Photo{% else %}Click to upload student photo{% endif %}</label>
                 <div class="help-text">Supported formats: JPG, PNG (Max size: 5MB)</div>
             </div>
         </div>
@@ -628,36 +634,57 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Achievement Certificates</label>
+                        {% if student.cert_achieve_url or student.cert_achieve %}
+                        <div class="help-text"><a href="{% if student.cert_achieve_url %}{{ student.cert_achieve_url }}{% else %}{{ student.cert_achieve.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload achievement certificates (PDF/Image)</div>
                     </div>
                     <div class="form-group">
                         <label>Internship Certificates</label>
+                        {% if student.cert_intern_url or student.cert_intern %}
+                        <div class="help-text"><a href="{% if student.cert_intern_url %}{{ student.cert_intern_url }}{% else %}{{ student.cert_intern.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload internship certificates (PDF/Image)</div>
                     </div>
                     <div class="form-group">
                         <label>Course Certificates</label>
+                        {% if student.cert_courses_url or student.cert_courses %}
+                        <div class="help-text"><a href="{% if student.cert_courses_url %}{{ student.cert_courses_url }}{% else %}{{ student.cert_courses.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload course completion certificates</div>
                     </div>
                     <div class="form-group">
                         <label>SDP Certificates</label>
+                        {% if student.cert_sdp_url or student.cert_sdp %}
+                        <div class="help-text"><a href="{% if student.cert_sdp_url %}{{ student.cert_sdp_url }}{% else %}{{ student.cert_sdp.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload Skill Development Program certificates</div>
                     </div>
                     <div class="form-group">
                         <label>Extracurricular Certificates</label>
+                        {% if student.cert_extra_url or student.cert_extra %}
+                        <div class="help-text"><a href="{% if student.cert_extra_url %}{{ student.cert_extra_url }}{% else %}{{ student.cert_extra.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload extracurricular activity certificates</div>
                     </div>
                     <div class="form-group">
                         <label>Placement Certificates</label>
+                        {% if student.cert_placement_url or student.cert_placement %}
+                        <div class="help-text"><a href="{% if student.cert_placement_url %}{{ student.cert_placement_url }}{% else %}{{ student.cert_placement.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload placement offer letters</div>
                     </div>
                     <div class="form-group">
                         <label>National Exam Certificates</label>
+                        {% if student.cert_national_url or student.cert_national %}
+                        <div class="help-text"><a href="{% if student.cert_national_url %}{{ student.cert_national_url }}{% else %}{{ student.cert_national.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
+                        {% endif %}
                         <input type="file" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
                         <div class="help-text">Upload national exam certificates</div>
                     </div>
@@ -670,7 +697,7 @@
 
         <!-- Form Actions -->
         <div class="form-actions">
-            <button type="submit" class="btn-submit">SAVE STUDENT</button>
+            <button type="submit" class="btn-submit">{% if student %}UPDATE STUDENT{% else %}SAVE STUDENT{% endif %}</button>
             <a href="{% url 'dashboard:students' %}" class="btn-cancel">CANCEL</a>
         </div>
     </form>

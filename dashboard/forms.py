@@ -22,7 +22,8 @@ class StudentForm(forms.ModelForm):
             'task_registered', 'task_username', 'csi_registered', 'csi_membership_id',
             'admission_type', 'other_admission_details', 'eamcet_rank',
             'rtrp_project_title', 'intern_title', 'final_project_title', 'other_training',
-            'photo'
+            'photo', 'cert_achieve', 'cert_intern', 'cert_courses', 'cert_sdp',
+            'cert_extra', 'cert_placement', 'cert_national'
         ]
         widgets = {
             'dob': forms.DateInput(attrs={'type': 'date'}),
