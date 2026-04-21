@@ -99,6 +99,16 @@ def is_cloudinary_configured():
     return getattr(settings, 'CLOUDINARY_CONFIGURED', False)
 
 
+def calculate_correct_age(dob):
+    """Return accurate age in years from a date object."""
+    if not dob:
+        return None
+    today = date.today()
+    return today.year - dob.year - (
+        (today.month, today.day) < (dob.month, dob.day)
+    )
+
+
 if is_cloudinary_configured():
     try:
         cloud_name = getattr(settings, 'CLOUDINARY_CLOUD_NAME', None)
@@ -1112,29 +1122,7 @@ def student_detail(request, student_id):
         return redirect('dashboard:student_login')
     student = get_object_or_404(Student, id=student_id)
 
-    # Populate URLs from CloudinaryUpload if not set
-    cloudinary_uploads = CloudinaryUpload.objects.filter(student=student)
-    upload_map = {}
-    for upload in cloudinary_uploads:
-        upload_map[upload.upload_type] = upload.cloudinary_url
-
-    # Set photo_url if not set and we have a Cloudinary upload
-    if not student.photo_url and 'photos' in upload_map:
-        student.photo_url = upload_map['photos']
-
-    # Set cert URLs
-    cert_type_map = {
-        'cert_achieve_url': 'achievement',
-        'cert_intern_url': 'internship',
-        'cert_courses_url': 'courses',
-        'cert_sdp_url': 'sdp',
-        'cert_extra_url': 'extra',
-        'cert_placement_url': 'placement',
-        'cert_national_url': 'national',
-    }
-    for url_field, upload_type in cert_type_map.items():
-        if not getattr(student, url_field) and upload_type in upload_map:
-            setattr(student, url_field, upload_map[upload_type])
+    # Student URLs are already stored directly on the model
 
     # Automatically generate PDF if it doesn't exist and student has photo/certificates
     if not student.pdf_url and not student.pdf_generated:
@@ -2465,19 +2453,7 @@ def students_data(request):
     paginator = Paginator(qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
-    # Populate URLs from CloudinaryUpload for students in this page
-    student_ids = [s.id for s in page_obj]
-    cloudinary_uploads = CloudinaryUpload.objects.filter(student_id__in=student_ids)
-    upload_map = {}
-    for upload in cloudinary_uploads:
-        if upload.student_id not in upload_map:
-            upload_map[upload.student_id] = {}
-        upload_map[upload.student_id][upload.upload_type] = upload.cloudinary_url
-
-    for student in page_obj:
-        student_uploads = upload_map.get(student.id, {})
-        if not student.photo_url and 'photos' in student_uploads:
-            student.photo_url = student_uploads['photos']
+    # Student photo URLs are already stored directly on the model
 
     return render(request, "dashboard/students_data.html", {
         "title": "Students Data", "students": page_obj,
@@ -2574,6 +2550,15 @@ def add_student(request):
                 cert_sdp=None, cert_extra=None, cert_placement=None, cert_national=None,
             )
             student.save()
+
+            # Calculate correct age from DOB
+            if student.dob:
+                try:
+                    student.age = calculate_correct_age(student.dob)
+                    student.save(update_fields=['age'])
+                except Exception:
+                    pass
+
             files_up, files_lo = [], []
             
             # Handle photo - Always try Cloudinary first if configured
@@ -2721,7 +2706,15 @@ def edit_student(request, student_id):
             # Let's see if certificates are in request.FILES for editing too.
             
             updated_student = form.save()
-            
+
+            # Calculate correct age from DOB if DOB was updated
+            if updated_student.dob:
+                try:
+                    updated_student.age = calculate_correct_age(updated_student.dob)
+                    updated_student.save(update_fields=['age'])
+                except Exception:
+                    pass
+
             # Check for certificates in POST/FILES even if not in form
             cert_fields = [
                 ('cert_achieve', 'achievement', 'cert_achieve_url'), 
@@ -2914,158 +2907,310 @@ def generate_student_pdf(student):
 
 
 def generate_student_pdf_file(request, student_id):
-    import shutil
+    import io, shutil
     student = get_object_or_404(Student, id=student_id)
-    styles = getSampleStyleSheet()
-    photo_path, cert_image_files, cert_pdf_files, collected_temp_files = collect_student_files(student)
-    temp_files = list(collected_temp_files)
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    main_pdf_path = tmp.name
-    tmp.close()
-    temp_files.append(main_pdf_path)
-    doc = SimpleDocTemplate(main_pdf_path, pagesize=A4)
-    elems = []
-    elems.append(Paragraph("""<para alignment='center'>
-        <font name='Helvetica-Bold' size='16' color='darkblue'>ANURAG ENGINEERING COLLEGE</font><br/>
-        <font name='Helvetica' size='12' color='navy'>DEPARTMENT OF INFORMATION TECHNOLOGY</font><br/><br/>
-        <font name='Helvetica-Bold' size='14'>STUDENT PROFILE</font></para>""", styles['Normal']))
-    elems.append(Spacer(1, 0.2 * inch))
-    elems.append(HRFlowable(width="100%", thickness=2, color=colors.darkblue))
-    elems.append(Spacer(1, 0.2 * inch))
-    photo_img = None
 
+    # ── Recalculate age correctly ──────────────────────────
+    correct_age = None
+    if student.dob:
+        try:
+            from datetime import date as _date
+            d = student.dob if hasattr(student.dob, 'year') else _date.fromisoformat(str(student.dob))
+            correct_age = d.year  # placeholder, computed below
+            today = _date.today()
+            correct_age = today.year - d.year - ((today.month, today.day) < (d.month, d.day))
+        except Exception:
+            correct_age = student.age
+
+    styles = getSampleStyleSheet()
+    temp_files = []
+
+    # ── 1. Download/locate photo ───────────────────────────
+    photo_path = None
+
+    # Priority 1: local FileField
+    if student.photo and getattr(student.photo, 'name', ''):
+        try:
+            lp = student.photo.path
+            if os.path.exists(lp):
+                photo_path = lp
+        except Exception:
+            pass
+
+    # Priority 2: cloudinary_photo_url or photo.url
+    if not photo_path:
+        photo_url = getattr(student, 'photo_url', None) or getattr(student, 'cloudinary_photo_url', None)
+        if not photo_url and student.photo and getattr(student.photo, 'name', ''):
+            try:
+                photo_url = student.photo.url
+            except Exception:
+                pass
+        if photo_url and photo_url.startswith('http'):
+            try:
+                r = requests.get(photo_url, timeout=20)
+                if r.status_code == 200:
+                    ext = '.png' if 'png' in r.headers.get('content-type', '') else '.jpg'
+                    tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                    tp.write(r.content)
+                    tp.close()
+                    photo_path = tp.name
+                    temp_files.append(photo_path)
+            except Exception as e:
+                logger.error(f"Photo download error: {e}")
+
+    # ── 2. Build info PDF with ReportLab ───────────────────
+    tmp_info = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+    temp_files.append(tmp_info.name)
+    doc = SimpleDocTemplate(tmp_info.name, pagesize=A4,
+                            leftMargin=0.6*inch, rightMargin=0.6*inch,
+                            topMargin=0.6*inch, bottomMargin=0.6*inch)
+    elems = []
+
+    # Header
+    header_style = ParagraphStyle('hdr', parent=styles['Normal'],
+                                  fontSize=16, fontName='Helvetica-Bold',
+                                  alignment=1, textColor=colors.darkblue, spaceAfter=2)
+    elems.append(Paragraph("ANURAG ENGINEERING COLLEGE", header_style))
+    elems.append(Paragraph("<font size='12' color='navy'><b>DEPARTMENT OF INFORMATION TECHNOLOGY</b></font>",
+                           styles['Normal']))
+    elems.append(Spacer(1, 4))
+    elems.append(Paragraph("<b>STUDENT PROFILE</b>",
+                           ParagraphStyle('sp', parent=styles['Normal'], fontSize=14, alignment=1, spaceAfter=6)))
+    elems.append(HRFlowable(width='100%', thickness=2, color=colors.darkblue))
+    elems.append(Spacer(1, 8))
+
+    # Photo + title row
     if photo_path:
         try:
-            photo_img = Image(photo_path, width=1.5 * inch, height=1.8 * inch)
+            photo_img = Image(photo_path, width=1.4*inch, height=1.7*inch)
+            hdr_tbl = Table([
+                [Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]
+            ], colWidths=[4.7*inch, 1.5*inch])
+            hdr_tbl.setStyle(TableStyle([
+                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+                ('ALIGN', (1,0), (1,0), 'RIGHT'),
+            ]))
+            elems.append(hdr_tbl)
         except Exception as e:
-            logger.error(f"Error creating ReportLab image: {e}")
-
-    if photo_img:
-        ht = Table([[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]],
-                   colWidths=[4.5 * inch, 1.5 * inch])
-        ht.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('ALIGN', (1, 0), (1, 0), 'RIGHT')]))
-        elems.append(ht)
+            logger.error(f"Photo embed error: {e}")
+            elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
     else:
         elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
-    elems.append(Spacer(1, 0.2 * inch))
+
+    elems.append(Spacer(1, 8))
+
+    # Info fields — use correct age
     fields = [
-        ("Hall Ticket No", student.ht_no), ("Name", student.student_name),
-        ("Father Name", student.father_name), ("Mother Name", student.mother_name),
-        ("Gender", student.gender), ("Date of Birth", student.dob), ("Age", student.age),
-        ("Nationality", student.nationality or "Indian"), ("Category", student.category or "N/S"),
-        ("Religion", student.religion or "N/S"), ("Blood Group", student.blood_group or "N/S"),
-        ("Aadhar Number", student.aadhar), ("APAAR ID", student.apaar_id or "N/S"),
-        ("Address", student.address), ("Parent Phone", student.parent_phone),
-        ("Student Phone", student.student_phone), ("Email", student.email),
+        ("Hall Ticket No", student.ht_no),
+        ("Name", student.student_name),
+        ("Father Name", student.father_name),
+        ("Mother Name", student.mother_name),
+        ("Gender", student.gender),
+        ("Date of Birth", str(student.dob) if student.dob else "N/A"),
+        ("Age", str(correct_age) if correct_age is not None else (str(student.age) if student.age else "N/A")),
+        ("Nationality", student.nationality or "Indian"),
+        ("Category", student.category or "N/A"),
+        ("Religion", student.religion or "N/A"),
+        ("Blood Group", student.blood_group or "N/A"),
+        ("Aadhar Number", student.aadhar or "N/A"),
+        ("APAAR ID", student.apaar_id or "N/A"),
+        ("Address", student.address or "N/A"),
+        ("Parent Phone", student.parent_phone or "N/A"),
+        ("Student Phone", student.student_phone or "N/A"),
+        ("Email", student.email or "N/A"),
         ("TASK Registered", student.task_registered or "No"),
         ("TASK Username", student.task_username or "N/A"),
         ("CSI Registered", student.csi_registered or "No"),
         ("CSI Membership ID", student.csi_membership_id or "N/A"),
-        ("Admission Type", student.admission_type),
+        ("Admission Type", student.admission_type or "N/A"),
         ("Other Admission Details", student.other_admission_details or "N/A"),
-        ("EAMCET Rank", student.eamcet_rank or "N/A"),
-        ("Year", student.year), ("Semester", student.sem),
-        ("SSC Marks (%)", student.ssc_marks or "N/A"),
-        ("Intermediate Marks (%)", student.inter_marks or "N/A"),
-        ("CGPA", student.cgpa or "N/A"),
+
+        ("EAMCET Rank", str(student.eamcet_rank) if student.eamcet_rank else "N/A"),
+        ("Year", str(student.year) if student.year else "N/A"),
+        ("Semester", str(student.sem) if student.sem else "N/A"),
+        ("SSC Marks (%)", str(student.ssc_marks) if student.ssc_marks else "N/A"),
+        ("Intermediate Marks (%)", str(student.inter_marks) if student.inter_marks else "N/A"),
+        ("CGPA", str(student.cgpa) if student.cgpa else "N/A"),
         ("RTRP Project Title", student.rtrp_project_title or "N/A"),
         ("Internship Title", student.intern_title or "N/A"),
         ("Final Project Title", student.final_project_title or "N/A"),
         ("Other Training", student.other_training or "N/A"),
     ]
-    
-    # Add Certificates Summary to fields
-    cert_status = []
-    if student.cert_achieve or student.cert_achieve_url: cert_status.append("Achievement")
-    if student.cert_intern or student.cert_intern_url: cert_status.append("Internship")
-    if student.cert_courses or student.cert_courses_url: cert_status.append("Courses")
-    if student.cert_sdp or student.cert_sdp_url: cert_status.append("SDP")
-    if student.cert_extra or student.cert_extra_url: cert_status.append("Extracurricular")
-    if student.cert_placement or student.cert_placement_url: cert_status.append("Placement")
-    if student.cert_national or student.cert_national_url: cert_status.append("National Exam")
-    
-    fields.append(("CERTIFICATES UPLOADED", ", ".join(cert_status) if cert_status else "None"))
-    
-    tbl = Table([[Paragraph(f"<b>{l}</b>", styles['Normal']),
-                  Paragraph(str(v) if v else "N/A", styles['Normal'])] for l, v in fields],
-                colWidths=[2.2 * inch, 4.3 * inch])
+
+    # Certificates summary row
+    cert_labels = []
+    cert_field_pairs = [
+        ('cert_achieve', 'cert_achieve_url', 'Achievement'),
+        ('cert_intern',  'cert_intern_url',  'Internship'),
+        ('cert_courses', 'cert_courses_url', 'Courses'),
+        ('cert_sdp',     'cert_sdp_url',     'SDP'),
+        ('cert_extra',   'cert_extra_url',   'Extracurricular'),
+        ('cert_placement','cert_placement_url','Placement'),
+        ('cert_national','cert_national_url', 'National Exam'),
+    ]
+    for ff, uf, label in cert_field_pairs:
+        if getattr(student, ff, None) or getattr(student, uf, None):
+            cert_labels.append(label)
+    fields.append(("CERTIFICATES UPLOADED", ", ".join(cert_labels) if cert_labels else "None"))
+
+    tbl = Table(
+        [[Paragraph(f"<b>{lbl}</b>", styles['Normal']),
+          Paragraph(str(val) if val else "N/A", styles['Normal'])] for lbl, val in fields],
+        colWidths=[2.2*inch, 4.2*inch]
+    )
     tbl.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('PADDING', (0, 0), (-1, -1), 6),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'), ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID',       (0,0), (-1,-1), 0.5, colors.grey),
+        ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f0f0f0')),
+        ('VALIGN',     (0,0), (-1,-1), 'TOP'),
+        ('PADDING',    (0,0), (-1,-1), 5),
+        ('FONTNAME',   (0,0), (0,-1), 'Helvetica-Bold'),
+        ('FONTSIZE',   (0,0), (-1,-1), 9),
     ]))
     elems.append(tbl)
-    elems.append(Spacer(1, 0.2 * inch))
-    elems.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", styles['Normal']))
+    elems.append(Spacer(1, 8))
+    elems.append(Paragraph(
+        f"<font size='8' color='grey'>Generated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}</font>",
+        styles['Normal']
+    ))
+
     doc.build(elems)
+    tmp_info.close()
+    print(f"  ✅ Info PDF: {tmp_info.name}")
+
+    # ── 3. Merge info PDF + all certificates ──────────────
+    from pypdf import PdfWriter, PdfReader
+
     writer = PdfWriter()
-    readers = [] # Keep readers in scope
-    try:
-        main_reader = PdfReader(main_pdf_path)
-        readers.append(main_reader)
-        for pg in main_reader.pages:
-            writer.add_page(pg)
-    except Exception as e:
-        logger.error(f"Error adding main PDF: {e}")
-    asset_readers, asset_temp_files = append_assets_to_writer(
-        writer,
-        pdf_files=cert_pdf_files,
-        image_files=cert_image_files
-    )
-    readers.extend(asset_readers)
-    temp_files.extend(asset_temp_files)
-    fp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    final_path = fp.name
-    fp.close()
-    temp_files.append(final_path)
-    try:
-        with open(final_path, "wb") as out:
-            writer.write(out)
-    except Exception as e:
-        logger.error(f"Error writing final merged PDF: {e}")
-        shutil.copy(main_pdf_path, final_path)
+    readers_keep = []
+
+    def _add_to_writer(path_or_bytes, label=""):
+        """Add a file (path or bytes) to the PdfWriter."""
+        if not path_or_bytes:
+            return
+        try:
+            # If bytes, write to temp
+            if isinstance(path_or_bytes, (bytes, bytearray)):
+                t = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                t.write(path_or_bytes)
+                t.close()
+                path_or_bytes = t.name
+                temp_files.append(path_or_bytes)
+
+            if not os.path.exists(path_or_bytes):
+                return
+
+            with open(path_or_bytes, 'rb') as fh:
+                header = fh.read(4)
+
+            if header.startswith(b'%PDF'):
+                reader = PdfReader(path_or_bytes)
+                readers_keep.append(reader)
+                for pg in reader.pages:
+                    writer.add_page(pg)
+                print(f"  ✅ Merged PDF ({len(reader.pages)}p): {label or os.path.basename(path_or_bytes)}")
+            else:
+                # Image → PDF
+                img = PILImage.open(path_or_bytes)
+                if img.mode not in ('RGB', 'L'):
+                    img = img.convert('RGB')
+                tp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                img.save(tp.name, 'PDF', resolution=100.0)
+                tp.close()
+                temp_files.append(tp.name)
+                reader = PdfReader(tp.name)
+                readers_keep.append(reader)
+                for pg in reader.pages:
+                    writer.add_page(pg)
+                print(f"  ✅ Merged image: {label or os.path.basename(path_or_bytes)}")
+        except Exception as e:
+            logger.error(f"Merge error ({label}): {e}")
+
+    def _fetch_and_add(file_field, url_field, label):
+        """Get a cert file (local or URL) and add it to the writer."""
+        ff = getattr(student, file_field, None)
+        url = getattr(student, url_field, None)
+
+        # Local file first
+        if ff and getattr(ff, 'name', ''):
+            try:
+                lp = ff.path
+                if os.path.exists(lp):
+                    _add_to_writer(lp, label)
+                    return
+            except Exception:
+                pass
+
+        # URL (Cloudinary or relative)
+        src = url or (ff.url if ff and getattr(ff, 'name', '') else None)
+        if src:
+            if isinstance(src, str) and src.startswith('/'):
+                src = request.build_absolute_uri(src)
+            if isinstance(src, str) and src.startswith('http'):
+                try:
+                    r = requests.get(src, timeout=30)
+                    if r.status_code == 200:
+                        ext = '.pdf' if 'pdf' in r.headers.get('content-type','').lower() else '.jpg'
+                        tp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+                        tp.write(r.content)
+                        tp.close()
+                        temp_files.append(tp.name)
+                        _add_to_writer(tp.name, label)
+                except Exception as e:
+                    logger.error(f"Cert download error ({label}): {e}")
+
+    # Add info PDF
+    _add_to_writer(tmp_info.name, "Info Page")
+
+    # Add all certificates
+    for ff_name, uf_name, label in cert_field_pairs:
+        _fetch_and_add(ff_name, uf_name, label)
+
+    # Write final merged PDF
+    final_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+    final_tmp.close()
+    temp_files.append(final_tmp.name)
+
+    with open(final_tmp.name, 'wb') as out:
+        writer.write(out)
+
+    print(f"  ✅ Final merged PDF: {len(writer.pages)} pages")
+
+    # ── 4. Upload to Cloudinary ────────────────────────────
     if is_cloudinary_configured():
         try:
             ur = cloudinary.uploader.upload(
-                final_path, resource_type="raw", folder="student_generated_pdfs",
-                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}", overwrite=True
+                final_tmp.name, resource_type='raw',
+                folder='student_generated_pdfs',
+                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                overwrite=True
             )
-            student.pdf_url = ur["secure_url"]
+            student.pdf_url = ur['secure_url']
             student.pdf_generated = True
-            student.pdf_generation_time = timezone.now()
-            student.save(update_fields=['pdf_url', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
+            student.save(update_fields=['pdf_url', 'pdf_generated'])
             CloudinaryUpload.objects.create(
                 student=student, upload_type='pdf',
                 cloudinary_url=ur['secure_url'], public_id=ur['public_id'],
                 resource_type=ur['resource_type'],
                 uploaded_by=request.user.username if request.user.is_authenticated else 'Student'
             )
+            print(f"  ✅ Uploaded to Cloudinary: {ur['secure_url']}")
         except Exception as e:
-            logger.error(f"Error uploading student PDF to Cloudinary: {e}")
-    else:
-        try:
-            with open(final_path, 'rb') as pdf_handle:
-                student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
-            student.pdf_generated = True
-            student.pdf_generation_time = timezone.now()
-            student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
-        except Exception as e:
-            logger.error(f"Error saving local student PDF: {e}")
+            logger.error(f"Cloudinary upload error: {e}")
+
+    # ── 5. Return response ─────────────────────────────────
     try:
-        with open(final_path, 'rb') as pf:
+        with open(final_tmp.name, 'rb') as pf:
             response = HttpResponse(pf.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
+    finally:
         for t in temp_files:
             try:
                 if os.path.exists(t):
                     os.remove(t)
             except Exception:
                 pass
-        return response
-    except Exception as e:
-        return HttpResponse(f"Error generating PDF: {e}", status=500)
+
+    return response
 
 
 def view_pdf(request, student_id):
