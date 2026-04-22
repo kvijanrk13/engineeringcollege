@@ -2908,6 +2908,17 @@ def generate_student_pdf(student):
             return None
         try:
             r = requests.get(url, timeout=30)
+            # Fallback for Cloudinary errors
+            if r.status_code in [401, 403] and 'cloudinary.com' in url:
+                try:
+                    public_id = get_cloudinary_public_id(url)
+                    if public_id:
+                        resource = cloudinary.api.resource(public_id)
+                        secure_url = resource.get('secure_url')
+                        if secure_url:
+                            r = requests.get(secure_url, timeout=30)
+                except Exception as cloud_err:
+                    print(f"  [WARN] Cloudinary API fallback failed: {cloud_err}")
             if r.status_code != 200:
                 print(f"  [SKIP] HTTP {r.status_code}: {url}")
                 return None
@@ -3667,9 +3678,12 @@ def view_pdf(request, student_id):
 
 def download_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    url = getattr(student, 'pdf_url', None) or getattr(student, 'pdf_file', None)
-    if url:
-        return redirect(url)
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+    if student.pdf_file and student.pdf_file.url:
+        response = HttpResponse(student.pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
+        return response
     return generate_student_pdf_file(request, student_id)
 
 
