@@ -31,13 +31,13 @@ def upload_certificate_for_student(ht_no, cert_type, file_path):
             return
         
         field_mapping = {
-            'achieve': 'cert_achieve',
-            'intern': 'cert_intern',
-            'courses': 'cert_courses',
-            'sdp': 'cert_sdp',
-            'extra': 'cert_extra',
-            'placement': 'cert_placement',
-            'national': 'cert_national'
+            'achieve': 'cert_achieve_url',
+            'intern': 'cert_intern_url',
+            'courses': 'cert_courses_url',
+            'sdp': 'cert_sdp_url',
+            'extra': 'cert_extra_url',
+            'placement': 'cert_placement_url',
+            'national': 'cert_national_url'
         }
         
         if cert_type not in field_mapping:
@@ -62,6 +62,9 @@ def upload_certificate_for_student(ht_no, cert_type, file_path):
         
         # Update student record
         setattr(student, field_name, result['secure_url'])
+        # Clear the corresponding FileField
+        file_field_name = field_name.replace('_url', '')
+        setattr(student, file_field_name, None)
         student.save()
         
         print(f"✓ Student record updated")

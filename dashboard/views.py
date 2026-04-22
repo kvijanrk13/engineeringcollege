@@ -3584,11 +3584,11 @@ def generate_student_pdf_simple(request, student_id):
 
     # Try photo_url first (Cloudinary URL saved in DB)
     if student.photo_url:
+        photo_url_for_pdf = student.photo_url  # Use direct URL for HTML
         p = _dl(student.photo_url)
         if p:
             local_photo_path = p
-            photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
-            print(f"  ✅ Photo from photo_url: {photo_url_for_pdf}")
+            print(f"  ✅ Photo from photo_url downloaded: {p}")
 
     # Fallback to photo FileField
     if not photo_url_for_pdf and student.photo and getattr(student.photo, 'name', ''):
@@ -3601,11 +3601,11 @@ def generate_student_pdf_simple(request, student_id):
             try:
                 fu = student.photo.url
                 if fu and fu.startswith('http'):
+                    photo_url_for_pdf = fu  # Use direct URL
                     p = _dl(fu)
                     if p:
                         local_photo_path = p
-                        photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
-                        print(f"  ✅ Photo downloaded from FileField URL: {photo_url_for_pdf}")
+                        print(f"  ✅ Photo downloaded from FileField URL: {fu}")
             except Exception:
                 pass
 
