@@ -2162,6 +2162,32 @@ def add_faculty(request):
                 ip_address=request.META.get('REMOTE_ADDR')
             )
 
+            # Ensure the faculty flow (add_faculty_form.html) always attempts
+            # to build a single individual PDF that includes profile photo and docs.
+            try:
+                has_uploads = bool(
+                    faculty.photo or faculty.cloudinary_photo_url or
+                    faculty.aadhar_file or faculty.aadhar_url or
+                    faculty.pan_file or faculty.pan_url or
+                    faculty.apaar_file or faculty.apaar_url or
+                    faculty.scm_file or faculty.scm_url or
+                    faculty.jntuh_biodata or faculty.jntuh_biodata_url or
+                    faculty.ssc_certificate or faculty.ssc_certificate_url or
+                    faculty.inter_certificate or faculty.inter_certificate_url or
+                    faculty.ug_certificate or faculty.ug_certificate_url or
+                    faculty.pg_certificate or faculty.pg_certificate_url or
+                    faculty.phd_certificate or faculty.phd_certificate_url or
+                    faculty.research_proof or faculty.research_proof_url or
+                    faculty.fdp_certificate or faculty.fdp_certificate_url or
+                    faculty.experience_certificates or faculty.experience_certificates_url or
+                    faculty.other_documents or faculty.other_documents_url or
+                    Certificate.objects.filter(faculty=faculty).exists()
+                )
+                if has_uploads:
+                    generate_faculty_pdf(request, faculty.id)
+            except Exception as pdf_e:
+                logger.warning(f"Faculty added, but merged PDF generation failed: {pdf_e}")
+
             messages.success(request, f'Faculty {faculty.staff_name} added successfully!')
             print(f" ✅ Faculty {faculty.employee_code} fully saved. Redirecting to faculty list.")
             return redirect('dashboard:faculty_list')
@@ -2656,6 +2682,23 @@ def add_student(request):
                             setattr(student, fn, local_path)
                             files_lo.append(fn)
             student.save()
+
+            # Ensure the student flow (add_student.html) always attempts
+            # to build a single individual PDF that includes photo + certificates.
+            try:
+                has_uploads = bool(
+                    student.photo or student.photo_url or
+                    student.cert_achieve or student.cert_intern or student.cert_courses or
+                    student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
+                    student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
+                    student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or
+                    student.cert_national_url
+                )
+                if has_uploads:
+                    generate_student_pdf(student)
+            except Exception as pdf_e:
+                logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
+
             if files_up:
                 messages.success(request, f'Student {student.student_name} added! Cloudinary: {", ".join(files_up)}')
             if files_lo:
@@ -3870,6 +3913,17 @@ def generate_faculty_pdf(request, faculty_id):
                 return None
             try:
                 r = requests.get(url, timeout=30)
+                # Fallback for Cloudinary protected links
+                if r.status_code in [401, 403] and 'cloudinary.com' in url:
+                    try:
+                        public_id = get_cloudinary_public_id(url)
+                        if public_id:
+                            resource = cloudinary.api.resource(public_id)
+                            secure_url = resource.get('secure_url')
+                            if secure_url:
+                                r = requests.get(secure_url, timeout=30)
+                    except Exception as cloud_err:
+                        print(f"  [WARN] Cloudinary API fallback failed: {cloud_err}")
                 if r.status_code != 200:
                     print(f"  [SKIP] HTTP {r.status_code}: {url}")
                     return None
@@ -5408,8 +5462,10 @@ def merge_student_certificates(request, student_id):
         writer = PdfWriter()
         merged_count = 0
 
+        photo_path, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        temp_files.extend(collected_temp_files)
+
         # 1. Add the photo if it exists
-        photo_path, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
         if photo_path and os.path.exists(photo_path):
             try:
                 # Convert image to PDF page
@@ -5444,62 +5500,50 @@ def merge_student_certificates(request, student_id):
                 logger.error(f"Error adding photo to merged PDF: {e}")
 
         # 2. Add certificates
-        cert_fields = [
-            ('cert_achieve', 'cert_achieve_url', 'Achievement Certificate'),
-            ('cert_intern', 'cert_intern_url', 'Internship Certificate'),
-            ('cert_courses', 'cert_courses_url', 'Course Certificate'),
-            ('cert_sdp', 'cert_sdp_url', 'SDP Certificate'),
-            ('cert_extra', 'cert_extra_url', 'Extracurricular Certificate'),
-            ('cert_placement', 'cert_placement_url', 'Placement Certificate'),
-            ('cert_national', 'cert_national_url', 'National Exam Certificate'),
-        ]
-
-        for file_field, url_field, cert_type in cert_fields:
-            asset_path, is_pdf = _collect_asset(
-                getattr(student, file_field, None),
-                getattr(student, url_field, None),
-                default_suffix='.jpg'
-            )
-            
-            if asset_path and os.path.exists(asset_path):
+        for cert_path in pdf_files:
+            if cert_path and os.path.exists(cert_path):
                 try:
-                    if is_pdf:
-                        reader = PdfReader(asset_path)
-                        for page in reader.pages:
-                            writer.add_page(page)
-                        merged_count += 1
-                    else:
-                        # Image - convert to PDF page
-                        from PIL import Image
-                        import io
-                        from reportlab.pdfgen import canvas
-                        from reportlab.lib.pagesizes import letter
-
-                        img = Image.open(asset_path)
-                        if img.mode not in ('RGB', 'L'):
-                            img = img.convert('RGB')
-                            
-                        img_pdf_buffer = io.BytesIO()
-                        c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
-                        page_width, page_height = letter
-                        img_width, img_height = img.size
-                        scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
-                        new_width = img_width * scale
-                        new_height = img_height * scale
-                        x = (page_width - new_width) / 2
-                        y = (page_height - new_height) / 2
-                        
-                        c.drawImage(asset_path, x, y, width=new_width, height=new_height)
-                        c.showPage()
-                        c.save()
-                        
-                        img_pdf_buffer.seek(0)
-                        writer.add_page(PdfReader(img_pdf_buffer).pages[0])
-                        merged_count += 1
-                    
-                    logger.info(f"Successfully merged {cert_type}")
+                    reader = PdfReader(cert_path)
+                    for page in reader.pages:
+                        writer.add_page(page)
+                    merged_count += 1
+                    logger.info(f"Successfully merged student PDF asset: {cert_path}")
                 except Exception as e:
-                    logger.warning(f"Failed to merge {cert_type}: {e}")
+                    logger.warning(f"Failed to merge student PDF asset {cert_path}: {e}")
+
+        for image_path in image_files:
+            if image_path and os.path.exists(image_path):
+                try:
+                    # Image - convert to PDF page
+                    from PIL import Image
+                    import io
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import letter
+
+                    img = Image.open(image_path)
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+
+                    img_pdf_buffer = io.BytesIO()
+                    c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                    page_width, page_height = letter
+                    img_width, img_height = img.size
+                    scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
+                    new_width = img_width * scale
+                    new_height = img_height * scale
+                    x = (page_width - new_width) / 2
+                    y = (page_height - new_height) / 2
+
+                    c.drawImage(image_path, x, y, width=new_width, height=new_height)
+                    c.showPage()
+                    c.save()
+
+                    img_pdf_buffer.seek(0)
+                    writer.add_page(PdfReader(img_pdf_buffer).pages[0])
+                    merged_count += 1
+                    logger.info(f"Successfully merged student image asset: {image_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to merge student image asset {image_path}: {e}")
 
         if merged_count == 0:
             messages.error(request, 'No valid photo or certificates could be merged.')
