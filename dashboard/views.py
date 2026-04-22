@@ -2995,6 +2995,124 @@ def generate_student_pdf(student):
             pass
         return None
 
+    def _build_reportlab_info_pdf(student_obj, photo_path=None):
+        """Create a simple student profile PDF without wkhtmltopdf."""
+        import io
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.lib.units import inch
+        from reportlab.platypus import HRFlowable, Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            leftMargin=0.6 * inch,
+            rightMargin=0.6 * inch,
+            topMargin=0.6 * inch,
+            bottomMargin=0.6 * inch,
+        )
+        styles = getSampleStyleSheet()
+        elems = []
+
+        header_style = ParagraphStyle(
+            'hdr', parent=styles['Normal'], fontSize=16,
+            fontName='Helvetica-Bold', alignment=1,
+            textColor=colors.darkblue, spaceAfter=2
+        )
+        elems.append(Paragraph("ANURAG ENGINEERING COLLEGE", header_style))
+        elems.append(Paragraph(
+            "<font size='12' color='navy'><b>DEPARTMENT OF INFORMATION TECHNOLOGY</b></font>",
+            styles['Normal']
+        ))
+        elems.append(Spacer(1, 4))
+        elems.append(Paragraph(
+            "<b>STUDENT PROFILE</b>",
+            ParagraphStyle('sp', parent=styles['Normal'], fontSize=14, alignment=1, spaceAfter=6)
+        ))
+        elems.append(HRFlowable(width='100%', thickness=2, color=colors.darkblue))
+        elems.append(Spacer(1, 8))
+
+        if photo_path and os.path.exists(photo_path):
+            try:
+                photo_img = Image(photo_path, width=1.4 * inch, height=1.7 * inch)
+                hdr_tbl = Table(
+                    [[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]],
+                    colWidths=[4.7 * inch, 1.5 * inch]
+                )
+                hdr_tbl.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                ]))
+                elems.append(hdr_tbl)
+            except Exception as photo_err:
+                logger.warning(f"Student ReportLab photo embed failed: {photo_err}")
+                elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
+        else:
+            elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
+
+        elems.append(Spacer(1, 8))
+
+        fields = [
+            ("Hall Ticket No", student_obj.ht_no),
+            ("Name", student_obj.student_name),
+            ("Father Name", student_obj.father_name),
+            ("Mother Name", student_obj.mother_name),
+            ("Gender", student_obj.gender),
+            ("Date of Birth", str(student_obj.dob) if student_obj.dob else "N/A"),
+            ("Age", str(student_obj.age) if student_obj.age else "N/A"),
+            ("Nationality", student_obj.nationality or "Indian"),
+            ("Category", student_obj.category or "N/A"),
+            ("Religion", student_obj.religion or "N/A"),
+            ("Blood Group", student_obj.blood_group or "N/A"),
+            ("Aadhar Number", student_obj.aadhar or "N/A"),
+            ("APAAR ID", student_obj.apaar_id or "N/A"),
+            ("Address", student_obj.address or "N/A"),
+            ("Parent Phone", student_obj.parent_phone or "N/A"),
+            ("Student Phone", student_obj.student_phone or "N/A"),
+            ("Email", student_obj.email or "N/A"),
+            ("Year", str(student_obj.year) if student_obj.year else "N/A"),
+            ("Semester", str(student_obj.sem) if student_obj.sem else "N/A"),
+            ("SSC Marks", student_obj.ssc_marks or "N/A"),
+            ("Inter Marks", student_obj.inter_marks or "N/A"),
+            ("CGPA", student_obj.cgpa or "N/A"),
+            ("Admission Type", student_obj.admission_type or "N/A"),
+            ("EAMCET Rank", student_obj.eamcet_rank or "N/A"),
+            ("TASK Registered", student_obj.task_registered or "N/A"),
+            ("TASK Username", student_obj.task_username or "N/A"),
+            ("CSI Registered", student_obj.csi_registered or "N/A"),
+            ("CSI Membership ID", student_obj.csi_membership_id or "N/A"),
+            ("RTRP Project", student_obj.rtrp_project_title or "N/A"),
+            ("Internship Title", student_obj.intern_title or "N/A"),
+            ("Final Project", student_obj.final_project_title or "N/A"),
+            ("Other Training", student_obj.other_training or "N/A"),
+        ]
+
+        table_data = [[
+            Paragraph(f"<b>{label}</b>", styles['Normal']),
+            Paragraph(str(value), styles['Normal'])
+        ] for label, value in fields]
+
+        info_table = Table(table_data, colWidths=[2.1 * inch, 4.6 * inch])
+        info_table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('BACKGROUND', (0, 0), (0, -1), colors.whitesmoke),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elems.append(info_table)
+        elems.append(Spacer(1, 12))
+        elems.append(Paragraph(
+            f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}",
+            styles['Normal']
+        ))
+
+        doc.build(elems)
+        pdf_bytes = buffer.getvalue()
+        buffer.close()
+        return pdf_bytes
+
     # ── PHOTO ──────────────────────────────────────────────────
     local_photo_path = None
     photo_url_for_pdf = None
@@ -3036,54 +3154,58 @@ def generate_student_pdf(student):
     # ── GENERATE INFO PDF with pdfkit ─────────────────────────
     html_string = render_to_string('dashboard/student_pdf.html', context)
 
-    if pdfkit is None:
-        print("  [ERR] pdfkit not installed - cannot generate PDF")
-        return None
+    info_pdf_bytes = None
+    used_reportlab_fallback = False
 
-    options = {
-        'page-size': 'A4',
-        'margin-top': '15mm', 'margin-right': '15mm',
-        'margin-bottom': '15mm', 'margin-left': '15mm',
-        'encoding': 'UTF-8',
-        'enable-local-file-access': '',
-        'quiet': '',
-        'no-stop-slow-scripts': None,
-        'javascript-delay': '500',
-        'load-error-handling': 'ignore',
-        'no-outline': None,
-    }
+    if pdfkit is not None:
+        options = {
+            'page-size': 'A4',
+            'margin-top': '15mm', 'margin-right': '15mm',
+            'margin-bottom': '15mm', 'margin-left': '15mm',
+            'encoding': 'UTF-8',
+            'enable-local-file-access': '',
+            'quiet': '',
+            'no-stop-slow-scripts': None,
+            'javascript-delay': '500',
+            'load-error-handling': 'ignore',
+            'no-outline': None,
+        }
 
-    # Cross-platform wkhtmltopdf detection
-    wkhtmltopdf_paths = [
-        r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-        r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-        '/usr/local/bin/wkhtmltopdf',
-        '/usr/bin/wkhtmltopdf',
-        'wkhtmltopdf',
-    ]
+        # Cross-platform wkhtmltopdf detection
+        wkhtmltopdf_paths = [
+            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+            '/usr/local/bin/wkhtmltopdf',
+            '/usr/bin/wkhtmltopdf',
+            'wkhtmltopdf',
+        ]
 
-    wkhtmltopdf_path = None
-    for path in wkhtmltopdf_paths:
-        if os.path.exists(path) or path == 'wkhtmltopdf':
-            try:
-                import subprocess
-                result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    wkhtmltopdf_path = path
-                    break
-            except:
-                continue
+        wkhtmltopdf_path = None
+        for path in wkhtmltopdf_paths:
+            if os.path.exists(path) or path == 'wkhtmltopdf':
+                try:
+                    import subprocess
+                    result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                    if result.returncode == 0:
+                        wkhtmltopdf_path = path
+                        break
+                except:
+                    continue
 
-    try:
-        if wkhtmltopdf_path:
-            config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-            info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
-        else:
-            info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
-        print(f"  ✅ Info PDF generated: {len(info_pdf_bytes)} bytes")
-    except Exception as e:
-        print(f"  [ERR] pdfkit error: {e}")
-        return None
+        try:
+            if wkhtmltopdf_path:
+                config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+                info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
+            else:
+                info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
+            print(f"  ✅ Info PDF generated: {len(info_pdf_bytes)} bytes")
+        except Exception as e:
+            print(f"  [WARN] pdfkit error, using ReportLab fallback: {e}")
+
+    if info_pdf_bytes is None:
+        info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
+        used_reportlab_fallback = True
+        print(f"  ✅ ReportLab fallback info PDF generated: {len(info_pdf_bytes)} bytes")
 
     # ── MERGE: info PDF + all uploaded documents ──────────────
     filename = f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}.pdf"
@@ -3240,6 +3362,9 @@ def generate_student_pdf(student):
     student.pdf_generated = True
     student.pdf_generation_time = timezone.now()
     student.save(update_fields=['pdf_generated', 'pdf_generation_time', 'updated_at'])
+
+    if used_reportlab_fallback:
+        logger.info(f"Student PDF for {student.ht_no} used ReportLab fallback instead of pdfkit/wkhtmltopdf")
 
     print("=== STUDENT PDF GENERATION COMPLETE ===\n")
     return return_url
