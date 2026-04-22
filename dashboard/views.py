@@ -96,6 +96,42 @@ def is_cloudinary_configured():
     return getattr(settings, 'CLOUDINARY_CONFIGURED', False)
 
 
+def upload_file_to_cloudinary(file_path, folder, public_id, resource_type='auto', **kwargs):
+    """Helper to upload file to Cloudinary."""
+    if not is_cloudinary_configured():
+        return None
+    try:
+        result = cloudinary.uploader.upload(
+            file_path, resource_type=resource_type, folder=folder,
+            public_id=public_id, overwrite=True, **kwargs
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Cloudinary upload failed: {e}")
+        return None
+
+
+def get_wkhtmltopdf_path():
+    """Get wkhtmltopdf executable path."""
+    wkhtmltopdf_paths = [
+        r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+        r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+        '/usr/local/bin/wkhtmltopdf',
+        '/usr/bin/wkhtmltopdf',
+        'wkhtmltopdf',
+    ]
+    for path in wkhtmltopdf_paths:
+        if os.path.exists(path) or path == 'wkhtmltopdf':
+            try:
+                import subprocess
+                result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    return path
+            except:
+                continue
+    return None
+
+
 # ==================== HELPER FUNCTIONS ====================
 def get_cloudinary_public_id(url):
     try:
@@ -823,13 +859,6 @@ def append_assets_to_writer(writer, pdf_files=None, image_files=None):
 
 
 # ==================== DEBUG / TEST VIEWS ====================
-def test_template(request):
-    return render(request, 'test.html', {
-        'title': 'Template Test',
-        'message': 'If you can see this, templates are working correctly!'
-    })
-
-
 def test_session(request):
     return JsonResponse({
         'student_logged_in': request.session.get('student_logged_in', False),
@@ -1164,6 +1193,33 @@ def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
 
+@login_required
+def bulk_student_actions(request):
+    if request.method != 'POST':
+        return redirect('dashboard:students_data')
+    action = request.POST.get('bulk_action')
+    student_ids = request.POST.getlist('student_ids')
+    if not student_ids:
+        messages.error(request, 'No students selected.')
+        return redirect('dashboard:students_data')
+    if action == 'generate_pdfs':
+        ok = err = 0
+        for sid in student_ids:
+            try:
+                student = Student.objects.get(id=sid)
+                generate_student_pdf(student)
+                ok += 1
+            except Exception as e:
+                logger.error(f"Error generating PDF for student {sid}: {e}")
+                err += 1
+        messages.success(request, f"Generated PDFs for {ok} students.")
+        if err:
+            messages.warning(request, f"Failed to generate PDFs for {err} students.")
+    else:
+        messages.error(request, 'Invalid bulk action.')
+    return redirect('dashboard:students_data')
+
+
 def student_detail(request, student_id):
     if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
@@ -1374,58 +1430,7 @@ def home(request):
 
 
 @login_required
-def db_test(request):
-    """Simple database test endpoint"""
-    try:
-        from django.db import connection
-        cursor = connection.cursor()
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
-        return HttpResponse(f"Database OK: {result}")
-    except Exception as e:
-        return HttpResponse(f"Database ERROR: {str(e)}", status=500)
 
-
-def debug_dashboard(request):
-    """Debug endpoint to diagnose dashboard issues"""
-    try:
-        debug_info = {
-            'database_connection': 'Testing...',
-            'user_authenticated': request.user.is_authenticated,
-            'user_is_superuser': request.user.is_superuser if request.user.is_authenticated else False,
-            'models_exist': {},
-            'psutil_available': psutil is not None,
-        }
-
-        # Test database connection
-        try:
-            from django.db import connection
-            cursor = connection.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-            debug_info['database_connection'] = 'SUCCESS'
-        except Exception as e:
-            debug_info['database_connection'] = f'ERROR: {str(e)}'
-
-        # Test model existence
-        model_tests = [
-            ('Faculty', Faculty),
-            ('Student', Student),
-            ('Certificate', Certificate),
-            ('CloudinaryUpload', CloudinaryUpload),
-            ('FacultyLog', FacultyLog),
-        ]
-
-        for name, model in model_tests:
-            try:
-                count = model.objects.count()
-                debug_info['models_exist'][name] = f'SUCCESS: {count} records'
-            except Exception as e:
-                debug_info['models_exist'][name] = f'ERROR: {str(e)}'
-
-        return JsonResponse(debug_info, safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e), 'traceback': traceback.format_exc()}, status=500)
 
 
 def admin_dashboard(request):
@@ -2849,6 +2854,17 @@ def edit_student(request, student_id):
 
 
 @login_required
+def generate_student_pdf_view(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    pdf_url = generate_student_pdf(student)
+    if pdf_url:
+        return redirect(pdf_url)
+    else:
+        messages.error(request, "Failed to generate PDF.")
+        return redirect('dashboard:students_data')
+
+
+@login_required
 @csrf_exempt
 def regenerate_student_pdf(request, student_id):
     if request.method != 'POST':
@@ -2872,68 +2888,7 @@ def regenerate_student_pdf(request, student_id):
 
 
 # ==================== PDF MERGE UTILITY (LEGACY) ====================
-def merge_files_legacy(file_list):
-    from pypdf import PdfWriter
-    from PIL import Image
-    merger = PdfWriter()
-    temp_files = []
-    print("\n========== PDF MERGE START ==========")
-    for idx, file in enumerate(file_list):
-        if not file:
-            print(f"[{idx}] Skipped (empty)")
-            continue
-        try:
-            file_url = file.url if hasattr(file, "url") else str(file)
-            print(f"[{idx}] Processing: {file_url}")
-            if file_url.startswith("http"):
-                response = requests.get(file_url, timeout=20)
-                if response.status_code != 200:
-                    print(" [X] Download failed")
-                    continue
-                suffix = ".pdf" if file_url.lower().endswith(".pdf") else ".img"
-                temp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-                temp.write(response.content)
-                temp.close()
-                file_path = temp.name
-                temp_files.append(file_path)
-            else:
-                file_path = file.path
-            with open(file_path, "rb") as f:
-                header = f.read(4)
-            is_pdf = header.startswith(b"%PDF")
-            if is_pdf:
-                print(" [OK] PDF detected")
-                merger.append(file_path)
-            else:
-                print(" [OK] Image detected → converting to PDF")
-                img = Image.open(file_path)
-                if img.mode in ("RGBA", "LA", "P"):
-                    bg = Image.new("RGB", img.size, (255, 255, 255))
-                    if img.mode == "RGBA":
-                        bg.paste(img, mask=img.split()[3])
-                    else:
-                        bg.paste(img)
-                    img = bg
-                else:
-                    img = img.convert("RGB")
-                temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                img.save(temp_pdf.name, "PDF")
-                temp_pdf.close()
-                merger.append(temp_pdf.name)
-                temp_files.append(temp_pdf.name)
-        except Exception as e:
-            print(f" [X] Error: {e}")
-    final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    merger.write(final_pdf)
-    final_pdf.close()
-    print(f"[OK] Final PDF: {final_pdf.name}")
-    for f in temp_files:
-        try:
-            os.remove(f)
-        except:
-            pass
-    print("========== PDF MERGE END ==========\n")
-    return final_pdf.name
+
 
 
 # ==================== GENERATE STUDENT PDF ====================
@@ -3297,34 +3252,30 @@ def generate_student_pdf(student):
             with open(merged_tmp.name, 'rb') as mf:
                 final_pdf_bytes = mf.read()
 
-            # Upload to Cloudinary
-            if is_cloudinary_configured():
-                try:
-                    cloudinary_public_id = f"{student.ht_no}/complete_profile"
-                    print(f" ☁️  Uploading merged PDF to Cloudinary: {cloudinary_public_id}")
-                    cloud_result = cloudinary.uploader.upload(
-                        merged_tmp.name, resource_type='raw',
-                        folder=f"student_documents/{student.ht_no}",
-                        public_id='complete_profile', overwrite=True,
-                    )
-                    student.pdf_url = cloud_result['secure_url']
-                    student.save(update_fields=['pdf_url'])
+                # Upload to Cloudinary
+                cloud_result = upload_file_to_cloudinary(
+                    merged_tmp.name,
+                    folder=f"faculty_documents/{faculty.employee_code}",
+                    public_id='complete_profile',
+                    resource_type='raw'
+                )
+                if cloud_result:
+                    faculty.cloudinary_pdf_url = cloud_result['secure_url']
+                    faculty.save(update_fields=['cloudinary_pdf_url'])
                     CloudinaryUpload.objects.update_or_create(
-                        student=student, upload_type='complete_profile_pdf',
+                        faculty=faculty, upload_type='complete_profile_pdf',
                         defaults={
                             'cloudinary_url': cloud_result['secure_url'],
                             'public_id': cloud_result['public_id'],
                             'resource_type': 'raw',
-                            'uploaded_by': 'system',
+                            'uploaded_by': request.user.username,
                         }
                     )
                     print(f"  ✅ Uploaded to Cloudinary: {cloud_result['secure_url']}")
                     return_url = cloud_result['secure_url']
-                except Exception as e:
-                    print(f"  [WARN] Cloudinary upload failed (non-fatal): {e}")
+                else:
+                    print("  [WARN] Cloudinary upload failed (non-fatal)")
                     return_url = None
-            else:
-                return_url = None
         else:
             print("  [WARN] No pages in writer — returning info PDF only")
             return_url = None
@@ -3370,598 +3321,10 @@ def generate_student_pdf(student):
     return return_url
 
 
-def generate_student_pdf_file(request, student_id):
-    student = get_object_or_404(Student, student_id)
-
-    # ── Recalculate age correctly ──────────────────────────
-    correct_age = None
-    if student.dob:
-        try:
-            from datetime import date as _date
-            d = student.dob if hasattr(student.dob, 'year') else _date.fromisoformat(str(student.dob))
-            correct_age = d.year  # placeholder, computed below
-            today = _date.today()
-            correct_age = today.year - d.year - ((today.month, today.day) < (d.month, d.day))
-        except Exception:
-            correct_age = student.age
-
-    styles = getSampleStyleSheet()
-    temp_files = []
-
-    # ── 1. Download/locate photo ───────────────────────────
-    photo_path = None
-
-    # Priority 1: local FileField
-    if student.photo and getattr(student.photo, 'name', ''):
-        try:
-            lp = student.photo.path
-            if os.path.exists(lp):
-                photo_path = lp
-        except Exception:
-            pass
-
-    # Priority 2: cloudinary_photo_url or photo.url
-    if not photo_path:
-        photo_url = getattr(student, 'photo_url', None) or getattr(student, 'cloudinary_photo_url', None)
-        if not photo_url and student.photo and getattr(student.photo, 'name', ''):
-            try:
-                photo_url = student.photo.url
-            except Exception:
-                pass
-        
-        if photo_url and photo_url.startswith('http'):
-            downloaded_path, is_pdf = download_remote_asset(photo_url, default_suffix='.jpg')
-            if downloaded_path:
-                photo_path = downloaded_path
-                temp_files.append(photo_path)
-
-    # ── 2. Build info PDF with ReportLab ───────────────────
-    tmp_info = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-    temp_files.append(tmp_info.name)
-    doc = SimpleDocTemplate(tmp_info.name, pagesize=A4,
-                            leftMargin=0.6*inch, rightMargin=0.6*inch,
-                            topMargin=0.6*inch, bottomMargin=0.6*inch)
-    elems = []
-
-    # Header
-    header_style = ParagraphStyle('hdr', parent=styles['Normal'],
-                                  fontSize=16, fontName='Helvetica-Bold',
-                                  alignment=1, textColor=colors.darkblue, spaceAfter=2)
-    elems.append(Paragraph("ANURAG ENGINEERING COLLEGE", header_style))
-    elems.append(Paragraph("<font size='12' color='navy'><b>DEPARTMENT OF INFORMATION TECHNOLOGY</b></font>",
-                           styles['Normal']))
-    elems.append(Spacer(1, 4))
-    elems.append(Paragraph("<b>STUDENT PROFILE</b>",
-                           ParagraphStyle('sp', parent=styles['Normal'], fontSize=14, alignment=1, spaceAfter=6)))
-    elems.append(HRFlowable(width='100%', thickness=2, color=colors.darkblue))
-    elems.append(Spacer(1, 8))
-
-    # Photo + title row
-    if photo_path:
-        try:
-            photo_img = Image(photo_path, width=1.4*inch, height=1.7*inch)
-            hdr_tbl = Table([
-                [Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]
-            ], colWidths=[4.7*inch, 1.5*inch])
-            hdr_tbl.setStyle(TableStyle([
-                ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                ('ALIGN', (1,0), (1,0), 'RIGHT'),
-            ]))
-            elems.append(hdr_tbl)
-        except Exception as e:
-            logger.error(f"Photo embed error: {e}")
-            elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
-    else:
-        elems.append(Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']))
-
-    elems.append(Spacer(1, 8))
-
-    # Info fields — use correct age
-    fields = [
-        ("Hall Ticket No", student.ht_no),
-        ("Name", student.student_name),
-        ("Father Name", student.father_name),
-        ("Mother Name", student.mother_name),
-        ("Gender", student.gender),
-        ("Date of Birth", str(student.dob) if student.dob else "N/A"),
-        ("Age", str(correct_age) if correct_age is not None else (str(student.age) if student.age else "N/A")),
-        ("Nationality", student.nationality or "Indian"),
-        ("Category", student.category or "N/A"),
-        ("Religion", student.religion or "N/A"),
-        ("Blood Group", student.blood_group or "N/A"),
-        ("Aadhar Number", student.aadhar or "N/A"),
-        ("APAAR ID", student.apaar_id or "N/A"),
-        ("Address", student.address or "N/A"),
-        ("Parent Phone", student.parent_phone or "N/A"),
-        ("Student Phone", student.student_phone or "N/A"),
-        ("Email", student.email or "N/A"),
-        ("TASK Registered", student.task_registered or "No"),
-        ("TASK Username", student.task_username or "N/A"),
-        ("CSI Registered", student.csi_registered or "No"),
-        ("CSI Membership ID", student.csi_membership_id or "N/A"),
-        ("Admission Type", student.admission_type or "N/A"),
-        ("Other Admission Details", student.other_admission_details or "N/A"),
-
-        ("EAMCET Rank", str(student.eamcet_rank) if student.eamcet_rank else "N/A"),
-        ("Year", str(student.year) if student.year else "N/A"),
-        ("Semester", str(student.sem) if student.sem else "N/A"),
-        ("SSC Marks (%)", str(student.ssc_marks) if student.ssc_marks else "N/A"),
-        ("Intermediate Marks (%)", str(student.inter_marks) if student.inter_marks else "N/A"),
-        ("CGPA", str(student.cgpa) if student.cgpa else "N/A"),
-        ("RTRP Project Title", student.rtrp_project_title or "N/A"),
-        ("Internship Title", student.intern_title or "N/A"),
-        ("Final Project Title", student.final_project_title or "N/A"),
-        ("Other Training", student.other_training or "N/A"),
-    ]
-
-    # Certificates summary row
-    cert_labels = []
-    cert_field_pairs = [
-        ('cert_achieve', 'cert_achieve_url', 'Achievement'),
-        ('cert_intern',  'cert_intern_url',  'Internship'),
-        ('cert_courses', 'cert_courses_url', 'Courses'),
-        ('cert_sdp',     'cert_sdp_url',     'SDP'),
-        ('cert_extra',   'cert_extra_url',   'Extracurricular'),
-        ('cert_placement','cert_placement_url','Placement'),
-        ('cert_national','cert_national_url', 'National Exam'),
-    ]
-    for ff, uf, label in cert_field_pairs:
-        if getattr(student, ff, None) or getattr(student, uf, None):
-            cert_labels.append(label)
-    fields.append(("CERTIFICATES UPLOADED", ", ".join(cert_labels) if cert_labels else "None"))
-
-    tbl = Table(
-        [[Paragraph(f"<b>{lbl}</b>", styles['Normal']),
-          Paragraph(str(val) if val else "N/A", styles['Normal'])] for lbl, val in fields],
-        colWidths=[2.2*inch, 4.2*inch]
-    )
-    tbl.setStyle(TableStyle([
-        ('GRID',       (0,0), (-1,-1), 0.5, colors.grey),
-        ('BACKGROUND', (0,0), (0,-1), colors.HexColor('#f0f0f0')),
-        ('VALIGN',     (0,0), (-1,-1), 'TOP'),
-        ('PADDING',    (0,0), (-1,-1), 5),
-        ('FONTNAME',   (0,0), (0,-1), 'Helvetica-Bold'),
-        ('FONTSIZE',   (0,0), (-1,-1), 9),
-    ]))
-    elems.append(tbl)
-    elems.append(Spacer(1, 8))
-    elems.append(Paragraph(
-        f"<font size='8' color='grey'>Generated: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}</font>",
-        styles['Normal']
-    ))
-
-    doc.build(elems)
-    tmp_info.close()
-    print(f"  ✅ Info PDF: {tmp_info.name}")
-
-    # ── 3. Merge info PDF + all certificates ──────────────
-    from pypdf import PdfWriter, PdfReader
-
-    writer = PdfWriter()
-    readers_keep = []
-
-    def _add_to_writer(path_or_bytes, label=""):
-        """Add a file (path or bytes) to the PdfWriter."""
-        if not path_or_bytes:
-            return
-        try:
-            # If bytes, write to temp
-            if isinstance(path_or_bytes, (bytes, bytearray)):
-                t = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-                t.write(path_or_bytes)
-                t.close()
-                path_or_bytes = t.name
-                temp_files.append(path_or_bytes)
-
-            if not os.path.exists(path_or_bytes):
-                return
-
-            with open(path_or_bytes, 'rb') as fh:
-                header = fh.read(4)
-
-            if header.startswith(b'%PDF'):
-                reader = PdfReader(path_or_bytes)
-                readers_keep.append(reader)
-                for pg in reader.pages:
-                    writer.add_page(pg)
-                print(f"  ✅ Merged PDF ({len(reader.pages)}p): {label or os.path.basename(path_or_bytes)}")
-            else:
-                # Image → PDF
-                img = PILImage.open(path_or_bytes)
-                if img.mode not in ('RGB', 'L'):
-                    img = img.convert('RGB')
-                tp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-                img.save(tp.name, 'PDF', resolution=100.0)
-                tp.close()
-                temp_files.append(tp.name)
-                reader = PdfReader(tp.name)
-                readers_keep.append(reader)
-                for pg in reader.pages:
-                    writer.add_page(pg)
-                print(f"  ✅ Merged image: {label or os.path.basename(path_or_bytes)}")
-        except Exception as e:
-            logger.error(f"Merge error ({label}): {e}")
-
-    def _fetch_and_add(file_field, url_field, label):
-        """Get a cert file (local or URL) and add it to the writer."""
-        ff = getattr(student, file_field, None)
-        url = getattr(student, url_field, None)
-
-        # Local file first
-        if ff and getattr(ff, 'name', ''):
-            try:
-                lp = ff.path
-                if os.path.exists(lp):
-                    _add_to_writer(lp, label)
-                    return
-            except Exception:
-                pass
-
-        # URL (Cloudinary or relative)
-        src = url or (ff.url if ff and getattr(ff, 'name', '') else None)
-        if src:
-            if isinstance(src, str) and src.startswith('/'):
-                src = request.build_absolute_uri(src)
-            if isinstance(src, str) and src.startswith('http'):
-                downloaded_path, is_pdf = download_remote_asset(src, default_suffix='.jpg')
-                if downloaded_path:
-                    temp_files.append(downloaded_path)
-                    _add_to_writer(downloaded_path, label)
-
-    # Add info PDF
-    _add_to_writer(tmp_info.name, "Info Page")
-
-    # Add all certificates
-    for ff_name, uf_name, label in cert_field_pairs:
-        _fetch_and_add(ff_name, uf_name, label)
-
-    # Write final merged PDF
-    final_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-    final_tmp.close()
-    temp_files.append(final_tmp.name)
-
-    with open(final_tmp.name, 'wb') as out:
-        writer.write(out)
-
-    print(f"  ✅ Final merged PDF: {len(writer.pages)} pages")
-
-    # ── 4. Upload to Cloudinary ────────────────────────────
-    if is_cloudinary_configured():
-        try:
-            ur = cloudinary.uploader.upload(
-                final_tmp.name, resource_type='raw',
-                folder='student_generated_pdfs',
-                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                overwrite=True
-            )
-            student.pdf_url = ur['secure_url']
-            student.pdf_generated = True
-            student.save(update_fields=['pdf_url', 'pdf_generated'])
-            CloudinaryUpload.objects.create(
-                student=student, upload_type='pdf',
-                cloudinary_url=ur['secure_url'], public_id=ur['public_id'],
-                resource_type=ur['resource_type'],
-                uploaded_by=request.user.username if request.user.is_authenticated else 'Student'
-            )
-            print(f"  ✅ Uploaded to Cloudinary: {ur['secure_url']}")
-        except Exception as e:
-            logger.error(f"Cloudinary upload error: {e}")
-
-    # ── 5. Return response ─────────────────────────────────
-    try:
-        with open(final_tmp.name, 'rb') as pf:
-            response = HttpResponse(pf.read(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
-    finally:
-        for t in temp_files:
-            try:
-                if os.path.exists(t):
-                    os.remove(t)
-            except Exception:
-                pass
-
-    return response
 
 
-# ==================== SIMPLIFIED STUDENT PDF GENERATION ====================
-def generate_student_pdf_simple(request, student_id):
-    """
-    Student PDF generation — mirrors the faculty PDF pattern.
-    Photo and certificates are downloaded from Cloudinary if needed,
-    then merged into a single downloadable PDF.
-    """
-    from urllib.parse import quote
-    import io
 
-    student = get_object_or_404(Student, id=student_id)
-    print(f"\n{'='*60}\nSTUDENT PDF SIMPLE: {student.student_name} ({student.ht_no})\n{'='*60}")
 
-    temp_files = []
-
-    # ── Helper: download URL → local temp ─────────────────────────
-    def _dl(url, suffix=None):
-        if not url or not isinstance(url, str) or not url.startswith('http'):
-            return None
-        try:
-            r = requests.get(url, timeout=30)
-            # Cloudinary 401 fallback
-            if r.status_code in [401, 403] and 'cloudinary.com' in url:
-                try:
-                    public_id = get_cloudinary_public_id(url)
-                    if public_id:
-                        resource = cloudinary.api.resource(public_id)
-                        secure_url = resource.get('secure_url')
-                        if secure_url:
-                            r = requests.get(secure_url, timeout=30)
-                except Exception as cloud_err:
-                    print(f"  [WARN] Cloudinary fallback failed: {cloud_err}")
-            if r.status_code != 200:
-                print(f"  [SKIP] HTTP {r.status_code}: {url}")
-                return None
-            ct = r.headers.get('content-type', '').lower()
-            if suffix is None:
-                if 'pdf' in ct or url.lower().endswith('.pdf'):
-                    suffix = '.pdf'
-                elif 'png' in ct or url.lower().endswith('.png'):
-                    suffix = '.png'
-                else:
-                    suffix = '.jpg'
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-            tmp.write(r.content)
-            tmp.close()
-            temp_files.append(tmp.name)
-            return tmp.name
-        except Exception as e:
-            print(f"  [ERR] Download failed {url}: {e}")
-            return None
-
-    # ── Helper: local FileField → path ────────────────────────────
-    def _local(ff):
-        if not ff or not getattr(ff, 'name', ''):
-            return None
-        try:
-            p = ff.path
-            if os.path.exists(p):
-                return p
-        except (NotImplementedError, ValueError, Exception):
-            pass
-        return None
-
-    # ── Helper: resolve FileField + URL → local path ──────────────
-    def _resolve(ff, url_val):
-        # 1. Local filesystem
-        p = _local(ff)
-        if p:
-            return p
-        # 2. Explicit URL field
-        if url_val and isinstance(url_val, str) and url_val.startswith('http'):
-            return _dl(url_val)
-        # 3. FileField .url (Cloudinary storage)
-        if ff and getattr(ff, 'name', ''):
-            try:
-                fu = ff.url
-                if fu and fu.startswith('http'):
-                    return _dl(fu)
-            except Exception:
-                pass
-        return None
-
-    # ── 1. Locate / download PHOTO ────────────────────────────────
-    local_photo_path = None
-    photo_url_for_pdf = None
-
-    # Try photo_url first (Cloudinary URL saved in DB)
-    if student.photo_url:
-        photo_url_for_pdf = student.photo_url  # Use direct URL for HTML
-        p = _dl(student.photo_url)
-        if p:
-            local_photo_path = p
-            print(f"  ✅ Photo from photo_url downloaded: {p}")
-
-    # Fallback to photo FileField
-    if not photo_url_for_pdf and student.photo and getattr(student.photo, 'name', ''):
-        lp = _local(student.photo)
-        if lp:
-            local_photo_path = lp
-            photo_url_for_pdf = 'file:///' + quote(lp.replace('\\', '/'), safe=':/')
-            print(f"  ✅ Photo from local file: {photo_url_for_pdf}")
-        else:
-            try:
-                fu = student.photo.url
-                if fu and fu.startswith('http'):
-                    photo_url_for_pdf = fu  # Use direct URL
-                    p = _dl(fu)
-                    if p:
-                        local_photo_path = p
-                        print(f"  ✅ Photo downloaded from FileField URL: {fu}")
-            except Exception:
-                pass
-
-    print(f"  Photo URL for PDF: {photo_url_for_pdf}")
-
-    # ── 2. Generate info PDF via pdfkit + student_pdf.html ────────
-    context = {
-        'student': student,
-        'current_date': datetime.now(),
-        'local_photo_path': photo_url_for_pdf,
-    }
-
-    if pdfkit is None:
-        return HttpResponse("pdfkit not installed", status=500)
-
-    html_string = render_to_string('dashboard/student_pdf.html', context)
-
-    options = {
-        'page-size': 'A4',
-        'margin-top': '15mm', 'margin-right': '15mm',
-        'margin-bottom': '15mm', 'margin-left': '15mm',
-        'encoding': 'UTF-8',
-        'enable-local-file-access': '',
-        'quiet': '',
-        'no-stop-slow-scripts': None,
-        'javascript-delay': '500',
-        'load-error-handling': 'ignore',
-        'no-outline': None,
-    }
-
-    # Detect wkhtmltopdf
-    wkhtmltopdf_paths = [
-        r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-        r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-        '/usr/local/bin/wkhtmltopdf',
-        '/usr/bin/wkhtmltopdf',
-        'wkhtmltopdf',
-    ]
-    wkhtmltopdf_path = None
-    for path in wkhtmltopdf_paths:
-        if os.path.exists(path) or path == 'wkhtmltopdf':
-            try:
-                import subprocess
-                result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    wkhtmltopdf_path = path
-                    break
-            except Exception:
-                continue
-
-    try:
-        if wkhtmltopdf_path:
-            config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-            info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
-        else:
-            info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
-        print(f"  ✅ Info PDF generated: {len(info_pdf_bytes)} bytes")
-    except Exception as e:
-        logger.error(f"pdfkit error for student PDF: {e}")
-        # Cleanup temps
-        for t in temp_files:
-            try:
-                if os.path.exists(t):
-                    os.remove(t)
-            except Exception:
-                pass
-        return HttpResponse(f"PDF generation error: {e}", status=500)
-
-    # ── 3. Merge info PDF + all certificates ─────────────────────
-    filename = f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}.pdf"
-    final_pdf_bytes = info_pdf_bytes  # fallback
-
-    try:
-        from pypdf import PdfWriter, PdfReader
-
-        writer = PdfWriter()
-        readers_keep = []
-
-        def _add_to_writer(path):
-            """Add local file (PDF or image) to PdfWriter."""
-            if not path or not os.path.exists(path):
-                return
-            try:
-                with open(path, 'rb') as fh:
-                    header = fh.read(4)
-                if header.startswith(b'%PDF'):
-                    reader = PdfReader(path)
-                    readers_keep.append(reader)
-                    for pg in reader.pages:
-                        writer.add_page(pg)
-                    print(f"  ✅ Merged PDF ({len(reader.pages)}p): {os.path.basename(path)}")
-                else:
-                    img = PILImage.open(path)
-                    if img.mode not in ('RGB', 'L'):
-                        img = img.convert('RGB')
-                    tmp_img_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-                    img.save(tmp_img_pdf.name, 'PDF', resolution=100.0)
-                    tmp_img_pdf.close()
-                    temp_files.append(tmp_img_pdf.name)
-                    reader = PdfReader(tmp_img_pdf.name)
-                    readers_keep.append(reader)
-                    for pg in reader.pages:
-                        writer.add_page(pg)
-                    print(f"  ✅ Merged image: {os.path.basename(path)}")
-            except Exception as ex:
-                print(f"  [ERR] Could not merge {path}: {ex}")
-
-        # 3a. Info PDF first
-        info_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-        info_tmp.write(info_pdf_bytes)
-        info_tmp.close()
-        temp_files.append(info_tmp.name)
-        _add_to_writer(info_tmp.name)
-
-        # 3b. All certificate fields
-        cert_field_pairs = [
-            ('cert_achieve',   'cert_achieve_url',   'Achievement'),
-            ('cert_intern',    'cert_intern_url',     'Internship'),
-            ('cert_courses',   'cert_courses_url',    'Courses'),
-            ('cert_sdp',       'cert_sdp_url',        'SDP'),
-            ('cert_extra',     'cert_extra_url',      'Extra'),
-            ('cert_placement', 'cert_placement_url',  'Placement'),
-            ('cert_national',  'cert_national_url',   'National'),
-        ]
-        for ff_name, uf_name, label in cert_field_pairs:
-            ff  = getattr(student, ff_name, None)
-            url = getattr(student, uf_name, None)
-            p = _resolve(ff, url)
-            if p:
-                _add_to_writer(p)
-                print(f"  ✅ Added cert: {label}")
-            else:
-                print(f"  [SKIP] No file for cert: {label}")
-
-        # 3c. Write merged PDF
-        if len(writer.pages) > 0:
-            merged_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-            merged_tmp.close()
-            temp_files.append(merged_tmp.name)
-            with open(merged_tmp.name, 'wb') as out:
-                writer.write(out)
-            print(f"  ✅ Merged PDF: {len(writer.pages)} pages, {os.path.getsize(merged_tmp.name)} bytes")
-            with open(merged_tmp.name, 'rb') as mf:
-                final_pdf_bytes = mf.read()
-
-            # 3d. Upload to Cloudinary
-            if is_cloudinary_configured():
-                try:
-                    cloud_result = cloudinary.uploader.upload(
-                        merged_tmp.name, resource_type='raw',
-                        folder=f"student_documents/{student.ht_no}",
-                        public_id='complete_profile', overwrite=True,
-                    )
-                    student.pdf_url = cloud_result['secure_url']
-                    student.pdf_generated = True
-                    student.pdf_generation_time = timezone.now()
-                    student.save(update_fields=['pdf_url', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
-                    CloudinaryUpload.objects.update_or_create(
-                        student=student, upload_type='complete_profile_pdf',
-                        defaults={
-                            'cloudinary_url': cloud_result['secure_url'],
-                            'public_id': cloud_result['public_id'],
-                            'resource_type': 'raw',
-                            'uploaded_by': request.user.username if request.user.is_authenticated else 'Student',
-                        }
-                    )
-                    print(f"  ✅ Uploaded to Cloudinary: {cloud_result['secure_url']}")
-                except Exception as e:
-                    print(f"  [WARN] Cloudinary upload failed (non-fatal): {e}")
-        else:
-            print("  [WARN] No pages — returning info PDF only")
-
-    except Exception as merge_err:
-        logger.error(f"Merge error (non-fatal): {merge_err}")
-        traceback.print_exc()
-
-    # ── 4. Cleanup + return ───────────────────────────────────────
-    for t in temp_files:
-        try:
-            if os.path.exists(t):
-                os.remove(t)
-        except Exception:
-            pass
-
-    response = HttpResponse(final_pdf_bytes, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    print(f"  ✅ Returned PDF: {len(final_pdf_bytes)} bytes")
-    return response
 
 
 def view_pdf(request, student_id):
@@ -3981,7 +3344,12 @@ def download_pdf(request, student_id):
         response = HttpResponse(student.pdf_file, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
         return response
-    return generate_student_pdf_file(request, student_id)
+    # Generate PDF if not available
+    pdf_url = generate_student_pdf(student)
+    if pdf_url:
+        return redirect(pdf_url)
+    messages.error(request, "Failed to generate PDF.")
+    return redirect('dashboard:students_data')
 
 
 @login_required
@@ -4616,71 +3984,10 @@ def generate_faculty_pdf(request, faculty_id):
 
 
 
-def generate_simple_pdf_reportlab(context):
-    """Fallback PDF generation using ReportLab when wkhtmltopdf is not available"""
-    import io
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.units import inch
-    
-    faculty = context.get('faculty')
-    
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=72)
-    styles = getSampleStyleSheet()
-    story = []
-    
-    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=16, alignment=1, spaceAfter=30)
-    story.append(Paragraph("ANURAG ENGINEERING COLLEGE", title_style))
-    story.append(Paragraph("DEPARTMENT OF INFORMATION TECHNOLOGY", styles['Heading2']))
-    story.append(Paragraph(f"<b>FACULTY PROFILE REPORT</b>", styles['Heading3']))
-    story.append(Spacer(1, 0.2 * inch))
-    
-    story.append(Paragraph(f"<b>Name:</b> {faculty.staff_name}", styles['Normal']))
-    story.append(Paragraph(f"<b>Employee Code:</b> {faculty.employee_code}", styles['Normal']))
-    story.append(Paragraph(f"<b>Department:</b> {faculty.department or 'N/A'}", styles['Normal']))
-    story.append(Paragraph(f"<b>Designation:</b> {faculty.designation or 'N/A'}", styles['Normal']))
-    story.append(Spacer(1, 0.2 * inch))
-    
-    research_pubs = context.get('research_publications', [])
-    if research_pubs:
-        story.append(Paragraph("<b>Research Publications:</b>", styles['Heading4']))
-        for pub in research_pubs:
-            story.append(Paragraph(f"• {pub.title} ({pub.publication_year or 'N/A'})", styles['Normal']))
-        story.append(Spacer(1, 0.1 * inch))
-    
-    fdps = context.get('fdps', [])
-    if fdps:
-        story.append(Paragraph("<b>FDP/Workshops Attended:</b>", styles['Heading4']))
-        for fdp in fdps:
-            story.append(Paragraph(f"• {fdp.title} ({fdp.from_date} to {fdp.to_date})", styles['Normal']))
-        story.append(Spacer(1, 0.1 * inch))
-    
-    story.append(Spacer(1, 0.5 * inch))
-    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M:%S')}", styles['Normal']))
-    
-    doc.build(story)
-    pdf_bytes = buffer.getvalue()
-    buffer.close()
-    return pdf_bytes
 
 
-# ==================== GENERATE FACULTY PDF CLEAN ====================
-@login_required
-def generate_faculty_pdf_clean(request, faculty_id):
-    print("\n🔥🔥🔥 NEW PDF FUNCTION CALLED 🔥🔥🔥")
-    print(f"🔥 Faculty identifier: {faculty_id}")
-    print(f"🔥 Request method: {request.method}")
-    print(f"🔥 User: {request.user}")
-    print("🔥🔥🔥 ================================= 🔥🔥🔥\n")
-    try:
-        faculty = get_object_or_404(Faculty, id=int(faculty_id))
-        print(f"✅ Found faculty by ID: {faculty.staff_name} (ID: {faculty.id})")
-    except (ValueError, TypeError):
-        faculty = get_object_or_404(Faculty, employee_code=str(faculty_id))
-        print(f"✅ Found faculty by employee_code: {faculty.staff_name} (ID: {faculty.id})")
-    return generate_faculty_pdf(request, faculty.id)
+
+
 
 
 # ==================== CHARTS & ANALYTICS ====================
@@ -5035,6 +4342,25 @@ def bulk_generate_faculty_pdfs(request):
                         with open(pp, 'wb') as f:
                             f.write(pdf)
                         zipf.write(pp, pname)
+
+                        # Upload to Cloudinary if not already uploaded
+                        if is_cloudinary_configured() and not fac.cloudinary_pdf_url:
+                            try:
+                                cloud_result = cloudinary.uploader.upload(
+                                    pp, resource_type="raw", folder="faculty_pdfs",
+                                    public_id=f"faculty_{fac.employee_code}_{date.today().strftime('%Y%m%d')}",
+                                    overwrite=True, tags=[f"faculty_{fac.employee_code}", fac.department, "pdf"]
+                                )
+                                fac.cloudinary_pdf_url = cloud_result['secure_url']
+                                fac.save()
+                                CloudinaryUpload.objects.create(
+                                    faculty=fac, upload_type='pdf', cloudinary_url=cloud_result['secure_url'],
+                                    public_id=cloud_result['public_id'], resource_type=cloud_result['resource_type'],
+                                    uploaded_by=request.user.username
+                                )
+                            except Exception as cloud_err:
+                                logger.error(f"Cloudinary upload failed for faculty {fid}: {cloud_err}")
+
                         os.remove(pp)
                 except Exception as e:
                     logger.error(f"Error generating PDF for faculty {fid}: {e}")

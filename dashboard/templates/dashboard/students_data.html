@@ -517,22 +517,24 @@ body {
     <!-- TABLE -->
     <div class="table-container">
         <table class="student-table" id="studentTable">
-            <thead>
-                <tr>
-                    <th>PHOTO</th>
-                    <th>H.T No</th>
-                    <th>NAME</th>
-                    <th>YEAR/SEM</th>
-                    <th>PHONE</th>
-                    <th>EMAIL</th>
-                    <th>CGPA</th>
-                    <th>PDF</th>
-                    <th>ACTIONS</th>
-                </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>PHOTO</th>
+                        <th>H.T No</th>
+                        <th>NAME</th>
+                        <th>YEAR/SEM</th>
+                        <th>PHONE</th>
+                        <th>EMAIL</th>
+                        <th>CGPA</th>
+                        <th>PDF</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
             <tbody>
                 {% for student in students %}
                 <tr>
+                    <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
                     <td>
                         {% if student.photo_url %}
                             <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
@@ -637,6 +639,19 @@ body {
     </div>
     {% endif %}
 
+    <!-- Bulk Actions -->
+    <div style="margin-top: 20px; text-align: center;">
+        <form id="bulk-action-form" method="POST" action="{% url 'dashboard:bulk_student_actions' %}">
+            {% csrf_token %}
+            <input type="hidden" name="student_ids" id="selected-student-ids">
+            <select name="bulk_action" style="padding: 8px; margin-right: 10px;">
+                <option value="">Bulk Actions</option>
+                <option value="generate_pdfs">Generate PDFs</option>
+            </select>
+            <button type="submit" style="padding: 8px 15px; background: #0f0; color: #000; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
+        </form>
+    </div>
+
 </div>
 {% endif %}
 </div>
@@ -722,6 +737,32 @@ body {
         if (e.key === 'Enter') {
             filterStudents();
         }
+    });
+
+    // Select all checkbox functionality
+    document.getElementById('select-all')?.addEventListener('change', function(e) {
+        document.querySelectorAll('.student-select').forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
+    });
+
+    // Bulk action form submission
+    document.getElementById('bulk-action-form')?.addEventListener('submit', function(e) {
+        const selected = Array.from(document.querySelectorAll('.student-select:checked')).map(cb => cb.value);
+        if (selected.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one student.');
+            return false;
+        }
+
+        const action = document.querySelector('[name="bulk_action"]').value;
+        if (!action) {
+            e.preventDefault();
+            alert('Please select an action.');
+            return false;
+        }
+
+        document.getElementById('selected-student-ids').value = selected.join(',');
     });
 </script>
 {% endblock %}

@@ -15,8 +15,7 @@ urlpatterns = [
 
     # Health check route
     path('health/', lambda r: HttpResponse(b"OK"), name='health_check'),
-    path('debug-dashboard/', views.debug_dashboard, name='debug_dashboard'),
-    path('db-test/', views.db_test, name='db_test'),
+
 
     # Main dashboard routes
     path('dashboard/', views.admin_dashboard, name='dashboard'),
@@ -55,7 +54,7 @@ urlpatterns = [
     # Faculty PDF routes
     path('faculty/pdf/<int:faculty_id>/', views.generate_faculty_pdf, name='generate_faculty_pdf'),
     path('faculty/generate-pdf/<int:faculty_id>/', views.generate_faculty_pdf, name='generate_faculty_pdf_alt'),
-    path('faculty/pdf-clean/<int:faculty_id>/', views.generate_faculty_pdf_clean, name='generate_faculty_pdf_clean'),
+
     path('faculty/pdf-view/<int:faculty_id>/', views.faculty_pdf, name='faculty_pdf'),
     path('faculty/pdf-download/<int:faculty_id>/', views.download_faculty_pdf, name='download_faculty_pdf'),
     path('faculty/pdf-preview/<int:faculty_id>/', views.preview_faculty_pdf, name='preview_faculty_pdf'),
@@ -82,12 +81,8 @@ urlpatterns = [
     path('student/delete/<int:student_id>/', views.delete_student, name='delete_student'),
 
     # Student PDF routes
-    path('student/pdf/<int:student_id>/', views.generate_student_pdf_simple, name='generate_student_pdf'),
-    path('student/pdf-view/<int:student_id>/', views.view_pdf, name='view_pdf'),
-    path('student/pdf-download/<int:student_id>/', views.download_pdf, name='download_pdf'),
+    path('student/pdf/<int:student_id>/', views.generate_student_pdf_view, name='generate_student_pdf'),
     path('student/pdf-regenerate/<int:student_id>/', views.regenerate_student_pdf, name='regenerate_student_pdf'),
-    path('student/merge-certificates/<int:student_id>/', views.merge_student_certificates, name='merge_student_certificates'),
-    path('student/pdf-simple/<int:student_id>/', views.generate_student_pdf_simple, name='generate_student_pdf_simple'),
     path('student/charts/', views.student_charts, name='student_charts'),
 
     # Students export
@@ -118,6 +113,7 @@ urlpatterns = [
     # Bulk operations
     path('bulk-upload/', views.bulk_upload, name='bulk_upload'),
     path('bulk-faculty-actions/', views.bulk_faculty_actions, name='bulk_faculty_actions'),
+    path('bulk-student-actions/', views.bulk_student_actions, name='bulk_student_actions'),
     path('export-faculty-csv/', views.export_faculty_csv, name='export_faculty_csv'),
     path('export-faculty-excel/', views.export_faculty_excel, name='export_faculty_excel'),
 
@@ -172,11 +168,7 @@ urlpatterns = [
     path('system/application-home/', views.application_home, name='application_home'),
 
     # Debug routes
-    path('debug/test-template/', views.test_template, name='test_template'),
-    path('debug/test-session/', views.test_session, name='test_session'),
-    path('debug/cloudinary/', views.debug_cloudinary, name='debug_cloudinary'),
-    path('debug/login/', views.debug_login, name='debug_login'),
-    path('debug/faculty/<int:faculty_id>/', views.debug_faculty_data, name='debug_faculty_data'),
+
 
     # PDF utilities
     path('pdf/generate-with-data/', views.generate_pdf_with_data, name='generate_pdf_with_data'),
