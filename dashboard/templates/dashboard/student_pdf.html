@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Profile - {{ student.student_name }}</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.4; color: #333; font-size: 11px; }
+        .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
+        .college-name { font-size: 22px; font-weight: bold; color: #2c3e50; }
+        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; }
+        .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; }
+        .student-photo { width: 100%; height: 100%; object-fit: cover; }
+        .no-photo { color: #999; font-size: 10px; text-align: center; }
+        .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
+        .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
+        .project-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
+        .document-box {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .training-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            white-space: pre-line;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 9px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+        }
+        .admission-details {
+            white-space: pre-line;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 75%; text-align: center; vertical-align: middle;">
+                <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+                <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
+                <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">STUDENT PROFILE REPORT</h1>
+                <div style="font-size: 10px;">H.T.No: {{ student.ht_no }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <div class="photo-box">
+                    {% if local_photo_path %}
+                        <img src="{{ local_photo_path }}" class="student-photo" alt="Student Photo">
+                    {% elif student.photo_url %}
+                        <img src="{{ student.photo_url }}" class="student-photo" alt="Student Photo">
+                    {% elif student.photo and student.photo.url %}
+                        <img src="{{ student.photo.url }}" class="student-photo" alt="Student Photo">
+                    {% else %}
+                        <div class="no-photo">NO PHOTO</div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 1. PERSONAL INFORMATION -->
+    <div class="section-title">1. PERSONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Full Name</td><td>{{ student.student_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">H.T.No</td><td>{{ student.ht_no|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Father's Name</td><td>{{ student.father_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mother's Name</td><td>{{ student.mother_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Date of Birth</td><td>{% if student.dob %}{{ student.dob|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Age</td><td>{{ student.age|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Gender</td><td>{{ student.gender|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Blood Group</td><td>{{ student.blood_group|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Category</td><td>{{ student.category|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Religion</td><td>{{ student.religion|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Nationality</td><td>{{ student.nationality|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Aadhar Number</td><td>{{ student.aadhar|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">APAAR ID</td><td>{{ student.apaar_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Permanent Address</td><td>{{ student.address|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 2. CONTACT INFORMATION -->
+    <div class="section-title">2. CONTACT INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Student Phone</td><td>{{ student.student_phone|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Parent Phone</td><td>{{ student.parent_phone|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Email</td><td>{{ student.email|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 3. ACADEMIC INFORMATION -->
+    <div class="section-title">3. ACADEMIC INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Current Year</td><td>{{ student.year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Current Semester</td><td>{{ student.sem|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">SSC Marks (%)</td><td>{{ student.ssc_marks|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Intermediate Marks (%)</td><td>{{ student.inter_marks|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Current CGPA</td><td>{{ student.cgpa|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 4. ADMISSION DETAILS -->
+    <div class="section-title">4. ADMISSION DETAILS</div>
+    <table class="info-table">
+        <tr><td class="label">Admission Type</td><td>{{ student.admission_type|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">EAMCET Rank</td><td>{{ student.eamcet_rank|default:"Not Specified" }}</td></tr>
+        {% if student.other_admission_details %}
+        <tr><td class="label">Other Admission Details</td><td class="admission-details">{{ student.other_admission_details }}</td></tr>
+        {% endif %}
+    </table>
+
+    <!-- 5. ACTIVITIES & REGISTRATIONS -->
+    <div class="section-title">5. ACTIVITIES & REGISTRATIONS</div>
+    <table class="info-table">
+        <tr><td class="label">TASK Registration</td><td>{{ student.task_registered|default:"Not Specified" }}{% if student.task_username %} ({{ student.task_username }}){% endif %}</td></tr>
+        <tr><td class="label">CSI Registration</td><td>{{ student.csi_registered|default:"Not Specified" }}{% if student.csi_membership_id %} ({{ student.csi_membership_id }}){% endif %}</td></tr>
+    </table>
+
+    <!-- 6. PROJECTS & TRAINING -->
+    <div class="section-title">6. PROJECTS & TRAINING</div>
+    <div style="padding: 10px;">
+        {% if student.rtrp_project_title or student.intern_title or student.final_project_title or student.other_training %}
+            <div style="margin-bottom: 15px;">
+                {% if student.rtrp_project_title %}
+                <div class="project-item"><strong>RTRP Project:</strong> {{ student.rtrp_project_title }}</div>
+                {% endif %}
+                {% if student.intern_title %}
+                <div class="project-item"><strong>Internship:</strong> {{ student.intern_title }}</div>
+                {% endif %}
+                {% if student.final_project_title %}
+                <div class="project-item"><strong>Final Project:</strong> {{ student.final_project_title }}</div>
+                {% endif %}
+            </div>
+            {% if student.other_training %}
+            <div class="training-content">
+                <strong>Other Training:</strong><br>
+                {{ student.other_training }}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-data">
+                <p style="margin: 0;">No project or training information available</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- 7. UPLOADED DOCUMENTS -->
+    <div class="section-title">7. UPLOADED DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div class="document-box"><strong>Achievement Certificate:</strong> {% if student.cert_achieve or student.cert_achieve_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Internship Certificate:</strong> {% if student.cert_intern or student.cert_intern_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Course Certificates:</strong> {% if student.cert_courses or student.cert_courses_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>SDP Certificate:</strong> {% if student.cert_sdp or student.cert_sdp_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Extra Certificates:</strong> {% if student.cert_extra or student.cert_extra_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Placement Certificate:</strong> {% if student.cert_placement or student.cert_placement_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>National Certificate:</strong> {% if student.cert_national or student.cert_national_url %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>This is an electronically generated official document of Anurag Engineering College.</p>
+        <p>ANURAG ENGINEERING COLLEGE | &copy; {{ current_date|date:"Y" }}</p>
+    </div>
+</body>
+</html>

@@ -1,25 +1,23 @@
 # dashboard/views.py - COMPLETE VERSION WITH ENHANCED PDF GENERATION
 # ============================================================================
 import os
+import sys
 import json
 import csv
 import tempfile
 import logging
-import uuid
 import zipfile
 import traceback
+import io
 from datetime import datetime, date, timedelta
-from io import BytesIO
-from typing import Dict, List, Optional, Any
 import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
-                         FileResponse, HttpResponseBadRequest)
+                         HttpResponseBadRequest)
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.db.models import Q, Count, Sum, Avg, Max, Min
+from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.template.loader import render_to_string
@@ -31,13 +29,12 @@ from django.utils import timezone
 import django
 # PDF Generation imports
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Image,
-                                Table, TableStyle, HRFlowable, PageBreak)
+                                Table, TableStyle, HRFlowable)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
 from pypdf import PdfWriter, PdfReader
 # from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
 from PIL import Image as PILImage
@@ -701,14 +698,18 @@ def collect_student_files(student):
     temp_files = []
 
     def _collect_asset(file_field, url_value=None, default_suffix='.pdf'):
+        """Helper to collect a single asset (photo or certificate) from local or remote storage."""
+        # 1. Try local file path first (standard storage)
         if file_field:
             try:
+                # Check if it has a path (local storage)
                 local_path = file_field.path if hasattr(file_field, 'path') else None
+                if local_path and os.path.exists(local_path):
+                    return local_path, local_path.lower().endswith('.pdf')
             except Exception:
-                local_path = None
-            if local_path and os.path.exists(local_path):
-                return local_path, local_path.lower().endswith('.pdf')
+                pass
 
+        # 2. Try provided URL value (Cloudinary/Remote URL field)
         if url_value and isinstance(url_value, str) and url_value.startswith('http'):
             downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix=default_suffix)
             if downloaded_path:
@@ -716,21 +717,41 @@ def collect_student_files(student):
                     temp_files.append(downloaded_path)
                 return downloaded_path, is_pdf
 
-        file_path, file_url = get_file_from_field(file_field, url_value)
-        if file_path and os.path.exists(file_path):
-            return file_path, file_path.lower().endswith('.pdf')
+        # 3. Try the file field's URL (Cloudinary storage)
+        if file_field:
+            try:
+                if hasattr(file_field, 'url') and file_field.url:
+                    furl = file_field.url
+                    # Handle local media URLs that might be passed as relative
+                    if furl.startswith(settings.MEDIA_URL):
+                        local_media_path = os.path.join(settings.MEDIA_ROOT, furl.replace(settings.MEDIA_URL, '', 1).lstrip('/'))
+                        if os.path.exists(local_media_path):
+                            return local_media_path, local_media_path.lower().endswith('.pdf')
+                    
+                    # Handle remote URLs from Cloudinary storage
+                    if furl.startswith('http'):
+                        downloaded_path, is_pdf = download_remote_asset(furl, default_suffix=default_suffix)
+                        if downloaded_path:
+                            if downloaded_path not in temp_files:
+                                temp_files.append(downloaded_path)
+                            return downloaded_path, is_pdf
+            except Exception:
+                pass
 
-        if file_url and isinstance(file_url, str) and file_url.startswith('/'):
-            local_media_path = os.path.join(settings.MEDIA_ROOT, file_url.replace(settings.MEDIA_URL, '', 1).lstrip('/'))
-            if os.path.exists(local_media_path):
-                return local_media_path, local_media_path.lower().endswith('.pdf')
+        # 4. Fallback to generic helper if available
+        try:
+            file_path, file_url = get_file_from_field(file_field, url_value)
+            if file_path and os.path.exists(file_path):
+                return file_path, file_path.lower().endswith('.pdf')
 
-        if file_url and isinstance(file_url, str) and file_url.startswith('http'):
-            downloaded_path, is_pdf = download_remote_asset(file_url, default_suffix=default_suffix)
-            if downloaded_path:
-                if downloaded_path not in temp_files:
-                    temp_files.append(downloaded_path)
-                return downloaded_path, is_pdf
+            if file_url and isinstance(file_url, str) and file_url.startswith('http'):
+                downloaded_path, is_pdf = download_remote_asset(file_url, default_suffix=default_suffix)
+                if downloaded_path:
+                    if downloaded_path not in temp_files:
+                        temp_files.append(downloaded_path)
+                    return downloaded_path, is_pdf
+        except Exception:
+            pass
 
         return None, False
 
@@ -2501,8 +2522,9 @@ def add_student(request):
                 if not file or not ca:
                     return None
                 try:
+                    file.seek(0) # Ensure at beginning
                     res = cloudinary.uploader.upload(
-                        file, 
+                        file,
                         resource_type="auto",
                         folder=f"student_documents/{folder}",
                         public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -2512,11 +2534,12 @@ def add_student(request):
                 except Exception as e:
                     logger.error(f"Cloudinary upload error ({folder}): {e}")
                     return None
-            
+
             def _save_local(file, folder):
                 if not file:
                     return None
                 try:
+                    file.seek(0) # Ensure at beginning
                     upload_paths = {
                         'photos': 'student_photos/',
                         'achievement': 'student_certs/achievement/',
@@ -2537,7 +2560,6 @@ def add_student(request):
                 except Exception as e:
                     logger.error(f"Local file save error ({folder}): {e}")
                     return None
-
             student = Student(
                 ht_no=request.POST.get('ht_no'),
                 student_name=request.POST.get('student_name'),
@@ -2678,8 +2700,9 @@ def edit_student(request, student_id):
                 if not file or not ca:
                     return None
                 try:
+                    file.seek(0) # Ensure at beginning
                     res = cloudinary.uploader.upload(
-                        file, 
+                        file,
                         resource_type="auto",
                         folder=f"student_documents/{folder}",
                         public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -2689,11 +2712,12 @@ def edit_student(request, student_id):
                 except Exception as e:
                     logger.error(f"Cloudinary upload error ({folder}): {e}")
                     return None
-            
+
             def _save_local(file, folder):
                 if not file:
                     return None
                 try:
+                    file.seek(0) # Ensure at beginning
                     upload_paths = {
                         'photos': 'student_photos/',
                         'achievement': 'student_certs/achievement/',
@@ -2714,7 +2738,6 @@ def edit_student(request, student_id):
                 except Exception as e:
                     logger.error(f"Local file save error ({folder}): {e}")
                     return None
-
             updated_student = form.save()
 
             # Handle photo manually because we want Cloudinary support
@@ -2872,66 +2895,304 @@ def merge_files_legacy(file_list):
 
 # ==================== GENERATE STUDENT PDF ====================
 def generate_student_pdf(student):
-    print(f"\n=== GENERATING STUDENT PDF for {student.student_name} (ID: {student.id}) ===")
-    photo_file, image_files, pdf_files, temp_files = collect_student_files(student)
-    merge_image_files = list(image_files)
-    if photo_file:
-        merge_image_files.insert(0, photo_file)
+    from urllib.parse import quote
+    print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
 
-    print(f"\n=== FILES TO MERGE: {len(merge_image_files) + len(pdf_files)} files ===")
-    for image_path in merge_image_files:
-        print(f" - image: {image_path}")
-    for pdf_path in pdf_files:
-        print(f" - pdf: {pdf_path}")
+    # ── temp file tracker ──────────────────────────────────────
+    temp_files = []
 
-    if not merge_image_files and not pdf_files:
-        print(" [X] No files to merge!")
-        return None
-
-    final_pdf = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    final_pdf_path = final_pdf.name
-    final_pdf.close()
-
-    try:
-        merged = merge_all_documents(final_pdf_path, merge_image_files, pdf_files)
-        if not merged or not os.path.exists(final_pdf_path):
+    # ── Helper: download URL → local temp file ─────────────────
+    def _download(url, suffix=None):
+        """Download a URL to a local temp file. Returns path or None."""
+        if not url or not url.startswith('http'):
+            return None
+        try:
+            r = requests.get(url, timeout=30)
+            if r.status_code != 200:
+                print(f"  [SKIP] HTTP {r.status_code}: {url}")
+                return None
+            ct = r.headers.get('content-type', '').lower()
+            if suffix is None:
+                if 'pdf' in ct or url.lower().endswith('.pdf'):
+                    suffix = '.pdf'
+                elif 'png' in ct or url.lower().endswith('.png'):
+                    suffix = '.png'
+                else:
+                    suffix = '.jpg'
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+            tmp.write(r.content)
+            tmp.close()
+            temp_files.append(tmp.name)
+            return tmp.name
+        except Exception as e:
+            print(f"  [ERR] Download failed {url}: {e}")
             return None
 
-        if is_cloudinary_configured():
-            upload = cloudinary.uploader.upload(
-                final_pdf_path,
-                resource_type="raw",
-                folder="student_generated_pdfs",
-                public_id=f"student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                overwrite=True
-            )
-            student.pdf_url = upload["secure_url"]
-            student.pdf_generated = True
-            student.pdf_generation_time = timezone.now()
-            student.save(update_fields=['pdf_url', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
-            print(f"PDF uploaded to Cloudinary: {student.pdf_url}")
-            return student.pdf_url
+    # ── Helper: local FileField → path ────────────────────────
+    def _local_path(ff):
+        """Try to get a local filesystem path from a FileField."""
+        if not ff or not getattr(ff, 'name', ''):
+            return None
+        try:
+            p = ff.path
+            if os.path.exists(p):
+                return p
+        except (NotImplementedError, ValueError, Exception):
+            pass
+        return None
 
-        with open(final_pdf_path, 'rb') as pdf_handle:
-            student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
-        student.pdf_generated = True
-        student.pdf_generation_time = timezone.now()
-        student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
-        print(f"PDF saved locally to student record: {student.pdf_file.name}")
-        return student.pdf_file.url if student.pdf_file else None
-    finally:
-        for temp_path in temp_files + [final_pdf_path]:
+    # ── PHOTO ──────────────────────────────────────────────────
+    local_photo_path = None
+    photo_url_for_pdf = None
+
+    # Try Cloudinary URL first
+    if student.photo_url:
+        p = _download(student.photo_url)
+        if p:
+            local_photo_path = p
+            photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+            print(f"  ✅ Photo (Cloudinary → local): {photo_url_for_pdf}")
+
+    # Fallback to FileField
+    if not photo_url_for_pdf and student.photo and getattr(student.photo, 'name', ''):
+        lp = _local_path(student.photo)
+        if lp:
+            local_photo_path = lp
+            photo_url_for_pdf = 'file:///' + quote(lp.replace('\\', '/'), safe=':/')
+            print(f"  ✅ Photo (local file): {photo_url_for_pdf}")
+        else:
             try:
-                if temp_path and os.path.exists(temp_path):
-                    os.remove(temp_path)
+                fu = student.photo.url
+                if fu and fu.startswith('http'):
+                    p = _download(fu)
+                    if p:
+                        local_photo_path = p
+                        photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+                        print(f"  ✅ Photo (URL → local): {photo_url_for_pdf}")
             except Exception:
                 pass
-        print("=== PDF GENERATION COMPLETE ===\n")
+
+    # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
+    context = {
+        'student': student,
+        'current_date': datetime.now(),
+        'local_photo_path': photo_url_for_pdf,
+    }
+
+    # ── GENERATE INFO PDF with pdfkit ─────────────────────────
+    html_string = render_to_string('dashboard/student_pdf.html', context)
+
+    if pdfkit is None:
+        print("  [ERR] pdfkit not installed - cannot generate PDF")
+        return None
+
+    options = {
+        'page-size': 'A4',
+        'margin-top': '15mm', 'margin-right': '15mm',
+        'margin-bottom': '15mm', 'margin-left': '15mm',
+        'encoding': 'UTF-8',
+        'enable-local-file-access': '',
+        'quiet': '',
+        'no-stop-slow-scripts': None,
+        'javascript-delay': '500',
+        'load-error-handling': 'ignore',
+        'no-outline': None,
+    }
+
+    # Cross-platform wkhtmltopdf detection
+    wkhtmltopdf_paths = [
+        r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
+        r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
+        '/usr/local/bin/wkhtmltopdf',
+        '/usr/bin/wkhtmltopdf',
+        'wkhtmltopdf',
+    ]
+
+    wkhtmltopdf_path = None
+    for path in wkhtmltopdf_paths:
+        if os.path.exists(path) or path == 'wkhtmltopdf':
+            try:
+                import subprocess
+                result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    wkhtmltopdf_path = path
+                    break
+            except:
+                continue
+
+    try:
+        if wkhtmltopdf_path:
+            config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+            info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
+        else:
+            info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
+        print(f"  ✅ Info PDF generated: {len(info_pdf_bytes)} bytes")
+    except Exception as e:
+        print(f"  [ERR] pdfkit error: {e}")
+        return None
+
+    # ── MERGE: info PDF + all uploaded documents ──────────────
+    filename = f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}.pdf"
+    final_pdf_bytes = info_pdf_bytes  # fallback = info PDF only
+
+    try:
+        from pypdf import PdfWriter, PdfReader
+        from PIL import Image as PILImage
+
+        writer = PdfWriter()
+        readers_keep = []  # keep PdfReader objects alive
+
+        # --- helper: add a file (path) to writer ---
+        def _add_to_writer(path):
+            if not path or not os.path.exists(path):
+                return
+            try:
+                with open(path, 'rb') as fh:
+                    header = fh.read(4)
+                if header.startswith(b'%PDF'):
+                    reader = PdfReader(path)
+                    readers_keep.append(reader)
+                    for pg in reader.pages:
+                        writer.add_page(pg)
+                    print(f"  ✅ Merged PDF ({len(reader.pages)} pages): {os.path.basename(path)}")
+                else:
+                    # Image → convert to PDF page
+                    img = PILImage.open(path)
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+                    tmp_img_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                    img.save(tmp_img_pdf.name, 'PDF', resolution=100.0)
+                    tmp_img_pdf.close()
+                    temp_files.append(tmp_img_pdf.name)
+                    reader = PdfReader(tmp_img_pdf.name)
+                    readers_keep.append(reader)
+                    for pg in reader.pages:
+                        writer.add_page(pg)
+                    print(f"  ✅ Merged image as PDF: {os.path.basename(path)}")
+            except Exception as ex:
+                print(f"  [ERR] Could not merge {path}: {ex}")
+
+        # 1. Info PDF first
+        info_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        info_tmp.write(info_pdf_bytes)
+        info_tmp.close()
+        temp_files.append(info_tmp.name)
+        _add_to_writer(info_tmp.name)
+
+        # 2. Collect all student certificates
+        cert_fields = [
+            ('cert_achieve', 'cert_achieve_url'),
+            ('cert_intern', 'cert_intern_url'),
+            ('cert_courses', 'cert_courses_url'),
+            ('cert_sdp', 'cert_sdp_url'),
+            ('cert_extra', 'cert_extra_url'),
+            ('cert_placement', 'cert_placement_url'),
+            ('cert_national', 'cert_national_url'),
+        ]
+
+        for file_field_name, url_field_name in cert_fields:
+            ff = getattr(student, file_field_name, None)
+            url_val = getattr(student, url_field_name, None)
+
+            # Try local file first
+            p = _local_path(ff) if ff else None
+            if not p and url_val and isinstance(url_val, str) and url_val.startswith('http'):
+                p = _download(url_val)
+            elif ff:
+                try:
+                    furl = ff.url
+                    if furl and furl.startswith('http'):
+                        p = _download(furl)
+                except Exception:
+                    pass
+
+            if p:
+                _add_to_writer(p)
+
+        # Write merged PDF
+        if len(writer.pages) > 0:
+            merged_tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+            merged_tmp.close()
+            temp_files.append(merged_tmp.name)
+            with open(merged_tmp.name, 'wb') as out:
+                writer.write(out)
+            file_size = os.path.getsize(merged_tmp.name)
+            print(f"  ✅ Merged PDF: {len(writer.pages)} total pages, {file_size} bytes")
+            with open(merged_tmp.name, 'rb') as mf:
+                final_pdf_bytes = mf.read()
+
+            # Upload to Cloudinary
+            if is_cloudinary_configured():
+                try:
+                    cloudinary_public_id = f"{student.ht_no}/complete_profile"
+                    print(f" ☁️  Uploading merged PDF to Cloudinary: {cloudinary_public_id}")
+                    cloud_result = cloudinary.uploader.upload(
+                        merged_tmp.name, resource_type='raw',
+                        folder=f"student_documents/{student.ht_no}",
+                        public_id='complete_profile', overwrite=True,
+                    )
+                    student.pdf_url = cloud_result['secure_url']
+                    student.save(update_fields=['pdf_url'])
+                    CloudinaryUpload.objects.update_or_create(
+                        student=student, upload_type='complete_profile_pdf',
+                        defaults={
+                            'cloudinary_url': cloud_result['secure_url'],
+                            'public_id': cloud_result['public_id'],
+                            'resource_type': 'raw',
+                            'uploaded_by': 'system',
+                        }
+                    )
+                    print(f"  ✅ Uploaded to Cloudinary: {cloud_result['secure_url']}")
+                    return_url = cloud_result['secure_url']
+                except Exception as e:
+                    print(f"  [WARN] Cloudinary upload failed (non-fatal): {e}")
+                    return_url = None
+            else:
+                return_url = None
+        else:
+            print("  [WARN] No pages in writer — returning info PDF only")
+            return_url = None
+
+    except Exception as merge_err:
+        print(f"  [ERR] Merge error: {merge_err}")
+        return_url = None
+
+    # Fallback: save locally if Cloudinary failed or not configured
+    if not return_url:
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_final:
+                tmp_final.write(final_pdf_bytes)
+                tmp_final_path = tmp_final.name
+
+            with open(tmp_final_path, 'rb') as pdf_handle:
+                student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
+            student.pdf_generated = True
+            student.pdf_generation_time = timezone.now()
+            student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
+            return_url = student.pdf_file.url if student.pdf_file else None
+            print(f"  ✅ PDF saved locally: {return_url}")
+        except Exception as e:
+            print(f"  [ERR] Local save failed: {e}")
+            return_url = None
+
+    # Cleanup temp files
+    for temp_path in temp_files:
+        try:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
+        except Exception:
+            pass
+
+    student.pdf_generated = True
+    student.pdf_generation_time = timezone.now()
+    student.save(update_fields=['pdf_generated', 'pdf_generation_time', 'updated_at'])
+
+    print("=== STUDENT PDF GENERATION COMPLETE ===\n")
+    return return_url
 
 
 def generate_student_pdf_file(request, student_id):
-    import io, shutil
-    student = get_object_or_404(Student, id=student_id)
+    student = get_object_or_404(Student, student_id)
 
     # ── Recalculate age correctly ──────────────────────────
     correct_age = None
@@ -3249,23 +3510,8 @@ def generate_student_pdf_simple(request, student_id):
         writer = PdfWriter()
 
         # ---------- 1. Add photo as first page ----------
-        photo_path = None
-        photo_downloaded = None
-
-        # Check local photo first
-        if student.photo:
-            try:
-                if os.path.exists(student.photo.path):
-                    photo_path = student.photo.path
-            except:
-                pass
-
-        # Check photo_url if no local photo
-        if not photo_path and student.photo_url:
-            photo_downloaded, is_pdf = download_remote_asset(student.photo_url, default_suffix='.jpg')
-            if photo_downloaded and os.path.exists(photo_downloaded):
-                photo_path = photo_downloaded
-                temp_files.append(photo_path)
+        # Use the same robust collection logic as collect_student_files
+        photo_path, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
 
         # If photo exists, convert to PDF and add as first page
         if photo_path and os.path.exists(photo_path):
@@ -3312,33 +3558,18 @@ def generate_student_pdf_simple(request, student_id):
         ]
 
         for file_field, url_field, label in cert_fields:
-            file_obj = getattr(student, file_field, None)
-            url_val = getattr(student, url_field, None)
-
-            cert_path = None
-            cert_downloaded = None
-
-            # Check local file first
-            if file_obj:
-                try:
-                    if os.path.exists(file_obj.path):
-                        cert_path = file_obj.path
-                except:
-                    pass
-
-            # Check URL if no local file
-            if not cert_path and url_val:
-                cert_downloaded, is_pdf = download_remote_asset(url_val, default_suffix='.jpg')
-                if cert_downloaded and os.path.exists(cert_downloaded):
-                    cert_path = cert_downloaded
-                    temp_files.append(cert_path)
+            cert_path, is_pdf = _collect_asset(
+                getattr(student, file_field, None),
+                getattr(student, url_field, None),
+                default_suffix='.jpg'
+            )
 
             if not cert_path or not os.path.exists(cert_path):
                 continue
 
             try:
                 # Check if it's a PDF or image
-                if cert_path.lower().endswith('.pdf'):
+                if is_pdf:
                     reader = PdfReader(cert_path)
                     for page in reader.pages:
                         writer.add_page(page)
@@ -3481,7 +3712,6 @@ def export_students_csv(request):
 # ==================== ENHANCED GENERATE FACULTY PDF — FIXED VERSION ====================
 @login_required
 def generate_faculty_pdf(request, faculty_id):
-    import io, shutil
     from urllib.parse import quote
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
@@ -4463,7 +4693,7 @@ def bulk_generate_faculty_pdfs(request):
 
                         wkhtmltopdf_path = None
                         for path in wkhtmltopdf_paths:
-                            if os.path.exists(path) or path == 'wkhtmltopdf':
+                            if (isinstance(path, str) and os.path.exists(path)) or path == 'wkhtmltopdf':
                                 try:
                                     import subprocess
                                     result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
@@ -5014,6 +5244,7 @@ def generate_faculty_pdf_bytes(faculty):
 
 
 def merge_student_certificates(request, student_id):
+    """Merges student photo and all certificates into a single PDF and uploads to Cloudinary."""
     student = get_object_or_404(Student, id=student_id)
 
     # Check if student has photo or any certificates
@@ -5029,105 +5260,47 @@ def merge_student_certificates(request, student_id):
         messages.error(request, 'No photo or certificates found to merge.')
         return redirect('dashboard:student_detail', student_id=student_id)
 
+    temp_files = []
     try:
         writer = PdfWriter()
         merged_count = 0
 
-        # First, add the photo if it exists
-        photo_url = student.photo_url or (student.photo.url if student.photo else None)
-        if photo_url and photo_url.startswith('http'):
-            downloaded_path, is_pdf = download_remote_asset(photo_url, default_suffix='.jpg')
-            if downloaded_path:
-                try:
-                    # Convert image to PDF page
-                    from PIL import Image
-                    import io
-
-                    image = Image.open(downloaded_path)
-                    # Convert to RGB if necessary
-                    if image.mode != 'RGB':
-                        image = image.convert('RGB')
-
-                    # Create a PDF page from the image
-                    from reportlab.pdfgen import canvas
-                    from reportlab.lib.pagesizes import letter
-
-                    img_pdf_buffer = io.BytesIO()
-                    c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
-                    img_width, img_height = image.size
-
-                    # Calculate scaling to fit the page
-                    page_width, page_height = letter
-                    scale = min(page_width / img_width, page_height / img_height)
-                    new_width = img_width * scale
-                    new_height = img_height * scale
-
-                    # Center the image
-                    x = (page_width - new_width) / 2
-                    y = (page_height - new_height) / 2
-
-                    c.drawImage(downloaded_path, x, y, new_width, new_height)
-                    c.save()
-
-                    # Add the image PDF page to the writer
-                    img_pdf_buffer.seek(0)
-                    img_reader = PdfReader(img_pdf_buffer)
-                    for page in img_reader.pages:
-                        writer.add_page(page)
-
-                    merged_count += 1
-                    logger.info("Successfully merged photo from URL")
-                    os.unlink(downloaded_path)
-                except Exception as e:
-                    logger.warning(f"Failed to merge photo from URL: {e}")
-
-        elif student.photo and hasattr(student.photo, 'path'):
+        # 1. Add the photo if it exists
+        photo_path, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
+        if photo_path and os.path.exists(photo_path):
             try:
-                if os.path.exists(student.photo.path):
-                    try:
-                        from PIL import Image
-                        import io
-                        from reportlab.pdfgen import canvas
-                        from reportlab.lib.pagesizes import letter
+                # Convert image to PDF page
+                from PIL import Image
+                import io
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.pagesizes import letter
 
-                        image = Image.open(student.photo.path)
-                        # Convert to RGB if necessary
-                        if image.mode != 'RGB':
-                            image = image.convert('RGB')
+                image = Image.open(photo_path)
+                if image.mode not in ('RGB', 'L'):
+                    image = image.convert('RGB')
 
-                        # Create a PDF page from the image
-                        img_pdf_buffer = io.BytesIO()
-                        c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
-                        img_width, img_height = image.size
+                img_pdf_buffer = io.BytesIO()
+                c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                img_width, img_height = image.size
+                page_width, page_height = letter
+                scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
+                new_width = img_width * scale
+                new_height = img_height * scale
+                x = (page_width - new_width) / 2
+                y = (page_height - new_height) / 2
 
-                        # Calculate scaling to fit the page
-                        page_width, page_height = letter
-                        scale = min(page_width / img_width, page_height / img_height)
-                        new_width = img_width * scale
-                        new_height = img_height * scale
+                c.drawImage(photo_path, x, y, width=new_width, height=new_height)
+                c.showPage()
+                c.save()
 
-                        # Center the image
-                        x = (page_width - new_width) / 2
-                        y = (page_height - new_height) / 2
-
-                        c.drawImage(student.photo.path, x, y, new_width, new_height)
-                        c.save()
-
-                        # Add the image PDF page to the writer
-                        img_pdf_buffer.seek(0)
-                        img_reader = PdfReader(img_pdf_buffer)
-                        for page in img_reader.pages:
-                            writer.add_page(page)
-
-                        merged_count += 1
-                        logger.info("Successfully merged local photo")
-
-                    except Exception as e:
-                        logger.warning(f"Failed to merge local photo: {e}")
+                img_pdf_buffer.seek(0)
+                writer.add_page(PdfReader(img_pdf_buffer).pages[0])
+                merged_count += 1
+                logger.info(f"Added photo to merged PDF for student {student.ht_no}")
             except Exception as e:
-                logger.warning(f"Failed to process local photo: {e}")
+                logger.error(f"Error adding photo to merged PDF: {e}")
 
-        # Define certificate fields and their types
+        # 2. Add certificates
         cert_fields = [
             ('cert_achieve', 'cert_achieve_url', 'Achievement Certificate'),
             ('cert_intern', 'cert_intern_url', 'Internship Certificate'),
@@ -5139,119 +5312,85 @@ def merge_student_certificates(request, student_id):
         ]
 
         for file_field, url_field, cert_type in cert_fields:
-            cert_file = getattr(student, file_field, None)
-            cert_url = getattr(student, url_field, None)
-
-            # Local file first
-            processed = False
-            if cert_file and hasattr(cert_file, 'path'):
+            asset_path, is_pdf = _collect_asset(
+                getattr(student, file_field, None),
+                getattr(student, url_field, None),
+                default_suffix='.jpg'
+            )
+            
+            if asset_path and os.path.exists(asset_path):
                 try:
-                    if os.path.exists(cert_file.path):
-                        if cert_file.path.lower().endswith('.pdf'):
-                            for pg in PdfReader(cert_file.path).pages:
-                                writer.add_page(pg)
-                            merged_count += 1
-                        else:
-                            # Image - convert to PDF page
-                            img = Image.open(cert_file.path)
-                            if img.mode != 'RGB': img = img.convert('RGB')
-                            img_pdf_buffer = io.BytesIO()
-                            c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
-                            page_width, page_height = letter
-                            img_width, img_height = img.size
-                            scale = min(page_width / img_width, page_height / img_height)
-                            new_width = img_width * scale
-                            new_height = img_height * scale
-                            x = (page_width - new_width) / 2
-                            y = (page_height - new_height) / 2
-                            c.drawImage(cert_file.path, x, y, new_width, new_height)
-                            c.save()
-                            img_pdf_buffer.seek(0)
-                            for pg in PdfReader(img_pdf_buffer).pages:
-                                writer.add_page(pg)
-                            merged_count += 1
-                        logger.info(f"Successfully merged local {cert_type}")
-                        processed = True
-                except Exception as e:
-                    logger.warning(f"Failed to merge local {cert_type}: {e}")
-
-            if not processed and cert_url:
-                try:
-                    downloaded_path, is_pdf = download_remote_asset(cert_url, default_suffix='.jpg')
-                    if downloaded_path:
-                        if is_pdf:
-                            for pg in PdfReader(downloaded_path).pages:
-                                writer.add_page(pg)
-                        else:
-                            # Image
-                            img = Image.open(downloaded_path)
-                            if img.mode != 'RGB': img = img.convert('RGB')
-                            img_pdf_buffer = io.BytesIO()
-                            c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
-                            page_width, page_height = letter
-                            img_width, img_height = img.size
-                            scale = min(page_width / img_width, page_height / img_height)
-                            new_width = img_width * scale
-                            new_height = img_height * scale
-                            x = (page_width - new_width) / 2
-                            y = (page_height - new_height) / 2
-                            c.drawImage(downloaded_path, x, y, new_width, new_height)
-                            c.save()
-                            img_pdf_buffer.seek(0)
-                            for pg in PdfReader(img_pdf_buffer).pages:
-                                writer.add_page(pg)
-
-                            os.unlink(downloaded_path)
-                            merged_count += 1
-                        logger.info(f"Successfully merged {cert_type} from URL")
+                    if is_pdf:
+                        reader = PdfReader(asset_path)
+                        for page in reader.pages:
+                            writer.add_page(page)
+                        merged_count += 1
                     else:
-                        logger.warning(f"Failed to download {cert_type}")
+                        # Image - convert to PDF page
+                        from PIL import Image
+                        import io
+                        from reportlab.pdfgen import canvas
+                        from reportlab.lib.pagesizes import letter
+
+                        img = Image.open(asset_path)
+                        if img.mode not in ('RGB', 'L'):
+                            img = img.convert('RGB')
+                            
+                        img_pdf_buffer = io.BytesIO()
+                        c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                        page_width, page_height = letter
+                        img_width, img_height = img.size
+                        scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
+                        new_width = img_width * scale
+                        new_height = img_height * scale
+                        x = (page_width - new_width) / 2
+                        y = (page_height - new_height) / 2
+                        
+                        c.drawImage(asset_path, x, y, width=new_width, height=new_height)
+                        c.showPage()
+                        c.save()
+                        
+                        img_pdf_buffer.seek(0)
+                        writer.add_page(PdfReader(img_pdf_buffer).pages[0])
+                        merged_count += 1
+                    
+                    logger.info(f"Successfully merged {cert_type}")
                 except Exception as e:
-                    logger.warning(f"Failed to merge {cert_type} from URL: {e}")
+                    logger.warning(f"Failed to merge {cert_type}: {e}")
 
         if merged_count == 0:
-            messages.error(request, 'No valid certificates could be merged.')
+            messages.error(request, 'No valid photo or certificates could be merged.')
             return redirect('dashboard:student_detail', student_id=student_id)
 
-        # Create merged PDF
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-            writer.write(mf.name)
-            merged_path = mf.name
+        # 3. Create merged PDF
+        output_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        output_pdf_path = output_pdf.name
+        output_pdf.close()
+        temp_files.append(output_pdf_path)
+        
+        with open(output_pdf_path, 'wb') as f:
+            writer.write(f)
 
-        # Upload to Cloudinary if configured
+        # 4. Upload to Cloudinary if configured
         merged_url = None
         if is_cloudinary_configured():
             try:
                 cr = cloudinary.uploader.upload(
-                    merged_path, resource_type="raw", folder="merged_student_certificates",
+                    output_pdf_path, resource_type="raw", folder="merged_student_certificates",
                     public_id=f"merged_student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                    overwrite=False
+                    overwrite=True
                 )
                 merged_url = cr['secure_url']
                 logger.info(f"Uploaded merged certificates to Cloudinary: {merged_url}")
-
-                # Save to database if we have a model for this
-                # For now, we'll just store the URL in a session or pass it to template
-
             except Exception as e:
                 logger.error(f"Failed to upload merged certificates to Cloudinary: {e}")
 
-        # Clean up temp file
-        if os.path.exists(merged_path):
-            os.unlink(merged_path)
-
-        content_types = []
-        if student.photo or student.photo_url:
-            content_types.append("photo")
-        if merged_count > (1 if (student.photo or student.photo_url) else 0):
-            content_types.append("certificates")
-
-        content_desc = " and ".join(content_types) if content_types else "content"
-
+        # 5. Result message
         if merged_url:
-            messages.success(request, f'Successfully merged {merged_count} items ({content_desc}). <a href="{merged_url}" target="_blank">Download PDF</a>')
+            from django.utils.safestring import mark_safe
+            messages.success(request, mark_safe(f'Successfully merged {merged_count} items. <a href="{merged_url}" target="_blank" class="btn btn-sm btn-info">Download Merged PDF</a>'))
         else:
-            messages.warning(request, f'Merged {merged_count} items ({content_desc}) but upload failed. Please try again.')
+            messages.warning(request, f'Merged {merged_count} items into PDF, but Cloudinary upload failed.')
 
         return redirect('dashboard:student_detail', student_id=student_id)
 
@@ -5259,6 +5398,14 @@ def merge_student_certificates(request, student_id):
         logger.error(f"Error merging student certificates: {e}")
         messages.error(request, f'Error merging certificates: {str(e)}')
         return redirect('dashboard:student_detail', student_id=student_id)
+    finally:
+        # Clean up temp files
+        for tf in temp_files:
+            try:
+                if os.path.exists(tf):
+                    os.remove(tf)
+            except Exception:
+                pass
 
 
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
@@ -5567,7 +5714,7 @@ def system_status(request):
                 'memory_percent': psutil.virtual_memory().percent,
                 'disk_usage': psutil.disk_usage('/').percent,
                 'boot_time': datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S'),
-                'python_version': os.sys.version,
+                'python_version': sys.version,
                 'django_version': django.get_version(),
             }
         except Exception:
@@ -6566,7 +6713,7 @@ def exam_branch_generate_report(request):
 
             wkhtmltopdf_path = None
             for path in wkhtmltopdf_paths:
-                if os.path.exists(path) or path == 'wkhtmltopdf':
+                if (isinstance(path, str) and os.path.exists(path)) or path == 'wkhtmltopdf':
                     try:
                         import subprocess
                         result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
