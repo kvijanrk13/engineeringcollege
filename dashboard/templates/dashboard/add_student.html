@@ -619,12 +619,12 @@
                 <img src="{% if student.photo_url %}{{ student.photo_url }}{% else %}{{ student.photo.url }}{% endif %}" alt="Current Photo" style="max-width: 150px; border: 1px solid #0f0;">
             </div>
             {% endif %}
-            <div class="file-upload" onclick="document.getElementById('photoInput').click()">
+            <label class="file-upload" for="photoInput" style="display: block;">
                 <i>📷</i>
                 <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;">
-                <label for="photoInput">{% if student.photo_url or student.photo %}Click to Change Photo{% else %}Click to upload student photo{% endif %}</label>
+                <span id="photoInputLabel">{% if student.photo_url or student.photo %}Click to Change Photo{% else %}Click to upload student photo{% endif %}</span>
                 <div class="help-text">Supported formats: JPG, PNG (Max size: 5MB)</div>
-            </div>
+            </label>
         </div>
 
         <!-- Certificates Upload -->
@@ -762,7 +762,7 @@
     document.getElementById('photoInput').addEventListener('change', function(e) {
         const fileName = e.target.files[0]?.name;
         if (fileName) {
-            const label = document.querySelector('.file-upload label');
+            const label = document.getElementById('photoInputLabel');
             label.textContent = `Selected: ${fileName}`;
         }
     });
