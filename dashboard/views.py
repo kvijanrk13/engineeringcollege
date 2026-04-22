@@ -1207,8 +1207,12 @@ def bulk_student_actions(request):
         for sid in student_ids:
             try:
                 student = Student.objects.get(id=sid)
-                generate_student_pdf(student)
-                ok += 1
+                pdf_url = generate_student_pdf(student)
+                if pdf_url:
+                    ok += 1
+                else:
+                    logger.warning(f"PDF generation returned None for student {sid}")
+                    err += 1
             except Exception as e:
                 logger.error(f"Error generating PDF for student {sid}: {e}")
                 err += 1
@@ -2856,11 +2860,16 @@ def edit_student(request, student_id):
 @login_required
 def generate_student_pdf_view(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    pdf_url = generate_student_pdf(student)
-    if pdf_url:
-        return redirect(pdf_url)
-    else:
-        messages.error(request, "Failed to generate PDF.")
+    try:
+        pdf_url = generate_student_pdf(student)
+        if pdf_url:
+            return redirect(pdf_url)
+        else:
+            messages.error(request, "Failed to generate PDF.")
+            return redirect('dashboard:students_data')
+    except Exception as e:
+        logger.error(f"Error generating PDF for student {student_id}: {e}")
+        messages.error(request, f"Failed to generate PDF: {str(e)}")
         return redirect('dashboard:students_data')
 
 
