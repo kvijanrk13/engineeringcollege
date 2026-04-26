@@ -32,7 +32,8 @@ urlpatterns = [
 
     # Dashboard variants
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('student-dashboard/', views.student_dashboard, name='student_dashboard'),
+    path('student-dashboard/', views.student_dashboard_password, name='student_dashboard'),
+    path('student-dashboard/view/', views.student_dashboard, name='student_dashboard_view'),
 
     # Faculty routes (top level)
     path('faculty/', views.faculty_dashboard, name='faculty'),
@@ -40,7 +41,8 @@ urlpatterns = [
 
     # Faculty sub-routes
     path('faculty/dashboard/', views.faculty_dashboard, name='faculty_dashboard'),
-    path('faculty/list/', views.faculty_list, name='faculty_list'),
+    path('faculty/list/', views.faculty_list_password, name='faculty_list'),
+    path('faculty/list/view/', views.faculty_list, name='faculty_list_view'),
     path('faculty/add/', views.add_faculty, name='add_faculty'),
     path('faculty/edit/<int:faculty_id>/', views.edit_faculty, name='edit_faculty'),
     path('faculty/edit-complete/<int:faculty_id>/', views.edit_faculty_complete, name='edit_faculty_complete'),
@@ -73,7 +75,8 @@ urlpatterns = [
     # Students routes
     path('students/', views.students_data, name='students'),
     path('students-list/', views.students_data, name='students-list'),
-    path('students/data/', views.students_data, name='students_data'),
+    path('students/data/', views.students_data_password, name='students_data'),
+    path('students/data/view/', views.students_data, name='students_data_view'),
     path('student-details/', views.students_data, name='student_details'),
     path('add-student/', views.add_student, name='add_student'),
     path('student/<int:student_id>/', views.student_detail, name='student_detail'),
@@ -83,6 +86,7 @@ urlpatterns = [
     # Student PDF routes
     path('student/pdf/<int:student_id>/', views.generate_student_pdf_view, name='generate_student_pdf'),
     path('student/pdf-regenerate/<int:student_id>/', views.regenerate_student_pdf, name='regenerate_student_pdf'),
+    path('student/merge-certificates/<int:student_id>/', views.merge_student_certificates, name='merge_student_certificates'),
     path('student/charts/', views.student_charts, name='student_charts'),
 
     # Students export

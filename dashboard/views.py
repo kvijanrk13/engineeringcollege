@@ -20,6 +20,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -44,6 +45,7 @@ import fitz  # PyMuPDF
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import cloudinary.utils
 # Local imports
 from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
@@ -51,14 +53,11 @@ from .models import (
     ResearchPublication, FDP, BTechProject
 )
 from .forms import (
-    LoginForm, StudentForm, FacultyForm, CertificateForm,
-    BulkUploadForm, FacultyProfileForm, ResearchProjectForm,
+    StudentForm, CertificateForm,
+    BulkUploadForm, FacultyProfileForm,
 )
 from .utils import (
-    calculate_experience, generate_pdf_from_html, merge_pdfs,
-    extract_text_from_pdf, validate_faculty_data, calculate_age,
-    format_date, get_academic_year, send_email_notification,
-    generate_qr_code, export_to_excel, validate_student_data,
+    calculate_experience,
     validate_pdf_file, validate_image_file, parse_date
 )
 
@@ -133,7 +132,7 @@ def get_wkhtmltopdf_path():
 
 
 # ==================== HELPER FUNCTIONS ====================
-def get_cloudinary_public_id(url):
+def get_cloudinary_public_id(url, keep_extension=False):
     try:
         if '/upload/' not in url:
             return None
@@ -144,11 +143,101 @@ def get_cloudinary_public_id(url):
         if not parts:
             return None
         public_id = '/'.join(parts)
-        if '.' in public_id:
+        if not keep_extension and '.' in public_id:
             public_id = public_id.rsplit('.', 1)[0]
         return public_id
     except Exception:
         return None
+
+
+def get_cloudinary_public_id_candidates(url):
+    """Return likely Cloudinary public_id variants for image and raw resources."""
+    candidates = []
+    for keep_extension in (True, False):
+        public_id = get_cloudinary_public_id(url, keep_extension=keep_extension)
+        if public_id and public_id not in candidates:
+            candidates.append(public_id)
+    return candidates
+
+
+def try_cloudinary_private_download(public_id, headers=None):
+    """Download a raw Cloudinary asset through the signed API download endpoint."""
+    if not public_id:
+        return None
+
+    try:
+        if '.' in public_id:
+            base_public_id, extension = public_id.rsplit('.', 1)
+        else:
+            base_public_id, extension = public_id, None
+
+        download_url = cloudinary.utils.private_download_url(
+            public_id if extension else base_public_id,
+            resource_type='raw',
+            format=extension,
+            type='upload',
+            attachment=False,
+        )
+        response = requests.get(download_url, timeout=30, headers=headers or {})
+        if response.status_code == 200:
+            return response
+        logger.warning(
+            f"Cloudinary private download failed for {public_id}: HTTP {response.status_code}"
+        )
+    except Exception as e:
+        logger.warning(f"Cloudinary private download failed for {public_id}: {e}")
+    return None
+
+
+def normalize_optional_url(value):
+    value = (value or '').strip()
+    if not value:
+        return ''
+    if value.startswith('//'):
+        return f'https:{value}'
+    if value.lower().startswith(('http://', 'https://')):
+        return value
+    if '://' in value:
+        return ''
+    return f'https://{value.lstrip("/")}'
+
+
+def parse_json_list(value):
+    try:
+        parsed = json.loads(value or '[]')
+        return parsed if isinstance(parsed, list) else []
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
+
+
+def iter_indexed_uploaded_files(files, prefix):
+    indexed_files = []
+    for key in files.keys():
+        if not key.startswith(prefix):
+            continue
+        suffix = key[len(prefix):]
+        if not suffix.isdigit():
+            continue
+        indexed_files.append((int(suffix), files[key]))
+    indexed_files.sort(key=lambda item: item[0])
+    return indexed_files
+
+
+def record_cloudinary_upload(*, upload_type, upload_result, uploaded_by=None, faculty=None, student=None):
+    if not upload_result:
+        return
+    try:
+        CloudinaryUpload.objects.create(
+            faculty=faculty,
+            student=student,
+            upload_type=upload_type,
+            cloudinary_url=upload_result.get('secure_url', ''),
+            public_id=upload_result.get('public_id', ''),
+            resource_type=upload_result.get('resource_type', 'auto') or 'auto',
+            uploaded_by=uploaded_by,
+        )
+    except Exception as exc:
+        logger.warning(f"Unable to record Cloudinary upload for {upload_type}: {exc}")
 
 
 def download_remote_asset(url, default_suffix='.pdf'):
@@ -160,16 +249,71 @@ def download_remote_asset(url, default_suffix='.pdf'):
         response = requests.get(url, timeout=30, headers=headers)
         
         # Fallback for Cloudinary errors
-        if response.status_code in [401, 403] and 'cloudinary.com' in url:
+        if response.status_code in [401, 403, 404] and 'cloudinary.com' in url:
             try:
-                public_id = get_cloudinary_public_id(url)
-                if public_id:
-                    resource = cloudinary.api.resource(public_id)
-                    secure_url = resource.get('secure_url')
-                    if secure_url:
-                        response = requests.get(secure_url, timeout=30, headers=headers)
+                public_ids = get_cloudinary_public_id_candidates(url)
+                for public_id in public_ids:
+                    if response.status_code == 200:
+                        break
+
+                    if '/raw/upload/' in url:
+                        private_response = try_cloudinary_private_download(public_id, headers=headers)
+                        if private_response is not None:
+                            response = private_response
+                            break
+
+                    for resource_type in ('raw', 'image'):
+                        try:
+                            resource = cloudinary.api.resource(public_id, resource_type=resource_type)
+                            secure_url = resource.get('secure_url')
+                            if secure_url:
+                                response = requests.get(secure_url, timeout=30, headers=headers)
+                                if response.status_code == 200:
+                                    break
+                        except Exception as api_err:
+                            logger.warning(
+                                f"Cloudinary API lookup failed for {public_id} ({resource_type}): {api_err}"
+                            )
+
+                    if response.status_code == 200:
+                        break
+
+                    # Try constructing URLs with different resource types
+                    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+                    if cloud_name:
+                        for res_type in ['raw', 'image']:
+                            try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
+                            logger.info(f"Trying {res_type} URL: {try_url}")
+                            test_r = requests.get(try_url, timeout=30, headers=headers)
+                            if test_r.status_code == 200:
+                                response = test_r
+                                break
+                            elif test_r.status_code == 404:
+                                continue
+                            else:
+                                break
+                    if response.status_code == 200:
+                        break
             except Exception as cloud_err:
                 logger.warning(f"Cloudinary fallback failed: {cloud_err}")
+
+        # Additional fallback: try changing resource type in URL
+        if response.status_code != 200 and 'cloudinary.com' in url:
+            try:
+                alt_urls = []
+                if '/raw/upload/' in url:
+                    alt_urls.append(url.replace('/raw/upload/', '/image/upload/'))
+                elif '/image/upload/' in url:
+                    alt_urls.append(url.replace('/image/upload/', '/raw/upload/'))
+
+                for alt_url in alt_urls:
+                    logger.info(f"Trying alternative resource type: {alt_url}")
+                    alt_r = requests.get(alt_url, timeout=30, headers=headers)
+                    if alt_r.status_code == 200:
+                        response = alt_r
+                        break
+            except Exception as alt_err:
+                logger.warning(f"Alternative URL fallback failed: {alt_err}")
 
         if response.status_code != 200:
             logger.warning(f"Failed to download asset {url}: HTTP {response.status_code}")
@@ -190,6 +334,31 @@ def download_remote_asset(url, default_suffix='.pdf'):
     except Exception as e:
         logger.warning(f"Error downloading asset {url}: {e}")
         return None, False
+
+
+def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
+    """Return a readable local path for a FileField/URL plus whether it is a PDF."""
+    try:
+        if file_field and getattr(file_field, 'name', ''):
+            try:
+                local_path = file_field.path
+                if local_path and os.path.exists(local_path):
+                    return local_path, local_path.lower().endswith('.pdf')
+            except (NotImplementedError, ValueError, OSError):
+                pass
+
+            try:
+                field_url = getattr(file_field, 'url', None)
+            except Exception:
+                field_url = None
+            if field_url:
+                return download_remote_asset(field_url, default_suffix=default_suffix)
+
+        if url:
+            return download_remote_asset(url, default_suffix=default_suffix)
+    except Exception as e:
+        logger.warning(f"Error resolving asset: {e}")
+    return None, False
 
 
 def calculate_correct_age(dob):
@@ -281,12 +450,12 @@ def merge_all_documents(output_path, image_files, pdf_files):
             if not pdf_path:
                 continue
             if isinstance(pdf_path, str) and pdf_path.startswith('http'):
-                print(f" 🌐 Downloading PDF from URL: {pdf_path}")
+                print(f" [URL] Downloading PDF from URL: {pdf_path}")
                 downloaded_path, is_pdf = download_remote_asset(pdf_path, default_suffix=".pdf")
                 if downloaded_path:
                     pdf_path = downloaded_path
                     temp_files.append(pdf_path)
-                    print(f" ✅ Downloaded: {pdf_path}")
+                    print(f" [OK] Downloaded: {pdf_path}")
                 else:
                     print(f" [SKIP] Failed to download PDF")
                     skipped_count += 1
@@ -316,12 +485,12 @@ def merge_all_documents(output_path, image_files, pdf_files):
             if not img_path:
                 continue
             if isinstance(img_path, str) and img_path.startswith('http'):
-                print(f" 🌐 Downloading image from URL: {img_path}")
+                print(f" [URL] Downloading image from URL: {img_path}")
                 downloaded_path, is_pdf = download_remote_asset(img_path, default_suffix=".jpg")
                 if downloaded_path:
                     img_path = downloaded_path
                     temp_files.append(img_path)
-                    print(f" ✅ Downloaded: {img_path}")
+                    print(f" [OK] Downloaded: {img_path}")
                 else:
                     print(f" [SKIP] Failed to download image")
                     skipped_count += 1
@@ -389,6 +558,156 @@ def merge_all_documents(output_path, image_files, pdf_files):
                     os.remove(tmp)
             except Exception:
                 pass
+
+
+def generate_student_pdf_bytes(student):
+    """Generate student PDF as bytes without request object."""
+    try:
+        from django.test import RequestFactory
+        from django.contrib.auth.models import AnonymousUser
+        factory = RequestFactory()
+        fake_req = factory.get('/')
+        fake_req.user = AnonymousUser()
+        fake_req.META['REMOTE_ADDR'] = '127.0.0.1'
+        return generate_student_pdf(student, return_bytes=True)
+    except Exception as e:
+        logger.error(f"Error generating student PDF bytes: {e}")
+        return None
+
+
+def merge_student_certificates_with_pdf_bytes(pdf_bytes, student):
+    """Merge student PDF with their certificates and return merged PDF bytes.
+    
+    This function:
+    1. Adds the main student profile PDF
+    2. Downloads and processes all certificates from Cloudinary URLs or local storage
+    3. Converts images to PDF pages and merges them
+    4. Returns the complete merged PDF as bytes
+    """
+    try:
+        writer = PdfWriter()
+        temp_files = []  # Track all temp files for cleanup
+
+        # 1. Add the main student PDF
+        if pdf_bytes:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
+                tf.write(pdf_bytes)
+                tfp = tf.name
+                temp_files.append(tfp)
+            try:
+                for pg in PdfReader(tfp).pages:
+                    writer.add_page(pg)
+                logger.info(f"Added main student PDF for {student.ht_no}")
+            except Exception as e:
+                logger.warning(f"Error reading main student PDF: {e}")
+
+        cert_count = 0
+        # 2. Collect and add student certificates
+        photo_path, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        temp_files.extend(collected_temp_files)
+
+        # 2a. Add photo if it exists (convert image to PDF page)
+        if photo_path and os.path.exists(photo_path):
+            try:
+                from PIL import Image as PILImage
+                import io
+                from reportlab.pdfgen import canvas
+                from reportlab.lib.pagesizes import letter
+
+                image = PILImage.open(photo_path)
+                if image.mode not in ('RGB', 'L'):
+                    image = image.convert('RGB')
+
+                img_pdf_buffer = io.BytesIO()
+                c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                img_width, img_height = image.size
+                page_width, page_height = letter
+                scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
+                new_width = img_width * scale
+                new_height = img_height * scale
+                x = (page_width - new_width) / 2
+                y = (page_height - new_height) / 2
+
+                c.drawImage(photo_path, x, y, width=new_width, height=new_height)
+                c.showPage()
+                c.save()
+
+                img_pdf_buffer.seek(0)
+                writer.add_page(PdfReader(img_pdf_buffer).pages[0])
+                cert_count += 1
+                logger.info(f"Added photo to merged PDF for student {student.ht_no}")
+            except Exception as e:
+                logger.error(f"Error adding photo to merged student PDF: {e}")
+
+        # 2b. Add PDF certificates
+        for cert_path in pdf_files:
+            if cert_path and os.path.exists(cert_path):
+                try:
+                    reader = PdfReader(cert_path)
+                    for page in reader.pages:
+                        writer.add_page(page)
+                    cert_count += 1
+                    logger.info(f"Successfully merged student certificate PDF: {cert_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to merge student certificate PDF {cert_path}: {e}")
+
+        # 2c. Add image certificates (convert to PDF pages)
+        for image_path in image_files:
+            if image_path and os.path.exists(image_path):
+                try:
+                    from PIL import Image as PILImage
+                    import io
+                    from reportlab.pdfgen import canvas
+                    from reportlab.lib.pagesizes import letter
+
+                    img = PILImage.open(image_path)
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+
+                    img_pdf_buffer = io.BytesIO()
+                    c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
+                    page_width, page_height = letter
+                    img_width, img_height = img.size
+                    scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
+                    new_width = img_width * scale
+                    new_height = img_height * scale
+                    x = (page_width - new_width) / 2
+                    y = (page_height - new_height) / 2
+
+                    c.drawImage(image_path, x, y, width=new_width, height=new_height)
+                    c.showPage()
+                    c.save()
+
+                    img_pdf_buffer.seek(0)
+                    writer.add_page(PdfReader(img_pdf_buffer).pages[0])
+                    cert_count += 1
+                    logger.info(f"Successfully merged student certificate image: {image_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to merge student certificate image {image_path}: {e}")
+
+        logger.info(f"Total items merged with student PDF: {cert_count}")
+
+        # 3. Create merged PDF and return bytes
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
+            writer.write(mf)
+            temp_files.append(mf.name)
+            with open(mf.name, 'rb') as f:
+                merged = f.read()
+
+        # Cleanup all temp files
+        for temp_file in temp_files:
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+            except Exception:
+                pass
+
+        return merged
+    except Exception as e:
+        logger.error(f"Error in merge_student_certificates_with_pdf_bytes: {e}")
+        traceback.print_exc()
+        return None
+
 
 
 def merge_documents(output_path, image_files=None, pdf_files=None):
@@ -501,7 +820,7 @@ def merge_files(file_list):
     merger.write(final_pdf.name)
     final_pdf.close()
     print(f"[OK] Final PDF: {final_pdf.name}")
-    print(f"📊 Summary: {valid_files} files merged, {skipped_files} files skipped")
+    print(f"[COUNT] Summary: {valid_files} files merged, {skipped_files} files skipped")
     print("========== ENHANCED PDF MERGE END ==========\n")
     for f in temp_files:
         try:
@@ -525,44 +844,60 @@ def collect_faculty_files(faculty):
     # Photo
     if faculty.cloudinary_photo_url:
         try:
-            print(f"📷 Found Cloudinary photo URL: {faculty.cloudinary_photo_url}")
+            print(f" [OK] Found Cloudinary photo URL: {faculty.cloudinary_photo_url}")
             response = requests.get(faculty.cloudinary_photo_url, timeout=30)
+            # Enhanced fallback for Cloudinary errors
+            if response.status_code in [401, 403, 404]:
+                try:
+                    public_id = faculty.cloudinary_photo_url.split('/upload/')[1].split('/')[1:] if '/upload/' in faculty.cloudinary_photo_url else None
+                    if public_id:
+                        public_id = '/'.join(public_id).rsplit('.', 1)[0]
+                        try:
+                            resource = cloudinary.api.resource(public_id)
+                            if resource.get('secure_url'):
+                                photo_url = resource['secure_url']
+                                print(f" [~] Using Cloudinary API resource URL: {photo_url}")
+                                response = requests.get(photo_url, timeout=30)
+                        except Exception as api_err:
+                            print(f" [DOWNLOAD] API resource lookup failed: {api_err}")
+                            # Try constructing URLs with different resource types
+                            cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+                            if cloud_name:
+                                for res_type in ['image', 'raw']:
+                                    try:
+                                        try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
+                                        test_r = requests.get(try_url, timeout=30)
+                                        if test_r.status_code == 200:
+                                            response = test_r
+                                            break
+                                        elif test_r.status_code == 404:
+                                            continue
+                                        else:
+                                            break
+                                    except Exception:
+                                        continue
+                except Exception as cloud_err:
+                    print(f" [WARN] Cloudinary fallback failed: {cloud_err}")
+
             if response.status_code == 200:
                 tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
                 tmp.write(response.content)
                 tmp.close()
                 image_files.append(tmp.name)
                 temp_files.append(tmp.name)
-                print(f" ✅ Downloaded photo from Cloudinary: {tmp.name}")
-            elif response.status_code == 401:
-                try:
-                    public_id = faculty.cloudinary_photo_url.split('/upload/')[1].split('/')[1:] if '/upload/' in faculty.cloudinary_photo_url else None
-                    if public_id:
-                        public_id = '/'.join(public_id).rsplit('.', 1)[0]
-                        resource = cloudinary.api.resource(public_id)
-                        if resource.get('secure_url'):
-                            photo_url = resource['secure_url']
-                            print(f" [~] Using Cloudinary API resource URL: {photo_url}")
-                            response = requests.get(photo_url, timeout=30)
-                            if response.status_code == 200:
-                                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-                                tmp.write(response.content)
-                                tmp.close()
-                                image_files.append(tmp.name)
-                                temp_files.append(tmp.name)
-                                print(f" ✅ Downloaded photo via API: {tmp.name}")
-                except Exception as cloud_err:
-                    print(f" ❌ Cloudinary API error: {cloud_err}")
+                print(f" [OK] Downloaded photo from Cloudinary: {tmp.name}")
+            else:
+                print(f" [SKIP] Photo download failed: HTTP {response.status_code}")
         except Exception as e:
-            print(f" ❌ Cloudinary photo download error: {e}")
+            print(f" [ERR] Cloudinary photo download error: {e}")
     if faculty.photo:
         file_path, file_url = get_file_from_field(faculty.photo, None)
         if file_path:
             image_files.append(file_path)
-            print(f" ✅ Photo (local): {file_path}")
+            print(f" [OK] Photo (local): {file_path}")
         elif file_url:
             try:
-                print(f"📷 Downloading photo from: {file_url}")
+                print(f"[PHOTO] Downloading photo from: {file_url}")
                 response = requests.get(file_url, timeout=30)
                 if response.status_code == 200:
                     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
@@ -570,9 +905,9 @@ def collect_faculty_files(faculty):
                     tmp.close()
                     image_files.append(tmp.name)
                     temp_files.append(tmp.name)
-                    print(f" ✅ Downloaded photo: {tmp.name}")
+                    print(f" [OK] Downloaded photo: {tmp.name}")
             except Exception as e:
-                print(f" ❌ Photo download error: {e}")
+                print(f" [ERROR] Photo download error: {e}")
     # Documents - UPDATED with ALL new fields
     doc_fields = [
         ('aadhar_url', 'aadhar_file', 'Aadhar Card'),
@@ -597,8 +932,63 @@ def collect_faculty_files(faculty):
         file_field = getattr(faculty, file_field_name, None)
         if cloudinary_url and cloudinary_url.startswith('http'):
             try:
-                print(f" 🌐 Downloading {display_name} from: {cloudinary_url}")
+                print(f" [OK] Downloading {display_name} from: {cloudinary_url}")
                 response = requests.get(cloudinary_url, timeout=30)
+
+                # Enhanced fallback for Cloudinary errors
+                if response.status_code in [401, 403, 404]:
+                    try:
+                        public_id = cloudinary_url.split('/upload/')[1].split('/')[1:] if '/upload/' in cloudinary_url else None
+                        if public_id:
+                            public_id = '/'.join(public_id).rsplit('.', 1)[0]
+                            try:
+                                resource = cloudinary.api.resource(public_id)
+                                if resource.get('secure_url'):
+                                    doc_url = resource['secure_url']
+                                    print(f" [~] Using Cloudinary API resource URL for {display_name}")
+                                    response = requests.get(doc_url, timeout=30)
+                            except Exception as api_err:
+                                print(f" [DOWNLOAD] API resource lookup failed for {display_name}: {api_err}")
+                                # Try constructing URLs with different resource types
+                                cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+                                if cloud_name:
+                                    for res_type in ['raw', 'image']:
+                                        try:
+                                            try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
+                                            test_r = requests.get(try_url, timeout=30)
+                                            if test_r.status_code == 200:
+                                                response = test_r
+                                                break
+                                            elif test_r.status_code == 404:
+                                                continue
+                                            else:
+                                                break
+                                        except Exception:
+                                            continue
+                    except Exception as cloud_err:
+                        print(f" [WARN] Cloudinary fallback failed for {display_name}: {cloud_err}")
+
+                # Additional fallback: try changing resource type in URL
+                if response.status_code != 200 and 'cloudinary.com' in cloudinary_url:
+                    try:
+                        alt_urls = []
+                        if '/raw/upload/' in cloudinary_url:
+                            alt_urls.append(cloudinary_url.replace('/raw/upload/', '/image/upload/'))
+                        elif '/image/upload/' in cloudinary_url:
+                            alt_urls.append(cloudinary_url.replace('/image/upload/', '/raw/upload/'))
+
+                        for alt_url in alt_urls:
+                            try:
+                                alt_r = requests.get(alt_url, timeout=30)
+                                if alt_r.status_code == 200:
+                                    response = alt_r
+                                    print(f" [OK] Downloaded {display_name} via alternative URL")
+                                    break
+                            except Exception:
+                                continue
+                    except Exception as alt_err:
+                        print(f" [WARN] Alternative URL fallback failed for {display_name}: {alt_err}")
+
                 if response.status_code == 200:
                     content_type = response.headers.get('content-type', '').lower()
                     is_pdf = 'pdf' in content_type or cloudinary_url.lower().endswith('.pdf')
@@ -608,79 +998,54 @@ def collect_faculty_files(faculty):
                     tmp.close()
                     if is_pdf:
                         pdf_files.append(tmp.name)
-                        print(f" ✅ Downloaded PDF: {tmp.name} ({len(response.content)} bytes)")
+                        print(f" [OK] Downloaded PDF: {tmp.name} ({len(response.content)} bytes)")
                     else:
                         image_files.append(tmp.name)
-                        print(f" ✅ Downloaded Image: {tmp.name} ({len(response.content)} bytes)")
+                        print(f" [OK] Downloaded Image: {tmp.name} ({len(response.content)} bytes)")
                     temp_files.append(tmp.name)
-                elif response.status_code == 401:
-                    try:
-                        public_id = cloudinary_url.split('/upload/')[1].split('/')[1:] if '/upload/' in cloudinary_url else None
-                        if public_id:
-                            public_id = '/'.join(public_id).rsplit('.', 1)[0]
-                            resource = cloudinary.api.resource(public_id)
-                            if resource.get('secure_url'):
-                                doc_url = resource['secure_url']
-                                print(f" [~] Using Cloudinary API resource URL for {display_name}")
-                                response = requests.get(doc_url, timeout=30)
-                                if response.status_code == 200:
-                                    content_type = response.headers.get('content-type', '').lower()
-                                    is_pdf = 'pdf' in content_type or doc_url.lower().endswith('.pdf')
-                                    suffix = ".pdf" if is_pdf else ".jpg"
-                                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
-                                    tmp.write(response.content)
-                                    tmp.close()
-                                    if is_pdf:
-                                        pdf_files.append(tmp.name)
-                                    else:
-                                        image_files.append(tmp.name)
-                                    temp_files.append(tmp.name)
-                                    print(f" ✅ Downloaded {display_name} via API")
-                    except Exception as cloud_err:
-                        print(f" ❌ Cloudinary API error for {display_name}: {cloud_err}")
                 else:
-                    print(f" ❌ Failed to download {display_name}: HTTP {response.status_code}")
+                    print(f" [SKIP] Failed to download {display_name}: HTTP {response.status_code}")
                     if file_field:
                         file_path, _ = get_file_from_field(file_field, None)
                         if file_path and os.path.exists(file_path):
                             if file_path.lower().endswith('.pdf'):
                                 pdf_files.append(file_path)
-                                print(f" ✅ Fallback: {display_name} (PDF local): {file_path}")
+                                print(f" [OK] Fallback: {display_name} (PDF local): {file_path}")
                             else:
                                 image_files.append(file_path)
-                                print(f" ✅ Fallback: {display_name} (Image local): {file_path}")
+                                print(f" [OK] Fallback: {display_name} (Image local): {file_path}")
             except Exception as e:
-                print(f" ❌ Download error for {display_name}: {e}")
+                print(f" [ERROR] Download error for {display_name}: {e}")
                 if file_field:
                     file_path, _ = get_file_from_field(file_field, None)
                     if file_path and os.path.exists(file_path):
                         if file_path.lower().endswith('.pdf'):
                             pdf_files.append(file_path)
-                            print(f" ✅ Fallback: {display_name} (PDF local): {file_path}")
+                            print(f" [OK] Fallback: {display_name} (PDF local): {file_path}")
                         else:
                             image_files.append(file_path)
-                            print(f" ✅ Fallback: {display_name} (Image local): {file_path}")
+                            print(f" [OK] Fallback: {display_name} (Image local): {file_path}")
         elif file_field:
             file_path, _ = get_file_from_field(file_field, None)
             if file_path and os.path.exists(file_path):
                 if file_path.lower().endswith('.pdf'):
                     pdf_files.append(file_path)
-                    print(f" ✅ {display_name} (PDF local): {file_path}")
+                    print(f" [OK] {display_name} (PDF local): {file_path}")
                 else:
                     image_files.append(file_path)
-                    print(f" ✅ {display_name} (Image local): {file_path}")
+                    print(f" [OK] {display_name} (Image local): {file_path}")
             else:
-                print(f" ❌ {display_name}: File not found")
+                print(f" [ERROR] {display_name}: File not found")
         else:
-            print(f" ❌ {display_name}: Not uploaded")
+            print(f" [ERROR] {display_name}: Not uploaded")
     # Certificates (includes FDP certificates saved as Certificate records)
     print("\n--- CHECKING CERTIFICATES ---")
     certificates = Certificate.objects.filter(faculty=faculty)
-    print(f"📊 Found {certificates.count()} certificates")
+    print(f"[COUNT] Found {certificates.count()} certificates")
     for cert in certificates:
         try:
             if cert.cloudinary_url:
-                print(f" 🌐 Downloading certificate ({cert.certificate_type}): {cert.cloudinary_url}")
+                print(f" [URL] Downloading certificate ({cert.certificate_type}): {cert.cloudinary_url}")
                 response = requests.get(cert.cloudinary_url, timeout=30)
                 if response.status_code == 200:
                     tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
@@ -688,19 +1053,19 @@ def collect_faculty_files(faculty):
                     tmp.close()
                     pdf_files.append(tmp.name)
                     temp_files.append(tmp.name)
-                    print(f" ✅ Downloaded certificate: {tmp.name}")
+                    print(f" [OK] Downloaded certificate: {tmp.name}")
             elif cert.certificate_file:
                 file_path, file_url = get_file_from_field(cert.certificate_file, None)
                 if file_path and os.path.exists(file_path):
                     if file_path.lower().endswith('.pdf'):
                         pdf_files.append(file_path)
-                        print(f" ✅ Certificate (local PDF): {file_path}")
+                        print(f" [OK] Certificate (local PDF): {file_path}")
                     else:
                         image_files.append(file_path)
-                        print(f" ✅ Certificate (local image): {file_path}")
+                        print(f" [OK] Certificate (local image): {file_path}")
                 elif file_url:
                     try:
-                        print(f" 🌐 Downloading certificate ({cert.certificate_type}) from: {file_url}")
+                        print(f" [URL] Downloading certificate ({cert.certificate_type}) from: {file_url}")
                         response = requests.get(file_url, timeout=30)
                         if response.status_code == 200:
                             tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
@@ -708,11 +1073,11 @@ def collect_faculty_files(faculty):
                             tmp.close()
                             pdf_files.append(tmp.name)
                             temp_files.append(tmp.name)
-                            print(f" ✅ Downloaded certificate: {tmp.name}")
+                            print(f" [OK] Downloaded certificate: {tmp.name}")
                     except Exception as e:
-                        print(f" ❌ Error: {e}")
+                        print(f" [ERROR] Error: {e}")
         except Exception as e:
-            print(f" ❌ Error processing certificate {cert.certificate_type}: {e}")
+            print(f" [ERROR] Error processing certificate {cert.certificate_type}: {e}")
     print("\n" + "=" * 60)
     print("FILE COLLECTION SUMMARY")
     print("=" * 60)
@@ -745,8 +1110,19 @@ def collect_student_files(student):
             except Exception:
                 pass
 
-        # 2. Try provided URL value (Cloudinary/Remote URL field)
+        # 1. Try local file first (more reliable than Cloudinary)
+        if file_field:
+            try:
+                local_path = file_field.path if hasattr(file_field, 'path') else None
+                if local_path and os.path.exists(local_path):
+                    print(f"  [COLLECT] Using local file: {local_path}")
+                    return local_path, local_path.lower().endswith('.pdf')
+            except Exception:
+                pass
+
+        # 2. Try provided URL value (Cloudinary/Remote URL field) - with better error handling
         if url_value and isinstance(url_value, str) and url_value.startswith('http'):
+            print(f"  [COLLECT] Trying URL: {url_value}")
             downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix=default_suffix)
             if downloaded_path:
                 if downloaded_path not in temp_files:
@@ -792,6 +1168,7 @@ def collect_student_files(student):
         return None, False
 
     photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
+    print(f"  [COLLECT] Photo collected: {photo_file is not None}")
 
     cert_fields = [
         ('cert_achieve', 'cert_achieve_url'),
@@ -803,18 +1180,25 @@ def collect_student_files(student):
         ('cert_national', 'cert_national_url'),
     ]
 
+    cert_count = 0
     for file_field_name, url_field_name in cert_fields:
-        asset_path, is_pdf = _collect_asset(
-            getattr(student, file_field_name, None),
-            getattr(student, url_field_name, None),
-            default_suffix='.jpg'
-        )
-        if not asset_path:
-            continue
-        if is_pdf:
-            pdf_files.append(asset_path)
+        file_field = getattr(student, file_field_name, None)
+        url_field = getattr(student, url_field_name, None)
+        print(f"  [COLLECT] Checking {file_field_name}: file={file_field is not None}, url={url_field is not None}")
+
+        asset_path, is_pdf = _collect_asset(file_field, url_field, default_suffix='.jpg')
+        if asset_path:
+            cert_count += 1
+            if is_pdf:
+                pdf_files.append(asset_path)
+                print(f"  [COLLECT] Added PDF: {asset_path}")
+            else:
+                image_files.append(asset_path)
+                print(f"  [COLLECT] Added image: {asset_path}")
         else:
-            image_files.append(asset_path)
+            print(f"  [COLLECT] No asset found for {file_field_name}")
+
+    print(f"  [COLLECT] Total certificates collected: {cert_count}")
 
     return photo_file, image_files, pdf_files, temp_files
 
@@ -963,10 +1347,12 @@ def edit_faculty_complete(request, faculty_id):
                      'gender', 'address', 'father_name', 'mother_name', 'aadhar', 'pan', 'state',
                      'caste', 'sub_caste', 'nationality', 'jntuh_id', 'aicte_id', 'orcid_id', 'apaar_id',
                      'ug_degree', 'ug_college', 'ug_spec', 'pg_degree', 'pg_college', 'pg_spec',
-                     'phd_degree', 'phd_university', 'phd_spec', 'about_yourself']:
+                     'phd_degree', 'phd_title', 'phd_university', 'phd_spec', 'about_yourself']:
             val = request.POST.get(attr)
             if val is not None:
                 setattr(faculty, attr, val)
+        if request.POST.get('phd_degree') != 'Completed':
+            faculty.phd_title = ''
         for date_attr in ['joining_date', 'dob']:
             val = request.POST.get(date_attr)
             setattr(faculty, date_attr, parse_date(val) if val else None)
@@ -1021,7 +1407,7 @@ def faculty_profile_view(request, faculty_id):
                             publisher_name=item.get('publisher'),
                             status=item.get('status'),
                             doi=item.get('doi'),
-                            url=item.get('url'),
+                            url=normalize_optional_url(item.get('url')),
                             abstract=item.get('abstract'),
                             keywords=item.get('keywords'),
                             journal_name=item.get('journal_name'),
@@ -1094,9 +1480,11 @@ def faculty_profile_view(request, faculty_id):
         'type_display': r.get_research_type_display(),
         'title': r.title,
         'authors': r.authors,
+        'academic_year': r.academic_year,
         'year': r.publication_year,
         'status': r.status,
         'doi': r.doi,
+        'url': r.url,
         'journal_name': r.journal_name,
         'conference_name': r.conference_name,
         'book_title': r.book_title,
@@ -1189,6 +1577,7 @@ def laboratory(request):
     return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
 
 
+@login_required
 def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
@@ -1329,7 +1718,7 @@ def admin_login(request):
         logger.info(f"Admin login request - method: {request.method}")
         if request.user.is_authenticated:
             logger.info(f"User already authenticated: {request.user}")
-            return redirect('dashboard:dashboard')
+            return redirect('dashboard:add_faculty')
         error = None
         if request.method == 'POST':
             username = request.POST.get('username')
@@ -1339,7 +1728,7 @@ def admin_login(request):
             if user is not None and user.is_staff:
                 login(request, user)
                 logger.info(f"Login successful for: {username}")
-                return redirect('dashboard:dashboard')
+                return redirect('dashboard:add_faculty')
             else:
                 error = 'Invalid admin credentials'
                 logger.warning(f"Login failed for username: {username}")
@@ -1791,6 +2180,9 @@ def add_faculty(request):
             return render(request, 'dashboard/add_faculty_form.html', {})
 
         try:
+            phd_status = request.POST.get('phd_degree', '')
+            phd_title = request.POST.get('phd_title', '').strip() if phd_status == 'Completed' else ''
+
             # ==================== CREATE FACULTY OBJECT ====================
             faculty = Faculty(
                 staff_name=request.POST.get('staff_name', ''),
@@ -1834,7 +2226,8 @@ def add_faculty(request):
                 pg_percentage=request.POST.get('pg_percentage', ''),
                 pg_college=request.POST.get('pg_college', ''),
                 pg_spec=request.POST.get('pg_spec', ''),
-                phd_degree=request.POST.get('phd_degree', ''),
+                phd_degree=phd_status,
+                phd_title=phd_title,
                 phd_year=request.POST.get('phd_year') or None,
                 phd_university=request.POST.get('phd_university', ''),
                 phd_spec=request.POST.get('phd_spec', ''),
@@ -1849,7 +2242,7 @@ def add_faculty(request):
 
             # ==================== SAVE FACULTY FIRST (need PK for related objects) ====================
             faculty.save()
-            print(f" ✅ Faculty saved with ID: {faculty.id}")
+            print(f" [OK] Faculty saved with ID: {faculty.id}")
 
             # ==================== UPLOAD PHOTO TO CLOUDINARY ====================
             if request.FILES.get('photo') and is_cloudinary_configured():
@@ -1869,10 +2262,10 @@ def add_faculty(request):
                         cloudinary_url=cr['secure_url'], public_id=cr['public_id'],
                         resource_type=cr['resource_type'], uploaded_by=request.user.username
                     )
-                    print(f" ✅ Photo uploaded to Cloudinary: {cr['secure_url']}")
+                    print(f" [OK] Photo uploaded to Cloudinary: {cr['secure_url']}")
                 except Exception as e:
                     logger.error(f"Cloudinary photo upload error: {e}")
-                    print(f" ⚠️  Photo saved locally, Cloudinary upload failed: {e}")
+                    print(f" [WARN]  Photo saved locally, Cloudinary upload failed: {e}")
 
             # ==================== DOCUMENT FILES ====================
             doc_file_fields = [
@@ -1884,7 +2277,7 @@ def add_faculty(request):
             for field_name in doc_file_fields:
                 if request.FILES.get(field_name):
                     setattr(faculty, field_name, request.FILES[field_name])
-                    print(f" ✅ Saved file field: {field_name}")
+                    print(f" [OK] Saved file field: {field_name}")
 
             # Experience certificates academic year
             exp_cert_ay = request.POST.get('experience_certificates_academic_year', '')
@@ -1923,23 +2316,27 @@ def add_faculty(request):
                                 overwrite=True,
                             )
                             setattr(faculty, url_field, cr['secure_url'])
-                            print(f" ✅ {label} uploaded to Cloudinary")
+                            record_cloudinary_upload(
+                                faculty=faculty,
+                                upload_type=file_field,
+                                upload_result=cr,
+                                uploaded_by=request.user.username,
+                            )
+                            print(f" [OK] {label} uploaded to Cloudinary")
                         except Exception as e:
                             logger.error(f"Cloudinary upload error for {label}: {e}")
                 faculty.save()
 
             # ==================== HANDLE MULTIPLE RESEARCH PROOF FILES ====================
-            proof_counter = 1
-            while request.FILES.get(f'research_proof_files_{proof_counter}'):
-                proof_file = request.FILES[f'research_proof_files_{proof_counter}']
+            uploaded_research_proof_urls = []
+            proofs_data = parse_json_list(request.POST.get('research_proofs_data', '[]'))
+            for proof_position, (proof_counter, proof_file) in enumerate(
+                iter_indexed_uploaded_files(request.FILES, 'research_proof_files_'),
+                start=1,
+            ):
                 ay = ''
-                # academic year comes from the JSON metadata
-                try:
-                    proofs_data = json.loads(request.POST.get('research_proofs_data', '[]'))
-                    if len(proofs_data) >= proof_counter:
-                        ay = proofs_data[proof_counter - 1].get('academic_year', '')
-                except Exception:
-                    pass
+                if len(proofs_data) >= proof_position and isinstance(proofs_data[proof_position - 1], dict):
+                    ay = (proofs_data[proof_position - 1].get('academic_year') or '').strip()
                 if is_cloudinary_configured():
                     try:
                         # Determine resource type based on file extension
@@ -1952,28 +2349,32 @@ def add_faculty(request):
                             public_id=f"research_proof_{faculty.employee_code}_{proof_counter}",
                             overwrite=True,
                         )
-                        # Save first proof to the main field
-                        if proof_counter == 1 and hasattr(faculty, 'research_proof_url'):
+                        record_cloudinary_upload(
+                            faculty=faculty,
+                            upload_type='research_proof',
+                            upload_result=cr,
+                            uploaded_by=request.user.username,
+                        )
+                        uploaded_research_proof_urls.append(cr['secure_url'])
+                        # Save first processed proof to the main field
+                        if proof_position == 1 and hasattr(faculty, 'research_proof_url'):
                             faculty.research_proof_url = cr['secure_url']
                             if ay and hasattr(faculty, 'research_proof_academic_year'):
                                 faculty.research_proof_academic_year = ay
                             faculty.save()
-                        print(f" ✅ Research proof {proof_counter} uploaded to Cloudinary (type: {resource_type})")
+                        print(f" [OK] Research proof {proof_counter} uploaded to Cloudinary (type: {resource_type})")
                     except Exception as e:
                         logger.error(f"Research proof Cloudinary upload error: {e}")
-                proof_counter += 1
 
             # ==================== HANDLE MULTIPLE OTHER DOC FILES ====================
-            other_doc_counter = 1
-            while request.FILES.get(f'other_doc_files_{other_doc_counter}'):
-                other_file = request.FILES[f'other_doc_files_{other_doc_counter}']
+            docs_data = parse_json_list(request.POST.get('other_documents_data', '[]'))
+            for doc_position, (other_doc_counter, other_file) in enumerate(
+                iter_indexed_uploaded_files(request.FILES, 'other_doc_files_'),
+                start=1,
+            ):
                 ay = ''
-                try:
-                    docs_data = json.loads(request.POST.get('other_documents_data', '[]'))
-                    if len(docs_data) >= other_doc_counter:
-                        ay = docs_data[other_doc_counter - 1].get('academic_year', '')
-                except Exception:
-                    pass
+                if len(docs_data) >= doc_position and isinstance(docs_data[doc_position - 1], dict):
+                    ay = (docs_data[doc_position - 1].get('academic_year') or '').strip()
                 if is_cloudinary_configured():
                     try:
                         # Determine resource type based on file extension
@@ -1986,21 +2387,26 @@ def add_faculty(request):
                             public_id=f"other_doc_{faculty.employee_code}_{other_doc_counter}",
                             overwrite=True,
                         )
-                        if other_doc_counter == 1 and hasattr(faculty, 'other_documents_url'):
+                        record_cloudinary_upload(
+                            faculty=faculty,
+                            upload_type='other_documents',
+                            upload_result=cr,
+                            uploaded_by=request.user.username,
+                        )
+                        if doc_position == 1 and hasattr(faculty, 'other_documents_url'):
                             faculty.other_documents_url = cr['secure_url']
                             if ay and hasattr(faculty, 'other_documents_academic_year'):
                                 faculty.other_documents_academic_year = ay
                             faculty.save()
-                        print(f" ✅ Other doc {other_doc_counter} uploaded to Cloudinary (type: {resource_type})")
+                        print(f" [OK] Other doc {other_doc_counter} uploaded to Cloudinary (type: {resource_type})")
                     except Exception as e:
                         logger.error(f"Other doc Cloudinary upload error: {e}")
-                other_doc_counter += 1
 
             # ==================== RESEARCH PUBLICATIONS ====================
             research_json = request.POST.get('research_publications_json', '[]')
-            research_proof_urls = {}
+            research_publication_records = []
             try:
-                research_list = json.loads(research_json)
+                research_list = parse_json_list(research_json)
                 for item in research_list:
                     if not item.get('title'):
                         continue
@@ -2015,48 +2421,23 @@ def add_faculty(request):
                         publication_year=item.get('publication_year') or item.get('year') or None,
                         journal_name=venue if pub_type != 'conference' else '',
                         conference_name=venue if pub_type == 'conference' else '',
+                        issn=item.get('issn', ''),
                         doi=item.get('doi', ''),
+                        url=normalize_optional_url(item.get('url')),
                         status=item.get('status', 'published'),
                     )
-                    research_proof_urls[item.get('academic_year')] = pub
-                print(f" ✅ Saved {len(research_list)} research publications")
+                    research_publication_records.append(pub)
+                print(f" [OK] Saved {len(research_list)} research publications")
             except (json.JSONDecodeError, Exception) as e:
                 logger.error(f"Error saving research publications: {e}")
 
             # ==================== LINK RESEARCH PROOF FILES TO PUBLICATIONS ====================
-            proof_counter = 1
-            while request.FILES.get(f'research_proof_files_{proof_counter}'):
-                proof_file = request.FILES[f'research_proof_files_{proof_counter}']
-                ay = ''
-                try:
-                    proofs_data = json.loads(request.POST.get('research_proofs_data', '[]'))
-                    if len(proofs_data) >= proof_counter:
-                        ay = proofs_data[proof_counter - 1].get('academic_year', '')
-                except Exception:
-                    pass
-                if is_cloudinary_configured():
-                    try:
-                        cr = cloudinary.uploader.upload(
-                            proof_file, resource_type='auto',
-                            folder=f"faculty_documents/{faculty.employee_code}/research_proofs",
-                            public_id=f"research_proof_{faculty.employee_code}_{proof_counter}",
-                            overwrite=True,
-                        )
-                        proof_url = cr['secure_url']
-                        if proof_counter == 1 and hasattr(faculty, 'research_proof_url'):
-                            faculty.research_proof_url = proof_url
-                            if ay and hasattr(faculty, 'research_proof_academic_year'):
-                                faculty.research_proof_academic_year = ay
-                            faculty.save()
-                        if ay and ay in research_proof_urls:
-                            pub = research_proof_urls[ay]
-                            pub.proof_document_url = proof_url
-                            pub.save(update_fields=['proof_document_url'])
-                            print(f" ✅ Linked research proof to publication: {pub.title[:30]}")
-                        print(f" ✅ Research proof {proof_counter} uploaded to Cloudinary")
-                    except Exception as e:
-                        logger.error(f"Research proof Cloudinary upload error: {e}")
-                proof_counter += 1
+            # Assign proofs sequentially to publications (more reliable than academic year matching)
+            for index, pub in enumerate(research_publication_records):
+                if index < len(uploaded_research_proof_urls):
+                    pub.proof_document_url = uploaded_research_proof_urls[index]
+                    pub.save(update_fields=['proof_document_url'])
+                    print(f" [OK] Linked research proof to publication: {pub.title[:30]}")
 
             # ==================== BTECH PROJECTS ====================
             projects_json = request.POST.get('btech_projects_json', '[]')
@@ -2074,15 +2455,15 @@ def add_faculty(request):
                         approved=item.get('approved') is True or str(item.get('approved')).lower() == 'true',
                         marks=item.get('marks') or None,
                     )
-                print(f" ✅ Saved {len(projects_list)} B.Tech projects")
+                print(f" [OK] Saved {len(projects_list)} B.Tech projects")
             except (json.JSONDecodeError, Exception) as e:
                 logger.error(f"Error saving B.Tech projects: {e}")
 
             # ==================== FDP / WORKSHOPS ====================
             fdp_json = request.POST.get('fdp_entries_json', '[]')
-            fdp_entries_by_ay = {}
+            fdp_records = []
             try:
-                fdp_list = json.loads(fdp_json)
+                fdp_list = parse_json_list(fdp_json)
                 for item in fdp_list:
                     if not item.get('title'):
                         continue
@@ -2101,22 +2482,21 @@ def add_faculty(request):
                         sponsored_by=item.get('sponsored_by', ''),
                         remarks=item.get('remarks', ''),
                     )
-                    fdp_entries_by_ay[item.get('academic_year', '')] = fdp
-                print(f" ✅ Saved {len(fdp_list)} FDP entries")
+                    fdp_records.append(fdp)
+                print(f" [OK] Saved {len(fdp_list)} FDP entries")
             except (json.JSONDecodeError, Exception) as e:
                 logger.error(f"Error saving FDP entries: {e}")
 
             # ==================== LINK FDP CERT FILES TO FDP RECORDS ====================
-            fdp_cert_counter = 1
-            while request.FILES.get(f'fdp_cert_files_{fdp_cert_counter}'):
-                cert_file = request.FILES[f'fdp_cert_files_{fdp_cert_counter}']
+            uploaded_fdp_certificate_urls = []
+            certs_data = parse_json_list(request.POST.get('fdp_certificates_data', '[]'))
+            for cert_position, (fdp_cert_counter, cert_file) in enumerate(
+                iter_indexed_uploaded_files(request.FILES, 'fdp_cert_files_'),
+                start=1,
+            ):
                 ay = ''
-                try:
-                    certs_data = json.loads(request.POST.get('fdp_certificates_data', '[]'))
-                    if len(certs_data) >= fdp_cert_counter:
-                        ay = certs_data[fdp_cert_counter - 1].get('academic_year', '')
-                except Exception:
-                    pass
+                if len(certs_data) >= cert_position and isinstance(certs_data[cert_position - 1], dict):
+                    ay = (certs_data[cert_position - 1].get('academic_year') or '').strip()
                 if is_cloudinary_configured():
                     try:
                         # Determine resource type based on file extension
@@ -2130,15 +2510,28 @@ def add_faculty(request):
                             overwrite=True,
                         )
                         cert_url = cr['secure_url']
-                        if fdp_cert_counter == 1 and hasattr(faculty, 'fdp_certificate_url'):
+                        record_cloudinary_upload(
+                            faculty=faculty,
+                            upload_type='fdp_certificate',
+                            upload_result=cr,
+                            uploaded_by=request.user.username,
+                        )
+                        uploaded_fdp_certificate_urls.append(cert_url)
+                        if cert_position == 1 and hasattr(faculty, 'fdp_certificate_url'):
                             faculty.fdp_certificate_url = cert_url
                             if ay and hasattr(faculty, 'fdp_certificate_academic_year'):
                                 faculty.fdp_certificate_academic_year = ay
                             faculty.save()
-                        print(f" ✅ FDP cert {fdp_cert_counter} uploaded to Cloudinary (type: {resource_type})")
+                        print(f" [OK] FDP cert {fdp_cert_counter} uploaded to Cloudinary (type: {resource_type})")
                     except Exception as e:
                         logger.error(f"FDP cert Cloudinary upload error: {e}")
-                fdp_cert_counter += 1
+
+            # Assign FDP certificates sequentially to FDP records
+            for index, fdp in enumerate(fdp_records):
+                if index < len(uploaded_fdp_certificate_urls):
+                    fdp.certificate_url = uploaded_fdp_certificate_urls[index]
+                    fdp.save(update_fields=['certificate_url'])
+                    print(f" [OK] Linked FDP certificate to entry: {fdp.title[:30]}")
 
             # ==================== RESULTS ====================
             results_json = request.POST.get('results_json', '[]')
@@ -2147,7 +2540,7 @@ def add_faculty(request):
                 if results_list:
                     faculty.results = results_json
                     faculty.save(update_fields=['results'])
-                print(f" ✅ Saved {len(results_list)} result entries")
+                print(f" [OK] Saved {len(results_list)} result entries")
             except (json.JSONDecodeError, Exception) as e:
                 logger.error(f"Error saving results: {e}")
 
@@ -2198,7 +2591,7 @@ def add_faculty(request):
                 logger.warning(f"Faculty added, but merged PDF generation failed: {pdf_e}")
 
             messages.success(request, f'Faculty {faculty.staff_name} added successfully!')
-            print(f" ✅ Faculty {faculty.employee_code} fully saved. Redirecting to faculty list.")
+            print(f" [OK] Faculty {faculty.employee_code} fully saved. Redirecting to faculty list.")
             return redirect('dashboard:faculty_list')
 
         except Exception as e:
@@ -2237,7 +2630,7 @@ def edit_faculty(request, faculty_id):
             'inter_year', 'inter_percent', 'inter_college',
             'ug_degree', 'ug_year', 'ug_percentage', 'ug_college', 'ug_spec',
             'pg_degree', 'pg_year', 'pg_percentage', 'pg_college', 'pg_spec',
-            'phd_degree', 'phd_year', 'phd_university', 'phd_spec',
+            'phd_degree', 'phd_title', 'phd_year', 'phd_university', 'phd_spec',
             'subjects_dealt', 'scm', 'about_yourself', 'results',
             'exp_anurag', 'exp_other',
         ]
@@ -2245,6 +2638,8 @@ def edit_faculty(request, faculty_id):
             val = request.POST.get(attr)
             if val is not None:
                 setattr(faculty, attr, val)
+        if request.POST.get('phd_degree') != 'Completed':
+            faculty.phd_title = ''
         for date_attr in ['dob', 'joining_date']:
             val = request.POST.get(date_attr)
             setattr(faculty, date_attr, parse_date(val) if val else None)
@@ -2256,19 +2651,35 @@ def edit_faculty(request, faculty_id):
         if research_data:
             try:
                 research_list = json.loads(research_data)
-                # Keep track of existing IDs to know what to delete (optional, or just replace)
+                existing_publication_assets = {}
+                for existing_pub in ResearchPublication.objects.filter(faculty=faculty):
+                    key = ((existing_pub.academic_year or '').strip(), (existing_pub.title or '').strip())
+                    existing_publication_assets[key] = {
+                        'proof_document_url': existing_pub.proof_document_url or '',
+                        'url': existing_pub.url or '',
+                    }
                 ResearchPublication.objects.filter(faculty=faculty).delete()
                 for item in research_list:
                     if not item.get('title'): continue
+                    academic_year = item.get('academic_year', '')
+                    title = item.get('title') or ''
+                    research_type = item.get('research_type') or item.get('type', 'journal')
+                    venue = item.get('journal_name') or item.get('conference_name') or ''
+                    existing_assets = existing_publication_assets.get(((academic_year or '').strip(), title.strip()), {})
                     ResearchPublication.objects.create(
                         faculty=faculty,
-                        research_type=item.get('type', 'Journal'),
-                        title=item.get('title'),
+                        research_type=research_type,
+                        title=title,
                         authors=item.get('authors'),
+                        academic_year=academic_year,
                         publication_year=item.get('publication_year') or item.get('year'),
-                        journal_name=item.get('journal_name') or item.get('conference_name'),
-                        status=item.get('status', 'Published'),
-                        doi=item.get('doi')
+                        journal_name=venue if research_type != 'conference' else '',
+                        conference_name=venue if research_type == 'conference' else '',
+                        issn=item.get('issn', ''),
+                        status=item.get('status', 'published'),
+                        doi=item.get('doi'),
+                        url=normalize_optional_url(item.get('url') or existing_assets.get('url')),
+                        proof_document_url=existing_assets.get('proof_document_url', ''),
                     )
             except Exception as e:
                 logger.error(f"Error saving research publications: {e}")
@@ -2298,20 +2709,30 @@ def edit_faculty(request, faculty_id):
         if fdp_data:
             try:
                 fdp_list = json.loads(fdp_data)
+                existing_fdp_urls = {}
+                for existing_fdp in FDP.objects.filter(faculty=faculty):
+                    key = ((existing_fdp.academic_year or '').strip(), (existing_fdp.title or '').strip())
+                    existing_fdp_urls[key] = existing_fdp.certificate_url or ''
                 FDP.objects.filter(faculty=faculty).delete()
                 for item in fdp_list:
                     if not item.get('title'): continue
+                    academic_year = item.get('academic_year', '')
+                    title = item.get('title') or ''
                     FDP.objects.create(
                         faculty=faculty,
-                        fdp_type=item.get('type', 'fdp'),
-                        title=item.get('title'),
+                        fdp_type=item.get('fdp_type') or item.get('type', 'fdp'),
+                        title=title,
+                        academic_year=academic_year,
                         from_date=item.get('from_date') or date.today().strftime('%Y-%m-%d'),
                         to_date=item.get('to_date') or date.today().strftime('%Y-%m-%d'),
                         organized_by=item.get('organized_by', ''),
                         place=item.get('place', ''),
                         mode=item.get('mode', 'offline'),
                         level=item.get('level', 'national'),
-                        role=item.get('role', 'participant')
+                        role=item.get('role', 'participant'),
+                        sponsored_by=item.get('sponsored_by', ''),
+                        remarks=item.get('remarks', ''),
+                        certificate_url=existing_fdp_urls.get(((academic_year or '').strip(), title.strip()), ''),
                     )
             except Exception as e:
                 logger.error(f"Error saving FDP entries: {e}")
@@ -2362,6 +2783,38 @@ def edit_faculty(request, faculty_id):
             if request.FILES.get(ffile):
                 setattr(faculty, ffile, request.FILES[ffile])
         faculty.save()
+
+        cloudinary_doc_uploads = [
+            ('research_proof', 'research_proof_url', 'faculty_documents/{code}/research_proofs', 'research_proof_{code}'),
+            ('fdp_certificate', 'fdp_certificate_url', 'faculty_documents/{code}/fdp_certs', 'fdp_certificate_{code}'),
+            ('experience_certificates', 'experience_certificates_url', 'faculty_documents/{code}/experience_certs', 'experience_certificates_{code}'),
+            ('other_documents', 'other_documents_url', 'faculty_documents/{code}/other_docs', 'other_documents_{code}'),
+        ]
+        for field_name, url_field, folder_tpl, public_id_tpl in cloudinary_doc_uploads:
+            uploaded_file = request.FILES.get(field_name)
+            if not uploaded_file:
+                continue
+            setattr(faculty, field_name, uploaded_file)
+            if is_cloudinary_configured():
+                try:
+                    resource_type = 'raw' if uploaded_file.name.lower().endswith('.pdf') else 'auto'
+                    cr = cloudinary.uploader.upload(
+                        uploaded_file,
+                        resource_type=resource_type,
+                        folder=folder_tpl.format(code=faculty.employee_code),
+                        public_id=public_id_tpl.format(code=faculty.employee_code),
+                        overwrite=True,
+                    )
+                    setattr(faculty, url_field, cr['secure_url'])
+                    record_cloudinary_upload(
+                        faculty=faculty,
+                        upload_type=field_name,
+                        upload_result=cr,
+                        uploaded_by=request.user.username,
+                    )
+                except Exception as e:
+                    logger.error(f"Cloudinary upload error during edit for {field_name}: {e}")
+        faculty.save()
         messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
         return redirect("dashboard:faculty_dashboard")
     return render(request, "dashboard/faculty.html", {"add_mode": True, "faculty": faculty, "title": "Edit Faculty"})
@@ -2410,7 +2863,7 @@ def save_faculty(request, faculty_id):
                            'mother_name', 'gender', 'state', 'caste', 'sub_caste',
                            'nationality', 'jntuh_id', 'aicte_id', 'pan', 'aadhar',
                            'apaar_id', 'orcid_id', 'subjects_dealt', 'scm', 'results',
-                           'exp_anurag', 'exp_other']
+                           'exp_anurag', 'exp_other', 'phd_title']
             for field in text_fields:
                 if field in request.POST:
                     setattr(faculty, field, request.POST[field])
@@ -2432,10 +2885,12 @@ def save_faculty(request, faculty_id):
                 elif field in request.POST and not request.POST[field]:
                     setattr(faculty, field, None)
             edu_fields = ['ssc_school', 'inter_college', 'ug_degree', 'ug_college', 'ug_spec',
-                          'pg_degree', 'pg_college', 'pg_spec', 'phd_degree', 'phd_university', 'phd_spec']
+                          'pg_degree', 'pg_college', 'pg_spec', 'phd_degree', 'phd_title', 'phd_university', 'phd_spec']
             for field in edu_fields:
                 if field in request.POST:
                     setattr(faculty, field, request.POST[field])
+            if request.POST.get('phd_degree') != 'Completed':
+                faculty.phd_title = ''
             if 'photo' in request.FILES:
                 faculty.photo = request.FILES['photo']
                 if is_cloudinary_configured():
@@ -2558,14 +3013,45 @@ def add_student(request):
                     return None
                 try:
                     file.seek(0) # Ensure at beginning
+                    # Detect file type for proper resource_type
+                    filename = getattr(file, 'name', '').lower()
+                    if filename.endswith('.pdf'):
+                        resource_type = "raw"
+                    else:
+                        resource_type = "auto"
+                    public_id = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                    print(f"  [UPLOAD] Uploading {filename} to folder student_documents/{folder} with public_id {public_id} and resource_type {resource_type}")
                     res = cloudinary.uploader.upload(
                         file,
-                        resource_type="auto",
+                        resource_type=resource_type,
                         folder=f"student_documents/{folder}",
-                        public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                        overwrite=True
+                        public_id=public_id,
+                        overwrite=True,
+                        access_mode="public"  # Ensure public access
                     )
-                    return res.get('secure_url')
+                    print(f"  [UPLOAD] Upload result keys: {list(res.keys())}")
+                    actual_public_id = res.get('public_id')
+                    secure_url = res.get('secure_url')
+                    print(f"  [UPLOAD] Actual public_id: {actual_public_id}")
+                    print(f"  [UPLOAD] Secure URL: {secure_url}")
+
+                    # Verify the upload by trying to access the resource immediately
+                    if secure_url:
+                        import requests
+                        try:
+                            verify_response = requests.head(secure_url, timeout=10)
+                            if verify_response.status_code == 200:
+                                print(f"  [UPLOAD] Verification successful - resource is accessible")
+                                return secure_url
+                            else:
+                                print(f"  [UPLOAD] Verification failed - HTTP {verify_response.status_code}")
+                                return None
+                        except Exception as verify_err:
+                            print(f"  [UPLOAD] Verification error: {verify_err}")
+                            return None
+                    else:
+                        print(f"  [UPLOAD] No secure_url in response")
+                        return None
                 except Exception as e:
                     logger.error(f"Cloudinary upload error ({folder}): {e}")
                     return None
@@ -2595,14 +3081,23 @@ def add_student(request):
                 except Exception as e:
                     logger.error(f"Local file save error ({folder}): {e}")
                     return None
+            # Parse DOB properly
+            dob_value = None
+            if request.POST.get('dob'):
+                try:
+                    from datetime import datetime
+                    dob_value = datetime.strptime(request.POST.get('dob'), '%Y-%m-%d').date()
+                except ValueError:
+                    dob_value = None
+
             student = Student(
                 ht_no=request.POST.get('ht_no'),
                 student_name=request.POST.get('student_name'),
                 father_name=request.POST.get('father_name'),
                 mother_name=request.POST.get('mother_name'),
                 gender=request.POST.get('gender'),
-                dob=request.POST.get('dob'),
-                age=request.POST.get('age'),
+                dob=dob_value,
+                age=None,  # Will be calculated below
                 nationality=request.POST.get('nationality', 'Indian'),
                 category=request.POST.get('category'),
                 religion=request.POST.get('religion'),
@@ -2666,30 +3161,38 @@ def add_student(request):
                         files_lo.append('photo')
             
             # Handle certificates
-            for fn, folder, fn_url in [('cert_achieve', 'achievement', 'cert_achieve_url'), 
+            print(f"  [DEBUG] FILES received: {list(request.FILES.keys())}")
+            for fn, folder, fn_url in [('cert_achieve', 'achievement', 'cert_achieve_url'),
                               ('cert_intern', 'internship', 'cert_intern_url'),
-                              ('cert_courses', 'courses', 'cert_courses_url'), 
+                              ('cert_courses', 'courses', 'cert_courses_url'),
                               ('cert_sdp', 'sdp', 'cert_sdp_url'),
-                              ('cert_extra', 'extra', 'cert_extra_url'), 
+                              ('cert_extra', 'extra', 'cert_extra_url'),
                               ('cert_placement', 'placement', 'cert_placement_url'),
                               ('cert_national', 'national', 'cert_national_url')]:
                 if request.FILES.get(fn):
+                    print(f"  [DEBUG] Processing {fn} ({folder})")
                     cf = request.FILES[fn]
+                    print(f"  [DEBUG] File: {cf.name}, size: {cf.size}")
                     if ca: # Cloudinary configured
                         curl = _upload(cf, folder)
                         if curl:
                             setattr(student, fn_url, curl)
                             files_up.append(fn)
+                            print(f"  [DEBUG] Successfully uploaded {fn} to {curl}")
                         else:
+                            print(f"  [DEBUG] Cloudinary upload failed for {fn}, trying local")
                             local_path = _save_local(cf, folder)
                             if local_path:
                                 setattr(student, fn, local_path)
                                 files_lo.append(fn)
+                                print(f"  [DEBUG] Saved {fn} locally to {local_path}")
                     else:
                         local_path = _save_local(cf, folder)
                         if local_path:
                             setattr(student, fn, local_path)
                             files_lo.append(fn)
+                else:
+                    print(f"  [DEBUG] No file received for {fn}")
             student.save()
 
             # Ensure the student flow (add_student.html) always attempts
@@ -2758,7 +3261,8 @@ def edit_student(request, student_id):
                         resource_type="auto",
                         folder=f"student_documents/{folder}",
                         public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                        overwrite=True
+                        overwrite=True,
+                        access_mode="public"  # Ensure public access
                     )
                     return res.get('secure_url')
                 except Exception as e:
@@ -2857,20 +3361,58 @@ def edit_student(request, student_id):
     return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student', 'student': student})
 
 
-@login_required
 def generate_student_pdf_view(request, student_id):
+    # Allow both Django authenticated users and student session users
+    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
+    if not (user_authenticated or request.session.get('student_logged_in')):
+        return redirect('dashboard:student_login')
+
     student = get_object_or_404(Student, id=student_id)
+
+    # If student session user, only allow access to their own record
+    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
+    if request.session.get('student_logged_in') and not user_authenticated:
+        student_username = request.session.get('student_username')
+        if student.ht_no != student_username:
+            messages.error(request, "You can only access your own student record.")
+            return redirect('dashboard:student_dashboard')
+
     try:
-        pdf_url = generate_student_pdf(student)
-        if pdf_url:
-            return redirect(pdf_url)
-        else:
+        # Generate student PDF with merged certificates
+        pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        if not pdf_bytes:
             messages.error(request, "Failed to generate PDF.")
-            return redirect('dashboard:students_data')
+            return redirect('dashboard:students_data' if user_authenticated else 'dashboard:student_dashboard')
+        
+        # Merge with certificates if available
+        has_certificates = bool(
+            student.cert_achieve or student.cert_intern or student.cert_courses or
+            student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
+            student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
+            student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url
+        )
+        
+        if has_certificates:
+            try:
+                merged_bytes = merge_student_certificates_with_pdf_bytes(pdf_bytes, student)
+                if merged_bytes and len(merged_bytes) > 100:
+                    pdf_bytes = merged_bytes
+                    logger.info(f"Successfully merged student PDF with certificates for {student.ht_no}")
+                else:
+                    logger.warning(f"Merge failed for student {student.ht_no}, using main PDF only")
+            except Exception as merge_err:
+                logger.warning(f"Certificate merge error for student {student.ht_no}: {merge_err}. Using main PDF only.")
+        
+        # Return PDF directly as downloadable file
+        from django.http import HttpResponse
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="student_{student.ht_no}.pdf"'
+        response['Content-Length'] = len(pdf_bytes)
+        return response
     except Exception as e:
         logger.error(f"Error generating PDF for student {student_id}: {e}")
         messages.error(request, f"Failed to generate PDF: {str(e)}")
-        return redirect('dashboard:students_data')
+        return redirect('dashboard:students_data' if user_authenticated else 'dashboard:student_dashboard')
 
 
 @login_required
@@ -2901,31 +3443,78 @@ def regenerate_student_pdf(request, student_id):
 
 
 # ==================== GENERATE STUDENT PDF ====================
-def generate_student_pdf(student):
+def generate_student_pdf(student, return_bytes=False):
     from urllib.parse import quote
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
 
     # ── temp file tracker ──────────────────────────────────────
     temp_files = []
 
-    # ── Helper: download URL → local temp file ─────────────────
+    # ── Helper: download URL -> local temp file ─────────────────
     def _download(url, suffix=None):
         """Download a URL to a local temp file. Returns path or None."""
         if not url or not url.startswith('http'):
             return None
         try:
+            print(f"  [DOWNLOAD] Attempting to download: {url}")
             r = requests.get(url, timeout=30)
+            print(f"  [DOWNLOAD] Status: {r.status_code}")
+
             # Fallback for Cloudinary errors
             if r.status_code in [401, 403] and 'cloudinary.com' in url:
+                print(f"  [DOWNLOAD] Cloudinary auth error, trying API fallback...")
                 try:
                     public_id = get_cloudinary_public_id(url)
+                    print(f"  [DOWNLOAD] Extracted public_id: {public_id}")
                     if public_id:
-                        resource = cloudinary.api.resource(public_id)
-                        secure_url = resource.get('secure_url')
-                        if secure_url:
-                            r = requests.get(secure_url, timeout=30)
+                        # Try to get resource info from API
+                        try:
+                            resource = cloudinary.api.resource(public_id)
+                            secure_url = resource.get('secure_url')
+                            print(f"  [DOWNLOAD] Got fresh URL: {secure_url}")
+                            if secure_url:
+                                r = requests.get(secure_url, timeout=30)
+                                print(f"  [DOWNLOAD] API URL status: {r.status_code}")
+                        except Exception as api_err:
+                            print(f"  [DOWNLOAD] API resource lookup failed: {api_err}")
+                            # If API fails, try constructing URLs with different resource types
+                            cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+                            if cloud_name:
+                                for res_type in ['raw', 'image']:
+                                    try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
+                                    print(f"  [DOWNLOAD] Trying {res_type} URL: {try_url}")
+                                    test_r = requests.get(try_url, timeout=30)
+                                    print(f"  [DOWNLOAD] {res_type} URL status: {test_r.status_code}")
+                                    if test_r.status_code == 200:
+                                        r = test_r
+                                        break
+                                    elif test_r.status_code == 404:
+                                        continue  # Try next resource type
+                                    else:
+                                        break  # Other error, stop trying
                 except Exception as cloud_err:
                     print(f"  [WARN] Cloudinary API fallback failed: {cloud_err}")
+
+            # Final fallback: try changing resource type in URL
+            if r.status_code != 200 and 'cloudinary.com' in url:
+                try:
+                    # Try both directions: raw->image and image->raw
+                    alt_urls = []
+                    if '/raw/upload/' in url:
+                        alt_urls.append(url.replace('/raw/upload/', '/image/upload/'))
+                    elif '/image/upload/' in url:
+                        alt_urls.append(url.replace('/image/upload/', '/raw/upload/'))
+
+                    for alt_url in alt_urls:
+                        print(f"  [DOWNLOAD] Trying alternative resource type: {alt_url}")
+                        alt_r = requests.get(alt_url, timeout=30)
+                        print(f"  [DOWNLOAD] Alternative URL status: {alt_r.status_code}")
+                        if alt_r.status_code == 200:
+                            r = alt_r
+                            break
+                except Exception as alt_err:
+                    print(f"  [WARN] Alternative URL fallback failed: {alt_err}")
+
             if r.status_code != 200:
                 print(f"  [SKIP] HTTP {r.status_code}: {url}")
                 return None
@@ -2946,7 +3535,7 @@ def generate_student_pdf(student):
             print(f"  [ERR] Download failed {url}: {e}")
             return None
 
-    # ── Helper: local FileField → path ────────────────────────
+    # ── Helper: local FileField -> path ────────────────────────
     def _local_path(ff):
         """Try to get a local filesystem path from a FileField."""
         if not ff or not getattr(ff, 'name', ''):
@@ -3026,10 +3615,10 @@ def generate_student_pdf(student):
             ("Gender", student_obj.gender),
             ("Date of Birth", str(student_obj.dob) if student_obj.dob else "N/A"),
             ("Age", str(student_obj.age) if student_obj.age else "N/A"),
+            ("Blood Group", student_obj.blood_group or "N/A"),
             ("Nationality", student_obj.nationality or "Indian"),
             ("Category", student_obj.category or "N/A"),
             ("Religion", student_obj.religion or "N/A"),
-            ("Blood Group", student_obj.blood_group or "N/A"),
             ("Aadhar Number", student_obj.aadhar or "N/A"),
             ("APAAR ID", student_obj.apaar_id or "N/A"),
             ("Address", student_obj.address or "N/A"),
@@ -3087,7 +3676,7 @@ def generate_student_pdf(student):
         if p:
             local_photo_path = p
             photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
-            print(f"  ✅ Photo (Cloudinary → local): {photo_url_for_pdf}")
+            print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
 
     # Fallback to FileField
     if not photo_url_for_pdf and student.photo and getattr(student.photo, 'name', ''):
@@ -3095,7 +3684,7 @@ def generate_student_pdf(student):
         if lp:
             local_photo_path = lp
             photo_url_for_pdf = 'file:///' + quote(lp.replace('\\', '/'), safe=':/')
-            print(f"  ✅ Photo (local file): {photo_url_for_pdf}")
+            print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
         else:
             try:
                 fu = student.photo.url
@@ -3104,15 +3693,22 @@ def generate_student_pdf(student):
                     if p:
                         local_photo_path = p
                         photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
-                        print(f"  ✅ Photo (URL → local): {photo_url_for_pdf}")
+                        print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
             except Exception:
                 pass
+
+    # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
+    import os
+    from django.conf import settings
+    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+    anurag_header_url = 'file:///' + anurag_header_path.replace('\\', '/')
 
     # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
     context = {
         'student': student,
         'current_date': datetime.now(),
         'local_photo_path': photo_url_for_pdf,
+        'anurag_header_url': anurag_header_url,
     }
 
     # ── GENERATE INFO PDF with pdfkit ─────────────────────────
@@ -3162,14 +3758,28 @@ def generate_student_pdf(student):
                 info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
             else:
                 info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
-            print(f"  ✅ Info PDF generated: {len(info_pdf_bytes)} bytes")
+            print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
         except Exception as e:
             print(f"  [WARN] pdfkit error, using ReportLab fallback: {e}")
 
+    # Always try wkhtmltopdf first for better compatibility
     if info_pdf_bytes is None:
+        print("  [INFO] wkhtmltopdf failed, using ReportLab fallback")
         info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
         used_reportlab_fallback = True
-        print(f"  ✅ ReportLab fallback info PDF generated: {len(info_pdf_bytes)} bytes")
+        print(f"  [OK] ReportLab fallback info PDF generated: {len(info_pdf_bytes)} bytes")
+
+    # Validate PDF content
+    if info_pdf_bytes and len(info_pdf_bytes) > 100:
+        if not info_pdf_bytes.startswith(b'%PDF'):
+            print("  [WARN] Generated content is not a valid PDF, using fallback")
+            info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
+            used_reportlab_fallback = True
+            print(f"  [OK] Fallback PDF generated: {len(info_pdf_bytes)} bytes")
+    else:
+        print("  [WARN] PDF generation failed, using basic fallback")
+        info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
+        used_reportlab_fallback = True
 
     # ── MERGE: info PDF + all uploaded documents ──────────────
     filename = f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}.pdf"
@@ -3194,9 +3804,9 @@ def generate_student_pdf(student):
                     readers_keep.append(reader)
                     for pg in reader.pages:
                         writer.add_page(pg)
-                    print(f"  ✅ Merged PDF ({len(reader.pages)} pages): {os.path.basename(path)}")
+                    print(f"  [OK] Merged PDF ({len(reader.pages)} pages): {os.path.basename(path)}")
                 else:
-                    # Image → convert to PDF page
+                    # Image -> convert to PDF page
                     img = PILImage.open(path)
                     if img.mode not in ('RGB', 'L'):
                         img = img.convert('RGB')
@@ -3208,7 +3818,7 @@ def generate_student_pdf(student):
                     readers_keep.append(reader)
                     for pg in reader.pages:
                         writer.add_page(pg)
-                    print(f"  ✅ Merged image as PDF: {os.path.basename(path)}")
+                    print(f"  [OK] Merged image as PDF: {os.path.basename(path)}")
             except Exception as ex:
                 print(f"  [ERR] Could not merge {path}: {ex}")
 
@@ -3257,33 +3867,33 @@ def generate_student_pdf(student):
             with open(merged_tmp.name, 'wb') as out:
                 writer.write(out)
             file_size = os.path.getsize(merged_tmp.name)
-            print(f"  ✅ Merged PDF: {len(writer.pages)} total pages, {file_size} bytes")
+            print(f"  [OK] Merged PDF: {len(writer.pages)} total pages, {file_size} bytes")
             with open(merged_tmp.name, 'rb') as mf:
                 final_pdf_bytes = mf.read()
 
                 # Upload to Cloudinary
-                cloud_result = upload_file_to_cloudinary(
-                    merged_tmp.name,
-                    folder=f"faculty_documents/{faculty.employee_code}",
-                    public_id='complete_profile',
-                    resource_type='raw'
-                )
-                if cloud_result:
-                    faculty.cloudinary_pdf_url = cloud_result['secure_url']
-                    faculty.save(update_fields=['cloudinary_pdf_url'])
-                    CloudinaryUpload.objects.update_or_create(
-                        faculty=faculty, upload_type='complete_profile_pdf',
-                        defaults={
-                            'cloudinary_url': cloud_result['secure_url'],
-                            'public_id': cloud_result['public_id'],
-                            'resource_type': 'raw',
-                            'uploaded_by': request.user.username,
-                        }
-                    )
-                    print(f"  ✅ Uploaded to Cloudinary: {cloud_result['secure_url']}")
-                    return_url = cloud_result['secure_url']
+                if is_cloudinary_configured():
+                    try:
+                        cloud_result = cloudinary.uploader.upload(
+                            merged_tmp.name,
+                            resource_type='raw',
+                            folder=f"student_pdfs",
+                            public_id=f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}",
+                            overwrite=True
+                        )
+                        if cloud_result and 'secure_url' in cloud_result:
+                            student.pdf_url = cloud_result['secure_url']
+                            student.save(update_fields=['pdf_url'])
+                            print(f"  [OK] Uploaded to Cloudinary: {cloud_result['secure_url']}")
+                            return_url = cloud_result['secure_url']
+                        else:
+                            print("  [WARN] Cloudinary upload failed (non-fatal)")
+                            return_url = None
+                    except Exception as cloud_err:
+                        print(f"  [WARN] Cloudinary upload error: {cloud_err}")
+                        return_url = None
                 else:
-                    print("  [WARN] Cloudinary upload failed (non-fatal)")
+                    print("  [INFO] Cloudinary not configured")
                     return_url = None
         else:
             print("  [WARN] No pages in writer — returning info PDF only")
@@ -3304,9 +3914,9 @@ def generate_student_pdf(student):
                 student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
             student.pdf_generated = True
             student.pdf_generation_time = timezone.now()
-            student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time', 'updated_at'])
+            student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time'])
             return_url = student.pdf_file.url if student.pdf_file else None
-            print(f"  ✅ PDF saved locally: {return_url}")
+            print(f"  [OK] PDF saved locally: {return_url}")
         except Exception as e:
             print(f"  [ERR] Local save failed: {e}")
             return_url = None
@@ -3327,6 +3937,11 @@ def generate_student_pdf(student):
         logger.info(f"Student PDF for {student.ht_no} used ReportLab fallback instead of pdfkit/wkhtmltopdf")
 
     print("=== STUDENT PDF GENERATION COMPLETE ===\n")
+
+    # If return_bytes is True, return the PDF content directly
+    if return_bytes:
+        return final_pdf_bytes
+
     return return_url
 
 
@@ -3408,35 +4023,87 @@ def generate_faculty_pdf(request, faculty_id):
         # ── temp file tracker ──────────────────────────────────────
         temp_files = []
 
-        # ── Helper: download URL → local temp file ─────────────────
+        # ── Helper: download URL -> local temp file ─────────────────
         def _download(url, suffix=None):
             """Download a URL to a local temp file. Returns path or None."""
             if not url or not url.startswith('http'):
                 return None
+            
+            # Use a browser-like User-Agent
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+            
             try:
-                r = requests.get(url, timeout=30)
-                # Fallback for Cloudinary protected links
-                if r.status_code in [401, 403] and 'cloudinary.com' in url:
+                print(f"  [DOWNLOAD] Attempting: {url}")
+                r = requests.get(url, timeout=30, headers=headers)
+                
+                # Enhanced fallback for Cloudinary errors (401/403/404)
+                if r.status_code in [401, 403, 404] and 'cloudinary.com' in url:
+                    print(f"  [DOWNLOAD] Cloudinary error {r.status_code}, trying fallbacks...")
                     try:
-                        public_id = get_cloudinary_public_id(url)
-                        if public_id:
-                            resource = cloudinary.api.resource(public_id)
-                            secure_url = resource.get('secure_url')
-                            if secure_url:
-                                r = requests.get(secure_url, timeout=30)
+                        # Try without extension first
+                        if '.' in url.split('/')[-1]:
+                            base_url = url.rsplit('.', 1)[0]
+                            print(f"  [DOWNLOAD] Trying without extension: {base_url}")
+                            r_alt = requests.get(base_url, timeout=30, headers=headers)
+                            if r_alt.status_code == 200:
+                                r = r_alt
+                        
+                        if r.status_code != 200:
+                            for public_id in get_cloudinary_public_id_candidates(url):
+                                if r.status_code == 200:
+                                    break
+
+                                if '/raw/upload/' in url:
+                                    private_response = try_cloudinary_private_download(public_id, headers=headers)
+                                    if private_response is not None:
+                                        r = private_response
+                                        break
+
+                                for resource_type in ('raw', 'image'):
+                                    try:
+                                        # Attempt API lookup if configured
+                                        if is_cloudinary_configured():
+                                            resource = cloudinary.api.resource(public_id, resource_type=resource_type)
+                                            secure_url = resource.get('secure_url')
+                                            if secure_url:
+                                                r = requests.get(secure_url, timeout=30, headers=headers)
+                                                if r.status_code == 200:
+                                                    break
+                                    except Exception as api_err:
+                                        print(f"  [DOWNLOAD] API lookup failed for {public_id} ({resource_type}): {api_err}")
+
+                                if r.status_code == 200:
+                                    break
+
+                                # Construct alternative resource type URLs
+                                cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+                                if cloud_name:
+                                    for res_type in ['raw', 'image']:
+                                        try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
+                                        if try_url != url:
+                                            print(f"  [DOWNLOAD] Trying {res_type} URL: {try_url}")
+                                            test_r = requests.get(try_url, timeout=30, headers=headers)
+                                            if test_r.status_code == 200:
+                                                r = test_r
+                                                break
                     except Exception as cloud_err:
-                        print(f"  [WARN] Cloudinary API fallback failed: {cloud_err}")
+                        print(f"  [WARN] Cloudinary fallback failed: {cloud_err}")
+
                 if r.status_code != 200:
                     print(f"  [SKIP] HTTP {r.status_code}: {url}")
                     return None
+                
                 ct = r.headers.get('content-type', '').lower()
                 if suffix is None:
                     if 'pdf' in ct or url.lower().endswith('.pdf'):
                         suffix = '.pdf'
                     elif 'png' in ct or url.lower().endswith('.png'):
                         suffix = '.png'
-                    else:
+                    elif 'jpg' in ct or 'jpeg' in ct or url.lower().endswith('.jpg') or url.lower().endswith('.jpeg'):
                         suffix = '.jpg'
+                    else:
+                        suffix = '.pdf' # Default to PDF for raw docs
+                
                 tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
                 tmp.write(r.content)
                 tmp.close()
@@ -3446,7 +4113,7 @@ def generate_faculty_pdf(request, faculty_id):
                 print(f"  [ERR] Download failed {url}: {e}")
                 return None
 
-        # ── Helper: local FileField → path ────────────────────────
+        # ── Helper: local FileField -> path ────────────────────────
         def _local_path(ff):
             """Try to get a local filesystem path from a FileField."""
             if not ff or not getattr(ff, 'name', ''):
@@ -3459,8 +4126,8 @@ def generate_faculty_pdf(request, faculty_id):
                 pass
             return None
 
-        # ── Helper: FileField → any accessible path (local or dl) ─
-        def _resolve(ff, url_attr=None):
+        # ── Helper: FileField -> any accessible path (local or dl) ─
+        def _resolve(ff, url_attr=None, as_image=True):
             """
             Returns (local_path, is_pdf) for a FileField or URL string.
             Downloads remote files to temp. Returns (None, False) if unavailable.
@@ -3478,14 +4145,16 @@ def generate_faculty_pdf(request, faculty_id):
 
             # 3. Download from URL
             if url and isinstance(url, str) and url.startswith('http'):
-                # For Cloudinary raw PDFs: convert to image URL for display
-                if 'cloudinary.com' in url and '/raw/upload/' in url:
+                # For Cloudinary raw PDFs: convert to image URL for display if requested
+                if as_image and 'cloudinary.com' in url and '/raw/upload/' in url:
                     img_url = url.replace('/raw/upload/', '/image/upload/')
                     if img_url.lower().endswith('.pdf'):
                         img_url = img_url[:-4] + '.jpg'
                     p = _download(img_url, '.jpg')
                     if p:
                         return p, False
+                
+                # Otherwise download the original file
                 p = _download(url)
                 if p:
                     is_pdf = p.endswith('.pdf')
@@ -3503,7 +4172,7 @@ def generate_faculty_pdf(request, faculty_id):
             if p:
                 local_photo_path = p
                 photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
-                print(f"  ✅ Photo (Cloudinary → local): {photo_url_for_pdf}")
+                print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
 
         # Fallback to FileField
         if not photo_url_for_pdf and faculty.photo and getattr(faculty.photo, 'name', ''):
@@ -3511,7 +4180,7 @@ def generate_faculty_pdf(request, faculty_id):
             if lp:
                 local_photo_path = lp
                 photo_url_for_pdf = 'file:///' + quote(lp.replace('\\', '/'), safe=':/')
-                print(f"  ✅ Photo (local file): {photo_url_for_pdf}")
+                print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
             else:
                 try:
                     fu = faculty.photo.url
@@ -3520,7 +4189,7 @@ def generate_faculty_pdf(request, faculty_id):
                         if p:
                             local_photo_path = p
                             photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
-                            print(f"  ✅ Photo (URL → local): {photo_url_for_pdf}")
+                            print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
                 except Exception:
                     pass
 
@@ -3625,34 +4294,100 @@ def generate_faculty_pdf(request, faculty_id):
             return bool(ff and getattr(ff, 'name', ''))
 
         has_research_proof = _has_doc('research_proof_url', 'research_proof') or any(
-            getattr(p, 'proof_document', None) and getattr(p.proof_document, 'name', '') for p in research_publications)
+            (getattr(p, 'proof_document', None) and getattr(p.proof_document, 'name', '')) or
+            getattr(p, 'proof_document_url', None) for p in research_publications)
         has_fdp_certificate = _has_doc('fdp_certificate_url', 'fdp_certificate') or any(
-            getattr(f, 'certificate', None) and getattr(f.certificate, 'name', '') for f in fdps)
+            (getattr(f, 'certificate', None) and getattr(f.certificate, 'name', '')) or
+            getattr(f, 'certificate_url', None) for f in fdps)
         has_experience_certificates = _has_doc('experience_certificates_url', 'experience_certificates')
         has_other_documents = _has_doc('other_documents_url', 'other_documents')
 
-        # Count total pages for research publication proofs
-        research_proof_total_pages = 0
-        try:
-            from pypdf import PdfReader
-            for pub in research_publications:
-                pf = getattr(pub, 'proof_document', None)
-                if pf and getattr(pf, 'name', ''):
-                    p = _local_path(pf)
-                    if not p:
-                        try:
-                            p = _download(pf.url)
-                        except Exception:
-                            continue
-                    if p and os.path.exists(p):
-                        try:
-                            with open(p, 'rb') as f:
-                                reader = PdfReader(f)
-                                research_proof_total_pages += len(reader.pages)
-                        except Exception:
-                            pass  # Skip if not a valid PDF
-        except ImportError:
-            pass  # pypdf not available
+        def _asset_identity(file_field=None, url=None):
+            if url and str(url).strip():
+                return f"url:{str(url).strip()}"
+            if file_field and getattr(file_field, 'name', ''):
+                return f"file:{file_field.name}"
+            return None
+
+        def _collect_unique_asset_refs(primary_file_field=None, primary_url=None, related_items=None,
+                                       related_file_attr=None, related_url_attr=None):
+            refs = []
+            seen_refs = set()
+
+            def _add_ref(file_field=None, url=None):
+                identity = _asset_identity(file_field=file_field, url=url)
+                if not identity or identity in seen_refs:
+                    return
+                seen_refs.add(identity)
+                refs.append((file_field, url))
+
+            _add_ref(primary_file_field, primary_url)
+            for item in related_items or []:
+                _add_ref(
+                    getattr(item, related_file_attr, None),
+                    getattr(item, related_url_attr, None),
+                )
+            return refs
+
+        def _track_temp_asset(path, file_field=None):
+            if not path:
+                return
+            if path not in temp_files and not (
+                file_field and hasattr(file_field, 'path') and getattr(file_field, 'path', None) == path
+            ):
+                temp_files.append(path)
+
+        def _count_asset_pages(asset_refs):
+            total_pages = 0
+            document_count = 0
+            try:
+                from pypdf import PdfReader
+            except ImportError:
+                return 0, 0
+
+            for file_field, url in asset_refs:
+                path, is_pdf = get_local_or_remote_asset(file_field, url=url, default_suffix='.pdf')
+                if not path or not os.path.exists(path):
+                    continue
+
+                _track_temp_asset(path, file_field=file_field)
+                document_count += 1
+
+                if not is_pdf:
+                    total_pages += 1
+                    continue
+
+                try:
+                    with open(path, 'rb') as f:
+                        reader = PdfReader(f)
+                        total_pages += len(reader.pages)
+                except Exception:
+                    total_pages += 1
+
+            return total_pages, document_count
+
+        research_proof_asset_refs = _collect_unique_asset_refs(
+            primary_file_field=getattr(faculty, 'research_proof', None),
+            primary_url=getattr(faculty, 'research_proof_url', None),
+            related_items=research_publications,
+            related_file_attr='proof_document',
+            related_url_attr='proof_document_url',
+        )
+        fdp_certificate_asset_refs = _collect_unique_asset_refs(
+            primary_file_field=getattr(faculty, 'fdp_certificate', None),
+            primary_url=getattr(faculty, 'fdp_certificate_url', None),
+            related_items=fdps,
+            related_file_attr='certificate',
+            related_url_attr='certificate_url',
+        )
+
+        research_proof_total_pages, research_proof_documents_count = _count_asset_pages(research_proof_asset_refs)
+        fdp_certificate_total_pages, fdp_certificate_documents_count = _count_asset_pages(fdp_certificate_asset_refs)
+
+        if has_research_proof and research_proof_total_pages == 0:
+            research_proof_total_pages = max(research_proof_documents_count, 1)
+        if has_fdp_certificate and fdp_certificate_total_pages == 0:
+            fdp_certificate_total_pages = max(fdp_certificate_documents_count, 1)
 
         # Academic years for display
         research_proof_academic_year = getattr(faculty, 'research_proof_academic_year', '') or ''
@@ -3680,33 +4415,40 @@ def generate_faculty_pdf(request, faculty_id):
                 return 'file:///' + quote(p.replace('\\', '/'), safe=':/')
             return ''
 
-        research_proof_display_url = _display_url('research_proof_url', 'research_proof')
-        if not research_proof_display_url:
-            for pub in research_publications:
-                pf = getattr(pub, 'proof_document', None)
-                if pf and getattr(pf, 'name', ''):
-                    pp, _ = _resolve(pf)
-                    if pp:
-                        research_proof_display_url = 'file:///' + quote(pp.replace('\\', '/'), safe=':/')
-                        break
+        research_proof_is_image = True
+        research_proof_display_url = ''
+        for proof_file, proof_url in research_proof_asset_refs:
+            proof_path, proof_is_pdf = get_local_or_remote_asset(proof_file, url=proof_url, default_suffix='.pdf')
+            if proof_path:
+                _track_temp_asset(proof_path, file_field=proof_file)
+                research_proof_display_url = 'file:///' + quote(proof_path.replace('\\', '/'), safe=':/')
+                research_proof_is_image = not proof_is_pdf
+                break
 
-        fdp_certificate_display_url = _display_url('fdp_certificate_url', 'fdp_certificate')
-        if not fdp_certificate_display_url:
-            for fdp_rec in fdps:
-                cf = getattr(fdp_rec, 'certificate', None)
-                if cf and getattr(cf, 'name', ''):
-                    pp, _ = _resolve(cf)
-                    if pp:
-                        fdp_certificate_display_url = 'file:///' + quote(pp.replace('\\', '/'), safe=':/')
-                        break
+        fdp_certificate_is_image = True
+        fdp_certificate_display_url = ''
+        for fdp_file, fdp_url in fdp_certificate_asset_refs:
+            fdp_path, fdp_is_pdf = get_local_or_remote_asset(fdp_file, url=fdp_url, default_suffix='.pdf')
+            if fdp_path:
+                _track_temp_asset(fdp_path, file_field=fdp_file)
+                fdp_certificate_display_url = 'file:///' + quote(fdp_path.replace('\\', '/'), safe=':/')
+                fdp_certificate_is_image = not fdp_is_pdf
+                break
 
         experience_certificates_display_url = _display_url('experience_certificates_url', 'experience_certificates')
         other_documents_display_url = _display_url('other_documents_url', 'other_documents')
+
+        # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
+        import os
+        from django.conf import settings
+        anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+        anurag_header_url = 'file:///' + anurag_header_path.replace('\\', '/')
 
         # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
         context = {
             'faculty': faculty,
             'profile': profile,
+            'anurag_header_url': anurag_header_url,
             'research_publications': research_publications,
             'research_projects': research_projects,
             'fdps': fdps,
@@ -3729,12 +4471,13 @@ def generate_faculty_pdf(request, faculty_id):
             'has_research_proof': has_research_proof,
             'research_proof_academic_year': research_proof_academic_year,
             'research_proof_display_url': research_proof_display_url,
-            'research_proof_is_image': True,
+            'research_proof_is_image': research_proof_is_image,
             'research_proof_total_pages': research_proof_total_pages,
             'has_fdp_certificate': has_fdp_certificate,
             'fdp_certificate_academic_year': fdp_certificate_academic_year,
             'fdp_certificate_display_url': fdp_certificate_display_url,
-            'fdp_certificate_is_image': True,
+            'fdp_certificate_is_image': fdp_certificate_is_image,
+            'fdp_certificate_total_pages': fdp_certificate_total_pages,
             'has_experience_certificates': has_experience_certificates,
             'experience_certificates_academic_year': experience_certificates_academic_year,
             'experience_certificates_display_url': experience_certificates_display_url,
@@ -3793,7 +4536,7 @@ def generate_faculty_pdf(request, faculty_id):
                 info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
             else:
                 info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
-            print(f"  ✅ Info PDF generated: {len(info_pdf_bytes)} bytes")
+            print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
         except Exception as e:
             logger.error(f"pdfkit error: {e}")
             messages.error(request, f'PDF generation error: {e}')
@@ -3822,9 +4565,9 @@ def generate_faculty_pdf(request, faculty_id):
                         readers_keep.append(reader)
                         for pg in reader.pages:
                             writer.add_page(pg)
-                        print(f"  ✅ Merged PDF ({len(reader.pages)} pages): {os.path.basename(path)}")
+                        print(f"  [OK] Merged PDF ({len(reader.pages)} pages): {os.path.basename(path)}")
                     else:
-                        # Image → convert to PDF page
+                        # Image -> convert to PDF page
                         img = PILImage.open(path)
                         if img.mode not in ('RGB', 'L'):
                             img = img.convert('RGB')
@@ -3836,7 +4579,7 @@ def generate_faculty_pdf(request, faculty_id):
                         readers_keep.append(reader)
                         for pg in reader.pages:
                             writer.add_page(pg)
-                        print(f"  ✅ Merged image as PDF: {os.path.basename(path)}")
+                        print(f"  [OK] Merged image as PDF: {os.path.basename(path)}")
                 except Exception as ex:
                     print(f"  [ERR] Could not merge {path}: {ex}")
 
@@ -3859,66 +4602,39 @@ def generate_faculty_pdf(request, faculty_id):
                 ('ug_certificate_url', 'ug_certificate'),
                 ('pg_certificate_url', 'pg_certificate'),
                 ('phd_certificate_url', 'phd_certificate'),
-                ('research_proof_url', 'research_proof'),
-                ('fdp_certificate_url', 'fdp_certificate'),
                 ('experience_certificates_url', 'experience_certificates'),
+                ('research_proof_url', 'research_proof'),
                 ('other_documents_url', 'other_documents'),
             ]
             for url_field, file_field in doc_fields:
                 ff = getattr(faculty, file_field, None)
-                p, _ = _resolve(ff, url_field)
+                url_val = getattr(faculty, url_field, None)
+                p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
+                if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
+                    temp_files.append(p)
                 if p:
                     _add_to_writer(p)
 
-            # 3. Certificate records
+            # 3. Certificate records (the ones in the related Certificate model)
             for cert in certificates:
-                if cert.cloudinary_url:
-                    p = _download(cert.cloudinary_url)
-                    if p:
-                        _add_to_writer(p)
-                elif cert.certificate_file and getattr(cert.certificate_file, 'name', ''):
-                    p = _local_path(cert.certificate_file)
-                    if not p:
-                        try:
-                            p = _download(cert.certificate_file.url)
-                        except Exception:
-                            pass
-                    if p:
-                        _add_to_writer(p)
+                cert_p, _ = get_local_or_remote_asset(cert.certificate_file, url=cert.cloudinary_url, default_suffix='.pdf')
+                if cert_p and cert_p not in temp_files and not (cert.certificate_file and hasattr(cert.certificate_file, 'path') and getattr(cert.certificate_file, 'path', None) == cert_p):
+                    temp_files.append(cert_p)
+                if cert_p:
+                    _add_to_writer(cert_p)
 
-            # 4. Per-FDP certificate files
-            for fdp_rec in fdps:
-                cf = getattr(fdp_rec, 'certificate', None)
-                if cf and getattr(cf, 'name', ''):
-                    p = _local_path(cf)
-                    if not p:
-                        try:
-                            p = _download(cf.url)
-                        except Exception:
-                            pass
-                    if p:
-                        _add_to_writer(p)
+            # 4. Merge unique research/FDP proof assets once
+            for proof_file, proof_url in research_proof_asset_refs:
+                proof_path, _ = get_local_or_remote_asset(proof_file, url=proof_url, default_suffix='.pdf')
+                if proof_path:
+                    _track_temp_asset(proof_path, file_field=proof_file)
+                    _add_to_writer(proof_path)
 
-            # 5. Per-ResearchPublication proof files
-            for pub in research_publications:
-                # Check FileField first
-                pf = getattr(pub, 'proof_document', None)
-                if pf and getattr(pf, 'name', ''):
-                    p = _local_path(pf)
-                    if not p:
-                        try:
-                            p = _download(pf.url)
-                        except Exception:
-                            pass
-                    if p:
-                        _add_to_writer(p)
-                else:
-                    # Check URLField (Cloudinary URL)
-                    proof_url = getattr(pub, 'proof_document_url', None)
-                    if proof_url and isinstance(proof_url, str) and proof_url.startswith('http'):
-                        p = _download(proof_url)
-                        if p:
-                            _add_to_writer(p)
+            for fdp_file, fdp_url in fdp_certificate_asset_refs:
+                fdp_path, _ = get_local_or_remote_asset(fdp_file, url=fdp_url, default_suffix='.pdf')
+                if fdp_path:
+                    _track_temp_asset(fdp_path, file_field=fdp_file)
+                    _add_to_writer(fdp_path)
 
             # Write merged PDF
             if len(writer.pages) > 0:
@@ -3928,15 +4644,15 @@ def generate_faculty_pdf(request, faculty_id):
                 with open(merged_tmp.name, 'wb') as out:
                     writer.write(out)
                 file_size = os.path.getsize(merged_tmp.name)
-                print(f"  ✅ Merged PDF: {len(writer.pages)} total pages, {file_size} bytes")
+                print(f"  [OK] Merged PDF: {len(writer.pages)} total pages, {file_size} bytes")
                 with open(merged_tmp.name, 'rb') as mf:
                     final_pdf_bytes = mf.read()
 
                 # Upload to Cloudinary
                 if is_cloudinary_configured():
                     try:
-                        cloudinary_public_id = f"{faculty.employee_code}/complete_profile"
-                        print(f" ☁️  Uploading merged PDF to Cloudinary: {cloudinary_public_id}")
+                        cloudinary_public_id = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}"
+                        print(f" [CLOUD]  Uploading merged PDF to Cloudinary: {cloudinary_public_id}")
                         cloud_result = cloudinary.uploader.upload(
                             merged_tmp.name, resource_type='raw',
                             folder=f"faculty_documents/{faculty.employee_code}",
@@ -3950,10 +4666,10 @@ def generate_faculty_pdf(request, faculty_id):
                                 'cloudinary_url': cloud_result['secure_url'],
                                 'public_id': cloud_result['public_id'],
                                 'resource_type': 'raw',
-                                'uploaded_by': request.user.username,
+                                'uploaded_by': request.user.username if getattr(request.user, 'is_authenticated', False) else 'Anonymous',
                             }
                         )
-                        print(f"  ✅ Uploaded to Cloudinary: {cloud_result['secure_url']}")
+                        print(f"  [OK] Uploaded to Cloudinary: {cloud_result['secure_url']}")
                     except Exception as e:
                         print(f"  [WARN] Cloudinary upload failed (non-fatal): {e}")
             else:
@@ -3980,9 +4696,15 @@ def generate_faculty_pdf(request, faculty_id):
             ip_address=request.META.get('REMOTE_ADDR')
         )
 
+        try:
+            faculty.pdf_document.save(filename, ContentFile(final_pdf_bytes), save=False)
+            faculty.save(update_fields=['pdf_document'])
+        except Exception as save_err:
+            logger.warning(f"Could not save local faculty PDF copy: {save_err}")
+
         response = HttpResponse(final_pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        print(f"  ✅ Returned PDF: {len(final_pdf_bytes)} bytes")
+        print(f"  [OK] Returned PDF: {len(final_pdf_bytes)} bytes")
         return response
 
     except Exception as e:
@@ -4314,62 +5036,18 @@ def bulk_generate_faculty_pdfs(request):
             for fid in faculty_ids:
                 try:
                     fac = Faculty.objects.get(id=fid)
-                    exp = calculate_experience(fac.joining_date) if fac.joining_date else "N/A"
-                    ctx = {'faculty': fac, 'experience': exp, 'current_date': datetime.now(), 'pdf_mode': True}
-                    html = render_to_string('dashboard/faculty_pdf.html', ctx)
-                    if pdfkit is not None:
-                        opts = {'page-size': 'A4', 'margin-top': '20mm', 'margin-right': '20mm',
-                                'margin-bottom': '20mm', 'margin-left': '20mm', 'encoding': 'UTF-8'}
-                        # Cross-platform wkhtmltopdf detection
-                        wkhtmltopdf_paths = [
-                            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-                            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-                            '/usr/local/bin/wkhtmltopdf',
-                            '/usr/bin/wkhtmltopdf',
-                            'wkhtmltopdf',
-                        ]
-
-                        wkhtmltopdf_path = None
-                        for path in wkhtmltopdf_paths:
-                            if (isinstance(path, str) and os.path.exists(path)) or path == 'wkhtmltopdf':
-                                try:
-                                    import subprocess
-                                    result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
-                                    if result.returncode == 0:
-                                        wkhtmltopdf_path = path
-                                        break
-                                except:
-                                    continue
-
-                        if wkhtmltopdf_path:
-                            cfg = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-                        else:
-                            cfg = pdfkit.configuration()
-                        pdf = pdfkit.from_string(html, False, options=opts, configuration=cfg)
+                    # Use the comprehensive generation function that includes certificate merging
+                    pdf_bytes = generate_faculty_pdf_bytes(fac)
+                    
+                    if pdf_bytes:
                         pname = f"faculty_{fac.employee_code}.pdf"
                         pp = os.path.join(temp_dir, pname)
                         with open(pp, 'wb') as f:
-                            f.write(pdf)
+                            f.write(pdf_bytes)
                         zipf.write(pp, pname)
 
-                        # Upload to Cloudinary if not already uploaded
-                        if is_cloudinary_configured() and not fac.cloudinary_pdf_url:
-                            try:
-                                cloud_result = cloudinary.uploader.upload(
-                                    pp, resource_type="raw", folder="faculty_pdfs",
-                                    public_id=f"faculty_{fac.employee_code}_{date.today().strftime('%Y%m%d')}",
-                                    overwrite=True, tags=[f"faculty_{fac.employee_code}", fac.department, "pdf"]
-                                )
-                                fac.cloudinary_pdf_url = cloud_result['secure_url']
-                                fac.save()
-                                CloudinaryUpload.objects.create(
-                                    faculty=fac, upload_type='pdf', cloudinary_url=cloud_result['secure_url'],
-                                    public_id=cloud_result['public_id'], resource_type=cloud_result['resource_type'],
-                                    uploaded_by=request.user.username
-                                )
-                            except Exception as cloud_err:
-                                logger.error(f"Cloudinary upload failed for faculty {fid}: {cloud_err}")
-
+                        # Cloudinary upload handled inside generate_faculty_pdf if not already present
+                        # But we can still ensure it's recorded if needed
                         os.remove(pp)
                 except Exception as e:
                     logger.error(f"Error generating PDF for faculty {fid}: {e}")
@@ -4803,7 +5481,7 @@ def merge_certificates(request, faculty_id):
                         writer.add_page(pg)
                     os.unlink(tfp)
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-            writer.write(mf.name)
+            writer.write(mf)
             merged_path = mf.name
         merged_url = None
         if is_cloudinary_configured():
@@ -5056,102 +5734,141 @@ def merge_student_certificates(request, student_id):
 
 
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
+    """
+    Comprehensive merge of faculty profile PDF with all uploaded documents.
+    This is used by the 'Merge with PDF' action in the certificates view.
+    """
     try:
+        from pypdf import PdfWriter, PdfReader
+        from PIL import Image as PILImage
+
         writer = PdfWriter()
         temp_files = []  # Track all temp files for cleanup
+        readers_keep = [] # Keep readers alive
 
+        # --- helper: add a file (path) to writer ---
+        def _add_to_writer_internal(path):
+            if not path or not os.path.exists(path):
+                return False
+            try:
+                with open(path, 'rb') as fh:
+                    header = fh.read(4)
+                if header.startswith(b'%PDF'):
+                    reader = PdfReader(path)
+                    readers_keep.append(reader)
+                    for pg in reader.pages:
+                        writer.add_page(pg)
+                    return True
+                else:
+                    # Image -> convert to PDF page
+                    img = PILImage.open(path)
+                    if img.mode not in ('RGB', 'L'):
+                        img = img.convert('RGB')
+                    tmp_img_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                    img.save(tmp_img_pdf.name, 'PDF', resolution=100.0)
+                    tmp_img_pdf.close()
+                    temp_files.append(tmp_img_pdf.name)
+                    reader = PdfReader(tmp_img_pdf.name)
+                    readers_keep.append(reader)
+                    for pg in reader.pages:
+                        writer.add_page(pg)
+                    return True
+            except Exception:
+                return False
+
+        # 1. Add the main student/faculty profile PDF
         if pdf_bytes:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
                 tf.write(pdf_bytes)
                 tfp = tf.name
                 temp_files.append(tfp)
-            for pg in PdfReader(tfp).pages:
-                writer.add_page(pg)
+            _add_to_writer_internal(tfp)
 
-        cert_count = 0
+        # 2. Collect all faculty documents from model fields
+        doc_fields = [
+            ('aadhar_url', 'aadhar_file'),
+            ('pan_url', 'pan_file'),
+            ('apaar_url', 'apaar_file'),
+            ('scm_url', 'scm_file'),
+            ('jntuh_biodata_url', 'jntuh_biodata'),
+            ('ssc_certificate_url', 'ssc_certificate'),
+            ('inter_certificate_url', 'inter_certificate'),
+            ('ug_certificate_url', 'ug_certificate'),
+            ('pg_certificate_url', 'pg_certificate'),
+            ('phd_certificate_url', 'phd_certificate'),
+            ('research_proof_url', 'research_proof'),
+            ('fdp_certificate_url', 'fdp_certificate'),
+            ('experience_certificates_url', 'experience_certificates'),
+            ('other_documents_url', 'other_documents'),
+        ]
+        
+        for url_field, file_field in doc_fields:
+            ff = getattr(faculty, file_field, None)
+            url_val = getattr(faculty, url_field, None)
+            p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
+            if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
+                temp_files.append(p)
+            if p:
+                _add_to_writer_internal(p)
+
+        # 3. Certificate records (related model)
+        from .models import Certificate
         for cert in Certificate.objects.filter(faculty=faculty):
-            cert_added = False
+            cert_p, _ = get_local_or_remote_asset(cert.certificate_file, url=cert.cloudinary_url, default_suffix='.pdf')
+            if cert_p and cert_p not in temp_files and not (cert.certificate_file and hasattr(cert.certificate_file, 'path') and getattr(cert.certificate_file, 'path', None) == cert_p):
+                temp_files.append(cert_p)
+            if cert_p:
+                _add_to_writer_internal(cert_p)
 
-            # Priority 1: Try Cloudinary URL
-            if cert.cloudinary_url:
+        # 4. FDP Certificates
+        from .models import FDP
+        for fdp_rec in FDP.objects.filter(faculty=faculty):
+            fdp_p, _ = get_local_or_remote_asset(
+                fdp_rec.certificate,
+                url=getattr(fdp_rec, 'certificate_url', None),
+                default_suffix='.pdf'
+            )
+            if fdp_p and fdp_p not in temp_files and not (fdp_rec.certificate and hasattr(fdp_rec.certificate, 'path') and getattr(fdp_rec.certificate, 'path', None) == fdp_p):
+                temp_files.append(fdp_p)
+            if fdp_p:
+                _add_to_writer_internal(fdp_p)
+
+        # 5. Research Proofs
+        from .models import ResearchPublication
+        for pub in ResearchPublication.objects.filter(faculty=faculty):
+            pub_p, _ = get_local_or_remote_asset(
+                pub.proof_document,
+                url=getattr(pub, 'proof_document_url', None),
+                default_suffix='.pdf'
+            )
+            if pub_p and pub_p not in temp_files and not (pub.proof_document and hasattr(pub.proof_document, 'path') and getattr(pub.proof_document, 'path', None) == pub_p):
+                temp_files.append(pub_p)
+            if pub_p:
+                _add_to_writer_internal(pub_p)
+
+        # Finalize
+        if len(writer.pages) > 0:
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
+                writer.write(mf)
+                temp_files.append(mf.name)
+                with open(mf.name, 'rb') as f:
+                    merged = f.read()
+            
+            # Cleanup
+            for temp_file in temp_files:
                 try:
-                    logger.info(f"Downloading certificate from Cloudinary: {cert.certificate_type}")
-                    r = requests.get(cert.cloudinary_url, timeout=30)
-                    if r.status_code == 200:
-                        # More robust PDF detection - check for PDF header or try to read as PDF
-                        content = r.content
-                        is_pdf = False
-                        try:
-                            # Check PDF magic bytes
-                            if content[:4] == b'%PDF':
-                                is_pdf = True
-                            # Also try to create a PdfReader to validate it's actually a PDF
-                            elif len(content) > 100:
-                                with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tc:
-                                    tc.write(content)
-                                    tcp = tc.name
-                                    temp_files.append(tcp)
-                                # Try to read it as PDF
-                                PdfReader(tcp)
-                                is_pdf = True
-                        except Exception:
-                            is_pdf = False
+                    if os.path.exists(temp_file):
+                        os.unlink(temp_file)
+                except Exception:
+                    pass
+            
+            return merged
+        
+        return pdf_bytes if pdf_bytes else None
 
-                        if is_pdf:
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tc:
-                                tc.write(content)
-                                tcp = tc.name
-                                temp_files.append(tcp)
-                            for pg in PdfReader(tcp).pages:
-                                writer.add_page(pg)
-                            cert_added = True
-                            cert_count += 1
-                            logger.info(f"Successfully merged certificate: {cert.certificate_type}")
-                        else:
-                            logger.warning(f"Certificate is not a valid PDF: {cert.certificate_type} - {cert.cloudinary_url}")
-                    else:
-                        logger.error(f"Failed to download certificate: {cert.certificate_type} - HTTP {r.status_code}")
-                except Exception as e:
-                    logger.error(f"Error downloading certificate {cert.certificate_type}: {e}")
-
-            # Priority 2: Try local certificate file
-            if not cert_added and cert.certificate_file:
-                try:
-                    if os.path.exists(cert.certificate_file.path):
-                        logger.info(f"Processing local certificate file: {cert.certificate_type}")
-                        for pg in PdfReader(cert.certificate_file.path).pages:
-                            writer.add_page(pg)
-                        cert_added = True
-                        cert_count += 1
-                        logger.info(f"Successfully merged local certificate: {cert.certificate_type}")
-                    else:
-                        logger.warning(f"Certificate file does not exist: {cert.certificate_file.path}")
-                except Exception as e:
-                    logger.error(f"Error processing local certificate {cert.certificate_type}: {e}")
-
-            if not cert_added:
-                logger.warning(f"Could not merge certificate: {cert.certificate_type} (no valid source found)")
-
-        logger.info(f"Total certificates merged: {cert_count}")
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-            writer.write(mf.name)
-            temp_files.append(mf.name)
-            with open(mf.name, 'rb') as f:
-                merged = f.read()
-
-        # Cleanup all temp files
-        for temp_file in temp_files:
-            try:
-                if os.path.exists(temp_file):
-                    os.unlink(temp_file)
-            except Exception as e:
-                logger.error(f"Error cleaning up temp file {temp_file}: {e}")
-
-        return merged
     except Exception as e:
         logger.error(f"Error in merge_certificates_with_pdf_bytes: {e}")
-        return None
+        return pdf_bytes if pdf_bytes else None
 
 
 @login_required
@@ -5486,7 +6203,7 @@ def api_faculty_research(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
     publications = ResearchPublication.objects.filter(faculty=faculty).values(
         'id', 'research_type', 'title', 'authors', 'publication_year', 'academic_year',
-        'journal_name', 'doi', 'status'
+        'journal_name', 'conference_name', 'doi', 'url', 'status'
     )
     return JsonResponse({
         'faculty_id': faculty.id,
@@ -6170,6 +6887,84 @@ def exam_branch(request):
 
         available_departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
 
+        # Syllabus data for subjects by year-sem and branch
+        syllabus_data = {
+            "1-1": {
+                "IT": [
+                    {"code": "MA101BS", "name": "MATRICES AND CALCULUS"},
+                    {"code": "AP102BS", "name": "APPLIED PHYSICS"},
+                    {"code": "CS103ES", "name": "PROGRAMMING FOR PROBLEM SOLVING"},
+                    {"code": "EN104HS", "name": "ENGLISH FOR SKILL ENHANCEMENT"},
+                    {"code": "ME105ES", "name": "ENGINEERING WORKSHOP"},
+                    {"code": "CS106ES", "name": "ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
+                    {"code": "AP107BS", "name": "APPLIED PHYSICS LABORATORY"},
+                    {"code": "EN108HS", "name": "ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
+                    {"code": "CS109ES", "name": "PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
+                    {"code": "ES110MC", "name": "ENVIRONMENTAL SCIENCE"}
+                ],
+                "CSE": [
+                    {"code": "MA101BS", "name": "MATRICES AND CALCULUS"},
+                    {"code": "CH102BS", "name": "ENGINEERING CHEMISTRY"},
+                    {"code": "CS103ES", "name": "PROGRAMMING FOR PROBLEM SOLVING"},
+                    {"code": "EE104ES", "name": "BASIC ELECTRICAL ENGINEERING"},
+                    {"code": "EG105ES", "name": "COMPUTER AIDED ENGINEERING GRAPHICS"},
+                    {"code": "CS106ES", "name": "ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
+                    {"code": "CH107BS", "name": "ENGINEERING CHEMISTRY LABORATORY"},
+                    {"code": "CS109ES", "name": "PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
+                    {"code": "EE108ES", "name": "BASIC ELECTRICAL ENGINEERING LABORATORY"},
+                    {"code": "HS110MC", "name": "CONSTITUTION OF INDIA"}
+                ]
+            },
+            "1-2": {
+                "IT": [
+                    {"code": "MA201BS", "name": "ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
+                    {"code": "CH202BS", "name": "ENGINEERING CHEMISTRY"},
+                    {"code": "EG203ES", "name": "COMPUTER AIDED ENGINEERING GRAPHICS"},
+                    {"code": "EE204ES", "name": "BASIC ELECTRICAL ENGINEERING"},
+                    {"code": "EC205ES", "name": "ELECTRONIC DEVICES AND CIRCUITS"},
+                    {"code": "CH206BS", "name": "ENGINEERING CHEMISTRY LABORATORY"},
+                    {"code": "CS207ES", "name": "PYTHON PROGRAMMING LABORATORY"},
+                    {"code": "EE208ES", "name": "BASIC ELECTRICAL ENGINEERING LABORATORY"},
+                    {"code": "CS209ES", "name": "IT WORKSHOP"},
+                    {"code": "HS210MC", "name": "CONSTITUTION OF INDIA"}
+                ]
+            },
+            "2-1": {
+                "IT": [
+                    {"code": "MA301BS", "name": "COMPLEX VARIABLES AND STATISTICAL METHODS"},
+                    {"code": "CS302PC", "name": "DATA STRUCTURES"},
+                    {"code": "CS303PC", "name": "COMPUTER ORGANIZATION"},
+                    {"code": "IT304PC", "name": "WEB PROGRAMMING"},
+                    {"code": "CS305PC", "name": "OBJECT ORIENTED PROGRAMMING USING C++"},
+                    {"code": "CS306PC", "name": "DATA STRUCTURES LABORATORY"},
+                    {"code": "IT307PC", "name": "WEB PROGRAMMING LABORATORY"},
+                    {"code": "CS308PC", "name": "OBJECT ORIENTED PROGRAMMING USING C++ LABORATORY"},
+                    {"code": "MC309", "name": "GENDER SENSITIZATION LAB"},
+                    {"code": "HS310MC", "name": "BUSINESS VENTURES AND ENTREPRENEURSHIP"}
+                ]
+            },
+            "2-2": {
+                "IT": [
+                    {"code": "MB401HS", "name": "BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
+                    {"code": "CS402PC", "name": "DISCRETE MATHEMATICS"},
+                    {"code": "CS403PC", "name": "OPERATING SYSTEMS"},
+                    {"code": "CS404PC", "name": "DATABASE MANAGEMENT SYSTEMS"},
+                    {"code": "IT405PC", "name": "JAVA PROGRAMMING"},
+                    {"code": "CS406PC", "name": "OPERATING SYSTEMS LABORATORY"},
+                    {"code": "CS407PC", "name": "DATABASE MANAGEMENT SYSTEMS LABORATORY"},
+                    {"code": "IT408PC", "name": "JAVA PROGRAMMING LABORATORY"},
+                    {"code": "IT409PW", "name": "REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
+                    {"code": "IT410PC", "name": "SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},
+                    {"code": "HS411MC", "name": "INTELLECTUAL PROPERTY RIGHTS"}
+                ]
+            }
+        }
+
+        # Get subjects for the selected year_sem and branch
+        subjects = []
+        if year_sem in syllabus_data and branch in syllabus_data[year_sem]:
+            subjects = syllabus_data[year_sem][branch]
+
         # Attendance Dashboard Data
         date_list = []
         curr = from_date
@@ -6225,6 +7020,7 @@ def exam_branch(request):
             'to_date': to_date_str,
             'branch': branch,
             'year_sem': year_sem,
+            'subjects': subjects,
 
             'title': 'Exam Branch - Management',
         }
@@ -6444,6 +7240,43 @@ def exam_branch_batch_download(request):
         return redirect('dashboard:exam_branch')
 
 
+# Password Protection Views
+def students_data_password(request):
+    """Password protection for students data page"""
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        if password == 'aecithod':
+            return redirect('dashboard:students_data_view')
+        else:
+            messages.error(request, 'Invalid password. Access denied.')
+            return redirect('dashboard:students_data')
+    return render(request, 'dashboard/students_data_password.html')
+
+
+def student_dashboard_password(request):
+    """Password protection for student dashboard page"""
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        if password == 'aecithod':
+            return redirect('dashboard:student_dashboard_view')
+        else:
+            messages.error(request, 'Invalid password. Access denied.')
+            return redirect('dashboard:student_dashboard')
+    return render(request, 'dashboard/student_dashboard_password.html')
+
+
+def faculty_list_password(request):
+    """Password protection for faculty list page"""
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        if password == 'aecithod':
+            return redirect('dashboard:faculty_list_view')
+        else:
+            messages.error(request, 'Invalid password. Access denied.')
+            return redirect('dashboard:faculty_list')
+    return render(request, 'dashboard/faculty_list_password.html')
+
+
 def simple_test(request):
     """Simple test view to verify Django is working"""
     return HttpResponse("""
@@ -6496,7 +7329,7 @@ def test_render(request):
     <html>
     <head><title>Test Page</title></head>
     <body style="font-family: Arial; padding: 50px; text-align: center;">
-        <h1>✅ Django is Working!</h1>
+        <h1>[OK] Django is Working!</h1>
         <p>Your application is running successfully on Render.</p>
         <p>Time: """ + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + """</p>
         <hr>

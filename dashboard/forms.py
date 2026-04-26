@@ -16,7 +16,7 @@ class StudentForm(forms.ModelForm):
         model = Student
         fields = [
             'ht_no', 'student_name', 'father_name', 'mother_name', 'gender',
-            'dob', 'age', 'nationality', 'category', 'religion', 'blood_group',
+            'dob', 'nationality', 'category', 'religion', 'blood_group',
             'aadhar', 'apaar_id', 'address', 'parent_phone', 'student_phone',
             'email', 'year', 'sem', 'ssc_marks', 'inter_marks', 'cgpa',
             'task_registered', 'task_username', 'csi_registered', 'csi_membership_id',

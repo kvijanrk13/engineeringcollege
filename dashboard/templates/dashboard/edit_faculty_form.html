@@ -109,6 +109,11 @@
         gap: 10px;
         justify-content: flex-end;
     }
+    .publication-reference {
+        font-size: 12px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
 </style>
 {% endblock %}
 
@@ -429,12 +434,16 @@
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>PhD Status</label>
-                                            <select name="phd_degree" class="form-control">
+                                            <select name="phd_degree" id="phd-degree" class="form-control">
                                                 <option value="">Select Status</option>
                                                 <option value="Completed" {% if faculty.phd_degree == 'Completed' %}selected{% endif %}>Completed</option>
                                                 <option value="Pursuing" {% if faculty.phd_degree == 'Pursuing' %}selected{% endif %}>Pursuing</option>
                                                 <option value="Not Started" {% if faculty.phd_degree == 'Not Started' %}selected{% endif %}>Not Started</option>
                                             </select>
+                                        </div>
+                                        <div class="col-md-8 mb-3 {% if faculty.phd_degree != 'Completed' %}d-none{% endif %}" id="phd-title-group">
+                                            <label>Ph.D Title</label>
+                                            <input type="text" name="phd_title" id="phd-title" class="form-control" maxlength="500" value="{{ faculty.phd_title|default:'' }}">
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>PhD Year</label>
@@ -562,37 +571,49 @@
 
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="research-table">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>#</th>
-                                                    <th>Type</th>
-                                                    <th>Title</th>
-                                                    <th>Authors</th>
-                                                    <th>Year</th>
-                                                    <th>Journal / Conference</th>
-                                                    <th>Status</th>
-                                                    <th>Remove</th>
-                                                </tr>
-                                            </thead>
+                                             <thead class="table-light">
+                                                 <tr>
+                                                     <th>#</th>
+                                                     <th>Type</th>
+                                                     <th>Title</th>
+                                                     <th>Authors</th>
+                                                     <th>Year</th>
+                                                     <th>Journal / Conference</th>
+                                                     <th>ISSN</th>
+                                                     <th>Status</th>
+                                                     <th>DOI / URL</th>
+                                                     <th>Remove</th>
+                                                 </tr>
+                                             </thead>
                                             <tbody id="research-tbody">
                                                 {% if research_publications %}
                                                     {% for pub in research_publications %}
-                                                    <tr id="research-row-{{ forloop.counter0 }}">
-                                                        <td>{{ forloop.counter }}</td>
-                                                        <td><span class="badge bg-info text-dark">{{ pub.research_type }}</span></td>
-                                                        <td>{{ pub.title }}</td>
-                                                        <td>{{ pub.authors|default:'—' }}</td>
-                                                        <td>{{ pub.publication_year|default:'—' }}</td>
-                                                        <td>{{ pub.journal_name|default:pub.conference_name|default:'—' }}</td>
-                                                        <td><span class="badge bg-success">{{ pub.status }}</span></td>
-                                                        <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
-                                                    </tr>
+                                                     <tr id="research-row-{{ forloop.counter0 }}">
+                                                         <td>{{ forloop.counter }}</td>
+                                                         <td><span class="badge bg-info text-dark">{{ pub.research_type }}</span></td>
+                                                         <td>{{ pub.title }}</td>
+                                                         <td>{{ pub.authors|default:'—' }}</td>
+                                                         <td>{{ pub.publication_year|default:'—' }}</td>
+                                                         <td>{{ pub.journal_name|default:pub.conference_name|default:'—' }}</td>
+                                                         <td>{{ pub.issn|default:'—' }}</td>
+                                                         <td><span class="badge bg-success">{{ pub.status }}</span></td>
+                                                         <td class="publication-reference">
+                                                             {% if pub.doi %}
+                                                                 <div><strong>DOI:</strong> {{ pub.doi }}</div>
+                                                             {% endif %}
+                                                             {% if pub.url %}
+                                                                 <div><strong>URL:</strong> <a href="{{ pub.url }}" target="_blank" rel="noopener noreferrer">{{ pub.url }}</a></div>
+                                                             {% endif %}
+                                                             {% if not pub.doi and not pub.url %}—{% endif %}
+                                                         </td>
+                                                         <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
+                                                     </tr>
                                                     {% endfor %}
-                                                {% else %}
-                                                    <tr id="no-research-row">
-                                                        <td colspan="8" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td>
-                                                    </tr>
-                                                {% endif %}
+                                                 {% else %}
+                                                     <tr id="no-research-row">
+                                                         <td colspan="10" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td>
+                                                     </tr>
+                                                 {% endif %}
                                             </tbody>
                                         </table>
                                     </div>
@@ -633,14 +654,22 @@
                                                         <option value="submitted">Submitted</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small fw-bold">Journal / Conference Name</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label small fw-bold">DOI / URL</label>
-                                                    <input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="https://doi.org/...">
-                                                </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">Journal / Conference Name</label>
+                                                     <input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name">
+                                                 </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">ISSN</label>
+                                                     <input type="text" class="form-control form-control-sm" id="rp-issn" placeholder="e.g. 1234-5678">
+                                                 </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">DOI</label>
+                                                     <input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="10.1000/xyz123">
+                                                 </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">URL</label>
+                                                     <input type="url" class="form-control form-control-sm" id="rp-url" placeholder="https://example.com/publication">
+                                                 </div>
                                             </div>
                                             <div class="mt-3">
                                                 <button type="button" class="btn btn-primary btn-sm" onclick="addResearchPublication()">
@@ -1065,6 +1094,72 @@
 
     const csrftoken = getCookie('csrftoken');
 
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function(char) {
+            return ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[char];
+        });
+    }
+
+    function normalizePublicationUrl(value) {
+        const trimmed = (value || '').trim();
+        if (!trimmed) {
+            return '';
+        }
+        if (/^https?:\/\//i.test(trimmed)) {
+            return trimmed;
+        }
+        if (trimmed.startsWith('//')) {
+            return `https:${trimmed}`;
+        }
+        if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+            return '';
+        }
+        return `https://${trimmed.replace(/^\/+/, '')}`;
+    }
+
+    function formatPublicationReferenceCell(publication) {
+        const refs = [];
+        const doi = (publication.doi || '').trim();
+        const rawUrl = (publication.url || '').trim();
+
+        if (doi) {
+            const doiHref = /^https?:\/\//i.test(doi) ? doi : `https://doi.org/${doi}`;
+            refs.push(`<div><strong>DOI:</strong> <a href="${escapeHtml(doiHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(doi)}</a></div>`);
+        }
+
+        if (rawUrl) {
+            const normalizedUrl = normalizePublicationUrl(rawUrl);
+            if (normalizedUrl) {
+                refs.push(`<div><strong>URL:</strong> <a href="${escapeHtml(normalizedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(rawUrl)}</a></div>`);
+            } else {
+                refs.push(`<div><strong>URL:</strong> ${escapeHtml(rawUrl)}</div>`);
+            }
+        }
+
+        return refs.length ? `<div class="publication-reference">${refs.join('')}</div>` : '—';
+    }
+
+    function togglePhdTitleField() {
+        const phdStatus = document.getElementById('phd-degree');
+        const phdTitleGroup = document.getElementById('phd-title-group');
+        const phdTitleInput = document.getElementById('phd-title');
+        if (!phdStatus || !phdTitleGroup || !phdTitleInput) {
+            return;
+        }
+
+        const shouldShow = phdStatus.value === 'Completed';
+        phdTitleGroup.classList.toggle('d-none', !shouldShow);
+        if (!shouldShow) {
+            phdTitleInput.value = '';
+        }
+    }
+
     // ============================================================
     // RESEARCH PUBLICATIONS
     // ============================================================
@@ -1082,6 +1177,7 @@
                 journal_name: "{{ pub.journal_name|escapejs }}",
                 conference_name: "{{ pub.conference_name|escapejs }}",
                 doi: "{{ pub.doi|escapejs }}",
+                url: "{{ pub.url|escapejs }}",
                 status: "{{ pub.status }}"
             },
             {% endfor %}
@@ -1104,7 +1200,9 @@
             publication_year: document.getElementById('rp-year').value || null,
             journal_name: (type !== 'conference') ? venue : '',
             conference_name: (type === 'conference') ? venue : '',
+            issn: document.getElementById('rp-issn').value.trim(),
             doi: document.getElementById('rp-doi').value.trim(),
+            url: document.getElementById('rp-url').value.trim(),
             status: document.getElementById('rp-status').value,
         };
         researchList.push(entry);
@@ -1122,18 +1220,20 @@
     function renderResearchTable() {
         const tbody = document.getElementById('research-tbody');
         if (researchList.length === 0) {
-            tbody.innerHTML = `<tr id="no-research-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr>`;
+            tbody.innerHTML = `<tr id="no-research-row"><td colspan="10" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr>`;
             return;
         }
         tbody.innerHTML = researchList.map((r, i) => `
             <tr>
                 <td>${i + 1}</td>
-                <td><span class="badge bg-info text-dark">${r.research_type}</span></td>
-                <td>${r.title}</td>
-                <td>${r.authors || '—'}</td>
-                <td>${r.publication_year || '—'}</td>
-                <td>${r.journal_name || r.conference_name || '—'}</td>
-                <td><span class="badge bg-success">${r.status}</span></td>
+                <td><span class="badge bg-info text-dark">${escapeHtml(r.research_type)}</span></td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.authors || '—')}</td>
+                <td>${escapeHtml(r.publication_year || '—')}</td>
+                <td>${escapeHtml(r.journal_name || r.conference_name || '—')}</td>
+                <td>${escapeHtml(r.issn || '—')}</td>
+                <td><span class="badge bg-success">${escapeHtml(r.status || '—')}</span></td>
+                <td>${formatPublicationReferenceCell(r)}</td>
                 <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch(${i})"><i class="fas fa-trash"></i></button></td>
             </tr>
         `).join('');
@@ -1144,7 +1244,7 @@
     }
 
     function clearResearchForm() {
-        ['rp-title', 'rp-authors', 'rp-year', 'rp-journal', 'rp-doi'].forEach(id => {
+        ['rp-title', 'rp-authors', 'rp-year', 'rp-journal', 'rp-issn', 'rp-doi', 'rp-url'].forEach(id => {
             document.getElementById(id).value = '';
         });
     }
@@ -1479,6 +1579,11 @@
         renderProjectTable();
         renderFDPTable();
         renderResultsTable();
+        const phdStatus = document.getElementById('phd-degree');
+        if (phdStatus) {
+            phdStatus.addEventListener('change', togglePhdTitleField);
+            togglePhdTitleField();
+        }
     });
 </script>
 {% endblock %}

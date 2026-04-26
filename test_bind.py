@@ -13,26 +13,26 @@ def test_server_binding():
 
     try:
         django.setup()
-        print("✅ Django setup successful")
+        print("[OK] Django setup successful")
 
         # Try to manually create a simple HTTP server to test binding
         import socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.bind(('127.0.0.1', 8000))
-            print("✅ Successfully bound to 127.0.0.1:8000")
+            print("[OK] Successfully bound to 127.0.0.1:8000")
             sock.close()
         except Exception as e:
-            print(f"❌ Failed to bind to 127.0.0.1:8000 - {e}")
+            print(f"[ERROR] Failed to bind to 127.0.0.1:8000 - {e}")
 
         # Now try Django server
-        print("🔧 Attempting to start Django server...")
+        print("[INFO] Attempting to start Django server...")
         execute_from_command_line(['manage.py', 'runserver', '--noreload'])
 
     except SystemExit:
-        print("✅ Server process completed normally")
+        print("[OK] Server process completed normally")
     except Exception as e:
-        print(f"❌ Server failed with error: {e}")
+        print(f"[ERROR] Server failed with error: {e}")
         import traceback
         traceback.print_exc()
 

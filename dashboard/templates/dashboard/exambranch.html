@@ -471,14 +471,7 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- College Header (as per Excel) -->
-    <div class="college-header no-print">
-        <h2>ANURAG ENGINEERING COLLEGE</h2>
-        <h4>An Autonomous Institution</h4>
-        <p>(Affiliated to JNTUH-Hyderabad, Approved by AICTE-New Delhi)</p>
-        <p>ANANTHAGIRI (V) (M), SURYAPET (D), TELANGANA-508206</p>
-        <p>Academic Year: 2025-26</p>
-    </div>
+
 
     <!-- Page Header -->
     <div class="row mb-4">
@@ -497,7 +490,7 @@
                         {% if view_mode == 'list' %}
                             View and download faculty PDFs
                         {% else %}
-                            IV B.Tech I Semester IT - Monthly Attendance
+                            Attendance Management
                         {% endif %}
                     </p>
                 </div>
@@ -681,15 +674,15 @@
 
     <!-- Attendance Sheet Header -->
     <div class="attendance-sheet">
-        <div class="attendance-header">
-            <h4>IV B.Tech I Semester IT - SEPTEMBER Monthly Attendance</h4>
-            <p>Period: 10-07-2025 to 30-09-2025</p>
-        </div>
 
         <!-- Date Range Filter -->
         <div class="date-range no-print">
             <form method="GET" action="{% url 'dashboard:exam_branch' %}" class="row g-3 align-items-end">
                 <input type="hidden" name="view" value="dashboard">
+                <div class="col-auto">
+                    <label for="academic_year">Academic Year:</label>
+                    <input type="text" name="academic_year" id="academic_year" class="form-control" value="{{ academic_year|default:'2025-26' }}" placeholder="e.g., 2025-26">
+                </div>
                 <div class="col-auto">
                     <label for="from_date">From Date:</label>
                     <input type="date" name="from_date" id="from_date" class="form-control" value="{{ from_date|default:'2025-07-10' }}">
@@ -737,14 +730,24 @@
                         <th rowspan="2">S.No.</th>
                         <th rowspan="2">H.T.No.</th>
                         <th rowspan="2">Name of the Student</th>
+                        {% if subjects %}
+                        <th colspan="{{ subjects|length }}">Subjects</th>
+                        {% else %}
                         <th colspan="{{ date_list|length|default:31 }}">Days (Date)</th>
+                        {% endif %}
                         <th rowspan="2">TOTAL</th>
                         <th rowspan="2">%</th>
                     </tr>
                     <tr>
+                        {% if subjects %}
+                        {% for subject in subjects %}
+                        <th style="width: 80px; font-size: 10px; text-align: center;">{{ subject.code }}<br><small>{{ subject.name }}</small></th>
+                        {% endfor %}
+                        {% else %}
                         {% for date in date_list %}
                         <th>{{ date|date:"d/m" }}</th>
                         {% endfor %}
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -753,6 +756,17 @@
                         <td>{{ forloop.counter }}</td>
                         <td><strong>{{ student.ht_no }}</strong></td>
                         <td>{{ student.student_name }}</td>
+                        {% if subjects %}
+                        {% for subject in subjects %}
+                        <td class="subject-cell" style="text-align: center;">
+                            <input type="number" class="form-control form-control-sm subject-input"
+                                   style="width: 60px; text-align: center; margin: 0 auto;"
+                                   min="0" max="100" placeholder="0"
+                                   data-student="{{ student.id }}" data-subject="{{ subject.code }}"
+                                   onchange="updateSubjectAttendance({{ student.id }}, '{{ subject.code }}', this.value)">
+                        </td>
+                        {% endfor %}
+                        {% else %}
                         {% for date in date_list %}
                         <td class="attendance-cell" data-student="{{ student.id }}" data-date="{{ date|date:'Y-m-d' }}">
                             <select class="attendance-select form-control form-control-sm"
@@ -765,21 +779,28 @@
                             </select>
                         </td>
                         {% endfor %}
+                        {% endif %}
                         <td class="total-cell" id="total-{{ student.id }}">{{ student.total_present|default:0 }}</td>
                         <td class="percentage-cell" id="percentage-{{ student.id }}">{{ student.attendance_percentage|default:0 }}%</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="{{ date_list|length|default:31|add:5 }}" class="text-center">No student records found.</td>
+                        <td colspan="{% if subjects %}{{ subjects|length|add:5 }}{% else %}{{ date_list|length|default:31|add:5 }}{% endif %}" class="text-center">No student records found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="3"><strong>Total Classes</strong></td>
+                        <td colspan="3"><strong>{% if subjects %}Classes per Subject{% else %}Total Classes{% endif %}</strong></td>
+                        {% if subjects %}
+                        {% for subject in subjects %}
+                        <td class="total-classes-cell" style="text-align: center; font-weight: bold;" id="total-classes-{{ forloop.counter }}">0</td>
+                        {% endfor %}
+                        {% else %}
                         {% for date in date_list %}
                         <td class="total-classes-cell" id="total-classes-{{ forloop.counter }}">0</td>
                         {% endfor %}
+                        {% endif %}
                         <td colspan="2"></td>
                     </tr>
                 </tfoot>
@@ -1030,6 +1051,14 @@
             console.error('Error:', error);
             showToast('error', 'Network error occurred');
         });
+    }
+
+    // Update Subject Attendance Function
+    function updateSubjectAttendance(studentId, subjectCode, classesCount) {
+        // For now, just show a toast - you can implement server-side logic later
+        const count = parseInt(classesCount) || 0;
+        showToast('success', `Updated ${subjectCode} classes to ${count} for student ${studentId}`);
+        // TODO: Implement server-side storage for subject attendance data
     }
 
     // Calculate Totals Function

@@ -134,7 +134,8 @@
 
                     <!-- Tabs -->
                     <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal"><i class="fas fa-user me-1"></i>Personal</button></li>
+                        <li class="nav-item"><button class="nav-link active" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery"><i class="fas fa-images me-1"></i>Gallery</button></li>
+                        <li class="nav-item"><button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal"><i class="fas fa-user me-1"></i>Personal</button></li>
                         <li class="nav-item"><button class="nav-link" id="education-tab" data-bs-toggle="tab" data-bs-target="#education"><i class="fas fa-graduation-cap me-1"></i>Education</button></li>
                         <li class="nav-item"><button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#research"><i class="fas fa-book-open me-1"></i>Research & Publications {% if research_publications %}<span class="badge bg-danger ms-1">{{ research_publications|length }}</span>{% endif %}</button></li>
                         <li class="nav-item"><button class="nav-link" id="fdp-tab" data-bs-toggle="tab" data-bs-target="#fdp"><i class="fas fa-chalkboard-teacher me-1"></i>FDP/Workshops {% if fdps %}<span class="badge bg-warning ms-1">{{ fdps|length }}</span>{% endif %}</button></li>
@@ -144,8 +145,12 @@
                     </ul>
 
                     <div class="tab-content mt-3">
+                        <!-- Gallery Tab -->
+                        <div class="tab-pane fade show active" id="gallery">
+                            {% include 'dashboard/gallery.html' %}
+                        </div>
                         <!-- Personal Tab -->
-                        <div class="tab-pane fade show active" id="personal">
+                        <div class="tab-pane fade" id="personal">
                             <div class="row">
                                 <div class="col-md-6">
                                     <h6><i class="fas fa-user me-2"></i>Personal Details</h6>

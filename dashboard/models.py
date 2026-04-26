@@ -80,6 +80,7 @@ class Faculty(models.Model):
         ('Not Started', 'Not Started'),
         ('', 'Not Specified')
     ])
+    phd_title = models.CharField(max_length=500, blank=True, null=True)
     phd_year = models.IntegerField(blank=True, null=True)
     phd_university = models.CharField(max_length=255, blank=True, null=True)
     phd_spec = models.CharField(max_length=100, blank=True, null=True)

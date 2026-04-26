@@ -77,36 +77,22 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'dashboard:dashboard' %}">
                 <i class="fas fa-university me-2"></i>
-                ANURAG Engineering College
+                ANURAG ENGINEERING COLLEGE - INFORMATION TECHNOLOGY
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'dashboard:dashboard' %}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'faculty_list' or request.resolver_match.url_name == 'add_faculty' or request.resolver_match.url_name == 'edit_faculty' or request.resolver_match.url_name == 'faculty_detail' %}active{% endif %}" href="{% url 'dashboard:faculty_list' %}">
-                            <i class="fas fa-chalkboard-teacher me-1"></i>Faculty
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'students_data' or request.resolver_match.url_name == 'add_student' %}active{% endif %}" href="{% url 'dashboard:students_data' %}">
-                            <i class="fas fa-user-graduate me-1"></i>Students
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'syllabus' %}active{% endif %}" href="{% url 'dashboard:syllabus' %}">
-                            <i class="fas fa-book me-1"></i>Syllabus
-                        </a>
-                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'exam_branch' %}active{% endif %}" href="{% url 'dashboard:exam_branch' %}">
                             <i class="fas fa-file-alt me-1"></i>Exam Branch
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% url 'dashboard:gallery' %}">
+                            <i class="fas fa-images me-1"></i>Gallery
                         </a>
                     </li>
                     {% if user.is_authenticated %}

@@ -18,17 +18,9 @@
         text-align: center;
         margin-bottom: 30px;
     }
-    .coming-soon {
-        text-align: center;
-        padding: 50px;
-        background: #f8fafc;
-        border-radius: 8px;
-        color: #64748b;
-        font-size: 1.2rem;
-    }
     .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 20px;
         margin-top: 30px;
     }
@@ -49,23 +41,44 @@
         font-weight: 500;
         color: #1e293b;
     }
+    .pdf-card {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .pdf-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 </style>
 
 <div class="container">
     <h1>Gallery</h1>
-    <div class="coming-soon">
-        <h2>🚧 Under Construction 🚧</h2>
-        <p>Gallery page is coming soon. Check back later for photos and videos.</p>
-    </div>
-
-    <!-- Placeholder for future gallery content -->
-    <!--
     <div class="gallery-grid">
         <div class="gallery-item">
-            <img src="{% static 'images/placeholder.jpg' %}" alt="Placeholder">
-            <div class="caption">Campus View</div>
+            <img src="{% static 'images/BATCH 22 ITECH.jpeg' %}" alt="BATCH 22 ITECH">
+            <div class="caption">BATCH 22 ITECH</div>
+        </div>
+        <div class="gallery-item">
+            <img src="{% static 'images/CONNECT HACKATHON - 2026.jpeg' %}" alt="CONNECT HACKATHON - 2K26">
+            <div class="caption">CONNECT HACKATHON - 2K26</div>
         </div>
     </div>
-    -->
+
+    <div class="pdf-card">
+        <h4 class="mb-3">ITECH-2K26 Event PDF</h4>
+        <p class="mb-3">View or download the event PDF file below.</p>
+        <div class="pdf-actions">
+            <a class="btn btn-primary" href="{% static 'images/ITECH-2K26.pdf' %}" target="_blank" rel="noopener">
+                <i class="fas fa-file-pdf me-1"></i>Open PDF
+            </a>
+            <a class="btn btn-outline-primary" href="{% static 'images/ITECH-2K26.pdf' %}" download>
+                <i class="fas fa-download me-1"></i>Download PDF
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

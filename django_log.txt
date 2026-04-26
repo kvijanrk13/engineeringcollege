@@ -1,0 +1,64 @@
+Cloudinary initialized successfully.
+Admin login request - method: GET
+Rendering login page
+"GET / HTTP/1.1" 200 11579
+"GET /student-login/ HTTP/1.1" 200 11786
+"POST /student-login/ HTTP/1.1" 302 0
+"GET /student-dashboard/ HTTP/1.1" 200 17705
+"GET /students/data/ HTTP/1.1" 200 25982
+"POST /student/delete/16/ HTTP/1.1" 302 0
+"GET /students/data/ HTTP/1.1" 200 23484
+"GET /add-student/ HTTP/1.1" 200 35900
+"POST /add-student/ HTTP/1.1" 302 0
+"GET /students/data/ HTTP/1.1" 200 26415
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/achievement/achievement_20260423_230412
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/achievement/achievement_20260423_230412
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/achievement/achievement_20260423_230412
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf: HTTP 401
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/achievement/achievement_20260423_230412
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/achievement/achievement_20260423_230412
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/achievement/achievement_20260423_230412
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf: HTTP 401
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/internship/internship_20260423_230413
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/internship/internship_20260423_230413
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/internship/internship_20260423_230413
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf: HTTP 401
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/internship/internship_20260423_230413
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/internship/internship_20260423_230413
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/internship/internship_20260423_230413
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf: HTTP 401
+Added photo to merged PDF for student 23C11A1201
+Uploaded merged certificates to Cloudinary: https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965829/merged_student_certificates/merged_student_23C11A1201_20260423_230703.pdf
+"GET /student/merge-certificates/17/ HTTP/1.1" 302 0
+"GET /student/17/ HTTP/1.1" 200 20250
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/achievement/achievement_20260423_230412
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/achievement/achievement_20260423_230412
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/achievement/achievement_20260423_230412
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf: HTTP 401
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/achievement/achievement_20260423_230412
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/achievement/achievement_20260423_230412
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/achievement/achievement_20260423_230412
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965653/student_documents/achievement/achievement_20260423_230412.pdf: HTTP 401
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/internship/internship_20260423_230413
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/internship/internship_20260423_230413
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/internship/internship_20260423_230413
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf: HTTP 401
+Cloudinary API lookup failed: Error 404 - Resource not found - student_documents/internship/internship_20260423_230413
+Trying raw URL: https://res.cloudinary.com/dsndiruhe/raw/upload/student_documents/internship/internship_20260423_230413
+Trying image URL: https://res.cloudinary.com/dsndiruhe/image/upload/student_documents/internship/internship_20260423_230413
+Trying alternative resource type: https://res.cloudinary.com/dsndiruhe/image/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf
+Failed to download asset https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965654/student_documents/internship/internship_20260423_230413.pdf: HTTP 401
+Added photo to merged PDF for student 23C11A1201
+Uploaded merged certificates to Cloudinary: https://res.cloudinary.com/dsndiruhe/raw/upload/v1776965861/merged_student_certificates/merged_student_23C11A1201_20260423_230735.pdf
+"GET /student/merge-certificates/17/ HTTP/1.1" 302 0
+"GET /student/17/ HTTP/1.1" 200 20250
+"GET /student/pdf/17/ HTTP/1.1" 302 0
+"GET /student-dashboard/ HTTP/1.1" 200 18110
+"GET /students/data/ HTTP/1.1" 200 25982

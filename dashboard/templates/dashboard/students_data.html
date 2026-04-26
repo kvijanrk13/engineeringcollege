@@ -527,6 +527,8 @@ body {
                         <th>PHONE</th>
                         <th>EMAIL</th>
                         <th>CGPA</th>
+                        <th>DOB</th>
+                        <th>AGE</th>
                         <th>PDF</th>
                         <th>ACTIONS</th>
                     </tr>
@@ -577,6 +579,10 @@ body {
                             -
                         {% endif %}
                     </td>
+
+                    <td>{{ student.dob|date:"d/m/Y"|default:"-" }}</td>
+
+                    <td>{{ student.age|default:"-" }}</td>
 
                     <td class="action-cell">
                         {% if student.pdf_url %}

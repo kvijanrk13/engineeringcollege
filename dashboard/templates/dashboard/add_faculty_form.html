@@ -145,6 +145,11 @@
         justify-content: flex-end;
         margin-top: 20px;
     }
+    .publication-reference {
+        font-size: 12px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
 </style>
 {% endblock %}
 {% block content %}
@@ -158,7 +163,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" action="/faculty/add/" id="addFacultyForm">
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:add_faculty' %}" id="addFacultyForm">
                         {% csrf_token %}
                         <!-- Hidden JSON fields submitted with the form -->
                         <input type="hidden" name="research_publications_json" id="research_publications_json" value="[]">
@@ -391,7 +396,8 @@
                                         <div class="col-md-4 mb-3"><label>PG Percentage</label><input type="text" name="pg_percentage" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PG College</label><input type="text" name="pg_college" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PG Specialization</label><input type="text" name="pg_spec" class="form-control"></div>
-                                        <div class="col-md-4 mb-3"><label>PhD Status</label><select name="phd_degree" class="form-control"><option value="">Select Status</option>{% for qual in qualifications %}<option value="{{ qual }}">{{ qual }}</option>{% endfor %}</select></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Status</label><select name="phd_degree" id="phd-degree" class="form-control"><option value="">Select Status</option>{% for qual in qualifications %}<option value="{{ qual }}">{{ qual }}</option>{% endfor %}</select></div>
+                                        <div class="col-md-8 mb-3 d-none" id="phd-title-group"><label>Ph.D Title</label><input type="text" name="phd_title" id="phd-title" class="form-control" maxlength="500" placeholder="Enter Ph.D title"></div>
                                         <div class="col-md-4 mb-3"><label>PhD Year</label><input type="number" name="phd_year" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PhD University</label><input type="text" name="phd_university" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PhD Specialization</label><input type="text" name="phd_spec" class="form-control"></div>
@@ -439,23 +445,25 @@
                                     </div>
                                     <div class="table-responsive mb-3">
                                         <table class="table table-bordered table-sm align-middle" id="research-table">
-                                            <thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Authors</th><th>Academic Year</th><th>Year</th><th>Journal / Conference</th><th>Status</th><th>Remove</th></tr></thead>
-                                            <tbody id="research-tbody"><tr id="no-research-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr></tbody>
-                                        </table>
+                                             <thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Authors</th><th>Academic Year</th><th>Year</th><th>Journal / Conference</th><th>ISSN</th><th>Status</th><th>DOI / URL</th><th>Remove</th></tr></thead>
+                                             <tbody id="research-tbody"><tr id="no-research-row"><td colspan="11" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr></tbody>
+                                         </table>
                                     </div>
                                     <div class="card border-primary">
                                         <div class="card-header bg-primary text-white py-2"><i class="fas fa-plus me-1"></i>Add Publication</div>
                                         <div class="card-body">
-                                            <div class="row g-2">
-                                                <div class="col-md-3"><label class="form-label small fw-bold">Type *</label><select class="form-select form-select-sm" id="rp-type"><option value="journal">Journal Article</option><option value="conference">Conference Paper</option><option value="book">Book / Chapter</option><option value="patent">Patent</option></select></div>
-                                                <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication"></div>
-                                                <div class="col-md-5"><label class="form-label small fw-bold">Authors</label><input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma"></div>
-                                                <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rp-academic-year" placeholder="e.g., 2023-24"></div>
-                                                <div class="col-md-2"><label class="form-label small fw-bold">Year</label><input type="number" class="form-control form-control-sm" id="rp-year" min="1990" max="2030" placeholder="2024"></div>
-                                                <div class="col-md-3"><label class="form-label small fw-bold">Status</label><select class="form-select form-select-sm" id="rp-status"><option value="published">Published</option><option value="accepted">Accepted</option><option value="under_review">Under Review</option><option value="submitted">Submitted</option></select></div>
-                                                <div class="col-md-6"><label class="form-label small fw-bold">Journal / Conference Name</label><input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name"></div>
-                                                <div class="col-md-6"><label class="form-label small fw-bold">DOI / URL</label><input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="https://doi.org/..."></div>
-                                            </div>
+                                             <div class="row g-2">
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Type *</label><select class="form-select form-select-sm" id="rp-type"><option value="journal">Journal Article</option><option value="conference">Conference Paper</option><option value="book">Book / Chapter</option><option value="patent">Patent</option></select></div>
+                                                 <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication"></div>
+                                                 <div class="col-md-5"><label class="form-label small fw-bold">Authors</label><input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rp-academic-year" placeholder="e.g., 2023-24"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Year</label><input type="number" class="form-control form-control-sm" id="rp-year" min="1990" max="2030" placeholder="2024"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Status</label><select class="form-select form-select-sm" id="rp-status"><option value="published">Published</option><option value="accepted">Accepted</option><option value="under_review">Under Review</option><option value="submitted">Submitted</option></select></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Journal / Conference Name</label><input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">ISSN</label><input type="text" class="form-control form-control-sm" id="rp-issn" placeholder="e.g. 1234-5678"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">DOI</label><input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="10.1000/xyz123"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">URL</label><input type="url" class="form-control form-control-sm" id="rp-url" placeholder="https://example.com/publication"></div>
+                                             </div>
                                             <div class="mt-3"><button type="button" class="btn btn-primary btn-sm" onclick="addResearchPublication()"><i class="fas fa-plus me-1"></i>Add Publication</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResearchForm()">Clear</button></div>
                                         </div>
                                     </div>
@@ -637,6 +645,72 @@
         bootstrap.Tab.getOrCreateInstance(tabButton).show();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function(char) {
+            return ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[char];
+        });
+    }
+
+    function normalizePublicationUrl(value) {
+        const trimmed = (value || '').trim();
+        if (!trimmed) {
+            return '';
+        }
+        if (/^https?:\/\//i.test(trimmed)) {
+            return trimmed;
+        }
+        if (trimmed.startsWith('//')) {
+            return `https:${trimmed}`;
+        }
+        if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+            return '';
+        }
+        return `https://${trimmed.replace(/^\/+/, '')}`;
+    }
+
+    function formatPublicationReferenceCell(publication) {
+        const refs = [];
+        const doi = (publication.doi || '').trim();
+        const rawUrl = (publication.url || '').trim();
+
+        if (doi) {
+            const doiHref = /^https?:\/\//i.test(doi) ? doi : `https://doi.org/${doi}`;
+            refs.push(`<div><strong>DOI:</strong> <a href="${escapeHtml(doiHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(doi)}</a></div>`);
+        }
+
+        if (rawUrl) {
+            const normalizedUrl = normalizePublicationUrl(rawUrl);
+            if (normalizedUrl) {
+                refs.push(`<div><strong>URL:</strong> <a href="${escapeHtml(normalizedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(rawUrl)}</a></div>`);
+            } else {
+                refs.push(`<div><strong>URL:</strong> ${escapeHtml(rawUrl)}</div>`);
+            }
+        }
+
+        return refs.length ? `<div class="publication-reference">${refs.join('')}</div>` : '—';
+    }
+
+    function togglePhdTitleField() {
+        const phdStatus = document.getElementById('phd-degree');
+        const phdTitleGroup = document.getElementById('phd-title-group');
+        const phdTitleInput = document.getElementById('phd-title');
+        if (!phdStatus || !phdTitleGroup || !phdTitleInput) {
+            return;
+        }
+
+        const shouldShow = phdStatus.value === 'Completed';
+        phdTitleGroup.classList.toggle('d-none', !shouldShow);
+        if (!shouldShow) {
+            phdTitleInput.value = '';
+        }
+    }
     // ============================================================
     // MULTIPLE RESEARCH PROOFS WITH ADD BUTTON - WORKING VERSION
     // ============================================================
@@ -797,7 +871,9 @@
             publication_year: document.getElementById('rp-year').value || null,
             journal_name: (type !== 'conference') ? venue : '',
             conference_name: (type === 'conference') ? venue : '',
+            issn: document.getElementById('rp-issn').value.trim(),
             doi: document.getElementById('rp-doi').value.trim(),
+            url: document.getElementById('rp-url').value.trim(),
             status: document.getElementById('rp-status').value,
         };
         researchList.push(entry);
@@ -813,19 +889,21 @@
     function renderResearchTable() {
         const tbody = document.getElementById('research-tbody');
         if (researchList.length === 0) {
-            tbody.innerHTML = `<tr id="no-research-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr>`;
+            tbody.innerHTML = `<tr id="no-research-row"><td colspan="11" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr>`;
             return;
         }
         tbody.innerHTML = researchList.map((r, i) => `
             <tr>
                 <td>${i + 1}</td>
-                <td><span class="badge bg-info text-dark">${r.research_type}</span></td>
-                <td>${r.title}</td>
-                <td>${r.authors || '—'}</td>
-                <td>${r.academic_year || '—'}</td>
-                <td>${r.publication_year || '—'}</td>
-                <td>${r.journal_name || r.conference_name || '—'}</td>
-                <td><span class="badge bg-success">${r.status}</span></td>
+                <td><span class="badge bg-info text-dark">${escapeHtml(r.research_type)}</span></td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.authors || '—')}</td>
+                <td>${escapeHtml(r.academic_year || '—')}</td>
+                <td>${escapeHtml(r.publication_year || '—')}</td>
+                <td>${escapeHtml(r.journal_name || r.conference_name || '—')}</td>
+                <td>${escapeHtml(r.issn || '—')}</td>
+                <td><span class="badge bg-success">${escapeHtml(r.status || '—')}</span></td>
+                <td>${formatPublicationReferenceCell(r)}</td>
                 <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch(${i})"><i class="fas fa-trash"></i></button></td>
             </tr>
         `).join('');
@@ -839,7 +917,9 @@
         document.getElementById('rp-academic-year').value = '';
         document.getElementById('rp-year').value = '';
         document.getElementById('rp-journal').value = '';
+        document.getElementById('rp-issn').value = '';
         document.getElementById('rp-doi').value = '';
+        document.getElementById('rp-url').value = '';
         document.getElementById('rp-type').value = 'journal';
         document.getElementById('rp-status').value = 'published';
     }
@@ -1149,9 +1229,14 @@
         const addResearchBtn = document.getElementById('addResearchProofBtn');
         const addFDPCertBtn = document.getElementById('addFDPCertificateBtn');
         const addOtherBtn = document.getElementById('addOtherDocumentBtn');
+        const phdStatus = document.getElementById('phd-degree');
         if (addResearchBtn) addResearchBtn.addEventListener('click', addResearchProof);
         if (addFDPCertBtn) addFDPCertBtn.addEventListener('click', addFDPCertificate);
         if (addOtherBtn) addOtherBtn.addEventListener('click', addOtherDocument);
+        if (phdStatus) {
+            phdStatus.addEventListener('change', togglePhdTitleField);
+            togglePhdTitleField();
+        }
     });
     // ============================================================
     // FORM SUBMISSION

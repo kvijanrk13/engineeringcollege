@@ -6,20 +6,30 @@
     <title>Faculty Profile - {{ faculty.staff_name }}</title>
     <style>
         @page { size: A4; margin: 15mm; }
-        body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.4; color: #333; font-size: 11px; }
+        :root { --faculty-pdf-font: 'Times New Roman', 'Liberation Serif', Times, serif; }
+        body {
+            font-family: var(--faculty-pdf-font);
+            line-height: 1.5;
+            color: #222;
+            font-size: 11.5px;
+            text-rendering: geometricPrecision;
+        }
+        table, th, td, div, p, span, strong, h1, h2, h3 {
+            font-family: inherit;
+        }
         .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
-        .college-name { font-size: 22px; font-weight: bold; color: #2c3e50; }
-        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; }
+        .college-name img { max-width: 100%; height: auto; max-height: 60px; }
+        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; letter-spacing: 0.2px; }
         .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; }
         .faculty-photo { width: 100%; height: 100%; object-fit: cover; }
         .no-photo { color: #999; font-size: 10px; text-align: center; }
         .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
         .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; vertical-align: top; }
         .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
-        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10.5px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10.5px; vertical-align: top; }
         .certificate-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
         .document-box {
             display: inline-block;
@@ -150,6 +160,11 @@
             word-break: break-all;
             color: #3498db;
         }
+        .data-link {
+            color: #1565c0;
+            text-decoration: underline;
+            word-break: break-all;
+        }
         .page-break {
             page-break-before: always;
         }
@@ -159,7 +174,9 @@
     <table class="header-table">
         <tr>
             <td style="width: 75%; text-align: center; vertical-align: middle;">
-                <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+                <div class="college-name">
+                    <img src="{{ anurag_header_url }}" alt="ANURAG ENGINEERING COLLEGE">
+                </div>
                 <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
                 <div style="font-size: 10px;">Employee Code: {{ faculty.employee_code }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
@@ -262,6 +279,9 @@
     <div class="section-title">8. EDUCATIONAL QUALIFICATIONS - PhD</div>
     <table class="info-table">
         <tr><td class="label">Status</td><td>{{ faculty.phd_degree|default:"Not Specified" }}</td></tr>
+        {% if faculty.phd_degree == 'Completed' or faculty.phd_title %}
+        <tr><td class="label">Ph.D Title</td><td>{{ faculty.phd_title|default:"Not Specified" }}</td></tr>
+        {% endif %}
         <tr><td class="label">Year</td><td>{{ faculty.phd_year|default:"Not Specified" }}</td></tr>
         <tr><td class="label">University</td><td>{{ faculty.phd_university|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Specialization</td><td>{{ faculty.phd_spec|default:"Not Specified" }}</td></tr>
@@ -335,12 +355,23 @@
                         </span>
                         {% else %}—{% endif %}
                     </td>
-                    <td>
-                        {% if pub.authors %}<strong>Authors:</strong> {{ pub.authors }}<br>{% endif %}
-                        {% if pub.journal_name %}<strong>Journal:</strong> {{ pub.journal_name }}<br>{% endif %}
-                        {% if pub.conference_name %}<strong>Conference:</strong> {{ pub.conference_name }}<br>{% endif %}
-                        {% if pub.doi %}<strong>DOI:</strong> {{ pub.doi }}<br>{% endif %}
-                    </td>
+                     <td>
+                         {% if pub.authors %}<strong>Authors:</strong> {{ pub.authors }}<br>{% endif %}
+                         {% if pub.journal_name %}<strong>Journal:</strong> {{ pub.journal_name }}<br>{% endif %}
+                         {% if pub.conference_name %}<strong>Conference:</strong> {{ pub.conference_name }}<br>{% endif %}
+                         {% if pub.issn %}<strong>ISSN:</strong> {{ pub.issn }}<br>{% endif %}
+                         {% if pub.doi %}
+                             <strong>DOI:</strong>
+                             {% if pub.doi|slice:":4" == "http" %}
+                                 <a class="data-link" href="{{ pub.doi }}">{{ pub.doi }}</a><br>
+                             {% else %}
+                                 <a class="data-link" href="https://doi.org/{{ pub.doi }}">{{ pub.doi }}</a><br>
+                             {% endif %}
+                         {% endif %}
+                         {% if pub.url %}
+                             <strong>URL:</strong> <a class="data-link" href="{{ pub.url }}">{{ pub.url }}</a><br>
+                         {% endif %}
+                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -505,15 +536,33 @@
         <!-- Status summary row -->
         <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
             <div class="document-box"><strong>Research Publications Proof:</strong> {% if has_research_proof %}<span style="color: green;">&#10003; {{ research_proof_total_pages }} pages uploaded</span>{% if research_proof_academic_year %} <span class="document-detail">AY: {{ research_proof_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>FDP Proof:</strong> {% if has_fdp_certificate %}<span style="color: green;">&#10003; {{ fdp_certificate_total_pages }} pages uploaded</span>{% if fdp_certificate_academic_year %} <span class="document-detail">AY: {{ fdp_certificate_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
             <div class="document-box"><strong>Experience Certificates:</strong> {% if has_experience_certificates %}<span style="color: green;">&#10003; Uploaded</span>{% if experience_certificates_academic_year %} <span class="document-detail">AY: {{ experience_certificates_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
             <div class="document-box"><strong>Other Documents:</strong> {% if has_other_documents %}<span style="color: green;">&#10003; Uploaded</span>{% if other_documents_academic_year %} <span class="document-detail">AY: {{ other_documents_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
         </div>
 
         <!-- Embedded document previews -->
+        {% if has_research_proof and research_proof_display_url %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Research Publications Proof{% if research_proof_academic_year %} ({{ research_proof_academic_year }}){% endif %}:</div>
+            {% if research_proof_is_image %}
+                <img src="{{ research_proof_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
+            {% else %}
+                <iframe src="{{ research_proof_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
+            {% endif %}
+        </div>
+        {% endif %}
 
-
-
-
+        {% if has_fdp_certificate and fdp_certificate_display_url %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">FDP Proof{% if fdp_certificate_academic_year %} ({{ fdp_certificate_academic_year }}){% endif %}:</div>
+            {% if fdp_certificate_is_image %}
+                <img src="{{ fdp_certificate_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Proof">
+            {% else %}
+                <iframe src="{{ fdp_certificate_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
+            {% endif %}
+        </div>
+        {% endif %}
 
         {% if has_experience_certificates and experience_certificates_display_url %}
         <div style="margin-bottom: 20px; page-break-inside: avoid;">
