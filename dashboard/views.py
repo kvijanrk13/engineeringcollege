@@ -1577,7 +1577,6 @@ def laboratory(request):
     return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
 
 
-@login_required
 def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
