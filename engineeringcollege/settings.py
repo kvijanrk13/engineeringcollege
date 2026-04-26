@@ -166,7 +166,8 @@ STATICFILES_DIRS = [
 ] if (BASE_DIR / 'static').exists() else []
 
 # Use WhiteNoise for static files in production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Using basic StaticFilesStorage to avoid issues with filenames containing spaces
+STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 # ================================
 # MEDIA FILES (Cloudinary for production)
