@@ -5,19 +5,24 @@ import os
 
 
 def generate_pdf_from_html(html_string, output_path=None):
-    """Generate PDF from HTML string"""
+    """Generate PDF from HTML string using WeasyPrint"""
     try:
-        import pdfkit
+        from weasyprint import HTML
+        from django.conf import settings as django_settings
+
+        base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+        html_obj = HTML(string=html_string, base_url=base_url)
+
         if output_path:
-            pdfkit.from_string(html_string, output_path)
+            html_obj.write_pdf(target=output_path)
             return output_path
         else:
-            pdf_bytes = pdfkit.from_string(html_string, False)
+            pdf_bytes = html_obj.write_pdf()
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                 tmp.write(pdf_bytes)
                 return tmp.name
     except ImportError:
-        # Fallback to reportlab
+        # Fallback to reportlab if WeasyPrint not available
         from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import letter
         from reportlab.platypus import SimpleDocTemplate, Paragraph

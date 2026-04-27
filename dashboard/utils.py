@@ -203,29 +203,22 @@ def get_academic_year():
 # =================================================
 
 def generate_pdf_from_html(html_content, output_path=None):
-    if not pdfkit:
-        return None
-
     try:
-        config = None
-        if hasattr(settings, "WKHTMLTOPDF_PATH"):
-            config = pdfkit.configuration(
-                wkhtmltopdf=settings.WKHTMLTOPDF_PATH
-            )
+        from weasyprint import HTML
+        from django.conf import settings as django_settings
 
-        options = {
-            "page-size": "A4",
-            "encoding": "UTF-8",
-            "quiet": "",
-            "enable-local-file-access": "",
-        }
+        base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+        html_obj = HTML(string=html_content, base_url=base_url)
 
         if output_path:
-            pdfkit.from_string(html_content, output_path, options=options, configuration=config)
+            html_obj.write_pdf(target=output_path)
             return True
 
-        return pdfkit.from_string(html_content, False, options=options, configuration=config)
+        return html_obj.write_pdf()
 
+    except ImportError:
+        logger.error("WeasyPrint not installed. Cannot generate PDF.")
+        return None
     except Exception as e:
         logger.error(f"PDF Generation Error: {str(e)}")
         return None

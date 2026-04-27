@@ -4488,56 +4488,21 @@ def generate_faculty_pdf(request, faculty_id):
             'classes_taken': getattr(faculty, 'classes_taken', None) or 'Not specified',
         }
 
-        # ── GENERATE INFO PDF with pdfkit ─────────────────────────
+        # ── GENERATE INFO PDF with WeasyPrint ───────────────────────
         html_string = render_to_string('dashboard/faculty_pdf.html', context)
 
-        if pdfkit is None:
-            messages.error(request, 'pdfkit not installed.')
-            return redirect('dashboard:faculty_dashboard')
-
-        options = {
-            'page-size': 'A4',
-            'margin-top': '15mm', 'margin-right': '15mm',
-            'margin-bottom': '15mm', 'margin-left': '15mm',
-            'encoding': 'UTF-8',
-            'enable-local-file-access': '',
-            'quiet': '',
-            'no-stop-slow-scripts': None,
-            'javascript-delay': '500',
-            'load-error-handling': 'ignore',
-            'no-outline': None,
-        }
-
-        # Cross-platform wkhtmltopdf detection
-        wkhtmltopdf_paths = [
-            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-            '/usr/local/bin/wkhtmltopdf',
-            '/usr/bin/wkhtmltopdf',
-            'wkhtmltopdf',
-        ]
-
-        wkhtmltopdf_path = None
-        for path in wkhtmltopdf_paths:
-            if os.path.exists(path) or path == 'wkhtmltopdf':
-                try:
-                    import subprocess
-                    result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
-                    if result.returncode == 0:
-                        wkhtmltopdf_path = path
-                        break
-                except:
-                    continue
-
         try:
-            if wkhtmltopdf_path:
-                config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-                info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
-            else:
-                info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
+            from weasyprint import HTML
+            # Use BASE_DIR as base_url for resolving relative paths
+            base_url = f"file:///{settings.BASE_DIR}" if settings.BASE_DIR else None
+            html_obj = HTML(string=html_string, base_url=base_url)
+            info_pdf_bytes = html_obj.write_pdf()
             print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
+        except ImportError:
+            messages.error(request, 'WeasyPrint not installed. Please install weasyprint package.')
+            return redirect('dashboard:faculty_dashboard')
         except Exception as e:
-            logger.error(f"pdfkit error: {e}")
+            logger.error(f"WeasyPrint error: {e}")
             messages.error(request, f'PDF generation error: {e}')
             return redirect('dashboard:faculty_dashboard')
 
@@ -4954,46 +4919,22 @@ def quick_stats(request):
 # ==================== PDF GENERATION HELPERS ====================
 def generate_pdf_with_data(request):
     if request.method == 'POST':
-        if pdfkit is None:
-            return JsonResponse({'success': False, 'error': 'pdfkit not installed'})
         try:
+            from weasyprint import HTML
+            from django.conf import settings as django_settings
+
             html_string = render_to_string('faculty/custom_pdf_template.html', {'data': request.POST.dict()})
-            opts = {'page-size': 'A4', 'margin-top': '0.5in', 'margin-right': '0.5in',
-                    'margin-bottom': '0.5in', 'margin-left': '0.5in', 'encoding': 'UTF-8'}
-            # Cross-platform wkhtmltopdf detection
-            wkhtmltopdf_paths = [
-                r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-                r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-                '/usr/local/bin/wkhtmltopdf',
-                '/usr/bin/wkhtmltopdf',
-                'wkhtmltopdf',
-            ]
-
-            wkhtmltopdf_path = None
-            for path in wkhtmltopdf_paths:
-                if os.path.exists(path) or path == 'wkhtmltopdf':
-                    try:
-                        import subprocess
-                        result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
-                        if result.returncode == 0:
-                            wkhtmltopdf_path = path
-                            break
-                    except:
-                        continue
-
-            if wkhtmltopdf_path:
-                cfg = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-            else:
-                cfg = pdfkit.configuration()
-            pdf = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
+            base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+            html_obj = HTML(string=html_string, base_url=base_url)
+            pdf = html_obj.write_pdf()
             response = HttpResponse(pdf, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="generated_document.pdf"'
             return response
+        except ImportError:
+            return JsonResponse({'success': False, 'error': 'WeasyPrint not installed. Please install weasyprint package.'})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
     return render(request, 'faculty/generate_pdf_form.html')
-
-
 @login_required
 def preview_faculty_pdf(request, faculty_id):
     faculty = get_object_or_404(Faculty, id=faculty_id)
@@ -7165,11 +7106,14 @@ def exam_branch_generate_report(request):
                     except:
                         continue
 
-            if wkhtmltopdf_path:
-                cfg = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-            else:
-                cfg = pdfkit.configuration()
-            pdf = pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
+            try:
+                from weasyprint import HTML
+                from django.conf import settings as django_settings
+                base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+                html_obj = HTML(string=html_string, base_url=base_url)
+                pdf = html_obj.write_pdf()
+            except ImportError:
+                return JsonResponse({'success': False, 'error': 'WeasyPrint not installed.'})
             response = HttpResponse(pdf, content_type='application/pdf')
             response[
                 'Content-Disposition'] = f'attachment; filename="exam_branch_report_{date.today().strftime("%Y%m%d")}.pdf"'

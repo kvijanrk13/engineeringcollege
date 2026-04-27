@@ -1,0 +1,19 @@
+Found 3 matches
+
+=== At position 177511 ===
+Function: 
+Context: pdfkit.from_string(html_string, False, options=options, configuration=config)
+            else:
+                info_pdf_bytes = pdfkit.from_string(ht
+
+=== At position 177640 ===
+Function: 
+Context: pdfkit.from_string(html_string, False, options=options)
+            print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
+        except Ex
+
+=== At position 332441 ===
+Function: 
+Context: pdfkit.from_string(html_string, False, options=opts, configuration=cfg)
+            response = HttpResponse(pdf, content_type='application/pdf')
+     
