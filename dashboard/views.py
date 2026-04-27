@@ -3711,8 +3711,6 @@ def generate_student_pdf(student, return_bytes=False):
                 pass
 
     # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
-    import os
-    from django.conf import settings
     anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
     anurag_header_url = build_file_uri(anurag_header_path)
 
@@ -4451,8 +4449,6 @@ def generate_faculty_pdf(request, faculty_id):
         other_documents_display_url = _display_url('other_documents_url', 'other_documents')
 
         # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
-        import os
-        from django.conf import settings
         anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
         anurag_header_url = build_file_uri(anurag_header_path)
 

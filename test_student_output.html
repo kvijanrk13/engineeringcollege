@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Profile - ABHINAY THIGULLA</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        :root { --student-pdf-font: 'Times New Roman', 'Liberation Serif', Times, serif; }
+        body {
+            font-family: var(--student-pdf-font);
+            line-height: 1.4;
+            color: #333;
+            font-size: 11px;
+        }
+        table, th, td, div, p, span, strong, h1, h2, h3 {
+            font-family: inherit;
+        }
+        .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
+        .college-name img { max-width: 100%; height: auto; max-height: 60px; }
+        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; }
+        .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; background-color: #f0f0f0; display: flex; align-items: center; justify-content: center; }
+        .student-photo { width: 100%; height: 100%; object-fit: cover; }
+        .no-photo { color: #999; font-size: 10px; text-align: center; }
+        .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
+        .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
+        .project-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
+        .document-box {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .training-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            white-space: pre-line;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 9px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+        }
+        .admission-details {
+            white-space: pre-line;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 75%; text-align: center; vertical-align: middle;">
+                <div class="college-name">
+                    <img src="None" alt="ANURAG ENGINEERING COLLEGE">
+                </div>
+                <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
+                <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">STUDENT PROFILE REPORT</h1>
+                <div style="font-size: 10px;">H.T.No: 23C11A1201 | Generated: 27-04-2026</div>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <div class="photo-box">
+                    
+                        <img src="https://res.cloudinary.com/dsndiruhe/image/upload/v1777121245/student_documents/photos/photos_20260425_181720.jpg" class="student-photo" alt="Student Photo">
+                    
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 1. PERSONAL INFORMATION -->
+    <div class="section-title">1. PERSONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Full Name</td><td>ABHINAY THIGULLA</td></tr>
+        <tr><td class="label">H.T.No</td><td>23C11A1201</td></tr>
+        <tr><td class="label">Father's Name</td><td>ARAVIND</td></tr>
+        <tr><td class="label">Mother's Name</td><td>LAKSHMI</td></tr>
+        <tr><td class="label">Date of Birth</td><td>10 Oct 2005</td></tr>
+        <tr><td class="label">Age</td><td>20</td></tr>
+        <tr><td class="label">Gender</td><td>Male</td></tr>
+        <tr><td class="label">Blood Group</td><td>O+</td></tr>
+        <tr><td class="label">Category</td><td>General</td></tr>
+        <tr><td class="label">Religion</td><td>HINDU</td></tr>
+        <tr><td class="label">Nationality</td><td>Indian</td></tr>
+        <tr><td class="label">Aadhar Number</td><td>846452283847</td></tr>
+        <tr><td class="label">APAAR ID</td><td>72-265-370-947</td></tr>
+        <tr><td class="label">Permanent Address</td><td>H.No:- 6-35/12, MARUTHI NAGAR, WARANGAL CROSS ROAD, YEDULAPURAM, KHAMMAM - 507163
+</td></tr>
+    </table>
+
+    <!-- 2. CONTACT INFORMATION -->
+    <div class="section-title">2. CONTACT INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Student Phone</td><td>9030900962</td></tr>
+        <tr><td class="label">Parent Phone</td><td>9553122276</td></tr>
+        <tr><td class="label">Email</td><td>hod.inf@anurag.ac.in</td></tr>
+    </table>
+
+    <!-- 3. ACADEMIC INFORMATION -->
+    <div class="section-title">3. ACADEMIC INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Current Year</td><td>3</td></tr>
+        <tr><td class="label">Current Semester</td><td>2</td></tr>
+        <tr><td class="label">SSC Marks (%)</td><td>65</td></tr>
+        <tr><td class="label">Intermediate Marks (%)</td><td>68</td></tr>
+        <tr><td class="label">Current CGPA</td><td>6.5</td></tr>
+    </table>
+
+    <!-- 4. ADMISSION DETAILS -->
+    <div class="section-title">4. ADMISSION DETAILS</div>
+    <table class="info-table">
+        <tr><td class="label">Admission Type</td><td>Management</td></tr>
+        <tr><td class="label">EAMCET Rank</td><td>45000</td></tr>
+        
+    </table>
+
+    <!-- 5. ACTIVITIES & REGISTRATIONS -->
+    <div class="section-title">5. ACTIVITIES & REGISTRATIONS</div>
+    <table class="info-table">
+        <tr><td class="label">TASK Registration</td><td>No</td></tr>
+        <tr><td class="label">CSI Registration</td><td>No</td></tr>
+    </table>
+
+    <!-- 6. PROJECTS & TRAINING -->
+    <div class="section-title">6. PROJECTS & TRAINING</div>
+    <div style="padding: 10px;">
+        
+            <div style="margin-bottom: 15px;">
+                
+                <div class="project-item"><strong>RTRP Project:</strong> CRICKET</div>
+                
+                
+                <div class="project-item"><strong>Internship:</strong> TENNIS</div>
+                
+                
+                <div class="project-item"><strong>Final Project:</strong> ONLINE EXAM</div>
+                
+            </div>
+            
+        
+    </div>
+
+    <!-- 7. UPLOADED DOCUMENTS -->
+    <div class="section-title">7. UPLOADED DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div class="document-box"><strong>Achievement Certificate:</strong> <span style="color: green;">✓ Uploaded</span></div>
+            <div class="document-box"><strong>Internship Certificate:</strong> <span style="color: green;">✓ Uploaded</span></div>
+            <div class="document-box"><strong>Course Certificates:</strong> <span style="color: #999;">✗ Not Uploaded</span></div>
+            <div class="document-box"><strong>SDP Certificate:</strong> <span style="color: #999;">✗ Not Uploaded</span></div>
+            <div class="document-box"><strong>Extra Certificates:</strong> <span style="color: #999;">✗ Not Uploaded</span></div>
+            <div class="document-box"><strong>Placement Certificate:</strong> <span style="color: #999;">✗ Not Uploaded</span></div>
+            <div class="document-box"><strong>National Certificate:</strong> <span style="color: #999;">✗ Not Uploaded</span></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>This is an electronically generated official document of Anurag Engineering College.</p>
+        <p>ANURAG ENGINEERING COLLEGE | &copy; 2026</p>
+    </div>
+</body>
+</html>
