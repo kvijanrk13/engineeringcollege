@@ -9,8 +9,10 @@ import logging
 import zipfile
 import traceback
 import io
+from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
+from urllib.parse import quote
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest)
@@ -369,6 +371,19 @@ def calculate_correct_age(dob):
     return today.year - dob.year - (
         (today.month, today.day) < (dob.month, dob.day)
     )
+
+
+def build_file_uri(path_value):
+    """
+    Convert a local filesystem path to a properly encoded file:// URI.
+    """
+    if not path_value:
+        return ''
+    try:
+        return Path(path_value).resolve().as_uri()
+    except Exception:
+        # Fallback for odd path inputs that Path can't resolve.
+        return 'file:///' + quote(str(path_value).replace('\\', '/'), safe=':/')
 
 
 if is_cloudinary_configured():
@@ -3443,7 +3458,6 @@ def regenerate_student_pdf(request, student_id):
 
 # ==================== GENERATE STUDENT PDF ====================
 def generate_student_pdf(student, return_bytes=False):
-    from urllib.parse import quote
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
 
     # ── temp file tracker ──────────────────────────────────────
@@ -3674,7 +3688,7 @@ def generate_student_pdf(student, return_bytes=False):
         p = _download(student.photo_url)
         if p:
             local_photo_path = p
-            photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+            photo_url_for_pdf = build_file_uri(p)
             print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
 
     # Fallback to FileField
@@ -3682,7 +3696,7 @@ def generate_student_pdf(student, return_bytes=False):
         lp = _local_path(student.photo)
         if lp:
             local_photo_path = lp
-            photo_url_for_pdf = 'file:///' + quote(lp.replace('\\', '/'), safe=':/')
+            photo_url_for_pdf = build_file_uri(lp)
             print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
         else:
             try:
@@ -3691,7 +3705,7 @@ def generate_student_pdf(student, return_bytes=False):
                     p = _download(fu)
                     if p:
                         local_photo_path = p
-                        photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+                        photo_url_for_pdf = build_file_uri(p)
                         print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
             except Exception:
                 pass
@@ -3700,7 +3714,7 @@ def generate_student_pdf(student, return_bytes=False):
     import os
     from django.conf import settings
     anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
-    anurag_header_url = 'file:///' + anurag_header_path.replace('\\', '/')
+    anurag_header_url = build_file_uri(anurag_header_path)
 
     # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
     context = {
@@ -4014,7 +4028,6 @@ def export_students_csv(request):
 # ==================== ENHANCED GENERATE FACULTY PDF — FIXED VERSION ====================
 @login_required
 def generate_faculty_pdf(request, faculty_id):
-    from urllib.parse import quote
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
@@ -4170,7 +4183,7 @@ def generate_faculty_pdf(request, faculty_id):
             p = _download(faculty.cloudinary_photo_url)
             if p:
                 local_photo_path = p
-                photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+                photo_url_for_pdf = build_file_uri(p)
                 print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
 
         # Fallback to FileField
@@ -4178,7 +4191,7 @@ def generate_faculty_pdf(request, faculty_id):
             lp = _local_path(faculty.photo)
             if lp:
                 local_photo_path = lp
-                photo_url_for_pdf = 'file:///' + quote(lp.replace('\\', '/'), safe=':/')
+                photo_url_for_pdf = build_file_uri(lp)
                 print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
             else:
                 try:
@@ -4187,7 +4200,7 @@ def generate_faculty_pdf(request, faculty_id):
                         p = _download(fu)
                         if p:
                             local_photo_path = p
-                            photo_url_for_pdf = 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+                            photo_url_for_pdf = build_file_uri(p)
                             print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
                 except Exception:
                     pass
@@ -4411,7 +4424,7 @@ def generate_faculty_pdf(request, faculty_id):
             ff = getattr(faculty, file_field, None)
             p, _ = _resolve(ff, url_field)
             if p:
-                return 'file:///' + quote(p.replace('\\', '/'), safe=':/')
+                return build_file_uri(p)
             return ''
 
         research_proof_is_image = True
@@ -4420,7 +4433,7 @@ def generate_faculty_pdf(request, faculty_id):
             proof_path, proof_is_pdf = get_local_or_remote_asset(proof_file, url=proof_url, default_suffix='.pdf')
             if proof_path:
                 _track_temp_asset(proof_path, file_field=proof_file)
-                research_proof_display_url = 'file:///' + quote(proof_path.replace('\\', '/'), safe=':/')
+                research_proof_display_url = build_file_uri(proof_path)
                 research_proof_is_image = not proof_is_pdf
                 break
 
@@ -4430,7 +4443,7 @@ def generate_faculty_pdf(request, faculty_id):
             fdp_path, fdp_is_pdf = get_local_or_remote_asset(fdp_file, url=fdp_url, default_suffix='.pdf')
             if fdp_path:
                 _track_temp_asset(fdp_path, file_field=fdp_file)
-                fdp_certificate_display_url = 'file:///' + quote(fdp_path.replace('\\', '/'), safe=':/')
+                fdp_certificate_display_url = build_file_uri(fdp_path)
                 fdp_certificate_is_image = not fdp_is_pdf
                 break
 
@@ -4441,7 +4454,7 @@ def generate_faculty_pdf(request, faculty_id):
         import os
         from django.conf import settings
         anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
-        anurag_header_url = 'file:///' + anurag_header_path.replace('\\', '/')
+        anurag_header_url = build_file_uri(anurag_header_path)
 
         # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
         context = {
@@ -4494,7 +4507,7 @@ def generate_faculty_pdf(request, faculty_id):
         try:
             from weasyprint import HTML
             # Use BASE_DIR as base_url for resolving relative paths
-            base_url = f"file:///{settings.BASE_DIR}" if settings.BASE_DIR else None
+            base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
             html_obj = HTML(string=html_string, base_url=base_url)
             info_pdf_bytes = html_obj.write_pdf()
             print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
@@ -4924,7 +4937,7 @@ def generate_pdf_with_data(request):
             from django.conf import settings as django_settings
 
             html_string = render_to_string('faculty/custom_pdf_template.html', {'data': request.POST.dict()})
-            base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+            base_url = Path(django_settings.BASE_DIR).resolve().as_uri() if django_settings.BASE_DIR else None
             html_obj = HTML(string=html_string, base_url=base_url)
             pdf = html_obj.write_pdf()
             response = HttpResponse(pdf, content_type='application/pdf')
@@ -7109,7 +7122,7 @@ def exam_branch_generate_report(request):
             try:
                 from weasyprint import HTML
                 from django.conf import settings as django_settings
-                base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+                base_url = Path(django_settings.BASE_DIR).resolve().as_uri() if django_settings.BASE_DIR else None
                 html_obj = HTML(string=html_string, base_url=base_url)
                 pdf = html_obj.write_pdf()
             except ImportError:
