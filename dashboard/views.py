@@ -4029,6 +4029,23 @@ def generate_faculty_pdf(request, faculty_id):
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
+        
+        # Test WeasyPrint import and basic functionality FIRST
+        try:
+            from weasyprint import HTML
+            from weasyprint.text.fonts import FontConfiguration
+            print("  [CHECK] WeasyPrint imported successfully")
+            print(f"  [CHECK] WeasyPrint version: {HTML.__module__}")
+        except ImportError as ie:
+            error_msg = f'WeasyPrint not installed: {ie}'
+            logger.error(error_msg)
+            messages.error(request, error_msg)
+            return redirect('dashboard:faculty_dashboard')
+        except Exception as e:
+            error_msg = f'WeasyPrint initialization error: {e}'
+            logger.error(error_msg)
+            messages.error(request, error_msg)
+            return redirect('dashboard:faculty_dashboard')
 
         # ── temp file tracker ──────────────────────────────────────
         temp_files = []
