@@ -4508,11 +4508,19 @@ def generate_faculty_pdf(request, faculty_id):
             info_pdf_bytes = html_obj.write_pdf()
             print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
         except ImportError:
-            messages.error(request, 'WeasyPrint not installed. Please install weasyprint package.')
+            error_msg = 'WeasyPrint not installed. Please install weasyprint package.'
+            logger.error(error_msg)
+            messages.error(request, error_msg)
             return redirect('dashboard:faculty_dashboard')
         except Exception as e:
-            logger.error(f"WeasyPrint error: {e}")
-            messages.error(request, f'PDF generation error: {e}')
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"WeasyPrint error: {e}\n{error_details}")
+            print(f"\n{'='*60}")
+            print(f"WEASYPRINT ERROR on Render:")
+            print(f"{error_details}")
+            print(f"{'='*60}\n")
+            messages.error(request, f'PDF generation error: {str(e)[:200]}')
             return redirect('dashboard:faculty_dashboard')
 
         # ── MERGE: info PDF + all uploaded documents ──────────────
