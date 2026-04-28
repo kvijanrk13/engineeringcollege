@@ -185,10 +185,6 @@
                 <div class="photo-box">
                     {% if local_photo_path %}
                         <img src="{{ local_photo_path }}" class="faculty-photo" alt="Faculty Photo">
-                    {% elif faculty.cloudinary_photo_url %}
-                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo" alt="Faculty Photo">
-                    {% elif faculty.photo and faculty.photo.url %}
-                        <img src="{{ faculty.photo.url }}" class="faculty-photo" alt="Faculty Photo">
                     {% else %}
                         <div class="no-photo">NO PHOTO</div>
                     {% endif %}

@@ -15,6 +15,9 @@ urlpatterns = [
 
     # Health check route
     path('health/', lambda r: HttpResponse(b"OK"), name='health_check'),
+    
+    # Diagnostic routes
+    path('diagnose/weasyprint/', views.diagnose_weasyprint, name='diagnose_weasyprint'),
 
 
     # Main dashboard routes

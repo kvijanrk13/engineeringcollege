@@ -7270,6 +7270,75 @@ def simple_test(request):
     """)
 
 
+def diagnose_weasyprint(request):
+    """Diagnostic view to test WeasyPrint installation and configuration"""
+    import sys
+    import os
+    from io import StringIO
+    
+    output = StringIO()
+    output.write("<html><head><title>WeasyPrint Diagnostic</title></head><body style='font-family:monospace;padding:20px;'>")
+    output.write("<h1>🔧 WeasyPrint Diagnostic</h1>")
+    
+    # Check Python version
+    output.write(f"<p><strong>Python:</strong> {sys.version}</p>")
+    
+    # Check WeasyPrint import
+    try:
+        from weasyprint import HTML
+        output.write("<p style='color:green;'>✅ WeasyPrint imported successfully</p>")
+        
+        # Try to get version
+        try:
+            import weasyprint
+            output.write(f"<p><strong>WeasyPrint version:</strong> {weasyprint.__version__}</p>")
+        except:
+            output.write("<p>⚠️ Could not determine WeasyPrint version</p>")
+        
+        # Test basic PDF generation
+        try:
+            test_html = "<html><body><h1>Test PDF</h1><p>This is a test.</p></body></html>"
+            html_obj = HTML(string=test_html)
+            pdf_bytes = html_obj.write_pdf()
+            output.write(f"<p style='color:green;'>✅ Basic PDF generation works! Generated {len(pdf_bytes)} bytes</p>")
+        except Exception as e:
+            output.write(f"<p style='color:red;'>❌ PDF generation failed: {e}</p>")
+            import traceback
+            output.write(f"<pre>{traceback.format_exc()}</pre>")
+        
+        # Check Cairo
+        try:
+            import cairo
+            output.write("<p style='color:green;'>✅ Cairo available</p>")
+        except ImportError:
+            output.write("<p style='color:orange;'>⚠️ Cairo not available (may be needed for some features)</p>")
+        
+        # Check pydyf
+        try:
+            import pydyf
+            output.write(f"<p style='color:green;'>✅ pydyf available (version: {getattr(pydyf, '__version__', 'unknown')})</p>")
+        except ImportError:
+            output.write("<p style='color:red;'>❌ pydyf not available</p>")
+        
+        # Check font configuration
+        try:
+            from weasyprint.text.fonts import FontConfiguration
+            font_config = FontConfiguration()
+            output.write("<p style='color:green;'>✅ Font configuration initialized</p>")
+        except Exception as e:
+            output.write(f"<p style='color:red;'>❌ Font configuration error: {e}</p>")
+        
+    except ImportError as e:
+        output.write(f"<p style='color:red;'>❌ WeasyPrint import failed: {e}</p>")
+    except Exception as e:
+        output.write(f"<p style='color:red;'>❌ Unexpected error: {e}</p>")
+        import traceback
+        output.write(f"<pre>{traceback.format_exc()}</pre>")
+    
+    output.write("</body></html>")
+    return HttpResponse(output.getvalue())
+
+
 # ==================== ERROR HANDLERS ====================
 def handler404(request, exception):
     return render(request, 'errors/404.html', {
