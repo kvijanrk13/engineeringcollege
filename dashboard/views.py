@@ -4195,6 +4195,10 @@ def generate_faculty_pdf(request, faculty_id):
     """
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
+    except Exception as e:
+        logger.error(f"Error getting faculty {faculty_id}: {e}")
+        messages.error(request, f'Faculty not found: {e}')
+        return redirect('dashboard:faculty_dashboard')
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
         print(f"  [DEBUG] ON_RENDER={getattr(settings, 'ON_RENDER', False)}")
         print(f"  [DEBUG] CLOUDINARY_CONFIGURED={getattr(settings, 'CLOUDINARY_CONFIGURED', False)}")
@@ -4377,21 +4381,29 @@ def generate_faculty_pdf(request, faculty_id):
         local_photo_path = None
         photo_url_for_pdf = None
 
-        # Try Cloudinary URL first
-        if faculty.cloudinary_photo_url:
+        # On localhost, prefer local file first for reliability
+        if not getattr(settings, 'ON_RENDER', False) and faculty.photo and getattr(faculty.photo, 'name', ''):
+            lp = _local_path(faculty.photo)
+            if lp:
+                local_photo_path = lp
+                photo_url_for_pdf = build_file_uri(lp)
+                print(f"  [OK] Photo (local file - preferred on localhost): {photo_url_for_pdf}")
+
+        # Try Cloudinary URL (primary on Render, fallback on localhost)
+        if not photo_url_for_pdf and faculty.cloudinary_photo_url:
             p = _download(faculty.cloudinary_photo_url)
             if p:
                 local_photo_path = p
                 photo_url_for_pdf = build_file_uri(p)
                 print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
 
-        # Fallback to FileField
+        # Final fallback to FileField URL download
         if not photo_url_for_pdf and faculty.photo and getattr(faculty.photo, 'name', ''):
             lp = _local_path(faculty.photo)
             if lp:
                 local_photo_path = lp
                 photo_url_for_pdf = build_file_uri(lp)
-                print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
+                print(f"  [OK] Photo (local file - fallback): {photo_url_for_pdf}")
             else:
                 try:
                     fu = faculty.photo.url
@@ -4898,13 +4910,13 @@ def generate_faculty_pdf(request, faculty_id):
 
         response = HttpResponse(final_pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        print(f"  [OK] Returned PDF: {len(final_pdf_bytes)} bytes")
         return response
 
     except Exception as e:
-        logger.error(f"PDF Generation Error: {e}")
+        logger.error(f"Error generating faculty PDF for {faculty_id}: {e}")
+        import traceback
         traceback.print_exc()
-        messages.error(request, f'Error generating faculty PDF: {str(e)}')
+        messages.error(request, f'Error generating PDF: {str(e)[:200]}')
         return redirect('dashboard:faculty_dashboard')
 
 
