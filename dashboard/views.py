@@ -2251,9 +2251,12 @@ def add_faculty(request):
             )
 
             # ==================== PHOTO ====================
-            # On Render (Cloudinary storage), skip assigning to photo field to avoid automatic upload.
-            # The explicit Cloudinary upload below will handle it.
-            if not getattr(settings, 'ON_RENDER', False):
+            # On Render (Cloudinary storage), clear photo field to avoid automatic upload.
+            # The explicit Cloudinary upload below will handle it on local.
+            if getattr(settings, 'ON_RENDER', False):
+                if request.FILES.get('photo'):
+                    faculty.photo = None
+            else:
                 if request.FILES.get('photo'):
                     faculty.photo = request.FILES['photo']
             # ==================== SAVE FACULTY FIRST (need PK for related objects) ====================
@@ -2290,9 +2293,13 @@ def add_faculty(request):
                 'pg_certificate', 'phd_certificate', 'experience_certificates',
                 'research_proof', 'fdp_certificate', 'other_documents',
             ]
-            # On Render (Cloudinary storage), skip assigning to FileFields to avoid automatic upload.
-            # The explicit Cloudinary upload block below will handle files.
-            if not getattr(settings, 'ON_RENDER', False):
+            # On Render (Cloudinary storage), clear FileFields to avoid automatic upload.
+            # The explicit Cloudinary upload block below will handle files on local.
+            if getattr(settings, 'ON_RENDER', False):
+                for field_name in doc_file_fields:
+                    if request.FILES.get(field_name):
+                        setattr(faculty, field_name, None)
+            else:
                 for field_name in doc_file_fields:
                     if request.FILES.get(field_name):
                         setattr(faculty, field_name, request.FILES[field_name])
@@ -2776,7 +2783,8 @@ def edit_faculty(request, faculty_id):
         except Exception as e:
             logger.error(f"FacultyProfile save error: {e}")
         if request.FILES.get("photo"):
-            faculty.photo = request.FILES["photo"]
+            if not settings.ON_RENDER:
+                faculty.photo = request.FILES["photo"]
             if is_cloudinary_configured():
                 try:
                     cr = cloudinary.uploader.upload(
@@ -2798,41 +2806,43 @@ def edit_faculty(request, faculty_id):
             'ssc_certificate', 'inter_certificate',
             'ug_certificate', 'pg_certificate', 'phd_certificate',
         ]
-        for ffile in all_doc_fields:
-            if request.FILES.get(ffile):
-                setattr(faculty, ffile, request.FILES[ffile])
+        if not settings.ON_RENDER:
+            for ffile in all_doc_fields:
+                if request.FILES.get(ffile):
+                    setattr(faculty, ffile, request.FILES[ffile])
         faculty.save()
 
-        cloudinary_doc_uploads = [
-            ('research_proof', 'research_proof_url', 'faculty_documents/{code}/research_proofs', 'research_proof_{code}'),
-            ('fdp_certificate', 'fdp_certificate_url', 'faculty_documents/{code}/fdp_certs', 'fdp_certificate_{code}'),
-            ('experience_certificates', 'experience_certificates_url', 'faculty_documents/{code}/experience_certs', 'experience_certificates_{code}'),
-            ('other_documents', 'other_documents_url', 'faculty_documents/{code}/other_docs', 'other_documents_{code}'),
-        ]
-        for field_name, url_field, folder_tpl, public_id_tpl in cloudinary_doc_uploads:
-            uploaded_file = request.FILES.get(field_name)
-            if not uploaded_file:
-                continue
-            setattr(faculty, field_name, uploaded_file)
-            if is_cloudinary_configured():
-                try:
-                    resource_type = 'raw' if uploaded_file.name.lower().endswith('.pdf') else 'auto'
-                    cr = cloudinary.uploader.upload(
-                        uploaded_file,
-                        resource_type=resource_type,
-                        folder=folder_tpl.format(code=faculty.employee_code),
-                        public_id=public_id_tpl.format(code=faculty.employee_code),
-                        overwrite=True,
-                    )
-                    setattr(faculty, url_field, cr['secure_url'])
-                    record_cloudinary_upload(
-                        faculty=faculty,
-                        upload_type=field_name,
-                        upload_result=cr,
-                        uploaded_by=request.user.username,
-                    )
-                except Exception as e:
-                    logger.error(f"Cloudinary upload error during edit for {field_name}: {e}")
+        if not settings.ON_RENDER:
+            cloudinary_doc_uploads = [
+                ('research_proof', 'research_proof_url', 'faculty_documents/{code}/research_proofs', 'research_proof_{code}'),
+                ('fdp_certificate', 'fdp_certificate_url', 'faculty_documents/{code}/fdp_certs', 'fdp_certificate_{code}'),
+                ('experience_certificates', 'experience_certificates_url', 'faculty_documents/{code}/experience_certs', 'experience_certificates_{code}'),
+                ('other_documents', 'other_documents_url', 'faculty_documents/{code}/other_docs', 'other_documents_{code}'),
+            ]
+            for field_name, url_field, folder_tpl, public_id_tpl in cloudinary_doc_uploads:
+                uploaded_file = request.FILES.get(field_name)
+                if not uploaded_file:
+                    continue
+                setattr(faculty, field_name, uploaded_file)
+                if is_cloudinary_configured():
+                    try:
+                        resource_type = 'raw' if uploaded_file.name.lower().endswith('.pdf') else 'auto'
+                        cr = cloudinary.uploader.upload(
+                            uploaded_file,
+                            resource_type=resource_type,
+                            folder=folder_tpl.format(code=faculty.employee_code),
+                            public_id=public_id_tpl.format(code=faculty.employee_code),
+                            overwrite=True,
+                        )
+                        setattr(faculty, url_field, cr['secure_url'])
+                        record_cloudinary_upload(
+                            faculty=faculty,
+                            upload_type=field_name,
+                            upload_result=cr,
+                            uploaded_by=request.user.username,
+                        )
+                    except Exception as e:
+                        logger.error(f"Cloudinary upload error during edit for {field_name}: {e}")
         faculty.save()
         messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
         return redirect("dashboard:faculty_dashboard")
@@ -2911,17 +2921,18 @@ def save_faculty(request, faculty_id):
             if request.POST.get('phd_degree') != 'Completed':
                 faculty.phd_title = ''
             if 'photo' in request.FILES:
-                faculty.photo = request.FILES['photo']
-                if is_cloudinary_configured():
-                    try:
-                        cr = cloudinary.uploader.upload(
-                            request.FILES['photo'], folder="faculty_photos",
-                            public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                            transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
-                        )
-                        faculty.cloudinary_photo_url = cr['secure_url']
-                    except Exception as e:
-                        logger.error(f"Cloudinary upload error during save: {e}")
+                if not settings.ON_RENDER:
+                    faculty.photo = request.FILES['photo']
+                    if is_cloudinary_configured():
+                        try:
+                            cr = cloudinary.uploader.upload(
+                                request.FILES['photo'], folder="faculty_photos",
+                                public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
+                                transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
+                            )
+                            faculty.cloudinary_photo_url = cr['secure_url']
+                        except Exception as e:
+                            logger.error(f"Cloudinary upload error during save: {e}")
             faculty.save()
             try:
                 profile = FacultyProfile.objects.get(faculty=faculty)
