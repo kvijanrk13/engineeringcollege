@@ -4194,11 +4194,34 @@ def generate_faculty_pdf(request, faculty_id):
     Generate faculty PDF with comprehensive error handling for Render deployment.
     """
     try:
-        faculty = get_object_or_404(Faculty, id=faculty_id)
-    except Exception as e:
-        logger.error(f"Error getting faculty {faculty_id}: {e}")
-        messages.error(request, f'Faculty not found: {e}')
-        return redirect('dashboard:faculty_dashboard')
+        print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
+        print(f"  [DEBUG] ON_RENDER={getattr(settings, 'ON_RENDER', False)}")
+        print(f"  [DEBUG] CLOUDINARY_CONFIGURED={getattr(settings, 'CLOUDINARY_CONFIGURED', False)}")
+        print(f"  [DEBUG] BASE_DIR={settings.BASE_DIR}")
+
+        # Test WeasyPrint import and basic functionality FIRST
+        try:
+            from weasyprint import HTML
+            from weasyprint.text.fonts import FontConfiguration
+            print("  [CHECK] WeasyPrint imported successfully")
+            print(f"  [CHECK] WeasyPrint version: {HTML.__module__}")
+        except ImportError as ie:
+            error_msg = f'WeasyPrint not installed: {ie}'
+            logger.error(error_msg)
+            messages.error(request, error_msg)
+            return redirect('dashboard:faculty_dashboard')
+        except Exception as e:
+            error_msg = f'WeasyPrint initialization error: {e}'
+            logger.error(error_msg)
+            messages.error(request, error_msg)
+            return redirect('dashboard:faculty_dashboard')
+
+        # Early validation: Ensure BASE_DIR is set
+        if not settings.BASE_DIR:
+            error_msg = "BASE_DIR is not configured"
+            logger.error(error_msg)
+            messages.error(request, error_msg)
+            return redirect('dashboard:faculty_dashboard')
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
         print(f"  [DEBUG] ON_RENDER={getattr(settings, 'ON_RENDER', False)}")
         print(f"  [DEBUG] CLOUDINARY_CONFIGURED={getattr(settings, 'CLOUDINARY_CONFIGURED', False)}")
