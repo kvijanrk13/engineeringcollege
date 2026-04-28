@@ -4042,6 +4042,9 @@ def export_students_csv(request):
 # ==================== ENHANCED GENERATE FACULTY PDF — FIXED VERSION ====================
 @login_required
 def generate_faculty_pdf(request, faculty_id):
+    """
+    Generate faculty PDF with comprehensive error handling for Render deployment.
+    """
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
@@ -4059,6 +4062,13 @@ def generate_faculty_pdf(request, faculty_id):
             return redirect('dashboard:faculty_dashboard')
         except Exception as e:
             error_msg = f'WeasyPrint initialization error: {e}'
+            logger.error(error_msg)
+            messages.error(request, error_msg)
+            return redirect('dashboard:faculty_dashboard')
+        
+        # Early validation: Ensure BASE_DIR is set
+        if not settings.BASE_DIR:
+            error_msg = "BASE_DIR is not configured"
             logger.error(error_msg)
             messages.error(request, error_msg)
             return redirect('dashboard:faculty_dashboard')
