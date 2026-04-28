@@ -2673,6 +2673,7 @@ def edit_faculty(request, faculty_id):
         # ==================== PROCESS COMPLEX JSON DATA ====================
         
         # 1. Research Publications
+        research_publication_records = []
         research_data = request.POST.get('research_publications_json')
         if research_data:
             try:
@@ -2692,7 +2693,7 @@ def edit_faculty(request, faculty_id):
                     research_type = item.get('research_type') or item.get('type', 'journal')
                     venue = item.get('journal_name') or item.get('conference_name') or ''
                     existing_assets = existing_publication_assets.get(((academic_year or '').strip(), title.strip()), {})
-                    ResearchPublication.objects.create(
+                    pub = ResearchPublication.objects.create(
                         faculty=faculty,
                         research_type=research_type,
                         title=title,
@@ -2707,6 +2708,7 @@ def edit_faculty(request, faculty_id):
                         url=normalize_optional_url(item.get('url') or existing_assets.get('url')),
                         proof_document_url=existing_assets.get('proof_document_url', ''),
                     )
+                    research_publication_records.append(pub)
             except Exception as e:
                 logger.error(f"Error saving research publications: {e}")
 
@@ -2731,6 +2733,7 @@ def edit_faculty(request, faculty_id):
                 logger.error(f"Error saving B.Tech projects: {e}")
 
         # 3. FDP / Workshops
+        fdp_records = []
         fdp_data = request.POST.get('fdp_entries_json')
         if fdp_data:
             try:
@@ -2744,7 +2747,7 @@ def edit_faculty(request, faculty_id):
                     if not item.get('title'): continue
                     academic_year = item.get('academic_year', '')
                     title = item.get('title') or ''
-                    FDP.objects.create(
+                    fdp = FDP.objects.create(
                         faculty=faculty,
                         fdp_type=item.get('fdp_type') or item.get('type', 'fdp'),
                         title=title,
@@ -2760,6 +2763,7 @@ def edit_faculty(request, faculty_id):
                         remarks=item.get('remarks', ''),
                         certificate_url=existing_fdp_urls.get(((academic_year or '').strip(), title.strip()), ''),
                     )
+                    fdp_records.append(fdp)
             except Exception as e:
                 logger.error(f"Error saving FDP entries: {e}")
 
@@ -2801,29 +2805,79 @@ def edit_faculty(request, faculty_id):
                 except Exception as e:
                     logger.error(f"Cloudinary upload error during edit: {e}")
                     messages.warning(request, "Photo saved but Cloudinary upload failed.")
+        # ==================== DOCUMENT FILES ====================
         all_doc_fields = [
             'aadhar_file', 'pan_file', 'apaar_file', 'scm_file', 'jntuh_biodata',
             'ssc_certificate', 'inter_certificate',
             'ug_certificate', 'pg_certificate', 'phd_certificate',
         ]
-        if not settings.ON_RENDER:
-            for ffile in all_doc_fields:
-                if request.FILES.get(ffile):
-                    setattr(faculty, ffile, request.FILES[ffile])
+        # On Render (Cloudinary storage), clear FileFields to avoid automatic upload.
+        # The explicit Cloudinary upload below will handle files.
+        if getattr(settings, 'ON_RENDER', False):
+            for field_name in all_doc_fields:
+                if request.FILES.get(field_name):
+                    setattr(faculty, field_name, None)
+        else:
+            for field_name in all_doc_fields:
+                if request.FILES.get(field_name):
+                    setattr(faculty, field_name, request.FILES[field_name])
+
         faculty.save()
 
-        if not settings.ON_RENDER:
-            cloudinary_doc_uploads = [
+        # ==================== UPLOAD DOCUMENTS TO CLOUDINARY ====================
+        if is_cloudinary_configured():
+            cloudinary_doc_fields = [
+                ('aadhar_file', 'aadhar_url', 'Aadhar'),
+                ('pan_file', 'pan_url', 'PAN'),
+                ('apaar_file', 'apaar_url', 'APAAR'),
+                ('scm_file', 'scm_url', 'SCM'),
+                ('jntuh_biodata', 'jntuh_biodata_url', 'JNTUH Bio-Data'),
+                ('ssc_certificate', 'ssc_certificate_url', 'SSC Certificate'),
+                ('inter_certificate', 'inter_certificate_url', 'Inter Certificate'),
+                ('ug_certificate', 'ug_certificate_url', 'UG Certificate'),
+                ('pg_certificate', 'pg_certificate_url', 'PG Certificate'),
+                ('phd_certificate', 'phd_certificate_url', 'PhD Certificate'),
+            ]
+            for file_field, url_field, label in cloudinary_doc_fields:
+                if request.FILES.get(file_field) and hasattr(faculty, url_field):
+                    try:
+                        request.FILES[file_field].seek(0)
+                        cr = cloudinary.uploader.upload(
+                            request.FILES[file_field],
+                            resource_type='auto',
+                            folder=f"faculty_documents/{faculty.employee_code}",
+                            public_id=f"{file_field}_{faculty.employee_code}",
+                            overwrite=True,
+                        )
+                        setattr(faculty, url_field, cr['secure_url'])
+                        record_cloudinary_upload(
+                            faculty=faculty,
+                            upload_type=file_field,
+                            upload_result=cr,
+                            uploaded_by=request.user.username,
+                        )
+                        print(f" [OK] {label} uploaded to Cloudinary")
+                    except Exception as e:
+                        logger.error(f"Cloudinary upload error for {label}: {e}")
+
+            # Additional documents
+            additional_doc_fields = ['research_proof', 'fdp_certificate', 'experience_certificates', 'other_documents']
+            # On Render, clear FileFields for additional docs too
+            if getattr(settings, 'ON_RENDER', False):
+                for field_name in additional_doc_fields:
+                    if request.FILES.get(field_name):
+                        setattr(faculty, field_name, None)
+
+            additional_doc_uploads = [
                 ('research_proof', 'research_proof_url', 'faculty_documents/{code}/research_proofs', 'research_proof_{code}'),
                 ('fdp_certificate', 'fdp_certificate_url', 'faculty_documents/{code}/fdp_certs', 'fdp_certificate_{code}'),
                 ('experience_certificates', 'experience_certificates_url', 'faculty_documents/{code}/experience_certs', 'experience_certificates_{code}'),
                 ('other_documents', 'other_documents_url', 'faculty_documents/{code}/other_docs', 'other_documents_{code}'),
             ]
-            for field_name, url_field, folder_tpl, public_id_tpl in cloudinary_doc_uploads:
+            for field_name, url_field, folder_tpl, public_id_tpl in additional_doc_uploads:
                 uploaded_file = request.FILES.get(field_name)
                 if not uploaded_file:
                     continue
-                setattr(faculty, field_name, uploaded_file)
                 if is_cloudinary_configured():
                     try:
                         resource_type = 'raw' if uploaded_file.name.lower().endswith('.pdf') else 'auto'
@@ -2841,9 +2895,103 @@ def edit_faculty(request, faculty_id):
                             upload_result=cr,
                             uploaded_by=request.user.username,
                         )
+                        print(f" [OK] {field_name} uploaded to Cloudinary")
                     except Exception as e:
                         logger.error(f"Cloudinary upload error during edit for {field_name}: {e}")
         faculty.save()
+
+        # ==================== HANDLE MULTIPLE RESEARCH PROOF FILES DURING EDIT ====================
+        uploaded_research_proof_urls = []
+        proofs_data = parse_json_list(request.POST.get('research_proofs_data', '[]'))
+        for proof_position, (proof_counter, proof_file) in enumerate(
+            iter_indexed_uploaded_files(request.FILES, 'research_proof_files_'),
+            start=1,
+        ):
+            ay = ''
+            if len(proofs_data) >= proof_position and isinstance(proofs_data[proof_position - 1], dict):
+                ay = (proofs_data[proof_position - 1].get('academic_year') or '').strip()
+            if is_cloudinary_configured():
+                try:
+                    # Determine resource type based on file extension
+                    filename = proof_file.name.lower()
+                    resource_type = 'raw' if filename.endswith('.pdf') else 'auto'
+
+                    cr = cloudinary.uploader.upload(
+                        proof_file, resource_type=resource_type,
+                        folder=f"faculty_documents/{faculty.employee_code}/research_proofs",
+                        public_id=f"research_proof_{faculty.employee_code}_{proof_counter}",
+                        overwrite=True,
+                    )
+                    record_cloudinary_upload(
+                        faculty=faculty,
+                        upload_type='research_proof',
+                        upload_result=cr,
+                        uploaded_by=request.user.username,
+                    )
+                    uploaded_research_proof_urls.append(cr['secure_url'])
+                    # Save first processed proof to the main field
+                    if proof_position == 1 and hasattr(faculty, 'research_proof_url'):
+                        faculty.research_proof_url = cr['secure_url']
+                        if ay and hasattr(faculty, 'research_proof_academic_year'):
+                            faculty.research_proof_academic_year = ay
+                        faculty.save()
+                    print(f" [OK] Research proof {proof_counter} uploaded to Cloudinary (type: {resource_type})")
+                except Exception as e:
+                    logger.error(f"Research proof Cloudinary upload error: {e}")
+
+        # Assign research proof URLs to research publications sequentially
+        for index, pub in enumerate(research_publication_records):
+            if index < len(uploaded_research_proof_urls):
+                pub.proof_document_url = uploaded_research_proof_urls[index]
+                pub.save(update_fields=['proof_document_url'])
+                print(f" [OK] Linked research proof to publication: {pub.title[:30]}")
+
+        # ==================== HANDLE MULTIPLE FDP CERTIFICATE FILES DURING EDIT ====================
+        uploaded_fdp_certificate_urls = []
+        certs_data = parse_json_list(request.POST.get('fdp_certificates_data', '[]'))
+        for cert_position, (fdp_cert_counter, cert_file) in enumerate(
+            iter_indexed_uploaded_files(request.FILES, 'fdp_cert_files_'),
+            start=1,
+        ):
+            ay = ''
+            if len(certs_data) >= cert_position and isinstance(certs_data[cert_position - 1], dict):
+                ay = (certs_data[cert_position - 1].get('academic_year') or '').strip()
+            if is_cloudinary_configured():
+                try:
+                    # Determine resource type based on file extension
+                    filename = cert_file.name.lower()
+                    resource_type = 'raw' if filename.endswith('.pdf') else 'auto'
+
+                    cr = cloudinary.uploader.upload(
+                        cert_file, resource_type=resource_type,
+                        folder=f"faculty_documents/{faculty.employee_code}/fdp_certs",
+                        public_id=f"fdp_cert_{faculty.employee_code}_{fdp_cert_counter}",
+                        overwrite=True,
+                    )
+                    cert_url = cr['secure_url']
+                    record_cloudinary_upload(
+                        faculty=faculty,
+                        upload_type='fdp_certificate',
+                        upload_result=cr,
+                        uploaded_by=request.user.username,
+                    )
+                    uploaded_fdp_certificate_urls.append(cert_url)
+                    if cert_position == 1 and hasattr(faculty, 'fdp_certificate_url'):
+                        faculty.fdp_certificate_url = cert_url
+                        if ay and hasattr(faculty, 'fdp_certificate_academic_year'):
+                            faculty.fdp_certificate_academic_year = ay
+                        faculty.save()
+                    print(f" [OK] FDP cert {fdp_cert_counter} uploaded to Cloudinary (type: {resource_type})")
+                except Exception as e:
+                    logger.error(f"FDP cert Cloudinary upload error: {e}")
+
+        # Assign FDP certificates sequentially to FDP records
+        for index, fdp in enumerate(fdp_records):
+            if index < len(uploaded_fdp_certificate_urls):
+                fdp.certificate_url = uploaded_fdp_certificate_urls[index]
+                fdp.save(update_fields=['certificate_url'])
+                print(f" [OK] Linked FDP certificate to entry: {fdp.title[:30]}")
+
         messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
         return redirect("dashboard:faculty_dashboard")
     return render(request, "dashboard/faculty.html", {"add_mode": True, "faculty": faculty, "title": "Edit Faculty"})
@@ -4087,10 +4235,10 @@ def generate_faculty_pdf(request, faculty_id):
             if not url or not url.startswith('http'):
                 return None
 
-            # On Render, skip Cloudinary URL downloads entirely to avoid invalid credential errors
-            if getattr(settings, 'ON_RENDER', False) and 'cloudinary.com' in url:
-                print(f"  [SKIP] Cloudinary URL download on Render: {url}")
-                return None
+            # Try to download Cloudinary URLs even on Render if configured
+            # if getattr(settings, 'ON_RENDER', False) and 'cloudinary.com' in url:
+            #     print(f"  [SKIP] Cloudinary URL download on Render: {url}")
+            #     return None
             
             # Use a browser-like User-Agent
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
