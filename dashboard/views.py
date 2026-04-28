@@ -4081,6 +4081,11 @@ def generate_faculty_pdf(request, faculty_id):
             """Download a URL to a local temp file. Returns path or None."""
             if not url or not url.startswith('http'):
                 return None
+
+            # On Render, skip Cloudinary URL downloads entirely to avoid invalid credential errors
+            if getattr(settings, 'ON_RENDER', False) and 'cloudinary.com' in url:
+                print(f"  [SKIP] Cloudinary URL download on Render: {url}")
+                return None
             
             # Use a browser-like User-Agent
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
