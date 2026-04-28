@@ -2251,9 +2251,11 @@ def add_faculty(request):
             )
 
             # ==================== PHOTO ====================
-            if request.FILES.get('photo'):
-                faculty.photo = request.FILES['photo']
-
+            # On Render (Cloudinary storage), skip assigning to photo field to avoid automatic upload.
+            # The explicit Cloudinary upload below will handle it.
+            if not getattr(settings, 'ON_RENDER', False):
+                if request.FILES.get('photo'):
+                    faculty.photo = request.FILES['photo']
             # ==================== SAVE FACULTY FIRST (need PK for related objects) ====================
             faculty.save()
             print(f" [OK] Faculty saved with ID: {faculty.id}")
@@ -2288,10 +2290,13 @@ def add_faculty(request):
                 'pg_certificate', 'phd_certificate', 'experience_certificates',
                 'research_proof', 'fdp_certificate', 'other_documents',
             ]
-            for field_name in doc_file_fields:
-                if request.FILES.get(field_name):
-                    setattr(faculty, field_name, request.FILES[field_name])
-                    print(f" [OK] Saved file field: {field_name}")
+            # On Render (Cloudinary storage), skip assigning to FileFields to avoid automatic upload.
+            # The explicit Cloudinary upload block below will handle files.
+            if not getattr(settings, 'ON_RENDER', False):
+                for field_name in doc_file_fields:
+                    if request.FILES.get(field_name):
+                        setattr(faculty, field_name, request.FILES[field_name])
+                        print(f" [OK] Saved file field: {field_name}")
 
             # Experience certificates academic year
             exp_cert_ay = request.POST.get('experience_certificates_academic_year', '')
