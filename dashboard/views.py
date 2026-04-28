@@ -4048,6 +4048,9 @@ def generate_faculty_pdf(request, faculty_id):
     try:
         faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
+        print(f"  [DEBUG] ON_RENDER={getattr(settings, 'ON_RENDER', False)}")
+        print(f"  [DEBUG] CLOUDINARY_CONFIGURED={getattr(settings, 'CLOUDINARY_CONFIGURED', False)}")
+        print(f"  [DEBUG] BASE_DIR={settings.BASE_DIR}")
         
         # Test WeasyPrint import and basic functionality FIRST
         try:
@@ -4072,6 +4075,8 @@ def generate_faculty_pdf(request, faculty_id):
             logger.error(error_msg)
             messages.error(request, error_msg)
             return redirect('dashboard:faculty_dashboard')
+        
+        print("  [DEBUG] Starting asset collection...")
 
         # ── temp file tracker ──────────────────────────────────────
         temp_files = []
@@ -4546,17 +4551,29 @@ def generate_faculty_pdf(request, faculty_id):
         }
 
         # ── GENERATE INFO PDF with WeasyPrint ───────────────────────
-        html_string = render_to_string('dashboard/faculty_pdf.html', context)
+        print("  [DEBUG] Rendering template to string...")
+        try:
+            html_string = render_to_string('dashboard/faculty_pdf.html', context)
+            print(f"  [DEBUG] Template rendered: {len(html_string)} characters")
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"  [ERROR] Template rendering failed:\n{error_details}")
+            logger.error(f"Template error: {e}\n{error_details}")
+            messages.error(request, f'Template error: {str(e)[:200]}')
+            return redirect('dashboard:faculty_dashboard')
 
+        print("  [DEBUG] Generating PDF with WeasyPrint...")
         try:
             from weasyprint import HTML
             # Use BASE_DIR as base_url for resolving relative paths
             base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
+            print(f"  [DEBUG] base_url={base_url}")
             html_obj = HTML(string=html_string, base_url=base_url)
             info_pdf_bytes = html_obj.write_pdf()
             print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
-        except ImportError:
-            error_msg = 'WeasyPrint not installed. Please install weasyprint package.'
+        except ImportError as ie:
+            error_msg = f'WeasyPrint not installed: {ie}'
             logger.error(error_msg)
             messages.error(request, error_msg)
             return redirect('dashboard:faculty_dashboard')
@@ -4565,7 +4582,7 @@ def generate_faculty_pdf(request, faculty_id):
             error_details = traceback.format_exc()
             logger.error(f"WeasyPrint error: {e}\n{error_details}")
             print(f"\n{'='*60}")
-            print(f"WEASYPRINT ERROR on Render:")
+            print(f"WEASYPRINT ERROR:")
             print(f"{error_details}")
             print(f"{'='*60}\n")
             messages.error(request, f'PDF generation error: {str(e)[:200]}')
