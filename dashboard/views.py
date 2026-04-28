@@ -4194,6 +4194,7 @@ def generate_faculty_pdf(request, faculty_id):
     Generate faculty PDF with comprehensive error handling for Render deployment.
     """
     try:
+        faculty = get_object_or_404(Faculty, id=faculty_id)
         print(f"\n{'='*60}\nFACULTY PDF: {faculty.staff_name} ({faculty.employee_code})\n{'='*60}")
         print(f"  [DEBUG] ON_RENDER={getattr(settings, 'ON_RENDER', False)}")
         print(f"  [DEBUG] CLOUDINARY_CONFIGURED={getattr(settings, 'CLOUDINARY_CONFIGURED', False)}")
