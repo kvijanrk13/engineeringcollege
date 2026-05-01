@@ -173,7 +173,7 @@
 <body>
     <table class="header-table">
         <tr>
-            <td style="width: 75%; text-align: center; vertical-align: middle;">
+            <td style="text-align: center; vertical-align: middle;">
                 <div class="college-name">
                     <img src="{{ anurag_header_url }}" alt="ANURAG ENGINEERING COLLEGE">
                 </div>
@@ -181,17 +181,19 @@
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
                 <div style="font-size: 10px;">Employee Code: {{ faculty.employee_code }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
             </td>
-            <td style="width: 25%; text-align: right;">
-                <div class="photo-box">
-                    {% if local_photo_path %}
-                        <img src="{{ local_photo_path }}" class="faculty-photo" alt="Faculty Photo">
-                    {% else %}
-                        <div class="no-photo">NO PHOTO</div>
-                    {% endif %}
-                </div>
-            </td>
         </tr>
     </table>
+
+    <!-- Faculty Photo Box -->
+    <div style="text-align: center; margin: 20px 0;">
+        <div class="photo-box">
+            {% if local_photo_path %}
+                <img src="{{ local_photo_path }}" class="faculty-photo" alt="Faculty Photo">
+            {% else %}
+                <div class="no-photo">NO PHOTO</div>
+            {% endif %}
+        </div>
+    </div>
 
     <!-- 1. PERSONAL INFORMATION -->
     <div class="section-title">1. PERSONAL INFORMATION</div>

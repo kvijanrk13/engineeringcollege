@@ -2428,6 +2428,19 @@ def add_faculty(request):
                         print(f" [OK] Research proof {proof_counter} uploaded to Cloudinary (type: {resource_type})")
                     except Exception as e:
                         logger.error(f"Research proof Cloudinary upload error: {e}")
+                        # Save locally since Cloudinary failed
+                        if proof_position <= len(research_publication_records):
+                            pub = research_publication_records[proof_position - 1]
+                            pub.proof_document = proof_file
+                            pub.save(update_fields=['proof_document'])
+                            print(f" [OK] Research proof {proof_counter} saved locally to publication")
+                else:
+                    # Cloudinary not configured, save locally
+                    if proof_position <= len(research_publication_records):
+                        pub = research_publication_records[proof_position - 1]
+                        pub.proof_document = proof_file
+                        pub.save(update_fields=['proof_document'])
+                        print(f" [OK] Research proof {proof_counter} saved locally to publication")
 
             # ==================== HANDLE MULTIPLE OTHER DOC FILES ====================
             docs_data = parse_json_list(request.POST.get('other_documents_data', '[]'))
@@ -2588,6 +2601,19 @@ def add_faculty(request):
                         print(f" [OK] FDP cert {fdp_cert_counter} uploaded to Cloudinary (type: {resource_type})")
                     except Exception as e:
                         logger.error(f"FDP cert Cloudinary upload error: {e}")
+                        # Save locally since Cloudinary failed
+                        if cert_position <= len(fdp_records):
+                            fdp = fdp_records[cert_position - 1]
+                            fdp.certificate = cert_file
+                            fdp.save(update_fields=['certificate'])
+                            print(f" [OK] FDP cert {fdp_cert_counter} saved locally to FDP entry")
+                else:
+                    # Cloudinary not configured, save locally
+                    if cert_position <= len(fdp_records):
+                        fdp = fdp_records[cert_position - 1]
+                        fdp.certificate = cert_file
+                        fdp.save(update_fields=['certificate'])
+                        print(f" [OK] FDP cert {fdp_cert_counter} saved locally to FDP entry")
 
             # Assign FDP certificates sequentially to FDP records
             for index, fdp in enumerate(fdp_records):
@@ -4450,18 +4476,20 @@ def generate_faculty_pdf(request, faculty_id):
             """Convert image file to base64 data URI for reliable PDF embedding."""
             try:
                 import base64
+                from PIL import Image
                 with open(image_path, 'rb') as img_file:
                     img_data = img_file.read()
-                    # Detect image type
-                    if image_path.lower().endswith('.png'):
+                    # Detect image type using PIL
+                    img = Image.open(image_path)
+                    format = img.format.lower()
+                    if format == 'png':
                         mime_type = 'image/png'
-                    elif image_path.lower().endswith('.jpg') or image_path.lower().endswith('.jpeg'):
+                    elif format in ('jpg', 'jpeg'):
                         mime_type = 'image/jpeg'
-                    elif image_path.lower().endswith('.gif'):
+                    elif format == 'gif':
                         mime_type = 'image/gif'
                     else:
-                        # Default to jpeg
-                        mime_type = 'image/jpeg'
+                        mime_type = 'image/jpeg'  # fallback
 
                     b64_data = base64.b64encode(img_data).decode('utf-8')
                     return f"data:{mime_type};base64,{b64_data}"
@@ -4898,11 +4926,6 @@ def generate_faculty_pdf(request, faculty_id):
             temp_files.append(info_tmp.name)
             _add_to_writer(info_tmp.name)
 
-            # 1.5. Add photo as separate page if available
-            if local_photo_path and os.path.exists(local_photo_path):
-                _add_to_writer(local_photo_path)
-                print(f"  [OK] Added photo as separate page")
-
             # 2. Collect all faculty documents
             doc_fields = [
                 ('aadhar_url', 'aadhar_file'),
@@ -4916,7 +4939,6 @@ def generate_faculty_pdf(request, faculty_id):
                 ('pg_certificate_url', 'pg_certificate'),
                 ('phd_certificate_url', 'phd_certificate'),
                 ('experience_certificates_url', 'experience_certificates'),
-                ('research_proof_url', 'research_proof'),
                 ('other_documents_url', 'other_documents'),
             ]
             for url_field, file_field in doc_fields:
