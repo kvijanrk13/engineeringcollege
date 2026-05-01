@@ -4808,12 +4808,12 @@ def generate_faculty_pdf(request, faculty_id):
             'subjects_list': subjects_list,
             'experience': experience,
             'current_date': datetime.now(),
-            # ── Results — TWO separate vars so template never shows raw text ──
-            'results_data_list': results_data_list,   # list of dicts
-            'results_text': results_text,              # plain text fallback
-            # ── Photo ──
-            'photo_url': photo_url_for_pdf,
-            'local_photo_path': photo_url_for_pdf,
+             # ── Results — TWO separate vars so template never shows raw text ──
+             'results_data_list': results_data_list,   # list of dicts
+             'results_text': results_text,              # plain text fallback
+             # ── Photo ──
+             'photo_url': photo_url_for_pdf,
+             'local_photo_path': build_file_uri(local_photo_path) if local_photo_path else '',
             # ── Document flags ──
             'has_aadhar': has_aadhar, 'has_pan': has_pan, 'has_apaar': has_apaar,
             'has_scm': has_scm, 'has_jntuh_biodata': has_jntuh_biodata,
