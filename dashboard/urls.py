@@ -116,6 +116,7 @@ urlpatterns = [
     path('cloudinary/status/', views.cloudinary_status, name='cloudinary_status'),
     path('cloudinary/url/<int:faculty_id>/', views.get_cloudinary_url, name='get_cloudinary_url'),
     path('cloudinary/bulk-sync/', views.bulk_sync_to_cloudinary, name='bulk_sync_to_cloudinary'),
+    path('cloudinary/sync-all-photos/', views.sync_all_faculty_photos_to_cloudinary, name='sync_all_faculty_photos_to_cloudinary'),
 
     # Bulk operations
     path('bulk-upload/', views.bulk_upload, name='bulk_upload'),
