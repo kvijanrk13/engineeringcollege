@@ -4446,6 +4446,29 @@ def generate_faculty_pdf(request, faculty_id):
         local_photo_path = None
         photo_url_for_pdf = None
 
+        def _create_base64_data_uri(image_path):
+            """Convert image file to base64 data URI for reliable PDF embedding."""
+            try:
+                import base64
+                with open(image_path, 'rb') as img_file:
+                    img_data = img_file.read()
+                    # Detect image type
+                    if image_path.lower().endswith('.png'):
+                        mime_type = 'image/png'
+                    elif image_path.lower().endswith('.jpg') or image_path.lower().endswith('.jpeg'):
+                        mime_type = 'image/jpeg'
+                    elif image_path.lower().endswith('.gif'):
+                        mime_type = 'image/gif'
+                    else:
+                        # Default to jpeg
+                        mime_type = 'image/jpeg'
+
+                    b64_data = base64.b64encode(img_data).decode('utf-8')
+                    return f"data:{mime_type};base64,{b64_data}"
+            except Exception as e:
+                print(f"  [ERROR] Failed to create base64 data URI: {e}")
+                return None
+
         print(f"  [DEBUG] Resolving photo for faculty: {faculty.staff_name} ({faculty.employee_code})")
         print(f"  [DEBUG] faculty.photo: {faculty.photo}")
         print(f"  [DEBUG] faculty.cloudinary_photo_url: {faculty.cloudinary_photo_url}")
@@ -4456,8 +4479,8 @@ def generate_faculty_pdf(request, faculty_id):
             p = _download(faculty.cloudinary_photo_url)
             if p and os.path.exists(p):
                 local_photo_path = p
-                photo_url_for_pdf = build_file_uri(p)
-                print(f"  [SUCCESS] Photo from Cloudinary downloaded: {photo_url_for_pdf}")
+                photo_url_for_pdf = _create_base64_data_uri(p)
+                print(f"  [SUCCESS] Photo from Cloudinary downloaded and encoded as base64")
             else:
                 print(f"  [FAIL] Could not download Cloudinary photo")
 
@@ -4467,8 +4490,8 @@ def generate_faculty_pdf(request, faculty_id):
             lp = _local_path(faculty.photo)
             if lp and os.path.exists(lp):
                 local_photo_path = lp
-                photo_url_for_pdf = build_file_uri(lp)
-                print(f"  [SUCCESS] Photo from local file: {photo_url_for_pdf}")
+                photo_url_for_pdf = _create_base64_data_uri(lp)
+                print(f"  [SUCCESS] Photo from local file encoded as base64")
             else:
                 print(f"  [FAIL] Local photo file not found: {lp if lp else 'None'}")
 
@@ -4482,8 +4505,8 @@ def generate_faculty_pdf(request, faculty_id):
                     p = _download(fu)
                     if p and os.path.exists(p):
                         local_photo_path = p
-                        photo_url_for_pdf = build_file_uri(p)
-                        print(f"  [SUCCESS] Photo from FileField URL: {photo_url_for_pdf}")
+                        photo_url_for_pdf = _create_base64_data_uri(p)
+                        print(f"  [SUCCESS] Photo from FileField URL encoded as base64")
                     else:
                         print(f"  [FAIL] Could not download from FileField URL")
             except Exception as photo_err:
@@ -4493,7 +4516,7 @@ def generate_faculty_pdf(request, faculty_id):
         if not photo_url_for_pdf:
             print(f"  [WARNING] No photo available for faculty {faculty.employee_code} in PDF")
         else:
-            print(f"  [OK] Final photo URL for PDF: {photo_url_for_pdf}")
+            print(f"  [OK] Final photo encoded for PDF (base64 length: {len(photo_url_for_pdf) if photo_url_for_pdf else 0})")
 
         # ── RELATED DATA ──────────────────────────────────────────
         research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
