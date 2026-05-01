@@ -1386,6 +1386,25 @@ def edit_faculty_complete(request, faculty_id):
         if request.FILES.get("photo"):
             faculty.photo = request.FILES["photo"]
         faculty.save()
+        # Upload to Cloudinary if photo provided and Cloudinary configured
+        if request.FILES.get("photo") and is_cloudinary_configured():
+            try:
+                request.FILES["photo"].seek(0)
+                cr = cloudinary.uploader.upload(
+                    request.FILES["photo"], folder="faculty_photos",
+                    public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
+                    transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
+                )
+                faculty.cloudinary_photo_url = cr["secure_url"]
+                faculty.save(update_fields=['cloudinary_photo_url'])
+                CloudinaryUpload.objects.create(
+                    faculty=faculty, upload_type="photo",
+                    cloudinary_url=cr["secure_url"], public_id=cr["public_id"],
+                    resource_type=cr["resource_type"], uploaded_by=request.user.username
+                )
+            except Exception as e:
+                logger.error(f"Cloudinary upload error in edit_faculty_complete: {e}")
+                messages.warning(request, "Photo saved but Cloudinary upload failed.")
         messages.success(request, f'Faculty {faculty.staff_name} updated successfully!')
         return HttpResponseRedirect(reverse('dashboard:faculty_dashboard') + f'?id={faculty.id}')
     return render(request, 'dashboard/edit_faculty_complete.html', {
@@ -2251,14 +2270,9 @@ def add_faculty(request):
             )
 
             # ==================== PHOTO ====================
-            # On Render (Cloudinary storage), clear photo field to avoid automatic upload.
-            # The explicit Cloudinary upload below will handle it on local.
-            if getattr(settings, 'ON_RENDER', False):
-                if request.FILES.get('photo'):
-                    faculty.photo = None
-            else:
-                if request.FILES.get('photo'):
-                    faculty.photo = request.FILES['photo']
+            # Always save photo locally AND upload to Cloudinary (if configured)
+            if request.FILES.get('photo'):
+                faculty.photo = request.FILES['photo']
             # ==================== SAVE FACULTY FIRST (need PK for related objects) ====================
             faculty.save()
             print(f" [OK] Faculty saved with ID: {faculty.id}")
@@ -2284,7 +2298,30 @@ def add_faculty(request):
                     print(f" [OK] Photo uploaded to Cloudinary: {cr['secure_url']}")
                 except Exception as e:
                     logger.error(f"Cloudinary photo upload error: {e}")
-                    print(f" [WARN]  Photo saved locally, Cloudinary upload failed: {e}")
+                    print(f" [WARN] Photo saved locally, Cloudinary upload failed: {e}")
+            elif faculty.photo and not faculty.cloudinary_photo_url and is_cloudinary_configured():
+                # If photo exists locally but not on Cloudinary, sync it now
+                try:
+                    print(f" [ATTEMPT] Syncing existing local photo to Cloudinary...")
+                    with faculty.photo.open('rb') as pf:
+                        cr = cloudinary.uploader.upload(
+                            pf,
+                            folder="faculty_photos",
+                            public_id=f"faculty_{faculty.employee_code}_photo",
+                            overwrite=True,
+                            transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
+                        )
+                        faculty.cloudinary_photo_url = cr['secure_url']
+                        faculty.save(update_fields=['cloudinary_photo_url'])
+                        CloudinaryUpload.objects.create(
+                            faculty=faculty, upload_type='photo',
+                            cloudinary_url=cr['secure_url'], public_id=cr['public_id'],
+                            resource_type=cr['resource_type'], uploaded_by=request.user.username if request.user.username else 'System'
+                        )
+                        print(f" [OK] Existing photo synced to Cloudinary: {cr['secure_url']}")
+                except Exception as e:
+                    logger.warning(f"Could not sync existing photo to Cloudinary: {e}")
+                    print(f" [WARN] Could not sync existing photo: {e}")
 
             # ==================== DOCUMENT FILES ====================
             doc_file_fields = [
@@ -2787,10 +2824,12 @@ def edit_faculty(request, faculty_id):
         except Exception as e:
             logger.error(f"FacultyProfile save error: {e}")
         if request.FILES.get("photo"):
-            if not settings.ON_RENDER:
-                faculty.photo = request.FILES["photo"]
+            # Always save photo locally
+            faculty.photo = request.FILES["photo"]
+            # Always upload to Cloudinary if configured
             if is_cloudinary_configured():
                 try:
+                    request.FILES["photo"].seek(0)
                     cr = cloudinary.uploader.upload(
                         request.FILES["photo"], folder="faculty_photos",
                         public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
@@ -3069,18 +3108,20 @@ def save_faculty(request, faculty_id):
             if request.POST.get('phd_degree') != 'Completed':
                 faculty.phd_title = ''
             if 'photo' in request.FILES:
-                if not settings.ON_RENDER:
-                    faculty.photo = request.FILES['photo']
-                    if is_cloudinary_configured():
-                        try:
-                            cr = cloudinary.uploader.upload(
-                                request.FILES['photo'], folder="faculty_photos",
-                                public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
-                                transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
-                            )
-                            faculty.cloudinary_photo_url = cr['secure_url']
-                        except Exception as e:
-                            logger.error(f"Cloudinary upload error during save: {e}")
+                # Always save photo locally
+                faculty.photo = request.FILES['photo']
+                # Always upload to Cloudinary if configured
+                if is_cloudinary_configured():
+                    try:
+                        request.FILES['photo'].seek(0)
+                        cr = cloudinary.uploader.upload(
+                            request.FILES['photo'], folder="faculty_photos",
+                            public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
+                            transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}]
+                        )
+                        faculty.cloudinary_photo_url = cr['secure_url']
+                    except Exception as e:
+                        logger.error(f"Cloudinary upload error during save: {e}")
             faculty.save()
             try:
                 profile = FacultyProfile.objects.get(faculty=faculty)
@@ -4405,40 +4446,54 @@ def generate_faculty_pdf(request, faculty_id):
         local_photo_path = None
         photo_url_for_pdf = None
 
-        # On localhost, prefer local file first for reliability
-        if not getattr(settings, 'ON_RENDER', False) and faculty.photo and getattr(faculty.photo, 'name', ''):
-            lp = _local_path(faculty.photo)
-            if lp:
-                local_photo_path = lp
-                photo_url_for_pdf = build_file_uri(lp)
-                print(f"  [OK] Photo (local file - preferred on localhost): {photo_url_for_pdf}")
+        print(f"  [DEBUG] Resolving photo for faculty: {faculty.staff_name} ({faculty.employee_code})")
+        print(f"  [DEBUG] faculty.photo: {faculty.photo}")
+        print(f"  [DEBUG] faculty.cloudinary_photo_url: {faculty.cloudinary_photo_url}")
 
-        # Try Cloudinary URL (primary on Render, fallback on localhost)
-        if not photo_url_for_pdf and faculty.cloudinary_photo_url:
+        # Step 1: Try Cloudinary URL first (most reliable for Render)
+        if faculty.cloudinary_photo_url:
+            print(f"  [ATTEMPT] Downloading from Cloudinary: {faculty.cloudinary_photo_url}")
             p = _download(faculty.cloudinary_photo_url)
-            if p:
+            if p and os.path.exists(p):
                 local_photo_path = p
                 photo_url_for_pdf = build_file_uri(p)
-                print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
+                print(f"  [SUCCESS] Photo from Cloudinary downloaded: {photo_url_for_pdf}")
+            else:
+                print(f"  [FAIL] Could not download Cloudinary photo")
 
-        # Final fallback to FileField URL download
+        # Step 2: Try local photo file (preferred on localhost if available)
         if not photo_url_for_pdf and faculty.photo and getattr(faculty.photo, 'name', ''):
+            print(f"  [ATTEMPT] Trying local photo file...")
             lp = _local_path(faculty.photo)
-            if lp:
+            if lp and os.path.exists(lp):
                 local_photo_path = lp
                 photo_url_for_pdf = build_file_uri(lp)
-                print(f"  [OK] Photo (local file - fallback): {photo_url_for_pdf}")
+                print(f"  [SUCCESS] Photo from local file: {photo_url_for_pdf}")
             else:
-                try:
-                    fu = faculty.photo.url
-                    if fu and fu.startswith('http'):
-                        p = _download(fu)
-                        if p:
-                            local_photo_path = p
-                            photo_url_for_pdf = build_file_uri(p)
-                            print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
-                except Exception:
-                    pass
+                print(f"  [FAIL] Local photo file not found: {lp if lp else 'None'}")
+
+        # Step 3: Try downloading from FileField URL
+        if not photo_url_for_pdf and faculty.photo and getattr(faculty.photo, 'name', ''):
+            try:
+                print(f"  [ATTEMPT] Downloading from photo field URL...")
+                fu = faculty.photo.url if hasattr(faculty.photo, 'url') else None
+                if fu and fu.startswith('http'):
+                    print(f"  [ATTEMPT] FileField URL: {fu}")
+                    p = _download(fu)
+                    if p and os.path.exists(p):
+                        local_photo_path = p
+                        photo_url_for_pdf = build_file_uri(p)
+                        print(f"  [SUCCESS] Photo from FileField URL: {photo_url_for_pdf}")
+                    else:
+                        print(f"  [FAIL] Could not download from FileField URL")
+            except Exception as photo_err:
+                print(f"  [ERROR] Exception downloading photo: {photo_err}")
+
+        # Step 4: If still no photo, log it clearly
+        if not photo_url_for_pdf:
+            print(f"  [WARNING] No photo available for faculty {faculty.employee_code} in PDF")
+        else:
+            print(f"  [OK] Final photo URL for PDF: {photo_url_for_pdf}")
 
         # ── RELATED DATA ──────────────────────────────────────────
         research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')
@@ -4819,6 +4874,11 @@ def generate_faculty_pdf(request, faculty_id):
             info_tmp.close()
             temp_files.append(info_tmp.name)
             _add_to_writer(info_tmp.name)
+
+            # 1.5. Add photo as separate page if available
+            if local_photo_path and os.path.exists(local_photo_path):
+                _add_to_writer(local_photo_path)
+                print(f"  [OK] Added photo as separate page")
 
             # 2. Collect all faculty documents
             doc_fields = [
@@ -5347,6 +5407,9 @@ def upload_faculty_photo(request):
             faculty = get_object_or_404(Faculty, employee_code=request.POST.get('employee_code'))
             if not is_cloudinary_configured():
                 return JsonResponse({'success': False, 'error': 'Cloudinary not configured.'})
+            # Save photo locally
+            faculty.photo = request.FILES['photo']
+            # Upload to Cloudinary
             cr = cloudinary.uploader.upload(
                 request.FILES['photo'], folder="faculty_photos",
                 public_id=f"faculty_{faculty.employee_code}", overwrite=True,
@@ -5488,6 +5551,51 @@ def bulk_sync_to_cloudinary(request):
         messages.success(request, f"Synced {ok} faculty to Cloudinary.")
     if err:
         messages.warning(request, f"Failed to sync {err} faculty.")
+    return redirect('dashboard:faculty_list')
+
+
+@login_required
+def sync_all_faculty_photos_to_cloudinary(request):
+    if not is_cloudinary_configured():
+        messages.error(request, "Cloudinary is not configured properly.")
+        return redirect("dashboard:faculty_list")
+    
+    faculty_list = Faculty.objects.all()
+    ok = err = 0
+    
+    for faculty in faculty_list:
+        if faculty.photo and not faculty.cloudinary_photo_url:
+            try:
+                with faculty.photo.open("rb") as f:
+                    resp = cloudinary.uploader.upload(
+                        f, folder="faculty_photos",
+                        public_id=f"faculty_{faculty.employee_code}_photo", overwrite=True,
+                        transformation=[{'width': 300, 'height': 300, 'crop': 'fill'},
+                                        {'quality': 'auto:good'}]
+                    )
+                faculty.cloudinary_photo_url = resp["secure_url"]
+                faculty.save()
+                CloudinaryUpload.objects.create(
+                    faculty=faculty, upload_type="photo",
+                    cloudinary_url=resp["secure_url"], public_id=resp["public_id"],
+                    resource_type=resp["resource_type"], uploaded_by=request.user.username,
+                )
+                ok += 1
+            except Exception as e:
+                logger.error(f"Photo sync error for {faculty.employee_code}: {e}")
+                err += 1
+    
+    FacultyLog.objects.create(
+        faculty=None, action='Sync All Faculty Photos to Cloudinary',
+        details=f'Synced {ok} faculty photos ({err} errors)',
+        performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR')
+    )
+    
+    if ok:
+        messages.success(request, f"Synced {ok} faculty photos to Cloudinary.")
+    if err:
+        messages.warning(request, f"Failed to sync {err} faculty photos.")
+    
     return redirect('dashboard:faculty_list')
 
 
@@ -5770,17 +5878,36 @@ def merge_certificates_with_pdf(request, faculty_id):
 
 
 def generate_faculty_pdf_bytes(faculty):
+    """
+    Generate PDF bytes for a faculty member without requiring a real request.
+    This is used internally for merging certificates and bulk operations.
+    """
     try:
         from django.test import RequestFactory
-        from django.contrib.auth.models import AnonymousUser
+        from django.contrib.auth.models import User
+        
+        # Use a real superuser instead of AnonymousUser to bypass login requirement
+        # This is safe because this function is only called internally
+        try:
+            user = User.objects.filter(is_superuser=True).first()
+            if not user:
+                user = User.objects.first()
+        except Exception:
+            # Fallback if User model has issues
+            from django.contrib.auth.models import AnonymousUser
+            user = AnonymousUser()
+        
         factory = RequestFactory()
         fake_req = factory.get('/')
-        fake_req.user = AnonymousUser()
+        fake_req.user = user
         fake_req.META['REMOTE_ADDR'] = '127.0.0.1'
+        
         r = generate_faculty_pdf(fake_req, faculty.id)
         return r.content if isinstance(r, HttpResponse) else None
     except Exception as e:
         logger.error(f"Error generating PDF bytes: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
