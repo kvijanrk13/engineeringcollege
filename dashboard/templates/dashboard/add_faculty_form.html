@@ -240,7 +240,8 @@
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label">Photo</label>
-                                            <input type="file" name="photo" class="form-control" accept="image/*" id="photoInput">
+                                            <input type="file" name="photo" class="form-control" accept="image/*" id="photoInput" onchange="previewPhoto(this)">
+                                        <img id="photoPreview" src="#" alt="Photo Preview" style="display: none; max-width: 200px; max-height: 200px; margin-top: 10px; border: 1px solid #ddd; border-radius: 5px;">
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label required-field">Father's Name</label>
@@ -1238,6 +1239,22 @@
             togglePhdTitleField();
         }
     });
+    // ============================================================
+    // PHOTO PREVIEW FUNCTION
+    // ============================================================
+    function previewPhoto(input) {
+        const preview = document.getElementById('photoPreview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.style.display = 'none';
+        }
+    }
     // ============================================================
     // FORM SUBMISSION
     // ============================================================
