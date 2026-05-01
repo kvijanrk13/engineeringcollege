@@ -4856,8 +4856,8 @@ def generate_faculty_pdf(request, faculty_id):
         print("  [DEBUG] Generating PDF with WeasyPrint...")
         try:
             from weasyprint import HTML
-            # Use None for base_url since we use data URIs for images
-            base_url = None
+            # Use BASE_DIR as base_url for resolving relative paths
+            base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
 
             print(f"  [DEBUG] base_url={base_url}")
             html_obj = HTML(string=html_string, base_url=base_url)
