@@ -58,9 +58,22 @@ def test_faculty_pdf(faculty_id=7001):
         subjects_list = [s.strip() for s in (faculty.subjects_dealt or '').split(',') if s.strip()]
 
         # Build context - minimal
+        # Add header image as base64 for reliability
+        import base64
+        anurag_header_path = os.path.join('static', 'images', 'ANURAG HEADER.png')
+        anurag_header_url = ''
+        if os.path.exists(anurag_header_path):
+            with open(anurag_header_path, 'rb') as f:
+                anurag_header_url = f"data:image/png;base64,{base64.b64encode(f.read()).decode('utf-8')}"
+        
+        # Add photo URL (use Cloudinary URL if available)
+        photo_url = faculty.cloudinary_photo_url if faculty.cloudinary_photo_url else ''
+        
         context = {
             'faculty': faculty,
             'profile': profile,
+            'anurag_header_url': anurag_header_url,
+            'photo_url': photo_url,
             'research_projects': research_projects,
             'certificates': certificates,
             'subjects_list': subjects_list,

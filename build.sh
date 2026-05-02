@@ -3,8 +3,6 @@
 echo "🚀 Starting build process..."
 echo "========================================"
 
-set -o errexit
-
 # Show the exact source revision being built on Render.
 echo "🔎 Git commit:"
 git rev-parse HEAD || true
@@ -43,9 +41,21 @@ pip install -r requirements.txt
 echo "📁 Creating necessary directories..."
 mkdir -p staticfiles media
 
-# Run migrations first (critical for PostgreSQL)
+# Run migrations with retry logic (critical for PostgreSQL)
 echo "🔄 Applying database migrations..."
-python manage.py migrate --noinput
+max_retries=5
+retry_count=0
+until python manage.py migrate --noinput 2>/dev/null || [ $retry_count -eq $max_retries ]; do
+    retry_count=$((retry_count + 1))
+    echo "⚠️ Migration attempt $retry_count failed, retrying in 5 seconds..."
+    sleep 5
+done
+
+if [ $retry_count -eq $max_retries ]; then
+    echo "❌ Database migration failed after $max_retries attempts"
+    echo "This may be due to database connection issues. Check DATABASE_URL."
+    exit 1
+fi
 
 # Create or update the initial Django superuser when env vars are provided.
 python manage.py createsuperuser --noinput \

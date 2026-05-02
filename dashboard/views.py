@@ -4791,9 +4791,21 @@ def generate_faculty_pdf(request, faculty_id):
         experience_certificates_display_url = _display_url('experience_certificates_url', 'experience_certificates')
         other_documents_display_url = _display_url('other_documents_url', 'other_documents')
 
-        # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
+        # ── ANURAG HEADER IMAGE (convert to base64 for reliability) ──────────────────────────────
         anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
-        anurag_header_url = build_file_uri(anurag_header_path)
+        anurag_header_url = ''
+        if os.path.exists(anurag_header_path):
+            try:
+                import base64
+                with open(anurag_header_path, 'rb') as f:
+                    header_data = f.read()
+                anurag_header_url = f"data:image/png;base64,{base64.b64encode(header_data).decode('utf-8')}"
+                print(f"  [OK] Header image encoded as base64")
+            except Exception as e:
+                print(f"  [WARN] Could not encode header image: {e}")
+                anurag_header_url = build_file_uri(anurag_header_path)
+        else:
+            print(f"  [WARN] Header image not found at {anurag_header_path}")
 
         # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
         context = {

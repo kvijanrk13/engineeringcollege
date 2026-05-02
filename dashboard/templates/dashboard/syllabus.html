@@ -249,12 +249,13 @@
 <div class="container">
     <h1 class="syllabus-title">Academic Syllabus & Comparison</h1>
 
-    <div class="tab-grid">
-        <button class="tab-btn active" onclick="openTab('it')">IT</button>
-        <button class="tab-btn" onclick="openTab('cse')">CSE</button>
-        <button class="tab-btn" onclick="openTab('aiml')">CSE (AI&ML)</button>
-        <button class="tab-btn" onclick="openTab('common')">Comparison</button>
-    </div>
+        <div class="tab-grid">
+            <button class="tab-btn active" onclick="openTab('it')">IT</button>
+            <button class="tab-btn" onclick="openTab('cse')">CSE</button>
+            <button class="tab-btn" onclick="openTab('aiml')">CSE (AI&ML)</button>
+            <button class="tab-btn" onclick="openTab('common')">Comparison</button>
+            <button class="tab-btn" onclick="openTab('it-cse')">IT vs CSE</button>
+        </div>
 
     <!-- IT TAB -->
     <div id="tab-it" class="tab-content active">
@@ -279,6 +280,16 @@
                 Subjects Common Across IT, CSE &amp; CSE(AI&amp;ML)
             </div>
             <div id="common-syllabus-container"></div>
+        </div>
+    </div>
+
+    <!-- IT VS CSE TAB -->
+    <div id="tab-it-cse" class="tab-content">
+        <div class="sem-card">
+            <div class="sem-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                COMMON TO IT AND CSE
+            </div>
+            <div id="it-cse-common-container"></div>
         </div>
     </div>
 </div>
@@ -1010,6 +1021,84 @@
         summaryContainer.innerHTML = summaryHtml;
     }
 
+    function renderITCSECommonSubjects() {
+        const container = document.getElementById('it-cse-common-container');
+
+        let html = '<div class="common-table-wrapper"><table class="std-table common-table">';
+        html += '<thead><tr>';
+        html += '<th>Semester</th>';
+        html += '<th>Subject Name</th>';
+        html += '<th style="text-align:center;">IT Code</th>';
+        html += '<th style="text-align:center;">CSE Code</th>';
+        html += '</tr></thead><tbody>';
+
+        let totalCommon = 0;
+
+        semOrder.forEach(sem => {
+            const itSubs = syllabusData[sem]["IT"] || [];
+            const cseSubs = syllabusData[sem]["CSE"] || [];
+
+            const common = [];
+            const addedNames = new Set();
+
+            // Find common subjects based on normalized name
+            itSubs.forEach(itSub => {
+                const normName = normalizeSubjectName(itSub.name);
+                if (addedNames.has(normName)) return;
+
+                const cseMatch = cseSubs.find(s => normalizeSubjectName(s.name) === normName);
+                if (cseMatch) {
+                    addedNames.add(normName);
+                    common.push({
+                        name: itSub.name,
+                        itCode: itSub.code,
+                        cseCode: cseMatch.code
+                    });
+                }
+            });
+
+            // Also check CSE subjects not already found
+            cseSubs.forEach(cseSub => {
+                const normName = normalizeSubjectName(cseSub.name);
+                if (addedNames.has(normName)) return;
+
+                const itMatch = itSubs.find(s => normalizeSubjectName(s.name) === normName);
+                if (itMatch) {
+                    addedNames.add(normName);
+                    common.push({
+                        name: cseSub.name,
+                        itCode: itMatch.code,
+                        cseCode: cseSub.code
+                    });
+                }
+            });
+
+            totalCommon += common.length;
+
+            if (common.length > 0) {
+                let isFirst = true;
+                common.forEach(sub => {
+                    html += '<tr>';
+                    if (isFirst) {
+                        html += `<td rowspan="${common.length}" style="vertical-align:middle; text-align:center;"><span class="sem-badge">${sem}</span><br><small style="color:#64748b;">${common.length} common</small></td>`;
+                        isFirst = false;
+                    }
+                    html += `<td class="name-col">${sub.name}</td>`;
+                    html += `<td class="code-col" style="text-align:center;">${sub.itCode}</td>`;
+                    html += `<td class="code-col" style="text-align:center;">${sub.cseCode}</td>`;
+                    html += '</tr>';
+                });
+            }
+        });
+
+        if (totalCommon === 0) {
+            html += `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b; font-style: italic;">No common subjects found between IT and CSE.</td></tr>`;
+        }
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
     /* ============================================
        TAB SWITCHING
        ============================================ */
@@ -1028,16 +1117,18 @@
         if (tabName === 'cse') btns[1].classList.add("active");
         if (tabName === 'aiml') btns[2].classList.add("active");
         if (tabName === 'common') btns[3].classList.add("active");
+        if (tabName === 'it-cse') btns[4].classList.add("active");
     }
 
     /* ============================================
-       INITIALIZE ON PAGE LOAD
-       ============================================ */
+        INITIALIZE ON PAGE LOAD
+        ============================================ */
     document.addEventListener('DOMContentLoaded', () => {
         renderDepartmentSyllabus('IT', 'it-syllabus-container');
         renderDepartmentSyllabus('CSE', 'cse-syllabus-container');
         renderDepartmentSyllabus('AIML', 'aiml-syllabus-container');
         renderCommonSubjects();
+        renderITCSECommonSubjects();
     });
 
     window.addEventListener('resize', function() {
