@@ -1,0 +1,18 @@
+# Minimal YAML test
+databases:
+  - name: anrkitdept-db
+    databaseName: anrkitdept
+    user: anrkitdept_user
+    plan: free
+
+services:
+  - type: web
+    name: anrkitdept-test
+    runtime: python
+    pythonVersion: 3.10.11
+    buildCommand: echo "test build"
+    startCommand: echo "test start"
+    plan: free
+    envVars:
+      - key: TEST
+        value: "ok"
