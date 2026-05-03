@@ -10,7 +10,7 @@ services:
     runtime: python
     pythonVersion: 3.10.11
     buildCommand: ./build.sh
-    startCommand: bash -c "python manage.py migrate --noinput && (python manage.py createsuperuser --noinput --username $DJANGO_SUPERUSER_USERNAME --email $DJANGO_SUPERUSER_EMAIL || true) && gunicorn engineeringcollege.wsgi:application --log-file -"
+    startCommand: bash -c 'python manage.py migrate --noinput && (python manage.py createsuperuser --noinput --username $DJANGO_SUPERUSER_USERNAME --email $DJANGO_SUPERUSER_EMAIL || true) && gunicorn engineeringcollege.wsgi:application --log-file -'
     plan: free
     apt:
       packages:
