@@ -14,7 +14,10 @@ load_dotenv(BASE_DIR / '.env')
 # ================================
 # ✅ ENV DETECTION
 # ================================
-ON_RENDER = 'RENDER' in os.environ or 'DATABASE_URL' in os.environ
+ON_RENDER = any(
+    key in os.environ
+    for key in ('RENDER', 'DATABASE_URL', 'DATABASE_EXTERNAL_URL')
+)
 
 # ================================
 # SECURITY
