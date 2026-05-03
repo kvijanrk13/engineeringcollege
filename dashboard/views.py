@@ -246,95 +246,106 @@ def download_remote_asset(url, default_suffix='.pdf'):
     if not url or not isinstance(url, str) or not url.startswith('http'):
         return None, False
     try:
-        # Use a browser-like User-Agent
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
         response = requests.get(url, timeout=30, headers=headers)
-        
-        # Fallback for Cloudinary errors
+
+        # Primary Cloudinary fallback for auth errors
         if response.status_code in [401, 403, 404] and 'cloudinary.com' in url:
+            print(f"  [FALLBACK] Cloudinary error {response.status_code}, trying signed URL...")
             try:
+                # Extract public_id from URL
                 public_ids = get_cloudinary_public_id_candidates(url)
                 for public_id in public_ids:
-                    if response.status_code == 200:
-                        break
-
-                    if '/raw/upload/' in url:
-                        private_response = try_cloudinary_private_download(public_id, headers=headers)
-                        if private_response is not None:
-                            response = private_response
-                            break
-
-                    for resource_type in ('raw', 'image'):
+                    # Try raw resource type with signed URL
+                    for res_type in ['raw', 'image', 'auto']:
                         try:
-                            resource = cloudinary.api.resource(public_id, resource_type=resource_type)
-                            secure_url = resource.get('secure_url')
-                            if secure_url:
-                                response = requests.get(secure_url, timeout=30, headers=headers)
-                                if response.status_code == 200:
+                            if is_cloudinary_configured():
+                                # Generate a signed download URL
+                                signed_url = cloudinary.utils.private_download_url(
+                                    public_id,
+                                    resource_type=res_type,
+                                    type='upload',
+                                    attachment=False,
+                                    expires_at=int(__import__('time').time()) + 3600
+                                )
+                                r2 = requests.get(signed_url, timeout=30, headers=headers)
+                                if r2.status_code == 200:
+                                    response = r2
+                                    print(f"  [OK] Signed URL worked for {res_type}: {public_id}")
                                     break
-                        except Exception as api_err:
-                            logger.warning(
-                                f"Cloudinary API lookup failed for {public_id} ({resource_type}): {api_err}"
-                            )
+                        except Exception as signed_err:
+                            pass
 
-                    if response.status_code == 200:
-                        break
-
-                    # Try constructing URLs with different resource types
-                    cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
-                    if cloud_name:
-                        for res_type in ['raw', 'image']:
+                        # Try direct URL construction
+                        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
+                        if cloud_name:
                             try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
-                            logger.info(f"Trying {res_type} URL: {try_url}")
-                            test_r = requests.get(try_url, timeout=30, headers=headers)
-                            if test_r.status_code == 200:
-                                response = test_r
+                            r3 = requests.get(try_url, timeout=30, headers=headers)
+                            if r3.status_code == 200:
+                                response = r3
+                                print(f"  [OK] Direct {res_type} URL worked: {public_id}")
                                 break
-                            elif test_r.status_code == 404:
-                                continue
-                            else:
-                                break
+
                     if response.status_code == 200:
                         break
-            except Exception as cloud_err:
-                logger.warning(f"Cloudinary fallback failed: {cloud_err}")
 
-        # Additional fallback: try changing resource type in URL
-        if response.status_code != 200 and 'cloudinary.com' in url:
-            try:
-                alt_urls = []
-                if '/raw/upload/' in url:
-                    alt_urls.append(url.replace('/raw/upload/', '/image/upload/'))
-                elif '/image/upload/' in url:
-                    alt_urls.append(url.replace('/image/upload/', '/raw/upload/'))
-
-                for alt_url in alt_urls:
-                    logger.info(f"Trying alternative resource type: {alt_url}")
-                    alt_r = requests.get(alt_url, timeout=30, headers=headers)
-                    if alt_r.status_code == 200:
-                        response = alt_r
+                    # Try Cloudinary API to get fresh URL
+                    if is_cloudinary_configured():
+                        for res_type in ['raw', 'image']:
+                            try:
+                                resource = cloudinary.api.resource(public_id, resource_type=res_type)
+                                fresh_url = resource.get('secure_url')
+                                if fresh_url:
+                                    r4 = requests.get(fresh_url, timeout=30, headers=headers)
+                                    if r4.status_code == 200:
+                                        response = r4
+                                        print(f"  [OK] Fresh API URL worked: {fresh_url}")
+                                        break
+                            except Exception:
+                                continue
+                    if response.status_code == 200:
                         break
-            except Exception as alt_err:
-                logger.warning(f"Alternative URL fallback failed: {alt_err}")
+
+            except Exception as cloud_err:
+                print(f"  [WARN] Cloudinary fallback error: {cloud_err}")
+
+        # Try swapping resource type in URL
+        if response.status_code != 200 and 'cloudinary.com' in url:
+            alt_urls = []
+            if '/raw/upload/' in url:
+                alt_urls.append(url.replace('/raw/upload/', '/image/upload/'))
+            elif '/image/upload/' in url:
+                alt_urls.append(url.replace('/image/upload/', '/raw/upload/'))
+            for alt_url in alt_urls:
+                try:
+                    r5 = requests.get(alt_url, timeout=30, headers=headers)
+                    if r5.status_code == 200:
+                        response = r5
+                        print(f"  [OK] Alt URL worked: {alt_url}")
+                        break
+                except Exception:
+                    continue
 
         if response.status_code != 200:
-            logger.warning(f"Failed to download asset {url}: HTTP {response.status_code}")
+            print(f"  [SKIP] All fallbacks failed for: {url} (HTTP {response.status_code})")
             return None, False
 
-        # Detect PDF content
         content_type = (response.headers.get('content-type') or '').lower()
         is_pdf = 'application/pdf' in content_type or url.lower().endswith('.pdf')
         if not is_pdf and len(response.content) > 4:
-            if response.content.startswith(b'%PDF-'):
+            if response.content[:4] == b'%PDF':
                 is_pdf = True
 
         suffix = '.pdf' if is_pdf else default_suffix
         tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
         tmp.write(response.content)
         tmp.close()
+        print(f"  [OK] Downloaded {len(response.content)} bytes -> {tmp.name}")
         return tmp.name, is_pdf
     except Exception as e:
-        logger.warning(f"Error downloading asset {url}: {e}")
+        print(f"  [ERR] Download error for {url}: {e}")
         return None, False
 
 
@@ -5014,29 +5025,60 @@ def generate_faculty_pdf(request, faculty_id):
             temp_files.append(info_tmp.name)
             _add_to_writer(info_tmp.name)
 
-            # 2. Collect all faculty documents
+            # 2. Collect ALL faculty documents (enhanced with direct download fallback)
             doc_fields = [
-                ('aadhar_url', 'aadhar_file'),
-                ('pan_url', 'pan_file'),
-                ('apaar_url', 'apaar_file'),
-                ('scm_url', 'scm_file'),
-                ('jntuh_biodata_url', 'jntuh_biodata'),
-                ('ssc_certificate_url', 'ssc_certificate'),
-                ('inter_certificate_url', 'inter_certificate'),
-                ('ug_certificate_url', 'ug_certificate'),
-                ('pg_certificate_url', 'pg_certificate'),
-                ('phd_certificate_url', 'phd_certificate'),
-                ('experience_certificates_url', 'experience_certificates'),
-                ('other_documents_url', 'other_documents'),
+                ('aadhar_url', 'aadhar_file', 'Aadhar'),
+                ('pan_url', 'pan_file', 'PAN'),
+                ('apaar_url', 'apaar_file', 'APAAR'),
+                ('scm_url', 'scm_file', 'SCM'),
+                ('jntuh_biodata_url', 'jntuh_biodata', 'JNTUH Bio-Data'),
+                ('ssc_certificate_url', 'ssc_certificate', 'SSC Certificate'),
+                ('inter_certificate_url', 'inter_certificate', 'Inter Certificate'),
+                ('ug_certificate_url', 'ug_certificate', 'UG Certificate'),
+                ('pg_certificate_url', 'pg_certificate', 'PG Certificate'),
+                ('phd_certificate_url', 'phd_certificate', 'PhD Certificate'),
+                ('experience_certificates_url', 'experience_certificates', 'Experience Certificates'),
+                ('other_documents_url', 'other_documents', 'Other Documents'),
             ]
-            for url_field, file_field in doc_fields:
+            for url_field, file_field, label in doc_fields:
                 ff = getattr(faculty, file_field, None)
                 url_val = getattr(faculty, url_field, None)
-                p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
-                if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
-                    temp_files.append(p)
+                print(f"  [DOC] Processing {label}: url={bool(url_val)}, file={bool(ff and getattr(ff, 'name', ''))}")
+                
+                p = None
+                # Try URL first (Render/Cloudinary path)
+                if url_val and isinstance(url_val, str) and url_val.startswith('http'):
+                    p, _ = download_remote_asset(url_val, default_suffix='.pdf')
+                    if p:
+                        temp_files.append(p)
+                        print(f"  [OK] {label} downloaded from URL")
+                
+                # Fallback to local file
+                if not p and ff and getattr(ff, 'name', ''):
+                    try:
+                        local_p = ff.path
+                        if os.path.exists(local_p):
+                            p = local_p
+                            print(f"  [OK] {label} found locally")
+                    except Exception:
+                        pass
+                    
+                    # Try file URL if local path failed
+                    if not p:
+                        try:
+                            fu = ff.url if hasattr(ff, 'url') else None
+                            if fu and fu.startswith('http'):
+                                p, _ = download_remote_asset(fu, default_suffix='.pdf')
+                                if p:
+                                    temp_files.append(p)
+                                    print(f"  [OK] {label} downloaded from file URL")
+                        except Exception:
+                            pass
+
                 if p:
                     _add_to_writer(p)
+                else:
+                    print(f"  [SKIP] {label}: no accessible file found")
 
             # 3. Certificate records (the ones in the related Certificate model)
             for cert in certificates:
