@@ -363,6 +363,143 @@ def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
     return None, False
 
 
+def encode_image_as_data_uri(image_path):
+    """Convert an image file into a data URI for reliable WeasyPrint embedding."""
+    if not image_path or not os.path.exists(image_path):
+        return None
+
+    try:
+        with PILImage.open(image_path) as image:
+            image_format = (image.format or Path(image_path).suffix.lstrip('.')).lower()
+
+        mime_type = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'bmp': 'image/bmp',
+        }.get(image_format, 'image/jpeg')
+
+        import base64
+
+        with open(image_path, 'rb') as image_file:
+            image_bytes = image_file.read()
+
+        return f"data:{mime_type};base64,{base64.b64encode(image_bytes).decode('utf-8')}"
+    except Exception as e:
+        logger.warning(f"Could not encode image {image_path}: {e}")
+        return None
+
+
+def collect_faculty_photo_candidates(faculty):
+    """Return ordered photo candidates from DB fields, Cloudinary history, and filesystem fallbacks."""
+    candidates = []
+    seen = set()
+
+    def add_path(path_value, source):
+        if not path_value:
+            return
+        normalized = os.path.normcase(os.path.abspath(str(path_value)))
+        key = ('path', normalized)
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'path': str(path_value), 'source': source})
+
+    def add_url(url_value, source):
+        normalized = normalize_optional_url(url_value)
+        if not normalized:
+            return
+        key = ('url', normalized)
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'url': normalized, 'source': source})
+
+    add_url(getattr(faculty, 'cloudinary_photo_url', None), 'cloudinary_photo_url')
+
+    photo_field = getattr(faculty, 'photo', None)
+    if photo_field and getattr(photo_field, 'name', ''):
+        try:
+            add_path(photo_field.path, 'photo_field_path')
+        except (NotImplementedError, ValueError, OSError, Exception):
+            pass
+
+        try:
+            add_url(photo_field.url, 'photo_field_url')
+        except Exception:
+            pass
+
+    latest_uploads = (
+        CloudinaryUpload.objects
+        .filter(faculty=faculty, upload_type='photo')
+        .order_by('-upload_date')
+        .values_list('cloudinary_url', flat=True)
+    )
+    for uploaded_url in latest_uploads:
+        add_url(uploaded_url, 'cloudinary_upload_history')
+
+    if faculty.employee_code:
+        media_photo_dir = Path(settings.MEDIA_ROOT) / 'faculty_photos'
+        if media_photo_dir.exists():
+            for candidate in sorted(media_photo_dir.glob(f'{faculty.employee_code}*')):
+                if candidate.is_file():
+                    add_path(candidate, 'media_employee_code_fallback')
+
+        static_image_dir = Path(settings.BASE_DIR) / 'static' / 'images'
+        if static_image_dir.exists():
+            for candidate in sorted(static_image_dir.glob(f'{faculty.employee_code}*')):
+                if candidate.is_file():
+                    add_path(candidate, 'static_employee_code_fallback')
+
+        if is_cloudinary_configured():
+            try:
+                convention_url, _ = cloudinary.utils.cloudinary_url(
+                    f'faculty_photos/faculty_{faculty.employee_code}_photo',
+                    secure=True,
+                )
+                add_url(convention_url, 'cloudinary_naming_convention')
+            except Exception as e:
+                logger.warning(f"Could not build Cloudinary photo URL for {faculty.employee_code}: {e}")
+
+    return candidates
+
+
+def resolve_faculty_photo_for_pdf(faculty):
+    """Resolve the best faculty photo source and return a data URI plus cleanup temp paths."""
+    temp_paths = []
+
+    for candidate in collect_faculty_photo_candidates(faculty):
+        source = candidate['source']
+        path_value = candidate.get('path')
+        url_value = candidate.get('url')
+
+        if path_value and os.path.exists(path_value):
+            data_uri = encode_image_as_data_uri(path_value)
+            if data_uri:
+                return data_uri, path_value, temp_paths, source
+            logger.warning(f"Photo candidate from {source} could not be encoded: {path_value}")
+
+        if url_value:
+            downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix='.jpg')
+            if not downloaded_path:
+                continue
+
+            temp_paths.append(downloaded_path)
+            if is_pdf:
+                logger.warning(f"Photo candidate from {source} resolved to a PDF, skipping: {url_value}")
+                continue
+
+            data_uri = encode_image_as_data_uri(downloaded_path)
+            if data_uri:
+                return data_uri, downloaded_path, temp_paths, source
+
+            logger.warning(f"Downloaded photo candidate from {source} could not be encoded: {url_value}")
+
+    return None, None, temp_paths, None
+
+
 def calculate_correct_age(dob):
     """Return accurate age in years from a date object."""
     if not dob:
@@ -4469,82 +4606,20 @@ def generate_faculty_pdf(request, faculty_id):
             return None, False
 
         # ── PHOTO ──────────────────────────────────────────────────
-        local_photo_path = None
-        photo_url_for_pdf = None
-
-        def _create_base64_data_uri(image_path):
-            """Convert image file to base64 data URI for reliable PDF embedding."""
-            try:
-                import base64
-                from PIL import Image
-                with open(image_path, 'rb') as img_file:
-                    img_data = img_file.read()
-                    # Detect image type using PIL
-                    img = Image.open(image_path)
-                    format = img.format.lower()
-                    if format == 'png':
-                        mime_type = 'image/png'
-                    elif format in ('jpg', 'jpeg'):
-                        mime_type = 'image/jpeg'
-                    elif format == 'gif':
-                        mime_type = 'image/gif'
-                    else:
-                        mime_type = 'image/jpeg'  # fallback
-
-                    b64_data = base64.b64encode(img_data).decode('utf-8')
-                    return f"data:{mime_type};base64,{b64_data}"
-            except Exception as e:
-                print(f"  [ERROR] Failed to create base64 data URI: {e}")
-                return None
-
         print(f"  [DEBUG] Resolving photo for faculty: {faculty.staff_name} ({faculty.employee_code})")
         print(f"  [DEBUG] faculty.photo: {faculty.photo}")
         print(f"  [DEBUG] faculty.cloudinary_photo_url: {faculty.cloudinary_photo_url}")
 
-        # Step 1: Try Cloudinary URL first (most reliable for Render)
-        if faculty.cloudinary_photo_url:
-            print(f"  [ATTEMPT] Downloading from Cloudinary: {faculty.cloudinary_photo_url}")
-            p = _download(faculty.cloudinary_photo_url)
-            if p and os.path.exists(p):
-                local_photo_path = p
-                photo_url_for_pdf = _create_base64_data_uri(p)
-                print(f"  [SUCCESS] Photo from Cloudinary downloaded and encoded as base64")
-            else:
-                print(f"  [FAIL] Could not download Cloudinary photo")
+        photo_url_for_pdf, local_photo_path, photo_temp_files, photo_source = resolve_faculty_photo_for_pdf(faculty)
+        temp_files.extend(photo_temp_files)
 
-        # Step 2: Try local photo file (preferred on localhost if available)
-        if not photo_url_for_pdf and faculty.photo and getattr(faculty.photo, 'name', ''):
-            print(f"  [ATTEMPT] Trying local photo file...")
-            lp = _local_path(faculty.photo)
-            if lp and os.path.exists(lp):
-                local_photo_path = lp
-                photo_url_for_pdf = _create_base64_data_uri(lp)
-                print(f"  [SUCCESS] Photo from local file encoded as base64")
-            else:
-                print(f"  [FAIL] Local photo file not found: {lp if lp else 'None'}")
-
-        # Step 3: Try downloading from FileField URL
-        if not photo_url_for_pdf and faculty.photo and getattr(faculty.photo, 'name', ''):
-            try:
-                print(f"  [ATTEMPT] Downloading from photo field URL...")
-                fu = faculty.photo.url if hasattr(faculty.photo, 'url') else None
-                if fu and fu.startswith('http'):
-                    print(f"  [ATTEMPT] FileField URL: {fu}")
-                    p = _download(fu)
-                    if p and os.path.exists(p):
-                        local_photo_path = p
-                        photo_url_for_pdf = _create_base64_data_uri(p)
-                        print(f"  [SUCCESS] Photo from FileField URL encoded as base64")
-                    else:
-                        print(f"  [FAIL] Could not download from FileField URL")
-            except Exception as photo_err:
-                print(f"  [ERROR] Exception downloading photo: {photo_err}")
-
-        # Step 4: If still no photo, log it clearly
         if not photo_url_for_pdf:
             print(f"  [WARNING] No photo available for faculty {faculty.employee_code} in PDF")
         else:
-            print(f"  [OK] Final photo encoded for PDF (base64 length: {len(photo_url_for_pdf) if photo_url_for_pdf else 0})")
+            print(
+                f"  [OK] Final photo encoded for PDF from {photo_source} "
+                f"(base64 length: {len(photo_url_for_pdf)})"
+            )
 
         # ── RELATED DATA ──────────────────────────────────────────
         research_publications = ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year')

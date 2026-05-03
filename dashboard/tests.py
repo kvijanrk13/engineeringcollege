@@ -1,13 +1,25 @@
+import io
 import json
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from dashboard import views as dashboard_views
 from dashboard.models import CloudinaryUpload, FDP, Faculty, ResearchPublication
+
+from PIL import Image
+
+
+def make_test_image_bytes(fmt='JPEG', color=(32, 96, 180)):
+    buffer = io.BytesIO()
+    Image.new('RGB', (60, 80), color=color).save(buffer, format=fmt)
+    return buffer.getvalue()
 
 
 class DashboardTests(TestCase):
@@ -15,6 +27,48 @@ class DashboardTests(TestCase):
         response = self.client.get(reverse('dashboard:login'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ANURAG Engineering College')
+
+    def test_resolve_faculty_photo_for_pdf_uses_file_field(self):
+        faculty = Faculty.objects.create(
+            staff_name='Photo Faculty',
+            employee_code='PHOTO9001',
+            department='IT',
+            designation='Assistant Professor',
+            photo=SimpleUploadedFile(
+                'photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            ),
+        )
+
+        data_uri, local_path, temp_paths, source = dashboard_views.resolve_faculty_photo_for_pdf(faculty)
+
+        self.assertTrue(data_uri.startswith('data:image/jpeg;base64,'))
+        self.assertTrue(Path(local_path).exists())
+        self.assertEqual(temp_paths, [])
+        self.assertEqual(source, 'photo_field_path')
+
+    def test_resolve_faculty_photo_for_pdf_falls_back_to_media_file_by_employee_code(self):
+        faculty = Faculty.objects.create(
+            staff_name='Fallback Faculty',
+            employee_code='PHOTO9002',
+            department='IT',
+            designation='Assistant Professor',
+        )
+
+        with tempfile.TemporaryDirectory() as temp_media_root:
+            photo_dir = Path(temp_media_root) / 'faculty_photos'
+            photo_dir.mkdir(parents=True, exist_ok=True)
+            fallback_path = photo_dir / 'PHOTO9002.jpg'
+            fallback_path.write_bytes(make_test_image_bytes())
+
+            with override_settings(MEDIA_ROOT=temp_media_root):
+                data_uri, local_path, temp_paths, source = dashboard_views.resolve_faculty_photo_for_pdf(faculty)
+
+        self.assertTrue(data_uri.startswith('data:image/jpeg;base64,'))
+        self.assertEqual(Path(local_path), fallback_path)
+        self.assertEqual(temp_paths, [])
+        self.assertEqual(source, 'media_employee_code_fallback')
 
     @patch('dashboard.views.generate_faculty_pdf', return_value=HttpResponse(b'%PDF-1.4 test'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)

@@ -3,6 +3,7 @@ databases:
     databaseName: anrkitdept
     user: anrkitdept_user
     plan: free
+    region: oregon
 
 services:
   - type: web
@@ -12,6 +13,7 @@ services:
     buildCommand: ./build.sh
     startCommand: ./start.sh
     plan: free
+    region: oregon
     apt:
       packages:
         - libpango-1.0-0

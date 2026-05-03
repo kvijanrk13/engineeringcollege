@@ -119,10 +119,17 @@ WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 # ================================
 # DATABASE (PostgreSQL on Render, SQLite locally)
 # ================================
+DATABASE_URL = os.environ.get('DATABASE_EXTERNAL_URL') or os.environ.get('DATABASE_URL')
+
 if ON_RENDER:
+    if not DATABASE_URL:
+        raise RuntimeError(
+            "Database configuration missing. Set DATABASE_URL or DATABASE_EXTERNAL_URL."
+        )
+
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
+            default=DATABASE_URL,
             conn_max_age=600,
             ssl_require=True
         )
