@@ -1,1 +1,1 @@
-web: gunicorn engineeringcollege.wsgi:application --log-file -
+web: ./start.sh
