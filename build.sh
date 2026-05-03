@@ -45,8 +45,13 @@ mkdir -p staticfiles media
 echo "🔄 Applying database migrations..."
 max_retries=5
 retry_count=0
-until python manage.py migrate --noinput 2>/dev/null || [ $retry_count -eq $max_retries ]; do
+last_error=""
+until python manage.py migrate --noinput; do
     retry_count=$((retry_count + 1))
+    last_error=$?
+    if [ $retry_count -ge $max_retries ]; then
+        break
+    fi
     echo "⚠️ Migration attempt $retry_count failed, retrying in 5 seconds..."
     sleep 5
 done
@@ -54,7 +59,8 @@ done
 if [ $retry_count -eq $max_retries ]; then
     echo "❌ Database migration failed after $max_retries attempts"
     echo "This may be due to database connection issues. Check DATABASE_URL."
-    exit 1
+    echo "Last error code: $last_error"
+    exit $last_error
 fi
 
 # Create or update the initial Django superuser when env vars are provided.
