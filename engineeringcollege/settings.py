@@ -4,9 +4,11 @@
 
 from pathlib import Path
 import os
+import socket
 import cloudinary
 import dj_database_url
 from dotenv import load_dotenv
+from urllib.parse import urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
@@ -122,7 +124,46 @@ WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 # ================================
 # DATABASE (PostgreSQL on Render, SQLite locally)
 # ================================
-DATABASE_URL = os.environ.get('DATABASE_EXTERNAL_URL') or os.environ.get('DATABASE_URL')
+RENDER_DATABASE_URL = os.environ.get('DATABASE_URL')
+LEGACY_DATABASE_EXTERNAL_URL = os.environ.get('DATABASE_EXTERNAL_URL')
+
+def _database_hostname(db_url):
+    try:
+        return urlparse(db_url).hostname
+    except Exception:
+        return None
+
+def _hostname_resolves(hostname, port=5432):
+    if not hostname:
+        return False
+    try:
+        socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
+        return True
+    except socket.gaierror:
+        return False
+    except Exception:
+        return False
+
+# Prefer Render's standard DATABASE_URL when both are present.
+# This avoids accidentally using a stale manually-set DATABASE_EXTERNAL_URL.
+if RENDER_DATABASE_URL and LEGACY_DATABASE_EXTERNAL_URL and RENDER_DATABASE_URL != LEGACY_DATABASE_EXTERNAL_URL:
+    print("Warning: both DATABASE_URL and DATABASE_EXTERNAL_URL are set; using DATABASE_URL.")
+
+DATABASE_URL = RENDER_DATABASE_URL or LEGACY_DATABASE_EXTERNAL_URL
+
+if ON_RENDER and RENDER_DATABASE_URL and LEGACY_DATABASE_EXTERNAL_URL:
+            internal_host = _database_hostname(RENDER_DATABASE_URL)
+            external_host = _database_hostname(LEGACY_DATABASE_EXTERNAL_URL)
+            if not _hostname_resolves(internal_host):
+                print(
+                    "Warning: DATABASE_URL host did not resolve on startup; "
+                    "falling back to DATABASE_EXTERNAL_URL."
+                )
+                DATABASE_URL = LEGACY_DATABASE_EXTERNAL_URL
+
+selected_database_host = _database_hostname(DATABASE_URL)
+if ON_RENDER and selected_database_host:
+    print(f"Database host selected: {selected_database_host}")
 
 if ON_RENDER:
     if not DATABASE_URL:
@@ -131,8 +172,8 @@ if ON_RENDER:
         )
 
     DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
+        'default': dj_database_url.parse(
+            DATABASE_URL,
             conn_max_age=600,
             ssl_require=True
         )
