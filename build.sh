@@ -41,26 +41,13 @@ pip install -r requirements.txt
 echo "📁 Creating necessary directories..."
 mkdir -p staticfiles media
 
-# Run migrations with retry logic (critical for PostgreSQL)
+# Run migrations (show errors immediately for debugging)
 echo "🔄 Applying database migrations..."
-max_retries=5
-retry_count=0
-last_error=""
-until python manage.py migrate --noinput; do
-    retry_count=$((retry_count + 1))
-    last_error=$?
-    if [ $retry_count -ge $max_retries ]; then
-        break
-    fi
-    echo "⚠️ Migration attempt $retry_count failed, retrying in 5 seconds..."
-    sleep 5
-done
-
-if [ $retry_count -eq $max_retries ]; then
-    echo "❌ Database migration failed after $max_retries attempts"
-    echo "This may be due to database connection issues. Check DATABASE_URL."
-    echo "Last error code: $last_error"
-    exit $last_error
+if ! python manage.py migrate --noinput; then
+    echo "❌ Migration failed. Checking database connection..."
+    echo "DATABASE_URL (masked): ${DATABASE_URL%%@*}@*****"
+    python -c "import dj_database_url; print('dj-database-url installed')" 2>&1 || echo "dj-database-url not available"
+    exit 1
 fi
 
 # Create or update the initial Django superuser when env vars are provided.
