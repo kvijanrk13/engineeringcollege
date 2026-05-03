@@ -41,21 +41,6 @@ pip install -r requirements.txt
 echo "📁 Creating necessary directories..."
 mkdir -p staticfiles media
 
-# Run migrations (show errors immediately for debugging)
-echo "🔄 Applying database migrations..."
-if ! python manage.py migrate --noinput; then
-    echo "❌ Migration failed. Checking database connection..."
-    echo "DATABASE_URL (masked): ${DATABASE_URL%%@*}@*****"
-    python -c "import dj_database_url; print('dj-database-url installed')" 2>&1 || echo "dj-database-url not available"
-    exit 1
-fi
-
-# Create or update the initial Django superuser when env vars are provided.
-python manage.py createsuperuser --noinput \
-  --username $DJANGO_SUPERUSER_USERNAME \
-  --email $DJANGO_SUPERUSER_EMAIL || true
-echo "Superuser created or already exists."
-
 # Collect static files
 echo "🎨 Collecting static files..."
 python manage.py collectstatic --noinput
