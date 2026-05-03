@@ -42,6 +42,17 @@ python manage.py collectstatic --noinput
 echo "Running database migrations..."
 python manage.py migrate
 
+echo "Creating superuser..."
+python manage.py shell << 'EOF'
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='7001').exists():
+    User.objects.create_superuser('7001', 'admin@anrkitdept.com', 'admin@7001')
+    print("Superuser created successfully!")
+else:
+    print("Superuser already exists.")
+EOF
+
 echo "========================================"
 echo "Build completed successfully!"
 echo "========================================"
