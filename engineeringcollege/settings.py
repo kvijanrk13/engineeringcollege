@@ -151,15 +151,24 @@ if RENDER_DATABASE_URL and LEGACY_DATABASE_EXTERNAL_URL and RENDER_DATABASE_URL 
 
 DATABASE_URL = RENDER_DATABASE_URL or LEGACY_DATABASE_EXTERNAL_URL
 
-if ON_RENDER and RENDER_DATABASE_URL and LEGACY_DATABASE_EXTERNAL_URL:
-            internal_host = _database_hostname(RENDER_DATABASE_URL)
-            external_host = _database_hostname(LEGACY_DATABASE_EXTERNAL_URL)
-            if not _hostname_resolves(internal_host):
-                print(
-                    "Warning: DATABASE_URL host did not resolve on startup; "
-                    "falling back to DATABASE_EXTERNAL_URL."
-                )
-                DATABASE_URL = LEGACY_DATABASE_EXTERNAL_URL
+if ON_RENDER and DATABASE_URL:
+    selected_host = _database_hostname(DATABASE_URL)
+    if selected_host and not _hostname_resolves(selected_host):
+        if LEGACY_DATABASE_EXTERNAL_URL:
+            print(
+                "Warning: DATABASE_URL host did not resolve on startup; "
+                "falling back to DATABASE_EXTERNAL_URL."
+            )
+            DATABASE_URL = LEGACY_DATABASE_EXTERNAL_URL
+        else:
+            print(
+                "ERROR: Database hostname '{}' does not resolve. "
+                "Please check your DATABASE_URL in Render environment variables.".format(selected_host)
+            )
+            raise RuntimeError(
+                "Database hostname '{}' does not resolve. "
+                "Update DATABASE_URL in Render dashboard with correct PostgreSQL connection string.".format(selected_host)
+            )
 
 selected_database_host = _database_hostname(DATABASE_URL)
 if ON_RENDER and selected_database_host:
