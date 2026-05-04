@@ -4220,8 +4220,12 @@ def generate_student_pdf(student, return_bytes=False):
         _add_to_writer(info_tmp.name)
 
         # 2. Collect all student certificates using the shared asset resolver
-        _, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(student)
         temp_files.extend(collected_temp_files)
+
+        # 2a. Add student photo if available
+        if photo_file and os.path.exists(photo_file):
+            _add_to_writer(photo_file)
 
         for pdf_path in pdf_files:
             _add_to_writer(pdf_path)
