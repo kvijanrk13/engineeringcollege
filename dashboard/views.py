@@ -1232,12 +1232,18 @@ def collect_student_files(student):
         """Helper to collect a single asset (photo or certificate) from local or remote storage."""
         # 1. Try local file path first (standard storage)
         if file_field:
+            print(f"  [COLLECT-ASSET] Processing file_field: {file_field}")
             try:
                 # Check if it has a path (local storage)
                 local_path = file_field.path if hasattr(file_field, 'path') else None
+                print(f"  [COLLECT-ASSET]   local_path: {local_path}")
                 if local_path and os.path.exists(local_path):
+                    print(f"  [COLLECT-ASSET]   Found local file: {local_path}")
                     return local_path, local_path.lower().endswith('.pdf')
-            except Exception:
+                else:
+                    print(f"  [COLLECT-ASSET]   Local file not found or path empty")
+            except Exception as e:
+                print(f"  [COLLECT-ASSET]   Error checking local path: {e}")
                 pass
 
         # 1. Try local file first (more reliable than Cloudinary)
@@ -1252,32 +1258,44 @@ def collect_student_files(student):
 
         # 2. Try provided URL value (Cloudinary/Remote URL field) - with better error handling
         if url_value and isinstance(url_value, str) and url_value.startswith('http'):
-            print(f"  [COLLECT] Trying URL: {url_value}")
+            print(f"  [COLLECT] Trying URL: {url_value[:100]}...")
             downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix=default_suffix)
             if downloaded_path:
+                print(f"  [COLLECT] Downloaded from URL: {downloaded_path}")
                 if downloaded_path not in temp_files:
                     temp_files.append(downloaded_path)
                 return downloaded_path, is_pdf
+            else:
+                print(f"  [COLLECT] Failed to download from URL")
 
         # 3. Try the file field's URL (Cloudinary storage)
         if file_field:
+            print(f"  [COLLECT-ASSET] Checking file_field.url...")
             try:
                 if hasattr(file_field, 'url') and file_field.url:
                     furl = file_field.url
+                    print(f"  [COLLECT-ASSET]   file_field.url: {furl[:100]}...")
                     # Handle local media URLs that might be passed as relative
                     if furl.startswith(settings.MEDIA_URL):
                         local_media_path = os.path.join(settings.MEDIA_ROOT, furl.replace(settings.MEDIA_URL, '', 1).lstrip('/'))
+                        print(f"  [COLLECT-ASSET]   local_media_path: {local_media_path}")
                         if os.path.exists(local_media_path):
+                            print(f"  [COLLECT-ASSET]   Found via MEDIA_URL: {local_media_path}")
                             return local_media_path, local_media_path.lower().endswith('.pdf')
-                    
+
                     # Handle remote URLs from Cloudinary storage
                     if furl.startswith('http'):
+                        print(f"  [COLLECT-ASSET]   Trying remote URL from file_field.url")
                         downloaded_path, is_pdf = download_remote_asset(furl, default_suffix=default_suffix)
                         if downloaded_path:
+                            print(f"  [COLLECT-ASSET]   Downloaded from file_field.url: {downloaded_path}")
                             if downloaded_path not in temp_files:
                                 temp_files.append(downloaded_path)
                             return downloaded_path, is_pdf
-            except Exception:
+                        else:
+                            print(f"  [COLLECT-ASSET]   Failed to download from file_field.url")
+            except Exception as e:
+                print(f"  [COLLECT-ASSET]   Error with file_field.url: {e}")
                 pass
 
         # 4. Fallback to generic helper if available
