@@ -4219,35 +4219,15 @@ def generate_student_pdf(student, return_bytes=False):
         temp_files.append(info_tmp.name)
         _add_to_writer(info_tmp.name)
 
-        # 2. Collect all student certificates
-        cert_fields = [
-            ('cert_achieve', 'cert_achieve_url'),
-            ('cert_intern', 'cert_intern_url'),
-            ('cert_courses', 'cert_courses_url'),
-            ('cert_sdp', 'cert_sdp_url'),
-            ('cert_extra', 'cert_extra_url'),
-            ('cert_placement', 'cert_placement_url'),
-            ('cert_national', 'cert_national_url'),
-        ]
+        # 2. Collect all student certificates using the shared asset resolver
+        _, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        temp_files.extend(collected_temp_files)
 
-        for file_field_name, url_field_name in cert_fields:
-            ff = getattr(student, file_field_name, None)
-            url_val = getattr(student, url_field_name, None)
+        for pdf_path in pdf_files:
+            _add_to_writer(pdf_path)
 
-            # Try local file first
-            p = _local_path(ff) if ff else None
-            if not p and url_val and isinstance(url_val, str) and url_val.startswith('http'):
-                p = _download(url_val)
-            elif ff:
-                try:
-                    furl = ff.url
-                    if furl and furl.startswith('http'):
-                        p = _download(furl)
-                except Exception:
-                    pass
-
-            if p:
-                _add_to_writer(p)
+        for image_path in image_files:
+            _add_to_writer(image_path)
 
         # Write merged PDF
         if len(writer.pages) > 0:

@@ -11,14 +11,25 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from dashboard import views as dashboard_views
-from dashboard.models import CloudinaryUpload, FDP, Faculty, ResearchPublication
+from dashboard.models import CloudinaryUpload, FDP, Faculty, ResearchPublication, Student
 
 from PIL import Image
+from pypdf import PdfReader
+from reportlab.pdfgen import canvas
 
 
 def make_test_image_bytes(fmt='JPEG', color=(32, 96, 180)):
     buffer = io.BytesIO()
     Image.new('RGB', (60, 80), color=color).save(buffer, format=fmt)
+    return buffer.getvalue()
+
+
+def make_test_pdf_bytes(label='Test PDF'):
+    buffer = io.BytesIO()
+    pdf_canvas = canvas.Canvas(buffer)
+    pdf_canvas.drawString(72, 720, label)
+    pdf_canvas.showPage()
+    pdf_canvas.save()
     return buffer.getvalue()
 
 
@@ -69,6 +80,61 @@ class DashboardTests(TestCase):
         self.assertEqual(Path(local_path), fallback_path)
         self.assertEqual(temp_paths, [])
         self.assertEqual(source, 'media_employee_code_fallback')
+
+    @patch('dashboard.views.pdfkit', new=None)
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    @patch('dashboard.views.download_remote_asset')
+    @patch('dashboard.views.requests.get')
+    def test_generate_student_pdf_merges_certificate_url_into_cloudinary_pdf(
+        self,
+        mock_requests_get,
+        mock_download_remote_asset,
+        mock_upload,
+        _mock_cloudinary_enabled,
+    ):
+        mock_requests_get.return_value.status_code = 403
+        mock_requests_get.return_value.headers = {}
+        mock_requests_get.return_value.content = b''
+
+        def fake_download_remote_asset(url, default_suffix='.pdf'):
+            self.assertEqual(url, 'https://example.com/certificate.pdf')
+            temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+            temp_pdf.write(make_test_pdf_bytes('Student Certificate'))
+            temp_pdf.close()
+            return temp_pdf.name, True
+
+        uploaded_page_counts = []
+
+        def fake_upload(file_path, *args, **kwargs):
+            uploaded_page_counts.append(len(PdfReader(file_path).pages))
+            return {
+                'secure_url': 'https://example.com/student_merged.pdf',
+                'public_id': kwargs['public_id'],
+                'resource_type': kwargs.get('resource_type', 'raw'),
+            }
+
+        mock_download_remote_asset.side_effect = fake_download_remote_asset
+        mock_upload.side_effect = fake_upload
+
+        student = Student.objects.create(
+            ht_no='23C11A9999',
+            student_name='Student Merge Test',
+            cert_achieve_url='https://example.com/certificate.pdf',
+        )
+
+        pdf_url = dashboard_views.generate_student_pdf(student)
+
+        self.assertEqual(pdf_url, 'https://example.com/student_merged.pdf')
+        self.assertEqual(uploaded_page_counts, [2])
+        mock_download_remote_asset.assert_called_once_with(
+            'https://example.com/certificate.pdf',
+            default_suffix='.jpg',
+        )
+
+        student.refresh_from_db()
+        self.assertEqual(student.pdf_url, 'https://example.com/student_merged.pdf')
+        self.assertTrue(student.pdf_generated)
 
     @patch('dashboard.views.generate_faculty_pdf', return_value=HttpResponse(b'%PDF-1.4 test'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
