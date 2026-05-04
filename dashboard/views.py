@@ -1315,6 +1315,15 @@ def collect_student_files(student):
         file_field = getattr(student, file_field_name, None)
         url_field = getattr(student, url_field_name, None)
         print(f"  [COLLECT] Checking {file_field_name}: file={file_field is not None}, url={url_field is not None}")
+        
+        # Debug: Show the actual values
+        if file_field:
+            try:
+                print(f"  [COLLECT]   file_field.path: {file_field.path if hasattr(file_field, 'path') else 'NO PATH'}")
+            except Exception as e:
+                print(f"  [COLLECT]   file_field error: {e}")
+        if url_field:
+            print(f"  [COLLECT]   url_field value: {url_field[:100]}...")
 
         asset_path, is_pdf = _collect_asset(file_field, url_field, default_suffix='.jpg')
         if asset_path:
@@ -3786,6 +3795,13 @@ def regenerate_student_pdf(request, student_id):
 # ==================== GENERATE STUDENT PDF ====================
 def generate_student_pdf(student, return_bytes=False):
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
+    print(f"  [DEBUG] cert_achieve: {student.cert_achieve}, cert_achieve_url: {student.cert_achieve_url}")
+    print(f"  [DEBUG] cert_intern: {student.cert_intern}, cert_intern_url: {student.cert_intern_url}")
+    print(f"  [DEBUG] cert_courses: {student.cert_courses}, cert_courses_url: {student.cert_courses_url}")
+    print(f"  [DEBUG] cert_sdp: {student.cert_sdp}, cert_sdp_url: {student.cert_sdp_url}")
+    print(f"  [DEBUG] cert_extra: {student.cert_extra}, cert_extra_url: {student.cert_extra_url}")
+    print(f"  [DEBUG] cert_placement: {student.cert_placement}, cert_placement_url: {student.cert_placement_url}")
+    print(f"  [DEBUG] cert_national: {student.cert_national}, cert_national_url: {student.cert_national_url}")
 
     # ── temp file tracker ──────────────────────────────────────
     temp_files = []
@@ -4122,6 +4138,8 @@ def generate_student_pdf(student, return_bytes=False):
     # ── MERGE: info PDF + all uploaded documents ──────────────
     filename = f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}.pdf"
     final_pdf_bytes = info_pdf_bytes  # fallback = info PDF only
+    print(f"  [DEBUG] Starting merge section. info_pdf_bytes length: {len(info_pdf_bytes) if info_pdf_bytes else 0}")
+    print(f"  [DEBUG] Entering merge try block...")
 
     try:
         from pypdf import PdfWriter, PdfReader
@@ -4133,7 +4151,9 @@ def generate_student_pdf(student, return_bytes=False):
         # --- helper: add a file (path) to writer ---
         def _add_to_writer(path):
             if not path or not os.path.exists(path):
+                print(f"  [DEBUG] _add_to_writer: Skipping {path} (not exists or None)")
                 return
+            print(f"  [DEBUG] _add_to_writer: Adding {path}")
             try:
                 with open(path, 'rb') as fh:
                     header = fh.read(4)
@@ -4171,12 +4191,15 @@ def generate_student_pdf(student, return_bytes=False):
         _, image_files, pdf_files, collected_temp_files = collect_student_files(student)
         temp_files.extend(collected_temp_files)
         print(f"  [DEBUG] Certificates collected: {len(image_files)} images, {len(pdf_files)} PDFs")
+        print(f"  [DEBUG] Writer pages before adding certificates: {len(writer.pages)}")
 
         for pdf_path in pdf_files:
             _add_to_writer(pdf_path)
 
         for image_path in image_files:
             _add_to_writer(image_path)
+
+        print(f"  [DEBUG] Writer pages after adding certificates: {len(writer.pages)}")
 
         # Write merged PDF
         if len(writer.pages) > 0:
