@@ -4191,11 +4191,15 @@ def generate_student_pdf(student, return_bytes=False):
         temp_files.extend(collected_temp_files)
         print(f"  [DEBUG] Certificates collected: {len(image_files)} images, {len(pdf_files)} PDFs")
         print(f"  [DEBUG] Writer pages before adding certificates: {len(writer.pages)}")
+        print(f"  [DEBUG] PDF files: {[os.path.basename(p) for p in pdf_files]}")
+        print(f"  [DEBUG] Image files: {[os.path.basename(p) for p in image_files]}")
 
         for pdf_path in pdf_files:
+            print(f"  [DEBUG] Adding PDF: {pdf_path} (exists: {os.path.exists(pdf_path) if pdf_path else False})")
             _add_to_writer(pdf_path)
 
         for image_path in image_files:
+            print(f"  [DEBUG] Adding image: {image_path} (exists: {os.path.exists(image_path) if image_path else False})")
             _add_to_writer(image_path)
 
         print(f"  [DEBUG] Writer pages after adding certificates: {len(writer.pages)}")
