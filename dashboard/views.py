@@ -766,41 +766,8 @@ def merge_student_certificates_with_pdf_bytes(pdf_bytes, student):
 
         cert_count = 0
         # 2. Collect and add student certificates
-        photo_path, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        _, image_files, pdf_files, collected_temp_files = collect_student_files(student)
         temp_files.extend(collected_temp_files)
-
-        # 2a. Add photo if it exists (convert image to PDF page)
-        if photo_path and os.path.exists(photo_path):
-            try:
-                from PIL import Image as PILImage
-                import io
-                from reportlab.pdfgen import canvas
-                from reportlab.lib.pagesizes import letter
-
-                image = PILImage.open(photo_path)
-                if image.mode not in ('RGB', 'L'):
-                    image = image.convert('RGB')
-
-                img_pdf_buffer = io.BytesIO()
-                c = canvas.Canvas(img_pdf_buffer, pagesize=letter)
-                img_width, img_height = image.size
-                page_width, page_height = letter
-                scale = min((page_width - 40) / img_width, (page_height - 40) / img_height)
-                new_width = img_width * scale
-                new_height = img_height * scale
-                x = (page_width - new_width) / 2
-                y = (page_height - new_height) / 2
-
-                c.drawImage(photo_path, x, y, width=new_width, height=new_height)
-                c.showPage()
-                c.save()
-
-                img_pdf_buffer.seek(0)
-                writer.add_page(PdfReader(img_pdf_buffer).pages[0])
-                cert_count += 1
-                logger.info(f"Added photo to merged PDF for student {student.ht_no}")
-            except Exception as e:
-                logger.error(f"Error adding photo to merged student PDF: {e}")
 
         # 2b. Add PDF certificates
         for cert_path in pdf_files:
@@ -3777,25 +3744,6 @@ def generate_student_pdf_view(request, student_id):
             messages.error(request, "Failed to generate PDF.")
             return redirect('dashboard:students_data' if user_authenticated else 'dashboard:student_dashboard')
         
-        # Merge with certificates if available
-        has_certificates = bool(
-            student.cert_achieve or student.cert_intern or student.cert_courses or
-            student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
-            student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
-            student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url
-        )
-        
-        if has_certificates:
-            try:
-                merged_bytes = merge_student_certificates_with_pdf_bytes(pdf_bytes, student)
-                if merged_bytes and len(merged_bytes) > 100:
-                    pdf_bytes = merged_bytes
-                    logger.info(f"Successfully merged student PDF with certificates for {student.ht_no}")
-                else:
-                    logger.warning(f"Merge failed for student {student.ht_no}, using main PDF only")
-            except Exception as merge_err:
-                logger.warning(f"Certificate merge error for student {student.ht_no}: {merge_err}. Using main PDF only.")
-        
         # Return PDF directly as downloadable file
         from django.http import HttpResponse
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
@@ -4220,12 +4168,9 @@ def generate_student_pdf(student, return_bytes=False):
         _add_to_writer(info_tmp.name)
 
         # 2. Collect all student certificates using the shared asset resolver
-        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        _, image_files, pdf_files, collected_temp_files = collect_student_files(student)
         temp_files.extend(collected_temp_files)
-
-        # 2a. Add student photo if available
-        if photo_file and os.path.exists(photo_file):
-            _add_to_writer(photo_file)
+        print(f"  [DEBUG] Certificates collected: {len(image_files)} images, {len(pdf_files)} PDFs")
 
         for pdf_path in pdf_files:
             _add_to_writer(pdf_path)
