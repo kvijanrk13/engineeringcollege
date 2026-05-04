@@ -243,75 +243,48 @@ def record_cloudinary_upload(*, upload_type, upload_result, uploaded_by=None, fa
 
 
 def download_remote_asset(url, default_suffix='.pdf'):
+    """Download a remote asset, with special handling for Cloudinary URLs."""
     if not url or not isinstance(url, str) or not url.startswith('http'):
         return None, False
+
+    # Special handling for Cloudinary URLs - use API with authentication
+    if 'cloudinary.com' in url and is_cloudinary_configured():
+        try:
+            public_id = get_cloudinary_public_id(url)
+            if public_id:
+                print(f"  [CLOUDINARY] Downloading via API: {public_id}")
+                # Try different resource types
+                for res_type in ['raw', 'image', 'auto']:
+                    try:
+                        # Get resource info from Cloudinary API
+                        resource = cloudinary.api.resource(public_id, resource_type=res_type)
+                        if resource and 'secure_url' in resource:
+                            # Download using the secure URL
+                            headers = {'User-Agent': 'Mozilla/5.0'}
+                            r = requests.get(resource['secure_url'], timeout=30, headers=headers)
+                            if r.status_code == 200:
+                                content_type = r.headers.get('content-type', '').lower()
+                                is_pdf = 'pdf' in content_type or url.lower().endswith('.pdf')
+                                suffix = ".pdf" if is_pdf else (".jpg" if 'image' in content_type else default_suffix)
+                                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                                tmp.write(r.content)
+                                tmp.close()
+                                print(f"  [OK] Downloaded via Cloudinary API ({res_type}): {tmp.name}")
+                                return tmp.name, is_pdf
+                    except Exception as e:
+                        print(f"  [CLOUDINARY] Resource type {res_type} failed: {e}")
+                        continue
+        except Exception as e:
+            print(f"  [CLOUDINARY] API download failed: {e}")
+
+    # Fallback to direct URL download
     try:
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
         response = requests.get(url, timeout=30, headers=headers)
 
-        # Primary Cloudinary fallback for auth errors
-        if response.status_code in [401, 403, 404] and 'cloudinary.com' in url:
-            print(f"  [FALLBACK] Cloudinary error {response.status_code}, trying signed URL...")
-            try:
-                # Extract public_id from URL
-                public_ids = get_cloudinary_public_id_candidates(url)
-                for public_id in public_ids:
-                    # Try raw resource type with signed URL
-                    for res_type in ['raw', 'image', 'auto']:
-                        try:
-                            if is_cloudinary_configured():
-                                # Generate a signed download URL
-                                signed_url = cloudinary.utils.private_download_url(
-                                    public_id,
-                                    resource_type=res_type,
-                                    type='upload',
-                                    attachment=False,
-                                    expires_at=int(__import__('time').time()) + 3600
-                                )
-                                r2 = requests.get(signed_url, timeout=30, headers=headers)
-                                if r2.status_code == 200:
-                                    response = r2
-                                    print(f"  [OK] Signed URL worked for {res_type}: {public_id}")
-                                    break
-                        except Exception as signed_err:
-                            pass
-
-                        # Try direct URL construction
-                        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME')
-                        if cloud_name:
-                            try_url = f"https://res.cloudinary.com/{cloud_name}/{res_type}/upload/{public_id}"
-                            r3 = requests.get(try_url, timeout=30, headers=headers)
-                            if r3.status_code == 200:
-                                response = r3
-                                print(f"  [OK] Direct {res_type} URL worked: {public_id}")
-                                break
-
-                    if response.status_code == 200:
-                        break
-
-                    # Try Cloudinary API to get fresh URL
-                    if is_cloudinary_configured():
-                        for res_type in ['raw', 'image']:
-                            try:
-                                resource = cloudinary.api.resource(public_id, resource_type=res_type)
-                                fresh_url = resource.get('secure_url')
-                                if fresh_url:
-                                    r4 = requests.get(fresh_url, timeout=30, headers=headers)
-                                    if r4.status_code == 200:
-                                        response = r4
-                                        print(f"  [OK] Fresh API URL worked: {fresh_url}")
-                                        break
-                            except Exception:
-                                continue
-                    if response.status_code == 200:
-                        break
-
-            except Exception as cloud_err:
-                print(f"  [WARN] Cloudinary fallback error: {cloud_err}")
-
-        # Try swapping resource type in URL
+        # Try swapping resource type in URL for Cloudinary URLs
         if response.status_code != 200 and 'cloudinary.com' in url:
             alt_urls = []
             if '/raw/upload/' in url:
@@ -3408,34 +3381,33 @@ def add_student(request):
                         resource_type = "auto"
                     public_id = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
                     print(f"  [UPLOAD] Uploading {filename} to folder student_documents/{folder} with public_id {public_id} and resource_type {resource_type}")
+                    # Upload without access_mode (files are public by default)
                     res = cloudinary.uploader.upload(
                         file,
                         resource_type=resource_type,
                         folder=f"student_documents/{folder}",
                         public_id=public_id,
                         overwrite=True,
-                        access_mode="public"  # Ensure public access
+                        # Remove access_mode - files are public by default in Cloudinary
                     )
                     print(f"  [UPLOAD] Upload result keys: {list(res.keys())}")
                     actual_public_id = res.get('public_id')
                     secure_url = res.get('secure_url')
                     print(f"  [UPLOAD] Actual public_id: {actual_public_id}")
                     print(f"  [UPLOAD] Secure URL: {secure_url}")
-
-                    # Verify the upload by trying to access the resource immediately
+                    print(f"  [UPLOAD] URL type: {res.get('type', 'N/A')}")
+                    
+                    # Verify the URL is accessible
                     if secure_url:
-                        import requests
                         try:
-                            verify_response = requests.head(secure_url, timeout=10)
-                            if verify_response.status_code == 200:
-                                print(f"  [UPLOAD] Verification successful - resource is accessible")
-                                return secure_url
-                            else:
-                                print(f"  [UPLOAD] Verification failed - HTTP {verify_response.status_code}")
-                                return None
-                         except Exception as verify_err:
-                            print(f"  [UPLOAD] Verification error: {verify_err}")
-                            return None
+                            test_r = requests.get(secure_url, timeout=10)
+                            print(f"  [UPLOAD] URL test status: {test_r.status_code}")
+                        except Exception as test_e:
+                            print(f"  [UPLOAD] URL test failed: {test_e}")
+                    
+                    if secure_url:
+                        print(f"  [UPLOAD] Upload successful - resource available at {secure_url}")
+                        return secure_url
                     else:
                         print(f"  [UPLOAD] No secure_url in response")
                         return None
@@ -3610,7 +3582,7 @@ def add_student(request):
             if files_up:
                 messages.success(request, f'Student {student.student_name} added! Cloudinary: {", ".join(files_up)}')
             if files_lo:
-                messages.warning(request, f'Some files saved locally: {", ".join(files_lo)}')
+                messages.info(request, f'Some files saved locally: {", ".join(files_lo)}')
             if not files_up and not files_lo:
                 messages.success(request, f'Student {student.student_name} added successfully!')
             return redirect('dashboard:students_data')
