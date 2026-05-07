@@ -2,7 +2,7 @@ import io
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -80,6 +80,52 @@ class DashboardTests(TestCase):
         self.assertEqual(Path(local_path), fallback_path)
         self.assertEqual(temp_paths, [])
         self.assertEqual(source, 'media_employee_code_fallback')
+
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.try_cloudinary_private_download')
+    @patch('dashboard.views.cloudinary.api.resource')
+    def test_download_remote_asset_retries_cloudinary_raw_public_id_with_extension(
+        self,
+        mock_cloudinary_resource,
+        mock_private_download,
+        mock_requests_get,
+        _mock_cloudinary_enabled,
+    ):
+        cloudinary_url = (
+            'https://res.cloudinary.com/demo/raw/upload/v1778072713/'
+            'faculty_documents/7001/research_proofs/research_proof_7001_1.pdf'
+        )
+        private_response = Mock(
+            status_code=200,
+            headers={'content-type': 'application/pdf'},
+            content=make_test_pdf_bytes('Research Proof'),
+        )
+
+        mock_cloudinary_resource.side_effect = Exception('not found')
+        mock_requests_get.return_value = Mock(status_code=401, headers={}, content=b'')
+
+        def fake_private_download(public_id, headers=None):
+            if public_id.endswith('.pdf'):
+                return private_response
+            return None
+
+        mock_private_download.side_effect = fake_private_download
+
+        downloaded_path, is_pdf = dashboard_views.download_remote_asset(cloudinary_url)
+
+        try:
+            self.assertTrue(is_pdf)
+            self.assertIsNotNone(downloaded_path)
+            self.assertTrue(Path(downloaded_path).exists())
+            self.assertEqual(Path(downloaded_path).suffix.lower(), '.pdf')
+        finally:
+            if downloaded_path and Path(downloaded_path).exists():
+                Path(downloaded_path).unlink()
+
+        mock_private_download.assert_any_call(
+            'faculty_documents/7001/research_proofs/research_proof_7001_1.pdf'
+        )
 
     @patch('dashboard.views.pdfkit', new=None)
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)

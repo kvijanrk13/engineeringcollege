@@ -163,7 +163,7 @@ def get_cloudinary_public_id_candidates(url):
 
 
 def try_cloudinary_private_download(public_id, headers=None):
-    """Download a raw Cloudinary asset through the signed API download endpoint."""
+    """Download a Cloudinary asset via signed private_download_url, trying multiple resource types."""
     if not public_id:
         return None
 
@@ -173,19 +173,34 @@ def try_cloudinary_private_download(public_id, headers=None):
         else:
             base_public_id, extension = public_id, None
 
-        download_url = cloudinary.utils.private_download_url(
-            public_id if extension else base_public_id,
-            resource_type='raw',
-            format=extension,
-            type='upload',
-            attachment=False,
-        )
-        response = requests.get(download_url, timeout=30, headers=headers or {})
-        if response.status_code == 200:
-            return response
-        logger.warning(
-            f"Cloudinary private download failed for {public_id}: HTTP {response.status_code}"
-        )
+        # Try multiple resource types
+        for res_type in ['raw', 'image']:
+            try:
+                if res_type == 'raw':
+                    download_url = cloudinary.utils.private_download_url(
+                        public_id,
+                        resource_type=res_type,
+                        format=None,
+                        type='upload',
+                        attachment=False,
+                    )
+                else:
+                    download_url = cloudinary.utils.private_download_url(
+                        base_public_id,
+                        resource_type=res_type,
+                        format=extension,
+                        type='upload',
+                        attachment=False,
+                    )
+                response = requests.get(download_url, timeout=30, headers=headers or {})
+                if response.status_code == 200:
+                    print(f"  [CLOUDINARY] Private download succeeded with resource_type={res_type}")
+                    return response
+            except Exception as e:
+                print(f"  [CLOUDINARY] Private download failed for {res_type}: {e}")
+                continue
+
+        logger.warning(f"Cloudinary private download failed for {public_id}: all resource types failed")
     except Exception as e:
         logger.warning(f"Cloudinary private download failed for {public_id}: {e}")
     return None
@@ -250,8 +265,8 @@ def download_remote_asset(url, default_suffix='.pdf'):
     # Special handling for Cloudinary URLs - use API with authentication
     if 'cloudinary.com' in url and is_cloudinary_configured():
         try:
-            public_id = get_cloudinary_public_id(url)
-            if public_id:
+            public_ids = get_cloudinary_public_id_candidates(url)
+            for public_id in public_ids:
                 print(f"  [CLOUDINARY] Downloading via API: {public_id}")
                 # Try different resource types
                 for res_type in ['raw', 'image', 'auto']:
@@ -274,6 +289,19 @@ def download_remote_asset(url, default_suffix='.pdf'):
                     except Exception as e:
                         print(f"  [CLOUDINARY] Resource type {res_type} failed: {e}")
                         continue
+
+                # Try private download for authenticated resources
+                print(f"  [CLOUDINARY] Trying private download for: {public_id}")
+                private_response = try_cloudinary_private_download(public_id)
+                if private_response and private_response.status_code == 200:
+                    content_type = private_response.headers.get('content-type', '').lower()
+                    is_pdf = 'pdf' in content_type or url.lower().endswith('.pdf')
+                    suffix = ".pdf" if is_pdf else default_suffix
+                    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                    tmp.write(private_response.content)
+                    tmp.close()
+                    print(f"  [OK] Downloaded via Cloudinary private download: {tmp.name}")
+                    return tmp.name, is_pdf
         except Exception as e:
             print(f"  [CLOUDINARY] API download failed: {e}")
 
@@ -325,6 +353,11 @@ def download_remote_asset(url, default_suffix='.pdf'):
 def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
     """Return a readable local path for a FileField/URL plus whether it is a PDF."""
     try:
+        if url and isinstance(url, str) and url.startswith('http'):
+            result, is_pdf = download_remote_asset(url, default_suffix=default_suffix)
+            if result:
+                return result, is_pdf
+
         if file_field and getattr(file_field, 'name', ''):
             try:
                 local_path = file_field.path
@@ -337,11 +370,11 @@ def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
                 field_url = getattr(file_field, 'url', None)
             except Exception:
                 field_url = None
-            if field_url:
-                return download_remote_asset(field_url, default_suffix=default_suffix)
+            if field_url and isinstance(field_url, str) and field_url.startswith('http'):
+                result, is_pdf = download_remote_asset(field_url, default_suffix=default_suffix)
+                if result:
+                    return result, is_pdf
 
-        if url:
-            return download_remote_asset(url, default_suffix=default_suffix)
     except Exception as e:
         logger.warning(f"Error resolving asset: {e}")
     return None, False
@@ -1202,90 +1235,34 @@ def collect_student_files(student):
     temp_files = []
 
     def _collect_asset(file_field, url_value=None, default_suffix='.pdf'):
-        """Helper to collect a single asset (photo or certificate) from local or remote storage."""
-        # 1. Try local file path first (standard storage)
+        """Helper to collect a single asset from local or remote storage."""
         if file_field:
-            print(f"  [COLLECT-ASSET] Processing file_field: {file_field}")
             try:
-                # Check if it has a path (local storage)
-                local_path = file_field.path if hasattr(file_field, 'path') else None
-                print(f"  [COLLECT-ASSET]   file_field.path: {local_path}")
-                if local_path:
-                    print(f"  [COLLECT-ASSET]   Checking if file exists at: {local_path}")
-                    if os.path.exists(local_path):
-                        print(f"  [COLLECT-ASSET]   ✓ Found local file: {local_path}")
-                        return local_path, local_path.lower().endswith('.pdf')
-                    else:
-                        print(f"  [COLLECT-ASSET]   ✗ File does not exist at: {local_path}")
-                else:
-                    print(f"  [COLLECT-ASSET]   No path attribute on file_field")
+                local_path = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
+                if local_path and isinstance(local_path, tuple):
+                    local_path = local_path[0]
+                if local_path and os.path.exists(local_path):
+                    return local_path, local_path.lower().endswith('.pdf')
             except Exception as e:
-                print(f"  [COLLECT-ASSET]   Error checking local path: {e}")
-                pass
-
-        # 1. Try local file first (more reliable than Cloudinary) - DUPLICATE SECTION REMOVED
-
-        # 2. Try provided URL value (Cloudinary/Remote URL field) - with better error handling
+                logger.warning(f"get_local_or_remote_asset failed: {e}")
         if url_value and isinstance(url_value, str) and url_value.startswith('http'):
-            print(f"  [COLLECT] Trying URL: {url_value[:100]}...")
             downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix=default_suffix)
             if downloaded_path:
-                print(f"  [COLLECT] Downloaded from URL: {downloaded_path}")
                 if downloaded_path not in temp_files:
                     temp_files.append(downloaded_path)
                 return downloaded_path, is_pdf
-            else:
-                print(f"  [COLLECT] Failed to download from URL")
-
-        # 3. Try the file field's URL (Cloudinary storage)
         if file_field:
-            print(f"  [COLLECT-ASSET] Checking file_field.url...")
             try:
                 if hasattr(file_field, 'url') and file_field.url:
                     furl = file_field.url
-                    print(f"  [COLLECT-ASSET]   file_field.url: {furl}")
-                    # Handle local media URLs that might be passed as relative
-                    if furl.startswith(settings.MEDIA_URL):
-                        local_media_path = os.path.join(settings.MEDIA_ROOT, furl.replace(settings.MEDIA_URL, '', 1).lstrip('/'))
-                        print(f"  [COLLECT-ASSET]   local_media_path: {local_media_path}")
-                        if os.path.exists(local_media_path):
-                            print(f"  [COLLECT-ASSET]   ✓ Found via MEDIA_URL: {local_media_path}")
-                            return local_media_path, local_media_path.lower().endswith('.pdf')
-                        else:
-                            print(f"  [COLLECT-ASSET]   ✗ Local media file not found")
-
-                    # Handle remote URLs from Cloudinary storage
-                    if furl.startswith('http'):
-                        print(f"  [COLLECT-ASSET]   Trying remote URL from file_field.url")
+                    if furl and furl.startswith('http'):
                         downloaded_path, is_pdf = download_remote_asset(furl, default_suffix=default_suffix)
                         if downloaded_path:
-                            print(f"  [COLLECT-ASSET]   ✓ Downloaded from file_field.url: {downloaded_path}")
                             if downloaded_path not in temp_files:
                                 temp_files.append(downloaded_path)
                             return downloaded_path, is_pdf
-                        else:
-                            print(f"  [COLLECT-ASSET]   ✗ Failed to download from file_field.url")
-                else:
-                    print(f"  [COLLECT-ASSET]   file_field has no url attribute or url is empty")
-            except Exception as e:
-                print(f"  [COLLECT-ASSET]   Error with file_field.url: {e}")
+            except Exception:
                 pass
-
-        # 4. Fallback to generic helper if available
-        try:
-            file_path, file_url = get_file_from_field(file_field, url_value)
-            if file_path and os.path.exists(file_path):
-                return file_path, file_path.lower().endswith('.pdf')
-
-            if file_url and isinstance(file_url, str) and file_url.startswith('http'):
-                downloaded_path, is_pdf = download_remote_asset(file_url, default_suffix=default_suffix)
-                if downloaded_path:
-                    if downloaded_path not in temp_files:
-                        temp_files.append(downloaded_path)
-                    return downloaded_path, is_pdf
-        except Exception:
-            pass
-
         return None, False
 
     photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
@@ -3067,6 +3044,7 @@ def edit_faculty(request, faculty_id):
                             folder=folder_tpl.format(code=faculty.employee_code),
                             public_id=public_id_tpl.format(code=faculty.employee_code),
                             overwrite=True,
+                            access_mode="public",  # Ensure public access
                         )
                         setattr(faculty, url_field, cr['secure_url'])
                         record_cloudinary_upload(
@@ -3101,6 +3079,7 @@ def edit_faculty(request, faculty_id):
                         folder=f"faculty_documents/{faculty.employee_code}/research_proofs",
                         public_id=f"research_proof_{faculty.employee_code}_{proof_counter}",
                         overwrite=True,
+                        access_mode="public",  # Ensure public access
                     )
                     record_cloudinary_upload(
                         faculty=faculty,
@@ -3147,6 +3126,7 @@ def edit_faculty(request, faculty_id):
                         folder=f"faculty_documents/{faculty.employee_code}/fdp_certs",
                         public_id=f"fdp_cert_{faculty.employee_code}_{fdp_cert_counter}",
                         overwrite=True,
+                        access_mode="public",  # Ensure public access
                     )
                     cert_url = cr['secure_url']
                     record_cloudinary_upload(
@@ -3388,7 +3368,7 @@ def add_student(request):
                         folder=f"student_documents/{folder}",
                         public_id=public_id,
                         overwrite=True,
-                        # Remove access_mode - files are public by default in Cloudinary
+                        access_mode="public",  # Ensure public access
                     )
                     print(f"  [UPLOAD] Upload result keys: {list(res.keys())}")
                     actual_public_id = res.get('public_id')
@@ -4187,8 +4167,19 @@ def generate_student_pdf(student, return_bytes=False):
         _add_to_writer(info_tmp.name)
 
         # 2. Collect all student certificates using the shared asset resolver
-        _, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        # photo_file is the student photo - we add it as a separate page in the merged PDF
+        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(student)
         temp_files.extend(collected_temp_files)
+        
+        # If the photo was already downloaded for the info PDF, use that path to avoid duplicate download
+        if local_photo_path and os.path.exists(local_photo_path) and local_photo_path != photo_file:
+            print(f"  [DEBUG] Using pre-downloaded photo for merge: {local_photo_path}")
+            if local_photo_path not in image_files:
+                image_files.append(local_photo_path)
+        elif photo_file and os.path.exists(photo_file):
+            print(f"  [DEBUG] Adding student photo as separate page: {photo_file}")
+            if photo_file not in image_files:
+                image_files.append(photo_file)
         print(f"  [DEBUG] Certificates collected: {len(image_files)} images, {len(pdf_files)} PDFs")
         print(f"  [DEBUG] Writer pages before adding certificates: {len(writer.pages)}")
         print(f"  [DEBUG] PDF files: {[os.path.basename(p) for p in pdf_files]}")
@@ -4723,6 +4714,33 @@ def generate_faculty_pdf(request, faculty_id):
                 )
             return refs
 
+        def _extend_asset_refs_with_cloudinary_history(asset_refs, upload_types):
+            if not upload_types:
+                return asset_refs
+
+            seen_refs = {
+                identity
+                for identity in (
+                    _asset_identity(file_field=file_field, url=url)
+                    for file_field, url in asset_refs
+                )
+                if identity
+            }
+
+            history_rows = CloudinaryUpload.objects.filter(
+                faculty=faculty,
+                upload_type__in=upload_types,
+            ).exclude(cloudinary_url='').order_by('upload_date')
+
+            for row in history_rows:
+                identity = _asset_identity(url=row.cloudinary_url)
+                if not identity or identity in seen_refs:
+                    continue
+                seen_refs.add(identity)
+                asset_refs.append((None, row.cloudinary_url))
+
+            return asset_refs
+
         def _track_temp_asset(path, file_field=None):
             if not path:
                 return
@@ -4767,12 +4785,20 @@ def generate_faculty_pdf(request, faculty_id):
             related_file_attr='proof_document',
             related_url_attr='proof_document_url',
         )
+        research_proof_asset_refs = _extend_asset_refs_with_cloudinary_history(
+            research_proof_asset_refs,
+            ['research_proof'],
+        )
         fdp_certificate_asset_refs = _collect_unique_asset_refs(
             primary_file_field=getattr(faculty, 'fdp_certificate', None),
             primary_url=getattr(faculty, 'fdp_certificate_url', None),
             related_items=fdps,
             related_file_attr='certificate',
             related_url_attr='certificate_url',
+        )
+        fdp_certificate_asset_refs = _extend_asset_refs_with_cloudinary_history(
+            fdp_certificate_asset_refs,
+            ['fdp_certificate'],
         )
 
         research_proof_total_pages, research_proof_documents_count = _count_asset_pages(research_proof_asset_refs)
@@ -4979,6 +5005,11 @@ def generate_faculty_pdf(request, faculty_id):
             info_tmp.close()
             temp_files.append(info_tmp.name)
             _add_to_writer(info_tmp.name)
+
+            # Add faculty photo as a separate page if available and not already used in template
+            if local_photo_path and os.path.exists(local_photo_path):
+                print(f"  [DEBUG] Adding faculty photo as separate page: {local_photo_path}")
+                _add_to_writer(local_photo_path)
 
             # 2. Collect ALL faculty documents (enhanced with direct download fallback)
             doc_fields = [
