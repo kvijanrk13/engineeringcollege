@@ -87,6 +87,7 @@ urlpatterns = [
     path('student/delete/<int:student_id>/', views.delete_student, name='delete_student'),
 
     # Student PDF routes
+    path('student/photo/<int:student_id>/', views.student_photo_redirect, name='student_photo_redirect'),
     path('student/pdf/<int:student_id>/', views.generate_student_pdf_view, name='generate_student_pdf'),
     path('student/pdf-regenerate/<int:student_id>/', views.regenerate_student_pdf, name='regenerate_student_pdf'),
     path('student/merge-certificates/<int:student_id>/', views.merge_student_certificates, name='merge_student_certificates'),

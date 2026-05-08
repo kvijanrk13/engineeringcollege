@@ -538,11 +538,8 @@ body {
                 <tr>
                     <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
                     <td>
-                        {% if student.photo_url %}
-                            <img src="{{ student.photo_url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                            <div class="no-photo" style="display: none;">Photo Error</div>
-                        {% elif student.photo and student.photo.url %}
-                            <img src="{{ student.photo.url }}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                        {% if student.photo_url or student.photo %}
+                            <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
                             <div class="no-photo" style="display: none;">Photo Error</div>
                         {% else %}
                             <div class="no-photo">No Photo</div>
