@@ -9,7 +9,7 @@ from dashboard.models import Student
 from dashboard.views import generate_student_pdf
 import traceback
 
-def test_full_student_pdf(student_id=21):
+def test_full_student_pdf(student_id=24):
     try:
         student = Student.objects.get(id=student_id)
         print(f"Testing full student PDF generation for: {student.student_name} ({student.ht_no})")
@@ -33,5 +33,5 @@ def test_full_student_pdf(student_id=21):
         return False
 
 if __name__ == "__main__":
-    success = test_full_student_pdf(21)
+    success = test_full_student_pdf(24)
     input("\nPress Enter to exit...")

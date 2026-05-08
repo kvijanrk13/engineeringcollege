@@ -1293,7 +1293,7 @@ def collect_student_files(student):
         if url_field:
             print(f"  [COLLECT]   url_field value: {url_field[:100]}...")
 
-        asset_path, is_pdf = _collect_asset(file_field, url_field, default_suffix='.jpg')
+        asset_path, is_pdf = _collect_asset(file_field, url_field, default_suffix='.pdf')
         if asset_path:
             cert_count += 1
             if is_pdf:
