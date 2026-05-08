@@ -260,6 +260,7 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
             api_key=CLOUDINARY_API_KEY,
             api_secret=CLOUDINARY_API_SECRET,
             secure=True,
+            access_mode='public',
             # Ensure resources are publicly accessible
             api_proxy=None
         )

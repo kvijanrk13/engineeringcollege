@@ -1310,6 +1310,52 @@ def collect_student_files(student):
     return photo_file, image_files, pdf_files, temp_files
 
 
+def get_student_uploaded_documents(student):
+    """Return verified student document metadata for template rendering."""
+    documents = []
+    temp_files = []
+    cert_fields = [
+        ('Achievement Certificate', 'cert_achieve', 'cert_achieve_url'),
+        ('Internship Certificate', 'cert_intern', 'cert_intern_url'),
+        ('Course Certificates', 'cert_courses', 'cert_courses_url'),
+        ('SDP Certificate', 'cert_sdp', 'cert_sdp_url'),
+        ('Extra Certificates', 'cert_extra', 'cert_extra_url'),
+        ('Placement Certificate', 'cert_placement', 'cert_placement_url'),
+        ('National Certificate', 'cert_national', 'cert_national_url'),
+    ]
+
+    for label, file_field_name, url_field_name in cert_fields:
+        file_field = getattr(student, file_field_name, None)
+        url_value = getattr(student, url_field_name, None)
+        asset_path, is_pdf = get_local_or_remote_asset(
+            file_field,
+            url=url_value,
+            default_suffix='.pdf',
+        )
+        if asset_path and not getattr(file_field, 'name', ''):
+            temp_files.append(asset_path)
+
+        source_name = ''
+        if asset_path:
+            source_name = os.path.basename(asset_path)
+        elif file_field and getattr(file_field, 'name', ''):
+            source_name = os.path.basename(file_field.name)
+        elif url_value:
+            try:
+                source_name = os.path.basename(url_value.split('?', 1)[0])
+            except Exception:
+                source_name = ''
+
+        documents.append({
+            'label': label,
+            'available': bool(asset_path),
+            'file_name': source_name or 'File available',
+            'file_type': 'PDF' if is_pdf else 'Image',
+        })
+
+    return documents, temp_files
+
+
 def append_assets_to_writer(writer, pdf_files=None, image_files=None):
     """Append local PDF and image assets to an existing PdfWriter."""
     pdf_files = pdf_files or []
@@ -3830,6 +3876,30 @@ def generate_student_pdf(student, return_bytes=False):
                 except Exception as cloud_err:
                     print(f"  [WARN] Cloudinary API fallback failed: {cloud_err}")
 
+            # If still failing after API fallback, try signed private download URLs
+            if r.status_code != 200 and 'cloudinary.com' in url:
+                pid = get_cloudinary_public_id(url)
+                if pid:
+                    print(f"  [DOWNLOAD] Trying signed private download URLs for public_id: {pid}")
+                    for res_type in ['raw', 'image']:
+                        try:
+                            private_url = cloudinary.utils.private_download_url(
+                                pid,
+                                resource_type=res_type,
+                                type='upload',
+                                attachment=False,
+                            )
+                            print(f"  [DOWNLOAD] Trying private {res_type} URL: {private_url}")
+                            r_priv = requests.get(private_url, timeout=30)
+                            print(f"  [DOWNLOAD] Private {res_type} URL status: {r_priv.status_code}")
+                            if r_priv.status_code == 200:
+                                r = r_priv
+                                print(f"  [OK] Private download succeeded with {res_type}")
+                                break
+                        except Exception as priv_err:
+                            print(f"  [WARN] Private download failed for {res_type}: {priv_err}")
+                            continue
+
             # Final fallback: try changing resource type in URL
             if r.status_code != 200 and 'cloudinary.com' in url:
                 try:
@@ -4004,33 +4074,18 @@ def generate_student_pdf(student, return_bytes=False):
     # ── PHOTO ──────────────────────────────────────────────────
     local_photo_path = None
     photo_url_for_pdf = None
-
-    # Try Cloudinary URL first
-    if student.photo_url:
-        p = _download(student.photo_url)
-        if p:
-            local_photo_path = p
-            photo_url_for_pdf = build_file_uri(p)
-            print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
-
-    # Fallback to FileField
-    if not photo_url_for_pdf and student.photo and getattr(student.photo, 'name', ''):
-        lp = _local_path(student.photo)
-        if lp:
-            local_photo_path = lp
-            photo_url_for_pdf = build_file_uri(lp)
-            print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
-        else:
-            try:
-                fu = student.photo.url
-                if fu and fu.startswith('http'):
-                    p = _download(fu)
-                    if p:
-                        local_photo_path = p
-                        photo_url_for_pdf = build_file_uri(p)
-                        print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
-            except Exception:
-                pass
+    original_photo_path = _local_path(student.photo) if student.photo and getattr(student.photo, 'name', '') else None
+    resolved_photo_path, _ = get_local_or_remote_asset(
+        getattr(student, 'photo', None),
+        url=getattr(student, 'photo_url', None),
+        default_suffix='.jpg',
+    )
+    if resolved_photo_path and os.path.exists(resolved_photo_path):
+        local_photo_path = resolved_photo_path
+        photo_url_for_pdf = build_file_uri(resolved_photo_path)
+        if resolved_photo_path != original_photo_path:
+            temp_files.append(resolved_photo_path)
+        print(f"  [OK] Photo resolved for PDF: {photo_url_for_pdf}")
 
     # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
     anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
@@ -4042,6 +4097,7 @@ def generate_student_pdf(student, return_bytes=False):
         'current_date': datetime.now(),
         'local_photo_path': photo_url_for_pdf,
         'anurag_header_url': anurag_header_url,
+        'uploaded_documents': get_student_uploaded_documents(student)[0],
     }
 
     # ── GENERATE INFO PDF with pdfkit ─────────────────────────
