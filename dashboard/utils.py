@@ -2,6 +2,7 @@
 
 import os
 import logging
+import tempfile
 from datetime import datetime, date
 from django.conf import settings
 from django.core.mail import send_mail
@@ -9,6 +10,8 @@ from io import BytesIO
 from pypdf import PdfReader, PdfWriter
 from PIL import Image as PILImage
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
 
 logger = logging.getLogger(__name__)
 

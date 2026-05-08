@@ -4298,6 +4298,7 @@ def generate_student_pdf(student, return_bytes=False):
     # Fallback: save locally if Cloudinary failed or not configured
     if not return_url:
         try:
+            # Always save the PDF locally, even if info PDF only
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_final:
                 tmp_final.write(final_pdf_bytes)
                 tmp_final_path = tmp_final.name
@@ -4307,10 +4308,14 @@ def generate_student_pdf(student, return_bytes=False):
             student.pdf_generated = True
             student.pdf_generation_time = timezone.now()
             student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time'])
-            return_url = student.pdf_file.url if student.pdf_file else None
+            return_url = student.pdf_file.url if student.pdf_file and student.pdf_file.url else None
             print(f"  [OK] PDF saved locally: {return_url}")
         except Exception as e:
             print(f"  [ERR] Local save failed: {e}")
+            # Always mark as generated even on save failure
+            student.pdf_generated = True
+            student.pdf_generation_time = timezone.now()
+            student.save(update_fields=['pdf_generated', 'pdf_generation_time'])
             return_url = None
 
     # Cleanup temp files
@@ -4330,6 +4335,11 @@ def generate_student_pdf(student, return_bytes=False):
 
     print("=== STUDENT PDF GENERATION COMPLETE ===\n")
 
+    # Safety check: if final_pdf_bytes is None but we have info_pdf_bytes, use that
+    if final_pdf_bytes is None and info_pdf_bytes and len(info_pdf_bytes) > 0:
+        final_pdf_bytes = info_pdf_bytes
+        print(f"  [INFO] Using info PDF as final PDF ({len(final_pdf_bytes)} bytes)")
+
     # If return_bytes is True, return the PDF content directly
     if return_bytes:
         return final_pdf_bytes
@@ -4345,9 +4355,10 @@ def generate_student_pdf(student, return_bytes=False):
 
 def view_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    url = getattr(student, 'pdf_url', None) or getattr(student, 'pdf_file', None)
-    if url:
-        return redirect(url)
+    if student.pdf_url:
+        return redirect(student.pdf_url)
+    if student.pdf_file and student.pdf_file.url:
+        return redirect(student.pdf_file.url)
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:students_data')
 
