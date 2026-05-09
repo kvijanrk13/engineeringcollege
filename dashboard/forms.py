@@ -27,9 +27,119 @@ class StudentForm(forms.ModelForm):
         ]
         widgets = {
             'dob': forms.DateInput(attrs={'type': 'date'}),
-            'address': forms.Textarea(attrs={'rows': 3}),
-            'other_training': forms.Textarea(attrs={'rows': 2}),
+            'address': forms.Textarea(attrs={'rows': 3, 'maxlength': 1000}),
+            'other_training': forms.Textarea(attrs={'rows': 2, 'maxlength': 1000}),
+            # Enforce maxlength at HTML level for fields with database limits
+            'nationalty': forms.TextInput(attrs={'maxlength': 100}),
+            'task_username': forms.TextInput(attrs={'maxlength': 100}),
+            'csi_membership_id': forms.TextInput(attrs={'maxlength': 100}),
+            'category': forms.TextInput(attrs={'maxlength': 50}),
+            'religion': forms.TextInput(attrs={'maxlength': 50}),
+            'blood_group': forms.TextInput(attrs={'maxlength': 10}),
+            'aadhar': forms.TextInput(attrs={'maxlength': 20}),
+            'apaar_id': forms.TextInput(attrs={'maxlength': 50}),
+            'parent_phone': forms.TextInput(attrs={'maxlength': 15}),
+            'student_phone': forms.TextInput(attrs={'maxlength': 15}),
+            'email': forms.EmailInput(attrs={'maxlength': 254}),
+            'ssc_marks': forms.TextInput(attrs={'maxlength': 20}),
+            'inter_marks': forms.TextInput(attrs={'maxlength': 20}),
+            'cgpa': forms.TextInput(attrs={'maxlength': 10}),
+            'admission_type': forms.TextInput(attrs={'maxlength': 50}),
+            'eamcet_rank': forms.TextInput(attrs={'maxlength': 20}),
+            'rtrp_project_title': forms.TextInput(attrs={'maxlength': 500}),
+            'intern_title': forms.TextInput(attrs={'maxlength': 500}),
+            'final_project_title': forms.TextInput(attrs={'maxlength': 500}),
         }
+
+    def clean_nationality(self):
+        val = self.cleaned_data.get('nationality', '')
+        if val and len(val) > 100:
+            raise forms.ValidationError("Nationality must be 100 characters or less.")
+        return val
+
+    def clean_task_username(self):
+        val = self.cleaned_data.get('task_username', '')
+        if val and len(val) > 100:
+            raise forms.ValidationError("Task username must be 100 characters or less.")
+        return val
+
+    def clean_csi_membership_id(self):
+        val = self.cleaned_data.get('csi_membership_id', '')
+        if val and len(val) > 100:
+            raise forms.ValidationError("CSI Membership ID must be 100 characters or less.")
+        return val
+
+    def clean_category(self):
+        val = self.cleaned_data.get('category', '')
+        if val and len(val) > 50:
+            raise forms.ValidationError("Category must be 50 characters or less.")
+        return val
+
+    def clean_religion(self):
+        val = self.cleaned_data.get('religion', '')
+        if val and len(val) > 50:
+            raise forms.ValidationError("Religion must be 50 characters or less.")
+        return val
+
+    def clean_blood_group(self):
+        val = self.cleaned_data.get('blood_group', '')
+        if val and len(val) > 10:
+            raise forms.ValidationError("Blood group must be 10 characters or less.")
+        return val
+
+    def clean_aadhar(self):
+        val = self.cleaned_data.get('aadhar', '')
+        if val and len(val) > 20:
+            raise forms.ValidationError("Aadhar number must be 20 characters or less.")
+        return val
+
+    def clean_apaar_id(self):
+        val = self.cleaned_data.get('apaar_id', '')
+        if val and len(val) > 50:
+            raise forms.ValidationError("APAAR ID must be 50 characters or less.")
+        return val
+
+    def clean_parent_phone(self):
+        val = self.cleaned_data.get('parent_phone', '')
+        if val and len(val) > 15:
+            raise forms.ValidationError("Parent phone must be 15 characters or less.")
+        return val
+
+    def clean_student_phone(self):
+        val = self.cleaned_data.get('student_phone', '')
+        if val and len(val) > 15:
+            raise forms.ValidationError("Student phone must be 15 characters or less.")
+        return val
+
+    def clean_ssc_marks(self):
+        val = self.cleaned_data.get('ssc_marks', '')
+        if val and len(val) > 20:
+            raise forms.ValidationError("SSC marks must be 20 characters or less.")
+        return val
+
+    def clean_inter_marks(self):
+        val = self.cleaned_data.get('inter_marks', '')
+        if val and len(val) > 20:
+            raise forms.ValidationError("Inter marks must be 20 characters or less.")
+        return val
+
+    def clean_cgpa(self):
+        val = self.cleaned_data.get('cgpa', '')
+        if val and len(val) > 10:
+            raise forms.ValidationError("CGPA must be 10 characters or less.")
+        return val
+
+    def clean_admission_type(self):
+        val = self.cleaned_data.get('admission_type', '')
+        if val and len(val) > 50:
+            raise forms.ValidationError("Admission type must be 50 characters or less.")
+        return val
+
+    def clean_eamcet_rank(self):
+        val = self.cleaned_data.get('eamcet_rank', '')
+        if val and len(val) > 20:
+            raise forms.ValidationError("EAMCET rank must be 20 characters or less.")
+        return val
 
 class FacultyForm(forms.ModelForm):
     class Meta:
