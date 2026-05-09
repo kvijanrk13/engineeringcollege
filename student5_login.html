@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>
+        
+            Student Login | ANURAG Engineering College
+        
+    </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Courier New', 'Segoe UI', monospace;
+            background: #000000;
+            color: #00ff41;
+            overflow: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: #000000;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1;
+        }
+
+        .page {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #00ff41;
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3), inset 0 0 20px rgba(0, 255, 65, 0.1);
+            padding: 32px;
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 65, 0.3), inset 0 0 10px rgba(0, 255, 65, 0.05);
+                border-color: #00ff41;
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(0, 255, 65, 0.6), inset 0 0 20px rgba(0, 255, 65, 0.1);
+                border-color: #00ff66;
+            }
+        }
+
+        .header-image {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header-image img {
+            max-width: 100%;
+            height: auto;
+            max-height: 100px;
+            border-radius: 8px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
+            text-align: center;
+            color: #00ff41;
+            text-shadow: 0 0 10px #00ff41;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        p {
+            margin: 0 0 20px;
+            color: #00cc33;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .alert {
+            margin-bottom: 16px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: rgba(255, 50, 50, 0.1);
+            color: #ff6666;
+            border-left-color: #ff3333;
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 65, 0.1);
+            color: #00ff41;
+            border-left-color: #00ff41;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #00ff41;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00ff66;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        input::placeholder {
+            color: #006622;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            background: transparent;
+            color: #00ff41;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 65, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        .switch {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .switch a {
+            color: #00ff41;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .switch a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #00ff41;
+            transition: width 0.3s ease;
+        }
+
+        .switch a:hover::after {
+            width: 100%;
+        }
+
+        .switch a:hover {
+            text-shadow: 0 0 5px #00ff41;
+        }
+
+        .hint {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(0, 255, 65, 0.05);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #00cc33;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .college-name {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 11px;
+            color: #006622;
+            letter-spacing: 1px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 14px;
+            background-color: #00ff41;
+            animation: blink 1s step-end infinite;
+            margin-left: 4px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="overlay"></div>
+
+    <div class="page">
+        <div class="card">
+            <!-- IT HEADER.png Image -->
+            <div class="header-image">
+                
+                <img src="/static/images/IT%20HEADER.png" alt="IT Department Header" onerror="this.style.display='none'">
+            </div>
+
+            
+                <h1>STUDENT LOGIN <span class="cursor"></span></h1>
+                <p>Access student portal & records</p>
+            
+
+            
+
+            
+
+            
+                <form method="post" action="/student-login/">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="QXqnyPyYFZwlzUtblfu9D758lPTiACqNwjTM5BT6nUJs1UyQxO0yZcFFNfO6e3gf">
+                    <label for="username">STUDENT USERNAME</label>
+                    <input id="username" name="username" type="text" value="anrkitstudent" required placeholder="Enter username">
+
+                    <label for="password">PASSWORD</label>
+                    <input id="password" name="password" type="password" value="anrkitstudent" required placeholder="Enter password">
+
+                    <button type="submit">LOGIN →</button>
+                </form>
+
+                <div class="hint">
+                    ⚡ Demo Credentials: <strong>anrkitstudent</strong> / <strong>anrkitstudent</strong>
+                </div>
+
+                <div class="switch">
+                    <a href="/admin-login/">← ADMIN LOGIN</a>
+                </div>
+            
+
+            <div class="college-name">
+                ANURAG Engineering College || Information Technology Department
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Rain Animation
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+{}[]|;:,.<>?/~`アァカサタナハマヤャワガザダバパイィキシチニヒミリヂジビピウゥクスツヌフムユュグズブプエェケセテネヘメレゲゼベペオォコソトノホモヨョヲゴゾボポヴ';
+        const charArray = chars.split('');
+
+        const fontSize = 16;
+        let columns = canvas.width / fontSize;
+        let drops = [];
+
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * -100;
+        }
+
+        const colors = ['#00ff41', '#00cc33', '#009926', '#00ff33', '#33ff66'];
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = fontSize + 'px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const char = charArray[Math.floor(Math.random() * charArray.length)];
+                const colorIndex = Math.floor(Math.random() * colors.length);
+                ctx.fillStyle = colors[colorIndex];
+
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+
+                if (y > 0 && y < canvas.height) {
+                    if (Math.random() > 0.95) {
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#00ff41';
+                    } else {
+                        ctx.shadowBlur = 0;
+                    }
+                    ctx.fillText(char, x, y);
+                    ctx.shadowBlur = 0;
+                }
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+
+                drops[i] += 0.5 + Math.random() * 0.5;
+            }
+        }
+
+        let interval = setInterval(draw, 35);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            columns = canvas.width / fontSize;
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = Math.random() * -100;
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (interval) clearInterval(interval);
+        });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for (let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+        }
+
+        if ('caches' in window) {
+            caches.keys().then(names => {
+                names.forEach(name => caches.delete(name));
+            });
+        }
+    </script>
+</body>
+</html>

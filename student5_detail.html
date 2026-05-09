@@ -1,0 +1,567 @@
+<!-- dashboard/templates/dashboard/student_detail.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>ABHINAY THIGULLA - Details</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .border-left-primary { border-left: 4px solid #4e73df !important; }
+        .border-left-success { border-left: 4px solid #1cc88a !important; }
+        .border-left-info { border-left: 4px solid #36b9cc !important; }
+        .border-left-warning { border-left: 4px solid #f6c23e !important; }
+        .text-gray-300 { color: #dddfeb !important; }
+        .text-gray-800 { color: #5a5c69 !important; }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .dropdown-item {
+            padding: 0.5rem 1.5rem;
+        }
+        .dropdown-item:hover {
+            background-color: #f8f9fc;
+        }
+        .alert {
+            border: none;
+            border-radius: 0.35rem;
+        }
+        footer {
+            border-top: 1px solid #e3e6f0;
+        }
+        /* Active navigation link styling */
+        .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 0.35rem;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Card hover effects */
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+    
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/dashboard/">
+                <i class="fas fa-university me-2"></i>
+                ANURAG Engineering College
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link " href="/dashboard/">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/faculty/list/">
+                            <i class="fas fa-chalkboard-teacher me-1"></i>Faculty
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/students/data/">
+                            <i class="fas fa-user-graduate me-1"></i>Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/syllabus/">
+                            <i class="fas fa-book me-1"></i>Syllabus
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/exam-branch/">
+                            <i class="fas fa-file-alt me-1"></i>Exam Branch
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/gallery/">
+                            <i class="fas fa-images me-1"></i>Gallery
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login/">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        
+
+        
+<style>
+    body {
+        font-family: 'Courier New', monospace;
+        background: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 30px;
+        background: rgba(0, 20, 0, 0.95);
+        border: 3px solid #0f0;
+        border-radius: 15px;
+        box-shadow: 0 0 30px rgba(0,255,0,.5);
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #0f0;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    .title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0f0;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: 2px solid #0f0;
+        color: #0f0;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: 0.3s;
+        margin: 0 5px;
+    }
+
+    .btn:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    .btn-danger {
+        border-color: #f00;
+        color: #f00;
+    }
+
+    .btn-danger:hover {
+        background: #f00;
+        color: #000;
+    }
+
+    .student-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    .info-section {
+        background: rgba(0, 30, 0, 0.8);
+        border: 1px solid #0f0;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        color: #0f0;
+        border-bottom: 1px solid #0f0;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .info-row {
+        display: flex;
+        margin-bottom: 10px;
+        padding: 5px 0;
+    }
+
+    .info-label {
+        width: 150px;
+        font-weight: bold;
+        color: #0f0;
+        opacity: 0.8;
+    }
+
+    .info-value {
+        flex: 1;
+        color: #0f0;
+    }
+
+    .photo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .student-photo {
+        max-width: 200px;
+        max-height: 200px;
+        border: 3px solid #0f0;
+        border-radius: 10px;
+    }
+
+    .no-photo {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+        background: rgba(0, 30, 0, 0.8);
+        border: 3px solid #0f0;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0f0;
+    }
+
+    .action-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="container">
+    <div class="header">
+        <span class="title">STUDENT DETAILS</span>
+        <div>
+            <a href="/students/data/" class="btn">BACK TO LIST</a>
+            <a href="/student/edit/5/" class="btn">EDIT</a>
+            <a href="/student/pdf/5/" class="btn">GENERATE PDF</a>
+            <a href="/logout/" class="btn btn-danger">LOGOUT</a>
+        </div>
+    </div>
+
+    <div class="student-info">
+        <!-- Photo Section -->
+        <div class="info-section">
+            <div class="section-title">PHOTO</div>
+            <div class="photo-section">
+                
+                    <div class="no-photo">No Photo</div>
+                
+            </div>
+        </div>
+
+        <!-- Basic Information -->
+        <div class="info-section">
+            <div class="section-title">BASIC INFORMATION</div>
+            <div class="info-row">
+                <span class="info-label">HT No:</span>
+                <span class="info-value">23C11A1201</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">ABHINAY THIGULLA</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Father's Name:</span>
+                <span class="info-value">ARAVIND</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Mother's Name:</span>
+                <span class="info-value">LAKSHMI</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Gender:</span>
+                <span class="info-value">Male</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date of Birth:</span>
+                <span class="info-value">10-10-2005</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Age:</span>
+                <span class="info-value">20</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Blood Group:</span>
+                <span class="info-value">-</span>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="info-section">
+            <div class="section-title">CONTACT INFORMATION</div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">hod.inf@anurag.ac.in</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Student Phone:</span>
+                <span class="info-value">9030900962</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Parent Phone:</span>
+                <span class="info-value">9553122276</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Address:</span>
+                <span class="info-value">H.No:- 6-35/12, MARUTHI NAGAR, WARANGAL CROSS ROAD, YEDULAPURAM, KHAMMAM - 507003
+</span>
+            </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="info-section">
+            <div class="section-title">ACADEMIC INFORMATION</div>
+            <div class="info-row">
+                <span class="info-label">Year:</span>
+                <span class="info-value">3</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Semester:</span>
+                <span class="info-value">2</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">SSC Marks:</span>
+                <span class="info-value">65</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Inter Marks:</span>
+                <span class="info-value">68</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">CGPA:</span>
+                <span class="info-value">6.3</span>
+            </div>
+        </div>
+
+        <!-- Identification -->
+        <div class="info-section">
+            <div class="section-title">IDENTIFICATION</div>
+            <div class="info-row">
+                <span class="info-label">Aadhar:</span>
+                <span class="info-value">846452283847</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">APAAR ID:</span>
+                <span class="info-value">72-265-370-947</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Category:</span>
+                <span class="info-value">General</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Religion:</span>
+                <span class="info-value">HINDU</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nationality:</span>
+                <span class="info-value">Indian</span>
+            </div>
+        </div>
+
+        <!-- Projects & Training -->
+        <div class="info-section">
+            <div class="section-title">PROJECTS & TRAINING</div>
+            <div class="info-row">
+                <span class="info-label">RTRP Project:</span>
+                <span class="info-value">CRICKET</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Internship:</span>
+                <span class="info-value">TENNIS</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Final Project:</span>
+                <span class="info-value">ONLINE EXAM</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Other Training:</span>
+                <span class="info-value">-</span>
+            </div>
+        </div>
+
+        <!-- Certificates & Documents -->
+        <div class="info-section" style="grid-column: span 2;">
+            <div class="section-title">CERTIFICATES & DOCUMENTS</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+                <div class="info-value">No documents uploaded.</div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="/student/pdf/5/" class="btn">DOWNLOAD PDF</a>
+        <a href="/student/merge-certificates/5/" class="btn">MERGE CERTIFICATES</a>
+        <a href="/student/edit/5/" class="btn">EDIT STUDENT</a>
+    </div>
+</div>
+
+<script>
+    // Matrix Animation
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '01ANURAGIT';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 ANURAG Engineering College. All rights reserved.</p>
+            <small class="text-muted">
+                <i class="fas fa-code-branch me-1"></i> Version 2.0 |
+                <i class="fas fa-database me-1"></i> Faculty Management System
+            </small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Clear any cached error messages
+        if (window.localStorage) {
+            localStorage.removeItem('adminLoginMessage');
+            localStorage.removeItem('dashboardWarning');
+            localStorage.removeItem('facultyError');
+        }
+        if (window.sessionStorage) {
+            sessionStorage.removeItem('adminLoginMessage');
+            sessionStorage.removeItem('dashboardWarning');
+            sessionStorage.removeItem('facultyError');
+        }
+
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function(alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+
+        // Add active class to current navigation item based on URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href !== '#' && currentPath === href) {
+                    link.classList.add('active');
+                } else if (href && href !== '#' && currentPath.startsWith(href) && href !== '/') {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Add loading spinner on form submission
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+
+                    // Re-enable after 30 seconds (in case of timeout)
+                    setTimeout(() => {
+                        if (submitBtn.disabled) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }
+                    }, 30000);
+                }
+            });
+        });
+    </script>
+    
+</body>
+</html>

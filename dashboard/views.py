@@ -285,6 +285,12 @@ def student_has_upload_assets(student):
     return student_has_photo_asset(student) or student_has_certificate_assets(student)
 
 
+def student_has_saved_pdf(student):
+    pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
+    pdf_field = getattr(student, 'pdf_file', None)
+    return bool(pdf_url or getattr(pdf_field, 'name', None))
+
+
 def choose_student_certificate_slot(student, requested_type=None, reserved_fields=None):
     reserved_fields = reserved_fields or set()
     slot_by_field = {
@@ -656,6 +662,72 @@ def build_file_uri(path_value):
     except Exception:
         # Fallback for odd path inputs that Path can't resolve.
         return 'file:///' + quote(str(path_value).replace('\\', '/'), safe=':/')
+
+
+def snapshot_uploaded_file(uploaded_file, default_suffix='.bin'):
+    """Persist an uploaded file to a temp path so downstream processing can reuse it reliably."""
+    if not uploaded_file:
+        return None, False
+
+    original_name = getattr(uploaded_file, 'name', '') or ''
+    suffix = (Path(original_name).suffix or default_suffix or '.bin').lower()
+    is_pdf = suffix == '.pdf' or 'pdf' in (getattr(uploaded_file, 'content_type', '') or '').lower()
+
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+    try:
+        uploaded_file.seek(0)
+        chunks_method = getattr(uploaded_file, 'chunks', None)
+        if callable(chunks_method):
+            for chunk in uploaded_file.chunks():
+                tmp.write(chunk)
+        else:
+            tmp.write(uploaded_file.read())
+        tmp.close()
+    finally:
+        try:
+            uploaded_file.seek(0)
+        except Exception:
+            pass
+
+    return tmp.name, is_pdf
+
+
+def build_student_uploaded_documents(student):
+    """Return document availability metadata for the student PDF template."""
+    labels = {
+        'cert_achieve': 'Achievement Certificates',
+        'cert_intern': 'Internship Certificates',
+        'cert_courses': 'Course Certificates',
+        'cert_sdp': 'SDP Certificates',
+        'cert_extra': 'Extracurricular Certificates',
+        'cert_placement': 'Placement Certificates',
+        'cert_national': 'National Exam Certificates',
+    }
+    uploaded_documents = []
+
+    for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+        file_field = getattr(student, field_name, None)
+        url_value = normalize_optional_url(getattr(student, url_field_name, None))
+        available = bool(url_value or getattr(file_field, 'name', None))
+
+        file_name = ''
+        file_type = ''
+        if url_value:
+            parsed_name = Path(url_value.split('?', 1)[0]).name
+            file_name = parsed_name or labels[field_name]
+            file_type = 'PDF' if file_name.lower().endswith('.pdf') else 'Image'
+        elif getattr(file_field, 'name', None):
+            file_name = Path(file_field.name).name
+            file_type = 'PDF' if file_name.lower().endswith('.pdf') else 'Image'
+
+        uploaded_documents.append({
+            'label': labels[field_name],
+            'available': available,
+            'file_name': file_name,
+            'file_type': file_type,
+        })
+
+    return uploaded_documents
 
 
 if is_cloudinary_configured():
@@ -1345,12 +1417,30 @@ def collect_faculty_files(faculty):
     return image_files, pdf_files, temp_files
 
 
-def collect_student_files(student):
+def collect_student_files(student, skip_photo=False, skip_certificate_fields=None):
     """Collect student photo and certificates from Cloudinary or local storage."""
+    skip_certificate_fields = set(skip_certificate_fields or [])
     photo_file = None
     image_files = []
     pdf_files = []
+    certificate_override_assets = [
+        asset for asset in (certificate_override_assets or [])
+        if asset.get('path') and os.path.exists(asset['path'])
+    ]
+    override_certificate_fields = {
+        asset['field_name']
+        for asset in certificate_override_assets
+        if asset.get('field_name')
+    }
+    if photo_override_path and not os.path.exists(photo_override_path):
+        photo_override_path = None
+
     temp_files = []
+    if photo_override_path:
+        temp_files.append(photo_override_path)
+    for asset in certificate_override_assets:
+        if asset['path'] not in temp_files:
+            temp_files.append(asset['path'])
 
     def _collect_asset(file_field, url_value=None, default_suffix='.pdf'):
         """Helper to collect a single asset from local or remote storage."""
@@ -1384,11 +1474,15 @@ def collect_student_files(student):
                 pass
         return None, False
 
-    photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
+    if not skip_photo:
+        photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
     print(f"  [COLLECT] Photo collected: {photo_file is not None}")
 
     cert_count = 0
     for file_field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+        if file_field_name in skip_certificate_fields:
+            print(f"  [COLLECT] Skipping {file_field_name} because an override asset is available")
+            continue
         file_field = getattr(student, file_field_name, None)
         url_field = getattr(student, url_field_name, None)
         print(f"  [COLLECT] Checking {file_field_name}: file={file_field is not None}, url={url_field is not None}")
@@ -1855,7 +1949,7 @@ def student_detail(request, student_id):
     # Student URLs are already stored directly on the model
 
     # Automatically generate PDF if it doesn't exist and student has photo/certificates
-    if not student.pdf_url and not student.pdf_generated:
+    if not student_has_saved_pdf(student):
         if student_has_upload_assets(student):
             try:
                 logger.info(f"Auto-generating PDF for student {student.student_name} on first view")
@@ -3455,6 +3549,8 @@ def add_student(request):
     if request.method == 'POST':
         try:
             ca = is_cloudinary_configured()
+            temp_photo_override_path = None
+            certificate_override_assets = []
 
             def _upload(file, folder):
                 if not file or not ca:
@@ -3597,6 +3693,7 @@ def add_student(request):
             # Handle photo - Always try Cloudinary first if configured
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
+                temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
                 if ca: # Cloudinary configured - prioritize Cloudinary
                     upload_result = _upload(pf, 'photos')
                     if upload_result and upload_result.get('secure_url'):
@@ -3632,6 +3729,16 @@ def add_student(request):
                 folder = upload_spec['folder']
                 url_field_name = upload_spec['url_field_name']
                 certificate_file = upload_spec['file']
+                temp_asset_path, temp_asset_is_pdf = snapshot_uploaded_file(
+                    certificate_file,
+                    default_suffix='.pdf',
+                )
+                if temp_asset_path:
+                    certificate_override_assets.append({
+                        'field_name': field_name,
+                        'path': temp_asset_path,
+                        'is_pdf': temp_asset_is_pdf,
+                    })
                 print(f"  [DEBUG] Processing {upload_spec['source']} -> {field_name} ({folder})")
                 print(f"  [DEBUG] File: {certificate_file.name}, size: {certificate_file.size}")
                 if ca: # Cloudinary configured
@@ -3675,7 +3782,11 @@ def add_student(request):
             # to build a single individual PDF that includes photo + certificates.
             try:
                 if student_has_upload_assets(student):
-                    generate_student_pdf(student)
+                    generate_student_pdf(
+                        student,
+                        photo_override_path=temp_photo_override_path,
+                        certificate_override_assets=certificate_override_assets,
+                    )
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
@@ -3718,6 +3829,8 @@ def edit_student(request, student_id):
         form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
             ca = is_cloudinary_configured()
+            temp_photo_override_path = None
+            certificate_override_assets = []
             
             def _upload(file, folder):
                 if not file or not ca:
@@ -3768,6 +3881,7 @@ def edit_student(request, student_id):
             # Handle photo manually because we want Cloudinary support
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
+                temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
                 if ca:
                     upload_result = _upload(pf, 'photos')
                     if upload_result and upload_result.get('secure_url'):
@@ -3800,6 +3914,16 @@ def edit_student(request, student_id):
                 folder = upload_spec['folder']
                 url_field_name = upload_spec['url_field_name']
                 certificate_file = upload_spec['file']
+                temp_asset_path, temp_asset_is_pdf = snapshot_uploaded_file(
+                    certificate_file,
+                    default_suffix='.pdf',
+                )
+                if temp_asset_path:
+                    certificate_override_assets.append({
+                        'field_name': field_name,
+                        'path': temp_asset_path,
+                        'is_pdf': temp_asset_is_pdf,
+                    })
                 if ca:
                     upload_result = _upload(certificate_file, folder)
                     if upload_result and upload_result.get('secure_url'):
@@ -3835,6 +3959,16 @@ def edit_student(request, student_id):
                     f'Some additional certificates were skipped because all student certificate slots are already used: {skipped_names}'
                     + ('...' if len(skipped_uploads) > 3 else '')
                 )
+
+            try:
+                if form.has_changed() or request.FILES:
+                    generate_student_pdf(
+                        updated_student,
+                        photo_override_path=temp_photo_override_path,
+                        certificate_override_assets=certificate_override_assets,
+                    )
+            except Exception as pdf_e:
+                logger.warning(f"Student updated, but PDF regeneration failed: {pdf_e}")
                 
             messages.success(request, "Student updated successfully.")
             return redirect('dashboard:students_data')
@@ -3918,7 +4052,12 @@ def regenerate_student_pdf(request, student_id):
 
 
 # ==================== GENERATE STUDENT PDF ====================
-def generate_student_pdf(student, return_bytes=False):
+def generate_student_pdf(
+    student,
+    return_bytes=False,
+    photo_override_path=None,
+    certificate_override_assets=None,
+):
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
     print(f"  [DEBUG] cert_achieve: {student.cert_achieve}, cert_achieve_url: {student.cert_achieve_url}")
     print(f"  [DEBUG] cert_intern: {student.cert_intern}, cert_intern_url: {student.cert_intern_url}")
@@ -3927,6 +4066,18 @@ def generate_student_pdf(student, return_bytes=False):
     print(f"  [DEBUG] cert_extra: {student.cert_extra}, cert_extra_url: {student.cert_extra_url}")
     print(f"  [DEBUG] cert_placement: {student.cert_placement}, cert_placement_url: {student.cert_placement_url}")
     print(f"  [DEBUG] cert_national: {student.cert_national}, cert_national_url: {student.cert_national_url}")
+
+    certificate_override_assets = [
+        asset for asset in (certificate_override_assets or [])
+        if asset.get('path') and os.path.exists(asset['path'])
+    ]
+    override_certificate_fields = {
+        asset['field_name']
+        for asset in certificate_override_assets
+        if asset.get('field_name')
+    }
+    if photo_override_path and not os.path.exists(photo_override_path):
+        photo_override_path = None
 
     # ── temp file tracker ──────────────────────────────────────
     temp_files = []
@@ -4151,8 +4302,14 @@ def generate_student_pdf(student, return_bytes=False):
     local_photo_path = None
     photo_url_for_pdf = None
 
+    # Try uploaded temp override first so freshly uploaded photos work before remote storage settles.
+    if photo_override_path and os.path.exists(photo_override_path):
+        local_photo_path = photo_override_path
+        photo_url_for_pdf = build_file_uri(photo_override_path)
+        print(f"  [OK] Photo (uploaded temp override): {photo_url_for_pdf}")
+
     # Try Cloudinary URL first
-    if student.photo_url:
+    if not photo_url_for_pdf and student.photo_url:
         p = _download(student.photo_url)
         if p:
             local_photo_path = p
@@ -4188,6 +4345,7 @@ def generate_student_pdf(student, return_bytes=False):
         'current_date': datetime.now(),
         'local_photo_path': photo_url_for_pdf,
         'anurag_header_url': anurag_header_url,
+        'uploaded_documents': build_student_uploaded_documents(student),
     }
 
     # ── GENERATE INFO PDF with WeasyPrint ─────────────────────────
@@ -4232,6 +4390,7 @@ def generate_student_pdf(student, return_bytes=False):
     final_pdf_bytes = info_pdf_bytes  # fallback = info PDF only
     print(f"  [DEBUG] Starting merge section. info_pdf_bytes length: {len(info_pdf_bytes) if info_pdf_bytes else 0}")
     print(f"  [DEBUG] Entering merge try block...")
+    pdf_persisted = False
 
     try:
         from pypdf import PdfWriter, PdfReader
@@ -4281,11 +4440,28 @@ def generate_student_pdf(student, return_bytes=False):
 
         # 2. Collect all student certificates using the shared asset resolver
         # photo_file is the student photo - we add it as a separate page in the merged PDF
-        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(student)
+        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(
+            student,
+            skip_photo=bool(photo_override_path),
+            skip_certificate_fields=override_certificate_fields,
+        )
         temp_files.extend(collected_temp_files)
+
+        for override_asset in certificate_override_assets:
+            override_path = override_asset['path']
+            if override_asset.get('is_pdf'):
+                if override_path not in pdf_files:
+                    pdf_files.append(override_path)
+            else:
+                if override_path not in image_files:
+                    image_files.append(override_path)
         
         # If the photo was already downloaded for the info PDF, use that path to avoid duplicate download
-        if local_photo_path and os.path.exists(local_photo_path) and local_photo_path != photo_file:
+        if photo_override_path and os.path.exists(photo_override_path):
+            print(f"  [DEBUG] Adding uploaded photo override as separate page: {photo_override_path}")
+            if photo_override_path not in image_files:
+                image_files.append(photo_override_path)
+        elif local_photo_path and os.path.exists(local_photo_path) and local_photo_path != photo_file:
             print(f"  [DEBUG] Using pre-downloaded photo for merge: {local_photo_path}")
             if local_photo_path not in image_files:
                 image_files.append(local_photo_path)
@@ -4335,6 +4511,7 @@ def generate_student_pdf(student, return_bytes=False):
                             student.save(update_fields=['pdf_url'])
                             print(f"  [OK] Uploaded to Cloudinary: {cloud_result['secure_url']}")
                             return_url = cloud_result['secure_url']
+                            pdf_persisted = True
                         else:
                             print("  [WARN] Cloudinary upload failed (non-fatal)")
                             return_url = None
@@ -4359,16 +4536,17 @@ def generate_student_pdf(student, return_bytes=False):
                 tmp_final.write(final_pdf_bytes)
                 tmp_final_path = tmp_final.name
 
+            student.pdf_url = None
             with open(tmp_final_path, 'rb') as pdf_handle:
                 student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
-            student.pdf_generated = True
-            student.pdf_generation_time = timezone.now()
-            student.save(update_fields=['pdf_file', 'pdf_generated', 'pdf_generation_time'])
+            student.save(update_fields=['pdf_file', 'pdf_url'])
             return_url = student.pdf_file.url if student.pdf_file else None
+            pdf_persisted = bool(return_url)
             print(f"  [OK] PDF saved locally: {return_url}")
         except Exception as e:
             print(f"  [ERR] Local save failed: {e}")
             return_url = None
+            pdf_persisted = False
 
     # Cleanup temp files
     for temp_path in temp_files:
@@ -4378,8 +4556,8 @@ def generate_student_pdf(student, return_bytes=False):
         except Exception:
             pass
 
-    student.pdf_generated = True
-    student.pdf_generation_time = timezone.now()
+    student.pdf_generated = pdf_persisted
+    student.pdf_generation_time = timezone.now() if pdf_persisted else None
     student.save(update_fields=['pdf_generated', 'pdf_generation_time', 'updated_at'])
 
     if used_reportlab_fallback:

@@ -236,6 +236,185 @@ class DashboardTests(TestCase):
             'https://res.cloudinary.com/demo/image/upload/v1/student/sample.jpg',
         )
 
+    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    def test_add_student_cloudinary_assets_display_on_detail_page(
+        self,
+        mock_upload,
+        _mock_cloudinary_enabled,
+        _mock_generate_student_pdf,
+    ):
+        admin_user = get_user_model().objects.create_user(
+            username='student-admin',
+            email='student-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(admin_user)
+
+        def fake_upload(uploaded_file, *args, **kwargs):
+            folder = kwargs['folder']
+            public_id = kwargs['public_id']
+            resource_type = kwargs.get('resource_type', 'auto')
+            return {
+                'secure_url': f'https://example.com/{folder}/{public_id}',
+                'public_id': public_id,
+                'resource_type': resource_type,
+            }
+
+        mock_upload.side_effect = fake_upload
+
+        response = self.client.post(
+            reverse('dashboard:add_student'),
+            data={
+                'ht_no': '23C11A6001',
+                'student_name': 'Cloudinary Student',
+                'admission_type': 'EAMCET',
+                'year': '2',
+                'sem': '1',
+                'photo': SimpleUploadedFile(
+                    'student-photo.jpg',
+                    make_test_image_bytes(),
+                    content_type='image/jpeg',
+                ),
+                'cert_achieve': SimpleUploadedFile(
+                    'achievement.pdf',
+                    make_test_pdf_bytes('Achievement'),
+                    content_type='application/pdf',
+                ),
+            },
+            secure=True,
+        )
+
+        self.assertIn(response.status_code, {301, 302})
+
+        student = Student.objects.get(ht_no='23C11A6001')
+        self.assertTrue(student.photo_url.startswith('https://example.com/student_documents/photos/'))
+        self.assertTrue(student.cert_achieve_url.startswith('https://example.com/student_documents/achievement/'))
+        self.assertTrue(
+            CloudinaryUpload.objects.filter(student=student, upload_type='photo').exists()
+        )
+        self.assertTrue(
+            CloudinaryUpload.objects.filter(student=student, upload_type='cert_achieve').exists()
+        )
+
+        photo_response = self.client.get(
+            reverse('dashboard:student_photo_redirect', args=[student.id]),
+            secure=True,
+        )
+        self.assertEqual(photo_response.status_code, 302)
+        self.assertEqual(photo_response['Location'], student.photo_url)
+
+        detail_response = self.client.get(
+            reverse('dashboard:student_detail', args=[student.id]),
+            secure=True,
+        )
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertNotContains(detail_response, 'No Photo')
+        self.assertNotContains(detail_response, 'No documents uploaded.')
+        self.assertContains(detail_response, 'View Document')
+
+    @patch('dashboard.views.pdfkit', new=None)
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    @patch('dashboard.views.requests.get')
+    def test_generate_student_pdf_uses_uploaded_overrides_when_remote_assets_fail(
+        self,
+        mock_requests_get,
+        mock_upload,
+        _mock_cloudinary_enabled,
+    ):
+        mock_requests_get.return_value.status_code = 403
+        mock_requests_get.return_value.headers = {}
+        mock_requests_get.return_value.content = b''
+
+        uploaded_page_counts = []
+
+        def fake_upload(file_path, *args, **kwargs):
+            uploaded_page_counts.append(len(PdfReader(file_path).pages))
+            return {
+                'secure_url': 'https://example.com/student_override_merged.pdf',
+                'public_id': kwargs['public_id'],
+                'resource_type': kwargs.get('resource_type', 'raw'),
+            }
+
+        mock_upload.side_effect = fake_upload
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as photo_tmp:
+            photo_tmp.write(make_test_image_bytes())
+            photo_path = photo_tmp.name
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as cert_tmp:
+            cert_tmp.write(make_test_pdf_bytes('Override Certificate'))
+            cert_path = cert_tmp.name
+
+        student = Student.objects.create(
+            ht_no='23C11A7001',
+            student_name='Override Merge Student',
+            photo_url='https://example.com/photo.jpg',
+            cert_achieve_url='https://example.com/certificate.pdf',
+        )
+
+        try:
+            pdf_url = dashboard_views.generate_student_pdf(
+                student,
+                photo_override_path=photo_path,
+                certificate_override_assets=[
+                    {
+                        'field_name': 'cert_achieve',
+                        'path': cert_path,
+                        'is_pdf': True,
+                    }
+                ],
+            )
+        finally:
+            for temp_path in (photo_path, cert_path):
+                if Path(temp_path).exists():
+                    Path(temp_path).unlink()
+
+        self.assertEqual(pdf_url, 'https://example.com/student_override_merged.pdf')
+        self.assertEqual(len(uploaded_page_counts), 1)
+        self.assertGreater(uploaded_page_counts[0], 2)
+
+    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student-edited.pdf')
+    @patch('dashboard.views.is_cloudinary_configured', return_value=False)
+    def test_edit_student_regenerates_pdf_after_uploaded_changes(
+        self,
+        _mock_cloudinary_enabled,
+        mock_generate_student_pdf,
+    ):
+        student = Student.objects.create(
+            ht_no='23C11A8001',
+            student_name='Edit Student',
+        )
+        session = self.client.session
+        session['student_logged_in'] = True
+        session.save()
+
+        response = self.client.post(
+            reverse('dashboard:edit_student', args=[student.id]),
+            data={
+                'ht_no': student.ht_no,
+                'student_name': student.student_name,
+                'photo': SimpleUploadedFile(
+                    'edit-photo.jpg',
+                    make_test_image_bytes(),
+                    content_type='image/jpeg',
+                ),
+                'cert_achieve': SimpleUploadedFile(
+                    'edit-achievement.pdf',
+                    make_test_pdf_bytes('Edit Achievement'),
+                    content_type='application/pdf',
+                ),
+            },
+            secure=True,
+        )
+
+        self.assertIn(response.status_code, {301, 302})
+        self.assertTrue(mock_generate_student_pdf.called)
+        _, kwargs = mock_generate_student_pdf.call_args
+        self.assertTrue(kwargs['photo_override_path'])
+        self.assertEqual(len(kwargs['certificate_override_assets']), 1)
+
     @patch('dashboard.views.generate_faculty_pdf', return_value=HttpResponse(b'%PDF-1.4 test'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.cloudinary.uploader.upload')
