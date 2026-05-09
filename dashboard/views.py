@@ -6478,6 +6478,424 @@ def test_render(request):
 
 # ==================== MISSING VIEW STUBS ====================
 # These are referenced in dashboard/urls.py but not yet implemented.
+# Stubs return HTTP 501 (Not Implemented) to satisfy URL resolution.
+
+
+def generate_faculty_pdf(request, faculty_id):
+    """Generate a faculty PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty PDF generation not yet implemented.", status=501)
+
+
+def student_charts(request):
+    """Student charts view - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Student charts not yet implemented.", status=501)
+
+
+def faculty_charts(request):
+    """Faculty charts view - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty charts not yet implemented.", status=501)
+
+
+def faculty_pdf(request, faculty_id):
+    """View faculty PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty PDF view not yet implemented.", status=501)
+
+
+def download_faculty_pdf(request, faculty_id):
+    """Download faculty PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty PDF download not yet implemented.", status=501)
+
+
+def preview_faculty_pdf(request, faculty_id):
+    """Preview faculty PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty PDF preview not yet implemented.", status=501)
+
+
+def ajax_check_pdf_status(request, faculty_id):
+    """AJAX check PDF status - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def bulk_generate_faculty_pdfs(request):
+    """Bulk generate faculty PDFs - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Bulk faculty PDF generation not yet implemented.", status=501)
+
+
+def delete_certificate(request, certificate_id):
+    """Delete certificate - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Delete certificate not yet implemented.", status=501)
+
+
+def edit_certificate(request, certificate_id):
+    """Edit certificate - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Edit certificate not yet implemented.", status=501)
+
+
+def merge_certificates(request, faculty_id):
+    """Merge certificates - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Merge certificates not yet implemented.", status=501)
+
+
+def merge_certificates_with_pdf(request, faculty_id):
+    """Merge certificates with PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Merge certificates with PDF not yet implemented.", status=501)
+
+
+def preview_merged_pdf(request, faculty_id):
+    """Preview merged PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Preview merged PDF not yet implemented.", status=501)
+
+
+def sync_to_cloudinary(request, faculty_id):
+    """Sync faculty to Cloudinary - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Sync to Cloudinary not yet implemented.", status=501)
+
+
+def upload_to_cloudinary(request, faculty_id):
+    """Upload to Cloudinary - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Upload to Cloudinary not yet implemented.", status=501)
+
+
+def upload_faculty_pdf(request):
+    """Upload faculty PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Upload faculty PDF not yet implemented.", status=501)
+
+
+def upload_faculty_photo(request):
+    """Upload faculty photo - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Upload faculty photo not yet implemented.", status=501)
+
+
+def cloudinary_status(request):
+    """Cloudinary status - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def get_cloudinary_url(request, faculty_id):
+    """Get Cloudinary URL - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'url': None}, status=501)
+
+
+def bulk_sync_to_cloudinary(request):
+    """Bulk sync to Cloudinary - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Bulk sync to Cloudinary not yet implemented.", status=501)
+
+
+def sync_all_faculty_photos_to_cloudinary(request):
+    """Sync all faculty photos to Cloudinary - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Sync all faculty photos not yet implemented.", status=501)
+
+
+def bulk_upload(request):
+    """Bulk upload - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Bulk upload not yet implemented.", status=501)
+
+
+def bulk_faculty_actions(request):
+    """Bulk faculty actions - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Bulk faculty actions not yet implemented.", status=501)
+
+
+def bulk_student_actions(request):
+    """Bulk student actions - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Bulk student actions not yet implemented.", status=501)
+
+
+def export_faculty_csv(request):
+    """Export faculty CSV - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Export faculty CSV not yet implemented.", status=501)
+
+
+def export_faculty_excel(request):
+    """Export faculty Excel - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Export faculty Excel not yet implemented.", status=501)
+
+
+def search_faculty(request):
+    """Search faculty - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Search faculty not yet implemented.", status=501)
+
+
+def search_students(request):
+    """Search students - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Search students not yet implemented.", status=501)
+
+
+def generate_pdf_with_data(request):
+    """Generate PDF with data - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Generate PDF with data not yet implemented.", status=501)
+
+
+def preview_pdf_template(request):
+    """Preview PDF template - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Preview PDF template not yet implemented.", status=501)
+
+
+def recent_activity(request):
+    """Recent activity - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Recent activity not yet implemented.", status=501)
+
+
+def system_status(request):
+    """System status - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("System status not yet implemented.", status=501)
+
+
+def clear_logs(request):
+    """Clear logs - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Clear logs not yet implemented.", status=501)
+
+
+def backup_database(request):
+    """Backup database - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Backup database not yet implemented.", status=501)
+
+
+def exam_branch(request):
+    """Exam branch - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Exam branch not yet implemented.", status=501)
+
+
+def exam_branch_generate_report(request):
+    """Exam branch generate report - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Exam branch generate report not yet implemented.", status=501)
+
+
+def exam_branch_batch_download(request):
+    """Exam branch batch download - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Exam branch batch download not yet implemented.", status=501)
+
+
+def update_attendance(request):
+    """Update attendance - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Update attendance not yet implemented.", status=501)
+
+
+def save_attendance(request):
+    """Save attendance - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Save attendance not yet implemented.", status=501)
+
+
+def attendance_report(request):
+    """Attendance report - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Attendance report not yet implemented.", status=501)
+
+
+def laboratory(request):
+    """Laboratory - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Laboratory not yet implemented.", status=501)
+
+
+def gallery(request):
+    """Gallery - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Gallery not yet implemented.", status=501)
+
+
+def session_info(request):
+    """Session info - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Session info not yet implemented.", status=501)
+
+
+def clear_session(request):
+    """Clear session - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Clear session not yet implemented.", status=501)
+
+
+def about_system(request):
+    """About system - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("About system not yet implemented.", status=501)
+
+
+def help_documentation(request):
+    """Help documentation - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Help documentation not yet implemented.", status=501)
+
+
+def contact_support(request):
+    """Contact support - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Contact support not yet implemented.", status=501)
+
+
+def profile_settings(request):
+    """Profile settings - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Profile settings not yet implemented.", status=501)
+
+
+def application_home(request):
+    """Application home - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Application home not yet implemented.", status=501)
+
+
+def syllabus_view(request):
+    """Syllabus view - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Syllabus view not yet implemented.", status=501)
+
+
+def quick_stats(request):
+    """Quick stats API - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def faculty_statistics_api(request, faculty_id):
+    """Faculty statistics API - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def student_photo_redirect(request, student_id):
+    """Student photo redirect - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Student photo redirect not yet implemented.", status=501)
+
+
+def regenerate_student_pdf(request, student_id):
+    """Regenerate student PDF - already implemented above."""
+    pass  # placeholder, actual implementation exists below
+
+
+def merge_student_certificates(request, student_id):
+    """Merge student certificates - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Merge student certificates not yet implemented.", status=501)
+
+
+def api_faculty_list(request):
+    """API: faculty list - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_faculty_detail(request, faculty_id):
+    """API: faculty detail - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_faculty_research(request, faculty_id):
+    """API: faculty research - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_faculty_fdps(request, faculty_id):
+    """API: faculty FDPs - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_faculty_projects(request, faculty_id):
+    """API: faculty projects - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_faculty_subjects(request, faculty_id):
+    """API: faculty subjects - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_assign_faculty_subjects(request, faculty_id):
+    """API: assign faculty subjects - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_update_faculty_status(request, faculty_id):
+    """API: update faculty status - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_bulk_update_faculty_status(request):
+    """API: bulk update faculty status - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_students_list(request):
+    """API: students list - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_student_detail(request, student_id):
+    """API: student detail - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_student_certificates(request, student_id):
+    """API: student certificates - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_dashboard_stats(request):
+    """API: dashboard stats - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+def api_department_stats(request, department):
+    """API: department stats - not yet implemented."""
+    from django.http import JsonResponse
+    return JsonResponse({'status': 'not_implemented'}, status=501)
+
+
+# ==================== MISSING VIEW STUBS ====================
+# These are referenced in dashboard/urls.py but not yet implemented.
 # They are stubbed to avoid AttributeError during URL resolution.
 
 def generate_faculty_pdf(request, faculty_id):
