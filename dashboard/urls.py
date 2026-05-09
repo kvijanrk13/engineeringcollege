@@ -54,7 +54,7 @@ urlpatterns = [
     path('faculty/profile/<int:faculty_id>/', views.faculty_profile_view, name='faculty_profile_view'),
     path('faculty/assign-subjects/<int:faculty_id>/', views.assign_subjects, name='assign_subjects'),
     path('faculty/analytics/', views.faculty_analytics, name='faculty_analytics'),
-    # path('faculty/charts/', views.faculty_charts, name='faculty_charts'),  # TODO: implement
+    path('faculty/charts/', views.faculty_charts, name='faculty_charts'),
 
     # Faculty PDF routes
     path('faculty/pdf/<int:faculty_id>/', views.generate_faculty_pdf, name='generate_faculty_pdf'),

@@ -6474,3 +6474,26 @@ def test_render(request):
     </body>
     </html>
     """)
+
+
+# ==================== MISSING VIEW STUBS ====================
+# These are referenced in dashboard/urls.py but not yet implemented.
+# They are stubbed to avoid AttributeError during URL resolution.
+
+def generate_faculty_pdf(request, faculty_id):
+    """Generate a faculty PDF - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty PDF generation not yet implemented.", status=501)
+
+
+def student_charts(request):
+    """Student charts view - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Student charts not yet implemented.", status=501)
+
+
+def faculty_charts(request):
+    """Faculty charts view - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Faculty charts not yet implemented.", status=501)
+
