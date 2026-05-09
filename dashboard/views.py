@@ -3824,157 +3824,180 @@ def delete_student(request, student_id):
 def edit_student(request, student_id):
     if not request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
-    student = get_object_or_404(Student, id=student_id)
+    try:
+        student = get_object_or_404(Student, id=student_id)
+    except Http404:
+        raise  # Re-raise 404 to let Django handle it
+    
     if request.method == 'POST':
         form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
-            ca = is_cloudinary_configured()
-            temp_photo_override_path = None
-            certificate_override_assets = []
-            
-            def _upload(file, folder):
-                if not file or not ca:
-                    return None
-                try:
-                    file.seek(0) # Ensure at beginning
-                    filename = getattr(file, 'name', '').lower()
-                    res = cloudinary.uploader.upload(
-                        file,
-                        resource_type="raw" if filename.endswith('.pdf') else "auto",
-                        folder=f"student_documents/{folder}",
-                        public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-                        overwrite=True,
-                        access_mode="public"  # Ensure public access
-                    )
-                    return res
-                except Exception as e:
-                    logger.error(f"Cloudinary upload error ({folder}): {e}")
-                    return None
-
-            def _save_local(file, folder):
-                if not file:
-                    return None
-                try:
-                    file.seek(0) # Ensure at beginning
-                    upload_paths = {
-                        'photos': 'student_photos/',
-                        'achievement': 'student_certs/achievement/',
-                        'internship': 'student_certs/internship/',
-                        'courses': 'student_certs/courses/',
-                        'sdp': 'student_certs/sdp/',
-                        'extra': 'student_certs/extra/',
-                        'placement': 'student_certs/placement/',
-                        'national': 'student_certs/national/',
-                    }
-                    upload_to = upload_paths.get(folder, f'student_{folder}/')
-                    from django.core.files.storage import default_storage
-                    ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
-                    filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
-                    path = os.path.join(upload_to, filename)
-                    saved_path = default_storage.save(path, file)
-                    return saved_path
-                except Exception as e:
-                    logger.error(f"Local file save error ({folder}): {e}")
-                    return None
-            updated_student = form.save()
-
-            # Handle photo manually because we want Cloudinary support
-            if request.FILES.get('photo'):
-                pf = request.FILES['photo']
-                temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
-                if ca:
-                    upload_result = _upload(pf, 'photos')
-                    if upload_result and upload_result.get('secure_url'):
-                        updated_student.photo_url = upload_result['secure_url']
-                        updated_student.photo = None # Clear local file if uploaded to Cloudinary
-                        updated_student.save(update_fields=['photo', 'photo_url'])
-                        record_cloudinary_upload(
-                            upload_type='photo',
-                            upload_result=upload_result,
-                            uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
-                            student=updated_student,
-                        )
-                    else:
-                        # If Cloudinary fails, it already has the local file from form.save()
-                        pass
+            try:
+                ca = is_cloudinary_configured()
+                temp_photo_override_path = None
+                certificate_override_assets = []
                 
-            # Calculate correct age from DOB if DOB was updated
-            if updated_student.dob:
-                try:
-                    updated_student.age = calculate_correct_age(updated_student.dob)
-                    updated_student.save(update_fields=['age'])
-                except Exception:
-                    pass
-
-            # Check for certificates in POST/FILES even if not in form
-            upload_plan, skipped_uploads = build_student_certificate_upload_plan(request, updated_student)
-            any_cert_updated = False
-            for upload_spec in upload_plan:
-                field_name = upload_spec['field_name']
-                folder = upload_spec['folder']
-                url_field_name = upload_spec['url_field_name']
-                certificate_file = upload_spec['file']
-                temp_asset_path, temp_asset_is_pdf = snapshot_uploaded_file(
-                    certificate_file,
-                    default_suffix='.pdf',
-                )
-                if temp_asset_path:
-                    certificate_override_assets.append({
-                        'field_name': field_name,
-                        'path': temp_asset_path,
-                        'is_pdf': temp_asset_is_pdf,
-                    })
-                if ca:
-                    upload_result = _upload(certificate_file, folder)
-                    if upload_result and upload_result.get('secure_url'):
-                        setattr(updated_student, url_field_name, upload_result['secure_url'])
-                        setattr(updated_student, field_name, None)
-                        record_cloudinary_upload(
-                            upload_type=field_name,
-                            upload_result=upload_result,
-                            uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
-                            student=updated_student,
+                def _upload(file, folder):
+                    if not file or not ca:
+                        return None
+                    try:
+                        file.seek(0)  # Ensure at beginning
+                        filename = getattr(file, 'name', '').lower()
+                        res = cloudinary.uploader.upload(
+                            file,
+                            resource_type="raw" if filename.endswith('.pdf') else "auto",
+                            folder=f"student_documents/{folder}",
+                            public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                            overwrite=True,
+                            access_mode="public"
                         )
-                        any_cert_updated = True
+                        return res
+                    except Exception as e:
+                        logger.error(f"Cloudinary upload error ({folder}): {e}")
+                        return None
+
+                def _save_local(file, folder):
+                    if not file:
+                        return None
+                    try:
+                        file.seek(0)  # Ensure at beginning
+                        upload_paths = {
+                            'photos': 'student_photos/',
+                            'achievement': 'student_certs/achievement/',
+                            'internship': 'student_certs/internship/',
+                            'courses': 'student_certs/courses/',
+                            'sdp': 'student_certs/sdp/',
+                            'extra': 'student_certs/extra/',
+                            'placement': 'student_certs/placement/',
+                            'national': 'student_certs/national/',
+                        }
+                        upload_to = upload_paths.get(folder, f'student_{folder}/')
+                        from django.core.files.storage import default_storage
+                        ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
+                        filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
+                        path = os.path.join(upload_to, filename)
+                        saved_path = default_storage.save(path, file)
+                        return saved_path
+                    except Exception as e:
+                        logger.error(f"Local file save error ({folder}): {e}")
+                        return None
+
+                updated_student = form.save()
+
+                # Handle photo manually because we want Cloudinary support
+                if request.FILES.get('photo'):
+                    pf = request.FILES['photo']
+                    temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
+                    if ca:
+                        upload_result = _upload(pf, 'photos')
+                        if upload_result and upload_result.get('secure_url'):
+                            updated_student.photo_url = upload_result['secure_url']
+                            updated_student.photo = None  # Clear local file if uploaded to Cloudinary
+                            updated_student.save(update_fields=['photo', 'photo_url'])
+                            record_cloudinary_upload(
+                                upload_type='photo',
+                                upload_result=upload_result,
+                                uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                                student=updated_student,
+                            )
+                        else:
+                            logger.warning("Cloudinary photo upload failed, using local file")
+                    
+                # Calculate correct age from DOB if DOB was updated
+                if updated_student.dob:
+                    try:
+                        updated_student.age = calculate_correct_age(updated_student.dob)
+                        updated_student.save(update_fields=['age'])
+                    except Exception:
+                        pass
+
+                # Check for certificates in POST/FILES even if not in form
+                upload_plan, skipped_uploads = build_student_certificate_upload_plan(request, updated_student)
+                any_cert_updated = False
+                for upload_spec in upload_plan:
+                    field_name = upload_spec['field_name']
+                    folder = upload_spec['folder']
+                    url_field_name = upload_spec['url_field_name']
+                    certificate_file = upload_spec['file']
+                    temp_asset_path, temp_asset_is_pdf = snapshot_uploaded_file(
+                        certificate_file,
+                        default_suffix='.pdf',
+                    )
+                    if temp_asset_path:
+                        certificate_override_assets.append({
+                            'field_name': field_name,
+                            'path': temp_asset_path,
+                            'is_pdf': temp_asset_is_pdf,
+                        })
+                    if ca:
+                        upload_result = _upload(certificate_file, folder)
+                        if upload_result and upload_result.get('secure_url'):
+                            setattr(updated_student, url_field_name, upload_result['secure_url'])
+                            setattr(updated_student, field_name, None)
+                            record_cloudinary_upload(
+                                upload_type=field_name,
+                                upload_result=upload_result,
+                                uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                                student=updated_student,
+                            )
+                            any_cert_updated = True
+                        else:
+                            local_path = _save_local(certificate_file, folder)
+                            if local_path:
+                                setattr(updated_student, field_name, local_path)
+                                setattr(updated_student, url_field_name, None)
+                                any_cert_updated = True
                     else:
                         local_path = _save_local(certificate_file, folder)
                         if local_path:
                             setattr(updated_student, field_name, local_path)
                             setattr(updated_student, url_field_name, None)
                             any_cert_updated = True
-                else:
-                    local_path = _save_local(certificate_file, folder)
-                    if local_path:
-                        setattr(updated_student, field_name, local_path)
-                        setattr(updated_student, url_field_name, None)
-                        any_cert_updated = True
-            
-            if any_cert_updated:
-                updated_student.save()
-
-            if skipped_uploads:
-                skipped_names = ', '.join(item['filename'] for item in skipped_uploads[:3])
-                messages.warning(
-                    request,
-                    f'Some additional certificates were skipped because all student certificate slots are already used: {skipped_names}'
-                    + ('...' if len(skipped_uploads) > 3 else '')
-                )
-
-            try:
-                if form.has_changed() or request.FILES:
-                    generate_student_pdf(
-                        updated_student,
-                        photo_override_path=temp_photo_override_path,
-                        certificate_override_assets=certificate_override_assets,
-                    )
-            except Exception as pdf_e:
-                logger.warning(f"Student updated, but PDF regeneration failed: {pdf_e}")
                 
-            messages.success(request, "Student updated successfully.")
-            return redirect('dashboard:students_data')
+                if any_cert_updated:
+                    updated_student.save()
+
+                if skipped_uploads:
+                    skipped_names = ', '.join(item['filename'] for item in skipped_uploads[:3])
+                    messages.warning(
+                        request,
+                        f'Some additional certificates were skipped because all student certificate slots are already used: {skipped_names}'
+                        + ('...' if len(skipped_uploads) > 3 else '')
+                    )
+
+                try:
+                    if form.has_changed() or request.FILES:
+                        generate_student_pdf(
+                            updated_student,
+                            photo_override_path=temp_photo_override_path,
+                            certificate_override_assets=certificate_override_assets,
+                        )
+                except Exception as pdf_e:
+                    logger.warning(f"Student updated, but PDF regeneration failed: {pdf_e}")
+                    
+                messages.success(request, "Student updated successfully.")
+                return redirect('dashboard:students_data')
+            except Exception as e:
+                logger.error(f"Error updating student {student_id}: {e}", exc_info=True)
+                messages.error(request, f"An error occurred while updating the student: {str(e)}")
+                return redirect('dashboard:edit_student', student_id=student_id)
+        else:
+            # Form is not valid; errors will be displayed
+            pass
     else:
-        form = StudentForm(instance=student)
-    return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student', 'student': student})
+        try:
+            form = StudentForm(instance=student)
+        except Exception as e:
+            logger.error(f"Error initializing edit form for student {student_id}: {e}", exc_info=True)
+            messages.error(request, f"Unable to load student data: {str(e)}")
+            return redirect('dashboard:students_data')
+    
+    try:
+        return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student', 'student': student})
+    except Exception as e:
+        logger.error(f"Error rendering edit student page for student {student_id}: {e}", exc_info=True)
+        messages.error(request, "An error occurred while loading the edit page.")
+        return redirect('dashboard:students_data')
 
 
 def student_photo_redirect(request, student_id):
