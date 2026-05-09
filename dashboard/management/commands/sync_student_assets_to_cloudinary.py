@@ -69,8 +69,8 @@ class Command(BaseCommand):
             if student.photo and not skip_existing:
                 photo_path = student.photo.path
                 if os.path.exists(photo_path):
-                    public_id = f'student_photos/{student.ht_no}_photo'
-                    self.stdout.write(f'  Uploading photo: {photo_path} -> {public_id}')
+                    public_id = f'{student.ht_no}_photo'
+                    self.stdout.write(f'  Uploading photo: {photo_path} -> student_photos/{public_id}')
                     if not dry_run:
                         try:
                             result = cloudinary.uploader.upload(
@@ -109,13 +109,13 @@ class Command(BaseCommand):
                 if file_field and not skip_existing:
                     file_path = file_field.path
                     if os.path.exists(file_path):
-                        public_id = f'student_certs/{cert_type}/{student.ht_no}_{cert_type}'
-                        self.stdout.write(f'  Uploading {cert_type} cert: {file_path} -> {public_id}')
+                        public_id = f'{student.ht_no}_{cert_type}'
+                        self.stdout.write(f'  Uploading {cert_type} cert: {file_path} -> student_certs/{cert_type}/{public_id}')
                         if not dry_run:
                             try:
                                 result = cloudinary.uploader.upload(
                                     file_path,
-                                    folder='student_certs',
+                                    folder=f'student_certs/{cert_type}',
                                     public_id=public_id,
                                     overwrite=True,
                                     resource_type='raw'

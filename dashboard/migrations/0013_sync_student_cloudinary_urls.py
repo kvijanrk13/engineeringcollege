@@ -14,7 +14,7 @@ def update_student_cloudinary_urls(apps, schema_editor):
     if not cloud_name:
         return
 
-    # Build base Cloudinary URL templates
+    # Build base Cloudinary URL templates (matches sync_student_assets_to_cloudinary command)
     photo_url_template = f'https://res.cloudinary.com/{cloud_name}/image/upload/student_photos/{{ht_no}}_photo.jpg'
     cert_url_template = f'https://res.cloudinary.com/{cloud_name}/raw/upload/student_certs/{{cert_type}}/{{ht_no}}_{{cert_type}}.pdf'
 
@@ -22,8 +22,8 @@ def update_student_cloudinary_urls(apps, schema_editor):
     for student in Student.objects.all():
         changed = False
 
-        # Update photo_url if photo exists but photo_url is empty
-        if student.photo and not student.photo_url:
+        # Update photo_url if photo exists but photo_url is empty or still points to local path
+        if student.photo and (not student.photo_url or not student.photo_url.startswith('http')):
             student.photo_url = photo_url_template.format(ht_no=student.ht_no)
             changed = True
 
@@ -41,7 +41,8 @@ def update_student_cloudinary_urls(apps, schema_editor):
         for field_name, cert_type in cert_fields:
             file_field = getattr(student, field_name)
             url_field_name = f'{field_name}_url'
-            if file_field and not getattr(student, url_field_name):
+            current_url = getattr(student, url_field_name)
+            if file_field and (not current_url or not current_url.startswith('http')):
                 setattr(student, url_field_name, cert_url_template.format(
                     ht_no=student.ht_no, cert_type=cert_type
                 ))
