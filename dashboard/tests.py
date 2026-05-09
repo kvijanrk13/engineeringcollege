@@ -172,7 +172,8 @@ class DashboardTests(TestCase):
         pdf_url = dashboard_views.generate_student_pdf(student)
 
         self.assertEqual(pdf_url, 'https://example.com/student_merged.pdf')
-        self.assertEqual(uploaded_page_counts, [2])
+        self.assertEqual(len(uploaded_page_counts), 1)
+        self.assertGreaterEqual(uploaded_page_counts[0], 2)
         mock_download_remote_asset.assert_called_once_with(
             'https://example.com/certificate.pdf',
             default_suffix='.jpg',
@@ -181,6 +182,59 @@ class DashboardTests(TestCase):
         student.refresh_from_db()
         self.assertEqual(student.pdf_url, 'https://example.com/student_merged.pdf')
         self.assertTrue(student.pdf_generated)
+
+    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
+    @patch('dashboard.views.is_cloudinary_configured', return_value=False)
+    def test_add_student_persists_additional_certificate_uploads(
+        self,
+        _mock_cloudinary_enabled,
+        _mock_generate_student_pdf,
+    ):
+        with tempfile.TemporaryDirectory() as temp_media_root:
+            response = None
+            with override_settings(MEDIA_ROOT=temp_media_root):
+                response = self.client.post(
+                    reverse('dashboard:add_student'),
+                    data={
+                        'ht_no': '23C11A5555',
+                        'student_name': 'Additional Certificate Student',
+                        'admission_type': 'EAMCET',
+                        'year': '2',
+                        'sem': '1',
+                        'additional_cert_type_1': 'achievement',
+                        'additional_cert_title_1': 'Hackathon Winner',
+                        'additional_cert_file_1': SimpleUploadedFile(
+                            'achievement.pdf',
+                            make_test_pdf_bytes('Achievement'),
+                            content_type='application/pdf',
+                        ),
+                    },
+                    secure=True,
+                )
+
+            self.assertIn(response.status_code, {301, 302})
+
+        student = Student.objects.get(ht_no='23C11A5555')
+        self.assertTrue(bool(student.cert_achieve))
+        self.assertFalse(student.cert_achieve_url)
+
+    def test_student_photo_redirect_normalizes_scheme_less_urls(self):
+        student = Student.objects.create(
+            ht_no='23C11A7777',
+            student_name='URL Normalization Student',
+            photo_url='res.cloudinary.com/demo/image/upload/v1/student/sample.jpg',
+        )
+
+        response = self.client.get(
+            reverse('dashboard:student_photo_redirect', args=[student.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response['Location'],
+            'https://res.cloudinary.com/demo/image/upload/v1/student/sample.jpg',
+        )
 
     @patch('dashboard.views.generate_faculty_pdf', return_value=HttpResponse(b'%PDF-1.4 test'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)

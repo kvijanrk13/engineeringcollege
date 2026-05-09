@@ -240,6 +240,124 @@ def iter_indexed_uploaded_files(files, prefix):
     return indexed_files
 
 
+STUDENT_CERTIFICATE_SLOTS = [
+    ('cert_achieve', 'achievement', 'cert_achieve_url'),
+    ('cert_intern', 'internship', 'cert_intern_url'),
+    ('cert_courses', 'courses', 'cert_courses_url'),
+    ('cert_sdp', 'sdp', 'cert_sdp_url'),
+    ('cert_extra', 'extra', 'cert_extra_url'),
+    ('cert_placement', 'placement', 'cert_placement_url'),
+    ('cert_national', 'national', 'cert_national_url'),
+]
+
+STUDENT_CERTIFICATE_TYPE_ALIASES = {
+    'achievement': 'cert_achieve',
+    'achieve': 'cert_achieve',
+    'internship': 'cert_intern',
+    'intern': 'cert_intern',
+    'course': 'cert_courses',
+    'courses': 'cert_courses',
+    'sdp': 'cert_sdp',
+    'extra': 'cert_extra',
+    'extracurricular': 'cert_extra',
+    'other': 'cert_extra',
+    'placement': 'cert_placement',
+    'national': 'cert_national',
+}
+
+
+def student_has_photo_asset(student):
+    photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
+    photo_field = getattr(student, 'photo', None)
+    return bool(photo_url or getattr(photo_field, 'name', None))
+
+
+def student_has_certificate_assets(student):
+    for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+        file_field = getattr(student, field_name, None)
+        url_value = normalize_optional_url(getattr(student, url_field_name, None))
+        if url_value or getattr(file_field, 'name', None):
+            return True
+    return False
+
+
+def student_has_upload_assets(student):
+    return student_has_photo_asset(student) or student_has_certificate_assets(student)
+
+
+def choose_student_certificate_slot(student, requested_type=None, reserved_fields=None):
+    reserved_fields = reserved_fields or set()
+    slot_by_field = {
+        field_name: (field_name, folder, url_field_name)
+        for field_name, folder, url_field_name in STUDENT_CERTIFICATE_SLOTS
+    }
+    preferred_field = STUDENT_CERTIFICATE_TYPE_ALIASES.get((requested_type or '').strip().lower())
+
+    def slot_is_available(field_name, url_field_name):
+        if field_name in reserved_fields:
+            return False
+        file_field = getattr(student, field_name, None)
+        url_value = normalize_optional_url(getattr(student, url_field_name, None))
+        return not getattr(file_field, 'name', None) and not url_value
+
+    if preferred_field:
+        preferred_slot = slot_by_field.get(preferred_field)
+        if preferred_slot and slot_is_available(preferred_slot[0], preferred_slot[2]):
+            return preferred_slot
+
+    for field_name, folder, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+        if slot_is_available(field_name, url_field_name):
+            return field_name, folder, url_field_name
+
+    return None
+
+
+def build_student_certificate_upload_plan(request, student):
+    reserved_fields = set()
+    upload_plan = []
+    skipped_uploads = []
+
+    for field_name, folder, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+        uploaded_file = request.FILES.get(field_name)
+        if not uploaded_file:
+            continue
+        reserved_fields.add(field_name)
+        upload_plan.append({
+            'field_name': field_name,
+            'folder': folder,
+            'url_field_name': url_field_name,
+            'file': uploaded_file,
+            'source': field_name,
+        })
+
+    for index, uploaded_file in iter_indexed_uploaded_files(request.FILES, 'additional_cert_file_'):
+        requested_type = (request.POST.get(f'additional_cert_type_{index}') or '').strip().lower()
+        selected_slot = choose_student_certificate_slot(
+            student,
+            requested_type=requested_type,
+            reserved_fields=reserved_fields,
+        )
+        if not selected_slot:
+            skipped_uploads.append({
+                'index': index,
+                'filename': getattr(uploaded_file, 'name', f'additional_cert_file_{index}'),
+                'requested_type': requested_type or 'other',
+            })
+            continue
+
+        field_name, folder, url_field_name = selected_slot
+        reserved_fields.add(field_name)
+        upload_plan.append({
+            'field_name': field_name,
+            'folder': folder,
+            'url_field_name': url_field_name,
+            'file': uploaded_file,
+            'source': f'additional_cert_file_{index}',
+        })
+
+    return upload_plan, skipped_uploads
+
+
 def record_cloudinary_upload(*, upload_type, upload_result, uploaded_by=None, faculty=None, student=None):
     if not upload_result:
         return
@@ -1236,17 +1354,18 @@ def collect_student_files(student):
 
     def _collect_asset(file_field, url_value=None, default_suffix='.pdf'):
         """Helper to collect a single asset from local or remote storage."""
+        normalized_url = normalize_optional_url(url_value)
         if file_field:
             try:
-                local_path = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
+                local_path = get_local_or_remote_asset(file_field, url=normalized_url, default_suffix=default_suffix)
                 if local_path and isinstance(local_path, tuple):
                     local_path = local_path[0]
                 if local_path and os.path.exists(local_path):
                     return local_path, local_path.lower().endswith('.pdf')
             except Exception as e:
                 logger.warning(f"get_local_or_remote_asset failed: {e}")
-        if url_value and isinstance(url_value, str) and url_value.startswith('http'):
-            downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix=default_suffix)
+        if normalized_url:
+            downloaded_path, is_pdf = download_remote_asset(normalized_url, default_suffix=default_suffix)
             if downloaded_path:
                 if downloaded_path not in temp_files:
                     temp_files.append(downloaded_path)
@@ -1268,18 +1387,8 @@ def collect_student_files(student):
     photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
     print(f"  [COLLECT] Photo collected: {photo_file is not None}")
 
-    cert_fields = [
-        ('cert_achieve', 'cert_achieve_url'),
-        ('cert_intern', 'cert_intern_url'),
-        ('cert_courses', 'cert_courses_url'),
-        ('cert_sdp', 'cert_sdp_url'),
-        ('cert_extra', 'cert_extra_url'),
-        ('cert_placement', 'cert_placement_url'),
-        ('cert_national', 'cert_national_url'),
-    ]
-
     cert_count = 0
-    for file_field_name, url_field_name in cert_fields:
+    for file_field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
         file_field = getattr(student, file_field_name, None)
         url_field = getattr(student, url_field_name, None)
         print(f"  [COLLECT] Checking {file_field_name}: file={file_field is not None}, url={url_field is not None}")
@@ -1747,15 +1856,7 @@ def student_detail(request, student_id):
 
     # Automatically generate PDF if it doesn't exist and student has photo/certificates
     if not student.pdf_url and not student.pdf_generated:
-        has_content = bool(
-            student.photo or student.photo_url or
-            student.cert_achieve or student.cert_intern or student.cert_courses or
-            student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
-            student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
-            student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url
-        )
-
-        if has_content:
+        if student_has_upload_assets(student):
             try:
                 logger.info(f"Auto-generating PDF for student {student.student_name} on first view")
                 pdf_url = generate_student_pdf(student)
@@ -2095,12 +2196,19 @@ def student_dashboard(request):
         }
     certificates = []
     if student and hasattr(student, 'id'):
-        for fn, dn in [('cert_achieve', 'Achievement'), ('cert_intern', 'Internship'),
-                       ('cert_courses', 'Courses'), ('cert_sdp', 'SDP'),
-                       ('cert_extra', 'Extra Curricular'), ('cert_placement', 'Placement'),
-                       ('cert_national', 'National Exam')]:
-            if hasattr(student, fn) and getattr(student, fn):
-                certificates.append({'type': dn, 'field': fn, 'has_file': True})
+        student.photo_url = normalize_optional_url(getattr(student, 'photo_url', None)) or getattr(student, 'photo_url', None)
+        certificate_labels = {
+            'cert_achieve': 'Achievement',
+            'cert_intern': 'Internship',
+            'cert_courses': 'Courses',
+            'cert_sdp': 'SDP',
+            'cert_extra': 'Extra Curricular',
+            'cert_placement': 'Placement',
+            'cert_national': 'National Exam',
+        }
+        for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+            if getattr(student, field_name, None) or normalize_optional_url(getattr(student, url_field_name, None)):
+                certificates.append({'type': certificate_labels[field_name], 'field': field_name, 'has_file': True})
     return render(request, "dashboard/student_dashboard.html", {
         'student': student, 'title': 'Student Dashboard',
         'total_students': Student.objects.count(),
@@ -3387,7 +3495,7 @@ def add_student(request):
                     
                     if secure_url:
                         print(f"  [UPLOAD] Upload successful - resource available at {secure_url}")
-                        return secure_url
+                        return res
                     else:
                         print(f"  [UPLOAD] No secure_url in response")
                         return None
@@ -3433,7 +3541,6 @@ def add_student(request):
             dob_value = None
             if request.POST.get('dob'):
                 try:
-                    from datetime import datetime
                     dob_value = datetime.strptime(request.POST.get('dob'), '%Y-%m-%d').date()
                 except ValueError:
                     dob_value = None
@@ -3491,9 +3598,15 @@ def add_student(request):
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
                 if ca: # Cloudinary configured - prioritize Cloudinary
-                    curl = _upload(pf, 'photos')
-                    if curl:
-                        student.photo_url = curl
+                    upload_result = _upload(pf, 'photos')
+                    if upload_result and upload_result.get('secure_url'):
+                        student.photo_url = upload_result['secure_url']
+                        record_cloudinary_upload(
+                            upload_type='photo',
+                            upload_result=upload_result,
+                            uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                            student=student,
+                        )
                         files_up.append('photo')
                     else:
                         # Fallback to local storage if Cloudinary fails
@@ -3510,51 +3623,58 @@ def add_student(request):
             
             # Handle certificates
             print(f"  [DEBUG] FILES received: {list(request.FILES.keys())}")
-            for fn, folder, fn_url in [('cert_achieve', 'achievement', 'cert_achieve_url'),
-                              ('cert_intern', 'internship', 'cert_intern_url'),
-                              ('cert_courses', 'courses', 'cert_courses_url'),
-                              ('cert_sdp', 'sdp', 'cert_sdp_url'),
-                              ('cert_extra', 'extra', 'cert_extra_url'),
-                              ('cert_placement', 'placement', 'cert_placement_url'),
-                              ('cert_national', 'national', 'cert_national_url')]:
-                if request.FILES.get(fn):
-                    print(f"  [DEBUG] Processing {fn} ({folder})")
-                    cf = request.FILES[fn]
-                    print(f"  [DEBUG] File: {cf.name}, size: {cf.size}")
-                    if ca: # Cloudinary configured
-                        curl = _upload(cf, folder)
-                        if curl:
-                            setattr(student, fn_url, curl)
-                            files_up.append(fn)
-                            print(f"  [DEBUG] Successfully uploaded {fn} to {curl}")
-                        else:
-                            print(f"  [DEBUG] Cloudinary upload failed for {fn}, trying local")
-                            local_path = _save_local(cf, folder)
-                            if local_path:
-                                setattr(student, fn, local_path)
-                                files_lo.append(fn)
-                                print(f"  [DEBUG] Saved {fn} locally to {local_path}")
+            upload_plan, skipped_uploads = build_student_certificate_upload_plan(request, student)
+            if not upload_plan:
+                for field_name, _, _ in STUDENT_CERTIFICATE_SLOTS:
+                    print(f"  [DEBUG] No file received for {field_name}")
+            for upload_spec in upload_plan:
+                field_name = upload_spec['field_name']
+                folder = upload_spec['folder']
+                url_field_name = upload_spec['url_field_name']
+                certificate_file = upload_spec['file']
+                print(f"  [DEBUG] Processing {upload_spec['source']} -> {field_name} ({folder})")
+                print(f"  [DEBUG] File: {certificate_file.name}, size: {certificate_file.size}")
+                if ca: # Cloudinary configured
+                    upload_result = _upload(certificate_file, folder)
+                    if upload_result and upload_result.get('secure_url'):
+                        setattr(student, url_field_name, upload_result['secure_url'])
+                        setattr(student, field_name, None)
+                        record_cloudinary_upload(
+                            upload_type=field_name,
+                            upload_result=upload_result,
+                            uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                            student=student,
+                        )
+                        files_up.append(field_name)
+                        print(f"  [DEBUG] Successfully uploaded {field_name} to {upload_result['secure_url']}")
                     else:
-                        local_path = _save_local(cf, folder)
+                        print(f"  [DEBUG] Cloudinary upload failed for {field_name}, trying local")
+                        local_path = _save_local(certificate_file, folder)
                         if local_path:
-                            setattr(student, fn, local_path)
-                            files_lo.append(fn)
+                            setattr(student, field_name, local_path)
+                            setattr(student, url_field_name, None)
+                            files_lo.append(field_name)
+                            print(f"  [DEBUG] Saved {field_name} locally to {local_path}")
                 else:
-                    print(f"  [DEBUG] No file received for {fn}")
+                    local_path = _save_local(certificate_file, folder)
+                    if local_path:
+                        setattr(student, field_name, local_path)
+                        setattr(student, url_field_name, None)
+                        files_lo.append(field_name)
             student.save()
+
+            if skipped_uploads:
+                skipped_names = ', '.join(item['filename'] for item in skipped_uploads[:3])
+                messages.warning(
+                    request,
+                    f'Some additional certificates were skipped because all student certificate slots are already used: {skipped_names}'
+                    + ('...' if len(skipped_uploads) > 3 else '')
+                )
 
             # Ensure the student flow (add_student.html) always attempts
             # to build a single individual PDF that includes photo + certificates.
             try:
-                has_uploads = bool(
-                    student.photo or student.photo_url or
-                    student.cert_achieve or student.cert_intern or student.cert_courses or
-                    student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
-                    student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
-                    student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or
-                    student.cert_national_url
-                )
-                if has_uploads:
+                if student_has_upload_assets(student):
                     generate_student_pdf(student)
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
@@ -3604,15 +3724,16 @@ def edit_student(request, student_id):
                     return None
                 try:
                     file.seek(0) # Ensure at beginning
+                    filename = getattr(file, 'name', '').lower()
                     res = cloudinary.uploader.upload(
                         file,
-                        resource_type="auto",
+                        resource_type="raw" if filename.endswith('.pdf') else "auto",
                         folder=f"student_documents/{folder}",
                         public_id=f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                         overwrite=True,
                         access_mode="public"  # Ensure public access
                     )
-                    return res.get('secure_url')
+                    return res
                 except Exception as e:
                     logger.error(f"Cloudinary upload error ({folder}): {e}")
                     return None
@@ -3648,11 +3769,17 @@ def edit_student(request, student_id):
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
                 if ca:
-                    curl = _upload(pf, 'photos')
-                    if curl:
-                        updated_student.photo_url = curl
+                    upload_result = _upload(pf, 'photos')
+                    if upload_result and upload_result.get('secure_url'):
+                        updated_student.photo_url = upload_result['secure_url']
                         updated_student.photo = None # Clear local file if uploaded to Cloudinary
                         updated_student.save(update_fields=['photo', 'photo_url'])
+                        record_cloudinary_upload(
+                            upload_type='photo',
+                            upload_result=upload_result,
+                            uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                            student=updated_student,
+                        )
                     else:
                         # If Cloudinary fails, it already has the local file from form.save()
                         pass
@@ -3666,41 +3793,48 @@ def edit_student(request, student_id):
                     pass
 
             # Check for certificates in POST/FILES even if not in form
-            cert_fields = [
-                ('cert_achieve', 'achievement', 'cert_achieve_url'), 
-                ('cert_intern', 'internship', 'cert_intern_url'),
-                ('cert_courses', 'courses', 'cert_courses_url'), 
-                ('cert_sdp', 'sdp', 'cert_sdp_url'),
-                ('cert_extra', 'extra', 'cert_extra_url'), 
-                ('cert_placement', 'placement', 'cert_placement_url'),
-                ('cert_national', 'national', 'cert_national_url')
-            ]
-            
+            upload_plan, skipped_uploads = build_student_certificate_upload_plan(request, updated_student)
             any_cert_updated = False
-            for fn, folder, fn_url in cert_fields:
-                if request.FILES.get(fn):
-                    cf = request.FILES[fn]
-                    if ca:
-                        curl = _upload(cf, folder)
-                        if curl:
-                            setattr(updated_student, fn_url, curl)
-                            setattr(updated_student, fn, None)
-                            any_cert_updated = True
-                        else:
-                            local_path = _save_local(cf, folder)
-                            if local_path:
-                                setattr(updated_student, fn, local_path)
-                                setattr(updated_student, fn_url, None)
-                                any_cert_updated = True
+            for upload_spec in upload_plan:
+                field_name = upload_spec['field_name']
+                folder = upload_spec['folder']
+                url_field_name = upload_spec['url_field_name']
+                certificate_file = upload_spec['file']
+                if ca:
+                    upload_result = _upload(certificate_file, folder)
+                    if upload_result and upload_result.get('secure_url'):
+                        setattr(updated_student, url_field_name, upload_result['secure_url'])
+                        setattr(updated_student, field_name, None)
+                        record_cloudinary_upload(
+                            upload_type=field_name,
+                            upload_result=upload_result,
+                            uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                            student=updated_student,
+                        )
+                        any_cert_updated = True
                     else:
-                        local_path = _save_local(cf, folder)
+                        local_path = _save_local(certificate_file, folder)
                         if local_path:
-                            setattr(updated_student, fn, local_path)
-                            setattr(updated_student, fn_url, None)
+                            setattr(updated_student, field_name, local_path)
+                            setattr(updated_student, url_field_name, None)
                             any_cert_updated = True
+                else:
+                    local_path = _save_local(certificate_file, folder)
+                    if local_path:
+                        setattr(updated_student, field_name, local_path)
+                        setattr(updated_student, url_field_name, None)
+                        any_cert_updated = True
             
             if any_cert_updated:
                 updated_student.save()
+
+            if skipped_uploads:
+                skipped_names = ', '.join(item['filename'] for item in skipped_uploads[:3])
+                messages.warning(
+                    request,
+                    f'Some additional certificates were skipped because all student certificate slots are already used: {skipped_names}'
+                    + ('...' if len(skipped_uploads) > 3 else '')
+                )
                 
             messages.success(request, "Student updated successfully.")
             return redirect('dashboard:students_data')
@@ -3711,8 +3845,9 @@ def edit_student(request, student_id):
 
 def student_photo_redirect(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    if student.photo_url:
-        return redirect(student.photo_url)
+    photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
+    if photo_url:
+        return redirect(photo_url)
     elif student.photo:
         return redirect(student.photo.url)
     else:
@@ -4063,7 +4198,6 @@ def generate_student_pdf(student, return_bytes=False):
 
     try:
         from weasyprint import HTML
-        from django.conf import settings
         
         print("  [CHECK] Generating Student PDF using WeasyPrint")
         base_url = f"file:///{settings.BASE_DIR}" if settings.BASE_DIR else None
@@ -6056,15 +6190,7 @@ def merge_student_certificates(request, student_id):
     student = get_object_or_404(Student, id=student_id)
 
     # Check if student has photo or any certificates
-    has_content = bool(
-        student.photo or student.photo_url or
-        student.cert_achieve or student.cert_intern or student.cert_courses or
-        student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or
-        student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or
-        student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url
-    )
-
-    if not has_content:
+    if not student_has_upload_assets(student):
         messages.error(request, 'No photo or certificates found to merge.')
         return redirect('dashboard:student_detail', student_id=student_id)
 
