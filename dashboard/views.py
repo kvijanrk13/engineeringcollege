@@ -1417,21 +1417,35 @@ def collect_faculty_files(faculty):
     return image_files, pdf_files, temp_files
 
 
-def collect_student_files(student, skip_photo=False, skip_certificate_fields=None):
-    """Collect student photo and certificates from Cloudinary or local storage."""
+def collect_student_files(student, skip_photo=False, skip_certificate_fields=None, photo_override_path=None, certificate_override_assets=None):
+    """Collect student photo and certificates from Cloudinary or local storage.
+    
+    Args:
+        student: Student model instance
+        skip_photo: If True, don't collect the student's photo
+        skip_certificate_fields: Set of certificate field names to skip (e.g., when overrides provided)
+        photo_override_path: Optional local path to a photo override (takes precedence)
+        certificate_override_assets: Optional list of asset dicts with 'path', 'field_name', 'is_pdf' keys
+    """
     skip_certificate_fields = set(skip_certificate_fields or [])
     photo_file = None
     image_files = []
     pdf_files = []
+    certificate_override_assets = certificate_override_assets or []
+    photo_override_path = photo_override_path
+    
+    # Filter override assets to only those that exist
     certificate_override_assets = [
-        asset for asset in (certificate_override_assets or [])
+        asset for asset in certificate_override_assets
         if asset.get('path') and os.path.exists(asset['path'])
     ]
+    
     override_certificate_fields = {
         asset['field_name']
         for asset in certificate_override_assets
         if asset.get('field_name')
     }
+    
     if photo_override_path and not os.path.exists(photo_override_path):
         photo_override_path = None
 
