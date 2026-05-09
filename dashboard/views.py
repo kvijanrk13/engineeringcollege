@@ -3709,6 +3709,17 @@ def edit_student(request, student_id):
     return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student', 'student': student})
 
 
+def student_photo_redirect(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    if student.photo_url:
+        return redirect(student.photo_url)
+    elif student.photo:
+        return redirect(student.photo.url)
+    else:
+        from django.http import Http404
+        raise Http404("Photo not found")
+
+
 def generate_student_pdf_view(request, student_id):
     # Allow both Django authenticated users and student session users
     user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
@@ -4044,60 +4055,28 @@ def generate_student_pdf(student, return_bytes=False):
         'anurag_header_url': anurag_header_url,
     }
 
-    # ── GENERATE INFO PDF with pdfkit ─────────────────────────
+    # ── GENERATE INFO PDF with WeasyPrint ─────────────────────────
     html_string = render_to_string('dashboard/student_pdf.html', context)
 
     info_pdf_bytes = None
     used_reportlab_fallback = False
 
-    if pdfkit is not None:
-        options = {
-            'page-size': 'A4',
-            'margin-top': '15mm', 'margin-right': '15mm',
-            'margin-bottom': '15mm', 'margin-left': '15mm',
-            'encoding': 'UTF-8',
-            'enable-local-file-access': '',
-            'quiet': '',
-            'no-stop-slow-scripts': None,
-            'javascript-delay': '500',
-            'load-error-handling': 'ignore',
-            'no-outline': None,
-        }
+    try:
+        from weasyprint import HTML
+        from django.conf import settings
+        
+        print("  [CHECK] Generating Student PDF using WeasyPrint")
+        base_url = f"file:///{settings.BASE_DIR}" if settings.BASE_DIR else None
+        html_obj = HTML(string=html_string, base_url=base_url)
+        info_pdf_bytes = html_obj.write_pdf()
+        print(f"  [OK] Info PDF generated with WeasyPrint: {len(info_pdf_bytes)} bytes")
+    except Exception as e:
+        print(f"  [WARN] WeasyPrint error, using ReportLab fallback: {e}")
+        logger.error(f"Student WeasyPrint generation failed: {e}")
 
-        # Cross-platform wkhtmltopdf detection
-        wkhtmltopdf_paths = [
-            r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe',
-            r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe',
-            '/usr/local/bin/wkhtmltopdf',
-            '/usr/bin/wkhtmltopdf',
-            'wkhtmltopdf',
-        ]
-
-        wkhtmltopdf_path = None
-        for path in wkhtmltopdf_paths:
-            if os.path.exists(path) or path == 'wkhtmltopdf':
-                try:
-                    import subprocess
-                    result = subprocess.run([path, '--version'], capture_output=True, text=True, timeout=5)
-                    if result.returncode == 0:
-                        wkhtmltopdf_path = path
-                        break
-                except:
-                    continue
-
-        try:
-            if wkhtmltopdf_path:
-                config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-                info_pdf_bytes = pdfkit.from_string(html_string, False, options=options, configuration=config)
-            else:
-                info_pdf_bytes = pdfkit.from_string(html_string, False, options=options)
-            print(f"  [OK] Info PDF generated: {len(info_pdf_bytes)} bytes")
-        except Exception as e:
-            print(f"  [WARN] pdfkit error, using ReportLab fallback: {e}")
-
-    # Always try wkhtmltopdf first for better compatibility
+    # Always try WeasyPrint first for better compatibility
     if info_pdf_bytes is None:
-        print("  [INFO] wkhtmltopdf failed, using ReportLab fallback")
+        print("  [INFO] WeasyPrint failed, using ReportLab fallback")
         info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
         used_reportlab_fallback = True
         print(f"  [OK] ReportLab fallback info PDF generated: {len(info_pdf_bytes)} bytes")
