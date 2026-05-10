@@ -257,6 +257,79 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], 'https://example.com/student-history-photo.jpg')
 
+    @patch('dashboard.views.download_remote_asset')
+    def test_view_student_pdf_streams_cloudinary_pdf_through_app_route(self, mock_download_remote_asset):
+        admin_user = get_user_model().objects.create_user(
+            username='pdf-admin',
+            email='pdf-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(admin_user)
+
+        student = Student.objects.create(
+            ht_no='23C11A7780',
+            student_name='PDF Stream Student',
+            pdf_url='https://example.com/student.pdf',
+        )
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+            temp_pdf.write(make_test_pdf_bytes('Student PDF'))
+            temp_pdf_path = temp_pdf.name
+
+        mock_download_remote_asset.return_value = (temp_pdf_path, True)
+
+        response = self.client.get(
+            reverse('dashboard:view_student_pdf', args=[student.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('inline;', response['Content-Disposition'])
+
+    @patch('dashboard.views.generate_student_pdf', return_value=make_test_pdf_bytes('Generated Student PDF'))
+    def test_demo_student_session_can_generate_student_pdf(self, _mock_generate_student_pdf):
+        student = Student.objects.create(
+            ht_no='23C11A7781',
+            student_name='Demo Session Student',
+        )
+
+        session = self.client.session
+        session['student_logged_in'] = True
+        session['student_username'] = 'anrkitstudent'
+        session.save()
+
+        response = self.client.get(
+            reverse('dashboard:generate_student_pdf', args=[student.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_students_data_filters_to_logged_in_student_record(self):
+        own_student = Student.objects.create(
+            ht_no='23C11A7782',
+            student_name='Own Student',
+        )
+        Student.objects.create(
+            ht_no='23C11A7783',
+            student_name='Other Student',
+        )
+
+        session = self.client.session
+        session['student_logged_in'] = True
+        session['student_username'] = own_student.ht_no
+        session['student_ht_no'] = own_student.ht_no
+        session['student_id'] = own_student.id
+        session.save()
+
+        response = self.client.get(reverse('dashboard:students_data_view'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, own_student.ht_no)
+        self.assertNotContains(response, '23C11A7783')
+
     @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.cloudinary.uploader.upload')

@@ -456,7 +456,7 @@ body {
     <div class="data-header">
         <h1 class="data-title">STUDENTS DATA PORTAL</h1>
         <div>
-            <a href="{% url 'dashboard:student_dashboard' %}" class="btn btn-info">Dashboard</a>
+            <a href="{% url 'dashboard:student_dashboard_view' %}" class="btn btn-info">Dashboard</a>
             <a href="{% url 'dashboard:student_logout' %}" class="btn btn-danger">Logout</a>
         </div>
     </div>
@@ -583,9 +583,9 @@ body {
 
                     <td class="action-cell">
                         {% if student.pdf_url %}
-                            <a href="{{ student.pdf_url }}" target="_blank" class="btn btn-success">View PDF</a>
+                            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success">View PDF</a>
                         {% elif student.pdf_file %}
-                            <a href="{{ student.pdf_file.url }}" target="_blank" class="btn btn-success">View PDF</a>
+                            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success">View PDF</a>
                         {% else %}
                             <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning">Generate</a>
                         {% endif %}

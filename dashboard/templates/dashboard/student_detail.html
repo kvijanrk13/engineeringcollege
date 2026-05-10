@@ -147,7 +147,11 @@
         <div>
             <a href="{% url 'dashboard:students_data' %}" class="btn">BACK TO LIST</a>
             <a href="{% url 'dashboard:edit_student' student.id %}" class="btn">EDIT</a>
+            {% if student.pdf_url or student.pdf_file %}
+            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn">VIEW PDF</a>
+            {% else %}
             <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn">GENERATE PDF</a>
+            {% endif %}
             <a href="{% url 'dashboard:logout' %}" class="btn btn-danger">LOGOUT</a>
         </div>
     </div>
@@ -419,7 +423,11 @@
     </div>
 
     <div class="action-buttons">
+        {% if student.pdf_url or student.pdf_file %}
+        <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn">DOWNLOAD PDF</a>
+        {% else %}
         <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn">DOWNLOAD PDF</a>
+        {% endif %}
         <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn">MERGE CERTIFICATES</a>
         <a href="{% url 'dashboard:edit_student' student.id %}" class="btn">EDIT STUDENT</a>
     </div>

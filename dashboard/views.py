@@ -265,6 +265,64 @@ STUDENT_CERTIFICATE_TYPE_ALIASES = {
     'national': 'cert_national',
 }
 
+DEMO_STUDENT_USERNAMES = {'anrkitstudent'}
+
+
+def is_demo_student_session(request):
+    return bool(
+        request.session.get('student_logged_in')
+        and request.session.get('student_username') in DEMO_STUDENT_USERNAMES
+    )
+
+
+def get_session_student_ht_no(request):
+    return (request.session.get('student_ht_no') or request.session.get('student_username') or '').strip()
+
+
+def get_session_student_record(request):
+    if not request.session.get('student_logged_in'):
+        return None
+
+    student_id = request.session.get('student_id')
+    if student_id:
+        try:
+            return Student.objects.filter(id=student_id).first()
+        except Exception as exc:
+            logger.warning(f"Could not resolve student session by id {student_id}: {exc}")
+
+    if is_demo_student_session(request):
+        return None
+
+    student_ht_no = get_session_student_ht_no(request)
+    if not student_ht_no:
+        return None
+
+    try:
+        return Student.objects.filter(ht_no=student_ht_no).first()
+    except Exception as exc:
+        logger.warning(f"Could not resolve student session by ht_no {student_ht_no}: {exc}")
+        return None
+
+
+def student_session_can_access_record(request, student):
+    if not request.session.get('student_logged_in'):
+        return False
+
+    if is_demo_student_session(request):
+        return True
+
+    session_student = get_session_student_record(request)
+    if session_student and student:
+        return session_student.id == student.id
+
+    return get_session_student_ht_no(request) == getattr(student, 'ht_no', None)
+
+
+def student_dashboard_redirect_route(request):
+    if request.session.get('student_logged_in'):
+        return 'dashboard:student_dashboard_view'
+    return 'dashboard:student_dashboard'
+
 
 def student_has_photo_asset(student):
     photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
@@ -1960,6 +2018,12 @@ def student_detail(request, student_id):
         return redirect('dashboard:student_login')
     student = get_object_or_404(Student, id=student_id)
 
+    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
+    if request.session.get('student_logged_in') and not user_authenticated:
+        if not student_session_can_access_record(request, student):
+            messages.error(request, "You can only access your own student record.")
+            return redirect(student_dashboard_redirect_route(request))
+
     # Student URLs are already stored directly on the model
 
     # Automatically generate PDF if it doesn't exist and student has photo/certificates
@@ -2116,18 +2180,22 @@ def student_login(request):
             if username == 'anrkitstudent' and password == 'anrkitstudent':
                 request.session['student_logged_in'] = True
                 request.session['student_username'] = username
-                return redirect('dashboard:student_dashboard')
+                request.session.pop('student_id', None)
+                request.session.pop('student_ht_no', None)
+                return redirect('dashboard:student_dashboard_view')
 
             student = Student.objects.filter(ht_no=username).first()
             if student:
-                valid_passwords = [student.student_phone, student.student_email, student.ht_no]
+                valid_passwords = [student.student_phone, getattr(student, 'student_email', None), student.email, student.ht_no]
                 if student.dob:
                     valid_passwords.append(student.dob.strftime('%Y-%m-%d'))
                     valid_passwords.append(student.dob.strftime('%d-%m-%Y'))
                 if any(p and password == p for p in valid_passwords):
                     request.session['student_logged_in'] = True
                     request.session['student_username'] = username
-                    return redirect('dashboard:student_dashboard')
+                    request.session['student_id'] = student.id
+                    request.session['student_ht_no'] = student.ht_no
+                    return redirect('dashboard:student_dashboard_view')
             error = 'Invalid student credentials'
             messages.error(request, error)
         return render(request, 'dashboard/login.html', {
@@ -2148,7 +2216,7 @@ def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
     if request.session.get('student_logged_in'):
-        return redirect('dashboard:student_dashboard')
+        return redirect('dashboard:student_dashboard_view')
     # Directly render login page instead of redirecting
     return render(request, 'dashboard/login.html', {
         'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
@@ -2292,7 +2360,7 @@ def student_dashboard(request):
     student_username = request.session.get('student_username', 'anrkitstudent')
     student = None
     try:
-        student = Student.objects.filter(ht_no=student_username).first()
+        student = get_session_student_record(request)
     except Exception as e:
         logger.error(f"Error getting student data: {e}")
     if not student:
@@ -2329,7 +2397,7 @@ def redirect_to_dashboard(request):
     if request.user.is_authenticated:
         return redirect('dashboard:admin_dashboard' if request.user.is_superuser else 'dashboard:dashboard')
     elif request.session.get('student_logged_in'):
-        return redirect('dashboard:student_dashboard')
+        return redirect('dashboard:student_dashboard_view')
     return redirect('dashboard:admin_login')
 
 
@@ -3542,7 +3610,15 @@ def students(request):
 def students_data(request):
     if not request.session.get('student_logged_in') and not request.user.is_authenticated:
         return redirect('dashboard:student_login')
-    qs = Student.objects.all().order_by('-created_at')
+    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
+    if request.session.get('student_logged_in') and not user_authenticated and not is_demo_student_session(request):
+        session_student = get_session_student_record(request)
+        if not session_student:
+            messages.error(request, "Your student session is missing record information. Please log in again.")
+            return redirect('dashboard:student_logout')
+        qs = Student.objects.filter(id=session_student.id).order_by('-created_at')
+    else:
+        qs = Student.objects.all().order_by('-created_at')
     paginator = Paginator(qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
@@ -3853,9 +3929,9 @@ def edit_student(request, student_id):
 
     # If it's a student session (and not admin), ensure they can only edit their own record
     if student_logged_in and not user_authenticated:
-        if student.ht_no != student_username:
+        if not student_session_can_access_record(request, student):
             messages.error(request, "You can only edit your own student record.")
-            return redirect('dashboard:student_dashboard')
+            return redirect(student_dashboard_redirect_route(request))
 
     # Proceed with edit
     if request.method == 'POST':
@@ -4067,17 +4143,16 @@ def generate_student_pdf_view(request, student_id):
     # If student session user, only allow access to their own record
     user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
     if request.session.get('student_logged_in') and not user_authenticated:
-        student_username = request.session.get('student_username')
-        if student.ht_no != student_username:
+        if not student_session_can_access_record(request, student):
             messages.error(request, "You can only access your own student record.")
-            return redirect('dashboard:student_dashboard')
+            return redirect(student_dashboard_redirect_route(request))
 
     try:
         # Generate student PDF with merged certificates
         pdf_bytes = generate_student_pdf(student, return_bytes=True)
         if not pdf_bytes:
             messages.error(request, "Failed to generate PDF.")
-            return redirect('dashboard:students_data' if user_authenticated else 'dashboard:student_dashboard')
+            return redirect('dashboard:students_data' if user_authenticated else student_dashboard_redirect_route(request))
         
         # Return PDF directly as downloadable file
         from django.http import HttpResponse
@@ -4088,7 +4163,7 @@ def generate_student_pdf_view(request, student_id):
     except Exception as e:
         logger.error(f"Error generating PDF for student {student_id}: {e}")
         messages.error(request, f"Failed to generate PDF: {str(e)}")
-        return redirect('dashboard:students_data' if user_authenticated else 'dashboard:student_dashboard')
+        return redirect('dashboard:students_data' if user_authenticated else student_dashboard_redirect_route(request))
 
 
 @login_required
@@ -4572,11 +4647,18 @@ def generate_student_pdf(
                             folder='student_pdfs',
                             public_id=f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}",
                             overwrite=True,
-                            format='pdf'
+                            format='pdf',
+                            type='upload',
+                            access_mode='public',
                         )
                         if cloud_result and 'secure_url' in cloud_result:
                             student.pdf_url = cloud_result['secure_url']
                             student.save(update_fields=['pdf_url'])
+                            record_cloudinary_upload(
+                                upload_type='student_pdf',
+                                upload_result=cloud_result,
+                                student=student,
+                            )
                             print(f"  [OK] Uploaded to Cloudinary: {cloud_result['secure_url']}")
                             pdf_persisted = True
                         else:
@@ -4656,14 +4738,45 @@ def view_pdf(request, student_id):
     
     # If student session (not admin), enforce ownership
     if request.session.get('student_logged_in') and not user_authenticated:
-        student_username = request.session.get('student_username')
-        if student.ht_no != student_username:
+        if not student_session_can_access_record(request, student):
             messages.error(request, "You can only view your own PDF.")
-            return redirect('dashboard:student_dashboard')
-    
-    url = getattr(student, 'pdf_url', None) or getattr(student, 'pdf_file', None)
-    if url:
-        return redirect(url)
+            return redirect(student_dashboard_redirect_route(request))
+
+    pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
+    if pdf_url:
+        temp_pdf_path = None
+        try:
+            temp_pdf_path, _ = download_remote_asset(pdf_url, default_suffix='.pdf')
+            if temp_pdf_path and os.path.exists(temp_pdf_path):
+                with open(temp_pdf_path, 'rb') as pdf_handle:
+                    pdf_bytes = pdf_handle.read()
+                response = HttpResponse(pdf_bytes, content_type='application/pdf')
+                response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+                response['Content-Length'] = len(pdf_bytes)
+                return response
+        finally:
+            if temp_pdf_path and os.path.exists(temp_pdf_path):
+                try:
+                    os.remove(temp_pdf_path)
+                except OSError:
+                    pass
+
+    pdf_field = getattr(student, 'pdf_file', None)
+    if pdf_field and getattr(pdf_field, 'name', ''):
+        try:
+            with pdf_field.open('rb') as pdf_handle:
+                pdf_bytes = pdf_handle.read()
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(pdf_bytes)
+            return response
+        except Exception as exc:
+            logger.warning(f"Could not stream local student PDF for {student.ht_no}: {exc}")
+            try:
+                return redirect(pdf_field.url)
+            except Exception:
+                pass
+
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
 
@@ -4677,10 +4790,9 @@ def merge_student_certificates(request, student_id):
         return redirect('dashboard:student_login')
 
     if request.session.get('student_logged_in') and not user_authenticated:
-        student_username = request.session.get('student_username')
-        if student.ht_no != student_username:
+        if not student_session_can_access_record(request, student):
             messages.error(request, "You can only access your own student record.")
-            return redirect('dashboard:student_dashboard')
+            return redirect(student_dashboard_redirect_route(request))
 
     temp_files = []
     try:
@@ -4793,7 +4905,9 @@ def merge_student_certificates(request, student_id):
                     folder='merged_student_certificates',
                     public_id=f"merged_student_{student.ht_no}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                     overwrite=True,
-                    format='pdf'
+                    format='pdf',
+                    type='upload',
+                    access_mode='public',
                 )
                 merged_url = cr['secure_url']
                 record_cloudinary_upload(
@@ -6395,6 +6509,8 @@ def students_data_password(request):
 
 def student_dashboard_password(request):
     """Password protection for student dashboard page"""
+    if request.session.get('student_logged_in'):
+        return redirect('dashboard:student_dashboard_view')
     if request.method == 'POST':
         password = request.POST.get('password')
         if password == 'aecithod':
