@@ -112,6 +112,7 @@ urlpatterns = [
     # Cloudinary routes
     path('cloudinary/sync/<int:faculty_id>/', views.sync_to_cloudinary, name='sync_to_cloudinary'),
     path('cloudinary/upload/<int:faculty_id>/', views.upload_to_cloudinary, name='upload_to_cloudinary'),
+    path('faculty/upload-to-cloudinary/<int:faculty_id>/', views.upload_to_cloudinary, name='upload_to_cloudinary_faculty_alias'),
     path('cloudinary/upload-faculty/', views.upload_faculty_pdf, name='upload_faculty_pdf'),
     path('cloudinary/upload-photo/', views.upload_faculty_photo, name='upload_faculty_photo'),
     path('cloudinary/status/', views.cloudinary_status, name='cloudinary_status'),

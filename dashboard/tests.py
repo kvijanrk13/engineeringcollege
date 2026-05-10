@@ -1,10 +1,12 @@
 import io
 import json
 import tempfile
+from datetime import date
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
@@ -256,6 +258,37 @@ class DashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], 'https://example.com/student-history-photo.jpg')
+
+    @patch('dashboard.views.download_remote_asset')
+    def test_resolve_student_photo_for_pdf_falls_back_to_latest_cloudinary_upload(self, mock_download_remote_asset):
+        student = Student.objects.create(
+            ht_no='23C11A7779',
+            student_name='PDF History Photo Student',
+        )
+        CloudinaryUpload.objects.create(
+            student=student,
+            upload_type='photo',
+            cloudinary_url='https://example.com/student-pdf-history-photo.jpg',
+            public_id='student-pdf-history-photo',
+            resource_type='image',
+        )
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_photo:
+            temp_photo.write(make_test_image_bytes())
+            temp_photo_path = temp_photo.name
+
+        mock_download_remote_asset.return_value = (temp_photo_path, False)
+
+        try:
+            photo_uri, local_path, temp_paths, source = dashboard_views.resolve_student_photo_for_pdf(student)
+        finally:
+            if Path(temp_photo_path).exists():
+                Path(temp_photo_path).unlink()
+
+        self.assertTrue(photo_uri.startswith('file:///'))
+        self.assertEqual(local_path, temp_photo_path)
+        self.assertEqual(temp_paths, [temp_photo_path])
+        self.assertEqual(source, 'cloudinary_upload_history')
 
     @patch('dashboard.views.download_remote_asset')
     def test_view_student_pdf_streams_cloudinary_pdf_through_app_route(self, mock_download_remote_asset):
@@ -707,3 +740,133 @@ class DashboardTests(TestCase):
                 cloudinary_url='https://example.com/fdp_cert_T9001_2',
             ).exists()
         )
+
+    def test_merge_certificates_with_pdf_bytes_merges_faculty_photo_and_related_assets(self):
+        with tempfile.TemporaryDirectory() as temp_media_root:
+            with override_settings(MEDIA_ROOT=temp_media_root):
+                faculty = Faculty.objects.create(
+                    staff_name='Merged Faculty',
+                    employee_code='F9002',
+                    department='IT',
+                    designation='Assistant Professor',
+                    photo=SimpleUploadedFile(
+                        'faculty-photo.jpg',
+                        make_test_image_bytes(),
+                        content_type='image/jpeg',
+                    ),
+                    other_documents=SimpleUploadedFile(
+                        'other-doc.pdf',
+                        make_test_pdf_bytes('Other Document'),
+                        content_type='application/pdf',
+                    ),
+                )
+                Certificate.objects.create(
+                    faculty=faculty,
+                    certificate_type='NPTEL',
+                    certificate_file=SimpleUploadedFile(
+                        'nptel.pdf',
+                        make_test_pdf_bytes('Certificate Record'),
+                        content_type='application/pdf',
+                    ),
+                )
+                ResearchPublication.objects.create(
+                    faculty=faculty,
+                    research_type='journal',
+                    title='Merged Research Publication',
+                    publication_year=2024,
+                    proof_document=SimpleUploadedFile(
+                        'research-proof.pdf',
+                        make_test_pdf_bytes('Research Proof'),
+                        content_type='application/pdf',
+                    ),
+                )
+                FDP.objects.create(
+                    faculty=faculty,
+                    fdp_type='fdp',
+                    title='Merged FDP',
+                    from_date=date(2024, 6, 1),
+                    to_date=date(2024, 6, 2),
+                    certificate=SimpleUploadedFile(
+                        'fdp-proof.pdf',
+                        make_test_pdf_bytes('FDP Proof'),
+                        content_type='application/pdf',
+                    ),
+                )
+
+                merged_pdf = dashboard_views.merge_certificates_with_pdf_bytes(
+                    make_test_pdf_bytes('Faculty Profile'),
+                    faculty,
+                )
+
+        self.assertIsNotNone(merged_pdf)
+        self.assertGreaterEqual(len(PdfReader(io.BytesIO(merged_pdf)).pages), 6)
+
+    @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Generated Faculty PDF'))
+    @patch('dashboard.views.is_cloudinary_configured', return_value=False)
+    def test_generate_faculty_pdf_route_persists_pdf_document(
+        self,
+        _mock_cloudinary_enabled,
+        _mock_generate_faculty_pdf_bytes,
+    ):
+        user = get_user_model().objects.create_user(
+            username='faculty-generator',
+            email='faculty-generator@example.com',
+            password='secret123',
+        )
+        self.client.force_login(user)
+
+        faculty = Faculty.objects.create(
+            staff_name='Faculty Generator',
+            employee_code='F9003',
+            department='IT',
+            designation='Assistant Professor',
+        )
+
+        response = self.client.get(
+            reverse('dashboard:generate_faculty_pdf', args=[faculty.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('attachment;', response['Content-Disposition'])
+
+        faculty.refresh_from_db()
+        self.assertTrue(bool(faculty.pdf_document))
+
+    def test_faculty_pdf_view_and_download_routes_use_saved_pdf_document(self):
+        user = get_user_model().objects.create_user(
+            username='faculty-pdf-viewer',
+            email='faculty-pdf-viewer@example.com',
+            password='secret123',
+        )
+        self.client.force_login(user)
+
+        faculty = Faculty.objects.create(
+            staff_name='Saved Faculty PDF',
+            employee_code='F9004',
+            department='IT',
+            designation='Assistant Professor',
+        )
+        faculty.pdf_document.save(
+            'faculty_saved.pdf',
+            ContentFile(make_test_pdf_bytes('Saved Faculty PDF')),
+            save=True,
+        )
+
+        view_response = self.client.get(
+            reverse('dashboard:faculty_pdf', args=[faculty.id]),
+            secure=True,
+        )
+        download_response = self.client.get(
+            reverse('dashboard:download_faculty_pdf', args=[faculty.id]),
+            secure=True,
+        )
+
+        self.assertEqual(view_response.status_code, 200)
+        self.assertEqual(view_response['Content-Type'], 'application/pdf')
+        self.assertIn('inline;', view_response['Content-Disposition'])
+
+        self.assertEqual(download_response.status_code, 200)
+        self.assertEqual(download_response['Content-Type'], 'application/pdf')
+        self.assertIn('attachment;', download_response['Content-Disposition'])

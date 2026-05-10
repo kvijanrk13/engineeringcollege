@@ -699,6 +699,387 @@ def resolve_faculty_photo_for_pdf(faculty):
     return None, None, temp_paths, None
 
 
+def collect_student_photo_candidates(student, photo_override_path=None):
+    """Return ordered student photo candidates for generated PDFs."""
+    candidates = []
+    seen = set()
+
+    def add_path(path_value, source):
+        if not path_value or not os.path.exists(path_value):
+            return
+        key = ('path', os.path.abspath(path_value))
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'source': source, 'path': path_value})
+
+    def add_url(url_value, source):
+        normalized_url = normalize_optional_url(url_value)
+        if not normalized_url:
+            return
+        key = ('url', normalized_url)
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'source': source, 'url': normalized_url})
+
+    add_path(photo_override_path, 'photo_override_path')
+    add_url(getattr(student, 'photo_url', None), 'student.photo_url')
+
+    latest_upload_url = (
+        CloudinaryUpload.objects
+        .filter(student=student, upload_type='photo')
+        .order_by('-upload_date')
+        .values_list('cloudinary_url', flat=True)
+        .first()
+    )
+    add_url(latest_upload_url, 'cloudinary_upload_history')
+
+    photo_field = getattr(student, 'photo', None)
+    if photo_field and getattr(photo_field, 'name', ''):
+        try:
+            add_path(photo_field.path, 'student.photo.path')
+        except (NotImplementedError, ValueError, OSError):
+            pass
+
+        try:
+            field_url = photo_field.url
+        except Exception:
+            field_url = None
+
+        if isinstance(field_url, str) and field_url.startswith(('http://', 'https://', '//')):
+            add_url(field_url, 'student.photo.url')
+
+    return candidates
+
+
+def resolve_student_photo_for_pdf(student, photo_override_path=None):
+    """Resolve the best student photo source and return a file URI plus cleanup temp paths."""
+    temp_paths = []
+
+    for candidate in collect_student_photo_candidates(student, photo_override_path=photo_override_path):
+        source = candidate['source']
+        path_value = candidate.get('path')
+        url_value = candidate.get('url')
+
+        if path_value and os.path.exists(path_value):
+            return build_file_uri(path_value), path_value, temp_paths, source
+
+        if url_value:
+            downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix='.jpg')
+            if not downloaded_path:
+                continue
+
+            temp_paths.append(downloaded_path)
+            if is_pdf:
+                logger.warning(f"Student photo candidate from {source} resolved to a PDF, skipping: {url_value}")
+                continue
+
+            return build_file_uri(downloaded_path), downloaded_path, temp_paths, source
+
+    return None, None, temp_paths, None
+
+
+def count_pdf_pages(pdf_path):
+    """Return the number of pages in a local PDF path."""
+    if not pdf_path or not os.path.exists(pdf_path):
+        return 0
+    try:
+        return len(PdfReader(pdf_path).pages)
+    except Exception as exc:
+        logger.warning(f"Could not count PDF pages for {pdf_path}: {exc}")
+        return 0
+
+
+def build_faculty_results_context(results_value):
+    """Normalize faculty results into either a structured list or plain text."""
+    if not results_value:
+        return [], None
+
+    parsed_results = None
+    if isinstance(results_value, list):
+        parsed_results = results_value
+    elif isinstance(results_value, str):
+        try:
+            candidate = json.loads(results_value)
+            if isinstance(candidate, list):
+                parsed_results = candidate
+            else:
+                return [], results_value
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return [], results_value
+    else:
+        return [], str(results_value)
+
+    normalized_results = []
+    for item in parsed_results:
+        if not isinstance(item, dict):
+            continue
+
+        normalized_item = dict(item)
+        attempted = normalized_item.get('students_attempted') or normalized_item.get('attempted') or 0
+        passed = normalized_item.get('students_passed') or normalized_item.get('passed') or 0
+        try:
+            attempted = int(attempted)
+        except (TypeError, ValueError):
+            attempted = 0
+        try:
+            passed = int(passed)
+        except (TypeError, ValueError):
+            passed = 0
+
+        normalized_item['students_attempted'] = attempted
+        normalized_item['students_passed'] = passed
+        normalized_item['classes_taken'] = normalized_item.get('classes_taken') or normalized_item.get('classes') or 0
+        normalized_item['subject_name'] = normalized_item.get('subject_name') or normalized_item.get('subject') or 'Subject'
+        normalized_item['subject_code'] = normalized_item.get('subject_code') or normalized_item.get('code') or ''
+        normalized_item['academic_year'] = normalized_item.get('academic_year') or normalized_item.get('ay') or ''
+
+        percentage = normalized_item.get('percentage')
+        if percentage in (None, ''):
+            percentage = round((passed / attempted * 100), 2) if attempted else 0
+        normalized_item['percentage'] = percentage
+        normalized_results.append(normalized_item)
+
+    return normalized_results, None
+
+
+def resolve_faculty_document_asset(file_field=None, url_value=None, default_suffix='.pdf'):
+    """Resolve a faculty document asset for PDF preview/summary use."""
+    temp_paths = []
+    asset_path, is_pdf = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
+    if not asset_path or not os.path.exists(asset_path):
+        return {
+            'available': False,
+            'path': None,
+            'display_url': None,
+            'is_image': False,
+            'page_count': 0,
+            'temp_paths': temp_paths,
+        }
+
+    local_field_path = None
+    if file_field and getattr(file_field, 'name', ''):
+        try:
+            local_field_path = file_field.path
+        except (NotImplementedError, ValueError, OSError):
+            local_field_path = None
+
+    if asset_path != local_field_path:
+        temp_paths.append(asset_path)
+
+    return {
+        'available': True,
+        'path': asset_path,
+        'display_url': build_file_uri(asset_path),
+        'is_image': not is_pdf,
+        'page_count': 1 if not is_pdf else count_pdf_pages(asset_path),
+        'temp_paths': temp_paths,
+    }
+
+
+def build_faculty_document_collection_summary(asset_specs, default_suffix='.pdf'):
+    """Aggregate availability/page-count/preview info across multiple faculty assets."""
+    temp_paths = []
+    first_available_asset = None
+    total_pages = 0
+
+    for file_field, url_value in asset_specs:
+        asset = resolve_faculty_document_asset(file_field, url_value, default_suffix=default_suffix)
+        for temp_path in asset['temp_paths']:
+            if temp_path not in temp_paths:
+                temp_paths.append(temp_path)
+        if not asset['available']:
+            continue
+
+        total_pages += asset['page_count']
+        if first_available_asset is None:
+            first_available_asset = asset
+
+    return {
+        'available': first_available_asset is not None,
+        'display_url': first_available_asset['display_url'] if first_available_asset else None,
+        'is_image': first_available_asset['is_image'] if first_available_asset else False,
+        'page_count': total_pages,
+        'temp_paths': temp_paths,
+    }
+
+
+def build_faculty_pdf_context(faculty):
+    """Build the complete context required by dashboard/faculty_pdf.html."""
+    temp_paths = []
+    photo_url, local_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
+    temp_paths.extend(photo_temp_paths)
+
+    certificates = list(Certificate.objects.filter(faculty=faculty).order_by('-uploaded_at'))
+    research_projects = list(ResearchProject.objects.filter(faculty=faculty).order_by('-year', '-id'))
+    research_publications = list(ResearchPublication.objects.filter(faculty=faculty).order_by('-publication_year', '-id'))
+    fdps = list(FDP.objects.filter(faculty=faculty).order_by('-from_date', '-id'))
+    btech_projects = list(BTechProject.objects.filter(faculty=faculty).order_by('-batch', '-id'))
+
+    subjects_list = []
+    subjects_dealt = getattr(faculty, 'subjects_dealt', None)
+    if subjects_dealt:
+        subjects_list = [subject.strip() for subject in subjects_dealt.split(',') if subject.strip()]
+
+    results_data_list, results_text = build_faculty_results_context(getattr(faculty, 'results', None))
+
+    def has_file_or_url(file_field, url_value):
+        return bool(getattr(file_field, 'name', '') or normalize_optional_url(url_value))
+
+    research_summary = build_faculty_document_collection_summary(
+        [(faculty.research_proof, faculty.research_proof_url)] +
+        [(pub.proof_document, getattr(pub, 'proof_document_url', None)) for pub in research_publications],
+        default_suffix='.pdf',
+    )
+    fdp_summary = build_faculty_document_collection_summary(
+        [(faculty.fdp_certificate, faculty.fdp_certificate_url)] +
+        [(fdp.certificate, getattr(fdp, 'certificate_url', None)) for fdp in fdps],
+        default_suffix='.pdf',
+    )
+    experience_summary = resolve_faculty_document_asset(
+        faculty.experience_certificates,
+        faculty.experience_certificates_url,
+        default_suffix='.pdf',
+    )
+    other_documents_summary = resolve_faculty_document_asset(
+        faculty.other_documents,
+        faculty.other_documents_url,
+        default_suffix='.pdf',
+    )
+
+    for asset_summary in (research_summary, fdp_summary, experience_summary, other_documents_summary):
+        for temp_path in asset_summary['temp_paths']:
+            if temp_path not in temp_paths:
+                temp_paths.append(temp_path)
+
+    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+
+    context = {
+        'faculty': faculty,
+        'photo_url': photo_url,
+        'local_photo_path': local_photo_path,
+        'anurag_header_url': build_file_uri(anurag_header_path),
+        'experience': calculate_experience(faculty.joining_date) if faculty.joining_date else 'N/A',
+        'certificates': certificates,
+        'research_projects': research_projects,
+        'research_publications': research_publications,
+        'fdps': fdps,
+        'btech_projects': btech_projects,
+        'subjects_list': subjects_list,
+        'results_data_list': results_data_list,
+        'results_text': results_text,
+        'current_date': timezone.now(),
+        'cloudinary_status': {'has_pdf': bool(faculty.cloudinary_pdf_url)},
+        'has_aadhar': has_file_or_url(faculty.aadhar_file, faculty.aadhar_url),
+        'has_pan': has_file_or_url(faculty.pan_file, faculty.pan_url),
+        'has_apaar': has_file_or_url(faculty.apaar_file, faculty.apaar_url),
+        'has_scm': has_file_or_url(faculty.scm_file, faculty.scm_url),
+        'has_jntuh_biodata': has_file_or_url(faculty.jntuh_biodata, faculty.jntuh_biodata_url),
+        'has_ssc_cert': has_file_or_url(faculty.ssc_certificate, faculty.ssc_certificate_url),
+        'has_inter_cert': has_file_or_url(faculty.inter_certificate, faculty.inter_certificate_url),
+        'has_ug_cert': has_file_or_url(faculty.ug_certificate, faculty.ug_certificate_url),
+        'has_pg_cert': has_file_or_url(faculty.pg_certificate, faculty.pg_certificate_url),
+        'has_phd_cert': has_file_or_url(faculty.phd_certificate, faculty.phd_certificate_url),
+        'has_research_proof': research_summary['available'],
+        'research_proof_total_pages': research_summary['page_count'],
+        'research_proof_display_url': research_summary['display_url'],
+        'research_proof_is_image': research_summary['is_image'],
+        'research_proof_academic_year': faculty.research_proof_academic_year or next(
+            (pub.academic_year for pub in research_publications if pub.academic_year),
+            '',
+        ),
+        'has_fdp_certificate': fdp_summary['available'],
+        'fdp_certificate_total_pages': fdp_summary['page_count'],
+        'fdp_certificate_display_url': fdp_summary['display_url'],
+        'fdp_certificate_is_image': fdp_summary['is_image'],
+        'fdp_certificate_academic_year': faculty.fdp_certificate_academic_year or next(
+            (fdp.academic_year for fdp in fdps if fdp.academic_year),
+            '',
+        ),
+        'has_experience_certificates': experience_summary['available'],
+        'experience_certificates_display_url': experience_summary['display_url'],
+        'experience_certificates_is_image': experience_summary['is_image'],
+        'experience_certificates_academic_year': faculty.experience_certificates_academic_year,
+        'has_other_documents': other_documents_summary['available'],
+        'other_documents_display_url': other_documents_summary['display_url'],
+        'other_documents_is_image': other_documents_summary['is_image'],
+        'other_documents_academic_year': faculty.other_documents_academic_year,
+    }
+
+    return context, temp_paths
+
+
+def persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=None):
+    """Persist a generated faculty PDF to local storage and Cloudinary when configured."""
+    filename = f"faculty_{faculty.employee_code}_{date.today().strftime('%Y%m%d')}.pdf"
+    faculty.pdf_document.save(filename, ContentFile(pdf_bytes), save=False)
+
+    cloudinary_pdf_url = getattr(faculty, 'cloudinary_pdf_url', None)
+    if is_cloudinary_configured():
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+            temp_pdf.write(pdf_bytes)
+            temp_pdf_path = temp_pdf.name
+        try:
+            upload_result = cloudinary.uploader.upload(
+                temp_pdf_path,
+                resource_type='raw',
+                folder='faculty_pdfs',
+                public_id=f"faculty_{faculty.employee_code}_profile",
+                overwrite=True,
+                format='pdf',
+                type='upload',
+                access_mode='public',
+            )
+            cloudinary_pdf_url = upload_result.get('secure_url') or cloudinary_pdf_url
+            if cloudinary_pdf_url:
+                record_cloudinary_upload(
+                    upload_type='pdf',
+                    upload_result=upload_result,
+                    faculty=faculty,
+                    uploaded_by=uploaded_by,
+                )
+        except Exception as exc:
+            logger.warning(f"Could not upload faculty PDF to Cloudinary for {faculty.employee_code}: {exc}")
+        finally:
+            try:
+                if os.path.exists(temp_pdf_path):
+                    os.remove(temp_pdf_path)
+            except Exception:
+                pass
+
+    faculty.cloudinary_pdf_url = cloudinary_pdf_url
+    faculty.save(update_fields=['pdf_document', 'cloudinary_pdf_url'])
+    return filename
+
+
+def generate_faculty_pdf_bytes(faculty):
+    """Generate a merged faculty PDF as bytes."""
+    context, temp_paths = build_faculty_pdf_context(faculty)
+    html_string = render_to_string('dashboard/faculty_pdf.html', context)
+    info_pdf_bytes = None
+
+    try:
+        from weasyprint import HTML
+        base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
+        html_obj = HTML(string=html_string, base_url=base_url)
+        info_pdf_bytes = html_obj.write_pdf()
+    except Exception as exc:
+        logger.error(f"Faculty WeasyPrint generation failed for {faculty.employee_code}: {exc}")
+    finally:
+        for temp_path in temp_paths:
+            try:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except Exception:
+                pass
+
+    if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
+        raise ValueError('Faculty profile PDF generation failed before merge.')
+
+    return merge_certificates_with_pdf_bytes(info_pdf_bytes, faculty) or info_pdf_bytes
+
+
 def calculate_correct_age(dob):
     """Return accurate age in years from a date object."""
     if not dob:
@@ -2098,6 +2479,71 @@ def sync_to_cloudinary(request, faculty_id):
 
 @login_required
 def upload_to_cloudinary(request, faculty_id):
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    wants_json = (
+        request.method == 'POST' or
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+        'application/json' in (request.headers.get('Accept', '') or '')
+    )
+
+    if wants_json:
+        try:
+            if not faculty.cloudinary_pdf_url:
+                existing_pdf_bytes = _read_faculty_pdf_bytes(faculty)
+                if existing_pdf_bytes:
+                    persist_faculty_pdf(faculty, existing_pdf_bytes, uploaded_by=request.user.username)
+                elif faculty.pdf_document and is_cloudinary_configured():
+                    with faculty.pdf_document.open('rb') as pdf_file:
+                        upload_result = cloudinary.uploader.upload(
+                            pdf_file,
+                            resource_type='raw',
+                            folder='faculty_pdfs',
+                            public_id=f"faculty_{faculty.employee_code}_profile",
+                            overwrite=True,
+                            format='pdf',
+                            type='upload',
+                            access_mode='public',
+                        )
+                    faculty.cloudinary_pdf_url = upload_result.get('secure_url')
+                    faculty.save(update_fields=['cloudinary_pdf_url'])
+                    if faculty.cloudinary_pdf_url:
+                        record_cloudinary_upload(
+                            upload_type='pdf',
+                            upload_result=upload_result,
+                            faculty=faculty,
+                            uploaded_by=request.user.username,
+                        )
+
+            if faculty.photo and not faculty.cloudinary_photo_url and is_cloudinary_configured():
+                with faculty.photo.open('rb') as photo_file:
+                    upload_result = cloudinary.uploader.upload(
+                        photo_file,
+                        folder='faculty_photos',
+                        public_id=f"faculty_{faculty.employee_code}_photo",
+                        overwrite=True,
+                        transformation=[{'width': 300, 'height': 300, 'crop': 'fill'}, {'quality': 'auto:good'}],
+                    )
+                faculty.cloudinary_photo_url = upload_result.get('secure_url')
+                faculty.save(update_fields=['cloudinary_photo_url'])
+                if faculty.cloudinary_photo_url:
+                    record_cloudinary_upload(
+                        upload_type='photo',
+                        upload_result=upload_result,
+                        faculty=faculty,
+                        uploaded_by=request.user.username,
+                    )
+
+            return JsonResponse({
+                'success': bool(faculty.cloudinary_pdf_url),
+                'pdf_url': normalize_optional_url(faculty.cloudinary_pdf_url),
+                'photo_url': normalize_optional_url(faculty.cloudinary_photo_url),
+                'message': 'Faculty assets synced to Cloudinary.' if faculty.cloudinary_pdf_url else 'Faculty PDF is not available for upload.',
+            }, status=200 if faculty.cloudinary_pdf_url else 400)
+        except Exception as exc:
+            logger.error(f"AJAX Cloudinary upload failed for {faculty.employee_code}: {exc}", exc_info=True)
+            return JsonResponse({'success': False, 'error': str(exc)}, status=500)
+
     return sync_to_cloudinary(request, faculty_id)
 
 
@@ -4441,41 +4887,13 @@ def generate_student_pdf(
         return pdf_bytes
 
     # ── PHOTO ──────────────────────────────────────────────────
-    local_photo_path = None
-    photo_url_for_pdf = None
-
-    # Try uploaded temp override first so freshly uploaded photos work before remote storage settles.
-    if photo_override_path and os.path.exists(photo_override_path):
-        local_photo_path = photo_override_path
-        photo_url_for_pdf = build_file_uri(photo_override_path)
-        print(f"  [OK] Photo (uploaded temp override): {photo_url_for_pdf}")
-
-    # Try Cloudinary URL first
-    if not photo_url_for_pdf and student.photo_url:
-        p = _download(student.photo_url)
-        if p:
-            local_photo_path = p
-            photo_url_for_pdf = build_file_uri(p)
-            print(f"  [OK] Photo (Cloudinary -> local): {photo_url_for_pdf}")
-
-    # Fallback to FileField
-    if not photo_url_for_pdf and student.photo and getattr(student.photo, 'name', ''):
-        lp = _local_path(student.photo)
-        if lp:
-            local_photo_path = lp
-            photo_url_for_pdf = build_file_uri(lp)
-            print(f"  [OK] Photo (local file): {photo_url_for_pdf}")
-        else:
-            try:
-                fu = student.photo.url
-                if fu and fu.startswith('http'):
-                    p = _download(fu)
-                    if p:
-                        local_photo_path = p
-                        photo_url_for_pdf = build_file_uri(p)
-                        print(f"  [OK] Photo (URL -> local): {photo_url_for_pdf}")
-            except Exception:
-                pass
+    photo_url_for_pdf, local_photo_path, photo_temp_paths, photo_source = resolve_student_photo_for_pdf(
+        student,
+        photo_override_path=photo_override_path,
+    )
+    temp_files.extend(photo_temp_paths)
+    if photo_url_for_pdf:
+        print(f"  [OK] Photo ({photo_source}): {photo_url_for_pdf}")
 
     # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
     anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
@@ -6674,10 +7092,62 @@ def test_render(request):
 # Stubs return HTTP 501 (Not Implemented) to satisfy URL resolution.
 
 
+def _read_faculty_pdf_bytes(faculty):
+    """Read a previously persisted faculty PDF from Cloudinary or local storage."""
+    pdf_url = normalize_optional_url(getattr(faculty, 'cloudinary_pdf_url', None))
+    if pdf_url:
+        temp_pdf_path, is_pdf = download_remote_asset(pdf_url, default_suffix='.pdf')
+        try:
+            if temp_pdf_path and os.path.exists(temp_pdf_path) and is_pdf:
+                with open(temp_pdf_path, 'rb') as pdf_file:
+                    return pdf_file.read()
+        finally:
+            try:
+                if temp_pdf_path and os.path.exists(temp_pdf_path):
+                    os.remove(temp_pdf_path)
+            except Exception:
+                pass
+
+    pdf_field = getattr(faculty, 'pdf_document', None)
+    if pdf_field and getattr(pdf_field, 'name', ''):
+        try:
+            with pdf_field.open('rb') as pdf_file:
+                return pdf_file.read()
+        except Exception as exc:
+            logger.warning(f"Could not read stored faculty PDF for {faculty.employee_code}: {exc}")
+
+    return None
+
+
+def _faculty_pdf_response(pdf_bytes, employee_code, as_attachment=False):
+    """Build an HTTP response for faculty PDF content."""
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    disposition = 'attachment' if as_attachment else 'inline'
+    response['Content-Disposition'] = f'{disposition}; filename="faculty_{employee_code}.pdf"'
+    response['Content-Length'] = len(pdf_bytes)
+    return response
+
+
+@login_required
 def generate_faculty_pdf(request, faculty_id):
-    """Generate a faculty PDF - not yet implemented."""
-    from django.http import HttpResponse
-    return HttpResponse("Faculty PDF generation not yet implemented.", status=501)
+    """Generate, persist, and return the merged faculty PDF."""
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    try:
+        pdf_bytes = generate_faculty_pdf_bytes(faculty)
+        persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+        FacultyLog.objects.create(
+            faculty=faculty,
+            action='Faculty PDF Generated',
+            details=f'Merged faculty PDF generated for {faculty.staff_name} ({faculty.employee_code})',
+            performed_by=request.user.username,
+            ip_address=request.META.get('REMOTE_ADDR'),
+        )
+        return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=True)
+    except Exception as exc:
+        logger.error(f"Error generating faculty PDF for {faculty_id}: {exc}", exc_info=True)
+        messages.error(request, f'Error generating faculty PDF: {exc}')
+        return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
 
 
 def student_charts(request):
@@ -6692,34 +7162,92 @@ def faculty_charts(request):
     return HttpResponse("Faculty charts not yet implemented.", status=501)
 
 
+@login_required
 def faculty_pdf(request, faculty_id):
-    """View faculty PDF - not yet implemented."""
-    from django.http import HttpResponse
-    return HttpResponse("Faculty PDF view not yet implemented.", status=501)
+    """View the saved faculty PDF inline, generating it on demand when necessary."""
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    try:
+        pdf_bytes = _read_faculty_pdf_bytes(faculty)
+        if not pdf_bytes:
+            pdf_bytes = generate_faculty_pdf_bytes(faculty)
+            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+        return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=False)
+    except Exception as exc:
+        logger.error(f"Error viewing faculty PDF for {faculty_id}: {exc}", exc_info=True)
+        messages.error(request, f'Error viewing faculty PDF: {exc}')
+        return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
 
 
+@login_required
 def download_faculty_pdf(request, faculty_id):
-    """Download faculty PDF - not yet implemented."""
-    from django.http import HttpResponse
-    return HttpResponse("Faculty PDF download not yet implemented.", status=501)
+    """Download the saved faculty PDF, generating it on demand when missing."""
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+
+    try:
+        pdf_bytes = _read_faculty_pdf_bytes(faculty)
+        if not pdf_bytes:
+            pdf_bytes = generate_faculty_pdf_bytes(faculty)
+            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+        return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=True)
+    except Exception as exc:
+        logger.error(f"Error downloading faculty PDF for {faculty_id}: {exc}", exc_info=True)
+        messages.error(request, f'Error downloading faculty PDF: {exc}')
+        return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
 
 
+@login_required
 def preview_faculty_pdf(request, faculty_id):
-    """Preview faculty PDF - not yet implemented."""
-    from django.http import HttpResponse
-    return HttpResponse("Faculty PDF preview not yet implemented.", status=501)
+    """Alias for inline faculty PDF preview."""
+    return faculty_pdf(request, faculty_id)
 
 
+@login_required
 def ajax_check_pdf_status(request, faculty_id):
-    """AJAX check PDF status - not yet implemented."""
-    from django.http import JsonResponse
-    return JsonResponse({'status': 'not_implemented'}, status=501)
+    """Return current faculty PDF availability for AJAX consumers."""
+    faculty = get_object_or_404(Faculty, id=faculty_id)
+    has_pdf = bool(
+        normalize_optional_url(getattr(faculty, 'cloudinary_pdf_url', None)) or
+        getattr(getattr(faculty, 'pdf_document', None), 'name', '')
+    )
+    return JsonResponse({
+        'status': 'ready' if has_pdf else 'missing',
+        'has_pdf': has_pdf,
+        'pdf_url': reverse('dashboard:faculty_pdf', args=[faculty.id]) if has_pdf else None,
+        'download_url': reverse('dashboard:download_faculty_pdf', args=[faculty.id]) if has_pdf else None,
+        'cloudinary_pdf_url': normalize_optional_url(getattr(faculty, 'cloudinary_pdf_url', None)) or '',
+    })
 
 
+@login_required
 def bulk_generate_faculty_pdfs(request):
-    """Bulk generate faculty PDFs - not yet implemented."""
-    from django.http import HttpResponse
-    return HttpResponse("Bulk faculty PDF generation not yet implemented.", status=501)
+    """Generate merged PDFs for all faculty records."""
+    faculties = Faculty.objects.all().order_by('staff_name')
+    generated_count = 0
+    failed = []
+
+    for faculty in faculties:
+        try:
+            pdf_bytes = generate_faculty_pdf_bytes(faculty)
+            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+            generated_count += 1
+        except Exception as exc:
+            logger.error(f"Bulk faculty PDF generation failed for {faculty.employee_code}: {exc}")
+            failed.append(faculty.employee_code)
+
+    if generated_count:
+        messages.success(request, f'Generated PDFs for {generated_count} faculty record(s).')
+    if failed:
+        messages.warning(request, f'Failed to generate PDFs for: {", ".join(failed)}')
+
+    FacultyLog.objects.create(
+        faculty=None,
+        action='Bulk Faculty PDF Generation',
+        details=f'Generated {generated_count} faculty PDFs; failed: {", ".join(failed) if failed else "none"}',
+        performed_by=request.user.username,
+        ip_address=request.META.get('REMOTE_ADDR'),
+    )
+    return redirect('dashboard:faculty_list_view')
 
 
 def delete_certificate(request, certificate_id):
