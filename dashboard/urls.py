@@ -94,7 +94,6 @@ urlpatterns = [
     path('student/charts/', views.student_charts, name='student_charts'),
 
     # Students export
-    path('export-students-csv/', views.export_students_csv, name='export_students_csv'),
     path('export-students-excel/', views.export_students_excel, name='export_students_excel'),
 
     # Certificates routes

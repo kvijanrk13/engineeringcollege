@@ -5743,6 +5743,42 @@ def export_faculty_excel(request):
 
 
 @login_required
+def export_students_csv(request):
+    qs = Student.objects.all()
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="students_export_{date.today().strftime("%Y%m%d")}.csv"'
+    w = csv.writer(response)
+    w.writerow(['HT No', 'Student Name', 'Father Name', 'Mother Name', 'Gender', 'Date of Birth', 'Age',
+                'Nationality', 'Category', 'Religion', 'Blood Group', 'Aadhar', 'APAAR ID', 'Address',
+                'Parent Phone', 'Student Phone', 'Email', 'Year', 'Semester', 'SSC Marks', 'Inter Marks',
+                'CGPA', 'Task Registered', 'Task Username', 'CSI Registered', 'CSI Membership ID',
+                'Admission Type', 'Other Admission Details', 'EAMCET Rank', 'RTRP Project Title',
+                'Intern Title', 'Final Project Title', 'Other Training', 'Photo URL',
+                'Certificate Achievement URL', 'Certificate Internship URL', 'Certificate Courses URL',
+                'Certificate SDP URL', 'Certificate Extra URL', 'Certificate Placement URL',
+                'Certificate National URL', 'PDF URL', 'PDF Generated', 'PDF Generation Time'])
+    for s in qs:
+        w.writerow([
+            s.ht_no, s.student_name, s.father_name, s.mother_name, s.gender,
+            s.dob.strftime('%Y-%m-%d') if s.dob else '', s.age,
+            s.nationality, s.category, s.religion, s.blood_group, s.aadhar, s.apaar_id, s.address,
+            s.parent_phone, s.student_phone, s.email, s.year, s.sem,
+            s.ssc_marks, s.inter_marks, s.cgpa, s.task_registered, s.task_username,
+            s.csi_registered, s.csi_membership_id, s.admission_type, s.other_admission_details,
+            s.eamcet_rank, s.rtrp_project_title, s.intern_title, s.final_project_title,
+            s.other_training, s.photo_url,
+            s.cert_achieve_url, s.cert_intern_url, s.cert_courses_url, s.cert_sdp_url,
+            s.cert_extra_url, s.cert_placement_url, s.cert_national_url,
+            s.pdf_url, s.pdf_generated,
+            s.pdf_generation_time.strftime('%Y-%m-%d %H:%M:%S') if s.pdf_generation_time else ''
+        ])
+    FacultyLog.objects.create(faculty=None, action='Student CSV Export',
+                              details=f'Exported {qs.count()} students to CSV',
+                              performed_by=request.user.username, ip_address=request.META.get('REMOTE_ADDR'))
+    return response
+
+
+@login_required
 def export_students_excel(request):
     if pd is None:
         messages.error(request, 'Pandas not installed. Cannot export to Excel.')
@@ -6914,4 +6950,19 @@ def faculty_charts(request):
     """Faculty charts view - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Faculty charts not yet implemented.", status=501)
+
+
+def view_certificates(request, *args, **kwargs):
+    from django.http import HttpResponse
+    return HttpResponse("view_certificates not yet implemented.", status=501)
+
+
+def upload_certificate(request, *args, **kwargs):
+    from django.http import HttpResponse
+    return HttpResponse("upload_certificate not yet implemented.", status=501)
+
+
+def upload_certificates_bulk(request, *args, **kwargs):
+    from django.http import HttpResponse
+    return HttpResponse("upload_certificates_bulk not yet implemented.", status=501)
 
