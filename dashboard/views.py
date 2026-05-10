@@ -4034,11 +4034,26 @@ def student_photo_redirect(request, student_id):
     photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
     if photo_url:
         return redirect(photo_url)
-    elif student.photo:
-        return redirect(student.photo.url)
-    else:
-        from django.http import Http404
-        raise Http404("Photo not found")
+
+    latest_upload_url = (
+        CloudinaryUpload.objects
+        .filter(student=student, upload_type='photo')
+        .order_by('-upload_date')
+        .values_list('cloudinary_url', flat=True)
+        .first()
+    )
+    latest_upload_url = normalize_optional_url(latest_upload_url)
+    if latest_upload_url:
+        return redirect(latest_upload_url)
+
+    if student.photo:
+        try:
+            return redirect(student.photo.url)
+        except Exception as exc:
+            logger.warning(f"Could not resolve student photo URL for {student.ht_no}: {exc}")
+
+    from django.http import Http404
+    raise Http404("Photo not found")
 
 
 def generate_student_pdf_view(request, student_id):
@@ -4652,6 +4667,21 @@ def view_pdf(request, student_id):
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
 
+
+def merge_student_certificates(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+
+    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
+    if not (user_authenticated or request.session.get('student_logged_in')):
+        messages.error(request, "Please log in to merge certificates.")
+        return redirect('dashboard:student_login')
+
+    if request.session.get('student_logged_in') and not user_authenticated:
+        student_username = request.session.get('student_username')
+        if student.ht_no != student_username:
+            messages.error(request, "You can only access your own student record.")
+            return redirect('dashboard:student_dashboard')
+
     temp_files = []
     try:
         writer = PdfWriter()
@@ -4766,6 +4796,12 @@ def view_pdf(request, student_id):
                     format='pdf'
                 )
                 merged_url = cr['secure_url']
+                record_cloudinary_upload(
+                    upload_type='merged_student_certificates',
+                    upload_result=cr,
+                    uploaded_by=request.user.username if user_authenticated else request.session.get('student_username'),
+                    student=student,
+                )
                 logger.info(f"Uploaded merged certificates to Cloudinary: {merged_url}")
             except Exception as e:
                 logger.error(f"Failed to upload merged certificates to Cloudinary: {e}")
@@ -4774,10 +4810,15 @@ def view_pdf(request, student_id):
         if merged_url:
             from django.utils.safestring import mark_safe
             messages.success(request, mark_safe(f'Successfully merged {merged_count} items. <a href="{merged_url}" target="_blank" class="btn btn-sm btn-info">Download Merged PDF</a>'))
-        else:
-            messages.warning(request, f'Merged {merged_count} items into PDF, but Cloudinary upload failed.')
+            return redirect('dashboard:student_detail', student_id=student_id)
 
-        return redirect('dashboard:student_detail', student_id=student_id)
+        with open(output_pdf_path, 'rb') as merged_file:
+            merged_bytes = merged_file.read()
+
+        response = HttpResponse(merged_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="merged_student_{student.ht_no}.pdf"'
+        response['Content-Length'] = len(merged_bytes)
+        return response
 
     except Exception as e:
         logger.error(f"Error merging student certificates: {e}")
@@ -6589,19 +6630,19 @@ def merge_certificates_with_pdf(request, faculty_id):
     return HttpResponse("Merge certificates with PDF not yet implemented.", status=501)
 
 
-def preview_merged_pdf(request, faculty_id):
+def _unused_preview_merged_pdf_stub(request, faculty_id):
     """Preview merged PDF - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Preview merged PDF not yet implemented.", status=501)
 
 
-def sync_to_cloudinary(request, faculty_id):
+def _unused_sync_to_cloudinary_stub(request, faculty_id):
     """Sync faculty to Cloudinary - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Sync to Cloudinary not yet implemented.", status=501)
 
 
-def upload_to_cloudinary(request, faculty_id):
+def _unused_upload_to_cloudinary_stub(request, faculty_id):
     """Upload to Cloudinary - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Upload to Cloudinary not yet implemented.", status=501)
@@ -6643,31 +6684,31 @@ def sync_all_faculty_photos_to_cloudinary(request):
     return HttpResponse("Sync all faculty photos not yet implemented.", status=501)
 
 
-def bulk_upload(request):
+def _unused_bulk_upload_stub(request):
     """Bulk upload - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Bulk upload not yet implemented.", status=501)
 
 
-def bulk_faculty_actions(request):
+def _unused_bulk_faculty_actions_stub(request):
     """Bulk faculty actions - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Bulk faculty actions not yet implemented.", status=501)
 
 
-def bulk_student_actions(request):
+def _unused_bulk_student_actions_stub(request):
     """Bulk student actions - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Bulk student actions not yet implemented.", status=501)
 
 
-def export_faculty_csv(request):
+def _unused_export_faculty_csv_stub(request):
     """Export faculty CSV - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Export faculty CSV not yet implemented.", status=501)
 
 
-def export_faculty_excel(request):
+def _unused_export_faculty_excel_stub(request):
     """Export faculty Excel - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Export faculty Excel not yet implemented.", status=501)
@@ -6703,115 +6744,115 @@ def recent_activity(request):
     return HttpResponse("Recent activity not yet implemented.", status=501)
 
 
-def system_status(request):
+def _unused_system_status_stub(request):
     """System status - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("System status not yet implemented.", status=501)
 
 
-def clear_logs(request):
+def _unused_clear_logs_stub(request):
     """Clear logs - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Clear logs not yet implemented.", status=501)
 
 
-def backup_database(request):
+def _unused_backup_database_stub(request):
     """Backup database - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Backup database not yet implemented.", status=501)
 
 
-def exam_branch(request):
+def _unused_exam_branch_stub(request):
     """Exam branch - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Exam branch not yet implemented.", status=501)
 
 
-def exam_branch_generate_report(request):
+def _unused_exam_branch_generate_report_stub(request):
     """Exam branch generate report - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Exam branch generate report not yet implemented.", status=501)
 
 
-def exam_branch_batch_download(request):
+def _unused_exam_branch_batch_download_stub(request):
     """Exam branch batch download - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Exam branch batch download not yet implemented.", status=501)
 
 
-def update_attendance(request):
+def _unused_update_attendance_stub(request):
     """Update attendance - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Update attendance not yet implemented.", status=501)
 
 
-def save_attendance(request):
+def _unused_save_attendance_stub(request):
     """Save attendance - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Save attendance not yet implemented.", status=501)
 
 
-def attendance_report(request):
+def _unused_attendance_report_stub(request):
     """Attendance report - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Attendance report not yet implemented.", status=501)
 
 
-def laboratory(request):
+def _unused_laboratory_stub(request):
     """Laboratory - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Laboratory not yet implemented.", status=501)
 
 
-def gallery(request):
+def _unused_gallery_stub(request):
     """Gallery - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Gallery not yet implemented.", status=501)
 
 
-def session_info(request):
+def _unused_session_info_stub(request):
     """Session info - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Session info not yet implemented.", status=501)
 
 
-def clear_session(request):
+def _unused_clear_session_stub(request):
     """Clear session - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Clear session not yet implemented.", status=501)
 
 
-def about_system(request):
+def _unused_about_system_stub(request):
     """About system - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("About system not yet implemented.", status=501)
 
 
-def help_documentation(request):
+def _unused_help_documentation_stub(request):
     """Help documentation - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Help documentation not yet implemented.", status=501)
 
 
-def contact_support(request):
+def _unused_contact_support_stub(request):
     """Contact support - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Contact support not yet implemented.", status=501)
 
 
-def profile_settings(request):
+def _unused_profile_settings_stub(request):
     """Profile settings - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Profile settings not yet implemented.", status=501)
 
 
-def application_home(request):
+def _unused_application_home_stub(request):
     """Application home - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Application home not yet implemented.", status=501)
 
 
-def syllabus_view(request):
+def _unused_syllabus_view_stub(request):
     """Syllabus view - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Syllabus view not yet implemented.", status=501)
@@ -6823,108 +6864,108 @@ def quick_stats(request):
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def faculty_statistics_api(request, faculty_id):
+def _unused_faculty_statistics_api_stub(request, faculty_id):
     """Faculty statistics API - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def student_photo_redirect(request, student_id):
-    """Student photo redirect - not yet implemented."""
+def _unused_student_photo_redirect_stub(request, student_id):
+    """Unused legacy stub retained only to avoid shadowing the real view."""
     from django.http import HttpResponse
     return HttpResponse("Student photo redirect not yet implemented.", status=501)
 
 
-def regenerate_student_pdf(request, student_id):
-    """Regenerate student PDF - already implemented above."""
-    pass  # placeholder, actual implementation exists below
+def _unused_regenerate_student_pdf_stub(request, student_id):
+    """Unused legacy stub retained only to avoid shadowing the real view."""
+    return JsonResponse({'error': 'Not implemented'}, status=501)
 
 
-def merge_student_certificates(request, student_id):
-    """Merge student certificates - not yet implemented."""
+def _unused_merge_student_certificates_stub(request, student_id):
+    """Unused legacy stub retained only to avoid shadowing the real view."""
     from django.http import HttpResponse
     return HttpResponse("Merge student certificates not yet implemented.", status=501)
 
 
-def api_faculty_list(request):
+def _unused_api_faculty_list_stub(request):
     """API: faculty list - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_faculty_detail(request, faculty_id):
+def _unused_api_faculty_detail_stub(request, faculty_id):
     """API: faculty detail - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_faculty_research(request, faculty_id):
+def _unused_api_faculty_research_stub(request, faculty_id):
     """API: faculty research - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_faculty_fdps(request, faculty_id):
+def _unused_api_faculty_fdps_stub(request, faculty_id):
     """API: faculty FDPs - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_faculty_projects(request, faculty_id):
+def _unused_api_faculty_projects_stub(request, faculty_id):
     """API: faculty projects - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_faculty_subjects(request, faculty_id):
+def _unused_api_faculty_subjects_stub(request, faculty_id):
     """API: faculty subjects - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_assign_faculty_subjects(request, faculty_id):
+def _unused_api_assign_faculty_subjects_stub(request, faculty_id):
     """API: assign faculty subjects - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_update_faculty_status(request, faculty_id):
+def _unused_api_update_faculty_status_stub(request, faculty_id):
     """API: update faculty status - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_bulk_update_faculty_status(request):
+def _unused_api_bulk_update_faculty_status_stub(request):
     """API: bulk update faculty status - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_students_list(request):
+def _unused_api_students_list_stub(request):
     """API: students list - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_student_detail(request, student_id):
+def _unused_api_student_detail_stub(request, student_id):
     """API: student detail - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_student_certificates(request, student_id):
+def _unused_api_student_certificates_stub(request, student_id):
     """API: student certificates - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_dashboard_stats(request):
+def _unused_api_dashboard_stats_stub(request):
     """API: dashboard stats - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
 
 
-def api_department_stats(request, department):
+def _unused_api_department_stats_stub(request, department):
     """API: department stats - not yet implemented."""
     from django.http import JsonResponse
     return JsonResponse({'status': 'not_implemented'}, status=501)
@@ -6934,19 +6975,19 @@ def api_department_stats(request, department):
 # These are referenced in dashboard/urls.py but not yet implemented.
 # They are stubbed to avoid AttributeError during URL resolution.
 
-def generate_faculty_pdf(request, faculty_id):
+def _unused_generate_faculty_pdf_stub(request, faculty_id):
     """Generate a faculty PDF - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Faculty PDF generation not yet implemented.", status=501)
 
 
-def student_charts(request):
+def _unused_student_charts_stub(request):
     """Student charts view - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Student charts not yet implemented.", status=501)
 
 
-def faculty_charts(request):
+def _unused_faculty_charts_stub(request):
     """Faculty charts view - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Faculty charts not yet implemented.", status=501)

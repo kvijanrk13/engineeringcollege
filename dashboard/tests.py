@@ -236,6 +236,27 @@ class DashboardTests(TestCase):
             'https://res.cloudinary.com/demo/image/upload/v1/student/sample.jpg',
         )
 
+    def test_student_photo_redirect_falls_back_to_latest_cloudinary_upload(self):
+        student = Student.objects.create(
+            ht_no='23C11A7778',
+            student_name='History Photo Student',
+        )
+        CloudinaryUpload.objects.create(
+            student=student,
+            upload_type='photo',
+            cloudinary_url='https://example.com/student-history-photo.jpg',
+            public_id='student-history-photo',
+            resource_type='image',
+        )
+
+        response = self.client.get(
+            reverse('dashboard:student_photo_redirect', args=[student.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], 'https://example.com/student-history-photo.jpg')
+
     @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.cloudinary.uploader.upload')
@@ -313,6 +334,57 @@ class DashboardTests(TestCase):
         self.assertNotContains(detail_response, 'No Photo')
         self.assertNotContains(detail_response, 'No documents uploaded.')
         self.assertContains(detail_response, 'View Document')
+
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    def test_merge_student_certificates_uploads_pdf_and_redirects(
+        self,
+        mock_upload,
+        _mock_cloudinary_enabled,
+    ):
+        admin_user = get_user_model().objects.create_user(
+            username='merge-admin',
+            email='merge-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(admin_user)
+
+        student = Student.objects.create(
+            ht_no='23C11A6002',
+            student_name='Merge Student',
+            photo=SimpleUploadedFile(
+                'student-photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            ),
+            cert_achieve=SimpleUploadedFile(
+                'achievement.pdf',
+                make_test_pdf_bytes('Achievement'),
+                content_type='application/pdf',
+            ),
+        )
+
+        mock_upload.return_value = {
+            'secure_url': 'https://example.com/merged-student.pdf',
+            'public_id': 'merged_student_23C11A6002',
+            'resource_type': 'raw',
+        }
+
+        response = self.client.get(
+            reverse('dashboard:merge_student_certificates', args=[student.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], reverse('dashboard:student_detail', args=[student.id]))
+        self.assertTrue(mock_upload.called)
+        self.assertTrue(
+            CloudinaryUpload.objects.filter(
+                student=student,
+                upload_type='merged_student_certificates',
+                cloudinary_url='https://example.com/merged-student.pdf',
+            ).exists()
+        )
 
     @patch('dashboard.views.pdfkit', new=None)
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
