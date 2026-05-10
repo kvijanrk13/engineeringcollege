@@ -98,7 +98,12 @@
                     <h6 class="m-0 font-weight-bold text-primary">Your Profile</h6>
                 </div>
                 <div class="card-body text-center">
-                    {% if student.photo_url %}
+                    {% if student.id %}
+                        <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                        <div class="rounded-circle bg-secondary text-white align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; display: none;">
+                            <i class="fas fa-user fa-4x"></i>
+                        </div>
+                    {% elif student.photo_url %}
                         <img src="{{ student.photo_url }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="{{ student.student_name }}">
                     {% elif student.photo %}
                         <img src="{{ student.photo.url }}" class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;" alt="{{ student.student_name }}">

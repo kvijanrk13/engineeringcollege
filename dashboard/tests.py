@@ -330,6 +330,28 @@ class DashboardTests(TestCase):
         self.assertContains(response, own_student.ht_no)
         self.assertNotContains(response, '23C11A7783')
 
+    def test_student_dashboard_uses_student_photo_redirect_for_profile_box(self):
+        student = Student.objects.create(
+            ht_no='23C11A7784',
+            student_name='Dashboard Photo Student',
+            photo_url='https://example.com/student-photo.jpg',
+        )
+
+        session = self.client.session
+        session['student_logged_in'] = True
+        session['student_username'] = student.ht_no
+        session['student_ht_no'] = student.ht_no
+        session['student_id'] = student.id
+        session.save()
+
+        response = self.client.get(reverse('dashboard:student_dashboard_view'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('dashboard:student_photo_redirect', args=[student.id]),
+        )
+
     @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.cloudinary.uploader.upload')
