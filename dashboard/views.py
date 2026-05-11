@@ -2818,7 +2818,9 @@ def student_dashboard(request):
         }
     certificates = []
     if student and hasattr(student, 'id'):
-        student.photo_url = normalize_optional_url(getattr(student, 'photo_url', None)) or getattr(student, 'photo_url', None)
+        existing_photo_url = getattr(student, 'photo_url', None)
+        if existing_photo_url:
+            student.photo_url = normalize_optional_url(existing_photo_url)
         certificate_labels = {
             'cert_achieve': 'Achievement',
             'cert_intern': 'Internship',
