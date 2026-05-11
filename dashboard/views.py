@@ -2874,15 +2874,30 @@ def faculty_dashboard(request, faculty_id=None):
         fid = request.GET.get("id")
         if not fid:
             return HttpResponseBadRequest("Faculty ID required for PDF mode")
-        f = get_object_or_404(Faculty, id=fid)
-        exp = calculate_experience(f.joining_date) if f.joining_date else "N/A"
-        return render(request, "dashboard/faculty_pdf.html", {
-            "faculty": f,
+        faculty = get_object_or_404(Faculty, id=fid)
+        exp = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
+        # Resolve the faculty photo for the PDF template
+        photo_url, local_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
+        anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+        context = {
+            "faculty": faculty,
             "pdf_mode": True,
             "current_date": timezone.now(),
             "experience": exp,
-            "cloudinary_status": {"has_pdf": bool(f.cloudinary_pdf_url)},
-        })
+            "photo_url": photo_url,
+            "anurag_header_url": build_file_uri(anurag_header_path),
+            "cloudinary_status": {"has_pdf": bool(faculty.cloudinary_pdf_url)},
+        }
+        # Clean up any temp paths after rendering
+        try:
+            return render(request, "dashboard/faculty_pdf.html", context)
+        finally:
+            for temp_path in photo_temp_paths:
+                try:
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                except Exception:
+                    pass
     faculties = Faculty.objects.all().order_by('staff_name')
     faculty = None
     certificates = None
@@ -4779,9 +4794,10 @@ def generate_student_pdf(
             pass
         return None
 
-    def _build_reportlab_info_pdf(student_obj, photo_path=None):
+    def _build_reportlab_info_pdf(student_obj, photo_path=None, temp_files_ref=None):
         """Create a simple student profile PDF without wkhtmltopdf."""
         import io
+        import base64
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -4818,9 +4834,27 @@ def generate_student_pdf(
         elems.append(HRFlowable(width='100%', thickness=2, color=colors.darkblue))
         elems.append(Spacer(1, 8))
 
-        if photo_path and os.path.exists(photo_path):
+        # Handle photo: data URI, file path, or None
+        resolved_photo_path = None
+        if photo_path and photo_path.startswith('data:'):
             try:
-                photo_img = Image(photo_path, width=1.4 * inch, height=1.7 * inch)
+                header, b64_data = photo_path.split(',', 1)
+                image_data = base64.b64decode(b64_data)
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.jpg')
+                tmp.write(image_data)
+                tmp.close()
+                resolved_photo_path = tmp.name
+                if temp_files_ref is not None:
+                    temp_files_ref.append(tmp.name)
+                print(f"  [OK] Decoded data URI photo to temp file for ReportLab: {resolved_photo_path}")
+            except Exception as e:
+                logger.warning(f"Failed to decode data URI photo for ReportLab: {e}")
+        elif photo_path and os.path.exists(photo_path):
+            resolved_photo_path = photo_path
+
+        if resolved_photo_path:
+            try:
+                photo_img = Image(resolved_photo_path, width=1.4 * inch, height=1.7 * inch)
                 hdr_tbl = Table(
                     [[Paragraph("<b>STUDENT INFORMATION</b>", styles['Normal']), photo_img]],
                     colWidths=[4.7 * inch, 1.5 * inch]
@@ -4927,9 +4961,9 @@ def generate_student_pdf(
 
     try:
         from weasyprint import HTML
-        
+
         print("  [CHECK] Generating Student PDF using WeasyPrint")
-        base_url = f"file:///{settings.BASE_DIR}" if settings.BASE_DIR else None
+        base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
         html_obj = HTML(string=html_string, base_url=base_url)
         info_pdf_bytes = html_obj.write_pdf()
         print(f"  [OK] Info PDF generated with WeasyPrint: {len(info_pdf_bytes)} bytes")
@@ -4940,7 +4974,7 @@ def generate_student_pdf(
     # Always try WeasyPrint first for better compatibility
     if info_pdf_bytes is None:
         print("  [INFO] WeasyPrint failed, using ReportLab fallback")
-        info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
+        info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path, temp_files)
         used_reportlab_fallback = True
         print(f"  [OK] ReportLab fallback info PDF generated: {len(info_pdf_bytes)} bytes")
 
@@ -4948,12 +4982,12 @@ def generate_student_pdf(
     if info_pdf_bytes and len(info_pdf_bytes) > 100:
         if not info_pdf_bytes.startswith(b'%PDF'):
             print("  [WARN] Generated content is not a valid PDF, using fallback")
-            info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
+            info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path, temp_files)
             used_reportlab_fallback = True
             print(f"  [OK] Fallback PDF generated: {len(info_pdf_bytes)} bytes")
     else:
         print("  [WARN] PDF generation failed, using basic fallback")
-        info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path)
+        info_pdf_bytes = _build_reportlab_info_pdf(student, local_photo_path, temp_files)
         used_reportlab_fallback = True
 
     # ── MERGE: info PDF + all uploaded documents ──────────────
@@ -5082,6 +5116,7 @@ def generate_student_pdf(
                         )
                         if cloud_result and 'secure_url' in cloud_result:
                             student.pdf_url = cloud_result['secure_url']
+                            return_url = cloud_result['secure_url']
                             student.save(update_fields=['pdf_url'])
                             record_cloudinary_upload(
                                 upload_type='student_pdf',

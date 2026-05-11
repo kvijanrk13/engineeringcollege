@@ -4,13 +4,16 @@ import tempfile
 import os
 
 
+from pathlib import Path
+
+
 def generate_pdf_from_html(html_string, output_path=None):
     """Generate PDF from HTML string using WeasyPrint"""
     try:
         from weasyprint import HTML
         from django.conf import settings as django_settings
 
-        base_url = f"file:///{django_settings.BASE_DIR}" if django_settings.BASE_DIR else None
+        base_url = Path(django_settings.BASE_DIR).resolve().as_uri() if django_settings.BASE_DIR else None
         html_obj = HTML(string=html_string, base_url=base_url)
 
         if output_path:
