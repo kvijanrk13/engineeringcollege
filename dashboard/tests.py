@@ -349,6 +349,40 @@ class DashboardTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         mock_generate_student_pdf.assert_called_once_with(student, return_bytes=True)
 
+    @patch('dashboard.views.download_remote_asset', return_value=(None, False))
+    @patch('dashboard.views.is_cloudinary_configured', return_value=False)
+    def test_generate_student_pdf_uses_saved_file_fields_when_url_fields_are_stale(
+        self,
+        _mock_cloudinary_enabled,
+        _mock_download_remote_asset,
+    ):
+        student = Student.objects.create(
+            ht_no='23C11A7790',
+            student_name='Durable Asset Student',
+            photo=SimpleUploadedFile(
+                'durable-photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            ),
+            photo_url='https://example.com/stale-photo.jpg',
+            cert_achieve=SimpleUploadedFile(
+                'durable-achievement.pdf',
+                make_test_pdf_bytes('Durable Achievement'),
+                content_type='application/pdf',
+            ),
+            cert_achieve_url='https://example.com/stale-achievement.pdf',
+        )
+
+        pdf_bytes = dashboard_views.generate_student_pdf(student, return_bytes=True)
+        student.refresh_from_db()
+
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        combined_text = '\n'.join((page.extract_text() or '') for page in reader.pages[:2])
+
+        self.assertGreaterEqual(len(reader.pages), 3)
+        self.assertNotIn('NO PHOTO', combined_text)
+        self.assertTrue(bool(student.pdf_file))
+
     @patch('dashboard.views.generate_student_pdf', return_value=make_test_pdf_bytes('Generated Student PDF'))
     def test_demo_student_session_can_generate_student_pdf(self, _mock_generate_student_pdf):
         student = Student.objects.create(
@@ -469,6 +503,8 @@ class DashboardTests(TestCase):
         student = Student.objects.get(ht_no='23C11A6001')
         self.assertTrue(student.photo_url.startswith('https://example.com/student_documents/photos/'))
         self.assertTrue(student.cert_achieve_url.startswith('https://example.com/student_documents/achievement/'))
+        self.assertTrue(bool(student.photo))
+        self.assertTrue(bool(student.cert_achieve))
         self.assertTrue(
             CloudinaryUpload.objects.filter(student=student, upload_type='photo').exists()
         )

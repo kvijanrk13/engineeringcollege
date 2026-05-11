@@ -1282,6 +1282,25 @@ def snapshot_uploaded_file(uploaded_file, default_suffix='.bin'):
     return tmp.name, is_pdf
 
 
+def persist_snapshot_to_model_field(instance, field_name, snapshot_path, original_name=None):
+    """Persist a snapshot file through the model field storage backend."""
+    if not instance or not snapshot_path or not os.path.exists(snapshot_path):
+        return False
+
+    model_field = getattr(instance, field_name, None)
+    if model_field is None:
+        return False
+
+    target_name = Path(original_name or snapshot_path).name
+    try:
+        with open(snapshot_path, 'rb') as snapshot_handle:
+            model_field.save(target_name, File(snapshot_handle), save=False)
+        return True
+    except Exception as exc:
+        logger.warning(f"Could not persist snapshot for {field_name}: {exc}")
+        return False
+
+
 def build_student_uploaded_documents(student):
     """Return document availability metadata for the student PDF template."""
     labels = {
@@ -4374,6 +4393,8 @@ def add_student(request):
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
                 temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
+                if temp_photo_override_path:
+                    persist_snapshot_to_model_field(student, 'photo', temp_photo_override_path, getattr(pf, 'name', None))
                 if ca: # Cloudinary configured - prioritize Cloudinary
                     upload_result = _upload(pf, 'photos')
                     if upload_result and upload_result.get('secure_url'):
@@ -4419,13 +4440,18 @@ def add_student(request):
                         'path': temp_asset_path,
                         'is_pdf': temp_asset_is_pdf,
                     })
+                    persist_snapshot_to_model_field(
+                        student,
+                        field_name,
+                        temp_asset_path,
+                        getattr(certificate_file, 'name', None),
+                    )
                 print(f"  [DEBUG] Processing {upload_spec['source']} -> {field_name} ({folder})")
                 print(f"  [DEBUG] File: {certificate_file.name}, size: {certificate_file.size}")
                 if ca: # Cloudinary configured
                     upload_result = _upload(certificate_file, folder)
                     if upload_result and upload_result.get('secure_url'):
                         setattr(student, url_field_name, upload_result['secure_url'])
-                        setattr(student, field_name, None)
                         record_cloudinary_upload(
                             upload_type=field_name,
                             upload_result=upload_result,
@@ -4583,11 +4609,12 @@ def edit_student(request, student_id):
                 if request.FILES.get('photo'):
                     pf = request.FILES['photo']
                     temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
+                    if temp_photo_override_path:
+                        persist_snapshot_to_model_field(updated_student, 'photo', temp_photo_override_path, getattr(pf, 'name', None))
                     if ca:
                         upload_result = _upload(pf, 'photos')
                         if upload_result and upload_result.get('secure_url'):
                             updated_student.photo_url = upload_result['secure_url']
-                            updated_student.photo = None  # Clear local file if uploaded to Cloudinary
                             updated_student.save(update_fields=['photo', 'photo_url'])
                             record_cloudinary_upload(
                                 upload_type='photo',
@@ -4624,11 +4651,16 @@ def edit_student(request, student_id):
                             'path': temp_asset_path,
                             'is_pdf': temp_asset_is_pdf,
                         })
+                        persist_snapshot_to_model_field(
+                            updated_student,
+                            field_name,
+                            temp_asset_path,
+                            getattr(certificate_file, 'name', None),
+                        )
                     if ca:
                         upload_result = _upload(certificate_file, folder)
                         if upload_result and upload_result.get('secure_url'):
                             setattr(updated_student, url_field_name, upload_result['secure_url'])
-                            setattr(updated_student, field_name, None)
                             record_cloudinary_upload(
                                 upload_type=field_name,
                                 upload_result=upload_result,
@@ -5115,6 +5147,8 @@ def generate_student_pdf(
     print(f"  [DEBUG] Starting merge section. info_pdf_bytes length: {len(info_pdf_bytes) if info_pdf_bytes else 0}")
     print(f"  [DEBUG] Entering merge try block...")
     pdf_persisted = False
+    pdf_file_saved = False
+    return_url = None
 
     try:
         from pypdf import PdfWriter, PdfReader
@@ -5236,7 +5270,6 @@ def generate_student_pdf(
                         if cloud_result and 'secure_url' in cloud_result:
                             student.pdf_url = cloud_result['secure_url']
                             return_url = cloud_result['secure_url']
-                            student.save(update_fields=['pdf_url'])
                             record_cloudinary_upload(
                                 upload_type='student_pdf',
                                 upload_result=cloud_result,
@@ -5261,24 +5294,22 @@ def generate_student_pdf(
         print(f"  [ERR] Merge error: {merge_err}")
         return_url = None
 
-    # Fallback: save locally if Cloudinary failed or not configured
     if not return_url:
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_final:
-                tmp_final.write(final_pdf_bytes)
-                tmp_final_path = tmp_final.name
+        student.pdf_url = None
 
-            student.pdf_url = None
-            with open(tmp_final_path, 'rb') as pdf_handle:
-                student.pdf_file.save(f"student_{student.ht_no}.pdf", File(pdf_handle), save=False)
-            student.save(update_fields=['pdf_file', 'pdf_url'])
-            return_url = student.pdf_file.url if student.pdf_file else None
-            pdf_persisted = bool(return_url)
-            print(f"  [OK] PDF saved locally: {return_url}")
+    # Always persist the generated PDF through the model storage backend as a durable fallback.
+    if final_pdf_bytes:
+        try:
+            student.pdf_file.save(filename, ContentFile(final_pdf_bytes), save=False)
+            pdf_file_saved = True
+            if not return_url and student.pdf_file:
+                return_url = student.pdf_file.url
+            print(f"  [OK] PDF persisted via model storage: {return_url or filename}")
         except Exception as e:
-            print(f"  [ERR] Local save failed: {e}")
-            return_url = None
-            pdf_persisted = False
+            print(f"  [ERR] Persistent PDF save failed: {e}")
+            pdf_file_saved = False
+
+    pdf_persisted = bool(return_url or pdf_file_saved)
 
     # Cleanup temp files
     for temp_path in temp_files:
@@ -5290,7 +5321,12 @@ def generate_student_pdf(
 
     student.pdf_generated = pdf_persisted
     student.pdf_generation_time = timezone.now() if pdf_persisted else None
-    student.save(update_fields=['pdf_generated', 'pdf_generation_time', 'updated_at'])
+    update_fields = ['pdf_generated', 'pdf_generation_time', 'updated_at']
+    if pdf_file_saved:
+        update_fields.append('pdf_file')
+    if student.pdf_url is not None or return_url:
+        update_fields.append('pdf_url')
+    student.save(update_fields=list(dict.fromkeys(update_fields)))
 
     if used_reportlab_fallback:
         logger.info(f"Student PDF for {student.ht_no} used ReportLab fallback instead of pdfkit/wkhtmltopdf")
