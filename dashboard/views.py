@@ -5016,7 +5016,8 @@ def generate_student_pdf(
     context = {
         'student': student,
         'current_date': datetime.now(),
-        'local_photo_path': photo_url_for_pdf,
+        'student_photo_url': photo_url_for_pdf,
+        'local_photo_path': local_photo_path,
         'anurag_header_url': anurag_header_url,
         'uploaded_documents': build_student_uploaded_documents(student),
     }

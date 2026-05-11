@@ -83,8 +83,8 @@
             </td>
             <td style="width: 25%; text-align: right;">
                 <div class="photo-box">
-                    {% if local_photo_path %}
-                        <img src="{{ local_photo_path }}" class="student-photo" alt="Student Photo">
+                    {% if student_photo_url %}
+                        <img src="{{ student_photo_url }}" class="student-photo" alt="Student Photo">
                     {% else %}
                         <div class="no-photo">NO PHOTO</div>
                     {% endif %}
