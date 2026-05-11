@@ -320,6 +320,35 @@ class DashboardTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn('inline;', response['Content-Disposition'])
 
+    @patch('dashboard.views.generate_student_pdf', return_value=make_test_pdf_bytes('Regenerated Student PDF'))
+    @patch('dashboard.views.download_remote_asset', return_value=(None, False))
+    def test_view_student_pdf_regenerates_when_saved_pdf_url_is_stale(
+        self,
+        _mock_download_remote_asset,
+        mock_generate_student_pdf,
+    ):
+        admin_user = get_user_model().objects.create_user(
+            username='pdf-regenerate-admin',
+            email='pdf-regenerate-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(admin_user)
+
+        student = Student.objects.create(
+            ht_no='23C11A7780R',
+            student_name='Stale Student PDF',
+            pdf_url='https://example.com/stale-student.pdf',
+        )
+
+        response = self.client.get(
+            reverse('dashboard:view_student_pdf', args=[student.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        mock_generate_student_pdf.assert_called_once_with(student, return_bytes=True)
+
     @patch('dashboard.views.generate_student_pdf', return_value=make_test_pdf_bytes('Generated Student PDF'))
     def test_demo_student_session_can_generate_student_pdf(self, _mock_generate_student_pdf):
         student = Student.objects.create(
@@ -513,6 +542,58 @@ class DashboardTests(TestCase):
                 cloudinary_url='https://example.com/merged-student.pdf',
             ).exists()
         )
+
+    @patch('dashboard.views.is_cloudinary_configured', return_value=True)
+    @patch('dashboard.views.cloudinary.uploader.upload')
+    @patch('dashboard.views.download_remote_asset')
+    def test_merge_student_certificates_uses_photo_upload_history_when_photo_fields_are_empty(
+        self,
+        mock_download_remote_asset,
+        mock_upload,
+        _mock_cloudinary_enabled,
+    ):
+        admin_user = get_user_model().objects.create_user(
+            username='merge-history-admin',
+            email='merge-history-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(admin_user)
+
+        student = Student.objects.create(
+            ht_no='23C11A6003',
+            student_name='Merge History Student',
+        )
+        CloudinaryUpload.objects.create(
+            student=student,
+            upload_type='photo',
+            cloudinary_url='https://example.com/history-photo.jpg',
+            public_id='history-photo',
+            resource_type='image',
+        )
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_photo:
+            temp_photo.write(make_test_image_bytes())
+            temp_photo_path = temp_photo.name
+
+        mock_download_remote_asset.return_value = (temp_photo_path, False)
+        mock_upload.return_value = {
+            'secure_url': 'https://example.com/merged-history-student.pdf',
+            'public_id': 'merged_student_23C11A6003',
+            'resource_type': 'raw',
+        }
+
+        try:
+            response = self.client.get(
+                reverse('dashboard:merge_student_certificates', args=[student.id]),
+                secure=True,
+            )
+        finally:
+            if Path(temp_photo_path).exists():
+                Path(temp_photo_path).unlink()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], reverse('dashboard:student_detail', args=[student.id]))
+        self.assertTrue(mock_upload.called)
 
     @patch('dashboard.views.pdfkit', new=None)
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)

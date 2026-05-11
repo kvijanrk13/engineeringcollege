@@ -753,6 +753,80 @@ def collect_student_photo_candidates(student, photo_override_path=None):
     return candidates
 
 
+def collect_student_document_candidates(student, file_field_name, url_field_name):
+    """Return ordered document candidates from model fields and upload history."""
+    candidates = []
+    seen = set()
+
+    def add_path(path_value, source):
+        if not path_value or not os.path.exists(path_value):
+            return
+        key = ('path', os.path.abspath(path_value))
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'source': source, 'path': path_value})
+
+    def add_url(url_value, source):
+        normalized_url = normalize_optional_url(url_value)
+        if not normalized_url:
+            return
+        key = ('url', normalized_url)
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'source': source, 'url': normalized_url})
+
+    file_field = getattr(student, file_field_name, None)
+    if file_field and getattr(file_field, 'name', ''):
+        try:
+            add_path(file_field.path, f'{file_field_name}.path')
+        except (NotImplementedError, ValueError, OSError):
+            pass
+
+    add_url(getattr(student, url_field_name, None), url_field_name)
+
+    latest_upload_urls = (
+        CloudinaryUpload.objects
+        .filter(student=student, upload_type=file_field_name)
+        .order_by('-upload_date')
+        .values_list('cloudinary_url', flat=True)
+    )
+    for uploaded_url in latest_upload_urls:
+        add_url(uploaded_url, f'{file_field_name}.cloudinary_upload_history')
+
+    if file_field and getattr(file_field, 'name', ''):
+        try:
+            field_url = file_field.url
+        except Exception:
+            field_url = None
+
+        if isinstance(field_url, str) and field_url.startswith(('http://', 'https://', '//')):
+            add_url(field_url, f'{file_field_name}.url')
+
+    return candidates
+
+
+def resolve_asset_from_candidates(candidates, temp_files, default_suffix='.pdf'):
+    """Resolve the first readable asset candidate into a local path."""
+    for candidate in candidates:
+        path_value = candidate.get('path')
+        if path_value and os.path.exists(path_value):
+            return path_value, path_value.lower().endswith('.pdf')
+
+        url_value = candidate.get('url')
+        if not url_value:
+            continue
+
+        downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix=default_suffix)
+        if downloaded_path:
+            if downloaded_path not in temp_files:
+                temp_files.append(downloaded_path)
+            return downloaded_path, is_pdf
+
+    return None, False
+
+
 def resolve_student_photo_for_pdf(student, photo_override_path=None):
     """Resolve the best student photo source and return an embeddable image URI plus cleanup temp paths."""
     temp_paths = []
@@ -1972,40 +2046,12 @@ def collect_student_files(student, skip_photo=False, skip_certificate_fields=Non
         if asset['path'] not in temp_files:
             temp_files.append(asset['path'])
 
-    def _collect_asset(file_field, url_value=None, default_suffix='.pdf'):
-        """Helper to collect a single asset from local or remote storage."""
-        normalized_url = normalize_optional_url(url_value)
-        if file_field:
-            try:
-                local_path = get_local_or_remote_asset(file_field, url=normalized_url, default_suffix=default_suffix)
-                if local_path and isinstance(local_path, tuple):
-                    local_path = local_path[0]
-                if local_path and os.path.exists(local_path):
-                    return local_path, local_path.lower().endswith('.pdf')
-            except Exception as e:
-                logger.warning(f"get_local_or_remote_asset failed: {e}")
-        if normalized_url:
-            downloaded_path, is_pdf = download_remote_asset(normalized_url, default_suffix=default_suffix)
-            if downloaded_path:
-                if downloaded_path not in temp_files:
-                    temp_files.append(downloaded_path)
-                return downloaded_path, is_pdf
-        if file_field:
-            try:
-                if hasattr(file_field, 'url') and file_field.url:
-                    furl = file_field.url
-                    if furl and furl.startswith('http'):
-                        downloaded_path, is_pdf = download_remote_asset(furl, default_suffix=default_suffix)
-                        if downloaded_path:
-                            if downloaded_path not in temp_files:
-                                temp_files.append(downloaded_path)
-                            return downloaded_path, is_pdf
-            except Exception:
-                pass
-        return None, False
-
     if not skip_photo:
-        photo_file, _ = _collect_asset(student.photo, getattr(student, 'photo_url', None), default_suffix='.jpg')
+        photo_file, _ = resolve_asset_from_candidates(
+            collect_student_photo_candidates(student, photo_override_path=photo_override_path),
+            temp_files,
+            default_suffix='.jpg',
+        )
     print(f"  [COLLECT] Photo collected: {photo_file is not None}")
 
     cert_count = 0
@@ -2026,7 +2072,11 @@ def collect_student_files(student, skip_photo=False, skip_certificate_fields=Non
         if url_field:
             print(f"  [COLLECT]   url_field value: {url_field[:100]}...")
 
-        asset_path, is_pdf = _collect_asset(file_field, url_field, default_suffix='.jpg')
+        asset_path, is_pdf = resolve_asset_from_candidates(
+            collect_student_document_candidates(student, file_field_name, url_field_name),
+            temp_files,
+            default_suffix='.jpg',
+        )
         if asset_path:
             cert_count += 1
             if is_pdf:
@@ -5309,6 +5359,16 @@ def view_pdf(request, student_id):
                 return redirect(pdf_field.url)
             except Exception:
                 pass
+
+    try:
+        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        if regenerated_pdf_bytes:
+            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(regenerated_pdf_bytes)
+            return response
+    except Exception as exc:
+        logger.error(f"Failed to regenerate stale student PDF for {student.ht_no}: {exc}")
 
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
