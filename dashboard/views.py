@@ -1075,6 +1075,7 @@ def generate_faculty_pdf_bytes(faculty):
         info_pdf_bytes = html_obj.write_pdf()
     except Exception as exc:
         logger.error(f"Faculty WeasyPrint generation failed for {faculty.employee_code}: {exc}")
+        info_pdf_bytes = None
     finally:
         for temp_path in temp_paths:
             try:
@@ -1082,6 +1083,10 @@ def generate_faculty_pdf_bytes(faculty):
                     os.remove(temp_path)
             except Exception:
                 pass
+
+    if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
+        logger.warning(f"Faculty PDF generation failed with WeasyPrint for {faculty.employee_code}; falling back to ReportLab.")
+        info_pdf_bytes = _build_reportlab_faculty_pdf(faculty, temp_paths)
 
     if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
         raise ValueError('Faculty profile PDF generation failed before merge.')
@@ -1110,6 +1115,43 @@ def build_file_uri(path_value):
     except Exception:
         # Fallback for odd path inputs that Path can't resolve.
         return 'file:///' + quote(str(path_value).replace('\\', '/'), safe=':/')
+
+
+def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
+    """Build a simple faculty profile PDF using ReportLab as a fallback."""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30,
+                            topMargin=30, bottomMargin=30)
+    styles = getSampleStyleSheet()
+    elems = [Paragraph('Faculty Profile', styles['Title']), Spacer(1, 12)]
+
+    fields = [
+        ('Employee Code', getattr(faculty, 'employee_code', 'N/A')),
+        ('Name', getattr(faculty, 'staff_name', 'N/A')),
+        ('Designation', getattr(faculty, 'designation', 'N/A')),
+        ('Department', getattr(faculty, 'department', 'N/A')),
+        ('Email', getattr(faculty, 'email', 'N/A')),
+        ('Mobile', getattr(faculty, 'mobile', 'N/A')),
+        ('Joining Date', str(getattr(faculty, 'joining_date', 'N/A'))),
+        ('Academic Qualifications', getattr(faculty, 'academics', 'N/A')),
+    ]
+
+    for label, value in fields:
+        elems.append(Paragraph(f'<b>{label}:</b> {value or "N/A"}', styles['Normal']))
+        elems.append(Spacer(1, 6))
+
+    elems.append(Spacer(1, 12))
+    elems.append(Paragraph(
+        f'Generated on: {datetime.now().strftime("%d-%m-%Y %H:%M:%S")}',
+        styles['Normal']
+    ))
+
+    try:
+        doc.build(elems)
+        return buffer.getvalue()
+    except Exception as exc:
+        logger.error(f'Failed to generate fallback faculty PDF with ReportLab: {exc}')
+        return None
 
 
 def snapshot_uploaded_file(uploaded_file, default_suffix='.bin'):
