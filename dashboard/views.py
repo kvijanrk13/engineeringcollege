@@ -1091,12 +1091,21 @@ def generate_faculty_pdf_bytes(faculty):
             logger.warning(f"Faculty PDF generation failed with WeasyPrint for {faculty.employee_code}; falling back to ReportLab.")
             info_pdf_bytes = _build_reportlab_faculty_pdf(faculty, temp_paths)
 
-        if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
-            raise ValueError(f'Faculty profile PDF generation failed for {faculty.employee_code}')
+        if not info_pdf_bytes:
+            raise ValueError(f'Faculty profile PDF generation produced None for {faculty.employee_code}')
+        
+        if not info_pdf_bytes.startswith(b'%PDF'):
+            logger.error(f'Base PDF invalid for {faculty.employee_code}: starts with {info_pdf_bytes[:20] if info_pdf_bytes else None}')
+            raise ValueError(f'Invalid base PDF generated for {faculty.employee_code}')
 
         logger.info(f"Successfully generated base PDF ({len(info_pdf_bytes)} bytes) for {faculty.employee_code}")
         merged = merge_certificates_with_pdf_bytes(info_pdf_bytes, faculty)
-        final_pdf = merged or info_pdf_bytes
+        
+        if not merged or not merged.startswith(b'%PDF'):
+            logger.warning(f"Merge returned invalid PDF for {faculty.employee_code}, using base PDF")
+            return info_pdf_bytes
+        
+        final_pdf = merged
         logger.info(f"Final merged PDF: {len(final_pdf)} bytes for {faculty.employee_code}")
         return final_pdf
     except Exception as exc:
@@ -5585,27 +5594,47 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
                 _add_to_writer_internal(pub_p)
 
         # Finalize
-        if len(writer.pages) > 0:
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as mf:
-                writer.write(mf)
-                temp_files.append(mf.name)
-                with open(mf.name, 'rb') as f:
-                    merged = f.read()
-            
-            # Cleanup
-            for temp_file in temp_files:
-                try:
-                    if os.path.exists(temp_file):
-                        os.unlink(temp_file)
-                except Exception:
-                    pass
-            
-            return merged
+        pages_count = len(writer.pages)
+        logger.info(f"Merge attempt for {faculty.employee_code}: {pages_count} pages to write")
         
-        return pdf_bytes if pdf_bytes else None
+        if pages_count > 0:
+            try:
+                # Write PDF to temporary file with explicit flush
+                mf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+                mf_path = mf.name
+                temp_files.append(mf_path)
+                
+                writer.write(mf)
+                mf.flush()
+                mf.close()
+                
+                # Now read it back
+                with open(mf_path, 'rb') as f:
+                    merged = f.read()
+                
+                if not merged or not merged.startswith(b'%PDF'):
+                    logger.error(f"Merged PDF invalid for {faculty.employee_code}: size={len(merged) if merged else 0}")
+                    return pdf_bytes if pdf_bytes else None
+                
+                logger.info(f"Successfully merged {pages_count} pages into {len(merged)} bytes for {faculty.employee_code}")
+                return merged
+            except Exception as e:
+                logger.error(f"Error writing merged PDF for {faculty.employee_code}: {e}", exc_info=True)
+                return pdf_bytes if pdf_bytes else None
+            finally:
+                # Cleanup
+                for temp_file in temp_files:
+                    try:
+                        if os.path.exists(temp_file):
+                            os.unlink(temp_file)
+                    except Exception:
+                        pass
+        else:
+            logger.info(f"No pages to merge for {faculty.employee_code}, returning base PDF")
+            return pdf_bytes if pdf_bytes else None
 
     except Exception as e:
-        logger.error(f"Error in merge_certificates_with_pdf_bytes: {e}")
+        logger.error(f"Error in merge_certificates_with_pdf_bytes for {faculty.employee_code}: {e}", exc_info=True)
         return pdf_bytes if pdf_bytes else None
 
 
