@@ -1064,34 +1064,44 @@ def persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=None):
 
 def generate_faculty_pdf_bytes(faculty):
     """Generate a merged faculty PDF as bytes."""
-    context, temp_paths = build_faculty_pdf_context(faculty)
-    html_string = render_to_string('dashboard/faculty_pdf.html', context)
-    info_pdf_bytes = None
-
     try:
-        from weasyprint import HTML
-        base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
-        html_obj = HTML(string=html_string, base_url=base_url)
-        info_pdf_bytes = html_obj.write_pdf()
-    except Exception as exc:
-        logger.error(f"Faculty WeasyPrint generation failed for {faculty.employee_code}: {exc}")
+        logger.info(f"Starting PDF generation for faculty {faculty.employee_code}")
+        context, temp_paths = build_faculty_pdf_context(faculty)
+        html_string = render_to_string('dashboard/faculty_pdf.html', context)
         info_pdf_bytes = None
-    finally:
-        for temp_path in temp_paths:
-            try:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-            except Exception:
-                pass
 
-    if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
-        logger.warning(f"Faculty PDF generation failed with WeasyPrint for {faculty.employee_code}; falling back to ReportLab.")
-        info_pdf_bytes = _build_reportlab_faculty_pdf(faculty, temp_paths)
+        try:
+            from weasyprint import HTML
+            base_url = Path(settings.BASE_DIR).resolve().as_uri() if settings.BASE_DIR else None
+            html_obj = HTML(string=html_string, base_url=base_url)
+            info_pdf_bytes = html_obj.write_pdf()
+            logger.info(f"WeasyPrint generated {len(info_pdf_bytes)} bytes for {faculty.employee_code}")
+        except Exception as exc:
+            logger.warning(f"Faculty WeasyPrint generation failed for {faculty.employee_code}: {exc}")
+            info_pdf_bytes = None
+        finally:
+            for temp_path in temp_paths:
+                try:
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                except Exception:
+                    pass
 
-    if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
-        raise ValueError('Faculty profile PDF generation failed before merge.')
+        if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
+            logger.warning(f"Faculty PDF generation failed with WeasyPrint for {faculty.employee_code}; falling back to ReportLab.")
+            info_pdf_bytes = _build_reportlab_faculty_pdf(faculty, temp_paths)
 
-    return merge_certificates_with_pdf_bytes(info_pdf_bytes, faculty) or info_pdf_bytes
+        if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
+            raise ValueError(f'Faculty profile PDF generation failed for {faculty.employee_code}')
+
+        logger.info(f"Successfully generated base PDF ({len(info_pdf_bytes)} bytes) for {faculty.employee_code}")
+        merged = merge_certificates_with_pdf_bytes(info_pdf_bytes, faculty)
+        final_pdf = merged or info_pdf_bytes
+        logger.info(f"Final merged PDF: {len(final_pdf)} bytes for {faculty.employee_code}")
+        return final_pdf
+    except Exception as exc:
+        logger.error(f"generate_faculty_pdf_bytes failed for {faculty.employee_code}: {exc}", exc_info=True)
+        raise
 
 
 def calculate_correct_age(dob):
@@ -1120,38 +1130,45 @@ def build_file_uri(path_value):
 def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
     """Build a simple faculty profile PDF using ReportLab as a fallback."""
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30,
-                            topMargin=30, bottomMargin=30)
-    styles = getSampleStyleSheet()
-    elems = [Paragraph('Faculty Profile', styles['Title']), Spacer(1, 12)]
-
-    fields = [
-        ('Employee Code', getattr(faculty, 'employee_code', 'N/A')),
-        ('Name', getattr(faculty, 'staff_name', 'N/A')),
-        ('Designation', getattr(faculty, 'designation', 'N/A')),
-        ('Department', getattr(faculty, 'department', 'N/A')),
-        ('Email', getattr(faculty, 'email', 'N/A')),
-        ('Mobile', getattr(faculty, 'mobile', 'N/A')),
-        ('Joining Date', str(getattr(faculty, 'joining_date', 'N/A'))),
-        ('Academic Qualifications', getattr(faculty, 'academics', 'N/A')),
-    ]
-
-    for label, value in fields:
-        elems.append(Paragraph(f'<b>{label}:</b> {value or "N/A"}', styles['Normal']))
-        elems.append(Spacer(1, 6))
-
-    elems.append(Spacer(1, 12))
-    elems.append(Paragraph(
-        f'Generated on: {datetime.now().strftime("%d-%m-%Y %H:%M:%S")}',
-        styles['Normal']
-    ))
-
     try:
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30,
+                                topMargin=30, bottomMargin=30)
+        styles = getSampleStyleSheet()
+        elems = [Paragraph('Faculty Profile', styles['Title']), Spacer(1, 12)]
+
+        fields = [
+            ('Employee Code', getattr(faculty, 'employee_code', 'N/A')),
+            ('Name', getattr(faculty, 'staff_name', 'N/A')),
+            ('Designation', getattr(faculty, 'designation', 'N/A')),
+            ('Department', getattr(faculty, 'department', 'N/A')),
+            ('Email', getattr(faculty, 'email', 'N/A')),
+            ('Mobile', getattr(faculty, 'mobile', 'N/A')),
+            ('Joining Date', str(getattr(faculty, 'joining_date', 'N/A'))),
+            ('Academic Qualifications', getattr(faculty, 'academics', 'N/A')),
+        ]
+
+        for label, value in fields:
+            elems.append(Paragraph(f'<b>{label}:</b> {value or "N/A"}', styles['Normal']))
+            elems.append(Spacer(1, 6))
+
+        elems.append(Spacer(1, 12))
+        elems.append(Paragraph(
+            f'Generated on: {datetime.now().strftime("%d-%m-%Y %H:%M:%S")}',
+            styles['Normal']
+        ))
+
         doc.build(elems)
-        return buffer.getvalue()
+        result = buffer.getvalue()
+        logger.info(f'ReportLab fallback PDF generated: {len(result)} bytes')
+        return result
     except Exception as exc:
-        logger.error(f'Failed to generate fallback faculty PDF with ReportLab: {exc}')
+        logger.error(f'Failed to generate fallback faculty PDF with ReportLab: {exc}', exc_info=True)
         return None
+    finally:
+        try:
+            buffer.close()
+        except Exception:
+            pass
 
 
 def snapshot_uploaded_file(uploaded_file, default_suffix='.bin'):
@@ -7219,10 +7236,27 @@ def _faculty_pdf_response(pdf_bytes, employee_code, as_attachment=False):
 @login_required
 def generate_faculty_pdf(request, faculty_id):
     """Generate, persist, and return the merged faculty PDF."""
-    faculty = get_object_or_404(Faculty, id=faculty_id)
-
     try:
+        faculty = Faculty.objects.filter(id=faculty_id).first()
+        if not faculty:
+            logger.warning(f"Faculty PDF request for non-existent id={faculty_id}")
+            return HttpResponse(
+                f"Faculty with id={faculty_id} not found.",
+                status=404,
+                content_type='text/plain'
+            )
+
+        logger.info(f"Generating faculty PDF for {faculty.employee_code}")
         pdf_bytes = generate_faculty_pdf_bytes(faculty)
+        
+        if not pdf_bytes or not pdf_bytes.startswith(b'%PDF'):
+            logger.error(f"Generated PDF is invalid for {faculty.employee_code}")
+            return HttpResponse(
+                f"PDF generation failed for {faculty.employee_code}.",
+                status=500,
+                content_type='text/plain'
+            )
+        
         persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
         FacultyLog.objects.create(
             faculty=faculty,
@@ -7231,11 +7265,15 @@ def generate_faculty_pdf(request, faculty_id):
             performed_by=request.user.username,
             ip_address=request.META.get('REMOTE_ADDR'),
         )
+        logger.info(f"Successfully generated and persisted faculty PDF for {faculty.employee_code}")
         return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=True)
     except Exception as exc:
         logger.error(f"Error generating faculty PDF for {faculty_id}: {exc}", exc_info=True)
-        messages.error(request, f'Error generating faculty PDF: {exc}')
-        return redirect('dashboard:faculty_profile_view', faculty_id=faculty.id)
+        return HttpResponse(
+            f"Error generating faculty PDF: {str(exc)}",
+            status=500,
+            content_type='text/plain'
+        )
 
 
 def student_charts(request):
