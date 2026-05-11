@@ -285,7 +285,7 @@ class DashboardTests(TestCase):
             if Path(temp_photo_path).exists():
                 Path(temp_photo_path).unlink()
 
-        self.assertTrue(photo_uri.startswith('file:///'))
+        self.assertTrue(photo_uri.startswith('data:image/') or photo_uri.startswith('file:///'))
         self.assertEqual(local_path, temp_photo_path)
         self.assertEqual(temp_paths, [temp_photo_path])
         self.assertEqual(source, 'cloudinary_upload_history')

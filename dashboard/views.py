@@ -754,7 +754,7 @@ def collect_student_photo_candidates(student, photo_override_path=None):
 
 
 def resolve_student_photo_for_pdf(student, photo_override_path=None):
-    """Resolve the best student photo source and return a file URI plus cleanup temp paths."""
+    """Resolve the best student photo source and return an embeddable image URI plus cleanup temp paths."""
     temp_paths = []
 
     for candidate in collect_student_photo_candidates(student, photo_override_path=photo_override_path):
@@ -763,6 +763,10 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
         url_value = candidate.get('url')
 
         if path_value and os.path.exists(path_value):
+            data_uri = encode_image_as_data_uri(path_value)
+            if data_uri:
+                return data_uri, path_value, temp_paths, source
+            logger.warning(f"Student photo candidate from {source} could not be encoded: {path_value}")
             return build_file_uri(path_value), path_value, temp_paths, source
 
         if url_value:
@@ -775,6 +779,11 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
                 logger.warning(f"Student photo candidate from {source} resolved to a PDF, skipping: {url_value}")
                 continue
 
+            data_uri = encode_image_as_data_uri(downloaded_path)
+            if data_uri:
+                return data_uri, downloaded_path, temp_paths, source
+
+            logger.warning(f"Downloaded student photo candidate from {source} could not be encoded: {url_value}")
             return build_file_uri(downloaded_path), downloaded_path, temp_paths, source
 
     return None, None, temp_paths, None
