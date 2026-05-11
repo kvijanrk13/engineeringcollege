@@ -13,8 +13,8 @@ class DashboardConfig(AppConfig):
         """
         Safe startup initialization (NON-BLOCKING & RUNS ONCE)
         """
-        # Skip during management commands and non-main processes
-        if os.environ.get('RUN_MAIN') != 'true':
+        # Skip the parent manage.py process when autoreloading, but allow real web and WSGI startup.
+        if os.path.basename(sys.argv[0]) in ('manage.py', 'django-admin.py', 'django-admin') and os.environ.get('RUN_MAIN') != 'true':
             return
 
         # Skip during common management commands
@@ -24,12 +24,11 @@ class DashboardConfig(AppConfig):
             if cmd in sys.argv:
                 return
 
-        # Only run the actual startup task for runserver command
-        if 'runserver' in sys.argv:
-            try:
-                # Import and run the startup check
-                from .startup import check_pdf_url_column
-                result = check_pdf_url_column()
-            except Exception as e:
-                # Don't let startup errors crash the server
-                pass
+        try:
+            # Import and run the startup checks
+            from .startup import check_pdf_url_column, ensure_default_admin_user
+            check_pdf_url_column()
+            ensure_default_admin_user()
+        except Exception:
+            # Don't let startup errors crash the server
+            pass
