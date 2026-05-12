@@ -78,12 +78,17 @@ Exam Branch - Teaching Plan
                                     <th scope="col">NUMBER OF CLASSES TAKEN</th>
                                     <th scope="col">TOPICS TO BE COVERED</th>
                                     <th scope="col">NUMBER OF STUDENTS PRESENT</th>
-                                    <th scope="col">TOTAL</th>
                                 </tr>
                             </thead>
                             <tbody id="teachingPlanBody">
                             </tbody>
                         </table>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">TOTAL :</label>
+                            <input id="totalClassesTaken" type="text" class="form-control" value="0" readonly />
+                        </div>
                     </div>
                     <div class="d-flex justify-content-end mt-3 gap-2">
                         <button id="saveBtn" class="btn btn-success">SAVE</button>
@@ -146,13 +151,12 @@ Exam Branch - Teaching Plan
                             let runningTotal = 0;
                             for (const row of tbody.rows) {
                                 const classesInput = row.cells[3].querySelector('input');
-                                const totalCell = row.cells[6];
                                 const classesValue = Number(classesInput?.value || 0);
                                 if (!Number.isNaN(classesValue)) {
                                     runningTotal += classesValue;
                                 }
-                                totalCell.innerHTML = `<input type="text" class="form-control" value="${runningTotal}" readonly />`;
                             }
+                            document.getElementById('totalClassesTaken').value = runningTotal;
                         }
                         
                         function renderRows(rows) {
@@ -183,7 +187,6 @@ Exam Branch - Teaching Plan
                                     const classesCell = document.createElement('td');
                                     const topicsCell = document.createElement('td');
                                     const studentsCell = document.createElement('td');
-                                    const totalCell = document.createElement('td');
                                     
                                     dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
                                     dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
@@ -200,10 +203,9 @@ Exam Branch - Teaching Plan
                                     classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
                                     studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
-                                    totalCell.innerHTML = `<input type="text" class="form-control" value="0" readonly />`;
                                     
                                     if (entry.day === 'Saturday') {
-                                        [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell, totalCell].forEach(cell => {
+                                        [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell].forEach(cell => {
                                             cell.style.borderBottom = '2px solid #000';
                                         });
                                     }
@@ -214,7 +216,6 @@ Exam Branch - Teaching Plan
                                     row.appendChild(classesCell);
                                     row.appendChild(topicsCell);
                                     row.appendChild(studentsCell);
-                                    row.appendChild(totalCell);
                                     tbody.appendChild(row);
                                 });
                             });
