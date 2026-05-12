@@ -69,7 +69,7 @@ Exam Branch - Teaching Plan
                                     <th scope="col">DATE</th>
                                     <th scope="col">DAY OF THE WEEK</th>
                                     <th scope="col">WEEK NO.</th>
-                                    <th scope="col">CLASSES PER WEEK</th>
+                                    <th scope="col">NUMBER OF CLASSES TAKEN</th>
                                     <th scope="col">TOPICS TO BE COVERED</th>
                                 </tr>
                             </thead>
@@ -201,22 +201,25 @@ Exam Branch - Teaching Plan
                                         weekCell.innerHTML = `<input type="text" class="form-control" value="${group.weekNum}" readonly />`;
                                         weekCell.setAttribute('rowspan', rowspan);
                                     } else {
-                                        // Subsequent rows in group skip week cell
-                                        weekCell.style.display = 'none';
+                                        // Subsequent rows keep a placeholder cell so separators span the full row
+                                        weekCell.innerHTML = '';
+                                        weekCell.style.padding = '0';
+                                        weekCell.style.border = 'none';
                                     }
                                     
                                     classesCell.innerHTML = `<input type="text" class="form-control" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control" />`;
                                     
                                     if (dayName === 'Saturday') {
-                                        row.style.borderBottom = '2px solid #000';
+                                        const cells = [dateCell, dayCell, weekCell, classesCell, topicsCell];
+                                        cells.forEach(cell => {
+                                            cell.style.borderBottom = '2px solid #000';
+                                        });
                                     }
                                     
                                     row.appendChild(dateCell);
                                     row.appendChild(dayCell);
-                                    if (i === 0) {
-                                        row.appendChild(weekCell);
-                                    }
+                                    row.appendChild(weekCell);
                                     row.appendChild(classesCell);
                                     row.appendChild(topicsCell);
                                     
