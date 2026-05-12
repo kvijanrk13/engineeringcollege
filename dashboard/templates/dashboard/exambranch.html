@@ -162,62 +162,36 @@ Exam Branch - Teaching Plan
                         function renderRows(rows) {
                             const tbody = document.getElementById('teachingPlanBody');
                             clearTable();
-                            const groups = [];
-                            let currentGroup = null;
                             
                             rows.forEach(entry => {
-                                if (!currentGroup || currentGroup.weekNum !== entry.weekNum) {
-                                    currentGroup = {
-                                        weekNum: entry.weekNum,
-                                        rows: [entry]
-                                    };
-                                    groups.push(currentGroup);
-                                } else {
-                                    currentGroup.rows.push(entry);
+                                const row = document.createElement('tr');
+                                const dateCell = document.createElement('td');
+                                const dayCell = document.createElement('td');
+                                const weekCell = document.createElement('td');
+                                const classesCell = document.createElement('td');
+                                const topicsCell = document.createElement('td');
+                                const studentsCell = document.createElement('td');
+                                
+                                dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
+                                dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
+                                weekCell.innerHTML = `<input type="text" class="form-control" value="${entry.weekNum}" readonly />`;
+                                classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" step="1" />`;
+                                topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
+                                studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
+                                
+                                if (entry.day === 'Saturday') {
+                                    [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell].forEach(cell => {
+                                        cell.style.borderBottom = '2px solid #000';
+                                    });
                                 }
-                            });
-                            
-                            groups.forEach(group => {
-                                const rowspan = group.rows.length;
-                                group.rows.forEach((entry, index) => {
-                                    const row = document.createElement('tr');
-                                    const dateCell = document.createElement('td');
-                                    const dayCell = document.createElement('td');
-                                    const weekCell = document.createElement('td');
-                                    const classesCell = document.createElement('td');
-                                    const topicsCell = document.createElement('td');
-                                    const studentsCell = document.createElement('td');
-                                    
-                                    dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
-                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
-                                    
-                                    if (index === 0) {
-                                        weekCell.innerHTML = `<input type="text" class="form-control" value="${group.weekNum}" readonly />`;
-                                        weekCell.setAttribute('rowspan', rowspan);
-                                    } else {
-                                        weekCell.textContent = '';
-                                        weekCell.style.padding = '0';
-                                        weekCell.style.border = 'none';
-                                    }
-                                    
-                                    classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" step="1" />`;
-                                    topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
-                                    studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
-                                    
-                                    if (entry.day === 'Saturday') {
-                                        [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell].forEach(cell => {
-                                            cell.style.borderBottom = '2px solid #000';
-                                        });
-                                    }
-                                    
-                                    row.appendChild(dateCell);
-                                    row.appendChild(dayCell);
-                                    row.appendChild(weekCell);
-                                    row.appendChild(classesCell);
-                                    row.appendChild(topicsCell);
-                                    row.appendChild(studentsCell);
-                                    tbody.appendChild(row);
-                                });
+                                
+                                row.appendChild(dateCell);
+                                row.appendChild(dayCell);
+                                row.appendChild(weekCell);
+                                row.appendChild(classesCell);
+                                row.appendChild(topicsCell);
+                                row.appendChild(studentsCell);
+                                tbody.appendChild(row);
                             });
                             updateTotals();
                         }
