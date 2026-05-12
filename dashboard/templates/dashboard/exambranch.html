@@ -49,8 +49,21 @@ Exam Branch - Teaching Plan
                             <input type="text" class="form-control" placeholder="Subject Code" />
                         </div>
                     </div>
+                    <div class="row gy-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">From :</label>
+                            <input type="date" id="fromDate" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">To :</label>
+                            <input type="date" id="toDate" class="form-control" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button id="addBtn" class="btn btn-primary w-100">ADD</button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-bordered text-center align-middle">
+                        <table class="table table-bordered text-center align-middle" id="teachingPlanTable">
                             <thead class="table-light">
                                 <tr>
                                     <th scope="col">DATE</th>
@@ -60,52 +73,89 @@ Exam Branch - Teaching Plan
                                     <th scope="col">TOPICS TO BE COVERED</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                    <td><input type="text" class="form-control" /></td>
-                                </tr>
+                            <tbody id="teachingPlanBody">
                             </tbody>
                         </table>
                     </div>
+                    <script>
+                        function getWeekNumber(date) {
+                            const d = new Date(date);
+                            const firstDay = new Date(d.getFullYear(), 0, 1);
+                            const dayOfWeek = firstDay.getDay();
+                            const firstSunday = new Date(firstDay);
+                            firstSunday.setDate(firstSunday.getDate() + (7 - dayOfWeek) % 7);
+                            
+                            if (d < firstSunday) {
+                                return 1;
+                            }
+                            const diff = d - firstSunday;
+                            const weekNum = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
+                            return weekNum;
+                        }
+                        
+                        function getDayName(date) {
+                            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                            const d = new Date(date);
+                            return days[d.getDay()];
+                        }
+                        
+                        function formatDate(date) {
+                            const d = new Date(date);
+                            const day = String(d.getDate()).padStart(2, '0');
+                            const month = String(d.getMonth() + 1).padStart(2, '0');
+                            const year = d.getFullYear();
+                            return `${day}-${month}-${year}`;
+                        }
+                        
+                        document.getElementById('addBtn').addEventListener('click', function() {
+                            const fromDateStr = document.getElementById('fromDate').value;
+                            const toDateStr = document.getElementById('toDate').value;
+                            
+                            if (!fromDateStr || !toDateStr) {
+                                alert('Please select both From and To dates');
+                                return;
+                            }
+                            
+                            const fromDate = new Date(fromDateStr);
+                            const toDate = new Date(toDateStr);
+                            
+                            if (fromDate > toDate) {
+                                alert('From date must be before To date');
+                                return;
+                            }
+                            
+                            const tbody = document.getElementById('teachingPlanBody');
+                            let currentDate = new Date(fromDate);
+                            
+                            while (currentDate <= toDate) {
+                                const row = document.createElement('tr');
+                                const dateCell = document.createElement('td');
+                                const dayCell = document.createElement('td');
+                                const weekCell = document.createElement('td');
+                                const classesCell = document.createElement('td');
+                                const topicsCell = document.createElement('td');
+                                
+                                dateCell.innerHTML = `<input type="text" class="form-control" value="${formatDate(currentDate)}" readonly />`;
+                                dayCell.innerHTML = `<input type="text" class="form-control" value="${getDayName(currentDate)}" readonly />`;
+                                weekCell.innerHTML = `<input type="text" class="form-control" value="${getWeekNumber(currentDate)}" readonly />`;
+                                classesCell.innerHTML = `<input type="text" class="form-control" />`;
+                                topicsCell.innerHTML = `<input type="text" class="form-control" />`;
+                                
+                                row.appendChild(dateCell);
+                                row.appendChild(dayCell);
+                                row.appendChild(weekCell);
+                                row.appendChild(classesCell);
+                                row.appendChild(topicsCell);
+                                
+                                tbody.appendChild(row);
+                                
+                                currentDate.setDate(currentDate.getDate() + 1);
+                            }
+                            
+                            document.getElementById('fromDate').value = '';
+                            document.getElementById('toDate').value = '';
+                        });
+                    </script>
                 </div>
             </div>
         </div>
