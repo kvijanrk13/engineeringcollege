@@ -125,49 +125,70 @@ Exam Branch - Teaching Plan
                             }
                             
                             const tbody = document.getElementById('teachingPlanBody');
-                            const weekMap = {};
+                            const dates = [];
                             let currentDate = new Date(fromDate);
                             
-                            // Group dates by week number
+                            // Collect all dates
                             while (currentDate <= toDate) {
-                                const weekNum = getWeekNumber(currentDate);
-                                if (!weekMap[weekNum]) {
-                                    weekMap[weekNum] = {
-                                        startDate: new Date(currentDate),
-                                        endDate: new Date(currentDate)
-                                    };
-                                } else {
-                                    weekMap[weekNum].endDate = new Date(currentDate);
-                                }
+                                dates.push(new Date(currentDate));
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
                             
-                            // Create rows for each week
-                            for (const weekNum in weekMap) {
-                                const row = document.createElement('tr');
-                                const dateCell = document.createElement('td');
-                                const dayCell = document.createElement('td');
-                                const weekCell = document.createElement('td');
-                                const classesCell = document.createElement('td');
-                                const topicsCell = document.createElement('td');
+                            // Group consecutive dates by week number
+                            const groups = [];
+                            let currentGroup = null;
+                            
+                            for (let i = 0; i < dates.length; i++) {
+                                const weekNum = getWeekNumber(dates[i]);
                                 
-                                const startDate = weekMap[weekNum].startDate;
-                                const endDate = weekMap[weekNum].endDate;
-                                const dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`;
+                                if (!currentGroup || currentGroup.weekNum !== weekNum) {
+                                    currentGroup = {
+                                        weekNum: weekNum,
+                                        dates: [dates[i]]
+                                    };
+                                    groups.push(currentGroup);
+                                } else {
+                                    currentGroup.dates.push(dates[i]);
+                                }
+                            }
+                            
+                            // Create rows for each group
+                            for (const group of groups) {
+                                const rowspan = group.dates.length;
                                 
-                                dateCell.innerHTML = `<input type="text" class="form-control" value="${dateRange}" readonly />`;
-                                dayCell.innerHTML = `<input type="text" class="form-control" value="${getDayName(startDate)} to ${getDayName(endDate)}" readonly />`;
-                                weekCell.innerHTML = `<input type="text" class="form-control" value="${weekNum}" readonly />`;
-                                classesCell.innerHTML = `<input type="text" class="form-control" />`;
-                                topicsCell.innerHTML = `<input type="text" class="form-control" />`;
-                                
-                                row.appendChild(dateCell);
-                                row.appendChild(dayCell);
-                                row.appendChild(weekCell);
-                                row.appendChild(classesCell);
-                                row.appendChild(topicsCell);
-                                
-                                tbody.appendChild(row);
+                                for (let i = 0; i < group.dates.length; i++) {
+                                    const row = document.createElement('tr');
+                                    const dateCell = document.createElement('td');
+                                    const dayCell = document.createElement('td');
+                                    const weekCell = document.createElement('td');
+                                    const classesCell = document.createElement('td');
+                                    const topicsCell = document.createElement('td');
+                                    
+                                    dateCell.innerHTML = `<input type="text" class="form-control" value="${formatDate(group.dates[i])}" readonly />`;
+                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${getDayName(group.dates[i])}" readonly />`;
+                                    
+                                    if (i === 0) {
+                                        // First row in group gets rowspan
+                                        weekCell.innerHTML = `<input type="text" class="form-control" value="${group.weekNum}" readonly />`;
+                                        weekCell.setAttribute('rowspan', rowspan);
+                                    } else {
+                                        // Subsequent rows in group skip week cell
+                                        weekCell.style.display = 'none';
+                                    }
+                                    
+                                    classesCell.innerHTML = `<input type="text" class="form-control" />`;
+                                    topicsCell.innerHTML = `<input type="text" class="form-control" />`;
+                                    
+                                    row.appendChild(dateCell);
+                                    row.appendChild(dayCell);
+                                    if (i === 0) {
+                                        row.appendChild(weekCell);
+                                    }
+                                    row.appendChild(classesCell);
+                                    row.appendChild(topicsCell);
+                                    
+                                    tbody.appendChild(row);
+                                }
                             }
                             
                             document.getElementById('fromDate').value = '';
