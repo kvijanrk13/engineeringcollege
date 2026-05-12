@@ -195,12 +195,12 @@ Exam Branch - Teaching Plan
                                         weekCell.innerHTML = `<input type="text" class="form-control" value="${group.weekNum}" readonly />`;
                                         weekCell.setAttribute('rowspan', rowspan);
                                     } else {
-                                        weekCell.innerHTML = `<input type="hidden" value="${group.weekNum}" />`;
+                                        weekCell.textContent = '';
                                         weekCell.style.padding = '0';
                                         weekCell.style.border = 'none';
                                     }
                                     
-                                    classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" />`;
+                                    classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" step="1" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
                                     studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
                                     
