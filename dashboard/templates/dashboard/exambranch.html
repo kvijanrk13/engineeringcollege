@@ -78,14 +78,16 @@ Exam Branch - Teaching Plan
                                     <th scope="col">NUMBER OF CLASSES TAKEN</th>
                                     <th scope="col">TOPICS TO BE COVERED</th>
                                     <th scope="col">NUMBER OF STUDENTS PRESENT</th>
+                                    <th scope="col">TOTAL</th>
                                 </tr>
                             </thead>
                             <tbody id="teachingPlanBody">
                             </tbody>
                         </table>
                     </div>
-                    <div class="d-flex justify-content-end mt-3">
+                    <div class="d-flex justify-content-end mt-3 gap-2">
                         <button id="saveBtn" class="btn btn-success">SAVE</button>
+                        <button id="deleteBtn" class="btn btn-danger">DELETE</button>
                     </div>
                     <script>
                         function getWeekNumber(date) {
@@ -139,6 +141,20 @@ Exam Branch - Teaching Plan
                             document.getElementById('teachingPlanBody').innerHTML = '';
                         }
                         
+                        function updateTotals() {
+                            const tbody = document.getElementById('teachingPlanBody');
+                            let runningTotal = 0;
+                            for (const row of tbody.rows) {
+                                const classesInput = row.cells[3].querySelector('input');
+                                const totalCell = row.cells[6];
+                                const classesValue = Number(classesInput?.value || 0);
+                                if (!Number.isNaN(classesValue)) {
+                                    runningTotal += classesValue;
+                                }
+                                totalCell.innerHTML = `<input type="text" class="form-control" value="${runningTotal}" readonly />`;
+                            }
+                        }
+                        
                         function renderRows(rows) {
                             const tbody = document.getElementById('teachingPlanBody');
                             clearTable();
@@ -167,6 +183,7 @@ Exam Branch - Teaching Plan
                                     const classesCell = document.createElement('td');
                                     const topicsCell = document.createElement('td');
                                     const studentsCell = document.createElement('td');
+                                    const totalCell = document.createElement('td');
                                     
                                     dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
                                     dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
@@ -180,12 +197,13 @@ Exam Branch - Teaching Plan
                                         weekCell.style.border = 'none';
                                     }
                                     
-                                    classesCell.innerHTML = `<input type="text" class="form-control" value="${entry.classesTaken || ''}" />`;
+                                    classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
                                     studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
+                                    totalCell.innerHTML = `<input type="text" class="form-control" value="0" readonly />`;
                                     
                                     if (entry.day === 'Saturday') {
-                                        [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell].forEach(cell => {
+                                        [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell, totalCell].forEach(cell => {
                                             cell.style.borderBottom = '2px solid #000';
                                         });
                                     }
@@ -196,9 +214,11 @@ Exam Branch - Teaching Plan
                                     row.appendChild(classesCell);
                                     row.appendChild(topicsCell);
                                     row.appendChild(studentsCell);
+                                    row.appendChild(totalCell);
                                     tbody.appendChild(row);
                                 });
                             });
+                            updateTotals();
                         }
                         
                         function getHeaderData() {
@@ -309,8 +329,23 @@ Exam Branch - Teaching Plan
                             document.getElementById('toDate').value = '';
                         }
                         
+                        function deleteTeachingPlan() {
+                            if (!confirm('Delete saved teaching plan and clear all entries?')) {
+                                return;
+                            }
+                            localStorage.removeItem('examBranchTeachingPlan');
+                            setHeaderData({});
+                            clearTable();
+                        }
+                        
                         document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
                         document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
+                        document.getElementById('deleteBtn').addEventListener('click', deleteTeachingPlan);
+                        document.getElementById('teachingPlanBody').addEventListener('input', function(event) {
+                            if (event.target && event.target.classList.contains('classes-taken-input')) {
+                                updateTotals();
+                            }
+                        });
                         window.addEventListener('DOMContentLoaded', loadTeachingPlan);
                     </script>
                 </div>
