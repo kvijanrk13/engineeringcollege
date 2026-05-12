@@ -125,9 +125,25 @@ Exam Branch - Teaching Plan
                             }
                             
                             const tbody = document.getElementById('teachingPlanBody');
+                            const weekMap = {};
                             let currentDate = new Date(fromDate);
                             
+                            // Group dates by week number
                             while (currentDate <= toDate) {
+                                const weekNum = getWeekNumber(currentDate);
+                                if (!weekMap[weekNum]) {
+                                    weekMap[weekNum] = {
+                                        startDate: new Date(currentDate),
+                                        endDate: new Date(currentDate)
+                                    };
+                                } else {
+                                    weekMap[weekNum].endDate = new Date(currentDate);
+                                }
+                                currentDate.setDate(currentDate.getDate() + 1);
+                            }
+                            
+                            // Create rows for each week
+                            for (const weekNum in weekMap) {
                                 const row = document.createElement('tr');
                                 const dateCell = document.createElement('td');
                                 const dayCell = document.createElement('td');
@@ -135,9 +151,13 @@ Exam Branch - Teaching Plan
                                 const classesCell = document.createElement('td');
                                 const topicsCell = document.createElement('td');
                                 
-                                dateCell.innerHTML = `<input type="text" class="form-control" value="${formatDate(currentDate)}" readonly />`;
-                                dayCell.innerHTML = `<input type="text" class="form-control" value="${getDayName(currentDate)}" readonly />`;
-                                weekCell.innerHTML = `<input type="text" class="form-control" value="${getWeekNumber(currentDate)}" readonly />`;
+                                const startDate = weekMap[weekNum].startDate;
+                                const endDate = weekMap[weekNum].endDate;
+                                const dateRange = `${formatDate(startDate)} to ${formatDate(endDate)}`;
+                                
+                                dateCell.innerHTML = `<input type="text" class="form-control" value="${dateRange}" readonly />`;
+                                dayCell.innerHTML = `<input type="text" class="form-control" value="${getDayName(startDate)} to ${getDayName(endDate)}" readonly />`;
+                                weekCell.innerHTML = `<input type="text" class="form-control" value="${weekNum}" readonly />`;
                                 classesCell.innerHTML = `<input type="text" class="form-control" />`;
                                 topicsCell.innerHTML = `<input type="text" class="form-control" />`;
                                 
@@ -148,8 +168,6 @@ Exam Branch - Teaching Plan
                                 row.appendChild(topicsCell);
                                 
                                 tbody.appendChild(row);
-                                
-                                currentDate.setDate(currentDate.getDate() + 1);
                             }
                             
                             document.getElementById('fromDate').value = '';
