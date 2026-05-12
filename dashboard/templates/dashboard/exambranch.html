@@ -80,16 +80,35 @@ Exam Branch - Teaching Plan
                     <script>
                         function getWeekNumber(date) {
                             const d = new Date(date);
-                            const firstDay = new Date(d.getFullYear(), 0, 1);
-                            const dayOfWeek = firstDay.getDay();
-                            const firstSunday = new Date(firstDay);
-                            firstSunday.setDate(firstSunday.getDate() + (7 - dayOfWeek) % 7);
+                            const year = d.getFullYear();
                             
-                            if (d < firstSunday) {
-                                return 1;
+                            // Find first Monday of the year
+                            const firstDay = new Date(year, 0, 1);
+                            const firstDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+                            
+                            // Calculate days to first Monday
+                            let daysToFirstMonday;
+                            if (firstDayOfWeek === 1) { // Jan 1 is Monday
+                                daysToFirstMonday = 0;
+                            } else if (firstDayOfWeek === 0) { // Jan 1 is Sunday
+                                daysToFirstMonday = 1;
+                            } else {
+                                daysToFirstMonday = 8 - firstDayOfWeek;
                             }
-                            const diff = d - firstSunday;
-                            const weekNum = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1;
+                            
+                            const firstMonday = new Date(year, 0, daysToFirstMonday + 1);
+                            
+                            // Find Monday of current week
+                            const currentMonday = new Date(d);
+                            const currentDayOfWeek = d.getDay();
+                            const daysToMonday = currentDayOfWeek === 1 ? 0 : (currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1);
+                            currentMonday.setDate(d.getDate() - daysToMonday);
+                            
+                            // Calculate week number
+                            const diffTime = currentMonday - firstMonday;
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                            const weekNum = Math.floor(diffDays / 7) + 1;
+                            
                             return weekNum;
                         }
                         
