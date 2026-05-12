@@ -71,6 +71,7 @@ Exam Branch - Teaching Plan
                                     <th scope="col">WEEK NO.</th>
                                     <th scope="col">NUMBER OF CLASSES TAKEN</th>
                                     <th scope="col">TOPICS TO BE COVERED</th>
+                                    <th scope="col">NUMBER OF STUDENTS PRESENT</th>
                                 </tr>
                             </thead>
                             <tbody id="teachingPlanBody">
@@ -209,9 +210,11 @@ Exam Branch - Teaching Plan
                                     
                                     classesCell.innerHTML = `<input type="text" class="form-control" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control" />`;
+                                    const studentsCell = document.createElement('td');
+                                    studentsCell.innerHTML = `<input type="text" class="form-control" />`;
                                     
                                     if (dayName === 'Saturday') {
-                                        const cells = [dateCell, dayCell, weekCell, classesCell, topicsCell];
+                                        const cells = [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell];
                                         cells.forEach(cell => {
                                             cell.style.borderBottom = '2px solid #000';
                                         });
@@ -222,6 +225,7 @@ Exam Branch - Teaching Plan
                                     row.appendChild(weekCell);
                                     row.appendChild(classesCell);
                                     row.appendChild(topicsCell);
+                                    row.appendChild(studentsCell);
                                     
                                     tbody.appendChild(row);
                                 }
