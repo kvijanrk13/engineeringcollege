@@ -153,21 +153,30 @@ Exam Branch - Teaching Plan
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
                             
-                            // Group consecutive dates by week number
+                            // Group dates by week with sequential week numbers starting at 1
                             const groups = [];
                             let currentGroup = null;
+                            let weekCounter = 0;
                             
                             for (let i = 0; i < dates.length; i++) {
-                                const weekNum = getWeekNumber(dates[i]);
+                                const date = dates[i];
+                                const dayOfWeek = date.getDay();
+                                const isMonday = dayOfWeek === 1;
+                                
+                                if (i === 0 || isMonday) {
+                                    weekCounter += 1;
+                                }
+                                
+                                const weekNum = weekCounter;
                                 
                                 if (!currentGroup || currentGroup.weekNum !== weekNum) {
                                     currentGroup = {
                                         weekNum: weekNum,
-                                        dates: [dates[i]]
+                                        dates: [date]
                                     };
                                     groups.push(currentGroup);
                                 } else {
-                                    currentGroup.dates.push(dates[i]);
+                                    currentGroup.dates.push(date);
                                 }
                             }
                             
@@ -183,8 +192,9 @@ Exam Branch - Teaching Plan
                                     const classesCell = document.createElement('td');
                                     const topicsCell = document.createElement('td');
                                     
+                                    const dayName = getDayName(group.dates[i]);
                                     dateCell.innerHTML = `<input type="text" class="form-control" value="${formatDate(group.dates[i])}" readonly />`;
-                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${getDayName(group.dates[i])}" readonly />`;
+                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${dayName}" readonly />`;
                                     
                                     if (i === 0) {
                                         // First row in group gets rowspan
@@ -197,6 +207,10 @@ Exam Branch - Teaching Plan
                                     
                                     classesCell.innerHTML = `<input type="text" class="form-control" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control" />`;
+                                    
+                                    if (dayName === 'Saturday') {
+                                        row.style.borderBottom = '2px solid #000';
+                                    }
                                     
                                     row.appendChild(dateCell);
                                     row.appendChild(dayCell);
