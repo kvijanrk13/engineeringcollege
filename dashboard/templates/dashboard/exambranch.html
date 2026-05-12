@@ -84,6 +84,9 @@ Exam Branch - Teaching Plan
                             </tbody>
                         </table>
                     </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button id="saveBtn" class="btn btn-success">SAVE</button>
+                    </div>
                     <script>
                         function getWeekNumber(date) {
                             const d = new Date(date);
@@ -95,9 +98,9 @@ Exam Branch - Teaching Plan
                             
                             // Calculate days to first Monday
                             let daysToFirstMonday;
-                            if (firstDayOfWeek === 1) { // Jan 1 is Monday
+                            if (firstDayOfWeek === 1) {
                                 daysToFirstMonday = 0;
-                            } else if (firstDayOfWeek === 0) { // Jan 1 is Sunday
+                            } else if (firstDayOfWeek === 0) {
                                 daysToFirstMonday = 1;
                             } else {
                                 daysToFirstMonday = 8 - firstDayOfWeek;
@@ -111,7 +114,6 @@ Exam Branch - Teaching Plan
                             const daysToMonday = currentDayOfWeek === 1 ? 0 : (currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1);
                             currentMonday.setDate(d.getDate() - daysToMonday);
                             
-                            // Calculate week number
                             const diffTime = currentMonday - firstMonday;
                             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                             const weekNum = Math.floor(diffDays / 7) + 1;
@@ -133,7 +135,135 @@ Exam Branch - Teaching Plan
                             return `${day}-${month}-${year}`;
                         }
                         
-                        document.getElementById('addBtn').addEventListener('click', function() {
+                        function clearTable() {
+                            document.getElementById('teachingPlanBody').innerHTML = '';
+                        }
+                        
+                        function renderRows(rows) {
+                            const tbody = document.getElementById('teachingPlanBody');
+                            clearTable();
+                            const groups = [];
+                            let currentGroup = null;
+                            
+                            rows.forEach(entry => {
+                                if (!currentGroup || currentGroup.weekNum !== entry.weekNum) {
+                                    currentGroup = {
+                                        weekNum: entry.weekNum,
+                                        rows: [entry]
+                                    };
+                                    groups.push(currentGroup);
+                                } else {
+                                    currentGroup.rows.push(entry);
+                                }
+                            });
+                            
+                            groups.forEach(group => {
+                                const rowspan = group.rows.length;
+                                group.rows.forEach((entry, index) => {
+                                    const row = document.createElement('tr');
+                                    const dateCell = document.createElement('td');
+                                    const dayCell = document.createElement('td');
+                                    const weekCell = document.createElement('td');
+                                    const classesCell = document.createElement('td');
+                                    const topicsCell = document.createElement('td');
+                                    const studentsCell = document.createElement('td');
+                                    
+                                    dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
+                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
+                                    
+                                    if (index === 0) {
+                                        weekCell.innerHTML = `<input type="text" class="form-control" value="${group.weekNum}" readonly />`;
+                                        weekCell.setAttribute('rowspan', rowspan);
+                                    } else {
+                                        weekCell.innerHTML = `<input type="hidden" value="${group.weekNum}" />`;
+                                        weekCell.style.padding = '0';
+                                        weekCell.style.border = 'none';
+                                    }
+                                    
+                                    classesCell.innerHTML = `<input type="text" class="form-control" value="${entry.classesTaken || ''}" />`;
+                                    topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
+                                    studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
+                                    
+                                    if (entry.day === 'Saturday') {
+                                        [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell].forEach(cell => {
+                                            cell.style.borderBottom = '2px solid #000';
+                                        });
+                                    }
+                                    
+                                    row.appendChild(dateCell);
+                                    row.appendChild(dayCell);
+                                    row.appendChild(weekCell);
+                                    row.appendChild(classesCell);
+                                    row.appendChild(topicsCell);
+                                    row.appendChild(studentsCell);
+                                    tbody.appendChild(row);
+                                });
+                            });
+                        }
+                        
+                        function getHeaderData() {
+                            return {
+                                faculty: document.querySelector('input[placeholder="Faculty Name"]').value,
+                                employeeCode: document.querySelector('input[placeholder="7001"]').value,
+                                subject: document.querySelector('input[placeholder="Subject Name"]').value,
+                                className: document.querySelector('input[placeholder="Class"]').value,
+                                subjectCode: document.querySelector('input[placeholder="Subject Code"]').value
+                            };
+                        }
+                        
+                        function setHeaderData(data) {
+                            if (!data) return;
+                            document.querySelector('input[placeholder="Faculty Name"]').value = data.faculty || '';
+                            document.querySelector('input[placeholder="7001"]').value = data.employeeCode || '';
+                            document.querySelector('input[placeholder="Subject Name"]').value = data.subject || '';
+                            document.querySelector('input[placeholder="Class"]').value = data.className || '';
+                            document.querySelector('input[placeholder="Subject Code"]').value = data.subjectCode || '';
+                        }
+                        
+                        function getTableRows() {
+                            const tbody = document.getElementById('teachingPlanBody');
+                            const rows = [];
+                            for (const row of tbody.rows) {
+                                const cells = row.cells;
+                                const date = cells[0].querySelector('input')?.value || '';
+                                const day = cells[1].querySelector('input')?.value || '';
+                                const weekNum = cells[2].querySelector('input')?.value || '';
+                                const classesTaken = cells[3].querySelector('input')?.value || '';
+                                const topics = cells[4].querySelector('input')?.value || '';
+                                const studentsPresent = cells[5].querySelector('input')?.value || '';
+                                if (date || day || weekNum) {
+                                    rows.push({ date, day, weekNum, classesTaken, topics, studentsPresent });
+                                }
+                            }
+                            return rows;
+                        }
+                        
+                        function saveTeachingPlan() {
+                            const payload = {
+                                header: getHeaderData(),
+                                rows: getTableRows()
+                            };
+                            localStorage.setItem('examBranchTeachingPlan', JSON.stringify(payload));
+                            alert('Teaching plan saved successfully.');
+                        }
+                        
+                        function loadTeachingPlan() {
+                            const saved = localStorage.getItem('examBranchTeachingPlan');
+                            if (!saved) {
+                                return;
+                            }
+                            try {
+                                const payload = JSON.parse(saved);
+                                setHeaderData(payload.header);
+                                if (Array.isArray(payload.rows)) {
+                                    renderRows(payload.rows);
+                                }
+                            } catch (e) {
+                                console.error('Failed to load saved teaching plan', e);
+                            }
+                        }
+                        
+                        function addRowsFromRange() {
                             const fromDateStr = document.getElementById('fromDate').value;
                             const toDateStr = document.getElementById('toDate').value;
                             
@@ -150,96 +280,38 @@ Exam Branch - Teaching Plan
                                 return;
                             }
                             
-                            const tbody = document.getElementById('teachingPlanBody');
                             const dates = [];
                             let currentDate = new Date(fromDate);
-                            
-                            // Collect all dates
                             while (currentDate <= toDate) {
                                 dates.push(new Date(currentDate));
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
                             
-                            // Group dates by week with sequential week numbers starting at 1
-                            const groups = [];
-                            let currentGroup = null;
+                            const rows = [];
                             let weekCounter = 0;
-                            
-                            for (let i = 0; i < dates.length; i++) {
-                                const date = dates[i];
+                            dates.forEach((date, index) => {
                                 const dayOfWeek = date.getDay();
                                 const isMonday = dayOfWeek === 1;
-                                
-                                if (i === 0 || isMonday) {
+                                if (index === 0 || isMonday) {
                                     weekCounter += 1;
                                 }
-                                
-                                const weekNum = weekCounter;
-                                
-                                if (!currentGroup || currentGroup.weekNum !== weekNum) {
-                                    currentGroup = {
-                                        weekNum: weekNum,
-                                        dates: [date]
-                                    };
-                                    groups.push(currentGroup);
-                                } else {
-                                    currentGroup.dates.push(date);
-                                }
-                            }
-                            
-                            // Create rows for each group
-                            for (const group of groups) {
-                                const rowspan = group.dates.length;
-                                
-                                for (let i = 0; i < group.dates.length; i++) {
-                                    const row = document.createElement('tr');
-                                    const dateCell = document.createElement('td');
-                                    const dayCell = document.createElement('td');
-                                    const weekCell = document.createElement('td');
-                                    const classesCell = document.createElement('td');
-                                    const topicsCell = document.createElement('td');
-                                    
-                                    const dayName = getDayName(group.dates[i]);
-                                    dateCell.innerHTML = `<input type="text" class="form-control" value="${formatDate(group.dates[i])}" readonly />`;
-                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${dayName}" readonly />`;
-                                    
-                                    if (i === 0) {
-                                        // First row in group gets rowspan
-                                        weekCell.innerHTML = `<input type="text" class="form-control" value="${group.weekNum}" readonly />`;
-                                        weekCell.setAttribute('rowspan', rowspan);
-                                    } else {
-                                        // Subsequent rows keep a placeholder cell so separators span the full row
-                                        weekCell.innerHTML = '';
-                                        weekCell.style.padding = '0';
-                                        weekCell.style.border = 'none';
-                                    }
-                                    
-                                    classesCell.innerHTML = `<input type="text" class="form-control" />`;
-                                    topicsCell.innerHTML = `<input type="text" class="form-control" />`;
-                                    const studentsCell = document.createElement('td');
-                                    studentsCell.innerHTML = `<input type="text" class="form-control" />`;
-                                    
-                                    if (dayName === 'Saturday') {
-                                        const cells = [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell];
-                                        cells.forEach(cell => {
-                                            cell.style.borderBottom = '2px solid #000';
-                                        });
-                                    }
-                                    
-                                    row.appendChild(dateCell);
-                                    row.appendChild(dayCell);
-                                    row.appendChild(weekCell);
-                                    row.appendChild(classesCell);
-                                    row.appendChild(topicsCell);
-                                    row.appendChild(studentsCell);
-                                    
-                                    tbody.appendChild(row);
-                                }
-                            }
-                            
+                                rows.push({
+                                    date: formatDate(date),
+                                    day: getDayName(date),
+                                    weekNum: weekCounter,
+                                    classesTaken: '',
+                                    topics: '',
+                                    studentsPresent: ''
+                                });
+                            });
+                            renderRows(rows.concat(getTableRows()));
                             document.getElementById('fromDate').value = '';
                             document.getElementById('toDate').value = '';
-                        });
+                        }
+                        
+                        document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
+                        document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
+                        window.addEventListener('DOMContentLoaded', loadTeachingPlan);
                     </script>
                 </div>
             </div>
