@@ -29,6 +29,9 @@ class DashboardConfig(AppConfig):
             from .startup import check_pdf_url_column, ensure_default_admin_user
             check_pdf_url_column()
             ensure_default_admin_user()
+            
+            # Connect Django signals for automatic student profile initialization
+            import dashboard.signals  # noqa
         except Exception:
             # Don't let startup errors crash the server
             pass
