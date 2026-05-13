@@ -149,49 +149,78 @@ Exam Branch - Teaching Plan
                         function updateTotals() {
                             const tbody = document.getElementById('teachingPlanBody');
                             let runningTotal = 0;
-                            for (const row of tbody.rows) {
-                                const classesInput = row.cells[3].querySelector('input');
-                                const classesValue = Number(classesInput?.value || 0);
+                            tbody.querySelectorAll('.classes-taken-input').forEach(input => {
+                                const classesValue = Number(input.value || 0);
                                 if (!Number.isNaN(classesValue)) {
                                     runningTotal += classesValue;
                                 }
-                            }
+                            });
                             document.getElementById('totalClassesTaken').value = runningTotal;
                         }
                         
                         function renderRows(rows) {
                             const tbody = document.getElementById('teachingPlanBody');
                             clearTable();
-                            
+
+                            const groupedRows = [];
+                            let currentGroup = null;
+
                             rows.forEach(entry => {
-                                const row = document.createElement('tr');
-                                const dateCell = document.createElement('td');
-                                const dayCell = document.createElement('td');
-                                const weekCell = document.createElement('td');
-                                const classesCell = document.createElement('td');
-                                const topicsCell = document.createElement('td');
-                                const studentsCell = document.createElement('td');
-                                
-                                dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
-                                dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
-                                weekCell.innerHTML = `<input type="text" class="form-control" value="${entry.weekNum}" readonly />`;
-                                classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" step="1" />`;
-                                topicsCell.innerHTML = `<input type="text" class="form-control" value="${entry.topics || ''}" />`;
-                                studentsCell.innerHTML = `<input type="text" class="form-control" value="${entry.studentsPresent || ''}" />`;
-                                
-                                if (entry.day === 'Saturday') {
-                                    [dateCell, dayCell, weekCell, classesCell, topicsCell, studentsCell].forEach(cell => {
-                                        cell.style.borderBottom = '2px solid #000';
-                                    });
+                                if (!currentGroup || currentGroup.weekNum !== entry.weekNum) {
+                                    currentGroup = { weekNum: entry.weekNum, rows: [] };
+                                    groupedRows.push(currentGroup);
                                 }
-                                
-                                row.appendChild(dateCell);
-                                row.appendChild(dayCell);
-                                row.appendChild(weekCell);
-                                row.appendChild(classesCell);
-                                row.appendChild(topicsCell);
-                                row.appendChild(studentsCell);
-                                tbody.appendChild(row);
+                                currentGroup.rows.push(entry);
+                            });
+
+                            groupedRows.forEach(group => {
+                                const mondayIndex = group.rows.findIndex(item => item.day === 'Monday');
+                                const mondayRowCount = mondayIndex >= 0 ? group.rows.length - mondayIndex : 0;
+
+                                group.rows.forEach((entry, index) => {
+                                    const row = document.createElement('tr');
+                                    const dateCell = document.createElement('td');
+                                    const dayCell = document.createElement('td');
+                                    const classesCell = document.createElement('td');
+                                    const topicsCell = document.createElement('td');
+                                    const studentsCell = document.createElement('td');
+
+                                    dateCell.innerHTML = `<input type="text" class="form-control" value="${entry.date}" readonly />`;
+                                    dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
+                                    classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" step="1" />`;
+                                    topicsCell.innerHTML = `<input type="text" class="form-control topics-input" value="${entry.topics || ''}" />`;
+                                    studentsCell.innerHTML = `<input type="text" class="form-control students-input" value="${entry.studentsPresent || ''}" />`;
+
+                                    row.dataset.weekNum = entry.weekNum;
+
+                                    let weekCell = null;
+                                    if (index === mondayIndex) {
+                                        weekCell = document.createElement('td');
+                                        weekCell.rowSpan = mondayRowCount;
+                                        weekCell.innerHTML = `<input type="text" class="form-control week-num-input" value="${entry.weekNum}" readonly />`;
+                                    }
+
+                                    row.appendChild(dateCell);
+                                    row.appendChild(dayCell);
+                                    if (weekCell) {
+                                        row.appendChild(weekCell);
+                                    }
+                                    row.appendChild(classesCell);
+                                    row.appendChild(topicsCell);
+                                    row.appendChild(studentsCell);
+
+                                    if (entry.day === 'Saturday') {
+                                        const cellsToStyle = [dateCell, dayCell, classesCell, topicsCell, studentsCell];
+                                        if (weekCell) {
+                                            cellsToStyle.splice(2, 0, weekCell);
+                                        }
+                                        cellsToStyle.forEach(cell => {
+                                            cell.style.borderBottom = '2px solid #000';
+                                        });
+                                    }
+
+                                    tbody.appendChild(row);
+                                });
                             });
                             updateTotals();
                         }
@@ -219,13 +248,13 @@ Exam Branch - Teaching Plan
                             const tbody = document.getElementById('teachingPlanBody');
                             const rows = [];
                             for (const row of tbody.rows) {
-                                const cells = row.cells;
-                                const date = cells[0].querySelector('input')?.value || '';
-                                const day = cells[1].querySelector('input')?.value || '';
-                                const weekNum = cells[2].querySelector('input')?.value || '';
-                                const classesTaken = cells[3].querySelector('input')?.value || '';
-                                const topics = cells[4].querySelector('input')?.value || '';
-                                const studentsPresent = cells[5].querySelector('input')?.value || '';
+                                const textInputs = row.querySelectorAll('input[type="text"]');
+                                const date = textInputs[0]?.value || '';
+                                const day = textInputs[1]?.value || '';
+                                const weekNum = row.dataset.weekNum || '';
+                                const classesTaken = row.querySelector('.classes-taken-input')?.value || '';
+                                const topics = row.querySelector('.topics-input')?.value || '';
+                                const studentsPresent = row.querySelector('.students-input')?.value || '';
                                 if (date || day || weekNum) {
                                     rows.push({ date, day, weekNum, classesTaken, topics, studentsPresent });
                                 }
