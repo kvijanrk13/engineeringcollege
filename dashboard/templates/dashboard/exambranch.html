@@ -192,11 +192,22 @@ Exam Branch - Teaching Plan
                                     const studentsInput = document.createElement('input');
                                     studentsInput.type = 'text';
                                     studentsInput.className = 'form-control students-input';
+                                    studentsInput.setAttribute('tabindex', '0');
+                                    studentsInput.style.width = '100%';
+                                    studentsInput.style.minWidth = '80px';
+                                    studentsInput.style.position = 'relative';
+                                    studentsInput.style.zIndex = '1';
                                     studentsInput.value = entry.studentsPresent || '';
                                     studentsInput.addEventListener('input', function(e) {
                                         this.dataset.value = this.value;
                                     });
+                                    studentsInput.addEventListener('focus', function() {
+                                        console.log('Students input focused');
+                                    });
                                     studentsCell.appendChild(studentsInput);
+                                    studentsCell.style.position = 'relative';
+                                    studentsCell.style.zIndex = '1';
+                                    studentsCell.style.minHeight = '50px';
 
                                     row.dataset.weekNum = entry.weekNum;
 
