@@ -189,7 +189,14 @@ Exam Branch - Teaching Plan
                                     dayCell.innerHTML = `<input type="text" class="form-control" value="${entry.day}" readonly />`;
                                     classesCell.innerHTML = `<input type="number" class="form-control classes-taken-input" value="${entry.classesTaken || ''}" min="0" step="1" />`;
                                     topicsCell.innerHTML = `<input type="text" class="form-control topics-input" value="${entry.topics || ''}" />`;
-                                    studentsCell.innerHTML = `<input type="text" class="form-control students-input" value="${entry.studentsPresent || ''}" />`;
+                                    const studentsInput = document.createElement('input');
+                                    studentsInput.type = 'text';
+                                    studentsInput.className = 'form-control students-input';
+                                    studentsInput.value = entry.studentsPresent || '';
+                                    studentsInput.addEventListener('input', function(e) {
+                                        this.dataset.value = this.value;
+                                    });
+                                    studentsCell.appendChild(studentsInput);
 
                                     row.dataset.weekNum = entry.weekNum;
 
@@ -328,7 +335,9 @@ Exam Branch - Teaching Plan
                                     studentsPresent: ''
                                 });
                             });
-                            renderRows(rows.concat(getTableRows()));
+                            const existingRows = getTableRows();
+                            const allRows = rows.concat(existingRows);
+                            renderRows(allRows);
                             document.getElementById('fromDate').value = '';
                             document.getElementById('toDate').value = '';
                         }
