@@ -68,8 +68,8 @@ Exam Branch - Teaching Plan
                             <button id="addBtn" class="btn btn-primary w-100">ADD</button>
                         </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered text-center align-middle" id="teachingPlanTable">
+                    <div class="table-responsive" style="overflow-x: visible;">
+                        <table class="table table-bordered text-center align-middle" id="teachingPlanTable" style="min-width: 800px;">
                             <thead class="table-light">
                                 <tr>
                                     <th scope="col">DATE</th>
@@ -193,12 +193,12 @@ Exam Branch - Teaching Plan
                                     studentsInput.type = 'number';
                                     studentsInput.className = 'form-control students-input';
                                     studentsInput.min = '0';
-                                    studentsInput.style.width = '100%';
-                                    studentsInput.style.minWidth = '80px';
+                                    studentsInput.style.cssText = 'width: 100%; min-width: 80px; background: white; cursor: text;';
                                     studentsInput.value = entry.studentsPresent || '';
                                     studentsInput.placeholder = '0';
                                     studentsInput.title = 'Enter number of students present';
                                     studentsInput.setAttribute('aria-label', 'Number of students present');
+                                    studentsCell.style.cssText = 'position: relative; z-index: 1; cursor: text;';
                                     studentsCell.appendChild(studentsInput);
 
                                     row.dataset.weekNum = entry.weekNum;
