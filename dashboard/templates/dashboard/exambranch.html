@@ -306,11 +306,11 @@ Exam Branch - Teaching Plan
                                 date: formatDate(date),
                                 day: getDayName(date),
                                 weekNum: getWeekNumber(date),
-                                classesTaken: 0,
-                                topics: '0',
-                                studentsPresent: 0,
+                                classesTaken: '',
+                                topics: '',
+                                studentsPresent: '',
                             }));
-                            renderRows(getTableRows().concat(rows));
+                            renderRows(rows);
                             document.getElementById('fromDate').value = '';
                             document.getElementById('toDate').value = '';
                         }
