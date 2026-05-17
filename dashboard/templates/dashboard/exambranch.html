@@ -463,10 +463,13 @@ Exam Branch - Teaching Plan
                         const grades = { 'O': { count: 0, rolls: [] }, 'A+': { count: 0, rolls: [] }, 
                                          'A': { count: 0, rolls: [] }, 'B+': { count: 0, rolls: [] },
                                          'B': { count: 0, rolls: [] }, 'P': { count: 0, rolls: [] }, 'F': { count: 0, rolls: [] } };
-                        students.forEach(s => {
-                            if (s.grade !== 'ABSENT') {
-                                grades[s.grade].count++;
-                                grades[s.grade].rolls.push(s.rollNo);
+                        const rows = document.querySelectorAll('#marksBody tr');
+                        rows.forEach(row => {
+                            const rollNo = row.querySelector('.roll-no').value;
+                            const grade = row.querySelector('.grade').textContent;
+                            if (grade !== 'ABSENT' && grade !== '-') {
+                                grades[grade].count++;
+                                grades[grade].rolls.push(rollNo);
                             }
                         });
                         return grades;
@@ -478,7 +481,7 @@ Exam Branch - Teaching Plan
                         students.forEach((s, idx) => {
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td>${s.rollNo}</td>
+                                <td><input type="text" class="form-control form-control-sm roll-no" value="${s.rollNo}" /></td>
                                 <td><input type="number" class="form-control form-control-sm mid1-obj" value="${s.mid1Obj}" min="0" max="10"></td>
                                 <td><input type="number" class="form-control form-control-sm mid1-desc" value="${s.mid1Desc}" min="0" max="20"></td>
                                 <td class="mid1-total">${s.mid1Obj + s.mid1Desc}</td>
@@ -493,19 +496,20 @@ Exam Branch - Teaching Plan
                             `;
                             tbody.appendChild(row);
                         });
-                        updateGradeSummary(students);
+                        updateGradeSummary();
                     }
                     
-                    function updateGradeSummary(students) {
-                        const grades = calculateGradeDistribution(students);
-                        const totalNonAbsent = students.filter(s => s.grade !== 'ABSENT').length || 1;
+                    function updateGradeSummary() {
+                        const grades = calculateGradeDistribution();
+                        const rows = document.querySelectorAll('#marksBody tr');
+                        const totalNonAbsent = rows.length;
                         const tbody = document.getElementById('gradeSummaryBody');
                         tbody.innerHTML = '';
                         const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
                         const ranges = { 'O': '10%-15%', 'A+': '20%-25%', 'A': '20%-25%', 'B+': '20%-25%', 'B': '10%-15%', 'P': '0%', 'F': '0%' };
                         let totalPercent = 0;
                         gradeOrder.forEach(g => {
-                            const pct = Math.round((grades[g].count / totalNonAbsent) * 100);
+                            const pct = Math.round((grades[g].count / totalNonAbsent) * 100) || 0;
                             totalPercent += pct;
                             const row = document.createElement('tr');
                             row.innerHTML = `<td>${g}</td><td>${grades[g].count}</td><td>${pct}%</td><td>${ranges[g]}</td><td style="font-size:10px;">${grades[g].rolls.join(', ')}</td>`;
@@ -518,59 +522,18 @@ Exam Branch - Teaching Plan
                     
                     function generateStudents(count, adjustForDistribution = true) {
                         const students = [];
-                        let grades = { 'O': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'P': 0, 'F': 0 };
-                        const gradeTargets = { 'O': 0.125, 'A+': 0.225, 'A': 0.225, 'B+': 0.225, 'B': 0.125 };
-                        if (adjustForDistribution) {
-                            const weights = [0.125, 0.225, 0.225, 0.225, 0.125];
-                            const gradeList = ['O', 'A+', 'A', 'B+', 'B'];
-                            let remaining = count;
-                            for (let i = 0; i < 4; i++) {
-                                grades[gradeList[i]] = Math.floor(count * weights[i]);
-                                remaining -= grades[gradeList[i]];
-                            }
-                            grades['B'] += remaining;
-                        }
-                        let rollNo = 1;
-                        for (const grade of Object.keys(grades)) {
-                            for (let i = 0; i < grades[grade]; i++) {
-                                let mid1Obj, mid1Desc, mid2Obj, mid2Desc;
-                                switch (grade) {
-                                    case 'O': mid1Obj = 10; mid1Desc = 20; mid2Obj = 10; mid2Desc = 20; break;
-                                    case 'A+': mid1Obj = 9; mid1Desc = 18; mid2Obj = 9; mid2Desc = 18; break;
-                                    case 'A': mid1Obj = 8; mid1Desc = 16; mid2Obj = 8; mid2Desc = 16; break;
-                                    case 'B+': mid1Obj = 7; mid1Desc = 14; mid2Obj = 7; mid2Desc = 14; break;
-                                    case 'B': mid1Obj = 6; mid1Desc = 12; mid2Obj = 6; mid2Desc = 12; break;
-                                    default: mid1Obj = 5; mid1Desc = 10; mid2Obj = 5; mid2Desc = 10;
-                                }
-                                const midAvg = Math.round(((mid1Obj + mid1Desc) + (mid2Obj + mid2Desc)) / 2);
-                                const assignment = 5;
-                                const viva = 5;
-                                const total = Math.min(midAvg + assignment + viva, 40);
-                                students.push({
-                                    rollNo: `BT${String(rollNo).padStart(3, '0')}`,
-                                    mid1Obj, mid1Desc, mid2Obj, mid2Desc,
-                                    midAvg: midAvg,
-                                    assignment, viva,
-                                    total,
-                                    grade: getGrade(total)
-                                });
-                                rollNo++;
-                            }
-                        }
-                        for (let i = rollNo; i <= count; i++) {
-                            const mid1Obj = Math.floor(Math.random() * 6) + 5;
-                            const mid1Desc = Math.floor(Math.random() * 10) + 10;
-                            const mid2Obj = Math.floor(Math.random() * 6) + 5;
-                            const mid2Desc = Math.floor(Math.random() * 10) + 10;
-                            const midAvg = Math.round(((mid1Obj + mid1Desc) + (mid2Obj + mid2Desc)) / 2);
+                        for (let i = 1; i <= count; i++) {
                             students.push({
                                 rollNo: `BT${String(i).padStart(3, '0')}`,
-                                mid1Obj, mid1Desc, mid2Obj, mid2Desc,
-                                midAvg: midAvg,
-                                assignment: 5,
-                                viva: 5,
-                                total: midAvg + 10,
-                                grade: getGrade(midAvg + 10)
+                                mid1Obj: 0,
+                                mid1Desc: 0,
+                                mid2Obj: 0,
+                                mid2Desc: 0,
+                                midAvg: 0,
+                                assignment: 0,
+                                viva: 0,
+                                total: 0,
+                                grade: '-'
                             });
                         }
                         return students;
@@ -600,6 +563,7 @@ Exam Branch - Teaching Plan
                             const total = Math.min(midAvg + assignment + viva, 40);
                             row.querySelector('.total').textContent = total;
                             row.querySelector('.grade').textContent = getGrade(total);
+                            updateGradeSummary();
                         }
                     });
                 </script>
