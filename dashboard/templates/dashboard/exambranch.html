@@ -7,22 +7,56 @@
 Exam Branch - Teaching Plan
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    .nav-tabs .nav-link { color: #495057; font-weight: 500; }
+    .nav-tabs .nav-link.active { color: #0d6efd; font-weight: 600; border-bottom: 3px solid #0d6efd; }
+    .nav-tabs .nav-link:hover { border-color: transparent; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="row justify-content-center mb-4">
-        <div class="col-lg-10">
-            <div class="card shadow-sm">
-                <div class="card-body">
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="examBranchTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="lessonplan-tab" data-bs-toggle="tab" data-bs-target="#lessonplan" type="button">
+                <i class="fas fa-book me-1"></i> LESSON PLAN
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button">
+                <i class="fas fa-clipboard-check me-1"></i> EVALUATION
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="examBranchTabsContent">
+        <!-- Lesson Plan Tab -->
+        <div class="tab-pane fade show active" id="lessonplan" role="tabpanel">
+            <div class="row justify-content-center mb-4">
+                <div class="col-lg-10">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
                     <div class="text-center mb-4">
                         <div class="row gy-2 justify-content-center mb-3">
                             <div class="col-auto">
-                                <input type="text" class="form-control" placeholder="Year" value="III" style="width: 80px;" />
+                                <input type="text" class="form-control" placeholder="Branch" value="" style="width: 80px;" />
                             </div>
                             <div class="col-auto">
                                 <span class="align-middle">B.Tech</span>
                             </div>
                             <div class="col-auto">
-                                <input type="text" class="form-control" placeholder="Semester" value="I" style="width: 80px;" />
+                                <input type="text" class="form-control" placeholder="Year" value="" style="width: 80px;" />
+                            </div>
+                            <div class="col-auto">
+                                <span class="align-middle">Year</span>
+                            </div>
+                            <div class="col-auto">
+                                <input type="text" class="form-control" placeholder="Semester" value="" style="width: 80px;" />
+                            </div>
+                            <div class="col-auto">
+                                <span class="align-middle">Sem</span>
                             </div>
                             <div class="col-auto">
                                 <span class="align-middle">Sem Teaching Plan</span>
@@ -198,8 +232,8 @@ Exam Branch - Teaching Plan
                                     if (index === 0) {
                                         const weekCell = document.createElement('td');
                                         weekCell.rowSpan = group.rows.length || 1;
-                                        weekCell.style.cssText = 'padding: 0.75rem 0.5rem; vertical-align: middle;';
-                                        weekCell.innerHTML = `<input type="text" class="form-control text-center" value="${group.weekNum}" readonly style="height: 100%; min-height: 3rem;" />`;
+                                        weekCell.style.cssText = 'vertical-align: middle; text-align: center;';
+                                        weekCell.innerHTML = `<input type="text" class="form-control text-center" value="${group.weekNum}" readonly style="height: 100%; min-height: 3rem; margin: 0 auto;" />`;
                                         row.appendChild(weekCell);
                                     }
 
@@ -296,20 +330,36 @@ Exam Branch - Teaching Plan
                                 alert('From date must be before To date');
                                 return;
                             }
+                            const tbody = document.getElementById('teachingPlanBody');
+                            if (tbody.children.length > 0) {
+                                const hasExistingData = Array.from(tbody.querySelectorAll('input, textarea')).some(input => input.value && input.value !== '0');
+                                if (hasExistingData) {
+                                    if (!confirm('This will delete all existing data in the table. Do you want to continue?')) {
+                                        return;
+                                    }
+                                }
+                            }
                             const dates = [];
                             let currentDate = new Date(fromDate);
                             while (currentDate <= toDate) {
                                 dates.push(new Date(currentDate));
                                 currentDate.setDate(currentDate.getDate() + 1);
                             }
-                            const rows = dates.map(date => ({
-                                date: formatDate(date),
-                                day: getDayName(date),
-                                weekNum: getWeekNumber(date),
-                                classesTaken: '',
-                                topics: '',
-                                studentsPresent: '',
-                            }));
+                            let weekNum = 1;
+                            const rows = dates.map((date, index) => {
+                                const dayOfWeek = date.getDay();
+                                if (index > 0 && dayOfWeek === 1) {
+                                    weekNum++;
+                                }
+                                return {
+                                    date: formatDate(date),
+                                    day: getDayName(date),
+                                    weekNum: weekNum,
+                                    classesTaken: '',
+                                    topics: '',
+                                    studentsPresent: '',
+                                };
+                            });
                             renderRows(rows);
                             document.getElementById('fromDate').value = '';
                             document.getElementById('toDate').value = '';
@@ -343,6 +393,11 @@ Exam Branch - Teaching Plan
                 </div>
             </div>
         </div>
-    </div>
+        </div><!-- End Lesson Plan Tab -->
+
+        <!-- Evaluation Tab -->
+        <div class="tab-pane fade" id="evaluation" role="tabpanel">
+        </div><!-- End Evaluation Tab -->
+    </div><!-- End Tab Content -->
 </div>
 {% endblock %}
