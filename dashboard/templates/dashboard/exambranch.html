@@ -511,6 +511,9 @@ Exam Branch - Teaching Plan
                             row.innerHTML = `<td>${g}</td><td>${grades[g].count}</td><td>${pct}%</td><td>${ranges[g]}</td><td style="font-size:10px;">${grades[g].rolls.join(', ')}</td>`;
                             tbody.appendChild(row);
                         });
+                        const totalRow = document.createElement('tr');
+                        totalRow.innerHTML = `<td><strong>TOTAL</strong></td><td><strong>${totalNonAbsent}</strong></td><td><strong>${totalPercent}%</strong></td><td><strong>100%</strong></td><td></td>`;
+                        tbody.appendChild(totalRow);
                     }
                     
                     function generateStudents(count, adjustForDistribution = true) {
