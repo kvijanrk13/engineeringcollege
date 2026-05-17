@@ -395,6 +395,212 @@ Exam Branch - Teaching Plan
 
         <!-- Evaluation Tab -->
         <div class="tab-pane fade" id="evaluation" role="tabpanel">
+            <div class="container-fluid py-3">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Total Students:</label>
+                        <input type="number" id="studentCount" class="form-control" placeholder="Enter number of students" min="1" value="50" />
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button id="addStudentsBtn" class="btn btn-primary">ADD</button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-bordered table-striped table-sm" id="internalMarksTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Roll No</th>
+                                <th>MID-1 Obj(10)</th>
+                                <th>MID-1 Desc(20)</th>
+                                <th>MID-1 Total</th>
+                                <th>MID-2 Obj(10)</th>
+                                <th>MID-2 Desc(20)</th>
+                                <th>MID-2 Total</th>
+                                <th>Average MID(30)</th>
+                                <th>Assignment(5)</th>
+                                <th>Viva(5)</th>
+                                <th>TOTAL(40)</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marksBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h5>Grade Distribution Summary</h5>
+                        <table class="table table-bordered table-striped" id="gradeSummaryTable">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Grade</th>
+                                    <th>Student Count</th>
+                                    <th>Percentage</th>
+                                    <th>Required Range</th>
+                                    <th>Roll Numbers</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gradeSummaryBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <script>
+                    function getGrade(total) {
+                        if (total >= 37) return 'O';
+                        if (total >= 32) return 'A+';
+                        if (total >= 28) return 'A';
+                        if (total >= 24) return 'B+';
+                        if (total >= 20) return 'B';
+                        if (total >= 14) return 'P';
+                        return 'F';
+                    }
+                    
+                    function calculateGradeDistribution(students) {
+                        const grades = { 'O': { count: 0, rolls: [] }, 'A+': { count: 0, rolls: [] }, 
+                                         'A': { count: 0, rolls: [] }, 'B+': { count: 0, rolls: [] },
+                                         'B': { count: 0, rolls: [] }, 'P': { count: 0, rolls: [] }, 'F': { count: 0, rolls: [] } };
+                        students.forEach(s => {
+                            if (s.grade !== 'ABSENT') {
+                                grades[s.grade].count++;
+                                grades[s.grade].rolls.push(s.rollNo);
+                            }
+                        });
+                        return grades;
+                    }
+                    
+                    function renderStudents(students) {
+                        const tbody = document.getElementById('marksBody');
+                        tbody.innerHTML = '';
+                        students.forEach((s, idx) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${s.rollNo}</td>
+                                <td><input type="number" class="form-control form-control-sm mid1-obj" value="${s.mid1Obj}" min="0" max="10"></td>
+                                <td><input type="number" class="form-control form-control-sm mid1-desc" value="${s.mid1Desc}" min="0" max="20"></td>
+                                <td class="mid1-total">${s.mid1Obj + s.mid1Desc}</td>
+                                <td><input type="number" class="form-control form-control-sm mid2-obj" value="${s.mid2Obj}" min="0" max="10"></td>
+                                <td><input type="number" class="form-control form-control-sm mid2-desc" value="${s.mid2Desc}" min="0" max="20"></td>
+                                <td class="mid2-total">${s.mid2Obj + s.mid2Desc}</td>
+                                <td class="mid-avg">${s.midAvg}</td>
+                                <td><input type="number" class="form-control form-control-sm assignment" value="${s.assignment}" min="0" max="5"></td>
+                                <td><input type="number" class="form-control form-control-sm viva" value="${s.viva}" min="0" max="5"></td>
+                                <td class="total">${s.total}</td>
+                                <td class="grade fw-bold">${s.grade}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                        updateGradeSummary(students);
+                    }
+                    
+                    function updateGradeSummary(students) {
+                        const grades = calculateGradeDistribution(students);
+                        const totalNonAbsent = students.filter(s => s.grade !== 'ABSENT').length || 1;
+                        const tbody = document.getElementById('gradeSummaryBody');
+                        tbody.innerHTML = '';
+                        const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
+                        const ranges = { 'O': '10%-15%', 'A+': '20%-25%', 'A': '20%-25%', 'B+': '20%-25%', 'B': '10%-15%', 'P': '0%', 'F': '0%' };
+                        let totalPercent = 0;
+                        gradeOrder.forEach(g => {
+                            const pct = Math.round((grades[g].count / totalNonAbsent) * 100);
+                            totalPercent += pct;
+                            const row = document.createElement('tr');
+                            row.innerHTML = `<td>${g}</td><td>${grades[g].count}</td><td>${pct}%</td><td>${ranges[g]}</td><td style="font-size:10px;">${grades[g].rolls.join(', ')}</td>`;
+                            tbody.appendChild(row);
+                        });
+                    }
+                    
+                    function generateStudents(count, adjustForDistribution = true) {
+                        const students = [];
+                        let grades = { 'O': 0, 'A+': 0, 'A': 0, 'B+': 0, 'B': 0, 'P': 0, 'F': 0 };
+                        const gradeTargets = { 'O': 0.125, 'A+': 0.225, 'A': 0.225, 'B+': 0.225, 'B': 0.125 };
+                        if (adjustForDistribution) {
+                            const weights = [0.125, 0.225, 0.225, 0.225, 0.125];
+                            const gradeList = ['O', 'A+', 'A', 'B+', 'B'];
+                            let remaining = count;
+                            for (let i = 0; i < 4; i++) {
+                                grades[gradeList[i]] = Math.floor(count * weights[i]);
+                                remaining -= grades[gradeList[i]];
+                            }
+                            grades['B'] += remaining;
+                        }
+                        let rollNo = 1;
+                        for (const grade of Object.keys(grades)) {
+                            for (let i = 0; i < grades[grade]; i++) {
+                                let mid1Obj, mid1Desc, mid2Obj, mid2Desc;
+                                switch (grade) {
+                                    case 'O': mid1Obj = 10; mid1Desc = 20; mid2Obj = 10; mid2Desc = 20; break;
+                                    case 'A+': mid1Obj = 9; mid1Desc = 18; mid2Obj = 9; mid2Desc = 18; break;
+                                    case 'A': mid1Obj = 8; mid1Desc = 16; mid2Obj = 8; mid2Desc = 16; break;
+                                    case 'B+': mid1Obj = 7; mid1Desc = 14; mid2Obj = 7; mid2Desc = 14; break;
+                                    case 'B': mid1Obj = 6; mid1Desc = 12; mid2Obj = 6; mid2Desc = 12; break;
+                                    default: mid1Obj = 5; mid1Desc = 10; mid2Obj = 5; mid2Desc = 10;
+                                }
+                                const midAvg = Math.round(((mid1Obj + mid1Desc) + (mid2Obj + mid2Desc)) / 2);
+                                const assignment = 5;
+                                const viva = 5;
+                                const total = Math.min(midAvg + assignment + viva, 40);
+                                students.push({
+                                    rollNo: `BT${String(rollNo).padStart(3, '0')}`,
+                                    mid1Obj, mid1Desc, mid2Obj, mid2Desc,
+                                    midAvg: midAvg,
+                                    assignment, viva,
+                                    total,
+                                    grade: getGrade(total)
+                                });
+                                rollNo++;
+                            }
+                        }
+                        for (let i = rollNo; i <= count; i++) {
+                            const mid1Obj = Math.floor(Math.random() * 6) + 5;
+                            const mid1Desc = Math.floor(Math.random() * 10) + 10;
+                            const mid2Obj = Math.floor(Math.random() * 6) + 5;
+                            const mid2Desc = Math.floor(Math.random() * 10) + 10;
+                            const midAvg = Math.round(((mid1Obj + mid1Desc) + (mid2Obj + mid2Desc)) / 2);
+                            students.push({
+                                rollNo: `BT${String(i).padStart(3, '0')}`,
+                                mid1Obj, mid1Desc, mid2Obj, mid2Desc,
+                                midAvg: midAvg,
+                                assignment: 5,
+                                viva: 5,
+                                total: midAvg + 10,
+                                grade: getGrade(midAvg + 10)
+                            });
+                        }
+                        return students;
+                    }
+                    
+                    document.getElementById('addStudentsBtn').addEventListener('click', function() {
+                        const count = parseInt(document.getElementById('studentCount').value) || 50;
+                        const students = generateStudents(count);
+                        renderStudents(students);
+                    });
+                    
+                    document.getElementById('marksBody').addEventListener('input', function(e) {
+                        if (e.target.classList.contains('mid1-obj') || e.target.classList.contains('mid1-desc') ||
+                            e.target.classList.contains('mid2-obj') || e.target.classList.contains('mid2-desc') ||
+                            e.target.classList.contains('assignment') || e.target.classList.contains('viva')) {
+                            const row = e.target.closest('tr');
+                            const mid1Obj = parseInt(row.querySelector('.mid1-obj').value) || 0;
+                            const mid1Desc = parseInt(row.querySelector('.mid1-desc').value) || 0;
+                            const mid2Obj = parseInt(row.querySelector('.mid2-obj').value) || 0;
+                            const mid2Desc = parseInt(row.querySelector('.mid2-desc').value) || 0;
+                            row.querySelector('.mid1-total').textContent = mid1Obj + mid1Desc;
+                            row.querySelector('.mid2-total').textContent = mid2Obj + mid2Desc;
+                            const midAvg = Math.round(((mid1Obj + mid1Desc) + (mid2Obj + mid2Desc)) / 2);
+                            row.querySelector('.mid-avg').textContent = midAvg;
+                            const assignment = parseInt(row.querySelector('.assignment').value) || 0;
+                            const viva = parseInt(row.querySelector('.viva').value) || 0;
+                            const total = Math.min(midAvg + assignment + viva, 40);
+                            row.querySelector('.total').textContent = total;
+                            row.querySelector('.grade').textContent = getGrade(total);
+                        }
+                    });
+                </script>
+            </div>
         </div><!-- End Evaluation Tab -->
     </div><!-- End Tab Content -->
 </div>
