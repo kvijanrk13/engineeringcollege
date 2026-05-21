@@ -1,63 +1,67 @@
 # ================================
-# SETTINGS.PY (UPDATED FOR RENDER)
+# SETTINGS.PY (POSTGRESQL + NEON)
 # ================================
 
 from pathlib import Path
 import os
-import socket
 import cloudinary
 import dj_database_url
 from dotenv import load_dotenv
-from urllib.parse import urlparse
 
+# ================================
+# BASE DIRECTORY
+# ================================
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ================================
+# LOAD ENV VARIABLES
+# ================================
 load_dotenv(BASE_DIR / '.env')
 
 # ================================
-# ✅ ENV DETECTION
-# ================================
-ON_RENDER = any(
-    key in os.environ
-    for key in ('RENDER', 'DATABASE_URL', 'DATABASE_EXTERNAL_URL')
-)
-
-# ================================
-# SECURITY
+# DJANGO SETTINGS
 # ================================
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-# Use environment variable for SECRET_KEY (required for Render)
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-for-local-only')
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-dev-key-for-local-development-only'
+)
 
-# Allowed hosts for Render
-default_hosts = [
+# ================================
+# COLLEGE SETTINGS
+# ================================
+COLLEGE_NAME = os.environ.get('COLLEGE_NAME', 'ANURAG Engineering College')
+DEPARTMENT_NAME = os.environ.get('DEPARTMENT_NAME', 'Information Technology')
+ACADEMIC_YEAR = os.environ.get('ACADEMIC_YEAR', '2026-2027')
+
+ALLOWED_HOSTS = [
+    '*',
     'localhost',
     '127.0.0.1',
     '.onrender.com',
     'engineeringcollege.onrender.com',
     'anrkitdept.onrender.com',
 ]
-env_hosts = [host.strip() for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host.strip()]
-ALLOWED_HOSTS = ['*'] if DEBUG else list(dict.fromkeys(default_hosts + env_hosts))
 
-default_origins = [
+CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
     'https://engineeringcollege.onrender.com',
     'https://anrkitdept.onrender.com',
-    'http://*.onrender.com',  # Also allow HTTP for redirect
 ]
-env_origins = [origin.strip() for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin.strip()]
-CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(default_origins + env_origins))
 
-# SSL/HTTPS Settings for Render
+# ================================
+# SSL / SECURITY SETTINGS
+# ================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = not DEBUG  # Redirect HTTP to HTTPS in production
-SESSION_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
-USE_X_FORWARDED_HOST = True
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year HSTS
-SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
-SECURE_HSTS_PRELOAD = not DEBUG
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # ================================
 # INSTALLED APPS
@@ -81,7 +85,9 @@ INSTALLED_APPS = [
 # ================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files
+
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -90,110 +96,59 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# ================================
+# ROOT URL CONFIG
+# ================================
 ROOT_URLCONF = 'engineeringcollege.urls'
 
 # ================================
-# COLLEGE SETTINGS
-# ================================
-COLLEGE_NAME = "ANURAG Engineering College"
-DEPARTMENT_NAME = "Information Technology"
-ACADEMIC_YEAR = "2023-24"
-
-# ================================
-# ✅ TEMPLATES
+# TEMPLATES
 # ================================
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+
         'DIRS': [BASE_DIR / 'templates'],
+
         'APP_DIRS': True,
+
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
                 'dashboard.context_processors.college_info',
             ],
         },
     },
 ]
 
+# ================================
+# WSGI
+# ================================
 WSGI_APPLICATION = 'engineeringcollege.wsgi.application'
 
 # ================================
-# DATABASE (PostgreSQL on Render, SQLite locally)
+# DATABASE (NEON POSTGRESQL)
 # ================================
-RENDER_DATABASE_URL = os.environ.get('DATABASE_URL')
-LEGACY_DATABASE_EXTERNAL_URL = os.environ.get('DATABASE_EXTERNAL_URL')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-def _database_hostname(db_url):
-    try:
-        return urlparse(db_url).hostname
-    except Exception:
-        return None
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL not found in .env"
+    )
 
-def _hostname_resolves(hostname, port=5432):
-    if not hostname:
-        return False
-    try:
-        socket.getaddrinfo(hostname, port, type=socket.SOCK_STREAM)
-        return True
-    except socket.gaierror:
-        return False
-    except Exception:
-        return False
+DATABASES = {
+    'default': dj_database_url.parse(
+        DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
 
-# Prefer Render's standard DATABASE_URL when both are present.
-# This avoids accidentally using a stale manually-set DATABASE_EXTERNAL_URL.
-if RENDER_DATABASE_URL and LEGACY_DATABASE_EXTERNAL_URL and RENDER_DATABASE_URL != LEGACY_DATABASE_EXTERNAL_URL:
-    print("Warning: both DATABASE_URL and DATABASE_EXTERNAL_URL are set; using DATABASE_URL.")
-
-DATABASE_URL = RENDER_DATABASE_URL or LEGACY_DATABASE_EXTERNAL_URL
-
-if ON_RENDER and DATABASE_URL:
-    selected_host = _database_hostname(DATABASE_URL)
-    if selected_host and not _hostname_resolves(selected_host):
-        if LEGACY_DATABASE_EXTERNAL_URL:
-            print(
-                "Warning: DATABASE_URL host did not resolve on startup; "
-                "falling back to DATABASE_EXTERNAL_URL."
-            )
-            DATABASE_URL = LEGACY_DATABASE_EXTERNAL_URL
-        else:
-            print(
-                "ERROR: Database hostname '{}' does not resolve. "
-                "Please check your DATABASE_URL in Render environment variables.".format(selected_host)
-            )
-            raise RuntimeError(
-                "Database hostname '{}' does not resolve. "
-                "Update DATABASE_URL in Render dashboard with correct PostgreSQL connection string.".format(selected_host)
-            )
-
-selected_database_host = _database_hostname(DATABASE_URL)
-if ON_RENDER and selected_database_host:
-    print(f"Database host selected: {selected_database_host}")
-
-if ON_RENDER:
-    if not DATABASE_URL:
-        raise RuntimeError(
-            "Database configuration missing. Set DATABASE_URL or DATABASE_EXTERNAL_URL."
-        )
-
-    DATABASES = {
-        'default': dj_database_url.parse(
-            DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+print("Using PostgreSQL Database")
 
 # ================================
 # PASSWORD VALIDATION
@@ -217,74 +172,69 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ================================
-# STATIC FILES (Whitenoise for production)
+# LANGUAGE / TIMEZONE
+# ================================
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'Asia/Kolkata'
+
+USE_I18N = True
+
+USE_TZ = True
+
+# ================================
+# STATIC FILES
 # ================================
 STATIC_URL = '/static/'
+
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ] if (BASE_DIR / 'static').exists() else []
 
-# Use WhiteNoise for static files in production
-# Using basic StaticFilesStorage to avoid issues with filenames containing spaces
 STATICFILES_STORAGE = 'whitenoise.storage.StaticFilesStorage'
 
 # ================================
-# MEDIA FILES (Cloudinary for production)
+# MEDIA FILES
 # ================================
 MEDIA_URL = '/media/'
+
 MEDIA_ROOT = BASE_DIR / 'media'
-
-# Configure WhiteNoise to serve media files in production
-WHITENOISE_USE_FINDERS = False
-WHITENOISE_AUTOREFRESH = False
-
-# Configure WhiteNoise to serve media files
-WHITENOISE_ROOT = MEDIA_ROOT
 
 # ================================
 # CLOUDINARY CONFIGURATION
 # ================================
-CLOUDINARY_CONFIGURED = False
-
-# Expose Cloudinary credentials as Django settings attributes.
 CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+
 CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+
 CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
 
-if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
-    try:
-        CLOUDINARY_CONFIGURED = True
-        cloudinary.config(
-            cloud_name=CLOUDINARY_CLOUD_NAME,
-            api_key=CLOUDINARY_API_KEY,
-            api_secret=CLOUDINARY_API_SECRET,
-            secure=True,
-            access_mode='public',
-            # Ensure resources are publicly accessible
-            api_proxy=None
-        )
+if (
+    CLOUDINARY_CLOUD_NAME and
+    CLOUDINARY_API_KEY and
+    CLOUDINARY_API_SECRET
+):
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
 
-        # Use Cloudinary for media storage in production OR when explicitly enabled
-        if ON_RENDER or os.environ.get('USE_CLOUDINARY', 'False') == 'True':
-            DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    except Exception as e:
-        CLOUDINARY_CONFIGURED = False
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+    print("Cloudinary initialized successfully.")
 
 # ================================
-# AUTH REDIRECTS (Updated for engineeringcollege.onrender.com)
+# LOGIN SETTINGS
 # ================================
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/dashboard/faculty/list/'
-LOGOUT_REDIRECT_URL = '/admin-login/'
 
-# ================================
-# TIMEZONE & LANGUAGE
-# ================================
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Kolkata'
-USE_I18N = True
-USE_TZ = True
+LOGIN_REDIRECT_URL = '/dashboard/faculty/list/'
+
+LOGOUT_REDIRECT_URL = '/admin-login/'
 
 # ================================
 # DEFAULT PRIMARY KEY
@@ -295,29 +245,35 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # FILE UPLOAD SETTINGS
 # ================================
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 
 # ================================
-# LOGGING (for debugging on Render)
+# LOGGING
 # ================================
 LOGGING = {
     'version': 1,
+
     'disable_existing_loggers': False,
+
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
         },
     },
+
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
+
     'loggers': {
         'django': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
+
         'dashboard': {
             'handlers': ['console'],
             'level': 'INFO',

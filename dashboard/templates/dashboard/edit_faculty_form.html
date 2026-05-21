@@ -370,7 +370,7 @@
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
                                             <label>SSC Year</label>
-                                            <input type="number" name="ssc_year" class="form-control" value="{{ faculty.ssc_year }}">
+                                             <input type="text" name="ssc_year" class="form-control" value="{{ faculty.ssc_year }}" pattern="[0-9]*">
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>SSC Percentage</label>
@@ -380,10 +380,10 @@
                                             <label>School Name</label>
                                             <input type="text" name="ssc_school" class="form-control" value="{{ faculty.ssc_school }}">
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>Intermediate Year</label>
-                                            <input type="number" name="inter_year" class="form-control" value="{{ faculty.inter_year }}">
-                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>Intermediate Year</label>
+                                             <input type="text" name="inter_year" class="form-control" value="{{ faculty.inter_year }}" pattern="[0-9]*">
+                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>Intermediate Percentage</label>
                                             <input type="text" name="inter_percent" class="form-control" value="{{ faculty.inter_percent }}">
@@ -396,10 +396,10 @@
                                             <label>UG Degree</label>
                                             <input type="text" name="ug_degree" class="form-control" value="{{ faculty.ug_degree }}">
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>UG Year</label>
-                                            <input type="number" name="ug_year" class="form-control" value="{{ faculty.ug_year }}">
-                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>SSC Year</label>
+                                             <input type="text" name="ssc_year" class="form-control" value="{{ faculty.ssc_year }}" pattern="[0-9]*">
+                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>UG Percentage/CGPA</label>
                                             <input type="text" name="ug_percentage" class="form-control" value="{{ faculty.ug_percentage }}">
@@ -416,10 +416,10 @@
                                             <label>PG Degree</label>
                                             <input type="text" name="pg_degree" class="form-control" value="{{ faculty.pg_degree }}">
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PG Year</label>
-                                            <input type="number" name="pg_year" class="form-control" value="{{ faculty.pg_year }}">
-                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>UG Year</label>
+                                             <input type="text" name="ug_year" class="form-control" value="{{ faculty.ug_year }}" pattern="[0-9]*">
+                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>PG Percentage</label>
                                             <input type="text" name="pg_percentage" class="form-control" value="{{ faculty.pg_percentage }}">
@@ -445,10 +445,10 @@
                                             <label>Ph.D Title</label>
                                             <input type="text" name="phd_title" id="phd-title" class="form-control" maxlength="500" value="{{ faculty.phd_title|default:'' }}">
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>PhD Year</label>
-                                            <input type="number" name="phd_year" class="form-control" value="{{ faculty.phd_year }}">
-                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>PG Year</label>
+                                             <input type="text" name="pg_year" class="form-control" value="{{ faculty.pg_year }}" pattern="[0-9]*">
+                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label>PhD University</label>
                                             <input type="text" name="phd_university" class="form-control" value="{{ faculty.phd_university }}">

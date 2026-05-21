@@ -399,7 +399,7 @@ Exam Branch - Teaching Plan
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Total Students:</label>
-                        <input type="number" id="studentCount" class="form-control" placeholder="Enter number of students" min="1" value="50" />
+                        <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="50" />
                     </div>
                     <div class="col-md-4 d-flex align-items-end">
                         <button id="addStudentsBtn" class="btn btn-primary">ADD</button>
@@ -459,21 +459,23 @@ Exam Branch - Teaching Plan
                         return 'F';
                     }
                     
-                    function calculateGradeDistribution(students) {
-                        const grades = { 'O': { count: 0, rolls: [] }, 'A+': { count: 0, rolls: [] }, 
-                                         'A': { count: 0, rolls: [] }, 'B+': { count: 0, rolls: [] },
-                                         'B': { count: 0, rolls: [] }, 'P': { count: 0, rolls: [] }, 'F': { count: 0, rolls: [] } };
-                        const rows = document.querySelectorAll('#marksBody tr');
-                        rows.forEach(row => {
-                            const rollNo = row.querySelector('.roll-no').value;
-                            const grade = row.querySelector('.grade').textContent;
-                            if (grade !== 'ABSENT' && grade !== '-') {
-                                grades[grade].count++;
-                                grades[grade].rolls.push(rollNo);
-                            }
-                        });
-                        return grades;
-                    }
+function calculateGradeDistribution(students) {
+                         const grades = { 'O': { count: 0, rolls: [] }, 'A+': { count: 0, rolls: [] }, 
+                                          'A': { count: 0, rolls: [] }, 'B+': { count: 0, rolls: [] },
+                                          'B': { count: 0, rolls: [] }, 'P': { count: 0, rolls: [] }, 'F': { count: 0, rolls: [] } };
+                         const rows = document.querySelectorAll('#marksBody tr');
+                         rows.forEach(row => {
+                             const rollNo = row.querySelector('.roll-no').value;
+                             const grade = row.querySelector('.grade').textContent;
+                             if (grade !== 'ABSENT' && grade !== '-') {
+                                 grades[grade].count++;
+                                 if (rollNo.trim() !== '') {
+                                     grades[grade].rolls.push(rollNo);
+                                 }
+                             }
+                         });
+                         return grades;
+                     }
                     
                     function renderStudents(students) {
                         const tbody = document.getElementById('marksBody');
@@ -481,16 +483,16 @@ Exam Branch - Teaching Plan
                         students.forEach((s, idx) => {
                             const row = document.createElement('tr');
                             row.innerHTML = `
-                                <td><input type="text" class="form-control form-control-sm roll-no" value="${s.rollNo}" /></td>
-                                <td><input type="number" class="form-control form-control-sm mid1-obj" value="${s.mid1Obj}" min="0" max="10"></td>
-                                <td><input type="number" class="form-control form-control-sm mid1-desc" value="${s.mid1Desc}" min="0" max="20"></td>
+                                <td><input type="text" class="form-control form-control-sm roll-no" value="" /></td>
+                                <td><input type="text" class="form-control form-control-sm mid1-obj" value="${s.mid1Obj}" pattern="[0-9]*"></td>
+                                <td><input type="text" class="form-control form-control-sm mid1-desc" value="${s.mid1Desc}" pattern="[0-9]*"></td>
                                 <td class="mid1-total">${s.mid1Obj + s.mid1Desc}</td>
-                                <td><input type="number" class="form-control form-control-sm mid2-obj" value="${s.mid2Obj}" min="0" max="10"></td>
-                                <td><input type="number" class="form-control form-control-sm mid2-desc" value="${s.mid2Desc}" min="0" max="20"></td>
+                                <td><input type="text" class="form-control form-control-sm mid2-obj" value="${s.mid2Obj}" pattern="[0-9]*"></td>
+                                 <td><input type="text" class="form-control form-control-sm mid2-desc" value="${s.mid2Desc}" pattern="[0-9]*"></td>
                                 <td class="mid2-total">${s.mid2Obj + s.mid2Desc}</td>
                                 <td class="mid-avg">${s.midAvg}</td>
-                                <td><input type="number" class="form-control form-control-sm assignment" value="${s.assignment}" min="0" max="5"></td>
-                                <td><input type="number" class="form-control form-control-sm viva" value="${s.viva}" min="0" max="5"></td>
+                                <td><input type="text" class="form-control form-control-sm assignment" value="${s.assignment}" pattern="[0-9]*"></td>
+                                <td><input type="text" class="form-control form-control-sm viva" value="${s.viva}" pattern="[0-9]*"></td>
                                 <td class="total">${s.total}</td>
                                 <td class="grade fw-bold">${s.grade}</td>
                             `;
@@ -499,26 +501,41 @@ Exam Branch - Teaching Plan
                         updateGradeSummary();
                     }
                     
-                    function updateGradeSummary() {
-                        const grades = calculateGradeDistribution();
-                        const rows = document.querySelectorAll('#marksBody tr');
-                        const totalNonAbsent = rows.length;
-                        const tbody = document.getElementById('gradeSummaryBody');
-                        tbody.innerHTML = '';
-                        const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
-                        const ranges = { 'O': '10%-15%', 'A+': '20%-25%', 'A': '20%-25%', 'B+': '20%-25%', 'B': '10%-15%', 'P': '0%', 'F': '0%' };
-                        let totalPercent = 0;
-                        gradeOrder.forEach(g => {
-                            const pct = Math.round((grades[g].count / totalNonAbsent) * 100) || 0;
-                            totalPercent += pct;
-                            const row = document.createElement('tr');
-                            row.innerHTML = `<td>${g}</td><td>${grades[g].count}</td><td>${pct}%</td><td>${ranges[g]}</td><td style="font-size:10px;">${grades[g].rolls.join(', ')}</td>`;
-                            tbody.appendChild(row);
-                        });
-                        const totalRow = document.createElement('tr');
-                        totalRow.innerHTML = `<td><strong>TOTAL</strong></td><td><strong>${totalNonAbsent}</strong></td><td><strong>${totalPercent}%</strong></td><td><strong>100%</strong></td><td></td>`;
-                        tbody.appendChild(totalRow);
-                    }
+function updateGradeSummary() {
+                         const grades = calculateGradeDistribution();
+                         const rows = document.querySelectorAll('#marksBody tr');
+                         const totalNonAbsent = rows.length;
+                         const tbody = document.getElementById('gradeSummaryBody');
+                         tbody.innerHTML = '';
+                         const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
+                         const ranges = { 'O': '10%-15%', 'A+': '20%-25%', 'A': '20%-25%', 'B+': '20%-25%', 'B': '10%-15%', 'P': '0%', 'F': '0%' };
+                         let totalPercent = 0;
+                         const percentages = {};
+                         
+                         // Calculate percentages for all grades except the last one
+                         for (let i = 0; i < gradeOrder.length - 1; i++) {
+                             const g = gradeOrder[i];
+                             const pct = Math.round((grades[g].count / totalNonAbsent) * 100) || 0;
+                             percentages[g] = pct;
+                             totalPercent += pct;
+                         }
+                         
+                         // Calculate the last grade percentage to make total exactly 100%
+                         const lastGrade = gradeOrder[gradeOrder.length - 1];
+                         percentages[lastGrade] = Math.max(0, 100 - totalPercent);
+                         
+                         // Create table rows
+                         gradeOrder.forEach(g => {
+                             const pct = percentages[g];
+                             const row = document.createElement('tr');
+                             row.innerHTML = `<td>${g}</td><td>${grades[g].count}</td><td>${pct}%</td><td>${ranges[g]}</td><td style="font-size:10px;">${grades[g].rolls.join(', ')}</td>`;
+                             tbody.appendChild(row);
+                         });
+                         
+                         const totalRow = document.createElement('tr');
+                         totalRow.innerHTML = `<td><strong>TOTAL</strong></td><td><strong>${totalNonAbsent}</strong></td><td><strong>100%</strong></td><td><strong>100%</strong></td><td></td>`;
+                         tbody.appendChild(totalRow);
+                     }
                     
                     function generateStudents(count, adjustForDistribution = true) {
                         const students = [];

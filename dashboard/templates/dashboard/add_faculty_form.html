@@ -383,25 +383,25 @@
                                 <div class="form-section">
                                     <h4><i class="fas fa-graduation-cap me-2"></i>Education Details</h4>
                                     <div class="row">
-                                        <div class="col-md-4 mb-3"><label>SSC Year</label><input type="number" name="ssc_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>SSC Year</label><input type="text" name="ssc_year" class="form-control" pattern="[0-9]*"></div>
                                         <div class="col-md-4 mb-3"><label>SSC Percentage</label><input type="text" name="ssc_percent" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>School Name</label><input type="text" name="ssc_school" class="form-control"></div>
-                                        <div class="col-md-4 mb-3"><label>Intermediate Year</label><input type="number" name="inter_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>Intermediate Year</label><input type="text" name="inter_year" class="form-control" pattern="[0-9]*"></div>
                                         <div class="col-md-4 mb-3"><label>Intermediate Percentage</label><input type="text" name="inter_percent" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>College Name</label><input type="text" name="inter_college" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>UG Degree</label><input type="text" name="ug_degree" class="form-control"></div>
-                                        <div class="col-md-4 mb-3"><label>UG Year</label><input type="number" name="ug_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Year</label><input type="text" name="ug_year" class="form-control" pattern="[0-9]*"></div>
                                         <div class="col-md-4 mb-3"><label>UG Percentage/CGPA</label><input type="text" name="ug_percentage" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>UG College</label><input type="text" name="ug_college" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>UG Specialization</label><input type="text" name="ug_spec" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PG Degree</label><input type="text" name="pg_degree" class="form-control"></div>
-                                        <div class="col-md-4 mb-3"><label>PG Year</label><input type="number" name="pg_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Year</label><input type="text" name="pg_year" class="form-control" pattern="[0-9]*"></div>
                                         <div class="col-md-4 mb-3"><label>PG Percentage</label><input type="text" name="pg_percentage" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PG College</label><input type="text" name="pg_college" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PG Specialization</label><input type="text" name="pg_spec" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PhD Status</label><select name="phd_degree" id="phd-degree" class="form-control"><option value="">Select Status</option>{% for qual in qualifications %}<option value="{{ qual }}">{{ qual }}</option>{% endfor %}</select></div>
                                         <div class="col-md-8 mb-3 d-none" id="phd-title-group"><label>Ph.D Title</label><input type="text" name="phd_title" id="phd-title" class="form-control" maxlength="500" placeholder="Enter Ph.D title"></div>
-                                        <div class="col-md-4 mb-3"><label>PhD Year</label><input type="number" name="phd_year" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Year</label><input type="text" name="phd_year" class="form-control" pattern="[0-9]*"></div>
                                         <div class="col-md-4 mb-3"><label>PhD University</label><input type="text" name="phd_university" class="form-control"></div>
                                         <div class="col-md-4 mb-3"><label>PhD Specialization</label><input type="text" name="phd_spec" class="form-control"></div>
                                     </div>
@@ -460,7 +460,7 @@
                                                  <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication"></div>
                                                  <div class="col-md-5"><label class="form-label small fw-bold">Authors</label><input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma"></div>
                                                  <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rp-academic-year" placeholder="e.g., 2023-24"></div>
-                                                 <div class="col-md-2"><label class="form-label small fw-bold">Year</label><input type="number" class="form-control form-control-sm" id="rp-year" min="1990" max="2030" placeholder="2024"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Year</label><input type="text" class="form-control form-control-sm" id="rp-year" pattern="[0-9]*" placeholder="2024"></div>
                                                  <div class="col-md-3"><label class="form-label small fw-bold">Status</label><select class="form-select form-select-sm" id="rp-status"><option value="published">Published</option><option value="accepted">Accepted</option><option value="under_review">Under Review</option><option value="submitted">Submitted</option></select></div>
                                                  <div class="col-md-3"><label class="form-label small fw-bold">Journal / Conference Name</label><input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name"></div>
                                                  <div class="col-md-3"><label class="form-label small fw-bold">ISSN</label><input type="text" class="form-control form-control-sm" id="rp-issn" placeholder="e.g. 1234-5678"></div>
@@ -492,7 +492,7 @@
                                                 <div class="col-md-3"><label class="form-label small fw-bold">H.T. No. *</label><input type="text" class="form-control form-control-sm" id="bp-htno" placeholder="e.g. 19A81A0501"></div>
                                                 <div class="col-md-4"><label class="form-label small fw-bold">Student Name *</label><input type="text" class="form-control form-control-sm" id="bp-student" placeholder="Full name of student"></div>
                                                 <div class="col-md-2"><label class="form-label small fw-bold">Batch</label><input type="text" class="form-control form-control-sm" id="bp-batch" placeholder="e.g. 2019-23"></div>
-                                                <div class="col-md-3"><label class="form-label small fw-bold">Marks (out of 100)</label><input type="number" class="form-control form-control-sm" id="bp-marks" min="0" max="100" placeholder="Marks"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Marks (out of 100)</label><input type="text" class="form-control form-control-sm" id="bp-marks" pattern="[0-9]*" placeholder="Marks"></div>
                                                 <div class="col-md-9"><label class="form-label small fw-bold">Project Title *</label><input type="text" class="form-control form-control-sm" id="bp-title" placeholder="Full project title"></div>
                                                 <div class="col-md-3"><label class="form-label small fw-bold">Approved?</label><select class="form-select form-select-sm" id="bp-approved"><option value="true">Yes</option><option value="false">No</option></select></div>
                                             </div>
@@ -572,9 +572,9 @@
                                                 <div class="col-md-3"><label class="form-label small fw-bold">Subject Name *</label><input type="text" class="form-control form-control-sm" id="rs-subject" placeholder="e.g. DBMS"></div>
                                                 <div class="col-md-2"><label class="form-label small fw-bold">Subject Code</label><input type="text" class="form-control form-control-sm" id="rs-code" placeholder="e.g. CS501"></div>
                                                 <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rs-academic-year" placeholder="e.g., 2023-24"></div>
-                                                <div class="col-md-2"><label class="form-label small fw-bold">Classes Taken *</label><input type="number" class="form-control form-control-sm" id="rs-classes" min="0" placeholder="e.g. 45"></div>
-                                                <div class="col-md-2"><label class="form-label small fw-bold">Attempted *</label><input type="number" class="form-control form-control-sm" id="rs-attempted" min="0" placeholder="60" oninput="autoCalculatePercent()"></div>
-                                                <div class="col-md-2"><label class="form-label small fw-bold">Passed *</label><input type="number" class="form-control form-control-sm" id="rs-passed" min="0" placeholder="54" oninput="autoCalculatePercent()"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Classes Taken *</label><input type="text" class="form-control form-control-sm" id="rs-classes" pattern="[0-9]*" placeholder="e.g. 45"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Attempted *</label><input type="text" class="form-control form-control-sm" id="rs-attempted" pattern="[0-9]*" placeholder="60" oninput="autoCalculatePercent()"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Passed *</label><input type="text" class="form-control form-control-sm" id="rs-passed" pattern="[0-9]*" placeholder="54" oninput="autoCalculatePercent()"></div>
                                                 <div class="col-md-1"><label class="form-label small fw-bold text-success">Pass %</label><input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0%"></div>
                                             </div>
                                             <div class="mt-3"><button type="button" class="btn btn-success btn-sm" onclick="addResult()"><i class="fas fa-plus me-1"></i>Add Result</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResultForm()">Clear</button></div>
