@@ -4,14 +4,87 @@
 
 {% block title %}Faculty List - ANURAG Engineering College{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
+<style>
+    .faculty-list-page .card-body {
+        padding: 1.5rem;
+    }
+    .faculty-list-page .search-toolbar {
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid rgba(111, 143, 169, 0.14);
+    }
+    .faculty-list-page .table code {
+        background: #eef5ff;
+        color: #163149;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+    }
+    .faculty-list-page .pagination .page-link {
+        border-radius: 12px !important;
+        margin: 0 0.2rem;
+        border: 0;
+    }
+    .faculty-list-page .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4 faculty-experience-page faculty-list-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-address-book"></i>
+                Faculty Directory
+            </span>
+            <h1 class="faculty-hero-title">Browse and manage faculty records beautifully</h1>
+            <p class="faculty-hero-copy">
+                Search, filter, review status, and jump into edit, PDF, and profile actions from a
+                directory page that feels cleaner and more intentional.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:add_faculty' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Faculty
+                </a>
+                <a href="{% url 'dashboard:faculty' %}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-id-card"></i>
+                    Open Faculty Profiles
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Total in View</span>
+                <strong>{{ total_faculty|default:faculties.paginator.count|default:"0" }} faculty records</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Filters</span>
+                <strong>Search by name, code, department, status, and qualification</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Operations</span>
+                <strong>Profile view, edit, PDF, bulk actions, and exports</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Flow</span>
+                <strong>Designed to feel aligned with the new add and edit faculty pages</strong>
+            </div>
+        </div>
+    </section>
     <div class="row">
         <div class="col-12">
-            <div class="card">
+            <div class="card faculty-panel-card">
                 <div class="card-header">
-                    <h3 class="card-title">Faculty Directory</h3>
-                    <div class="card-tools">
+                    <div class="faculty-directory-toolbar">
+                    <h3 class="card-title mb-0">Faculty Directory</h3>
+                    <div class="card-tools d-flex gap-2 flex-wrap">
                         <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus"></i> Add New Faculty
                         </a>
@@ -19,11 +92,12 @@
                             <i class="fas fa-upload"></i> Bulk Upload
                         </a>
                     </div>
+                    </div>
                 </div>
 
                 <div class="card-body">
                     <!-- Search Form -->
-                    <form method="GET" class="mb-3">
+                    <form method="GET" class="search-toolbar">
                         <div class="row">
                             <div class="col-md-4">
                                 <input type="text" name="search" class="form-control" placeholder="Search by name, code, email..." value="{{ search_query }}">
@@ -188,6 +262,7 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
 
 <script>
@@ -223,28 +298,4 @@
     });
 </script>
 
-<style>
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        border-radius: 0.2rem;
-        margin: 0 2px;
-    }
-    .badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-    }
-    .badge-success {
-        background-color: #28a745;
-        color: white;
-    }
-    .badge-danger {
-        background-color: #dc3545;
-        color: white;
-    }
-    .table td, .table th {
-        vertical-align: middle;
-    }
-</style>
 {% endblock %}

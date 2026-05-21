@@ -3,257 +3,977 @@
 
 {% block title %}Admin Dashboard - {{ block.super }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+        --admin-ink: #163149;
+        --admin-muted: #62798c;
+        --admin-ocean: #0f4c81;
+        --admin-emerald: #0e9f7b;
+        --admin-coral: #f97316;
+        --admin-sky: #edf7ff;
+        --admin-surface: rgba(255, 255, 255, 0.94);
+        --admin-border: rgba(91, 122, 149, 0.16);
+        --admin-shadow: 0 26px 58px rgba(15, 76, 129, 0.12);
+    }
+
+    .admin-dashboard-page {
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        color: var(--admin-ink);
+    }
+
+    .admin-dashboard-shell {
+        position: relative;
+        padding: 0.5rem;
+        overflow: hidden;
+    }
+
+    .admin-dashboard-shell::before,
+    .admin-dashboard-shell::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        border-radius: 999px;
+        filter: blur(18px);
+        opacity: 0.7;
+    }
+
+    .admin-dashboard-shell::before {
+        width: 240px;
+        height: 240px;
+        top: 40px;
+        right: -40px;
+        background: rgba(249, 115, 22, 0.16);
+    }
+
+    .admin-dashboard-shell::after {
+        width: 320px;
+        height: 320px;
+        left: -110px;
+        bottom: 50px;
+        background: rgba(14, 159, 123, 0.12);
+    }
+
+    .admin-dashboard-shell > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+        gap: 1.5rem;
+        align-items: stretch;
+        padding: 2rem;
+        margin-bottom: 1.75rem;
+        border-radius: 30px;
+        color: #fff;
+        background:
+            radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 34%),
+            linear-gradient(135deg, #071826 0%, #0f4c81 55%, #f97316 100%);
+        box-shadow: 0 30px 60px rgba(7, 24, 38, 0.26);
+    }
+
+    .admin-kicker,
+    .section-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .admin-kicker {
+        padding: 0.5rem 0.95rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        margin-bottom: 1rem;
+    }
+
+    .admin-hero-title,
+    .section-title,
+    .card-title,
+    .framework-title {
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        letter-spacing: -0.03em;
+    }
+
+    .admin-hero-title {
+        font-size: clamp(2rem, 3vw, 3.2rem);
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .admin-hero-copy {
+        max-width: 700px;
+        margin: 0 0 1.3rem;
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.75;
+    }
+
+    .admin-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+    }
+
+    .admin-hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.9rem 1.15rem;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: 800;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .admin-hero-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .admin-hero-btn.primary {
+        color: var(--admin-ink);
+        background: #fff;
+        box-shadow: 0 16px 30px rgba(6, 20, 33, 0.16);
+    }
+
+    .admin-hero-btn.secondary {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.14);
+        box-shadow: 0 16px 30px rgba(6, 20, 33, 0.14);
+    }
+
+    .admin-hero-side {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .hero-metric {
+        padding: 1rem 1.1rem;
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(14px);
+    }
+
+    .hero-metric span {
+        display: block;
+        margin-bottom: 0.45rem;
+        color: rgba(255, 255, 255, 0.74);
+        font-size: 0.8rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    .hero-metric strong {
+        display: block;
+        font-size: 1.05rem;
+        line-height: 1.45;
+        font-weight: 800;
+    }
+
+    .section-panel {
+        padding: 1.7rem;
+        border-radius: 28px;
+        border: 1px solid var(--admin-border);
+        background: var(--admin-surface);
+        box-shadow: var(--admin-shadow);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.4rem;
+    }
+
+    .section-kicker {
+        color: var(--admin-ocean);
+        margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.45rem, 2vw, 2rem);
+        font-weight: 700;
+        margin-bottom: 0.45rem;
+    }
+
+    .section-copy,
+    .card-copy {
+        margin: 0;
+        color: var(--admin-muted);
+        line-height: 1.7;
+    }
+
+    .section-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.78rem 1rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(15, 76, 129, 0.1), rgba(249, 115, 22, 0.12));
+        color: var(--admin-ink);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        padding: 1.2rem;
+        border-radius: 24px;
+        border: 1px solid rgba(111, 143, 169, 0.16);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .stat-card .icon {
+        width: 50px;
+        height: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0.85rem;
+        border-radius: 16px;
+        color: #fff;
+        font-size: 1.05rem;
+    }
+
+    .stat-card[data-tone="faculty"] .icon { background: linear-gradient(135deg, #0f4c81 0%, #1d6fb7 100%); }
+    .stat-card[data-tone="students"] .icon { background: linear-gradient(135deg, #0e9f7b 0%, #0c7b5f 100%); }
+    .stat-card[data-tone="active"] .icon { background: linear-gradient(135deg, #f97316 0%, #d65d09 100%); }
+    .stat-card[data-tone="phd"] .icon { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); }
+    .stat-card[data-tone="cert"] .icon { background: linear-gradient(135deg, #f4b63d 0%, #d38f10 100%); }
+    .stat-card[data-tone="cloud"] .icon { background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%); }
+
+    .stat-card span {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--admin-muted);
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .stat-card strong {
+        display: block;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: 1.9rem;
+        line-height: 1;
+        margin-bottom: 0.4rem;
+    }
+
+    .stat-card p {
+        margin: 0;
+        color: var(--admin-muted);
+        font-size: 0.92rem;
+    }
+
+    .story-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .story-card,
+    .action-card,
+    .activity-card,
+    .system-card,
+    .upload-card,
+    .department-card,
+    .framework-card {
+        height: 100%;
+        padding: 1.35rem;
+        border-radius: 24px;
+        border: 1px solid rgba(111, 143, 169, 0.16);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+
+    .card-title {
+        font-size: 1.08rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .story-points,
+    .action-list,
+    .activity-list,
+    .upload-list,
+    .system-grid,
+    .department-grid,
+    .framework-grid {
+        display: grid;
+        gap: 0.9rem;
+    }
+
+    .story-point {
+        display: flex;
+        gap: 0.85rem;
+        padding: 1rem;
+        border-radius: 18px;
+        background: var(--admin-sky);
+    }
+
+    .story-point i {
+        color: var(--admin-ocean);
+        margin-top: 0.15rem;
+    }
+
+    .action-tile,
+    .activity-item,
+    .upload-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.85rem;
+        padding: 1rem 1.05rem;
+        border-radius: 18px;
+        border: 1px solid rgba(111, 143, 169, 0.14);
+        background: #fff;
+        text-decoration: none;
+        color: var(--admin-ink);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .action-tile:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 28px rgba(15, 76, 129, 0.08);
+        color: var(--admin-ink);
+    }
+
+    .tile-copy h4,
+    .activity-copy h4,
+    .upload-copy h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    .tile-copy p,
+    .activity-copy p,
+    .upload-copy p {
+        margin: 0;
+        color: var(--admin-muted);
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+
+    .tile-icon,
+    .activity-icon,
+    .upload-icon {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        color: #fff;
+    }
+
+    .tile-icon { background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%); }
+    .activity-icon { background: linear-gradient(135deg, #f97316 0%, #d65d09 100%); }
+    .upload-icon { background: linear-gradient(135deg, #0e9f7b 0%, #0c7b5f 100%); }
+
+    .meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: var(--admin-muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+        margin-top: 0.55rem;
+    }
+
+    .system-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .system-metric {
+        padding: 1rem;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid rgba(111, 143, 169, 0.14);
+    }
+
+    .system-metric span {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--admin-muted);
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .system-metric strong {
+        display: block;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: 1.35rem;
+    }
+
+    .system-note {
+        padding: 1rem;
+        border-radius: 18px;
+        background: #fff8e8;
+        color: #9a5a12;
+        border: 1px solid rgba(244, 182, 61, 0.26);
+        font-weight: 700;
+    }
+
+    .department-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dept-item {
+        padding: 1rem;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid rgba(111, 143, 169, 0.14);
+    }
+
+    .dept-item strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .dept-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.65rem;
+        color: var(--admin-muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .dept-progress {
+        height: 10px;
+        border-radius: 999px;
+        background: #eaf1f6;
+        overflow: hidden;
+    }
+
+    .dept-progress span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(135deg, #0f4c81 0%, #0e9f7b 100%);
+    }
+
+    .framework-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .framework-block {
+        padding: 1.15rem;
+        border-radius: 20px;
+        color: #fff;
+        box-shadow: 0 16px 30px rgba(15, 76, 129, 0.12);
+    }
+
+    .framework-block h3 {
+        font-size: 1rem;
+        margin-bottom: 0.65rem;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    }
+
+    .framework-block p,
+    .framework-block li {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.93rem;
+        line-height: 1.65;
+    }
+
+    .framework-block ul,
+    .framework-block ol {
+        margin: 0;
+        padding-left: 1rem;
+    }
+
+    .framework-block.profile { background: linear-gradient(135deg, #15324a 0%, #0f4c81 100%); }
+    .framework-block.vision { background: linear-gradient(135deg, #0e9f7b 0%, #115e59 100%); }
+    .framework-block.mission { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+    .framework-block.outcomes { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); }
+
+    @media (max-width: 1399.98px) {
+        .stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .framework-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1199.98px) {
+        .admin-hero,
+        .story-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .department-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .admin-hero,
+        .section-panel {
+            padding: 1.25rem;
+        }
+
+        .admin-hero-side,
+        .stats-grid,
+        .system-grid,
+        .framework-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-hero-actions {
+            flex-direction: column;
+        }
+
+        .admin-hero-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid py-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card bg-gradient-primary">
-                <div class="card-body p-3">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <h3 class="text-white mb-1">INFORMATION TECHNOLOGY</h3>
-                            <h2 class="text-white mb-2">Admin Dashboard</h2>
-                            <p class="text-white opacity-8 mb-0">Welcome back, {{ user.get_full_name|default:user.username }}! Manage your faculty system from here.</p>
+<div class="container-fluid py-4 admin-dashboard-page">
+    <div class="admin-dashboard-shell">
+        <section class="admin-hero">
+            <div>
+                <span class="admin-kicker">
+                    <i class="fas fa-sparkles"></i>
+                    Information Technology Control Room
+                </span>
+                <h1 class="admin-hero-title">Admin Dashboard</h1>
+                <p class="admin-hero-copy">
+                    Welcome back, {{ user.get_full_name|default:user.username }}. This workspace now brings
+                    faculty operations, student coverage, academic identity, recent activity, and system health
+                    into one cleaner and more premium dashboard experience.
+                </p>
+                <div class="admin-hero-actions">
+                    <a href="{% url 'dashboard:faculty_list' %}" class="admin-hero-btn primary">
+                        <i class="fas fa-users"></i>
+                        View Faculty
+                    </a>
+                    <a href="{% url 'dashboard:students_data' %}" class="admin-hero-btn secondary">
+                        <i class="fas fa-user-graduate"></i>
+                        View Students
+                    </a>
+                    <a href="{% url 'dashboard:exam_branch' %}" class="admin-hero-btn secondary">
+                        <i class="fas fa-file-signature"></i>
+                        Exam Branch
+                    </a>
+                </div>
+            </div>
+
+            <div class="admin-hero-side">
+                <div class="hero-metric">
+                    <span>Department</span>
+                    <strong>Information Technology, ANURAG Engineering College</strong>
+                </div>
+                <div class="hero-metric">
+                    <span>User Access</span>
+                    <strong>{{ user_activity.total_users|default:"0" }} total authenticated users</strong>
+                </div>
+                <div class="hero-metric">
+                    <span>Infrastructure</span>
+                    <strong>Faculty system, student records, uploads, and academic workflow controls</strong>
+                </div>
+                <div class="hero-metric">
+                    <span>Focus</span>
+                    <strong>Operational clarity with a more attractive and modern presentation</strong>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-panel">
+            <div class="section-header">
+                <div>
+                    <div class="section-kicker">Live Snapshot</div>
+                    <h2 class="section-title">Department operations at a glance</h2>
+                    <p class="section-copy">
+                        The dashboard now surfaces the key live numbers from the admin view instead of hiding
+                        them behind a plain academic content page.
+                    </p>
+                </div>
+                <div class="section-pill">
+                    <i class="fas fa-chart-line"></i>
+                    Real-time admin context
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card" data-tone="faculty">
+                    <div class="icon"><i class="fas fa-users"></i></div>
+                    <span>Total Faculty</span>
+                    <strong>{{ total_faculty|default:"0" }}</strong>
+                    <p>Faculty records currently tracked in the system.</p>
+                </div>
+                <div class="stat-card" data-tone="students">
+                    <div class="icon"><i class="fas fa-user-graduate"></i></div>
+                    <span>Total Students</span>
+                    <strong>{{ total_students|default:"0" }}</strong>
+                    <p>Student profiles available for department administration.</p>
+                </div>
+                <div class="stat-card" data-tone="active">
+                    <div class="icon"><i class="fas fa-check-circle"></i></div>
+                    <span>Active Faculty</span>
+                    <strong>{{ active_faculty|default:"0" }}</strong>
+                    <p>Faculty currently marked as active and participating.</p>
+                </div>
+                <div class="stat-card" data-tone="phd">
+                    <div class="icon"><i class="fas fa-user-graduate"></i></div>
+                    <span>With PhD</span>
+                    <strong>{{ with_phd|default:"0" }}</strong>
+                    <p>Faculty with completed doctoral qualifications.</p>
+                </div>
+                <div class="stat-card" data-tone="cert">
+                    <div class="icon"><i class="fas fa-certificate"></i></div>
+                    <span>Certificates</span>
+                    <strong>{{ total_certificates|default:"0" }}</strong>
+                    <p>Total faculty certificates available in the repository.</p>
+                </div>
+                <div class="stat-card" data-tone="cloud">
+                    <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <span>Cloud Uploads</span>
+                    <strong>{{ cloudinary_uploads|default:"0" }}</strong>
+                    <p>Cloudinary uploads recorded for faculty and document assets.</p>
+                </div>
+            </div>
+
+            <div class="story-grid">
+                <div class="story-card">
+                    <h3 class="card-title">Department Profile</h3>
+                    <p class="card-copy">
+                        The Information Technology department was established in 2022 with an intake of 60
+                        students in the UG programme and continues to build a strong academic and professional
+                        foundation for students.
+                    </p>
+                    <div class="story-points mt-3">
+                        <div class="story-point">
+                            <i class="fas fa-seedling"></i>
+                            <div>
+                                <strong>Steady academic growth</strong>
+                                <div class="card-copy">
+                                    The department is continuously striving to impart quality education and
+                                    a competitive spirit for academic excellence.
+                                </div>
+                            </div>
                         </div>
-                         <div class="col-lg-4 text-end">
-                             <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-light me-2">
-                                 <i class="fas fa-users me-2"></i>View Faculty
-                             </a>
-                             <a href="{% url 'dashboard:students_data' %}" class="btn btn-light me-2">
-                                 <i class="fas fa-user-graduate me-2"></i>View Students
-                             </a>
-                             <a href="{% url 'dashboard:gallery' %}" class="btn btn-light">
-                                 <i class="fas fa-images me-2"></i>Gallery
-                             </a>
-                         </div>
+                        <div class="story-point">
+                            <i class="fas fa-laptop-code"></i>
+                            <div>
+                                <strong>Modern learning infrastructure</strong>
+                                <div class="card-copy">
+                                    State-of-the-art computing facilities, LCD projectors, digital boards,
+                                    and a seminar hall support effective teaching practices.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="story-point">
+                            <i class="fas fa-people-arrows"></i>
+                            <div>
+                                <strong>Continuous faculty development</strong>
+                                <div class="card-copy">
+                                    Staff members take part in workshops, conferences, and refresher courses
+                                    to stay aligned with current developments in IT.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="action-card">
+                    <h3 class="card-title">Quick Actions</h3>
+                    <p class="card-copy mb-3">
+                        Fast entry points for the admin workflows you are most likely to use.
+                    </p>
+                    <div class="action-list">
+                        <a href="{% url 'dashboard:faculty' %}" class="action-tile">
+                            <div class="d-flex gap-3">
+                                <span class="tile-icon"><i class="fas fa-users"></i></span>
+                                <div class="tile-copy">
+                                    <h4>Manage Faculty</h4>
+                                    <p>Review profiles, publications, projects, and certificates.</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="{% url 'dashboard:add_faculty' %}" class="action-tile">
+                            <div class="d-flex gap-3">
+                                <span class="tile-icon"><i class="fas fa-user-plus"></i></span>
+                                <div class="tile-copy">
+                                    <h4>Add Faculty</h4>
+                                    <p>Create new faculty records directly from the admin workspace.</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="{% url 'dashboard:students_data' %}" class="action-tile">
+                            <div class="d-flex gap-3">
+                                <span class="tile-icon"><i class="fas fa-user-graduate"></i></span>
+                                <div class="tile-copy">
+                                    <h4>Manage Students</h4>
+                                    <p>Open student data, profiles, and certificate-related records.</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="{% url 'dashboard:exam_branch' %}" class="action-tile">
+                            <div class="d-flex gap-3">
+                                <span class="tile-icon"><i class="fas fa-file-alt"></i></span>
+                                <div class="tile-copy">
+                                    <h4>Exam Branch</h4>
+                                    <p>Use the lesson plan and evaluation tools from the updated page.</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="{% url 'dashboard:gallery' %}" class="action-tile">
+                            <div class="d-flex gap-3">
+                                <span class="tile-icon"><i class="fas fa-images"></i></span>
+                                <div class="tile-copy">
+                                    <h4>Gallery</h4>
+                                    <p>Open department event highlights and brochure access points.</p>
+                                </div>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <section class="section-panel">
+            <div class="section-header">
+                <div>
+                    <div class="section-kicker">Operations Feed</div>
+                    <h2 class="section-title">Recent activity, uploads, and system view</h2>
+                    <p class="section-copy">
+                        This part of the dashboard is focused on day-to-day admin monitoring and operational visibility.
+                    </p>
+                </div>
+                <div class="section-pill">
+                    <i class="fas fa-broadcast-tower"></i>
+                    Admin monitoring
+                </div>
+            </div>
+
+            <div class="story-grid">
+                <div class="activity-card">
+                    <h3 class="card-title">Recent Activity</h3>
+                    <p class="card-copy mb-3">
+                        The latest system actions recorded through the faculty log.
+                    </p>
+                    <div class="activity-list">
+                        {% for log in recent_logs %}
+                        <div class="activity-item">
+                            <div class="d-flex gap-3">
+                                <span class="activity-icon"><i class="fas fa-bolt"></i></span>
+                                <div class="activity-copy">
+                                    <h4>{{ log.action }}</h4>
+                                    <p>{{ log.details }}</p>
+                                    <div class="meta">
+                                        <i class="fas fa-clock"></i>
+                                        {{ log.created_at|timesince }} ago
+                                    </div>
+                                    <div class="meta">
+                                        <i class="fas fa-user"></i>
+                                        {{ log.performed_by|default:"system" }}
+                                    </div>
+                                    {% if log.faculty %}
+                                    <div class="meta">
+                                        <i class="fas fa-id-badge"></i>
+                                        {{ log.faculty.staff_name }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="activity-item">
+                            <div class="activity-copy">
+                                <h4>No recent activity</h4>
+                                <p>The activity feed is currently empty.</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="upload-card">
+                    <h3 class="card-title">Recent Faculty Uploads</h3>
+                    <p class="card-copy mb-3">
+                        Recently created faculty records available in the system.
+                    </p>
+                    <div class="upload-list">
+                        {% for faculty in recent_uploads %}
+                        <div class="upload-item">
+                            <div class="d-flex gap-3">
+                                <span class="upload-icon"><i class="fas fa-user-check"></i></span>
+                                <div class="upload-copy">
+                                    <h4>{{ faculty.staff_name|default:"Faculty Record" }}</h4>
+                                    <p>Faculty profile created and ready for additional academic details.</p>
+                                    <div class="meta">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        {{ faculty.created_at|date:"d M Y, h:i A" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="upload-item">
+                            <div class="upload-copy">
+                                <h4>No recent faculty records</h4>
+                                <p>Newly created faculty entries will appear here.</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="story-grid">
+                <div class="system-card">
+                    <h3 class="card-title">System Health</h3>
+                    <p class="card-copy mb-3">
+                        Lightweight operational information collected for the admin view.
+                    </p>
+                    {% if has_psutil and not system_stats.error %}
+                    <div class="system-grid">
+                        <div class="system-metric">
+                            <span>CPU Usage</span>
+                            <strong>{{ system_stats.cpu_percent|default:"0" }}%</strong>
+                        </div>
+                        <div class="system-metric">
+                            <span>Memory Usage</span>
+                            <strong>{{ system_stats.memory_percent|default:"0" }}%</strong>
+                        </div>
+                        <div class="system-metric">
+                            <span>Disk Usage</span>
+                            <strong>{{ system_stats.disk_usage|default:"0" }}%</strong>
+                        </div>
+                        <div class="system-metric">
+                            <span>Boot Time</span>
+                            <strong style="font-size: 1rem;">{{ system_stats.boot_time|default:"Unavailable" }}</strong>
+                        </div>
+                    </div>
+                    {% elif system_stats.error %}
+                    <div class="system-note">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ system_stats.error }}
+                    </div>
+                    {% else %}
+                    <div class="system-note">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ system_stats.status|default:"System metrics are currently unavailable." }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="department-card">
+                    <h3 class="card-title">Department Distribution</h3>
+                    <p class="card-copy mb-3">
+                        The current faculty distribution across department values in the system.
+                    </p>
+                    <div class="department-grid">
+                        {% for dept in departments %}
+                        <div class="dept-item">
+                            <strong>{{ dept.department|default:"Unspecified" }}</strong>
+                            <div class="dept-meta">
+                                <span>{{ dept.count|default:"0" }} total</span>
+                                <span>{{ dept.active|default:"0" }} active</span>
+                            </div>
+                            <div class="dept-progress">
+                                <span style="width: {{ dept.percentage|default:0|floatformat:0 }}%;"></span>
+                            </div>
+                            <div class="meta">
+                                <i class="fas fa-chart-pie"></i>
+                                {{ dept.percentage|default:0|floatformat:1 }}% of faculty records
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="dept-item">
+                            <strong>No department data</strong>
+                            <div class="card-copy">Department distribution could not be loaded.</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-panel">
+            <div class="section-header">
+                <div>
+                    <div class="section-kicker">Academic Identity</div>
+                    <h2 class="section-title">Vision, mission, and outcome framework</h2>
+                    <p class="section-copy">
+                        The academic sections from the old dashboard are still here, but now presented
+                        as compact, more attractive knowledge blocks instead of a long wall of cards.
+                    </p>
+                </div>
+                <div class="section-pill">
+                    <i class="fas fa-graduation-cap"></i>
+                    Department philosophy
+                </div>
+            </div>
+
+            <div class="framework-grid">
+                <div class="framework-block profile">
+                    <h3>Department Profile</h3>
+                    <p>
+                        The department of IT was established in 2022 with an intake of 60 students in the
+                        UG programme and continues to build quality education and academic excellence.
+                    </p>
+                </div>
+                <div class="framework-block vision">
+                    <h3>Vision</h3>
+                    <p>
+                        To impart quality technical education, conduct scientific research of excellence,
+                        and generate world-class professionals to serve society through Information Technology.
+                    </p>
+                </div>
+                <div class="framework-block mission">
+                    <h3>Mission</h3>
+                    <ul>
+                        <li>Achieve excellence in higher education and research through quality technical education.</li>
+                        <li>Continuously build opportunities in IT with long-term academic and industry interaction.</li>
+                        <li>Uphold high professional and ethical standards for progressive societal contribution.</li>
+                    </ul>
+                </div>
+                <div class="framework-block outcomes">
+                    <h3>PSOs, PEOs, and POs</h3>
+                    <p>
+                        Graduates are expected to grow professionally, learn emerging paradigms, communicate
+                        effectively, solve complex problems, and practice life-long learning with ethics.
+                    </p>
+                </div>
+            </div>
+        </section>
     </div>
-
-    <!-- Department Profile -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-dark text-white">
-            <h4 class="mb-0"><i class="fas fa-building me-2"></i>DEPARTMENT PROFILE</h4>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <p>• The department of IT was established in 2022 with an intake of 60 students in the UG Programme. Right from its inception it is continuously striving to impart quality education and competitive spirit among students for academic excellence.</p>
-                <p>• The department is equipped with state of the art computing facilities and experienced staff members and is known for its academic excellence proved by its performances since its inception. The Department also has audio-visual facilities with LCD Projectors and Digital Boards and Seminar Hall for effective teaching. The staff members are deputed to participate in workshops, Conferences and refreshers courses to keep in place with recent developments in the field of IT.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Vision -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0"><i class="fas fa-eye me-2"></i>VISION</h4>
-        </div>
-        <div class="card-body">
-            <p class="mb-0">To impart quality technical education, conduct scientific research of excellence and generate world class professionals to excel in the dynamic realm of Information Technology and contribute to the needs of the society.</p>
-        </div>
-    </div>
-
-    <!-- Mission -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-secondary text-white">
-            <h4 class="mb-0"><i class="fas fa-target me-2"></i>MISSION</h4>
-        </div>
-        <div class="card-body">
-            <p class="mb-3">The Information Technology Department is committed</p>
-            <ul class="list-unstyled">
-                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>To achieve excellence in higher education and research through dissemination of quality technical education with a strong foundation.</li>
-                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>To continuously scout for and build opportunities in the field of IT and sustain long-term interaction with the institute and industry.</li>
-                <li class="mb-0"><i class="fas fa-check-circle text-success me-2"></i>To build and uphold high professional and ethical standards to make the nation noted for its progressive contribution to global society.</li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Program Educational Objectives -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-success text-white">
-            <h4 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>PROGRAM EDUCATIONAL OBJECTIVES (PEOs)</h4>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <h5 class="text-success mb-3">PEO1:</h5>
-                <p class="mb-3">Graduates will be able to take up the professional responsibilities and effectively communicate with diversified teams.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-success mb-3">PEO2:</h5>
-                <p class="mb-3">Graduates will have the commitment towards the sustainable development for the advancement of the society by adhering ethics and values.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-success mb-3">PEO3:</h5>
-                <p class="mb-0">Graduates will practice lifelong learning in producing innovative solutions for complex problems.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Program Specific Outcomes -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-warning text-white">
-            <h4 class="mb-0"><i class="fas fa-bullseye me-2"></i>PROGRAM SPECIFIC OUTCOMES (PSOs)</h4>
-        </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <h5 class="text-warning mb-3">PSO1:</h5>
-                <p class="mb-3">Advance professionally through organized training or self-learning in areas related to Information Technology throughout their career.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-warning mb-3">PSO2:</h5>
-                <p class="mb-0">Learn emerging computing paradigms for research and innovation.</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Program Outcomes -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-info text-white">
-            <h4 class="mb-0"><i class="fas fa-tasks me-2"></i>PROGRAM OUTCOMES (POs)</h4>
-        </div>
-        <div class="card-body">
-            <p class="mb-3"><strong>At the end of the program, Graduates will be able to:</strong></p>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO1: Engineering Knowledge</h5>
-                <p class="mb-3">Apply knowledge of mathematics, natural science, computing, engineering fundamentals and an engineering specialization to develop solutions of complex engineering problems.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO2: Problem Analysis</h5>
-                <p class="mb-3">Identify, formulate, review research literature and analyze complex engineering problems to reach substantiated conclusions.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO3: Design/Development of Solutions</h5>
-                <p class="mb-3">Design creative solutions for complex engineering problems and design system components/processes to meet specified needs.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO4: Conduct Investigations of Complex Problems</h5>
-                <p class="mb-3">Use research-based knowledge including design of experiments, modelling, analysis and interpretation of data.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO5: Engineering Tool Usage</h5>
-                <p class="mb-3">Create, select and apply appropriate techniques, resources and modern engineering & IT tools including prediction and modelling.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO6: The Engineer and the World</h5>
-                <p class="mb-3">Analyze and evaluate societal and environmental aspects of engineering solutions including sustainability, health, safety and legal factors.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO7: Ethics</h5>
-                <p class="mb-3">Apply ethical principles, professional ethics, human values, diversity and inclusion; adhere to laws.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO8: Individual and Collaborative Team Work</h5>
-                <p class="mb-3">Function effectively as an individual and as a member/leader in diverse teams.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO9: Communication</h5>
-                <p class="mb-3">Communicate effectively and inclusively with engineering community and society; write reports and give presentations.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO10: Project Management and Finance</h5>
-                <p class="mb-3">Apply engineering and management principles and economic decision-making in multidisciplinary projects.</p>
-            </div>
-            <div class="mb-3">
-                <h5 class="text-info mb-3">PO11: Life-Long Learning</h5>
-                <p class="mb-0">Recognize the need for independent and lifelong learning in the context of technological change.</p>
-            </div>
-        </div>
-    </div>
-
-
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .bg-gradient-primary {
-        background: linear-gradient(310deg, #7928CA, #FF0080);
-    }
-    .bg-gradient-success {
-        background: linear-gradient(310deg, #17ad37, #98ec2d);
-    }
-    .bg-gradient-info {
-        background: linear-gradient(310deg, #2152ff, #21d4fd);
-    }
-    .bg-gradient-warning {
-        background: linear-gradient(310deg, #f53939, #fab60b);
-    }
-    .bg-gradient-secondary {
-        background: linear-gradient(310deg, #627594, #a8b8d8);
-    }
-    .bg-gradient-dark {
-        background: linear-gradient(310deg, #141727, #3a416f);
-    }
-    .icon-shape {
-        width: 48px;
-        height: 48px;
-        background-position: center;
-        border-radius: 0.75rem;
-    }
-    .icon-shape i {
-        color: #fff;
-        opacity: 0.8;
-        top: 14px;
-        position: relative;
-        font-size: 20px;
-    }
-    .info-box {
-        display: flex;
-        align-items: center;
-        background: #f8f9fa;
-        border-radius: 0.5rem;
-        padding: 1rem;
-    }
-    .info-box-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-        color: white;
-    }
-    .info-box-content {
-        flex: 1;
-    }
-    .info-box-text {
-        font-size: 0.875rem;
-        color: #6c757d;
-        display: block;
-    }
-    .info-box-number {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #344767;
-    }
-    .list-group-item {
-        border-radius: 0.5rem !important;
-        background: #f8f9fa;
-        transition: all 0.3s ease;
-    }
-    .list-group-item:hover {
-        background: #e9ecef;
-        transform: translateX(5px);
-    }
-    .avatar-sm {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    .progress-wrapper {
-        width: 120px;
-    }
-    .progress {
-        height: 6px;
-        border-radius: 3px;
-    }
-    .progress-bar {
-        border-radius: 3px;
-    }
-</style>
 {% endblock %}

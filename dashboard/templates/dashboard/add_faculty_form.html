@@ -2,6 +2,7 @@
 {% load static %}
 {% block title %}Add New Faculty | ANURAG Engineering College{% endblock %}
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
 <style>
     .form-section {
         background: #fff;
@@ -150,13 +151,58 @@
         line-height: 1.35;
         word-break: break-word;
     }
+    .faculty-add-page .card-body {
+        padding: 1.5rem;
+    }
 </style>
 {% endblock %}
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 faculty-experience-page faculty-add-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-user-plus"></i>
+                Faculty Onboarding Studio
+            </span>
+            <h1 class="faculty-hero-title">Create a complete faculty profile</h1>
+            <p class="faculty-hero-copy">
+                Add personal details, qualifications, research, projects, results, and supporting
+                documents from one guided workspace with a cleaner tabbed experience.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:faculty_list' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-list"></i>
+                    Open Faculty Directory
+                </a>
+                <a href="{% url 'dashboard:faculty' %}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-id-card"></i>
+                    Faculty Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Workflow</span>
+                <strong>Multi-tab entry covering the full faculty record lifecycle</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Coverage</span>
+                <strong>Personal, professional, education, research, results, and documents</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Validation</span>
+                <strong>Required fields and tab-level guidance before final save</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Goal</span>
+                <strong>Make large data entry feel cleaner, calmer, and more premium</strong>
+            </div>
+        </div>
+    </section>
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
+            <div class="card shadow faculty-panel-card">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
                         <i class="fas fa-user-plus me-2"></i>Add New Faculty
@@ -177,6 +223,7 @@
                         <!-- Hidden field for multiple other documents -->
                         <input type="hidden" name="other_documents_data" id="other_documents_data" value="[]">
                         <!-- Tabs Navigation -->
+                        <div class="faculty-tabs-shell">
                         <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
                             <li class="nav-item">
                                 <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
@@ -224,6 +271,7 @@
                                 </button>
                             </li>
                         </ul>
+                        </div>
                         <div class="tab-content">
                             <!-- ==================== TAB 1: PERSONAL ==================== -->
                             <div class="tab-pane fade show active" id="personal">
@@ -637,6 +685,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>
 <script>

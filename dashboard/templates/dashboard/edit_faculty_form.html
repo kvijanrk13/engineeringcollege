@@ -4,6 +4,7 @@
 {% block title %}Edit Faculty | {{ faculty.staff_name }} | ANURAG Engineering College{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
 <style>
     .form-section {
         background: #fff;
@@ -114,14 +115,59 @@
         line-height: 1.35;
         word-break: break-word;
     }
+    .faculty-edit-page .card-body {
+        padding: 1.5rem;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 faculty-experience-page faculty-edit-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-user-pen"></i>
+                Faculty Editing Workspace
+            </span>
+            <h1 class="faculty-hero-title">Refine and maintain faculty profiles</h1>
+            <p class="faculty-hero-copy">
+                Update the complete academic and administrative record for {{ faculty.staff_name }},
+                from professional details to research, results, and supporting documents.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:faculty_list' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-list"></i>
+                    Back to Faculty Directory
+                </a>
+                <a href="{% url 'dashboard:faculty' %}?id={{ faculty.id }}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-id-card"></i>
+                    View Faculty Profile
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Faculty</span>
+                <strong>{{ faculty.staff_name }} ({{ faculty.employee_code }})</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Role</span>
+                <strong>{{ faculty.designation|default:"Faculty" }} in {{ faculty.department|default:"the department" }}</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Editing Scope</span>
+                <strong>Personal, research, workshops, projects, results, and documents</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Control</span>
+                <strong>Update safely from one tabbed page with direct delete access</strong>
+            </div>
+        </div>
+    </section>
     <div class="row">
         <div class="col-12">
-            <div class="card shadow">
+            <div class="card shadow faculty-panel-card">
                 <div class="card-header bg-primary text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="mb-0">
@@ -149,6 +195,7 @@
                         <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="{{ fdp_entries_json|default:'[]' }}">
 
                         <!-- Tabs Navigation -->
+                        <div class="faculty-tabs-shell">
                         <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
                             <li class="nav-item">
                                 <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
@@ -196,6 +243,7 @@
                                 </button>
                             </li>
                         </ul>
+                        </div>
 
                         <div class="tab-content">
                             <!-- ==================== TAB 1: PERSONAL ==================== -->
@@ -1031,6 +1079,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
 </div>
 

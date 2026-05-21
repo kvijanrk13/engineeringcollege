@@ -4,6 +4,7 @@
 {% block title %}Faculty Management | ANURAG Engineering College{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
 <style>
     .faculty-sidebar .list-group-item { cursor: pointer; transition: all 0.3s ease; }
     .faculty-sidebar .list-group-item:hover { background-color: #f8f9fa; transform: translateX(5px); }
@@ -33,15 +34,74 @@
     .empty-state i { font-size: 48px; margin-bottom: 20px; opacity: 0.5; }
     .tab-pane { min-height: 400px; }
     .btn-group .btn { margin-right: 5px; }
+    .faculty-dashboard-page .card-body {
+        padding: 1.5rem;
+    }
+    .faculty-dashboard-page .faculty-sidebar .card-body {
+        padding: 0 !important;
+    }
+    .faculty-dashboard-page .faculty-sidebar .list-group-item {
+        border: 0;
+        border-bottom: 1px solid rgba(111, 143, 169, 0.12);
+        background: transparent;
+    }
+    .faculty-dashboard-page .faculty-sidebar .list-group-item:last-child {
+        border-bottom: 0;
+    }
+    .faculty-dashboard-page .table-sm th {
+        color: #163149;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 faculty-experience-page faculty-dashboard-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-chalkboard-teacher"></i>
+                Faculty Workspace
+            </span>
+            <h1 class="faculty-hero-title">Faculty management with a richer profile experience</h1>
+            <p class="faculty-hero-copy">
+                Browse the faculty directory, open a complete profile, review research and results,
+                and move between actions with a cleaner and more premium tabbed layout.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:add_faculty' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Faculty
+                </a>
+                <a href="{% url 'dashboard:faculty_list' %}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-list"></i>
+                    Faculty Directory
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Faculty Records</span>
+                <strong>{{ faculties|length }} available in the current view</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Selected Faculty</span>
+                <strong>{% if faculty %}{{ faculty.staff_name }}{% else %}Choose a profile{% endif %}</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Research Items</span>
+                <strong>{{ research_publications|length|default:"0" }} publications and {{ fdps|length|default:"0" }} FDP records</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Projects</span>
+                <strong>{{ btech_projects|length|default:"0" }} B.Tech projects with results and documents tabs</strong>
+            </div>
+        </div>
+    </section>
     <div class="row">
         <!-- Sidebar -->
         <div class="col-md-3 mb-4">
-            <div class="card shadow faculty-sidebar">
+            <div class="card shadow faculty-sidebar faculty-panel-card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Faculty Directory
                         <span class="badge bg-light text-dark ms-2">{{ faculties|length }}</span>
@@ -86,7 +146,7 @@
         <!-- Main Content -->
         <div class="col-md-9">
             {% if faculty %}
-            <div class="card shadow">
+            <div class="card shadow faculty-panel-card">
                 <div class="card-header bg-primary text-white">
                     <div class="d-flex justify-content-between align-items-center flex-wrap">
                         <div>
@@ -133,6 +193,7 @@
                     </div>
 
                     <!-- Tabs -->
+                    <div class="faculty-tabs-shell">
                     <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
                         <li class="nav-item"><button class="nav-link active" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery"><i class="fas fa-images me-1"></i>Gallery</button></li>
                         <li class="nav-item"><button class="nav-link" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal"><i class="fas fa-user me-1"></i>Personal</button></li>
@@ -143,11 +204,36 @@
                         <li class="nav-item"><button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results"><i class="fas fa-chart-line me-1"></i>Results</button></li>
                         <li class="nav-item"><button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents"><i class="fas fa-file-alt me-1"></i>Documents</button></li>
                     </ul>
+                    </div>
 
                     <div class="tab-content mt-3">
                         <!-- Gallery Tab -->
                         <div class="tab-pane fade show active" id="gallery">
-                            {% include 'dashboard/gallery.html' %}
+                            <div class="faculty-gallery-grid">
+                                <div class="faculty-gallery-card">
+                                    <div class="faculty-section-heading">Department Event Highlight</div>
+                                    <p class="card-copy">
+                                        A featured visual from the department’s collaborative event culture,
+                                        useful when presenting a faculty profile in a broader academic context.
+                                    </p>
+                                    <img src="{% static 'images/CONNECT HACKATHON - 2026.jpeg' %}" alt="CONNECT HACKATHON 2026">
+                                </div>
+                                <div class="faculty-gallery-card">
+                                    <div class="faculty-section-heading">ITECH Activities</div>
+                                    <p class="card-copy">
+                                        Highlights from the launch of ITECH-2K26 and related department activities.
+                                    </p>
+                                    <img src="{% static 'images/BATCH 22 ITECH.jpeg' %}" alt="ITECH Activities">
+                                    <div class="faculty-gallery-actions">
+                                        <a href="{% static 'images/ITECH-2K26.pdf' %}" target="_blank" class="btn btn-danger">
+                                            <i class="fas fa-file-pdf me-1"></i>Open Brochure
+                                        </a>
+                                        <a href="{% static 'images/ITECH-2K26.pdf' %}" download class="btn btn-primary">
+                                            <i class="fas fa-download me-1"></i>Download PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <!-- Personal Tab -->
                         <div class="tab-pane fade" id="personal">
@@ -397,7 +483,7 @@
                 </div>
             </div>
             {% else %}
-            <div class="card shadow">
+            <div class="card shadow faculty-panel-card">
                 <div class="card-body text-center py-5">
                     <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
                     <h5>Select a faculty member from the list</h5>
@@ -407,6 +493,7 @@
             </div>
             {% endif %}
         </div>
+    </div>
     </div>
 </div>
 
