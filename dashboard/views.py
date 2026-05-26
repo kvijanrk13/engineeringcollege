@@ -6936,7 +6936,8 @@ def exam_branch(request):
 @require_POST
 def exam_branch_download_lesson_plan(request):
     try:
-        payload = json.loads(request.body or '{}')
+        raw_payload = request.POST.get('lesson_plan_payload')
+        payload = json.loads(raw_payload) if raw_payload else json.loads(request.body or '{}')
     except json.JSONDecodeError:
         return HttpResponseBadRequest('Invalid lesson plan payload.')
 
