@@ -160,6 +160,7 @@ urlpatterns = [
 
     # Exam & Laboratory
     path('exam-branch/', views.exam_branch, name='exam_branch'),
+    path('exam-branch/lesson-plan/download/', views.exam_branch_download_lesson_plan, name='exam_branch_download_lesson_plan'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
     path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
     path('exam-branch/update-attendance/', views.update_attendance, name='update_attendance'),

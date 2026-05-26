@@ -6933,6 +6933,156 @@ def exam_branch(request):
 
 
 @login_required
+@require_POST
+def exam_branch_download_lesson_plan(request):
+    try:
+        payload = json.loads(request.body or '{}')
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest('Invalid lesson plan payload.')
+
+    header = payload.get('header') or {}
+    rows = payload.get('rows') or []
+    total_classes = payload.get('totalClassesTaken', 0)
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    except ImportError:
+        return JsonResponse({'success': False, 'error': 'openpyxl is not installed.'}, status=500)
+
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Lesson Plan'
+
+    title_fill = PatternFill(fill_type='solid', start_color='1F4E78', end_color='1F4E78')
+    header_fill = PatternFill(fill_type='solid', start_color='D9EAF7', end_color='D9EAF7')
+    table_fill = PatternFill(fill_type='solid', start_color='EAF2F8', end_color='EAF2F8')
+    white_font = Font(color='FFFFFF', bold=True, size=14)
+    bold_font = Font(bold=True)
+    center_alignment = Alignment(horizontal='center', vertical='center')
+    wrap_alignment = Alignment(vertical='top', wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin', color='AAB7B8'),
+        right=Side(style='thin', color='AAB7B8'),
+        top=Side(style='thin', color='AAB7B8'),
+        bottom=Side(style='thin', color='AAB7B8'),
+    )
+
+    worksheet.merge_cells('A1:F1')
+    worksheet['A1'] = 'Lesson Plan'
+    worksheet['A1'].font = white_font
+    worksheet['A1'].fill = title_fill
+    worksheet['A1'].alignment = center_alignment
+    worksheet.row_dimensions[1].height = 24
+
+    metadata_rows = [
+        ('Branch', header.get('branch', ''), 'Year', header.get('year', ''), 'Semester', header.get('semester', '')),
+        ('Faculty', header.get('faculty', ''), 'Employee Code', header.get('employeeCode', ''), 'Class', header.get('className', '')),
+        ('Subject', header.get('subject', ''), 'Subject Code', header.get('subjectCode', ''), 'Saved On', timezone.localtime().strftime('%d-%m-%Y %I:%M %p')),
+    ]
+
+    current_row = 3
+    for metadata in metadata_rows:
+        for column_index, value in enumerate(metadata, start=1):
+            cell = worksheet.cell(row=current_row, column=column_index, value=value)
+            cell.border = thin_border
+            cell.alignment = wrap_alignment
+            if column_index % 2 == 1:
+                cell.font = bold_font
+                cell.fill = header_fill
+        current_row += 1
+
+    current_row += 1
+    table_headers = [
+        'Date',
+        'Day Of The Week',
+        'Week No.',
+        'No. Of Classes Taken',
+        'Topics To Be Covered',
+        'Students Present',
+    ]
+
+    for column_index, header_label in enumerate(table_headers, start=1):
+        cell = worksheet.cell(row=current_row, column=column_index, value=header_label)
+        cell.font = bold_font
+        cell.fill = table_fill
+        cell.alignment = center_alignment
+        cell.border = thin_border
+
+    current_row += 1
+    if not rows:
+        rows = [{
+            'date': '',
+            'day': '',
+            'weekNum': '',
+            'classesTaken': '',
+            'topics': '',
+            'studentsPresent': '',
+        }]
+
+    for row_data in rows:
+        values = [
+            row_data.get('date', ''),
+            row_data.get('day', ''),
+            row_data.get('weekNum', ''),
+            row_data.get('classesTaken', ''),
+            row_data.get('topics', ''),
+            row_data.get('studentsPresent', ''),
+        ]
+        for column_index, value in enumerate(values, start=1):
+            cell = worksheet.cell(row=current_row, column=column_index, value=value)
+            cell.border = thin_border
+            cell.alignment = wrap_alignment if column_index == 5 else center_alignment
+        current_row += 1
+
+    worksheet.cell(row=current_row + 1, column=3, value='Total Classes Taken').font = bold_font
+    worksheet.cell(row=current_row + 1, column=3).fill = header_fill
+    worksheet.cell(row=current_row + 1, column=3).border = thin_border
+    worksheet.cell(row=current_row + 1, column=4, value=total_classes).font = bold_font
+    worksheet.cell(row=current_row + 1, column=4).border = thin_border
+    worksheet.cell(row=current_row + 1, column=4).alignment = center_alignment
+
+    column_widths = {
+        'A': 16,
+        'B': 20,
+        'C': 12,
+        'D': 20,
+        'E': 42,
+        'F': 18,
+    }
+    for column_letter, width in column_widths.items():
+        worksheet.column_dimensions[column_letter].width = width
+
+    safe_parts = [
+        str(header.get('branch') or 'branch').strip().replace(' ', '_'),
+        str(header.get('year') or 'year').strip().replace(' ', '_'),
+        str(header.get('semester') or 'semester').strip().replace(' ', '_'),
+        str(header.get('subjectCode') or header.get('subject') or 'lesson_plan').strip().replace(' ', '_'),
+    ]
+    safe_parts = [part for part in safe_parts if part]
+    filename = f"lesson_plan_{'_'.join(safe_parts)}_{date.today().strftime('%Y%m%d')}.xlsx"
+
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    FacultyLog.objects.create(
+        faculty=None,
+        action='Lesson Plan Export',
+        details=f'Lesson plan Excel exported with {len(rows)} teaching rows',
+        performed_by=request.user.username,
+        ip_address=request.META.get('REMOTE_ADDR')
+    )
+
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@login_required
 @csrf_exempt
 def update_attendance(request):
     if request.method == 'POST':
