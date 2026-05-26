@@ -2,27 +2,44 @@
 {% load static %}
 {% block title %}Add New Student - ANURAG Engineering College{% endblock %}
 
-{% block body_class %}add-student-page{% endblock %}
-
-{% block content %}
+{% block extra_css %}
 <style>
-    /* Global Matrix Styling */
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: 'Courier New', monospace;
-        overflow-x: hidden;
-        background-color: #000;
-        color: #0f0;
+    /* Force full page styling for matrix effect */
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Courier New', monospace !important;
+        overflow-x: hidden !important;
+        background-color: #000 !important;
+        color: #0f0 !important;
+        min-height: 100vh;
     }
-
+    
+    /* Hide the default navbar for this page */
+    nav.navbar {
+        display: none !important;
+    }
+    
+    /* Ensure content is above matrix canvas */
+    main {
+        position: relative;
+        z-index: 2;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Hide footer from base template */
+    footer.bg-light {
+        display: none !important;
+    }
+    
     #matrix-canvas {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        z-index: -1;
+        z-index: 1;
     }
 
     /* Department Header */
@@ -369,7 +386,9 @@
         font-size: 0.9rem;
     }
 </style>
+{% endblock %}
 
+{% block content %}
 <canvas id="matrix-canvas"></canvas>
 
 <!-- DEPARTMENT HEADER AND NAVIGATION TABS -->
@@ -708,17 +727,30 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
     // Matrix Animation
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZANURAGIT';
     const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
+    let drops = [];
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        // Reinitialize drops array on resize
+        drops.length = 0;
+        const columns = Math.floor(canvas.width / fontSize);
+        for (let i = 0; i < columns; i++) {
+            drops[i] = 1;
+        }
+    }
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     function drawMatrix() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
@@ -733,11 +765,6 @@
         }
     }
     setInterval(drawMatrix, 33);
-
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
 
     // Auto-calculate age from DOB
     document.getElementById('addStudentForm').addEventListener('submit', function(e) {

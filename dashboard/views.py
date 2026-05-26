@@ -7149,7 +7149,7 @@ def students_data_password(request):
     if request.method == 'POST':
         password = request.POST.get('password')
         if password == 'aecithod':
-            return redirect('dashboard:students_data_view')
+            return redirect('dashboard:students')
         else:
             messages.error(request, 'Invalid password. Access denied.')
             return redirect('dashboard:students_data')

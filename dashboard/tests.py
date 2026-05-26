@@ -220,6 +220,45 @@ class DashboardTests(TestCase):
         self.assertTrue(bool(student.cert_achieve))
         self.assertFalse(student.cert_achieve_url)
 
+    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student-with-assets.pdf')
+    @patch('dashboard.views.is_cloudinary_configured', return_value=False)
+    def test_add_student_passes_uploaded_photo_and_certificate_overrides_to_pdf_generation(
+        self,
+        _mock_cloudinary_enabled,
+        mock_generate_student_pdf,
+    ):
+        with tempfile.TemporaryDirectory() as temp_media_root:
+            with override_settings(MEDIA_ROOT=temp_media_root):
+                response = self.client.post(
+                    reverse('dashboard:add_student'),
+                    data={
+                        'ht_no': '23C11A5556',
+                        'student_name': 'PDF Asset Student',
+                        'admission_type': 'EAMCET',
+                        'year': '2',
+                        'sem': '1',
+                        'photo': SimpleUploadedFile(
+                            'student-photo.jpg',
+                            make_test_image_bytes(),
+                            content_type='image/jpeg',
+                        ),
+                        'cert_achieve': SimpleUploadedFile(
+                            'achievement.pdf',
+                            make_test_pdf_bytes('Achievement'),
+                            content_type='application/pdf',
+                        ),
+                    },
+                    secure=True,
+                )
+
+        self.assertIn(response.status_code, {301, 302})
+        self.assertTrue(mock_generate_student_pdf.called)
+        _, kwargs = mock_generate_student_pdf.call_args
+        self.assertTrue(kwargs['photo_override_path'])
+        self.assertEqual(len(kwargs['certificate_override_assets']), 1)
+        self.assertEqual(kwargs['certificate_override_assets'][0]['field_name'], 'cert_achieve')
+        self.assertTrue(kwargs['certificate_override_assets'][0]['is_pdf'])
+
     def test_student_photo_redirect_normalizes_scheme_less_urls(self):
         student = Student.objects.create(
             ht_no='23C11A7777',

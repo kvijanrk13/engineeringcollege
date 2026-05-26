@@ -1,747 +1,298 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
-{% block title %}{{ title }}{% endblock %}
+
+{% block title %}Students Data - ANURAG Engineering College{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/students-experience.css' %}">
+<style>
+    .students-data-page .card-body {
+        padding: 1.5rem;
+    }
+    .students-data-page .search-toolbar {
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid rgba(111, 143, 169, 0.14);
+    }
+    .students-data-page .table code {
+        background: #eef5ff;
+        color: #163149;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+    }
+    .students-data-page .pagination .page-link {
+        border-radius: 12px !important;
+        margin: 0 0.2rem;
+        border: 0;
+    }
+    .students-data-page .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<style>
-
-/* ================= GLOBAL ================= */
-body {
-    font-family: 'Courier New', monospace;
-    background: #000;
-    color: #0f0;
-}
-
-#matrix-canvas {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-}
-
-.container {
-    position: relative;
-    z-index: 2;
-    padding: 50px 20px;
-}
-
-/* ================= LOGIN ================= */
-.login-container {
-    background: rgba(0, 20, 0, 0.95);
-    border: 2px solid #0f0;
-    border-radius: 12px;
-    box-shadow: 0 0 30px rgba(0,255,0,.4);
-    max-width: 450px;
-    margin: 80px auto;
-    padding: 30px;
-}
-
-.login-title {
-    text-align: center;
-    font-size: 1.7rem;
-    margin-bottom: 25px;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    background: #001900;
-    border: 1px solid #0a0;
-    color: #0f0;
-    border-radius: 6px;
-}
-
-.login-btn {
-    width: 100%;
-    padding: 14px;
-    font-weight: bold;
-    background: linear-gradient(#0a0,#050);
-    border-radius: 6px;
-    cursor: pointer;
-    border: none;
-}
-
-/* ================= DATA ================= */
-.data-container {
-    background: rgba(0, 20, 0, 0.95);
-    color: #0f0;
-    max-width: 1400px;
-    margin: auto;
-    padding: 35px;
-    border-radius: 18px;
-    border: 3px solid #0f0;
-    box-shadow: 0 0 35px rgba(0,255,0,.5);
-}
-
-.data-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 3px solid #0f0;
-    padding-bottom: 15px;
-    margin-bottom: 25px;
-}
-
-.data-title {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: #0f0;
-}
-
-/* Stats Cards */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 30px;
-}
-
-.stat-card {
-    background: rgba(0, 30, 0, 0.8);
-    border: 2px solid #0f0;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #0f0;
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    color: #0f0;
-    opacity: 0.8;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-}
-
-/* Filter Section */
-.filter-section {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    background: rgba(0, 30, 0, 0.8);
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #0f0;
-}
-
-.filter-input, .filter-select {
-    flex: 1;
-    min-width: 150px;
-    padding: 12px;
-    background: #000;
-    border: 2px solid #0f0;
-    color: #0f0;
-    font-family: 'Courier New', monospace;
-    border-radius: 5px;
-}
-
-.filter-input::placeholder {
-    color: rgba(0, 255, 0, 0.5);
-}
-
-.btn-filter {
-    padding: 12px 25px;
-    background: transparent;
-    color: #0f0;
-    border: 2px solid #0f0;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-    border-radius: 5px;
-    min-width: 120px;
-}
-
-.btn-filter:hover {
-    background: #0f0;
-    color: #000;
-    box-shadow: 0 0 15px #0f0;
-}
-
-/* ================= TABLE ================= */
-.table-container {
-    background: rgba(0, 10, 0, 0.9);
-    border-radius: 12px;
-    overflow-x: auto;
-    border: 2px solid #0f0;
-}
-
-.student-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 1200px;
-}
-
-.student-table th {
-    background: rgba(0, 50, 0, 0.9);
-    color: #0f0;
-    padding: 16px;
-    text-align: left;
-    font-weight: bold;
-    text-transform: uppercase;
-    border-bottom: 3px solid #0f0;
-}
-
-.student-table td {
-    padding: 14px;
-    border-bottom: 1px solid rgba(0, 255, 0, 0.2);
-    color: #0f0;
-}
-
-.student-table tr:hover {
-    background: rgba(0, 50, 0, 0.5);
-}
-
-/* Photo styling */
-.student-photo {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 5px;
-    border: 2px solid #0f0;
-}
-
-.no-photo {
-    width: 50px;
-    height: 50px;
-    background: rgba(0, 30, 0, 0.8);
-    border: 2px solid #0f0;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    color: #0f0;
-}
-
-/* Badges */
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
-
-.badge-year {
-    background: rgba(0, 100, 0, 0.8);
-    border: 1px solid #0f0;
-}
-
-.badge-sem {
-    background: rgba(0, 50, 100, 0.8);
-    border: 1px solid #0ff;
-    margin-left: 5px;
-}
-
-/* CGPA colors */
-.cgpa-high {
-    color: #0f0;
-    font-weight: bold;
-}
-
-.cgpa-medium {
-    color: #ff0;
-    font-weight: bold;
-}
-
-.cgpa-low {
-    color: #f00;
-    font-weight: bold;
-}
-
-/* Buttons */
-.btn {
-    display: inline-block;
-    padding: 6px 12px;
-    border: 1px solid #0f0;
-    color: #0f0;
-    text-decoration: none;
-    font-size: 0.8rem;
-    border-radius: 4px;
-    background: transparent;
-    cursor: pointer;
-    margin: 2px;
-}
-
-.btn:hover {
-    background: #0f0;
-    color: #000;
-}
-
-.btn-warning {
-    border-color: #ff0;
-    color: #ff0;
-}
-
-.btn-warning:hover {
-    background: #ff0;
-    color: #000;
-}
-
-.btn-info {
-    border-color: #0ff;
-    color: #0ff;
-}
-
-.btn-info:hover {
-    background: #0ff;
-    color: #000;
-}
-
-.btn-danger {
-    border-color: #f00;
-    color: #f00;
-}
-
-.btn-danger:hover {
-    background: #f00;
-    color: #000;
-}
-
-.btn-success {
-    border-color: #0f0;
-    color: #0f0;
-}
-
-.btn-success:hover {
-    background: #0f0;
-    color: #000;
-}
-
-.btn-primary {
-    border-color: #0f0;
-    color: #0f0;
-    padding: 10px 20px;
-    font-size: 1rem;
-}
-
-.action-cell {
-    white-space: nowrap;
-}
-
-.action-form {
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-}
-
-.action-form button {
-    background: transparent;
-    border: 1px solid #f00;
-    color: #f00;
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-}
-
-.action-form button:hover {
-    background: #f00;
-    color: #000;
-}
-
-/* Document indicator */
-.doc-indicator {
-    display: inline-flex;
-    align-items: center;
-    margin-left: 5px;
-    cursor: pointer;
-    vertical-align: middle;
-}
-
-/* Pagination */
-.pagination {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 30px;
-}
-
-.page-link {
-    padding: 8px 15px;
-    border: 2px solid #0f0;
-    color: #0f0;
-    text-decoration: none;
-    border-radius: 4px;
-}
-
-.page-link:hover,
-.page-link.active {
-    background: #0f0;
-    color: #000;
-}
-
-/* No data */
-.no-data {
-    text-align: center;
-    padding: 50px;
-    color: #0f0;
-    font-size: 1.2rem;
-}
-
-/* Add button */
-.add-button-container {
-    text-align: center;
-    margin: 30px 0;
-}
-
-.add-student-btn {
-    display: inline-block;
-    padding: 15px 40px;
-    background: transparent;
-    color: #0f0;
-    border: 3px solid #0f0;
-    font-weight: bold;
-    font-size: 1.2rem;
-    text-decoration: none;
-    border-radius: 8px;
-    transition: 0.3s;
-}
-
-.add-student-btn:hover {
-    background: #0f0;
-    color: #000;
-    box-shadow: 0 0 20px #0f0;
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    margin-top: 40px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(0, 255, 0, 0.3);
-    color: #666;
-    font-size: 0.9rem;
-}
-
-</style>
-
-<canvas id="matrix-canvas"></canvas>
-
-<div class="container">
-
-{% if not request.session.student_logged_in %}
-
-<!-- LOGIN -->
-<div class="login-container">
-    <h2 class="login-title">STUDENT DATA PORTAL LOGIN</h2>
-
-    <form method="POST" action="{% url 'dashboard:student_login' %}">
-        {% csrf_token %}
-        <input type="hidden" name="student_login" value="true">
-
-        <div class="form-group">
-            <input type="text" name="username" value="anrkitstudent" required>
-        </div>
-
-        <div class="form-group">
-            <input type="password" name="password" value="anrkitstudent" required>
-        </div>
-
-        <button type="submit" class="login-btn">LOGIN</button>
-    </form>
-</div>
-
-{% else %}
-
-<div class="data-container">
-
-    <div class="data-header">
-        <h1 class="data-title">STUDENTS DATA PORTAL</h1>
+<div class="container-fluid py-4 students-experience-page students-data-page">
+    <div class="students-shell">
+    <section class="students-hero">
         <div>
-            <a href="{% url 'dashboard:student_dashboard_view' %}" class="btn btn-info">Dashboard</a>
-            <a href="{% url 'dashboard:student_logout' %}" class="btn btn-danger">Logout</a>
+            <span class="students-kicker">
+                <i class="fas fa-user-graduate"></i>
+                Students Directory
+            </span>
+            <h1 class="students-hero-title">Manage and view student records beautifully</h1>
+            <p class="students-hero-copy">
+                Search, filter, review status, and jump into edit, PDF, and profile actions from a
+                directory page that feels cleaner and more intentional.
+            </p>
+            <div class="students-hero-actions">
+                <a href="{% url 'dashboard:add_student' %}" class="students-hero-btn primary">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Student
+                </a>
+                <a href="{% url 'dashboard:student_dashboard_view' %}" class="students-hero-btn secondary">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Student Dashboard
+                </a>
+            </div>
         </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-number">{{ total_students|default:"0" }}</div>
-            <div class="stat-label">TOTAL STUDENTS</div>
+        <div class="students-hero-metrics">
+            <div class="students-metric">
+                <span>Total in View</span>
+                <strong>{{ total_students|default:"0" }} student records</strong>
+            </div>
+            <div class="students-metric">
+                <span>Year Distribution</span>
+                <strong>Y1: {{ year_1_count|default:"0" }} | Y2: {{ year_2_count|default:"0" }} | Y3: {{ year_3_count|default:"0" }} | Y4: {{ year_4_count|default:"0" }}</strong>
+            </div>
+            <div class="students-metric">
+                <span>Operations</span>
+                <strong>Profile view, edit, PDF generation, bulk actions, and exports</strong>
+            </div>
+            <div class="students-metric">
+                <span>Flow</span>
+                <strong>Designed to feel aligned with the new add and edit student pages</strong>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ year_1_count|default:"0" }}</div>
-            <div class="stat-label">YEAR 1</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ year_2_count|default:"0" }}</div>
-            <div class="stat-label">YEAR 2</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ year_3_count|default:"0" }}</div>
-            <div class="stat-label">YEAR 3</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">{{ year_4_count|default:"0" }}</div>
-            <div class="stat-label">YEAR 4</div>
-        </div>
-    </div>
+    </section>
+    <div class="row">
+        <div class="col-12">
+            <div class="card students-panel-card">
+                <div class="card-header">
+                    <div class="students-directory-toolbar">
+                        <h3 class="card-title mb-0">Students Directory</h3>
+                        <div class="card-tools d-flex gap-2 flex-wrap">
+                            <a href="{% url 'dashboard:add_student' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add New Student
+                            </a>
+                            <a href="{% url 'dashboard:export_students_excel' %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Filter Section -->
-    <div class="filter-section">
-        <input type="text" id="searchInput" class="filter-input" placeholder="Search by Name, HT No, or Email...">
+                <div class="card-body">
+                    <!-- Search Form -->
+                    <form method="GET" class="search-toolbar">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" name="search" class="form-control" placeholder="Search by name, HT No, email..." value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="year" class="form-control">
+                                    <option value="">All Years</option>
+                                    {% for year in years %}
+                                        <option value="{{ year }}" {% if request.GET.year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>Year {{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="sem" class="form-control">
+                                    <option value="">All Semesters</option>
+                                    {% for sem in sems %}
+                                        <option value="{{ sem }}" {% if request.GET.sem|stringformat:"s" == sem|stringformat:"s" %}selected{% endif %}>Semester {{ sem }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="cgpa_range" class="form-control">
+                                    <option value="">All CGPA Ranges</option>
+                                    <option value="high" {% if request.GET.cgpa_range == 'high' %}selected{% endif %}>High (>= 8.5)</option>
+                                    <option value="medium" {% if request.GET.cgpa_range == 'medium' %}selected{% endif %}>Medium (6.0-8.4)</option>
+                                    <option value="low" {% if request.GET.cgpa_range == 'low' %}selected{% endif %}>Low (< 6.0)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="has_pdf" class="form-control">
+                                    <option value="">PDF Status</option>
+                                    <option value="yes" {% if request.GET.has_pdf == 'yes' %}selected{% endif %}>Has PDF</option>
+                                    <option value="no" {% if request.GET.has_pdf == 'no' %}selected{% endif %}>No PDF</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary btn-block">Search</button>
+                            </div>
+                        </div>
+                    </form>
 
-        <select id="yearFilter" class="filter-select">
-            <option value="">All Years</option>
-            <option value="1">Year 1</option>
-            <option value="2">Year 2</option>
-            <option value="3">Year 3</option>
-            <option value="4">Year 4</option>
-        </select>
+                    <!-- Students Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all"></th>
+                                    <th>Photo</th>
+                                    <th>HT No</th>
+                                    <th>Name</th>
+                                    <th>Year/Sem</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>CGPA</th>
+                                    <th>DOB</th>
+                                    <th>Age</th>
+                                    <th>PDF</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
+                                    <td>
+                                        {% if student.photo_url or student.photo %}
+                                            <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                                            <div class="no-photo" style="display: none;">Photo Error</div>
+                                        {% else %}
+                                            <div class="no-photo">No Photo</div>
+                                        {% endif %}
+                                    </td>
 
-        <select id="semFilter" class="filter-select">
-            <option value="">All Semesters</option>
-            <option value="1">Semester 1</option>
-            <option value="2">Semester 2</option>
-        </select>
+                                    <td><strong>{{ student.ht_no }}</strong></td>
 
-        <button onclick="filterStudents()" class="btn-filter">FILTER</button>
-        <button onclick="resetFilters()" class="btn-filter">RESET</button>
-    </div>
+                                    <td>
+                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="text-decoration-none">
+                                            {{ student.student_name }}
+                                        </a>
+                                    </td>
 
-    <!-- ADD STUDENT BUTTON -->
-    <div style="text-align:center; margin-bottom:20px;">
-        <a href="{% url 'dashboard:add_student' %}" class="btn btn-primary">
-            + ADD NEW STUDENT
-        </a>
-    </div>
+                                    <td>
+                                        <span class="badge bg-primary">Y{{ student.year }}</span>
+                                        <span class="badge bg-info ms-1">S{{ student.sem }}</span>
+                                    </td>
 
-    <!-- TABLE -->
-    <div class="table-container">
-        <table class="student-table" id="studentTable">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="select-all"></th>
-                        <th>PHOTO</th>
-                        <th>H.T No</th>
-                        <th>NAME</th>
-                        <th>YEAR/SEM</th>
-                        <th>PHONE</th>
-                        <th>EMAIL</th>
-                        <th>CGPA</th>
-                        <th>DOB</th>
-                        <th>AGE</th>
-                        <th>PDF</th>
-                        <th>ACTIONS</th>
-                    </tr>
-                </thead>
-            <tbody>
-                {% for student in students %}
-                <tr>
-                    <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
-                    <td>
-                        {% if student.photo_url or student.photo %}
-                            <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                            <div class="no-photo" style="display: none;">Photo Error</div>
-                        {% else %}
-                            <div class="no-photo">No Photo</div>
-                        {% endif %}
-                    </td>
+                                    <td>{{ student.student_phone|default:"-" }}</td>
 
-                    <td><strong>{{ student.ht_no }}</strong></td>
+                                    <td>{{ student.email|default:"-" }}</td>
 
-                    <td>
-                        <a href="{% url 'dashboard:student_detail' student.id %}" style="color: #0f0; text-decoration: none;">
-                            {{ student.student_name }}
-                        </a>
-                    </td>
+                                    <td>
+                                        {% if student.cgpa %}
+                                            {% if student.cgpa >= 8.5 %}
+                                                <span class="badge bg-success">{{ student.cgpa }}</span>
+                                            {% elif student.cgpa >= 6.0 %}
+                                                <span class="badge bg-warning text-dark">{{ student.cgpa }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ student.cgpa }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
 
-                    <td>
-                        <span class="badge badge-year">Y{{ student.year }}</span>
-                        <span class="badge badge-sem">S{{ student.sem }}</span>
-                    </td>
+                                    <td>{{ student.dob|date:"d/m/Y"|default:"-" }}</td>
 
-                    <td>{{ student.student_phone|default:"-" }}</td>
+                                    <td>{{ student.age|default:"-" }}</td>
 
-                    <td>{{ student.email|default:"-" }}</td>
+                                    <td class="text-center">
+                                        {% if student.pdf_url or student.pdf_file %}
+                                            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success btn-sm">
+                                                <i class="fas fa-file-pdf"></i> View
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-file-pdf"></i> Generate
+                                            </a>
+                                        {% endif %}
+                                    </td>
 
-                    <td>
-                        {% if student.cgpa %}
-                            {% if student.cgpa >= 8.5 %}
-                                <span class="cgpa-high">{{ student.cgpa }}</span>
-                            {% elif student.cgpa >= 6.0 %}
-                                <span class="cgpa-medium">{{ student.cgpa }}</span>
-                            {% else %}
-                                <span class="cgpa-low">{{ student.cgpa }}</span>
+                                    <td class="text-center">
+                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info btn-sm" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if student.cert_achieve or student.cert_intern or student.cert_courses or student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url %}
+                                        <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn btn-success btn-sm" title="Merge Certificates">
+                                            <i class="fas fa-paperclip"></i>
+                                        </a>
+                                        {% endif %}
+                                        <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-warning btn-sm" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ student.student_name }}? This action cannot be undone.');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="12" class="text-center py-4">
+                                        No students found. Click "ADD NEW STUDENT" to create one.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if students.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if students.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ students.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.sem %}&sem={{ request.GET.sem }}{% endif %}{% if request.GET.cgpa_range %}&cgpa_range={{ request.GET.cgpa_range }}{% endif %}{% if request.GET.has_pdf %}&has_pdf={{ request.GET.has_pdf }}{% endif %}">Previous</a></li>
                             {% endif %}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
 
-                    <td>{{ student.dob|date:"d/m/Y"|default:"-" }}</td>
+                            {% for num in students.paginator.page_range %}
+                            {% if students.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.sem %}&sem={{ request.GET.sem }}{% endif %}{% if request.GET.cgpa_range %}&cgpa_range={{ request.GET.cgpa_range }}{% endif %}{% if request.GET.has_pdf %}&has_pdf={{ request.GET.has_pdf }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                            {% endfor %}
 
-                    <td>{{ student.age|default:"-" }}</td>
+                            {% if students.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ students.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.sem %}&sem={{ request.GET.sem }}{% endif %}{% if request.GET.cgpa_range %}&cgpa_range={{ request.GET.cgpa_range }}{% endif %}{% if request.GET.has_pdf %}&has_pdf={{ request.GET.has_pdf }}{% endif %}">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
 
-                    <td class="action-cell">
-                        {% if student.pdf_url %}
-                            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success">View PDF</a>
-                        {% elif student.pdf_file %}
-                            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success">View PDF</a>
-                        {% else %}
-                            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning">Generate</a>
-                        {% endif %}
-                        {% if student.cert_achieve or student.cert_intern or student.cert_courses or student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url %}
-                            <span class="doc-indicator" title="Documents uploaded">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="#0f0">
-                                    <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5zM13 4H9.5V0H4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5L13 4z"/>
-                                </svg>
-                            </span>
-                        {% endif %}
-                    </td>
-
-                    <td class="action-cell">
-                        <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info">View</a>
-                        {% if student.cert_achieve or student.cert_intern or student.cert_courses or student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url %}
-                        <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn btn-success" title="Merge Certificates">Merge Certs</a>
-                        {% endif %}
-                        <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-warning">Edit</a>
-                        <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="action-form" onsubmit="return confirm('Are you sure you want to delete this student?');">
+                    <!-- Bulk Actions -->
+                    <div class="mt-3">
+                        <form id="bulk-action-form" method="POST" action="{% url 'dashboard:bulk_student_actions' %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-danger">Delete</button>
+                            <input type="hidden" name="student_ids" id="selected-student-ids">
+                            <select name="bulk_action" class="form-control d-inline-block w-auto">
+                                <option value="">Bulk Actions</option>
+                                <option value="generate_pdfs">Generate PDFs</option>
+                                <option value="export_csv">Export to CSV</option>
+                                <option value="delete">Delete Selected</option>
+                            </select>
+                            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
                         </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="9" class="no-data">
-                        No students found. Click "ADD NEW STUDENT" to create one.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Pagination -->
-    {% if students.has_other_pages %}
-    <div class="pagination">
-        {% if students.has_previous %}
-            <a href="?page={{ students.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">←</a>
-        {% endif %}
-
-        {% for i in students.paginator.page_range %}
-            {% if students.number == i %}
-                <span class="page-link active">{{ i }}</span>
-            {% else %}
-                <a href="?page={{ i }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">{{ i }}</a>
-            {% endif %}
-        {% endfor %}
-
-        {% if students.has_next %}
-            <a href="?page={{ students.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">→</a>
-        {% endif %}
     </div>
-    {% endif %}
-
-    <!-- Bulk Actions -->
-    <div style="margin-top: 20px; text-align: center;">
-        <form id="bulk-action-form" method="POST" action="{% url 'dashboard:bulk_student_actions' %}">
-            {% csrf_token %}
-            <input type="hidden" name="student_ids" id="selected-student-ids">
-            <select name="bulk_action" style="padding: 8px; margin-right: 10px;">
-                <option value="">Bulk Actions</option>
-                <option value="generate_pdfs">Generate PDFs</option>
-            </select>
-            <button type="submit" style="padding: 8px 15px; background: #0f0; color: #000; border: none; border-radius: 4px; cursor: pointer;">Apply</button>
-        </form>
-    </div>
-
-</div>
-{% endif %}
 </div>
 
 <script>
-    // Matrix Animation
-    const canvas = document.getElementById('matrix-canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    const chars = '01ANURAGIT';
-    const fontSize = 16;
-    const columns = canvas.width / fontSize;
-    const drops = Array(Math.floor(columns)).fill(1);
-
-    function drawMatrix() {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#0f0';
-        ctx.font = fontSize + 'px monospace';
-        for (let i = 0; i < drops.length; i++) {
-            const text = chars[Math.floor(Math.random() * chars.length)];
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++;
-        }
-    }
-    setInterval(drawMatrix, 33);
-
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-
-    // Filter Function
-    function filterStudents() {
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        const year = document.getElementById('yearFilter').value;
-        const sem = document.getElementById('semFilter').value;
-
-        const rows = document.querySelectorAll('#studentTable tbody tr');
-
-        rows.forEach(row => {
-            if (row.querySelector('.no-data')) return;
-
-            const htNo = row.cells[1].textContent.toLowerCase();
-            const name = row.cells[2].textContent.toLowerCase();
-            const email = row.cells[5].textContent.toLowerCase();
-            const yearSem = row.cells[3].textContent;
-
-            let matchesSearch = true;
-            if (search) {
-                matchesSearch = htNo.includes(search) || name.includes(search) || email.includes(search);
-            }
-
-            let matchesYear = true;
-            if (year) {
-                matchesYear = yearSem.includes(`Y${year}`);
-            }
-
-            let matchesSem = true;
-            if (sem) {
-                matchesSem = yearSem.includes(`S${sem}`);
-            }
-
-            row.style.display = matchesSearch && matchesYear && matchesSem ? '' : 'none';
-        });
-    }
-
-    // Reset Filters
-    function resetFilters() {
-        document.getElementById('searchInput').value = '';
-        document.getElementById('yearFilter').value = '';
-        document.getElementById('semFilter').value = '';
-
-        const rows = document.querySelectorAll('#studentTable tbody tr');
-        rows.forEach(row => row.style.display = '');
-    }
-
-    // Enter key for search
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            filterStudents();
-        }
-    });
-
     // Select all checkbox functionality
     document.getElementById('select-all')?.addEventListener('change', function(e) {
         document.querySelectorAll('.student-select').forEach(checkbox => {
@@ -762,6 +313,11 @@ body {
         if (!action) {
             e.preventDefault();
             alert('Please select an action.');
+            return false;
+        }
+
+        if (action === 'delete' && !confirm(`Are you sure you want to delete ${selected.length} student(s)? This action cannot be undone.`)) {
+            e.preventDefault();
             return false;
         }
 
