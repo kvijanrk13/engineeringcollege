@@ -20,11 +20,9 @@
         display: none !important;
     }
     
-    /* Create a local stacking context so the matrix stays behind page content */
+    /* Keep page content in its own layer above the fixed matrix background */
     main {
         position: relative;
-        z-index: 0;
-        isolation: isolate;
         padding: 0 !important;
         margin: 0 !important;
     }
@@ -39,13 +37,11 @@
         inset: 0;
         width: 100%;
         height: 100%;
-        z-index: -1;
+        z-index: 0;
         pointer-events: none;
     }
 
-    .dept-header,
-    .nav-tabs-container,
-    .form-container {
+    main > :not(#matrix-canvas) {
         position: relative;
         z-index: 1;
     }
