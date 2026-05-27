@@ -214,6 +214,42 @@ def try_cloudinary_private_download(public_id, headers=None):
     return None
 
 
+def build_cloudinary_private_download_url(url, preferred_resource_type='raw'):
+    """Build a signed Cloudinary download URL for a stored asset URL."""
+    if not url or 'cloudinary.com' not in str(url) or not is_cloudinary_configured():
+        return None
+
+    for public_id in get_cloudinary_public_id_candidates(url):
+        if not public_id:
+            continue
+        try:
+            if preferred_resource_type == 'raw':
+                return cloudinary.utils.private_download_url(
+                    public_id,
+                    resource_type='raw',
+                    format=None,
+                    type='upload',
+                    attachment=False,
+                )
+
+            if '.' in public_id:
+                base_public_id, extension = public_id.rsplit('.', 1)
+            else:
+                base_public_id, extension = public_id, None
+            return cloudinary.utils.private_download_url(
+                base_public_id,
+                resource_type=preferred_resource_type,
+                format=extension,
+                type='upload',
+                attachment=False,
+            )
+        except Exception as exc:
+            logger.warning(f"Could not build Cloudinary private download URL for {public_id}: {exc}")
+            continue
+
+    return None
+
+
 def normalize_optional_url(value):
     value = (value or '').strip()
     if not value:
@@ -5461,6 +5497,9 @@ def view_pdf(request, student_id):
 
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     if pdf_url:
+        private_pdf_url = build_cloudinary_private_download_url(pdf_url, preferred_resource_type='raw')
+        if private_pdf_url:
+            return redirect(private_pdf_url)
         temp_pdf_path = None
         try:
             temp_pdf_path, _ = download_remote_asset(pdf_url, default_suffix='.pdf')
