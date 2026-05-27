@@ -225,8 +225,6 @@ if CLOUDINARY_CONFIGURED:
         secure=True,
     )
 
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
     print("Cloudinary initialized successfully.")
 
 # ================================

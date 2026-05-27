@@ -237,6 +237,7 @@ def resolve_local_media_file_path(name_value):
         return None
 
     candidate_paths = []
+    candidate_dirs = []
 
     def add_candidate(path_value):
         if not path_value:
@@ -245,23 +246,51 @@ def resolve_local_media_file_path(name_value):
         if normalized not in candidate_paths:
             candidate_paths.append(normalized)
 
+    def add_candidate_dir(path_value):
+        if not path_value:
+            return
+        normalized = os.path.abspath(str(path_value))
+        if normalized not in candidate_dirs:
+            candidate_dirs.append(normalized)
+
     if os.path.isabs(raw_value):
         add_candidate(raw_value)
+        add_candidate_dir(Path(raw_value).parent)
 
     media_root = Path(settings.MEDIA_ROOT)
     base_dir = Path(settings.BASE_DIR)
 
-    add_candidate(media_root / raw_value)
-    add_candidate(base_dir / raw_value)
-
+    relative_candidates = [raw_value, raw_value.lstrip('/')]
     if raw_value.startswith('media/'):
-        stripped = raw_value[len('media/'):]
-        add_candidate(media_root / stripped)
-        add_candidate(base_dir / raw_value)
+        relative_candidates.append(raw_value[len('media/'):])
+
+    for relative_value in relative_candidates:
+        if not relative_value:
+            continue
+        media_candidate = media_root / relative_value
+        base_candidate = base_dir / relative_value
+        add_candidate(media_candidate)
+        add_candidate(base_candidate)
+        add_candidate_dir(media_candidate.parent)
+        add_candidate_dir(base_candidate.parent)
 
     for candidate in candidate_paths:
         if os.path.exists(candidate):
             return candidate
+
+    raw_path = Path(raw_value)
+    raw_stem = raw_path.stem or raw_path.name
+    if raw_stem:
+        for candidate_dir in candidate_dirs:
+            try:
+                directory = Path(candidate_dir)
+                if not directory.exists():
+                    continue
+                for match in directory.glob(f"{raw_stem}.*"):
+                    if match.is_file():
+                        return str(match.resolve())
+            except OSError:
+                continue
     return None
 
 
@@ -1365,28 +1394,45 @@ def build_student_uploaded_documents(student):
         'cert_national': 'National Exam Certificates',
     }
     uploaded_documents = []
+    temp_files = []
 
-    for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
-        file_field = getattr(student, field_name, None)
-        url_value = normalize_optional_url(getattr(student, url_field_name, None))
-        available = bool(url_value or getattr(file_field, 'name', None))
+    try:
+        for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+            file_field = getattr(student, field_name, None)
+            url_value = normalize_optional_url(getattr(student, url_field_name, None))
+            file_name_value = getattr(file_field, 'name', None) or ''
+            resolved_path, is_pdf = resolve_asset_from_candidates(
+                collect_student_document_candidates(student, field_name, url_field_name),
+                temp_files,
+                default_suffix='.pdf',
+            )
+            available = bool(resolved_path)
 
-        file_name = ''
-        file_type = ''
-        if url_value:
-            parsed_name = Path(url_value.split('?', 1)[0]).name
-            file_name = parsed_name or labels[field_name]
-            file_type = 'PDF' if file_name.lower().endswith('.pdf') else 'Image'
-        elif getattr(file_field, 'name', None):
-            file_name = Path(file_field.name).name
-            file_type = 'PDF' if file_name.lower().endswith('.pdf') else 'Image'
+            file_name = ''
+            file_type = ''
+            if available:
+                if url_value:
+                    parsed_name = Path(url_value.split('?', 1)[0]).name
+                    file_name = parsed_name or labels[field_name]
+                elif file_name_value:
+                    file_name = Path(file_name_value).name
+                if (not file_name or '.' not in file_name) and resolved_path:
+                    file_name = Path(resolved_path).name
+                file_type = 'PDF' if is_pdf or resolved_path.lower().endswith('.pdf') else 'Image'
 
-        uploaded_documents.append({
-            'label': labels[field_name],
-            'available': available,
-            'file_name': file_name,
-            'file_type': file_type,
-        })
+            uploaded_documents.append({
+                'label': labels[field_name],
+                'available': available,
+                'file_name': file_name,
+                'file_type': file_type,
+            })
+    finally:
+        for temp_path in temp_files:
+            try:
+                if temp_path and os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except OSError:
+                pass
 
     return uploaded_documents
 
@@ -4451,10 +4497,13 @@ def add_student(request):
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
                 temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
-                if ca: # Cloudinary configured - prioritize Cloudinary
+                local_path = _save_local(pf, 'photos')
+                if local_path:
+                    student.photo = local_path
+                    files_lo.append('photo')
+                if ca:
                     upload_result = _upload(pf, 'photos')
                     if upload_result and upload_result.get('secure_url'):
-                        student.photo = None
                         student.photo_url = upload_result['secure_url']
                         record_cloudinary_upload(
                             upload_type='photo',
@@ -4463,18 +4512,10 @@ def add_student(request):
                             student=student,
                         )
                         files_up.append('photo')
-                    else:
-                        # Fallback to local storage if Cloudinary fails
-                        local_path = _save_local(pf, 'photos')
-                        if local_path:
-                            student.photo = local_path
-                            files_lo.append('photo')
+                    elif local_path:
+                        student.photo_url = None
                 else:
-                    # Local storage only when Cloudinary not configured
-                    local_path = _save_local(pf, 'photos')
-                    if local_path:
-                        student.photo = local_path
-                        files_lo.append('photo')
+                    student.photo_url = None
             
             # Handle certificates
             print(f"  [DEBUG] FILES received: {list(request.FILES.keys())}")
@@ -4499,10 +4540,14 @@ def add_student(request):
                     })
                 print(f"  [DEBUG] Processing {upload_spec['source']} -> {field_name} ({folder})")
                 print(f"  [DEBUG] File: {certificate_file.name}, size: {certificate_file.size}")
-                if ca: # Cloudinary configured
+                local_path = _save_local(certificate_file, folder)
+                if local_path:
+                    setattr(student, field_name, local_path)
+                    files_lo.append(field_name)
+                    print(f"  [DEBUG] Saved {field_name} locally to {local_path}")
+                if ca:
                     upload_result = _upload(certificate_file, folder)
                     if upload_result and upload_result.get('secure_url'):
-                        setattr(student, field_name, None)
                         setattr(student, url_field_name, upload_result['secure_url'])
                         record_cloudinary_upload(
                             upload_type=field_name,
@@ -4512,20 +4557,10 @@ def add_student(request):
                         )
                         files_up.append(field_name)
                         print(f"  [DEBUG] Successfully uploaded {field_name} to {upload_result['secure_url']}")
-                    else:
-                        print(f"  [DEBUG] Cloudinary upload failed for {field_name}, trying local")
-                        local_path = _save_local(certificate_file, folder)
-                        if local_path:
-                            setattr(student, field_name, local_path)
-                            setattr(student, url_field_name, None)
-                            files_lo.append(field_name)
-                            print(f"  [DEBUG] Saved {field_name} locally to {local_path}")
-                else:
-                    local_path = _save_local(certificate_file, folder)
-                    if local_path:
-                        setattr(student, field_name, local_path)
+                    elif local_path:
                         setattr(student, url_field_name, None)
-                        files_lo.append(field_name)
+                else:
+                    setattr(student, url_field_name, None)
             student.save()
 
             if skipped_uploads:
@@ -4549,9 +4584,9 @@ def add_student(request):
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
             if files_up:
-                messages.success(request, f'Student {student.student_name} added! Cloudinary: {", ".join(files_up)}')
+                messages.success(request, f'Student {student.student_name} added! Cloudinary synced: {", ".join(files_up)}')
             if files_lo:
-                messages.info(request, f'Some files saved locally: {", ".join(files_lo)}')
+                messages.info(request, f'Local file copies saved: {", ".join(files_lo)}')
             if not files_up and not files_lo:
                 messages.success(request, f'Student {student.student_name} added successfully!')
             return redirect('dashboard:students_data')
@@ -4603,7 +4638,7 @@ def edit_student(request, student_id):
 
     # Proceed with edit
     if request.method == 'POST':
-        form = StudentForm(request.POST, request.FILES, instance=student)
+        form = StudentForm(request.POST, instance=student)
         if form.is_valid():
             try:
                 ca = is_cloudinary_configured()
@@ -4655,33 +4690,34 @@ def edit_student(request, student_id):
                         logger.error(f"Local file save error ({folder}): {e}")
                         return None
 
-                updated_student = form.save()
+                updated_student = form.save(commit=False)
+                updated_student.save()
 
                 # Handle photo manually because we want Cloudinary support
                 if request.FILES.get('photo'):
                     pf = request.FILES['photo']
                     temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
+                    local_path = _save_local(pf, 'photos')
+                    if local_path:
+                        updated_student.photo = local_path
                     if ca:
                         upload_result = _upload(pf, 'photos')
                         if upload_result and upload_result.get('secure_url'):
-                            updated_student.photo = None
                             updated_student.photo_url = upload_result['secure_url']
-                            updated_student.save(update_fields=['photo', 'photo_url'])
                             record_cloudinary_upload(
                                 upload_type='photo',
                                 upload_result=upload_result,
                                 uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
                                 student=updated_student,
                             )
+                        elif local_path:
+                            updated_student.photo_url = None
                         else:
-                            local_path = _save_local(pf, 'photos')
-                            if local_path:
-                                updated_student.photo = local_path
-                                updated_student.photo_url = None
-                                updated_student.save(update_fields=['photo', 'photo_url'])
-                            else:
-                                logger.warning("Cloudinary photo upload failed, and local fallback save failed")
-                    
+                            logger.warning("Cloudinary photo upload failed, and local fallback save failed")
+                    else:
+                        updated_student.photo_url = None
+                    updated_student.save(update_fields=['photo', 'photo_url', 'updated_at'])
+
                 # Calculate correct age from DOB if DOB was updated
                 if updated_student.dob:
                     try:
@@ -4708,10 +4744,12 @@ def edit_student(request, student_id):
                             'path': temp_asset_path,
                             'is_pdf': temp_asset_is_pdf,
                         })
+                    local_path = _save_local(certificate_file, folder)
+                    if local_path:
+                        setattr(updated_student, field_name, local_path)
                     if ca:
                         upload_result = _upload(certificate_file, folder)
                         if upload_result and upload_result.get('secure_url'):
-                            setattr(updated_student, field_name, None)
                             setattr(updated_student, url_field_name, upload_result['secure_url'])
                             record_cloudinary_upload(
                                 upload_type=field_name,
@@ -4720,21 +4758,24 @@ def edit_student(request, student_id):
                                 student=updated_student,
                             )
                             any_cert_updated = True
-                        else:
-                            local_path = _save_local(certificate_file, folder)
-                            if local_path:
-                                setattr(updated_student, field_name, local_path)
-                                setattr(updated_student, url_field_name, None)
-                                any_cert_updated = True
+                            if not local_path:
+                                setattr(updated_student, field_name, None)
+                        elif local_path:
+                            setattr(updated_student, url_field_name, None)
+                            any_cert_updated = True
                     else:
-                        local_path = _save_local(certificate_file, folder)
                         if local_path:
-                            setattr(updated_student, field_name, local_path)
                             setattr(updated_student, url_field_name, None)
                             any_cert_updated = True
                 
                 if any_cert_updated:
-                    updated_student.save()
+                    updated_student.save(update_fields=[
+                        'cert_achieve', 'cert_intern', 'cert_courses', 'cert_sdp',
+                        'cert_extra', 'cert_placement', 'cert_national',
+                        'cert_achieve_url', 'cert_intern_url', 'cert_courses_url',
+                        'cert_sdp_url', 'cert_extra_url', 'cert_placement_url',
+                        'cert_national_url', 'updated_at',
+                    ])
 
                 if skipped_uploads:
                     skipped_names = ', '.join(item['filename'] for item in skipped_uploads[:3])
@@ -5418,16 +5459,6 @@ def view_pdf(request, student_id):
             messages.error(request, "You can only view your own PDF.")
             return redirect(student_dashboard_redirect_route(request))
 
-    try:
-        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
-        if regenerated_pdf_bytes:
-            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
-            response['Content-Length'] = len(regenerated_pdf_bytes)
-            return response
-    except Exception as exc:
-        logger.error(f"Failed to generate fresh student PDF for {student.ht_no}: {exc}")
-
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     if pdf_url:
         temp_pdf_path = None
@@ -5470,6 +5501,16 @@ def view_pdf(request, student_id):
                 return redirect(pdf_field.url)
             except Exception:
                 pass
+
+    try:
+        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        if regenerated_pdf_bytes:
+            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(regenerated_pdf_bytes)
+            return response
+    except Exception as exc:
+        logger.error(f"Failed to generate fresh student PDF for {student.ht_no}: {exc}")
 
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
