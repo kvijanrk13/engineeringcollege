@@ -30,6 +30,83 @@
     .students-data-page .pagination .page-item.active .page-link {
         background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
     }
+    .students-data-page .students-directory-table {
+        min-width: 980px;
+    }
+    .students-data-page .students-directory-table th,
+    .students-data-page .students-directory-table td {
+        vertical-align: middle;
+    }
+    .students-data-page .passport-photo-cell {
+        width: 76px;
+        text-align: center;
+    }
+    .students-data-page .student-passport-thumb,
+    .students-data-page .student-photo-fallback {
+        width: 48px;
+        height: 60px;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 76, 129, 0.16);
+        box-shadow: 0 8px 20px rgba(15, 76, 129, 0.12);
+    }
+    .students-data-page .student-passport-thumb {
+        object-fit: cover;
+        background: #f4f8fb;
+    }
+    .students-data-page .student-photo-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #f9fbfd 0%, #eaf2f9 100%);
+        color: #5e7488;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.35rem;
+        text-align: center;
+    }
+    .students-data-page .student-htno {
+        font-weight: 700;
+        color: #163149;
+        white-space: nowrap;
+    }
+    .students-data-page .student-name-link {
+        color: #14324b;
+        font-weight: 600;
+    }
+    .students-data-page .student-name-link:hover {
+        color: #0f4c81;
+        text-decoration: none;
+    }
+    .students-data-page .student-branch-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: #eef5ff;
+        color: #163149;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+    .students-data-page .student-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .students-data-page .student-actions .btn {
+        min-width: 34px;
+        min-height: 34px;
+        padding: 0.35rem 0.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
 </style>
 {% endblock %}
 
@@ -140,20 +217,17 @@
 
                     <!-- Students Table -->
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
+                        <table class="table table-bordered table-striped table-hover students-directory-table">
                             <thead>
                                 <tr>
                                     <th><input type="checkbox" id="select-all"></th>
                                     <th>Photo</th>
-                                    <th>HT No</th>
+                                    <th>Hall Ticket Number</th>
                                     <th>Name</th>
-                                    <th>Year/Sem</th>
-                                    <th>Phone</th>
-                                    <th>Email</th>
-                                    <th>CGPA</th>
-                                    <th>DOB</th>
-                                    <th>Age</th>
-                                    <th>PDF</th>
+                                    <th>Branch</th>
+                                    <th>Year</th>
+                                    <th>Sem</th>
+                                    <th>B.Tech CGPA</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -161,31 +235,30 @@
                                 {% for student in students %}
                                 <tr>
                                     <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
-                                    <td>
+                                    <td class="passport-photo-cell">
                                         {% if student.photo_url or student.photo %}
-                                            <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-                                            <div class="no-photo" style="display: none;">Photo Error</div>
+                                            <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-passport-thumb" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
+                                            <div class="student-photo-fallback" style="display: none;">No Photo</div>
                                         {% else %}
-                                            <div class="no-photo">No Photo</div>
+                                            <div class="student-photo-fallback">No Photo</div>
                                         {% endif %}
                                     </td>
 
-                                    <td><strong>{{ student.ht_no }}</strong></td>
+                                    <td><span class="student-htno">{{ student.ht_no }}</span></td>
 
                                     <td>
-                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="text-decoration-none">
+                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="student-name-link text-decoration-none">
                                             {{ student.student_name }}
                                         </a>
                                     </td>
 
                                     <td>
-                                        <span class="badge bg-primary">Y{{ student.year }}</span>
-                                        <span class="badge bg-info ms-1">S{{ student.sem }}</span>
+                                        <span class="student-branch-pill">{{ student.branch|default:"IT" }}</span>
                                     </td>
 
-                                    <td>{{ student.student_phone|default:"-" }}</td>
+                                    <td><span class="badge bg-primary">Y{{ student.year|default:"-" }}</span></td>
 
-                                    <td>{{ student.email|default:"-" }}</td>
+                                    <td><span class="badge bg-info">S{{ student.sem|default:"-" }}</span></td>
 
                                     <td>
                                         {% if student.cgpa %}
@@ -201,45 +274,35 @@
                                         {% endif %}
                                     </td>
 
-                                    <td>{{ student.dob|date:"d/m/Y"|default:"-" }}</td>
-
-                                    <td>{{ student.age|default:"-" }}</td>
-
                                     <td class="text-center">
-                                        {% if student.pdf_url or student.pdf_file %}
-                                            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success btn-sm">
-                                                <i class="fas fa-file-pdf"></i> View
+                                        <div class="student-actions">
+                                            <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info btn-sm" title="View">
+                                                <i class="fas fa-eye"></i>
                                             </a>
-                                        {% else %}
-                                            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning btn-sm">
-                                                <i class="fas fa-file-pdf"></i> Generate
+                                            <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ student.student_name }}? This action cannot be undone.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% if student.pdf_url or student.pdf_file %}
+                                                <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success btn-sm" title="View PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning btn-sm" title="Generate PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            {% endif %}
+                                            <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-primary btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
                                             </a>
-                                        {% endif %}
-                                    </td>
-
-                                    <td class="text-center">
-                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info btn-sm" title="View">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        {% if student.cert_achieve or student.cert_intern or student.cert_courses or student.cert_sdp or student.cert_extra or student.cert_placement or student.cert_national or student.cert_achieve_url or student.cert_intern_url or student.cert_courses_url or student.cert_sdp_url or student.cert_extra_url or student.cert_placement_url or student.cert_national_url %}
-                                        <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn btn-success btn-sm" title="Merge Certificates">
-                                            <i class="fas fa-paperclip"></i>
-                                        </a>
-                                        {% endif %}
-                                        <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-warning btn-sm" title="Edit">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ student.student_name }}? This action cannot be undone.');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="12" class="text-center py-4">
+                                    <td colspan="9" class="text-center py-4">
                                         No students found. Click "ADD NEW STUDENT" to create one.
                                     </td>
                                 </tr>

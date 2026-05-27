@@ -23,6 +23,7 @@ from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
+from django.core.files.storage import FileSystemStorage
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -94,7 +95,14 @@ except ImportError:
 
 # ==================== HELPERS ====================
 def is_cloudinary_configured():
-    return getattr(settings, 'CLOUDINARY_CONFIGURED', False)
+    configured_flag = getattr(settings, 'CLOUDINARY_CONFIGURED', None)
+    if configured_flag is not None:
+        return bool(configured_flag)
+    return bool(
+        getattr(settings, 'CLOUDINARY_CLOUD_NAME', None)
+        and getattr(settings, 'CLOUDINARY_API_KEY', None)
+        and getattr(settings, 'CLOUDINARY_API_SECRET', None)
+    )
 
 
 def upload_file_to_cloudinary(file_path, folder, public_id, resource_type='auto', **kwargs):
@@ -217,6 +225,44 @@ def normalize_optional_url(value):
     if '://' in value:
         return ''
     return f'https://{value.lstrip("/")}'
+
+
+def resolve_local_media_file_path(name_value):
+    """Resolve a storage name or relative media path to a real local file when available."""
+    if not name_value:
+        return None
+
+    raw_value = str(name_value).strip().replace('\\', '/')
+    if not raw_value:
+        return None
+
+    candidate_paths = []
+
+    def add_candidate(path_value):
+        if not path_value:
+            return
+        normalized = os.path.abspath(str(path_value))
+        if normalized not in candidate_paths:
+            candidate_paths.append(normalized)
+
+    if os.path.isabs(raw_value):
+        add_candidate(raw_value)
+
+    media_root = Path(settings.MEDIA_ROOT)
+    base_dir = Path(settings.BASE_DIR)
+
+    add_candidate(media_root / raw_value)
+    add_candidate(base_dir / raw_value)
+
+    if raw_value.startswith('media/'):
+        stripped = raw_value[len('media/'):]
+        add_candidate(media_root / stripped)
+        add_candidate(base_dir / raw_value)
+
+    for candidate in candidate_paths:
+        if os.path.exists(candidate):
+            return candidate
+    return None
 
 
 def parse_json_list(value):
@@ -737,6 +783,9 @@ def collect_student_photo_candidates(student, photo_override_path=None):
 
     photo_field = getattr(student, 'photo', None)
     if photo_field and getattr(photo_field, 'name', ''):
+        local_media_path = resolve_local_media_file_path(photo_field.name)
+        add_path(local_media_path, 'student.photo.media_name')
+
         try:
             add_path(photo_field.path, 'student.photo.path')
         except (NotImplementedError, ValueError, OSError):
@@ -779,6 +828,9 @@ def collect_student_document_candidates(student, file_field_name, url_field_name
 
     file_field = getattr(student, file_field_name, None)
     if file_field and getattr(file_field, 'name', ''):
+        local_media_path = resolve_local_media_file_path(file_field.name)
+        add_path(local_media_path, f'{file_field_name}.media_name')
+
         try:
             add_path(file_field.path, f'{file_field_name}.path')
         except (NotImplementedError, ValueError, OSError):
@@ -1370,9 +1422,15 @@ def get_file_from_field(file_field, url_field=None):
     if isinstance(file_field, str):
         if file_field.startswith('http'):
             return None, file_field
+        local_media_path = resolve_local_media_file_path(file_field)
+        if local_media_path:
+            return local_media_path, None
         elif os.path.exists(file_field):
             return file_field, None
         return None, None
+    local_media_path = resolve_local_media_file_path(getattr(file_field, 'name', None))
+    if local_media_path:
+        return local_media_path, None
     if hasattr(file_field, 'url') and file_field.url:
         return None, file_field.url
     if hasattr(file_field, 'path') and file_field.path:
@@ -4314,17 +4372,17 @@ def add_student(request):
                         'national': 'student_certs/national/',
                     }
                     upload_to = upload_paths.get(folder, f'student_{folder}/')
-                    from django.core.files.storage import default_storage
+                    storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
                     ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
                     filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
                     path = os.path.join(upload_to, filename)
-                    saved_path = default_storage.save(path, file)
+                    saved_path = storage.save(path, file)
                     print(f"  [SAVE-LOCAL] Saved {folder} file to: {saved_path}")
-                    print(f"  [SAVE-LOCAL] default_storage type: {type(default_storage)}")
+                    print(f"  [SAVE-LOCAL] storage type: {type(storage)}")
                     # For debugging, try to get the full path
-                    if hasattr(default_storage, 'path'):
+                    if hasattr(storage, 'path'):
                         try:
-                            full_path = default_storage.path(saved_path)
+                            full_path = storage.path(saved_path)
                             print(f"  [SAVE-LOCAL] Full filesystem path: {full_path}")
                         except Exception as path_err:
                             print(f"  [SAVE-LOCAL] Could not get full path: {path_err}")
@@ -4393,11 +4451,10 @@ def add_student(request):
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
                 temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
-                if temp_photo_override_path:
-                    persist_snapshot_to_model_field(student, 'photo', temp_photo_override_path, getattr(pf, 'name', None))
                 if ca: # Cloudinary configured - prioritize Cloudinary
                     upload_result = _upload(pf, 'photos')
                     if upload_result and upload_result.get('secure_url'):
+                        student.photo = None
                         student.photo_url = upload_result['secure_url']
                         record_cloudinary_upload(
                             upload_type='photo',
@@ -4440,17 +4497,12 @@ def add_student(request):
                         'path': temp_asset_path,
                         'is_pdf': temp_asset_is_pdf,
                     })
-                    persist_snapshot_to_model_field(
-                        student,
-                        field_name,
-                        temp_asset_path,
-                        getattr(certificate_file, 'name', None),
-                    )
                 print(f"  [DEBUG] Processing {upload_spec['source']} -> {field_name} ({folder})")
                 print(f"  [DEBUG] File: {certificate_file.name}, size: {certificate_file.size}")
                 if ca: # Cloudinary configured
                     upload_result = _upload(certificate_file, folder)
                     if upload_result and upload_result.get('secure_url'):
+                        setattr(student, field_name, None)
                         setattr(student, url_field_name, upload_result['secure_url'])
                         record_cloudinary_upload(
                             upload_type=field_name,
@@ -4593,11 +4645,11 @@ def edit_student(request, student_id):
                             'national': 'student_certs/national/',
                         }
                         upload_to = upload_paths.get(folder, f'student_{folder}/')
-                        from django.core.files.storage import default_storage
+                        storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
                         ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
                         filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
                         path = os.path.join(upload_to, filename)
-                        saved_path = default_storage.save(path, file)
+                        saved_path = storage.save(path, file)
                         return saved_path
                     except Exception as e:
                         logger.error(f"Local file save error ({folder}): {e}")
@@ -4609,11 +4661,10 @@ def edit_student(request, student_id):
                 if request.FILES.get('photo'):
                     pf = request.FILES['photo']
                     temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
-                    if temp_photo_override_path:
-                        persist_snapshot_to_model_field(updated_student, 'photo', temp_photo_override_path, getattr(pf, 'name', None))
                     if ca:
                         upload_result = _upload(pf, 'photos')
                         if upload_result and upload_result.get('secure_url'):
+                            updated_student.photo = None
                             updated_student.photo_url = upload_result['secure_url']
                             updated_student.save(update_fields=['photo', 'photo_url'])
                             record_cloudinary_upload(
@@ -4623,7 +4674,13 @@ def edit_student(request, student_id):
                                 student=updated_student,
                             )
                         else:
-                            logger.warning("Cloudinary photo upload failed, using local file")
+                            local_path = _save_local(pf, 'photos')
+                            if local_path:
+                                updated_student.photo = local_path
+                                updated_student.photo_url = None
+                                updated_student.save(update_fields=['photo', 'photo_url'])
+                            else:
+                                logger.warning("Cloudinary photo upload failed, and local fallback save failed")
                     
                 # Calculate correct age from DOB if DOB was updated
                 if updated_student.dob:
@@ -4651,15 +4708,10 @@ def edit_student(request, student_id):
                             'path': temp_asset_path,
                             'is_pdf': temp_asset_is_pdf,
                         })
-                        persist_snapshot_to_model_field(
-                            updated_student,
-                            field_name,
-                            temp_asset_path,
-                            getattr(certificate_file, 'name', None),
-                        )
                     if ca:
                         upload_result = _upload(certificate_file, folder)
                         if upload_result and upload_result.get('secure_url'):
+                            setattr(updated_student, field_name, None)
                             setattr(updated_student, url_field_name, upload_result['secure_url'])
                             record_cloudinary_upload(
                                 upload_type=field_name,
@@ -4745,6 +4797,10 @@ def student_photo_redirect(request, student_id):
         return redirect(latest_upload_url)
 
     if student.photo:
+        local_photo_path = resolve_local_media_file_path(getattr(student.photo, 'name', None))
+        if local_photo_path and os.path.exists(local_photo_path):
+            local_media_relpath = os.path.relpath(local_photo_path, settings.MEDIA_ROOT).replace('\\', '/')
+            return redirect(f"{settings.MEDIA_URL.rstrip('/')}/{local_media_relpath}")
         try:
             return redirect(student.photo.url)
         except Exception as exc:
@@ -5297,16 +5353,17 @@ def generate_student_pdf(
     if not return_url:
         student.pdf_url = None
 
-    # Always persist the generated PDF through the model storage backend as a durable fallback.
-    if final_pdf_bytes:
+    # Keep a real local fallback PDF when Cloudinary upload is unavailable.
+    if final_pdf_bytes and not return_url:
         try:
-            student.pdf_file.save(filename, ContentFile(final_pdf_bytes), save=False)
+            storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
+            saved_name = storage.save(os.path.join('student_pdfs', filename), ContentFile(final_pdf_bytes))
+            student.pdf_file = saved_name
             pdf_file_saved = True
-            if not return_url and student.pdf_file:
-                return_url = student.pdf_file.url
-            print(f"  [OK] PDF persisted via model storage: {return_url or filename}")
+            return_url = storage.url(saved_name)
+            print(f"  [OK] PDF saved locally: {saved_name}")
         except Exception as e:
-            print(f"  [ERR] Persistent PDF save failed: {e}")
+            print(f"  [ERR] Local PDF save failed: {e}")
             pdf_file_saved = False
 
     pdf_persisted = bool(return_url or pdf_file_saved)
@@ -5361,6 +5418,16 @@ def view_pdf(request, student_id):
             messages.error(request, "You can only view your own PDF.")
             return redirect(student_dashboard_redirect_route(request))
 
+    try:
+        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        if regenerated_pdf_bytes:
+            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(regenerated_pdf_bytes)
+            return response
+    except Exception as exc:
+        logger.error(f"Failed to generate fresh student PDF for {student.ht_no}: {exc}")
+
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     if pdf_url:
         temp_pdf_path = None
@@ -5382,6 +5449,14 @@ def view_pdf(request, student_id):
 
     pdf_field = getattr(student, 'pdf_file', None)
     if pdf_field and getattr(pdf_field, 'name', ''):
+        local_pdf_path = resolve_local_media_file_path(pdf_field.name)
+        if local_pdf_path and os.path.exists(local_pdf_path):
+            with open(local_pdf_path, 'rb') as pdf_handle:
+                pdf_bytes = pdf_handle.read()
+            response = HttpResponse(pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(pdf_bytes)
+            return response
         try:
             with pdf_field.open('rb') as pdf_handle:
                 pdf_bytes = pdf_handle.read()
@@ -5395,16 +5470,6 @@ def view_pdf(request, student_id):
                 return redirect(pdf_field.url)
             except Exception:
                 pass
-
-    try:
-        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
-        if regenerated_pdf_bytes:
-            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
-            response['Content-Length'] = len(regenerated_pdf_bytes)
-            return response
-    except Exception as exc:
-        logger.error(f"Failed to regenerate stale student PDF for {student.ht_no}: {exc}")
 
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
