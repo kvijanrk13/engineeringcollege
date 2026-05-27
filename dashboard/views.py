@@ -4632,12 +4632,28 @@ def add_student(request):
 
 @require_POST
 def delete_student(request, student_id):
-    if not request.session.get('student_logged_in'):
-        return redirect('dashboard:students_data')
     student = get_object_or_404(Student, id=student_id)
+    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
+    student_logged_in = request.session.get('student_logged_in')
+
+    if not (user_authenticated or student_logged_in):
+        messages.error(request, "Please log in to delete student records.")
+        return redirect('dashboard:student_login')
+
+    if student_logged_in and not user_authenticated:
+        if not student_session_can_access_record(request, student):
+            messages.error(request, "You can only delete your own student record.")
+            return redirect(student_dashboard_redirect_route(request))
+
     name, ht = student.student_name, student.ht_no
     student.delete()
     messages.success(request, f"Student {name} ({ht}) deleted successfully.")
+
+    if student_logged_in and not user_authenticated:
+        for key in ['student_logged_in', 'student_username', 'student_id', 'student_ht_no']:
+            request.session.pop(key, None)
+        return redirect('dashboard:student_login')
+
     return redirect('dashboard:students_data')
 
 
