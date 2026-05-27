@@ -954,10 +954,6 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
         url_value = candidate.get('url')
 
         if path_value and os.path.exists(path_value):
-            data_uri = encode_image_as_data_uri(path_value)
-            if data_uri:
-                return data_uri, path_value, temp_paths, source
-            logger.warning(f"Student photo candidate from {source} could not be encoded: {path_value}")
             return build_file_uri(path_value), path_value, temp_paths, source
 
         if url_value:
@@ -970,11 +966,6 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
                 logger.warning(f"Student photo candidate from {source} resolved to a PDF, skipping: {url_value}")
                 continue
 
-            data_uri = encode_image_as_data_uri(downloaded_path)
-            if data_uri:
-                return data_uri, downloaded_path, temp_paths, source
-
-            logger.warning(f"Downloaded student photo candidate from {source} could not be encoded: {url_value}")
             return build_file_uri(downloaded_path), downloaded_path, temp_paths, source
 
     return None, None, temp_paths, None
@@ -5221,7 +5212,10 @@ def generate_student_pdf(
     )
     temp_files.extend(photo_temp_paths)
     if photo_url_for_pdf:
-        print(f"  [OK] Photo ({photo_source}): {photo_url_for_pdf}")
+        photo_log_value = photo_url_for_pdf
+        if isinstance(photo_log_value, str) and photo_log_value.startswith('data:'):
+            photo_log_value = f"embedded data URI ({len(photo_log_value)} chars)"
+        print(f"  [OK] Photo ({photo_source}): {photo_log_value}")
 
     # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
     anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
@@ -5329,11 +5323,11 @@ def generate_student_pdf(
         temp_files.append(info_tmp.name)
         _add_to_writer(info_tmp.name)
 
-        # 2. Collect all student certificates using the shared asset resolver
-        # photo_file is the student photo - we add it as a separate page in the merged PDF
-        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(
+        # 2. Collect student certificates using the shared asset resolver.
+        # The student photo belongs on the first profile page, not as a separate merged page.
+        _, image_files, pdf_files, collected_temp_files = collect_student_files(
             student,
-            skip_photo=bool(photo_override_path),
+            skip_photo=True,
             skip_certificate_fields=override_certificate_fields,
         )
         temp_files.extend(collected_temp_files)
@@ -5347,19 +5341,6 @@ def generate_student_pdf(
                 if override_path not in image_files:
                     image_files.append(override_path)
         
-        # If the photo was already downloaded for the info PDF, use that path to avoid duplicate download
-        if photo_override_path and os.path.exists(photo_override_path):
-            print(f"  [DEBUG] Adding uploaded photo override as separate page: {photo_override_path}")
-            if photo_override_path not in image_files:
-                image_files.append(photo_override_path)
-        elif local_photo_path and os.path.exists(local_photo_path) and local_photo_path != photo_file:
-            print(f"  [DEBUG] Using pre-downloaded photo for merge: {local_photo_path}")
-            if local_photo_path not in image_files:
-                image_files.append(local_photo_path)
-        elif photo_file and os.path.exists(photo_file):
-            print(f"  [DEBUG] Adding student photo as separate page: {photo_file}")
-            if photo_file not in image_files:
-                image_files.append(photo_file)
         print(f"  [DEBUG] Certificates collected: {len(image_files)} images, {len(pdf_files)} PDFs")
         print(f"  [DEBUG] Writer pages before adding certificates: {len(writer.pages)}")
         print(f"  [DEBUG] PDF files: {[os.path.basename(p) for p in pdf_files]}")
@@ -5495,6 +5476,16 @@ def view_pdf(request, student_id):
             messages.error(request, "You can only view your own PDF.")
             return redirect(student_dashboard_redirect_route(request))
 
+    try:
+        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        if regenerated_pdf_bytes:
+            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(regenerated_pdf_bytes)
+            return response
+    except Exception as exc:
+        logger.error(f"Failed to generate fresh student PDF for {student.ht_no}: {exc}")
+
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     if pdf_url:
         private_pdf_url = build_cloudinary_private_download_url(pdf_url, preferred_resource_type='raw')
@@ -5540,16 +5531,6 @@ def view_pdf(request, student_id):
                 return redirect(pdf_field.url)
             except Exception:
                 pass
-
-    try:
-        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
-        if regenerated_pdf_bytes:
-            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
-            response['Content-Length'] = len(regenerated_pdf_bytes)
-            return response
-    except Exception as exc:
-        logger.error(f"Failed to generate fresh student PDF for {student.ht_no}: {exc}")
 
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
