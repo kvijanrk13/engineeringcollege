@@ -5078,7 +5078,23 @@ def edit_student(request, student_id):
 
 def student_photo_redirect(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
+    if student.photo:
+        local_photo_path = resolve_local_media_file_path(getattr(student.photo, 'name', None))
+        if local_photo_path and os.path.exists(local_photo_path):
+            local_media_relpath = os.path.relpath(local_photo_path, settings.MEDIA_ROOT).replace('\\', '/')
+            return redirect(f"{settings.MEDIA_URL.rstrip('/')}/{local_media_relpath}")
+        try:
+            return redirect(student.photo.url)
+        except Exception as exc:
+            logger.warning(f"Could not resolve student photo URL for {student.ht_no}: {exc}")
+
+    photo_url_value = getattr(student, 'photo_url', None)
+    local_photo_url_path = resolve_local_asset_reference(photo_url_value)
+    if local_photo_url_path and os.path.exists(local_photo_url_path):
+        local_media_relpath = os.path.relpath(local_photo_url_path, settings.MEDIA_ROOT).replace('\\', '/')
+        return redirect(f"{settings.MEDIA_URL.rstrip('/')}/{local_media_relpath}")
+
+    photo_url = normalize_optional_url(photo_url_value)
     if photo_url:
         return redirect(photo_url)
 
@@ -5092,16 +5108,6 @@ def student_photo_redirect(request, student_id):
     latest_upload_url = normalize_optional_url(latest_upload_url)
     if latest_upload_url:
         return redirect(latest_upload_url)
-
-    if student.photo:
-        local_photo_path = resolve_local_media_file_path(getattr(student.photo, 'name', None))
-        if local_photo_path and os.path.exists(local_photo_path):
-            local_media_relpath = os.path.relpath(local_photo_path, settings.MEDIA_ROOT).replace('\\', '/')
-            return redirect(f"{settings.MEDIA_URL.rstrip('/')}/{local_media_relpath}")
-        try:
-            return redirect(student.photo.url)
-        except Exception as exc:
-            logger.warning(f"Could not resolve student photo URL for {student.ht_no}: {exc}")
 
     from django.http import Http404
     raise Http404("Photo not found")

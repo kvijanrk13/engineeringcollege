@@ -317,6 +317,28 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'], 'https://example.com/student-history-photo.jpg')
 
+    def test_student_photo_redirect_prefers_local_photo_over_stale_photo_url(self):
+        with tempfile.TemporaryDirectory() as temp_media_root:
+            with override_settings(MEDIA_ROOT=temp_media_root, MEDIA_URL='/media/'):
+                student = Student.objects.create(
+                    ht_no='23C11A7778L',
+                    student_name='Local Photo Student',
+                    photo_url='https://example.com/stale-photo.jpg',
+                    photo=SimpleUploadedFile(
+                        'local-student-photo.jpg',
+                        make_test_image_bytes(),
+                        content_type='image/jpeg',
+                    ),
+                )
+
+                response = self.client.get(
+                    reverse('dashboard:student_photo_redirect', args=[student.id]),
+                    secure=True,
+                )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/media/student_photos/local-student-photo', response['Location'])
+
     @patch('dashboard.views.download_remote_asset')
     def test_resolve_student_photo_for_pdf_falls_back_to_latest_cloudinary_upload(self, mock_download_remote_asset):
         student = Student.objects.create(
