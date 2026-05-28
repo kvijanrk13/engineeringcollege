@@ -144,6 +144,21 @@ class DashboardTests(TestCase):
         self.assertContains(response, 'Gallery')
         self.assertContains(response, 'data:image/jpeg;base64,')
 
+    def test_gallery_page_shows_gallery_content(self):
+        user = get_user_model().objects.create_user(
+            username='gallery-user',
+            email='gallery-user@example.com',
+            password='secret123',
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse('dashboard:gallery'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Gallery')
+        self.assertContains(response, 'CONNECT HACKATHON 2026')
+        self.assertContains(response, 'ITECH-2K26')
+
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.requests.get')
     @patch('dashboard.views.try_cloudinary_private_download')
