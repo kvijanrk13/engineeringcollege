@@ -114,7 +114,7 @@ class DashboardTests(TestCase):
 
         self.assertIn('/XObject', resources)
 
-    def test_faculty_dashboard_hides_gallery_and_shows_resolved_faculty_photo(self):
+    def test_faculty_dashboard_shows_gallery_and_resolved_faculty_photo(self):
         user = get_user_model().objects.create_user(
             username='faculty-dashboard-user',
             email='faculty-dashboard-user@example.com',
@@ -141,7 +141,7 @@ class DashboardTests(TestCase):
                 )
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'Gallery')
+        self.assertContains(response, 'Gallery')
         self.assertContains(response, 'data:image/jpeg;base64,')
 
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
@@ -853,15 +853,19 @@ class DashboardTests(TestCase):
             ht_no='23C11A8001',
             student_name='Edit Student',
         )
-        session = self.client.session
-        session['student_logged_in'] = True
-        session.save()
+        user = get_user_model().objects.create_user(
+            username='edit-student-admin',
+            email='edit-student-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(user)
 
         response = self.client.post(
             reverse('dashboard:edit_student', args=[student.id]),
             data={
                 'ht_no': student.ht_no,
                 'student_name': student.student_name,
+                'nationality': 'Indian',
                 'photo': SimpleUploadedFile(
                     'edit-photo.jpg',
                     make_test_image_bytes(),
