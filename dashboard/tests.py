@@ -14,6 +14,12 @@ from django.urls import reverse
 
 from dashboard import views as dashboard_views
 from dashboard.models import Certificate, CloudinaryUpload, FDP, Faculty, ResearchPublication, Student
+from dashboard.pdf_generation import (
+    FACULTY_PDF_TEMPLATE,
+    PDF_HEADER_IMAGE_FILENAME,
+    STUDENT_PDF_TEMPLATE,
+    get_pdf_header_image_path,
+)
 
 from PIL import Image
 from pypdf import PdfReader
@@ -40,6 +46,12 @@ class DashboardTests(TestCase):
         response = self.client.get(reverse('dashboard:login'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ANURAG Engineering College')
+
+    def test_pdf_generation_uses_dedicated_assets_boundary(self):
+        self.assertEqual(PDF_HEADER_IMAGE_FILENAME, 'NEW ANURAG 25.png')
+        self.assertEqual(STUDENT_PDF_TEMPLATE, 'dashboard/student_pdf.html')
+        self.assertEqual(FACULTY_PDF_TEMPLATE, 'dashboard/faculty_pdf.html')
+        self.assertTrue(Path(get_pdf_header_image_path()).exists())
 
     def test_resolve_faculty_photo_for_pdf_uses_file_field(self):
         faculty = Faculty.objects.create(
@@ -234,7 +246,7 @@ class DashboardTests(TestCase):
         self.assertEqual(student.pdf_url, 'https://example.com/student_merged.pdf')
         self.assertTrue(student.pdf_generated)
 
-    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
+    @patch('dashboard.views.generate_student_profile_pdf', return_value='https://example.com/student.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_add_student_persists_additional_certificate_uploads(
         self,
@@ -269,7 +281,7 @@ class DashboardTests(TestCase):
         self.assertTrue(bool(student.cert_achieve))
         self.assertFalse(student.cert_achieve_url)
 
-    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student-with-assets.pdf')
+    @patch('dashboard.views.generate_student_profile_pdf', return_value='https://example.com/student-with-assets.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_add_student_passes_uploaded_photo_and_certificate_overrides_to_pdf_generation(
         self,
@@ -430,7 +442,7 @@ class DashboardTests(TestCase):
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn('inline;', response['Content-Disposition'])
 
-    @patch('dashboard.views.generate_student_pdf', return_value=make_test_pdf_bytes('Regenerated Student PDF'))
+    @patch('dashboard.views.generate_student_profile_pdf_bytes', return_value=make_test_pdf_bytes('Regenerated Student PDF'))
     @patch('dashboard.views.download_remote_asset', return_value=(None, False))
     def test_view_student_pdf_regenerates_when_saved_pdf_url_is_stale(
         self,
@@ -457,7 +469,7 @@ class DashboardTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
-        mock_generate_student_pdf.assert_called_once_with(student, return_bytes=True)
+        mock_generate_student_pdf.assert_called_once_with(student)
 
     @patch('dashboard.views.download_remote_asset', return_value=(None, False))
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
@@ -493,7 +505,7 @@ class DashboardTests(TestCase):
         self.assertNotIn('NO PHOTO', combined_text)
         self.assertTrue(bool(student.pdf_file))
 
-    @patch('dashboard.views.generate_student_pdf', return_value=make_test_pdf_bytes('Generated Student PDF'))
+    @patch('dashboard.views.generate_student_profile_pdf_bytes', return_value=make_test_pdf_bytes('Generated Student PDF'))
     def test_demo_student_session_can_generate_student_pdf(self, _mock_generate_student_pdf):
         student = Student.objects.create(
             ht_no='23C11A7781',
@@ -586,7 +598,7 @@ class DashboardTests(TestCase):
             reverse('dashboard:student_photo_redirect', args=[student.id]),
         )
 
-    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student.pdf')
+    @patch('dashboard.views.generate_student_profile_pdf', return_value='https://example.com/student.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.cloudinary.uploader.upload')
     def test_add_student_cloudinary_assets_display_on_detail_page(
@@ -830,7 +842,7 @@ class DashboardTests(TestCase):
         self.assertEqual(len(uploaded_page_counts), 1)
         self.assertGreater(uploaded_page_counts[0], 2)
 
-    @patch('dashboard.views.generate_student_pdf', return_value='https://example.com/student-edited.pdf')
+    @patch('dashboard.views.generate_student_profile_pdf', return_value='https://example.com/student-edited.pdf')
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_edit_student_regenerates_pdf_after_uploaded_changes(
         self,
@@ -1163,7 +1175,7 @@ class DashboardTests(TestCase):
         self.assertEqual(combined_text.count('Research Shared Upload'), 1)
         self.assertEqual(combined_text.count('FDP Shared Upload'), 1)
 
-    @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Generated Faculty PDF'))
+    @patch('dashboard.views.build_faculty_profile_pdf_bytes', return_value=make_test_pdf_bytes('Generated Faculty PDF'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_generate_faculty_pdf_route_persists_pdf_document(
         self,
@@ -1196,7 +1208,7 @@ class DashboardTests(TestCase):
         faculty.refresh_from_db()
         self.assertTrue(bool(faculty.pdf_document))
 
-    @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Fresh Faculty PDF'))
+    @patch('dashboard.views.build_faculty_profile_pdf_bytes', return_value=make_test_pdf_bytes('Fresh Faculty PDF'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_faculty_pdf_view_regenerates_and_persists_pdf_document(
         self,
@@ -1230,7 +1242,7 @@ class DashboardTests(TestCase):
         faculty.refresh_from_db()
         self.assertTrue(bool(faculty.pdf_document))
 
-    @patch('dashboard.views.generate_faculty_pdf_bytes', side_effect=RuntimeError('fresh generation failed'))
+    @patch('dashboard.views.build_faculty_profile_pdf_bytes', side_effect=RuntimeError('fresh generation failed'))
     @patch('dashboard.views.download_remote_asset', side_effect=RuntimeError('stale cloudinary asset'))
     def test_faculty_pdf_view_and_download_fall_back_to_saved_pdf_document(
         self,

@@ -61,6 +61,15 @@ from .forms import (
     StudentForm, CertificateForm,
     BulkUploadForm, FacultyProfileForm,
 )
+from .pdf_generation import (
+    FACULTY_PDF_TEMPLATE,
+    STUDENT_PDF_TEMPLATE,
+    build_faculty_profile_pdf_bytes,
+    generate_student_profile_pdf,
+    generate_student_profile_pdf_bytes,
+    persist_faculty_profile_pdf,
+    get_pdf_header_image_path,
+)
 from .utils import (
     calculate_experience,
     validate_pdf_file, validate_image_file, parse_date
@@ -96,13 +105,6 @@ except ImportError:
 
 
 # ==================== HELPERS ====================
-PDF_HEADER_IMAGE_FILENAME = 'NEW ANURAG 25.png'
-
-
-def get_pdf_header_image_path():
-    return os.path.join(settings.BASE_DIR, 'static', 'images', PDF_HEADER_IMAGE_FILENAME)
-
-
 def is_cloudinary_configured():
     configured_flag = getattr(settings, 'CLOUDINARY_CONFIGURED', None)
     if configured_flag is not None:
@@ -1449,7 +1451,7 @@ def generate_faculty_pdf_bytes(faculty):
     try:
         logger.info(f"Starting PDF generation for faculty {faculty.employee_code}")
         context, temp_paths = build_faculty_pdf_context(faculty)
-        html_string = render_to_string('dashboard/faculty_pdf.html', context)
+        html_string = render_to_string(FACULTY_PDF_TEMPLATE, context)
         info_pdf_bytes = None
 
         try:
@@ -2894,7 +2896,7 @@ def bulk_student_actions(request):
         for sid in student_ids:
             try:
                 student = Student.objects.get(id=sid)
-                pdf_url = generate_student_pdf(student)
+                pdf_url = generate_student_profile_pdf(student)
                 if pdf_url:
                     ok += 1
                 else:
@@ -2929,7 +2931,7 @@ def student_detail(request, student_id):
         if student_has_upload_assets(student):
             try:
                 logger.info(f"Auto-generating PDF for student {student.student_name} on first view")
-                pdf_url = generate_student_pdf(student)
+                pdf_url = generate_student_profile_pdf(student)
                 if pdf_url:
                     messages.info(request, 'Student PDF has been generated and is ready for download.')
             except Exception as e:
@@ -3009,7 +3011,7 @@ def upload_to_cloudinary(request, faculty_id):
             if not faculty.cloudinary_pdf_url:
                 existing_pdf_bytes = _read_faculty_pdf_bytes(faculty)
                 if existing_pdf_bytes:
-                    persist_faculty_pdf(faculty, existing_pdf_bytes, uploaded_by=request.user.username)
+                    persist_faculty_profile_pdf(faculty, existing_pdf_bytes, uploaded_by=request.user.username)
                 elif faculty.pdf_document and is_cloudinary_configured():
                     with faculty.pdf_document.open('rb') as pdf_file:
                         upload_result = cloudinary.uploader.upload(
@@ -3398,7 +3400,7 @@ def faculty_dashboard(request, faculty_id=None):
         }
         # Clean up any temp paths after rendering
         try:
-            return render(request, "dashboard/faculty_pdf.html", context)
+            return render(request, FACULTY_PDF_TEMPLATE, context)
         finally:
             for temp_path in photo_temp_paths:
                 try:
@@ -4849,7 +4851,7 @@ def add_student(request):
             # to build a single individual PDF that includes photo + certificates.
             try:
                 if student_has_upload_assets(student):
-                    generate_student_pdf(
+                    generate_student_profile_pdf(
                         student,
                         photo_override_path=temp_photo_override_path,
                         certificate_override_assets=certificate_override_assets,
@@ -5077,7 +5079,7 @@ def edit_student(request, student_id):
 
                 try:
                     if form.has_changed() or request.FILES:
-                        generate_student_pdf(
+                        generate_student_profile_pdf(
                             updated_student,
                             photo_override_path=temp_photo_override_path,
                             certificate_override_assets=certificate_override_assets,
@@ -5164,7 +5166,7 @@ def generate_student_pdf_view(request, student_id):
 
     try:
         # Generate student PDF with merged certificates
-        pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        pdf_bytes = generate_student_profile_pdf_bytes(student)
         if not pdf_bytes:
             messages.error(request, "Failed to generate PDF.")
             return redirect('dashboard:students_data' if user_authenticated else student_dashboard_redirect_route(request))
@@ -5190,7 +5192,7 @@ def regenerate_student_pdf(request, student_id):
     try:
         student.pdf_generated = False
         student.save()
-        pdf_path = generate_student_pdf(student)
+        pdf_path = generate_student_profile_pdf(student)
         return JsonResponse({
             'success': True,
             'message': f'PDF regenerated for {student.student_name}',
@@ -5501,7 +5503,7 @@ def generate_student_pdf(
     }
 
     # ── GENERATE INFO PDF with WeasyPrint ─────────────────────────
-    html_string = render_to_string('dashboard/student_pdf.html', context)
+    html_string = render_to_string(STUDENT_PDF_TEMPLATE, context)
 
     info_pdf_bytes = None
     used_reportlab_fallback = False
@@ -5746,7 +5748,7 @@ def view_pdf(request, student_id):
             return redirect(student_dashboard_redirect_route(request))
 
     try:
-        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        regenerated_pdf_bytes = generate_student_profile_pdf_bytes(student)
         if regenerated_pdf_bytes:
             response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
             response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
@@ -8130,13 +8132,13 @@ def _faculty_pdf_response(pdf_bytes, employee_code, as_attachment=False):
 def _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=None):
     """Generate a fresh faculty PDF, validate it, and persist the result."""
     logger.info(f"Generating faculty PDF for {faculty.employee_code}")
-    pdf_bytes = generate_faculty_pdf_bytes(faculty)
+    pdf_bytes = build_faculty_profile_pdf_bytes(faculty)
 
     if not pdf_bytes or not pdf_bytes.startswith(b'%PDF'):
         logger.error(f"Generated PDF is invalid for {faculty.employee_code}")
         raise ValueError(f"PDF generation failed for {faculty.employee_code}.")
 
-    persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=uploaded_by)
+    persist_faculty_profile_pdf(faculty, pdf_bytes, uploaded_by=uploaded_by)
     return pdf_bytes
 
 
@@ -8261,8 +8263,8 @@ def bulk_generate_faculty_pdfs(request):
 
     for faculty in faculties:
         try:
-            pdf_bytes = generate_faculty_pdf_bytes(faculty)
-            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+            pdf_bytes = build_faculty_profile_pdf_bytes(faculty)
+            persist_faculty_profile_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
             generated_count += 1
         except Exception as exc:
             logger.error(f"Bulk faculty PDF generation failed for {faculty.employee_code}: {exc}")
