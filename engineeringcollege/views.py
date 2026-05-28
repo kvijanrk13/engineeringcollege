@@ -2774,7 +2774,7 @@ def student_login(request):
                 request.session['student_username'] = username
                 request.session.pop('student_id', None)
                 request.session.pop('student_ht_no', None)
-                return redirect('dashboard:student_dashboard_view')
+                return redirect('dashboard:add_student')
 
             student = Student.objects.filter(ht_no=username).first()
             if student:
@@ -2787,7 +2787,7 @@ def student_login(request):
                     request.session['student_username'] = username
                     request.session['student_id'] = student.id
                     request.session['student_ht_no'] = student.ht_no
-                    return redirect('dashboard:student_dashboard_view')
+                    return redirect('dashboard:add_student')
             error = 'Invalid student credentials'
             messages.error(request, error)
         return render(request, 'dashboard/login.html', {
