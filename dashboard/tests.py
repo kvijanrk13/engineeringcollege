@@ -13,7 +13,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from dashboard import views as dashboard_views
-from dashboard.models import CloudinaryUpload, FDP, Faculty, ResearchPublication, Student
+from dashboard.models import Certificate, CloudinaryUpload, FDP, Faculty, ResearchPublication, Student
 
 from PIL import Image
 from pypdf import PdfReader
@@ -82,6 +82,25 @@ class DashboardTests(TestCase):
         self.assertEqual(Path(local_path), fallback_path)
         self.assertEqual(temp_paths, [])
         self.assertEqual(source, 'media_employee_code_fallback')
+
+    def test_reportlab_faculty_fallback_embeds_photo_when_available(self):
+        faculty = Faculty.objects.create(
+            staff_name='Fallback PDF Faculty',
+            employee_code='PHOTO9003',
+            department='IT',
+            designation='Assistant Professor',
+            photo=SimpleUploadedFile(
+                'fallback-photo.jpg',
+                make_test_image_bytes(),
+                content_type='image/jpeg',
+            ),
+        )
+
+        pdf_bytes = dashboard_views._build_reportlab_faculty_pdf(faculty)
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        resources = reader.pages[0]['/Resources']
+
+        self.assertIn('/XObject', resources)
 
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.requests.get')
@@ -897,7 +916,7 @@ class DashboardTests(TestCase):
             ).exists()
         )
 
-    def test_merge_certificates_with_pdf_bytes_merges_faculty_photo_and_related_assets(self):
+    def test_merge_certificates_with_pdf_bytes_merges_faculty_related_assets(self):
         with tempfile.TemporaryDirectory() as temp_media_root:
             with override_settings(MEDIA_ROOT=temp_media_root):
                 faculty = Faculty.objects.create(
@@ -955,7 +974,7 @@ class DashboardTests(TestCase):
                 )
 
         self.assertIsNotNone(merged_pdf)
-        self.assertGreaterEqual(len(PdfReader(io.BytesIO(merged_pdf)).pages), 6)
+        self.assertGreaterEqual(len(PdfReader(io.BytesIO(merged_pdf)).pages), 5)
 
     @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Generated Faculty PDF'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)

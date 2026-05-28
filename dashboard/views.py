@@ -9,10 +9,11 @@ import logging
 import zipfile
 import traceback
 import io
+import re
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
-from urllib.parse import quote
+from urllib.parse import quote, unquote, urlparse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest)
@@ -254,11 +255,18 @@ def normalize_optional_url(value):
     value = (value or '').strip()
     if not value:
         return ''
+    # Local media/storage paths are not remote URLs.
+    if value.startswith(('/', 'media/', '.\\', './')) or re.match(r'^[A-Za-z]:[\\/]', value):
+        return ''
     if value.startswith('//'):
         return f'https:{value}'
     if value.lower().startswith(('http://', 'https://')):
         return value
     if '://' in value:
+        return ''
+    # Only promote bare host/path values that look like real domains.
+    first_segment = value.split('/', 1)[0]
+    if '.' not in first_segment:
         return ''
     return f'https://{value.lstrip("/")}'
 
@@ -328,6 +336,38 @@ def resolve_local_media_file_path(name_value):
             except OSError:
                 continue
     return None
+
+
+def resolve_local_asset_reference(value):
+    """Resolve local-looking path/url values to a real file path when available."""
+    if not value:
+        return None
+
+    raw_value = str(value).strip().replace('\\', '/')
+    if not raw_value:
+        return None
+
+    parsed = urlparse(raw_value)
+    if parsed.scheme == 'file' and parsed.path:
+        try:
+            local_candidate = Path(unquote(parsed.path))
+            if local_candidate.exists():
+                return str(local_candidate.resolve())
+        except Exception:
+            pass
+
+    if parsed.scheme in ('http', 'https'):
+        netloc = (parsed.netloc or '').lower()
+        if netloc in {'media', 'localhost', '127.0.0.1'} or parsed.path.startswith('/media/'):
+            local_path = resolve_local_media_file_path(parsed.path)
+            if local_path:
+                return local_path
+        return None
+
+    if parsed.scheme:
+        return None
+
+    return resolve_local_media_file_path(raw_value)
 
 
 def parse_json_list(value):
@@ -646,12 +686,21 @@ def download_remote_asset(url, default_suffix='.pdf'):
 def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
     """Return a readable local path for a FileField/URL plus whether it is a PDF."""
     try:
-        if url and isinstance(url, str) and url.startswith('http'):
-            result, is_pdf = download_remote_asset(url, default_suffix=default_suffix)
+        direct_local_path = resolve_local_asset_reference(url)
+        if direct_local_path and os.path.exists(direct_local_path):
+            return direct_local_path, direct_local_path.lower().endswith('.pdf')
+
+        normalized_url = normalize_optional_url(url)
+        if normalized_url and isinstance(normalized_url, str) and normalized_url.startswith('http'):
+            result, is_pdf = download_remote_asset(normalized_url, default_suffix=default_suffix)
             if result:
                 return result, is_pdf
 
         if file_field and getattr(file_field, 'name', ''):
+            local_media_path = resolve_local_media_file_path(getattr(file_field, 'name', None))
+            if local_media_path and os.path.exists(local_media_path):
+                return local_media_path, local_media_path.lower().endswith('.pdf')
+
             try:
                 local_path = file_field.path
                 if local_path and os.path.exists(local_path):
@@ -663,8 +712,14 @@ def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
                 field_url = getattr(file_field, 'url', None)
             except Exception:
                 field_url = None
-            if field_url and isinstance(field_url, str) and field_url.startswith('http'):
-                result, is_pdf = download_remote_asset(field_url, default_suffix=default_suffix)
+
+            local_field_url_path = resolve_local_asset_reference(field_url)
+            if local_field_url_path and os.path.exists(local_field_url_path):
+                return local_field_url_path, local_field_url_path.lower().endswith('.pdf')
+
+            normalized_field_url = normalize_optional_url(field_url)
+            if normalized_field_url and isinstance(normalized_field_url, str) and normalized_field_url.startswith('http'):
+                result, is_pdf = download_remote_asset(normalized_field_url, default_suffix=default_suffix)
                 if result:
                     return result, is_pdf
 
@@ -731,15 +786,19 @@ def collect_faculty_photo_candidates(faculty):
 
     photo_field = getattr(faculty, 'photo', None)
     if photo_field and getattr(photo_field, 'name', ''):
+        add_path(resolve_local_media_file_path(getattr(photo_field, 'name', None)), 'photo_field_media_name')
         try:
             add_path(photo_field.path, 'photo_field_path')
         except (NotImplementedError, ValueError, OSError, Exception):
             pass
 
         try:
-            add_url(photo_field.url, 'photo_field_url')
+            photo_field_url = photo_field.url
         except Exception:
-            pass
+            photo_field_url = None
+
+        add_path(resolve_local_asset_reference(photo_field_url), 'photo_field_url_local')
+        add_url(photo_field_url, 'photo_field_url')
 
     latest_uploads = (
         CloudinaryUpload.objects
@@ -772,6 +831,80 @@ def collect_faculty_photo_candidates(faculty):
                 add_url(convention_url, 'cloudinary_naming_convention')
             except Exception as e:
                 logger.warning(f"Could not build Cloudinary photo URL for {faculty.employee_code}: {e}")
+
+    return candidates
+
+
+FACULTY_DOCUMENT_UPLOAD_TYPE_MAP = {
+    'aadhar_file': 'aadhar_file',
+    'pan_file': 'pan_file',
+    'apaar_file': 'apaar_file',
+    'scm_file': 'scm_file',
+    'jntuh_biodata': 'jntuh_biodata',
+    'ssc_certificate': 'ssc_certificate',
+    'inter_certificate': 'inter_certificate',
+    'ug_certificate': 'ug_certificate',
+    'pg_certificate': 'pg_certificate',
+    'phd_certificate': 'phd_certificate',
+    'research_proof': 'research_proof',
+    'fdp_certificate': 'fdp_certificate',
+    'experience_certificates': 'experience_certificates',
+    'other_documents': 'other_documents',
+}
+
+
+def collect_faculty_document_candidates(faculty, file_field_name, url_field_name):
+    """Return ordered document candidates for faculty PDFs and merges."""
+    candidates = []
+    seen = set()
+
+    def add_path(path_value, source):
+        if not path_value or not os.path.exists(path_value):
+            return
+        normalized = os.path.normcase(os.path.abspath(str(path_value)))
+        key = ('path', normalized)
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'source': source, 'path': str(path_value)})
+
+    def add_url(url_value, source):
+        normalized = normalize_optional_url(url_value)
+        if not normalized:
+            return
+        key = ('url', normalized)
+        if key in seen:
+            return
+        seen.add(key)
+        candidates.append({'source': source, 'url': normalized})
+
+    file_field = getattr(faculty, file_field_name, None)
+    if file_field and getattr(file_field, 'name', ''):
+        add_path(resolve_local_media_file_path(getattr(file_field, 'name', None)), f'{file_field_name}.media_name')
+        try:
+            add_path(file_field.path, f'{file_field_name}.path')
+        except (NotImplementedError, ValueError, OSError, Exception):
+            pass
+
+        try:
+            field_url = file_field.url
+        except Exception:
+            field_url = None
+        add_path(resolve_local_asset_reference(field_url), f'{file_field_name}.url_local')
+        add_url(field_url, f'{file_field_name}.url')
+
+    add_path(resolve_local_asset_reference(getattr(faculty, url_field_name, None)), f'{url_field_name}.local')
+    add_url(getattr(faculty, url_field_name, None), url_field_name)
+
+    upload_type = FACULTY_DOCUMENT_UPLOAD_TYPE_MAP.get(file_field_name, file_field_name)
+    latest_upload_urls = (
+        CloudinaryUpload.objects
+        .filter(faculty=faculty, upload_type=upload_type)
+        .order_by('-upload_date')
+        .values_list('cloudinary_url', flat=True)
+    )
+    for uploaded_url in latest_upload_urls:
+        add_url(uploaded_url, f'{file_field_name}.cloudinary_upload_history')
 
     return candidates
 
@@ -861,6 +994,7 @@ def collect_student_photo_candidates(student, photo_override_path=None):
         except Exception:
             field_url = None
 
+        add_path(resolve_local_asset_reference(field_url), 'student.photo.url_local')
         if isinstance(field_url, str) and field_url.startswith(('http://', 'https://', '//')):
             add_url(field_url, 'student.photo.url')
 
@@ -902,6 +1036,7 @@ def collect_student_document_candidates(student, file_field_name, url_field_name
             pass
 
     add_url(getattr(student, url_field_name, None), url_field_name)
+    add_path(resolve_local_asset_reference(getattr(student, url_field_name, None)), f'{url_field_name}.local')
 
     latest_upload_urls = (
         CloudinaryUpload.objects
@@ -918,6 +1053,7 @@ def collect_student_document_candidates(student, file_field_name, url_field_name
         except Exception:
             field_url = None
 
+        add_path(resolve_local_asset_reference(field_url), f'{file_field_name}.url_local')
         if isinstance(field_url, str) and field_url.startswith(('http://', 'https://', '//')):
             add_url(field_url, f'{file_field_name}.url')
 
@@ -1035,10 +1171,26 @@ def build_faculty_results_context(results_value):
     return normalized_results, None
 
 
-def resolve_faculty_document_asset(file_field=None, url_value=None, default_suffix='.pdf'):
+def resolve_faculty_document_asset(file_field=None, url_value=None, default_suffix='.pdf', url_field_name=None):
     """Resolve a faculty document asset for PDF preview/summary use."""
     temp_paths = []
-    asset_path, is_pdf = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
+    asset_path, is_pdf = None, False
+
+    if url_field_name and hasattr(file_field, 'instance') and hasattr(file_field, 'field'):
+        try:
+            instance = file_field.instance
+            field_name = file_field.field.name
+            if isinstance(instance, Faculty):
+                asset_path, is_pdf = resolve_asset_from_candidates(
+                    collect_faculty_document_candidates(instance, field_name, url_field_name),
+                    temp_paths,
+                    default_suffix=default_suffix,
+                )
+        except Exception as exc:
+            logger.warning(f"Could not resolve faculty document candidates for {getattr(file_field, 'name', '')}: {exc}")
+
+    if not asset_path:
+        asset_path, is_pdf = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
     if not asset_path or not os.path.exists(asset_path):
         return {
             'available': False,
@@ -1075,8 +1227,18 @@ def build_faculty_document_collection_summary(asset_specs, default_suffix='.pdf'
     first_available_asset = None
     total_pages = 0
 
-    for file_field, url_value in asset_specs:
-        asset = resolve_faculty_document_asset(file_field, url_value, default_suffix=default_suffix)
+    for asset_spec in asset_specs:
+        if len(asset_spec) == 3:
+            file_field, url_value, url_field_name = asset_spec
+        else:
+            file_field, url_value = asset_spec
+            url_field_name = None
+        asset = resolve_faculty_document_asset(
+            file_field,
+            url_value,
+            default_suffix=default_suffix,
+            url_field_name=url_field_name,
+        )
         for temp_path in asset['temp_paths']:
             if temp_path not in temp_paths:
                 temp_paths.append(temp_path)
@@ -1119,12 +1281,12 @@ def build_faculty_pdf_context(faculty):
         return bool(getattr(file_field, 'name', '') or normalize_optional_url(url_value))
 
     research_summary = build_faculty_document_collection_summary(
-        [(faculty.research_proof, faculty.research_proof_url)] +
+        [(faculty.research_proof, faculty.research_proof_url, 'research_proof_url')] +
         [(pub.proof_document, getattr(pub, 'proof_document_url', None)) for pub in research_publications],
         default_suffix='.pdf',
     )
     fdp_summary = build_faculty_document_collection_summary(
-        [(faculty.fdp_certificate, faculty.fdp_certificate_url)] +
+        [(faculty.fdp_certificate, faculty.fdp_certificate_url, 'fdp_certificate_url')] +
         [(fdp.certificate, getattr(fdp, 'certificate_url', None)) for fdp in fdps],
         default_suffix='.pdf',
     )
@@ -1132,11 +1294,13 @@ def build_faculty_pdf_context(faculty):
         faculty.experience_certificates,
         faculty.experience_certificates_url,
         default_suffix='.pdf',
+        url_field_name='experience_certificates_url',
     )
     other_documents_summary = resolve_faculty_document_asset(
         faculty.other_documents,
         faculty.other_documents_url,
         default_suffix='.pdf',
+        url_field_name='other_documents_url',
     )
 
     for asset_summary in (research_summary, fdp_summary, experience_summary, other_documents_summary):
@@ -1246,6 +1410,7 @@ def persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=None):
 
 def generate_faculty_pdf_bytes(faculty):
     """Generate a merged faculty PDF as bytes."""
+    temp_paths = []
     try:
         logger.info(f"Starting PDF generation for faculty {faculty.employee_code}")
         context, temp_paths = build_faculty_pdf_context(faculty)
@@ -1261,17 +1426,14 @@ def generate_faculty_pdf_bytes(faculty):
         except Exception as exc:
             logger.warning(f"Faculty WeasyPrint generation failed for {faculty.employee_code}: {exc}")
             info_pdf_bytes = None
-        finally:
-            for temp_path in temp_paths:
-                try:
-                    if os.path.exists(temp_path):
-                        os.remove(temp_path)
-                except Exception:
-                    pass
 
         if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
             logger.warning(f"Faculty PDF generation failed with WeasyPrint for {faculty.employee_code}; falling back to ReportLab.")
-            info_pdf_bytes = _build_reportlab_faculty_pdf(faculty, temp_paths)
+            info_pdf_bytes = _build_reportlab_faculty_pdf(
+                faculty,
+                photo_path=context.get('local_photo_path'),
+                temp_paths=temp_paths,
+            )
 
         if not info_pdf_bytes:
             raise ValueError(f'Faculty profile PDF generation produced None for {faculty.employee_code}')
@@ -1293,6 +1455,13 @@ def generate_faculty_pdf_bytes(faculty):
     except Exception as exc:
         logger.error(f"generate_faculty_pdf_bytes failed for {faculty.employee_code}: {exc}", exc_info=True)
         raise
+    finally:
+        for temp_path in temp_paths:
+            try:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+            except Exception:
+                pass
 
 
 def calculate_correct_age(dob):
@@ -1318,14 +1487,43 @@ def build_file_uri(path_value):
         return 'file:///' + quote(str(path_value).replace('\\', '/'), safe=':/')
 
 
-def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
+def _build_reportlab_faculty_pdf(faculty, photo_path=None, temp_paths=None):
     """Build a simple faculty profile PDF using ReportLab as a fallback."""
     buffer = io.BytesIO()
+    managed_temp_paths = temp_paths if temp_paths is not None else []
     try:
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30,
                                 topMargin=30, bottomMargin=30)
         styles = getSampleStyleSheet()
         elems = [Paragraph('Faculty Profile', styles['Title']), Spacer(1, 12)]
+
+        resolved_photo_path = photo_path if photo_path and os.path.exists(photo_path) else None
+        if not resolved_photo_path:
+            _photo_data_uri, resolved_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
+            for temp_path in photo_temp_paths:
+                if temp_path not in managed_temp_paths:
+                    managed_temp_paths.append(temp_path)
+
+        if resolved_photo_path and os.path.exists(resolved_photo_path):
+            try:
+                photo_img = Image(resolved_photo_path, width=1.35 * inch, height=1.6 * inch)
+                header_table = Table(
+                    [[Paragraph('<b>FACULTY INFORMATION</b>', styles['Normal']), photo_img]],
+                    colWidths=[5.3 * inch, 1.3 * inch]
+                )
+                header_table.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+                ]))
+                elems.append(header_table)
+                elems.append(Spacer(1, 10))
+            except Exception as photo_err:
+                logger.warning(f"Faculty ReportLab photo embed failed: {photo_err}")
+                elems.append(Paragraph('<b>FACULTY INFORMATION</b>', styles['Normal']))
+                elems.append(Spacer(1, 10))
+        else:
+            elems.append(Paragraph('<b>FACULTY INFORMATION</b>', styles['Normal']))
+            elems.append(Spacer(1, 10))
 
         fields = [
             ('Employee Code', getattr(faculty, 'employee_code', 'N/A')),
@@ -1356,6 +1554,13 @@ def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
         logger.error(f'Failed to generate fallback faculty PDF with ReportLab: {exc}', exc_info=True)
         return None
     finally:
+        if temp_paths is None:
+            for temp_path in managed_temp_paths:
+                try:
+                    if temp_path and os.path.exists(temp_path):
+                        os.remove(temp_path)
+                except Exception:
+                    pass
         try:
             buffer.close()
         except Exception:
@@ -1421,45 +1626,45 @@ def build_student_uploaded_documents(student):
         'cert_national': 'National Exam Certificates',
     }
     uploaded_documents = []
-    temp_files = []
+    image_suffixes = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')
 
-    try:
-        for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
-            file_field = getattr(student, field_name, None)
-            url_value = normalize_optional_url(getattr(student, url_field_name, None))
-            file_name_value = getattr(file_field, 'name', None) or ''
-            resolved_path, is_pdf = resolve_asset_from_candidates(
-                collect_student_document_candidates(student, field_name, url_field_name),
-                temp_files,
-                default_suffix='.pdf',
-            )
-            available = bool(resolved_path)
+    def infer_file_type(file_name):
+        lowered = (file_name or '').lower()
+        if lowered.endswith('.pdf'):
+            return 'PDF'
+        if lowered.endswith(image_suffixes):
+            return 'Image'
+        return 'Document'
 
-            file_name = ''
-            file_type = ''
-            if available:
-                if url_value:
-                    parsed_name = Path(url_value.split('?', 1)[0]).name
-                    file_name = parsed_name or labels[field_name]
-                elif file_name_value:
-                    file_name = Path(file_name_value).name
-                if (not file_name or '.' not in file_name) and resolved_path:
-                    file_name = Path(resolved_path).name
-                file_type = 'PDF' if is_pdf or resolved_path.lower().endswith('.pdf') else 'Image'
+    for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
+        file_field = getattr(student, field_name, None)
+        file_name_value = getattr(file_field, 'name', None) or ''
 
-            uploaded_documents.append({
-                'label': labels[field_name],
-                'available': available,
-                'file_name': file_name,
-                'file_type': file_type,
-            })
-    finally:
-        for temp_path in temp_files:
-            try:
-                if temp_path and os.path.exists(temp_path):
-                    os.remove(temp_path)
-            except OSError:
-                pass
+        available = False
+        file_name = ''
+        file_type = ''
+
+        for candidate in collect_student_document_candidates(student, field_name, url_field_name):
+            candidate_path = candidate.get('path')
+            if candidate_path and os.path.exists(candidate_path):
+                available = True
+                file_name = Path(candidate_path).name or Path(file_name_value).name or labels[field_name]
+                file_type = 'PDF' if candidate_path.lower().endswith('.pdf') else 'Image'
+                break
+
+            candidate_url = candidate.get('url')
+            if candidate_url:
+                available = True
+                file_name = Path(candidate_url.split('?', 1)[0]).name or Path(file_name_value).name or labels[field_name]
+                file_type = infer_file_type(file_name or file_name_value)
+                break
+
+        uploaded_documents.append({
+            'label': labels[field_name],
+            'available': available,
+            'file_name': file_name,
+            'file_type': file_type,
+        })
 
     return uploaded_documents
 
@@ -5772,26 +5977,32 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
 
         # 2. Collect all faculty documents from model fields
         doc_fields = [
-            ('aadhar_url', 'aadhar_file'),
-            ('pan_url', 'pan_file'),
-            ('apaar_url', 'apaar_file'),
-            ('scm_url', 'scm_file'),
-            ('jntuh_biodata_url', 'jntuh_biodata'),
-            ('ssc_certificate_url', 'ssc_certificate'),
-            ('inter_certificate_url', 'inter_certificate'),
-            ('ug_certificate_url', 'ug_certificate'),
-            ('pg_certificate_url', 'pg_certificate'),
-            ('phd_certificate_url', 'phd_certificate'),
-            ('research_proof_url', 'research_proof'),
-            ('fdp_certificate_url', 'fdp_certificate'),
-            ('experience_certificates_url', 'experience_certificates'),
-            ('other_documents_url', 'other_documents'),
+            ('aadhar_file', 'aadhar_url'),
+            ('pan_file', 'pan_url'),
+            ('apaar_file', 'apaar_url'),
+            ('scm_file', 'scm_url'),
+            ('jntuh_biodata', 'jntuh_biodata_url'),
+            ('ssc_certificate', 'ssc_certificate_url'),
+            ('inter_certificate', 'inter_certificate_url'),
+            ('ug_certificate', 'ug_certificate_url'),
+            ('pg_certificate', 'pg_certificate_url'),
+            ('phd_certificate', 'phd_certificate_url'),
+            ('research_proof', 'research_proof_url'),
+            ('fdp_certificate', 'fdp_certificate_url'),
+            ('experience_certificates', 'experience_certificates_url'),
+            ('other_documents', 'other_documents_url'),
         ]
         
-        for url_field, file_field in doc_fields:
-            ff = getattr(faculty, file_field, None)
-            url_val = getattr(faculty, url_field, None)
-            p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
+        for file_field_name, url_field_name in doc_fields:
+            ff = getattr(faculty, file_field_name, None)
+            url_val = getattr(faculty, url_field_name, None)
+            p, _ = resolve_asset_from_candidates(
+                collect_faculty_document_candidates(faculty, file_field_name, url_field_name),
+                temp_files,
+                default_suffix='.pdf',
+            )
+            if not p:
+                p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
             if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
                 temp_files.append(p)
             if p:
