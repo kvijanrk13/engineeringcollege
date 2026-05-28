@@ -6031,7 +6031,7 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if cert_p:
                 _add_to_writer_internal(cert_p)
 
-        def _collect_related_document_candidates(file_field, url_value, source_prefix):
+        def _collect_related_document_candidates(file_field, url_value, source_prefix, upload_history_urls=None):
             candidates = []
             seen = set()
 
@@ -6072,16 +6072,25 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
 
             add_path(resolve_local_asset_reference(url_value), f'{source_prefix}.url_local')
             add_url(url_value, f'{source_prefix}.url')
+            for uploaded_url in upload_history_urls or []:
+                add_url(uploaded_url, f'{source_prefix}.cloudinary_upload_history')
             return candidates
 
         # 4. FDP Certificates
         from .models import FDP
+        fdp_upload_history_urls = list(
+            CloudinaryUpload.objects
+            .filter(faculty=faculty, upload_type='fdp_certificate')
+            .order_by('-upload_date')
+            .values_list('cloudinary_url', flat=True)
+        )
         for fdp_rec in FDP.objects.filter(faculty=faculty):
             fdp_p, _ = resolve_asset_from_candidates(
                 _collect_related_document_candidates(
                     fdp_rec.certificate,
                     getattr(fdp_rec, 'certificate_url', None),
                     'fdp_certificate',
+                    upload_history_urls=fdp_upload_history_urls,
                 ),
                 temp_files,
                 default_suffix='.pdf',
@@ -6099,12 +6108,19 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
 
         # 5. Research Proofs
         from .models import ResearchPublication
+        research_upload_history_urls = list(
+            CloudinaryUpload.objects
+            .filter(faculty=faculty, upload_type='research_proof')
+            .order_by('-upload_date')
+            .values_list('cloudinary_url', flat=True)
+        )
         for pub in ResearchPublication.objects.filter(faculty=faculty):
             pub_p, _ = resolve_asset_from_candidates(
                 _collect_related_document_candidates(
                     pub.proof_document,
                     getattr(pub, 'proof_document_url', None),
                     'research_proof',
+                    upload_history_urls=research_upload_history_urls,
                 ),
                 temp_files,
                 default_suffix='.pdf',

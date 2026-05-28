@@ -1026,6 +1026,62 @@ class DashboardTests(TestCase):
         self.assertIsNotNone(merged_pdf)
         self.assertGreaterEqual(len(PdfReader(io.BytesIO(merged_pdf)).pages), 5)
 
+    @patch('dashboard.views.download_remote_asset')
+    def test_merge_certificates_with_pdf_bytes_uses_faculty_upload_history_for_fdp_and_research(self, mock_download_remote_asset):
+        def fake_download(url, default_suffix='.pdf'):
+            label = 'Generic Upload'
+            if 'fdp-history' in url:
+                label = 'FDP Upload History'
+            elif 'research-history' in url:
+                label = 'Research Upload History'
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+                temp_pdf.write(make_test_pdf_bytes(label))
+                return temp_pdf.name, True
+
+        mock_download_remote_asset.side_effect = fake_download
+
+        faculty = Faculty.objects.create(
+            staff_name='History Merge Faculty',
+            employee_code='F9002H',
+            department='IT',
+            designation='Assistant Professor',
+        )
+        FDP.objects.create(
+            faculty=faculty,
+            fdp_type='fdp',
+            title='History FDP',
+            from_date=date(2024, 7, 1),
+            to_date=date(2024, 7, 2),
+        )
+        ResearchPublication.objects.create(
+            faculty=faculty,
+            research_type='journal',
+            title='History Research',
+            publication_year=2024,
+        )
+        CloudinaryUpload.objects.create(
+            faculty=faculty,
+            upload_type='fdp_certificate',
+            cloudinary_url='https://example.com/fdp-history.pdf',
+            public_id='fdp-history',
+            resource_type='raw',
+        )
+        CloudinaryUpload.objects.create(
+            faculty=faculty,
+            upload_type='research_proof',
+            cloudinary_url='https://example.com/research-history.pdf',
+            public_id='research-history',
+            resource_type='raw',
+        )
+
+        merged_pdf = dashboard_views.merge_certificates_with_pdf_bytes(
+            make_test_pdf_bytes('Faculty Profile'),
+            faculty,
+        )
+
+        self.assertIsNotNone(merged_pdf)
+        self.assertGreaterEqual(len(PdfReader(io.BytesIO(merged_pdf)).pages), 3)
+
     @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Generated Faculty PDF'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_generate_faculty_pdf_route_persists_pdf_document(
