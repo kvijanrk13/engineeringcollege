@@ -782,7 +782,9 @@ def collect_faculty_photo_candidates(faculty):
         seen.add(key)
         candidates.append({'url': normalized, 'source': source})
 
-    add_url(getattr(faculty, 'cloudinary_photo_url', None), 'cloudinary_photo_url')
+    cloudinary_photo_value = getattr(faculty, 'cloudinary_photo_url', None)
+    add_path(resolve_local_asset_reference(cloudinary_photo_value), 'cloudinary_photo_url_local')
+    add_url(cloudinary_photo_value, 'cloudinary_photo_url')
 
     photo_field = getattr(faculty, 'photo', None)
     if photo_field and getattr(photo_field, 'name', ''):
@@ -922,6 +924,9 @@ def resolve_faculty_photo_for_pdf(faculty):
             data_uri = encode_image_as_data_uri(path_value)
             if data_uri:
                 return data_uri, path_value, temp_paths, source
+            file_uri = build_file_uri(path_value)
+            if file_uri:
+                return file_uri, path_value, temp_paths, source
             logger.warning(f"Photo candidate from {source} could not be encoded: {path_value}")
 
         if url_value:
@@ -937,6 +942,9 @@ def resolve_faculty_photo_for_pdf(faculty):
             data_uri = encode_image_as_data_uri(downloaded_path)
             if data_uri:
                 return data_uri, downloaded_path, temp_paths, source
+            file_uri = build_file_uri(downloaded_path)
+            if file_uri:
+                return file_uri, downloaded_path, temp_paths, source
 
             logger.warning(f"Downloaded photo candidate from {source} could not be encoded: {url_value}")
 
@@ -6017,14 +6025,67 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if cert_p:
                 _add_to_writer_internal(cert_p)
 
+        def _collect_related_document_candidates(file_field, url_value, source_prefix):
+            candidates = []
+            seen = set()
+
+            def add_path(path_value, source):
+                if not path_value or not os.path.exists(path_value):
+                    return
+                normalized = os.path.normcase(os.path.abspath(str(path_value)))
+                key = ('path', normalized)
+                if key in seen:
+                    return
+                seen.add(key)
+                candidates.append({'source': source, 'path': str(path_value)})
+
+            def add_url(raw_url, source):
+                normalized_url = normalize_optional_url(raw_url)
+                if not normalized_url:
+                    return
+                key = ('url', normalized_url)
+                if key in seen:
+                    return
+                seen.add(key)
+                candidates.append({'source': source, 'url': normalized_url})
+
+            if file_field and getattr(file_field, 'name', ''):
+                add_path(resolve_local_media_file_path(getattr(file_field, 'name', None)), f'{source_prefix}.media_name')
+                try:
+                    add_path(file_field.path, f'{source_prefix}.path')
+                except (NotImplementedError, ValueError, OSError, Exception):
+                    pass
+
+                try:
+                    field_url = file_field.url
+                except Exception:
+                    field_url = None
+
+                add_path(resolve_local_asset_reference(field_url), f'{source_prefix}.field_url_local')
+                add_url(field_url, f'{source_prefix}.field_url')
+
+            add_path(resolve_local_asset_reference(url_value), f'{source_prefix}.url_local')
+            add_url(url_value, f'{source_prefix}.url')
+            return candidates
+
         # 4. FDP Certificates
         from .models import FDP
         for fdp_rec in FDP.objects.filter(faculty=faculty):
-            fdp_p, _ = get_local_or_remote_asset(
-                fdp_rec.certificate,
-                url=getattr(fdp_rec, 'certificate_url', None),
-                default_suffix='.pdf'
+            fdp_p, _ = resolve_asset_from_candidates(
+                _collect_related_document_candidates(
+                    fdp_rec.certificate,
+                    getattr(fdp_rec, 'certificate_url', None),
+                    'fdp_certificate',
+                ),
+                temp_files,
+                default_suffix='.pdf',
             )
+            if not fdp_p:
+                fdp_p, _ = get_local_or_remote_asset(
+                    fdp_rec.certificate,
+                    url=getattr(fdp_rec, 'certificate_url', None),
+                    default_suffix='.pdf'
+                )
             if fdp_p and fdp_p not in temp_files and not (fdp_rec.certificate and hasattr(fdp_rec.certificate, 'path') and getattr(fdp_rec.certificate, 'path', None) == fdp_p):
                 temp_files.append(fdp_p)
             if fdp_p:
@@ -6033,11 +6094,21 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
         # 5. Research Proofs
         from .models import ResearchPublication
         for pub in ResearchPublication.objects.filter(faculty=faculty):
-            pub_p, _ = get_local_or_remote_asset(
-                pub.proof_document,
-                url=getattr(pub, 'proof_document_url', None),
-                default_suffix='.pdf'
+            pub_p, _ = resolve_asset_from_candidates(
+                _collect_related_document_candidates(
+                    pub.proof_document,
+                    getattr(pub, 'proof_document_url', None),
+                    'research_proof',
+                ),
+                temp_files,
+                default_suffix='.pdf',
             )
+            if not pub_p:
+                pub_p, _ = get_local_or_remote_asset(
+                    pub.proof_document,
+                    url=getattr(pub, 'proof_document_url', None),
+                    default_suffix='.pdf'
+                )
             if pub_p and pub_p not in temp_files and not (pub.proof_document and hasattr(pub.proof_document, 'path') and getattr(pub.proof_document, 'path', None) == pub_p):
                 temp_files.append(pub_p)
             if pub_p:
