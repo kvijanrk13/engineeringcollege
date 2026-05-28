@@ -1115,7 +1115,47 @@ class DashboardTests(TestCase):
         faculty.refresh_from_db()
         self.assertTrue(bool(faculty.pdf_document))
 
-    def test_faculty_pdf_view_and_download_routes_use_saved_pdf_document(self):
+    @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Fresh Faculty PDF'))
+    @patch('dashboard.views.is_cloudinary_configured', return_value=False)
+    def test_faculty_pdf_view_regenerates_and_persists_pdf_document(
+        self,
+        _mock_cloudinary_enabled,
+        mock_generate_faculty_pdf_bytes,
+    ):
+        user = get_user_model().objects.create_user(
+            username='faculty-pdf-refresh',
+            email='faculty-pdf-refresh@example.com',
+            password='secret123',
+        )
+        self.client.force_login(user)
+
+        faculty = Faculty.objects.create(
+            staff_name='Faculty Refresh',
+            employee_code='F9004',
+            department='IT',
+            designation='Assistant Professor',
+        )
+
+        response = self.client.get(
+            reverse('dashboard:faculty_pdf', args=[faculty.id]),
+            secure=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertIn('inline;', response['Content-Disposition'])
+        mock_generate_faculty_pdf_bytes.assert_called_once_with(faculty)
+
+        faculty.refresh_from_db()
+        self.assertTrue(bool(faculty.pdf_document))
+
+    @patch('dashboard.views.generate_faculty_pdf_bytes', side_effect=RuntimeError('fresh generation failed'))
+    @patch('dashboard.views.download_remote_asset', side_effect=RuntimeError('stale cloudinary asset'))
+    def test_faculty_pdf_view_and_download_fall_back_to_saved_pdf_document(
+        self,
+        _mock_download_remote_asset,
+        _mock_generate_faculty_pdf_bytes,
+    ):
         user = get_user_model().objects.create_user(
             username='faculty-pdf-viewer',
             email='faculty-pdf-viewer@example.com',
@@ -1125,9 +1165,10 @@ class DashboardTests(TestCase):
 
         faculty = Faculty.objects.create(
             staff_name='Saved Faculty PDF',
-            employee_code='F9004',
+            employee_code='F9005',
             department='IT',
             designation='Assistant Professor',
+            cloudinary_pdf_url='https://example.com/faculty-stale.pdf',
         )
         faculty.pdf_document.save(
             'faculty_saved.pdf',

@@ -7924,11 +7924,16 @@ def _read_faculty_pdf_bytes(faculty):
     """Read a previously persisted faculty PDF from Cloudinary or local storage."""
     pdf_url = normalize_optional_url(getattr(faculty, 'cloudinary_pdf_url', None))
     if pdf_url:
-        temp_pdf_path, is_pdf = download_remote_asset(pdf_url, default_suffix='.pdf')
+        temp_pdf_path = None
         try:
+            temp_pdf_path, is_pdf = download_remote_asset(pdf_url, default_suffix='.pdf')
             if temp_pdf_path and os.path.exists(temp_pdf_path) and is_pdf:
                 with open(temp_pdf_path, 'rb') as pdf_file:
                     return pdf_file.read()
+        except Exception as exc:
+            logger.warning(
+                f"Could not download stored faculty PDF from Cloudinary for {faculty.employee_code}: {exc}"
+            )
         finally:
             try:
                 if temp_pdf_path and os.path.exists(temp_pdf_path):
@@ -7956,6 +7961,36 @@ def _faculty_pdf_response(pdf_bytes, employee_code, as_attachment=False):
     return response
 
 
+def _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=None):
+    """Generate a fresh faculty PDF, validate it, and persist the result."""
+    logger.info(f"Generating faculty PDF for {faculty.employee_code}")
+    pdf_bytes = generate_faculty_pdf_bytes(faculty)
+
+    if not pdf_bytes or not pdf_bytes.startswith(b'%PDF'):
+        logger.error(f"Generated PDF is invalid for {faculty.employee_code}")
+        raise ValueError(f"PDF generation failed for {faculty.employee_code}.")
+
+    persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=uploaded_by)
+    return pdf_bytes
+
+
+def _get_faculty_pdf_bytes_with_fallback(faculty, uploaded_by=None):
+    """Prefer a fresh faculty PDF and fall back to a previously saved copy when regeneration fails."""
+    try:
+        return _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=uploaded_by)
+    except Exception as exc:
+        logger.warning(
+            f"Fresh faculty PDF generation failed for {faculty.employee_code}; "
+            f"falling back to saved PDF if available: {exc}"
+        )
+
+    saved_pdf_bytes = _read_faculty_pdf_bytes(faculty)
+    if saved_pdf_bytes and saved_pdf_bytes.startswith(b'%PDF'):
+        return saved_pdf_bytes
+
+    raise ValueError(f"PDF generation failed for {faculty.employee_code}.")
+
+
 @login_required
 def generate_faculty_pdf(request, faculty_id):
     """Generate, persist, and return the merged faculty PDF."""
@@ -7969,18 +8004,7 @@ def generate_faculty_pdf(request, faculty_id):
                 content_type='text/plain'
             )
 
-        logger.info(f"Generating faculty PDF for {faculty.employee_code}")
-        pdf_bytes = generate_faculty_pdf_bytes(faculty)
-        
-        if not pdf_bytes or not pdf_bytes.startswith(b'%PDF'):
-            logger.error(f"Generated PDF is invalid for {faculty.employee_code}")
-            return HttpResponse(
-                f"PDF generation failed for {faculty.employee_code}.",
-                status=500,
-                content_type='text/plain'
-            )
-        
-        persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+        pdf_bytes = _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=request.user.username)
         FacultyLog.objects.create(
             faculty=faculty,
             action='Faculty PDF Generated',
@@ -8013,14 +8037,11 @@ def faculty_charts(request):
 
 @login_required
 def faculty_pdf(request, faculty_id):
-    """View the saved faculty PDF inline, generating it on demand when necessary."""
+    """View a fresh faculty PDF inline, falling back to a saved copy when regeneration fails."""
     faculty = get_object_or_404(Faculty, id=faculty_id)
 
     try:
-        pdf_bytes = _read_faculty_pdf_bytes(faculty)
-        if not pdf_bytes:
-            pdf_bytes = generate_faculty_pdf_bytes(faculty)
-            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+        pdf_bytes = _get_faculty_pdf_bytes_with_fallback(faculty, uploaded_by=request.user.username)
         return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=False)
     except Exception as exc:
         logger.error(f"Error viewing faculty PDF for {faculty_id}: {exc}", exc_info=True)
@@ -8030,14 +8051,11 @@ def faculty_pdf(request, faculty_id):
 
 @login_required
 def download_faculty_pdf(request, faculty_id):
-    """Download the saved faculty PDF, generating it on demand when missing."""
+    """Download a fresh faculty PDF, falling back to a saved copy when regeneration fails."""
     faculty = get_object_or_404(Faculty, id=faculty_id)
 
     try:
-        pdf_bytes = _read_faculty_pdf_bytes(faculty)
-        if not pdf_bytes:
-            pdf_bytes = generate_faculty_pdf_bytes(faculty)
-            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+        pdf_bytes = _get_faculty_pdf_bytes_with_fallback(faculty, uploaded_by=request.user.username)
         return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=True)
     except Exception as exc:
         logger.error(f"Error downloading faculty PDF for {faculty_id}: {exc}", exc_info=True)
