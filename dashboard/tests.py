@@ -1112,6 +1112,57 @@ class DashboardTests(TestCase):
         self.assertIsNotNone(merged_pdf)
         self.assertGreaterEqual(len(PdfReader(io.BytesIO(merged_pdf)).pages), 3)
 
+    @patch('dashboard.views.download_remote_asset')
+    def test_merge_certificates_with_pdf_bytes_deduplicates_shared_research_and_fdp_uploads(self, mock_download_remote_asset):
+        def fake_download(url, default_suffix='.pdf'):
+            label = 'Generic Upload'
+            if 'shared-fdp' in url:
+                label = 'FDP Shared Upload'
+            elif 'shared-research' in url:
+                label = 'Research Shared Upload'
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_pdf:
+                temp_pdf.write(make_test_pdf_bytes(label))
+                return temp_pdf.name, True
+
+        mock_download_remote_asset.side_effect = fake_download
+
+        faculty = Faculty.objects.create(
+            staff_name='Shared Upload Faculty',
+            employee_code='F9002D',
+            department='IT',
+            designation='Assistant Professor',
+            fdp_certificate_url='https://example.com/shared-fdp.pdf',
+            research_proof_url='https://example.com/shared-research.pdf',
+        )
+        FDP.objects.create(
+            faculty=faculty,
+            fdp_type='fdp',
+            title='Shared FDP',
+            from_date=date(2024, 8, 1),
+            to_date=date(2024, 8, 2),
+            certificate_url='https://example.com/shared-fdp.pdf',
+        )
+        ResearchPublication.objects.create(
+            faculty=faculty,
+            research_type='journal',
+            title='Shared Research',
+            publication_year=2024,
+            proof_document_url='https://example.com/shared-research.pdf',
+        )
+
+        merged_pdf = dashboard_views.merge_certificates_with_pdf_bytes(
+            make_test_pdf_bytes('Faculty Profile'),
+            faculty,
+        )
+
+        self.assertIsNotNone(merged_pdf)
+        reader = PdfReader(io.BytesIO(merged_pdf))
+        self.assertEqual(len(reader.pages), 3)
+
+        combined_text = '\n'.join((page.extract_text() or '') for page in reader.pages)
+        self.assertEqual(combined_text.count('Research Shared Upload'), 1)
+        self.assertEqual(combined_text.count('FDP Shared Upload'), 1)
+
     @patch('dashboard.views.generate_faculty_pdf_bytes', return_value=make_test_pdf_bytes('Generated Faculty PDF'))
     @patch('dashboard.views.is_cloudinary_configured', return_value=False)
     def test_generate_faculty_pdf_route_persists_pdf_document(

@@ -9,6 +9,7 @@ import logging
 import zipfile
 import traceback
 import io
+import hashlib
 import re
 from pathlib import Path
 from datetime import datetime, date, timedelta
@@ -5976,6 +5977,7 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
         writer = PdfWriter()
         temp_files = []  # Track all temp files for cleanup
         readers_keep = [] # Keep readers alive
+        merged_asset_fingerprints = set()
 
         # --- helper: add a file (path) to writer ---
         def _add_to_writer_internal(path):
@@ -6007,13 +6009,35 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             except Exception:
                 return False
 
+        def _add_unique_asset(path):
+            if not path or not os.path.exists(path):
+                return False
+
+            fingerprint = None
+            try:
+                hasher = hashlib.sha256()
+                with open(path, 'rb') as asset_file:
+                    for chunk in iter(lambda: asset_file.read(65536), b''):
+                        hasher.update(chunk)
+                fingerprint = hasher.hexdigest()
+            except Exception:
+                pass
+
+            if fingerprint and fingerprint in merged_asset_fingerprints:
+                return False
+
+            added = _add_to_writer_internal(path)
+            if added and fingerprint:
+                merged_asset_fingerprints.add(fingerprint)
+            return added
+
         # 1. Add the main student/faculty profile PDF
         if pdf_bytes:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
                 tf.write(pdf_bytes)
                 tfp = tf.name
                 temp_files.append(tfp)
-            _add_to_writer_internal(tfp)
+            _add_unique_asset(tfp)
 
         # 2. Collect all faculty documents from model fields
         doc_fields = [
@@ -6027,8 +6051,6 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             ('ug_certificate', 'ug_certificate_url'),
             ('pg_certificate', 'pg_certificate_url'),
             ('phd_certificate', 'phd_certificate_url'),
-            ('research_proof', 'research_proof_url'),
-            ('fdp_certificate', 'fdp_certificate_url'),
             ('experience_certificates', 'experience_certificates_url'),
             ('other_documents', 'other_documents_url'),
         ]
@@ -6046,7 +6068,7 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
                 temp_files.append(p)
             if p:
-                _add_to_writer_internal(p)
+                _add_unique_asset(p)
 
         # 3. Certificate records (related model)
         from .models import Certificate
@@ -6055,7 +6077,7 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if cert_p and cert_p not in temp_files and not (cert.certificate_file and hasattr(cert.certificate_file, 'path') and getattr(cert.certificate_file, 'path', None) == cert_p):
                 temp_files.append(cert_p)
             if cert_p:
-                _add_to_writer_internal(cert_p)
+                _add_unique_asset(cert_p)
 
         def _collect_related_document_candidates(file_field, url_value, source_prefix, upload_history_urls=None):
             candidates = []
@@ -6102,21 +6124,94 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
                 add_url(uploaded_url, f'{source_prefix}.cloudinary_upload_history')
             return candidates
 
-        # 4. FDP Certificates
-        from .models import FDP
+        def _asset_source_keys(file_field=None, url_value=None, upload_history_urls=None):
+            keys = set()
+
+            if file_field and getattr(file_field, 'name', ''):
+                media_path = resolve_local_media_file_path(getattr(file_field, 'name', None))
+                if media_path and os.path.exists(media_path):
+                    keys.add(('path', os.path.normcase(os.path.abspath(str(media_path)))))
+                try:
+                    field_path = file_field.path
+                except (NotImplementedError, ValueError, OSError, Exception):
+                    field_path = None
+                if field_path and os.path.exists(field_path):
+                    keys.add(('path', os.path.normcase(os.path.abspath(str(field_path)))))
+
+                try:
+                    field_url = file_field.url
+                except Exception:
+                    field_url = None
+                normalized_field_url = normalize_optional_url(field_url)
+                if normalized_field_url:
+                    keys.add(('url', normalized_field_url))
+
+            local_url_path = resolve_local_asset_reference(url_value)
+            if local_url_path and os.path.exists(local_url_path):
+                keys.add(('path', os.path.normcase(os.path.abspath(str(local_url_path)))))
+
+            normalized_url = normalize_optional_url(url_value)
+            if normalized_url:
+                keys.add(('url', normalized_url))
+
+            for uploaded_url in upload_history_urls or []:
+                normalized_uploaded_url = normalize_optional_url(uploaded_url)
+                if normalized_uploaded_url:
+                    keys.add(('url', normalized_uploaded_url))
+
+            return keys
+
+        # 4. Faculty-level FDP certificate
         fdp_upload_history_urls = list(
             CloudinaryUpload.objects
             .filter(faculty=faculty, upload_type='fdp_certificate')
             .order_by('-upload_date')
             .values_list('cloudinary_url', flat=True)
         )
+        merged_fdp_source_keys = _asset_source_keys(
+            getattr(faculty, 'fdp_certificate', None),
+            getattr(faculty, 'fdp_certificate_url', None),
+            upload_history_urls=fdp_upload_history_urls,
+        )
+        fdp_faculty_path, _ = resolve_asset_from_candidates(
+            collect_faculty_document_candidates(faculty, 'fdp_certificate', 'fdp_certificate_url'),
+            temp_files,
+            default_suffix='.pdf',
+        )
+        if not fdp_faculty_path:
+            fdp_faculty_path, _ = get_local_or_remote_asset(
+                getattr(faculty, 'fdp_certificate', None),
+                url=getattr(faculty, 'fdp_certificate_url', None),
+                default_suffix='.pdf',
+            )
+        if (
+            fdp_faculty_path and
+            fdp_faculty_path not in temp_files and
+            not (
+                getattr(faculty, 'fdp_certificate', None) and
+                hasattr(faculty.fdp_certificate, 'path') and
+                getattr(faculty.fdp_certificate, 'path', None) == fdp_faculty_path
+            )
+        ):
+            temp_files.append(fdp_faculty_path)
+        if fdp_faculty_path:
+            _add_unique_asset(fdp_faculty_path)
+
+        # 5. FDP Certificates attached to individual FDP records
+        from .models import FDP
         for fdp_rec in FDP.objects.filter(faculty=faculty):
+            record_fdp_source_keys = _asset_source_keys(
+                fdp_rec.certificate,
+                getattr(fdp_rec, 'certificate_url', None),
+            )
+            if record_fdp_source_keys and record_fdp_source_keys & merged_fdp_source_keys:
+                continue
+
             fdp_p, _ = resolve_asset_from_candidates(
                 _collect_related_document_candidates(
                     fdp_rec.certificate,
                     getattr(fdp_rec, 'certificate_url', None),
                     'fdp_certificate',
-                    upload_history_urls=fdp_upload_history_urls,
                 ),
                 temp_files,
                 default_suffix='.pdf',
@@ -6130,23 +6225,60 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if fdp_p and fdp_p not in temp_files and not (fdp_rec.certificate and hasattr(fdp_rec.certificate, 'path') and getattr(fdp_rec.certificate, 'path', None) == fdp_p):
                 temp_files.append(fdp_p)
             if fdp_p:
-                _add_to_writer_internal(fdp_p)
+                _add_unique_asset(fdp_p)
+                merged_fdp_source_keys.update(record_fdp_source_keys)
 
-        # 5. Research Proofs
-        from .models import ResearchPublication
+        # 6. Faculty-level research proof
         research_upload_history_urls = list(
             CloudinaryUpload.objects
             .filter(faculty=faculty, upload_type='research_proof')
             .order_by('-upload_date')
             .values_list('cloudinary_url', flat=True)
         )
+        merged_research_source_keys = _asset_source_keys(
+            getattr(faculty, 'research_proof', None),
+            getattr(faculty, 'research_proof_url', None),
+            upload_history_urls=research_upload_history_urls,
+        )
+        research_faculty_path, _ = resolve_asset_from_candidates(
+            collect_faculty_document_candidates(faculty, 'research_proof', 'research_proof_url'),
+            temp_files,
+            default_suffix='.pdf',
+        )
+        if not research_faculty_path:
+            research_faculty_path, _ = get_local_or_remote_asset(
+                getattr(faculty, 'research_proof', None),
+                url=getattr(faculty, 'research_proof_url', None),
+                default_suffix='.pdf',
+            )
+        if (
+            research_faculty_path and
+            research_faculty_path not in temp_files and
+            not (
+                getattr(faculty, 'research_proof', None) and
+                hasattr(faculty.research_proof, 'path') and
+                getattr(faculty.research_proof, 'path', None) == research_faculty_path
+            )
+        ):
+            temp_files.append(research_faculty_path)
+        if research_faculty_path:
+            _add_unique_asset(research_faculty_path)
+
+        # 7. Research proofs attached to individual publication records
+        from .models import ResearchPublication
         for pub in ResearchPublication.objects.filter(faculty=faculty):
+            record_research_source_keys = _asset_source_keys(
+                pub.proof_document,
+                getattr(pub, 'proof_document_url', None),
+            )
+            if record_research_source_keys and record_research_source_keys & merged_research_source_keys:
+                continue
+
             pub_p, _ = resolve_asset_from_candidates(
                 _collect_related_document_candidates(
                     pub.proof_document,
                     getattr(pub, 'proof_document_url', None),
                     'research_proof',
-                    upload_history_urls=research_upload_history_urls,
                 ),
                 temp_files,
                 default_suffix='.pdf',
@@ -6160,7 +6292,8 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if pub_p and pub_p not in temp_files and not (pub.proof_document and hasattr(pub.proof_document, 'path') and getattr(pub.proof_document, 'path', None) == pub_p):
                 temp_files.append(pub_p)
             if pub_p:
-                _add_to_writer_internal(pub_p)
+                _add_unique_asset(pub_p)
+                merged_research_source_keys.update(record_research_source_keys)
 
         # Finalize
         pages_count = len(writer.pages)
