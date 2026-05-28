@@ -96,6 +96,13 @@ except ImportError:
 
 
 # ==================== HELPERS ====================
+PDF_HEADER_IMAGE_FILENAME = 'NEW ANURAG 25.png'
+
+
+def get_pdf_header_image_path():
+    return os.path.join(settings.BASE_DIR, 'static', 'images', PDF_HEADER_IMAGE_FILENAME)
+
+
 def is_cloudinary_configured():
     configured_flag = getattr(settings, 'CLOUDINARY_CONFIGURED', None)
     if configured_flag is not None:
@@ -1336,7 +1343,7 @@ def build_faculty_pdf_context(faculty):
             if temp_path not in temp_paths:
                 temp_paths.append(temp_path)
 
-    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+    anurag_header_path = get_pdf_header_image_path()
 
     context = {
         'faculty': faculty,
@@ -3379,7 +3386,7 @@ def faculty_dashboard(request, faculty_id=None):
         exp = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
         # Resolve the faculty photo for the PDF template
         photo_url, local_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
-        anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+        anurag_header_path = get_pdf_header_image_path()
         context = {
             "faculty": faculty,
             "pdf_mode": True,
@@ -5480,7 +5487,7 @@ def generate_student_pdf(
         print(f"  [OK] Photo ({photo_source}): {photo_log_value}")
 
     # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
-    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+    anurag_header_path = get_pdf_header_image_path()
     anurag_header_url = build_file_uri(anurag_header_path)
 
     # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
