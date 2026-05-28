@@ -500,7 +500,7 @@ class DashboardTests(TestCase):
         session['student_id'] = own_student.id
         session.save()
 
-        response = self.client.get(reverse('dashboard:students_data_view'), secure=True)
+        response = self.client.get(reverse('dashboard:students'), secure=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, own_student.ht_no)
@@ -521,6 +521,34 @@ class DashboardTests(TestCase):
         session.save()
 
         response = self.client.get(reverse('dashboard:student_dashboard_view'), secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse('dashboard:student_photo_redirect', args=[student.id]),
+        )
+
+    def test_students_data_uses_student_photo_redirect_even_without_photo_fields(self):
+        admin_user = get_user_model().objects.create_user(
+            username='students-list-admin',
+            email='students-list-admin@example.com',
+            password='secret123',
+        )
+        self.client.force_login(admin_user)
+
+        student = Student.objects.create(
+            ht_no='23C11A7784H',
+            student_name='History Only Photo Student',
+        )
+        CloudinaryUpload.objects.create(
+            student=student,
+            upload_type='photo',
+            cloudinary_url='https://example.com/student-history-only-photo.jpg',
+            public_id='student-history-only-photo',
+            resource_type='image',
+        )
+
+        response = self.client.get(reverse('dashboard:students'), secure=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(

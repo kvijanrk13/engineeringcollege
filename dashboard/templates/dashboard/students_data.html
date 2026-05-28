@@ -236,12 +236,8 @@
                                 <tr>
                                     <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
                                     <td class="passport-photo-cell">
-                                        {% if student.photo_url or student.photo %}
-                                            <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-passport-thumb" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
-                                            <div class="student-photo-fallback" style="display: none;">No Photo</div>
-                                        {% else %}
-                                            <div class="student-photo-fallback">No Photo</div>
-                                        {% endif %}
+                                        <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-passport-thumb" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
+                                        <div class="student-photo-fallback" style="display: none;">No Photo</div>
                                     </td>
 
                                     <td><span class="student-htno">{{ student.ht_no }}</span></td>
