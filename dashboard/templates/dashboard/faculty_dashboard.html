@@ -1,5 +1,5 @@
 {% extends 'dashboard/base.html' %}
-{% load static %}
+{% load static dashboard_filters %}
 
 {% block title %}Faculty Management | ANURAG Engineering College{% endblock %}
 
@@ -112,15 +112,9 @@
                         {% for f in faculties %}
                         <a href="?id={{ f.id }}" class="list-group-item list-group-item-action {% if faculty and faculty.id == f.id %}active{% endif %}">
                             <div class="d-flex align-items-center">
-                                {% if f.photo %}
-                                <img src="{{ f.photo.url }}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;"
-                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
-                                     style="width: 35px; height: 35px; display: none !important;">
-                                    <i class="fas fa-user text-white"></i>
-                                </div>
-                                {% elif f.cloudinary_photo_url %}
-                                <img src="{{ f.cloudinary_photo_url }}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;"
+                                {% with list_photo_url=faculty_list_photo_urls|get_item:f.id %}
+                                {% if list_photo_url %}
+                                <img src="{{ list_photo_url }}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;"
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
                                      style="width: 35px; height: 35px; display: none !important;">
@@ -131,6 +125,7 @@
                                     <i class="fas fa-user text-white"></i>
                                 </div>
                                 {% endif %}
+                                {% endwith %}
                                 <div class="flex-grow-1">
                                     <strong>{{ f.staff_name|truncatechars:25 }}</strong><br>
                                     <small class="text-muted">{{ f.employee_code }}</small>
@@ -182,14 +177,8 @@
                     <!-- Profile Header -->
                     <div class="row mb-4">
                         <div class="col-md-2 text-center">
-                            {% if faculty.photo %}
-                            <img src="{{ faculty.photo.url }}" class="faculty-avatar"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; display: none !important;">
-                                <i class="fas fa-user fa-3x text-white"></i>
-                            </div>
-                            {% elif faculty.cloudinary_photo_url %}
-                            <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-avatar"
+                            {% if faculty_photo_url %}
+                            <img src="{{ faculty_photo_url }}" class="faculty-avatar"
                                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; display: none !important;">
                                 <i class="fas fa-user fa-3x text-white"></i>

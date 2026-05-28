@@ -102,6 +102,36 @@ class DashboardTests(TestCase):
 
         self.assertIn('/XObject', resources)
 
+    def test_faculty_dashboard_hides_gallery_and_shows_resolved_faculty_photo(self):
+        user = get_user_model().objects.create_user(
+            username='faculty-dashboard-user',
+            email='faculty-dashboard-user@example.com',
+            password='secret123',
+        )
+        self.client.force_login(user)
+
+        faculty = Faculty.objects.create(
+            staff_name='Dashboard Faculty',
+            employee_code='PHOTO9004',
+            department='IT',
+            designation='Assistant Professor',
+        )
+
+        with tempfile.TemporaryDirectory() as temp_media_root:
+            photo_dir = Path(temp_media_root) / 'faculty_photos'
+            photo_dir.mkdir(parents=True, exist_ok=True)
+            (photo_dir / 'PHOTO9004.jpg').write_bytes(make_test_image_bytes())
+
+            with override_settings(MEDIA_ROOT=temp_media_root):
+                response = self.client.get(
+                    reverse('dashboard:faculty') + f'?id={faculty.id}',
+                    secure=True,
+                )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Gallery')
+        self.assertContains(response, 'data:image/jpeg;base64,')
+
     @patch('dashboard.views.is_cloudinary_configured', return_value=True)
     @patch('dashboard.views.requests.get')
     @patch('dashboard.views.try_cloudinary_private_download')

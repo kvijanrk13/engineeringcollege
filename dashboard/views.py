@@ -951,6 +951,25 @@ def resolve_faculty_photo_for_pdf(faculty):
     return None, None, temp_paths, None
 
 
+def resolve_faculty_photo_for_dashboard(faculty):
+    """Resolve the best faculty photo URL for regular HTML views."""
+    if not faculty:
+        return ''
+
+    for candidate in collect_faculty_photo_candidates(faculty):
+        path_value = candidate.get('path')
+        if path_value and os.path.exists(path_value):
+            data_uri = encode_image_as_data_uri(path_value)
+            if data_uri:
+                return data_uri
+
+        url_value = normalize_optional_url(candidate.get('url'))
+        if url_value:
+            return url_value
+
+    return ''
+
+
 def collect_student_photo_candidates(student, photo_override_path=None):
     """Return ordered student photo candidates for generated PDFs."""
     candidates = []
@@ -3414,6 +3433,11 @@ def faculty_dashboard(request, faculty_id=None):
         return faculty_analytics(request)
     experience = calculate_experience(faculty.joining_date) if faculty and faculty.joining_date else "N/A"
     departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
+    faculty_photo_url = resolve_faculty_photo_for_dashboard(faculty) if faculty else ''
+    faculty_list_photo_urls = {
+        item.id: resolve_faculty_photo_for_dashboard(item)
+        for item in faculties
+    }
     return render(request, 'dashboard/faculty_dashboard.html', {
         'faculties': faculties,
         'faculty': faculty,
@@ -3433,6 +3457,8 @@ def faculty_dashboard(request, faculty_id=None):
         'is_analytics': False,
         'pdf_mode': False,
         'departments': departments,
+        'faculty_photo_url': faculty_photo_url,
+        'faculty_list_photo_urls': faculty_list_photo_urls,
         'title': f'Faculty Profile - {faculty.staff_name}' if faculty else 'Faculty Dashboard',
     })
 
