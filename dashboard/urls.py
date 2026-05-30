@@ -158,7 +158,7 @@ urlpatterns = [
     path('stats/clear-logs/', views.clear_logs, name='clear_logs'),
     path('stats/backup-database/', views.backup_database, name='backup_database'),
 
-    # Exam & Laboratory
+    # Exam
     path('exam-branch/', views.exam_branch, name='exam_branch'),
     path('exam-branch/lesson-plan/download/', views.exam_branch_download_lesson_plan, name='exam_branch_download_lesson_plan'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
@@ -166,7 +166,6 @@ urlpatterns = [
     path('exam-branch/update-attendance/', views.update_attendance, name='update_attendance'),
     path('exam-branch/save-attendance/', views.save_attendance, name='save_attendance'),
     path('exam-branch/attendance-report/', views.attendance_report, name='attendance_report'),
-    path('laboratory/', views.laboratory, name='laboratory'),
     path('gallery/', views.gallery, name='gallery'),
 
     # System routes
