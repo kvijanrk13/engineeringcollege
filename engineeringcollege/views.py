@@ -2501,10 +2501,6 @@ def delete_btech_project(request, project_id):
     return redirect('dashboard:faculty_profile_view', faculty_id=faculty_id)
 
 
-def laboratory(request):
-    return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
-
-
 def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
@@ -7684,12 +7680,6 @@ def _unused_attendance_report_stub(request):
     """Attendance report - not yet implemented."""
     from django.http import HttpResponse
     return HttpResponse("Attendance report not yet implemented.", status=501)
-
-
-def _unused_laboratory_stub(request):
-    """Laboratory - not yet implemented."""
-    from django.http import HttpResponse
-    return HttpResponse("Laboratory not yet implemented.", status=501)
 
 
 def _unused_gallery_stub(request):
