@@ -68,7 +68,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard:students' %}">
+                        <a class="nav-link" href="{% if user.is_authenticated %}{% url 'dashboard:students_data' %}{% else %}{% url 'dashboard:login' %}{% endif %}">
                             <i class="fas fa-user-graduate me-1"></i>Students
                         </a>
                     </li>
@@ -78,7 +78,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard:gallery' %}">
+                        <a class="nav-link" href="{% if user.is_authenticated %}{% url 'dashboard:gallery' %}{% else %}{% url 'dashboard:login' %}{% endif %}">
                             <i class="fas fa-images me-1"></i>Gallery
                         </a>
                     </li>

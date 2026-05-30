@@ -95,7 +95,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'students_data' or request.resolver_match.url_name == 'add_student' %}active{% endif %}" href="{% url 'dashboard:students_data' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'students_data' or request.resolver_match.url_name == 'add_student' %}active{% endif %}" href="{% if user.is_authenticated %}{% url 'dashboard:students_data' %}{% else %}{% url 'dashboard:login' %}{% endif %}">
                             <i class="fas fa-user-graduate me-1"></i>Students
                         </a>
                     </li>
@@ -105,7 +105,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% url 'dashboard:gallery' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% if user.is_authenticated %}{% url 'dashboard:gallery' %}{% else %}{% url 'dashboard:login' %}{% endif %}">
                             <i class="fas fa-images me-1"></i>Gallery
                         </a>
                     </li>

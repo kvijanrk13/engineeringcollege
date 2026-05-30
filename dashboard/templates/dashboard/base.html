@@ -85,7 +85,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% url 'dashboard:gallery' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% if user.is_authenticated %}{% url 'dashboard:gallery' %}{% else %}{% url 'dashboard:login' %}{% endif %}">
                             <i class="fas fa-images me-1"></i>Gallery
                         </a>
                     </li>

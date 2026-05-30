@@ -2874,6 +2874,7 @@ def delete_btech_project(request, project_id):
     return redirect('dashboard:faculty_profile_view', faculty_id=faculty_id)
 
 
+@login_required
 def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
@@ -4589,7 +4590,7 @@ def assign_subjects(request, faculty_id):
 
 # ==================== STUDENT MANAGEMENT ====================
 def students(request):
-    return redirect('dashboard:add_student')
+    return redirect('dashboard:login')
 
 
 def students_data(request):
