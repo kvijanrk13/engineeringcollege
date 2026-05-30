@@ -252,15 +252,15 @@
             </div>
             {% endif %}
             
-            <form class="login-form" method="POST" action="{% url 'dashboard:login' %}">
+            <form class="login-form" id="admin-login-form" method="POST" action="{% url 'dashboard:login' %}" autocomplete="off">
                 {% csrf_token %}
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" name="username" required placeholder="Enter admin username">
+                    <input type="text" name="username" value="" required placeholder="Enter admin username" autocomplete="off" autocapitalize="none" spellcheck="false">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" name="password" required placeholder="Enter password">
+                    <input type="password" name="password" value="" required placeholder="Enter password" autocomplete="new-password">
                 </div>
                 <button type="submit" class="login-btn">ACCESS SYSTEM</button>
             </form>
@@ -314,7 +314,19 @@
             }
         }, 5000);
         
-        // Auto-focus on username field
+        const adminLoginForm = document.getElementById('admin-login-form');
+        if (adminLoginForm) {
+            const clearAdminFields = () => {
+                adminLoginForm.querySelectorAll('input[name="username"], input[name="password"]').forEach(input => {
+                    input.value = '';
+                    input.setAttribute('value', '');
+                });
+            };
+            clearAdminFields();
+            window.addEventListener('pageshow', clearAdminFields);
+            setTimeout(clearAdminFields, 100);
+        }
+
         document.querySelector('input[name="username"]')?.focus();
     </script>
 </body>

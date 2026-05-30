@@ -323,13 +323,13 @@
                     <a href="{% url 'dashboard:admin_login' %}">← ADMIN LOGIN</a>
                 </div>
             {% else %}
-                <form method="post" action="{% url 'dashboard:admin_login' %}">
+                <form id="admin-login-form" method="post" action="{% url 'dashboard:admin_login' %}" autocomplete="off">
                     {% csrf_token %}
                     <label for="username">ADMIN USERNAME</label>
-                    <input id="username" name="username" type="text" required placeholder="Enter admin username">
+                    <input id="username" name="username" type="text" value="" required placeholder="Enter admin username" autocomplete="off" autocapitalize="none" spellcheck="false">
 
                     <label for="password">PASSWORD</label>
-                    <input id="password" name="password" type="password" required placeholder="Enter password">
+                    <input id="password" name="password" type="password" value="" required placeholder="Enter password" autocomplete="new-password">
 
                     <button type="submit">LOGIN →</button>
                 </form>
@@ -426,6 +426,19 @@
             caches.keys().then(names => {
                 names.forEach(name => caches.delete(name));
             });
+        }
+
+        const adminLoginForm = document.getElementById('admin-login-form');
+        if (adminLoginForm) {
+            const clearAdminFields = () => {
+                adminLoginForm.querySelectorAll('input[name="username"], input[name="password"]').forEach(input => {
+                    input.value = '';
+                    input.setAttribute('value', '');
+                });
+            };
+            clearAdminFields();
+            window.addEventListener('pageshow', clearAdminFields);
+            setTimeout(clearAdminFields, 100);
         }
     </script>
 </body>
