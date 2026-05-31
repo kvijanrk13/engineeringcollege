@@ -24,6 +24,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
+from django.core import signing
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -3086,12 +3087,16 @@ def google_login(request):
 
     login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
     google_configured = is_google_signin_enabled()
+    is_mobile_flow = request.GET.get('mobile') == '1'
 
     if request.GET.get('continue') != '1':
+        continue_params = {'role': role, 'continue': '1'}
+        if is_mobile_flow:
+            continue_params['mobile'] = '1'
         return render(request, 'dashboard/google_signin_confirm.html', {
             'role': role,
             'login_url': reverse(login_route),
-            'continue_url': f"{reverse('dashboard:google_login')}?{urlencode({'role': role, 'continue': '1'})}",
+            'continue_url': f"{reverse('dashboard:google_login')}?{urlencode(continue_params)}",
             'google_configured': google_configured,
         })
 
@@ -3105,6 +3110,7 @@ def google_login(request):
     state = secrets.token_urlsafe(24)
     request.session['google_oauth_state'] = state
     request.session['google_oauth_role'] = role
+    request.session['google_oauth_mobile'] = is_mobile_flow
 
     callback_url = request.build_absolute_uri(reverse('dashboard:google_callback'))
     params = {
@@ -3121,6 +3127,7 @@ def google_login(request):
 def google_callback(request):
     """Complete Google OAuth login and map the Gmail account to an app user."""
     role = request.session.pop('google_oauth_role', 'admin')
+    is_mobile_flow = request.session.pop('google_oauth_mobile', False)
     login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
 
     expected_state = request.session.pop('google_oauth_state', None)
@@ -3182,6 +3189,9 @@ def google_callback(request):
         request.session['student_id'] = student.id
         request.session['student_ht_no'] = student.ht_no
         messages.success(request, f"Signed in with Gmail as {student.student_name}.")
+        if is_mobile_flow:
+            token = signing.dumps({'role': 'student', 'student_id': student.id})
+            return redirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
         return redirect('dashboard:add_student')
 
     user = User.objects.filter(email__iexact=email).first()
@@ -3203,6 +3213,36 @@ def google_callback(request):
         user.is_active = True
     user.save(update_fields=['is_staff', 'is_active', 'email', 'first_name', 'last_name', 'password'])
 
+    login(request, user)
+    messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
+    if is_mobile_flow:
+        token = signing.dumps({'role': 'admin', 'user_id': user.id})
+        return redirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
+    return redirect('dashboard:add_faculty')
+
+
+def google_mobile_complete(request):
+    """Receive a short-lived mobile auth token and establish the WebView session."""
+    token = request.GET.get('token', '')
+    try:
+        payload = signing.loads(token, max_age=300)
+    except signing.BadSignature:
+        messages.error(request, "Mobile Gmail sign-in expired. Please try again.")
+        return redirect('dashboard:admin_login')
+
+    if payload.get('role') == 'student':
+        student = get_object_or_404(Student, id=payload.get('student_id'))
+        request.session['student_logged_in'] = True
+        request.session['student_username'] = student.ht_no
+        request.session['student_id'] = student.id
+        request.session['student_ht_no'] = student.ht_no
+        messages.success(request, f"Signed in with Gmail as {student.student_name}.")
+        return redirect('dashboard:add_student')
+
+    user = get_object_or_404(User, id=payload.get('user_id'), is_active=True)
+    if not user.is_staff:
+        user.is_staff = True
+        user.save(update_fields=['is_staff'])
     login(request, user)
     messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
     return redirect('dashboard:add_faculty')

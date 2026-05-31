@@ -30,6 +30,7 @@ urlpatterns = [
     path('student-login/', views.student_login, name='student_login'),
     path('google/login/', views.google_login, name='google_login'),
     path('google/callback/', views.google_callback, name='google_callback'),
+    path('google/mobile-complete/', views.google_mobile_complete, name='google_mobile_complete'),
     path('logout/', views.logout_view, name='logout'),
     path('student-logout/', views.student_logout, name='student_logout'),
     path('admin-logout/', views.admin_logout, name='admin_logout'),

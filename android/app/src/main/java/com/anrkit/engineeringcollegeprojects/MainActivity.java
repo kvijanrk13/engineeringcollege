@@ -24,8 +24,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
+    private static final String AUTH_DEEP_LINK_SCHEME = "engineeringcollegeprojects";
 
     private WebView webView;
     private ProgressBar progressBar;
@@ -45,7 +49,9 @@ public class MainActivity extends Activity {
         offlineView.setOnClickListener(view -> reloadWebApp());
         configureWebView();
 
-        reloadWebApp();
+        if (!handleIncomingIntent(getIntent())) {
+            reloadWebApp();
+        }
     }
 
     private void configureWebView() {
@@ -69,8 +75,17 @@ public class MainActivity extends Activity {
                 String scheme = uri.getScheme();
 
                 if ("http".equals(scheme) || "https".equals(scheme)) {
+                    if (isGoogleLoginStart(uri)) {
+                        openGoogleLoginInBrowser(uri);
+                        return true;
+                    }
                     progressBar.setVisibility(View.VISIBLE);
                     return false;
+                }
+
+                if (AUTH_DEEP_LINK_SCHEME.equals(scheme)) {
+                    handleAuthDeepLink(uri);
+                    return true;
                 }
 
                 startActivity(new Intent(Intent.ACTION_VIEW, uri));
@@ -198,6 +213,60 @@ public class MainActivity extends Activity {
         } else {
             showOfflineMessage();
         }
+    }
+
+    private boolean handleIncomingIntent(Intent intent) {
+        if (intent == null || intent.getData() == null) {
+            return false;
+        }
+
+        Uri uri = intent.getData();
+        if (AUTH_DEEP_LINK_SCHEME.equals(uri.getScheme())) {
+            handleAuthDeepLink(uri);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean isGoogleLoginStart(Uri uri) {
+        String host = uri.getHost();
+        String path = uri.getPath();
+        return host != null
+                && host.equals(Uri.parse(BuildConfig.WEB_APP_URL).getHost())
+                && "/google/login/".equals(path);
+    }
+
+    private void openGoogleLoginInBrowser(Uri uri) {
+        Uri.Builder builder = uri.buildUpon();
+        if (uri.getQueryParameter("mobile") == null) {
+            builder.appendQueryParameter("mobile", "1");
+        }
+        startActivity(new Intent(Intent.ACTION_VIEW, builder.build()));
+    }
+
+    private void handleAuthDeepLink(Uri uri) {
+        String token = uri.getQueryParameter("token");
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, R.string.google_signin_error, Toast.LENGTH_SHORT).show();
+            reloadWebApp();
+            return;
+        }
+
+        try {
+            String encodedToken = URLEncoder.encode(token, "UTF-8");
+            webView.loadUrl(BuildConfig.WEB_APP_URL + "google/mobile-complete/?token=" + encodedToken);
+        } catch (UnsupportedEncodingException exception) {
+            Toast.makeText(this, R.string.google_signin_error, Toast.LENGTH_SHORT).show();
+            reloadWebApp();
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIncomingIntent(intent);
     }
 
     @Override
