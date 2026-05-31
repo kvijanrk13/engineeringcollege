@@ -6,6 +6,7 @@
 - Confirm the privacy policy opens at `https://engineeringcollege.onrender.com/privacy-policy/`.
 - Test admin login, student login, Gmail login, file upload, and PDF download on the website.
 - Open the `android` folder in Android Studio and let Gradle sync.
+- Or build from the `android` folder with `.\gradlew.bat bundleRelease`.
 
 ## Build
 
@@ -13,6 +14,7 @@
 - Select `Android App Bundle`.
 - Use a release keystore and keep it backed up.
 - Upload the generated `.aab` file to Google Play Console.
+- Generated bundle path: `android/app/build/outputs/bundle/release/app-release.aab`.
 
 ## Play Console
 

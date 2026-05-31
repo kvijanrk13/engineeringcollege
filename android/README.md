@@ -16,7 +16,7 @@ Install Android Studio, then open this `android` folder as the project root. And
 
 ## Build AAB for Play Store
 
-1. Open `engineeringcollege/android` in Android Studio.
+1. Open `engineeringcollege/android` in Android Studio, or build from this folder with `gradlew.bat`.
 2. Confirm the web URL in `app/build.gradle`:
 
    ```gradle
@@ -28,6 +28,18 @@ Install Android Studio, then open this `android` folder as the project root. And
 5. Create or choose a release keystore.
 6. Build the release bundle.
 7. Upload the generated `.aab` file to Google Play Console.
+
+Command-line build from the `android` folder:
+
+```powershell
+.\gradlew.bat bundleRelease
+```
+
+Generated bundle:
+
+```text
+app/build/outputs/bundle/release/app-release.aab
+```
 
 ## Play Store Checklist
 
