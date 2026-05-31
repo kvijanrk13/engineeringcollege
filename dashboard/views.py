@@ -3184,10 +3184,24 @@ def google_callback(request):
         messages.success(request, f"Signed in with Gmail as {student.student_name}.")
         return redirect('dashboard:add_student')
 
-    user = User.objects.filter(email__iexact=email, is_staff=True).first()
+    user = User.objects.filter(email__iexact=email).first()
     if not user:
-        messages.error(request, "This Gmail account is not linked to an admin/staff user.")
-        return redirect('dashboard:admin_login')
+        username_seed = re.sub(r'[^a-zA-Z0-9_]+', '_', email.split('@')[0]).strip('_') or 'google_user'
+        email_hash = hashlib.sha1(email.encode('utf-8')).hexdigest()[:8]
+        username = f"{username_seed[:40]}_{email_hash}"
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=profile.get('given_name', '')[:150],
+            last_name=profile.get('family_name', '')[:150],
+        )
+        user.set_unusable_password()
+
+    if not user.is_staff:
+        user.is_staff = True
+    if not user.is_active:
+        user.is_active = True
+    user.save(update_fields=['is_staff', 'is_active', 'email', 'first_name', 'last_name', 'password'])
 
     login(request, user)
     messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
