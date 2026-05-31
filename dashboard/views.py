@@ -3066,6 +3066,10 @@ def upload_to_cloudinary(request, faculty_id):
 
 
 # ==================== AUTHENTICATION (FIXED) ====================
+def is_google_signin_enabled():
+    return bool(settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET)
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
@@ -3081,7 +3085,7 @@ def google_login(request):
         role = 'admin'
 
     login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
-    google_configured = bool(settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET)
+    google_configured = is_google_signin_enabled()
 
     if request.GET.get('continue') != '1':
         return render(request, 'dashboard/google_signin_confirm.html', {
@@ -3216,6 +3220,7 @@ def admin_login(request):
         return render(request, 'dashboard/login.html', {
             'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
             'admin_login': True, 'error': error,
+            'google_signin_enabled': is_google_signin_enabled(),
         })
     except Exception as e:
         logger.error(f"Dashboard view error: {e}", exc_info=True)
@@ -3282,6 +3287,7 @@ def student_login(request):
             'title': 'Student Login',
             'student_login': True,
             'error': error,
+            'google_signin_enabled': is_google_signin_enabled(),
         })
     except Exception as e:
         logger.error(f"Student login error: {e}", exc_info=True)
@@ -3301,6 +3307,7 @@ def home(request):
     return render(request, 'dashboard/login.html', {
         'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
         'admin_login': True,
+        'google_signin_enabled': is_google_signin_enabled(),
     })
 
 

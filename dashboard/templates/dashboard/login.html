@@ -238,6 +238,20 @@
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.24);
         }
 
+        .gmail-signin.disabled {
+            cursor: not-allowed;
+            opacity: 0.68;
+            pointer-events: none;
+        }
+
+        .gmail-config-note {
+            margin: -10px 0 18px;
+            color: #ffd28a;
+            font-size: 12px;
+            line-height: 1.4;
+            text-align: center;
+        }
+
         .switch {
             margin-top: 20px;
             text-align: center;
@@ -337,7 +351,7 @@
             {% endif %}
 
             {% if student_login %}
-                <a class="gmail-signin" href="{% url 'dashboard:google_login' %}?role=student">
+                <a class="gmail-signin{% if not google_signin_enabled %} disabled{% endif %}" href="{% if google_signin_enabled %}{% url 'dashboard:google_login' %}?role=student{% else %}#{% endif %}">
                     <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
                         <path fill="#EA4335" d="M24 23.6 6 10.5V38h36V10.5L24 23.6Z"/>
                         <path fill="#FBBC04" d="M6 10.5 24 23.6 42 10.5V9c0-1.7-1.3-3-3-3H9C7.3 6 6 7.3 6 9v1.5Z"/>
@@ -346,6 +360,9 @@
                     </svg>
                     <span>Sign in with Gmail</span>
                 </a>
+                {% if not google_signin_enabled %}
+                    <div class="gmail-config-note">Gmail sign-in needs Google OAuth credentials on Render.</div>
+                {% endif %}
 
                 <form method="post" action="{% url 'dashboard:student_login' %}">
                     {% csrf_token %}
@@ -366,7 +383,7 @@
                     <a href="{% url 'dashboard:admin_login' %}">← ADMIN LOGIN</a>
                 </div>
             {% else %}
-                <a class="gmail-signin" href="{% url 'dashboard:google_login' %}?role=admin">
+                <a class="gmail-signin{% if not google_signin_enabled %} disabled{% endif %}" href="{% if google_signin_enabled %}{% url 'dashboard:google_login' %}?role=admin{% else %}#{% endif %}">
                     <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
                         <path fill="#EA4335" d="M24 23.6 6 10.5V38h36V10.5L24 23.6Z"/>
                         <path fill="#FBBC04" d="M6 10.5 24 23.6 42 10.5V9c0-1.7-1.3-3-3-3H9C7.3 6 6 7.3 6 9v1.5Z"/>
@@ -375,6 +392,9 @@
                     </svg>
                     <span>Sign in with Gmail</span>
                 </a>
+                {% if not google_signin_enabled %}
+                    <div class="gmail-config-note">Gmail sign-in needs Google OAuth credentials on Render.</div>
+                {% endif %}
 
                 <form id="admin-login-form" method="post" action="{% url 'dashboard:admin_login' %}" autocomplete="off">
                     {% csrf_token %}
