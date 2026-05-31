@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500" role="img" aria-label="ENGINEERINGCOLLEGEPROJECTS feature graphic">
+  <rect width="1024" height="500" fill="#F7F9FC"/>
+  <rect x="0" y="0" width="1024" height="500" fill="#1456A0"/>
+  <path d="M0 385c148-42 263-39 408 0s266 40 420-2c75-20 137-25 196-15v132H0z" fill="#F2B705"/>
+  <g transform="translate(78 98)">
+    <path d="M0 110 150 18l150 92-24 42-126-77-126 77z" fill="#F2B705"/>
+    <path d="M46 162h208v34H46zm18 55h172v34H64zm-36 55h244v38H28z" fill="#FFFFFF"/>
+    <path d="M82 150h34v108H82zm51 0h34v108h-34zm51 0h34v108h-34z" fill="#FFFFFF"/>
+  </g>
+  <text x="430" y="205" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700">ENGINEERING</text>
+  <text x="430" y="270" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700">COLLEGE PROJECTS</text>
+  <text x="433" y="326" fill="#E8F0FF" font-family="Arial, Helvetica, sans-serif" font-size="25">Department dashboard for students and faculty</text>
+</svg>

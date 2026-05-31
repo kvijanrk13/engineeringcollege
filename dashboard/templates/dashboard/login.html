@@ -205,6 +205,39 @@
             text-shadow: 0 0 5px #00ff41;
         }
 
+        .gmail-signin {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            min-height: 46px;
+            margin: 0 0 20px;
+            padding: 11px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            border-radius: 8px;
+            background: #ffffff;
+            color: #202124;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0;
+            text-decoration: none;
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.14);
+        }
+
+        .gmail-signin svg {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 auto;
+        }
+
+        .gmail-signin:hover {
+            border-color: #ffffff;
+            background: #f8fafd;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.24);
+        }
+
         .switch {
             margin-top: 20px;
             text-align: center;
@@ -304,6 +337,16 @@
             {% endif %}
 
             {% if student_login %}
+                <a class="gmail-signin" href="https://accounts.google.com/" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                        <path fill="#EA4335" d="M24 23.6 6 10.5V38h36V10.5L24 23.6Z"/>
+                        <path fill="#FBBC04" d="M6 10.5 24 23.6 42 10.5V9c0-1.7-1.3-3-3-3H9C7.3 6 6 7.3 6 9v1.5Z"/>
+                        <path fill="#34A853" d="M6 10.5V38h9V17.1L6 10.5Z"/>
+                        <path fill="#4285F4" d="M33 17.1V38h9V10.5l-9 6.6Z"/>
+                    </svg>
+                    <span>Sign in with Gmail</span>
+                </a>
+
                 <form method="post" action="{% url 'dashboard:student_login' %}">
                     {% csrf_token %}
                     <label for="username">STUDENT USERNAME</label>
@@ -323,6 +366,16 @@
                     <a href="{% url 'dashboard:admin_login' %}">← ADMIN LOGIN</a>
                 </div>
             {% else %}
+                <a class="gmail-signin" href="https://accounts.google.com/" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                        <path fill="#EA4335" d="M24 23.6 6 10.5V38h36V10.5L24 23.6Z"/>
+                        <path fill="#FBBC04" d="M6 10.5 24 23.6 42 10.5V9c0-1.7-1.3-3-3-3H9C7.3 6 6 7.3 6 9v1.5Z"/>
+                        <path fill="#34A853" d="M6 10.5V38h9V17.1L6 10.5Z"/>
+                        <path fill="#4285F4" d="M33 17.1V38h9V10.5l-9 6.6Z"/>
+                    </svg>
+                    <span>Sign in with Gmail</span>
+                </a>
+
                 <form id="admin-login-form" method="post" action="{% url 'dashboard:admin_login' %}" autocomplete="off">
                     {% csrf_token %}
                     <label for="username">ADMIN USERNAME</label>

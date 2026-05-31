@@ -38,3 +38,14 @@ staticfiles/
 # Render
 .pid.e.n.v
 .e.n.v
+
+# Android
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+android/captures/
+android/*.jks
+android/*.keystore
+android/app/*.jks
+android/app/*.keystore
