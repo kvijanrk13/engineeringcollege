@@ -35,6 +35,12 @@ COLLEGE_NAME = os.environ.get('COLLEGE_NAME', 'ANURAG Engineering College')
 DEPARTMENT_NAME = os.environ.get('DEPARTMENT_NAME', 'Information Technology')
 ACADEMIC_YEAR = os.environ.get('ACADEMIC_YEAR', '2026-2027')
 
+# ================================
+# GOOGLE SIGN-IN SETTINGS
+# ================================
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '')
+
 ALLOWED_HOSTS = [
     '*',
     'localhost',

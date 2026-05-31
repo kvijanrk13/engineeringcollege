@@ -11,15 +11,17 @@ import traceback
 import io
 import hashlib
 import re
+import secrets
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
-from urllib.parse import quote, unquote, urlparse
+from urllib.parse import quote, unquote, urlencode, urlparse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest)
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -3070,6 +3072,111 @@ def login_view(request):
     if request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
     return redirect('dashboard:admin_login')
+
+
+def google_login(request):
+    """Start Google OAuth login for admin or student users."""
+    role = request.GET.get('role', 'admin')
+    if role not in ('admin', 'student'):
+        role = 'admin'
+
+    if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
+        messages.error(
+            request,
+            "Google sign-in is not configured yet. Please use username and password login."
+        )
+        return redirect('dashboard:student_login' if role == 'student' else 'dashboard:admin_login')
+
+    state = secrets.token_urlsafe(24)
+    request.session['google_oauth_state'] = state
+    request.session['google_oauth_role'] = role
+
+    callback_url = request.build_absolute_uri(reverse('dashboard:google_callback'))
+    params = {
+        'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+        'redirect_uri': callback_url,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'prompt': 'select_account',
+    }
+    return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
+
+
+def google_callback(request):
+    """Complete Google OAuth login and map the Gmail account to an app user."""
+    role = request.session.pop('google_oauth_role', 'admin')
+    login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
+
+    expected_state = request.session.pop('google_oauth_state', None)
+    if not expected_state or request.GET.get('state') != expected_state:
+        messages.error(request, "Google sign-in could not be verified. Please try again.")
+        return redirect(login_route)
+
+    if request.GET.get('error'):
+        messages.error(request, "Google sign-in was cancelled or denied.")
+        return redirect(login_route)
+
+    code = request.GET.get('code')
+    if not code:
+        messages.error(request, "Google did not return a sign-in code. Please try again.")
+        return redirect(login_route)
+
+    callback_url = request.build_absolute_uri(reverse('dashboard:google_callback'))
+    token_response = requests.post(
+        'https://oauth2.googleapis.com/token',
+        data={
+            'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+            'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
+            'code': code,
+            'grant_type': 'authorization_code',
+            'redirect_uri': callback_url,
+        },
+        timeout=15,
+    )
+    if token_response.status_code != 200:
+        logger.warning("Google token exchange failed: %s", token_response.text[:500])
+        messages.error(request, "Google sign-in failed. Please use username and password login.")
+        return redirect(login_route)
+
+    access_token = token_response.json().get('access_token')
+    profile_response = requests.get(
+        'https://www.googleapis.com/oauth2/v3/userinfo',
+        headers={'Authorization': f'Bearer {access_token}'},
+        timeout=15,
+    )
+    if profile_response.status_code != 200:
+        logger.warning("Google profile lookup failed: %s", profile_response.text[:500])
+        messages.error(request, "Could not read your Gmail profile. Please try again.")
+        return redirect(login_route)
+
+    profile = profile_response.json()
+    email = (profile.get('email') or '').strip().lower()
+    if not email or not profile.get('email_verified'):
+        messages.error(request, "Please use a verified Gmail account.")
+        return redirect(login_route)
+
+    if role == 'student':
+        student = Student.objects.filter(email__iexact=email).first()
+        if not student:
+            messages.error(request, "This Gmail account is not linked to a student record.")
+            return redirect('dashboard:student_login')
+
+        request.session['student_logged_in'] = True
+        request.session['student_username'] = student.ht_no
+        request.session['student_id'] = student.id
+        request.session['student_ht_no'] = student.ht_no
+        messages.success(request, f"Signed in with Gmail as {student.student_name}.")
+        return redirect('dashboard:add_student')
+
+    user = User.objects.filter(email__iexact=email, is_staff=True).first()
+    if not user:
+        messages.error(request, "This Gmail account is not linked to an admin/staff user.")
+        return redirect('dashboard:admin_login')
+
+    login(request, user)
+    messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
+    return redirect('dashboard:add_faculty')
 
 
 @csrf_protect
