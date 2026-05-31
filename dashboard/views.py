@@ -3080,12 +3080,23 @@ def google_login(request):
     if role not in ('admin', 'student'):
         role = 'admin'
 
-    if not settings.GOOGLE_OAUTH_CLIENT_ID or not settings.GOOGLE_OAUTH_CLIENT_SECRET:
+    login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
+    google_configured = bool(settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET)
+
+    if request.GET.get('continue') != '1':
+        return render(request, 'dashboard/google_signin_confirm.html', {
+            'role': role,
+            'login_url': reverse(login_route),
+            'continue_url': f"{reverse('dashboard:google_login')}?{urlencode({'role': role, 'continue': '1'})}",
+            'google_configured': google_configured,
+        })
+
+    if not google_configured:
         messages.error(
             request,
             "Google sign-in is not configured yet. Please use username and password login."
         )
-        return redirect('dashboard:student_login' if role == 'student' else 'dashboard:admin_login')
+        return redirect(login_route)
 
     state = secrets.token_urlsafe(24)
     request.session['google_oauth_state'] = state
