@@ -7473,6 +7473,13 @@ def contact_support(request):
     })
 
 
+def privacy_policy(request):
+    return render(request, 'dashboard/privacy_policy.html', {
+        'title': 'Privacy Policy',
+        'effective_date': 'June 1, 2026',
+    })
+
+
 # ==================== EXAM BRANCH VIEWS ====================
 @login_required
 def exam_branch(request):

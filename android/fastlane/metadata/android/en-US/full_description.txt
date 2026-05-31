@@ -1,0 +1,5 @@
+ENGINEERINGCOLLEGEPROJECTS provides Android access to the engineering college department portal.
+
+Students and faculty can open dashboards, view academic resources, manage department information, access reports, and download generated documents from the deployed Django platform.
+
+The app connects to the live college web portal and requires internet access.

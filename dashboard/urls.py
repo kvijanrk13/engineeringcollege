@@ -176,6 +176,7 @@ urlpatterns = [
     path('system/about/', views.about_system, name='about_system'),
     path('system/help/', views.help_documentation, name='help_documentation'),
     path('system/contact/', views.contact_support, name='contact_support'),
+    path('privacy-policy/', views.privacy_policy, name='privacy_policy'),
     path('system/profile-settings/', views.profile_settings, name='profile_settings'),
     path('system/application-home/', views.application_home, name='application_home'),
 

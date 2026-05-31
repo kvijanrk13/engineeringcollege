@@ -12,7 +12,7 @@
 
 1. Confirm the Django app is deployed and reachable over HTTPS:
 
-   `https://anrkitdept.onrender.com/`
+   `https://engineeringcollege.onrender.com/`
 
 2. Open `android` in Android Studio.
 3. Let Android Studio sync the Gradle project.
@@ -39,6 +39,10 @@ Google Play Console normally requires:
 - Content rating questionnaire
 
 Source artwork is included in `store-assets`. Export those SVG files to PNG before uploading them in Play Console.
+
+Privacy policy URL:
+
+`https://engineeringcollege.onrender.com/privacy-policy/`
 
 ## Suggested Listing Text
 

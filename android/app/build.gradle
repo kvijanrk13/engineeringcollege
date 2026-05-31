@@ -17,7 +17,7 @@ android {
         versionCode 1
         versionName "1.0.0"
 
-        buildConfigField "String", "WEB_APP_URL", "\"https://anrkitdept.onrender.com/\""
+        buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
     }
 
     buildTypes {

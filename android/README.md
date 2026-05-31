@@ -6,7 +6,7 @@ This Android project packages the deployed Django site as a Play Store-ready Web
 
 - App name: `ENGINEERINGCOLLEGEPROJECTS`
 - Package name: `com.anrkit.engineeringcollegeprojects`
-- Web app URL: `https://anrkitdept.onrender.com/`
+- Web app URL: `https://engineeringcollege.onrender.com/`
 - Minimum Android version: Android 6.0, API 23
 - Target SDK: API 35, matching the current Google Play requirement for new apps and app updates.
 
@@ -20,7 +20,7 @@ Install Android Studio, then open this `android` folder as the project root. And
 2. Confirm the web URL in `app/build.gradle`:
 
    ```gradle
-   buildConfigField "String", "WEB_APP_URL", "\"https://anrkitdept.onrender.com/\""
+   buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
    ```
 
 3. Choose `Build > Generate Signed App Bundle / APK`.
