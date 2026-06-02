@@ -3075,6 +3075,48 @@ def redirect_to_mobile_auth(token):
     return MobileAuthRedirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
 
 
+def split_display_name(display_name):
+    parts = (display_name or '').strip().split()
+    if not parts:
+        return '', ''
+    return parts[0][:150], ' '.join(parts[1:])[:150]
+
+
+def student_display_name(student):
+    if student and getattr(student, 'student_name', None):
+        return student.student_name
+    return 'Student'
+
+
+def set_student_login_session(request, student):
+    request.session['student_logged_in'] = True
+    request.session['student_username'] = student.ht_no
+    request.session['student_display_name'] = student_display_name(student)
+    request.session['student_id'] = student.id
+    request.session['student_ht_no'] = student.ht_no
+
+
+def faculty_display_name_for_user(user, profile=None):
+    faculty = Faculty.objects.filter(email__iexact=user.email).first() if user.email else None
+    if faculty and faculty.staff_name:
+        return faculty.staff_name
+    full_name = user.get_full_name().strip()
+    if full_name:
+        return full_name
+    profile_name = (profile or {}).get('name') or ''
+    if profile_name.strip():
+        return profile_name.strip()
+    return user.get_username()
+
+
+def sync_google_user_display_name(user, profile):
+    display_name = faculty_display_name_for_user(user, profile)
+    first_name, last_name = split_display_name(display_name)
+    user.first_name = first_name
+    user.last_name = last_name
+    return display_name
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
@@ -3216,11 +3258,8 @@ def google_callback(request):
             messages.error(request, "This Gmail account is not linked to a student record.")
             return redirect('dashboard:student_login')
 
-        request.session['student_logged_in'] = True
-        request.session['student_username'] = student.ht_no
-        request.session['student_id'] = student.id
-        request.session['student_ht_no'] = student.ht_no
-        messages.success(request, f"Signed in with Gmail as {student.student_name}.")
+        set_student_login_session(request, student)
+        messages.success(request, f"Signed in with Gmail as {student_display_name(student)}.")
         if is_mobile_flow:
             token = signing.dumps({'role': 'student', 'student_id': student.id})
             return redirect_to_mobile_auth(token)
@@ -3239,6 +3278,7 @@ def google_callback(request):
         )
         user.set_unusable_password()
 
+    display_name = sync_google_user_display_name(user, profile)
     if not user.is_staff:
         user.is_staff = True
     if not user.is_active:
@@ -3246,7 +3286,7 @@ def google_callback(request):
     user.save(update_fields=['is_staff', 'is_active', 'email', 'first_name', 'last_name', 'password'])
 
     login(request, user)
-    messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
+    messages.success(request, f"Signed in with Gmail as {display_name}.")
     if is_mobile_flow:
         token = signing.dumps({'role': 'admin', 'user_id': user.id})
         return redirect_to_mobile_auth(token)
@@ -3264,19 +3304,20 @@ def google_mobile_complete(request):
 
     if payload.get('role') == 'student':
         student = get_object_or_404(Student, id=payload.get('student_id'))
-        request.session['student_logged_in'] = True
-        request.session['student_username'] = student.ht_no
-        request.session['student_id'] = student.id
-        request.session['student_ht_no'] = student.ht_no
-        messages.success(request, f"Signed in with Gmail as {student.student_name}.")
+        set_student_login_session(request, student)
+        messages.success(request, f"Signed in with Gmail as {student_display_name(student)}.")
         return redirect('dashboard:add_student')
 
     user = get_object_or_404(User, id=payload.get('user_id'), is_active=True)
+    display_name = faculty_display_name_for_user(user)
     if not user.is_staff:
         user.is_staff = True
-        user.save(update_fields=['is_staff'])
+    first_name, last_name = split_display_name(display_name)
+    user.first_name = first_name
+    user.last_name = last_name
+    user.save(update_fields=['is_staff', 'first_name', 'last_name'])
     login(request, user)
-    messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
+    messages.success(request, f"Signed in with Gmail as {display_name}.")
     return redirect('dashboard:add_faculty')
 
 
@@ -3351,6 +3392,7 @@ def student_login(request):
             if username == 'anrkitstudent' and password == 'anrkitstudent':
                 request.session['student_logged_in'] = True
                 request.session['student_username'] = username
+                request.session['student_display_name'] = 'Student User'
                 request.session.pop('student_id', None)
                 request.session.pop('student_ht_no', None)
                 return redirect('dashboard:add_student')
@@ -3362,10 +3404,7 @@ def student_login(request):
                     valid_passwords.append(student.dob.strftime('%Y-%m-%d'))
                     valid_passwords.append(student.dob.strftime('%d-%m-%Y'))
                 if any(p and password == p for p in valid_passwords):
-                    request.session['student_logged_in'] = True
-                    request.session['student_username'] = username
-                    request.session['student_id'] = student.id
-                    request.session['student_ht_no'] = student.ht_no
+                    set_student_login_session(request, student)
                     return redirect('dashboard:add_student')
             error = 'Invalid student credentials'
             messages.error(request, error)
@@ -3538,7 +3577,8 @@ def student_dashboard(request):
         logger.error(f"Error getting student data: {e}")
     if not student:
         student = {
-            'ht_no': student_username, 'student_name': 'Student User',
+            'ht_no': student_username,
+            'student_name': request.session.get('student_display_name', 'Student User'),
             'year': 'II', 'sem': 'II', 'branch': 'Computer Science',
             'email': 'student@anurag.edu.in', 'student_phone': 'Not Available',
             'cgpa': None, 'photo': None, 'photo_url': None,
