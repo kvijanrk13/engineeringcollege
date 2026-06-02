@@ -4839,7 +4839,7 @@ def assign_subjects(request, faculty_id):
 
 # ==================== STUDENT MANAGEMENT ====================
 def students(request):
-    return redirect('dashboard:login')
+    return students_data(request)
 
 
 def students_data(request):
@@ -4854,6 +4854,31 @@ def students_data(request):
         qs = Student.objects.filter(id=session_student.id).order_by('-created_at')
     else:
         qs = Student.objects.all().order_by('-created_at')
+    years = qs.values_list("year", flat=True).distinct()
+    sems = qs.values_list("sem", flat=True).distinct()
+
+    search = (request.GET.get('search') or '').strip()
+    if search:
+        qs = qs.filter(
+            Q(student_name__icontains=search)
+            | Q(ht_no__icontains=search)
+            | Q(email__icontains=search)
+        )
+
+    year = request.GET.get('year')
+    if year:
+        qs = qs.filter(year=year)
+
+    sem = request.GET.get('sem')
+    if sem:
+        qs = qs.filter(sem=sem)
+
+    has_pdf = request.GET.get('has_pdf')
+    if has_pdf == 'yes':
+        qs = qs.filter(Q(pdf_url__isnull=False) & ~Q(pdf_url='') | Q(pdf_file__isnull=False) & ~Q(pdf_file=''))
+    elif has_pdf == 'no':
+        qs = qs.filter((Q(pdf_url__isnull=True) | Q(pdf_url='')) & (Q(pdf_file__isnull=True) | Q(pdf_file='')))
+
     paginator = Paginator(qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
@@ -4864,8 +4889,8 @@ def students_data(request):
         "total_students": qs.count(),
         "year_1_count": qs.filter(year=1).count(), "year_2_count": qs.filter(year=2).count(),
         "year_3_count": qs.filter(year=3).count(), "year_4_count": qs.filter(year=4).count(),
-        "years": Student.objects.values_list("year", flat=True).distinct(),
-        "sems": Student.objects.values_list("sem", flat=True).distinct(),
+        "years": years,
+        "sems": sems,
         "is_paginated": page_obj.has_other_pages(), "page_obj": page_obj,
     })
 
@@ -4873,6 +4898,7 @@ def students_data(request):
 def add_student(request):
     if request.method == 'POST':
         try:
+            user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
             ca = is_cloudinary_configured()
             temp_photo_override_path = None
             certificate_override_assets = []
@@ -5111,6 +5137,8 @@ def add_student(request):
                 messages.info(request, f'Local file copies saved: {", ".join(files_lo)}')
             if not files_up and not files_lo:
                 messages.success(request, f'Student {student.student_name} added successfully!')
+            if not user_authenticated:
+                set_student_login_session(request, student)
             return redirect('dashboard:students_data')
         except Exception as e:
             import traceback
@@ -8162,10 +8190,10 @@ def students_data_password(request):
     if request.method == 'POST':
         password = request.POST.get('password')
         if password == 'aecithod':
-            return redirect('dashboard:students')
+            return redirect('dashboard:students_data')
         else:
             messages.error(request, 'Invalid password. Access denied.')
-            return redirect('dashboard:students_data')
+            return redirect('dashboard:students_data_password')
     return render(request, 'dashboard/students_data_password.html')
 
 

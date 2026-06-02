@@ -145,6 +145,53 @@ class DashboardTests(TestCase):
         self.assertEqual(STUDENT_PDF_TEMPLATE, 'dashboard/student_pdf.html')
         self.assertEqual(FACULTY_PDF_TEMPLATE, 'dashboard/faculty_pdf.html')
 
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_students_data_route_renders_directory_actions(self):
+        user = get_user_model().objects.create_user(
+            username='student-list-admin',
+            password='testpass123',
+            is_staff=True,
+        )
+        self.client.force_login(user)
+        Student.objects.create(
+            ht_no='22ITVIEW001',
+            student_name='Directory Student',
+            year=2,
+            sem=1,
+        )
+
+        response = self.client.get(reverse('dashboard:students_data'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hall Ticket Number')
+        self.assertContains(response, 'Directory Student')
+        self.assertContains(response, reverse('dashboard:student_detail', args=[Student.objects.get(ht_no='22ITVIEW001').id]))
+        self.assertContains(response, reverse('dashboard:edit_student', args=[Student.objects.get(ht_no='22ITVIEW001').id]))
+        self.assertContains(response, reverse('dashboard:generate_student_pdf', args=[Student.objects.get(ht_no='22ITVIEW001').id]))
+        self.assertContains(response, reverse('dashboard:delete_student', args=[Student.objects.get(ht_no='22ITVIEW001').id]))
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_add_student_redirects_to_students_directory(self):
+        response = self.client.post(reverse('dashboard:add_student'), {
+            'ht_no': '22ITSUBMIT001',
+            'student_name': 'Submitted Student',
+            'father_name': 'Parent One',
+            'mother_name': 'Parent Two',
+            'gender': 'Other',
+            'nationality': 'Indian',
+            'email': 'submitted@example.com',
+            'year': '3',
+            'sem': '2',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], reverse('dashboard:students_data'))
+
+        list_response = self.client.get(response['Location'])
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, 'Submitted Student')
+        self.assertContains(list_response, '22ITSUBMIT001')
+
     def test_resolve_faculty_photo_for_pdf_uses_file_field(self):
         faculty = Faculty.objects.create(
             staff_name='Photo Faculty',

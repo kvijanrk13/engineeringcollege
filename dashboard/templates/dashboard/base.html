@@ -90,6 +90,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'students_data' or request.resolver_match.url_name == 'students' or request.resolver_match.url_name == 'students-list' or request.resolver_match.url_name == 'add_student' %}active{% endif %}" href="{% url 'dashboard:students_data' %}">
+                            <i class="fas fa-user-graduate me-1"></i>Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'exam_branch' %}active{% endif %}" href="{% url 'dashboard:exam_branch' %}">
                             <i class="fas fa-file-alt me-1"></i>Exam Branch
                         </a>

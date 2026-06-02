@@ -79,9 +79,10 @@ urlpatterns = [
     path('faculty/btech-project/delete/<int:project_id>/', views.delete_btech_project, name='delete_btech_project'),
 
     # Students routes
-    path('students/', views.students, name='students'),
+    path('students/', views.students_data, name='students'),
     path('students-list/', views.students_data, name='students-list'),
-    path('students/data/', views.students_data_password, name='students_data'),
+    path('students/data/', views.students_data, name='students_data'),
+    path('students/data/password/', views.students_data_password, name='students_data_password'),
 
     path('student-details/', views.students_data, name='student_details'),
     path('add-student/', views.add_student, name='add_student'),
