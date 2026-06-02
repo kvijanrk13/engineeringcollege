@@ -4,4 +4,13 @@
     <color name="brand_gold">#F2B705</color>
     <color name="ink">#172033</color>
     <color name="off_white">#F7F9FC</color>
+    <color name="muted_ink">#526070</color>
+    <color name="tile_border">#D8E0EA</color>
+    <color name="tile_fill">#FFFFFF</color>
+    <color name="faculty_green">#176B55</color>
+    <color name="student_blue">#1456A0</color>
+    <color name="exam_red">#A53A3A</color>
+    <color name="dashboard_navy">#172033</color>
+    <color name="gallery_gold">#B57900</color>
+    <color name="subjects_violet">#6341A7</color>
 </resources>

@@ -37,8 +37,11 @@ public class MainActivity extends Activity {
     private WebView webView;
     private ProgressBar progressBar;
     private TextView offlineView;
+    private View homeView;
+    private View homeButton;
     private ValueCallback<Uri[]> filePathCallback;
     private boolean mainPageLoadFailed;
+    private String currentPath = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,13 +51,26 @@ public class MainActivity extends Activity {
         webView = findViewById(R.id.webView);
         progressBar = findViewById(R.id.progressBar);
         offlineView = findViewById(R.id.offlineView);
+        homeView = findViewById(R.id.homeView);
+        homeButton = findViewById(R.id.homeButton);
 
         offlineView.setOnClickListener(view -> reloadWebApp());
+        homeButton.setOnClickListener(view -> showHome());
         configureWebView();
+        configureSectionTiles();
 
         if (!handleIncomingIntent(getIntent())) {
-            reloadWebApp();
+            showHome();
         }
+    }
+
+    private void configureSectionTiles() {
+        findViewById(R.id.facultyTile).setOnClickListener(view -> openSection("faculty/list/"));
+        findViewById(R.id.studentTile).setOnClickListener(view -> openSection("students/data/password/"));
+        findViewById(R.id.examBranchTile).setOnClickListener(view -> openSection("exam-branch/"));
+        findViewById(R.id.dashboardTile).setOnClickListener(view -> openSection("dashboard/"));
+        findViewById(R.id.galleryTile).setOnClickListener(view -> openSection("gallery/"));
+        findViewById(R.id.subjectsTile).setOnClickListener(view -> openSection("syllabus/"));
     }
 
     private void configureWebView() {
@@ -120,8 +136,14 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                if (currentPath == null || currentPath.isEmpty()) {
+                    showHome();
+                    return;
+                }
                 mainPageLoadFailed = false;
                 offlineView.setVisibility(View.GONE);
+                homeView.setVisibility(View.GONE);
+                homeButton.setVisibility(View.VISIBLE);
                 webView.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
             }
@@ -140,9 +162,15 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                if (currentPath == null || currentPath.isEmpty()) {
+                    showHome();
+                    return;
+                }
                 progressBar.setVisibility(View.GONE);
                 if (!mainPageLoadFailed) {
                     offlineView.setVisibility(View.GONE);
+                    homeView.setVisibility(View.GONE);
+                    homeButton.setVisibility(View.VISIBLE);
                     webView.setVisibility(View.VISIBLE);
                 }
             }
@@ -226,19 +254,41 @@ public class MainActivity extends Activity {
 
     private void showOfflineMessage() {
         progressBar.setVisibility(View.GONE);
+        homeView.setVisibility(View.GONE);
+        homeButton.setVisibility(View.GONE);
         webView.setVisibility(View.GONE);
         offlineView.setVisibility(View.VISIBLE);
     }
 
-    private void reloadWebApp() {
+    private void showHome() {
+        currentPath = "";
+        progressBar.setVisibility(View.GONE);
+        offlineView.setVisibility(View.GONE);
+        webView.setVisibility(View.GONE);
+        homeButton.setVisibility(View.GONE);
+        homeView.setVisibility(View.VISIBLE);
+    }
+
+    private void openSection(String path) {
+        currentPath = path;
         if (isOnline()) {
             progressBar.setVisibility(View.VISIBLE);
             offlineView.setVisibility(View.GONE);
+            homeView.setVisibility(View.GONE);
+            homeButton.setVisibility(View.VISIBLE);
             webView.setVisibility(View.VISIBLE);
-            webView.loadUrl(BuildConfig.WEB_APP_URL);
+            webView.loadUrl(BuildConfig.WEB_APP_URL + path);
         } else {
             showOfflineMessage();
         }
+    }
+
+    private void reloadWebApp() {
+        if (currentPath == null || currentPath.isEmpty()) {
+            showHome();
+            return;
+        }
+        openSection(currentPath);
     }
 
     private boolean handleIncomingIntent(Intent intent) {
@@ -281,6 +331,10 @@ public class MainActivity extends Activity {
 
         try {
             String encodedToken = URLEncoder.encode(token, "UTF-8");
+            currentPath = "google/mobile-complete/";
+            homeView.setVisibility(View.GONE);
+            homeButton.setVisibility(View.VISIBLE);
+            webView.setVisibility(View.VISIBLE);
             webView.loadUrl(BuildConfig.WEB_APP_URL + "google/mobile-complete/?token=" + encodedToken);
         } catch (UnsupportedEncodingException exception) {
             Toast.makeText(this, R.string.google_signin_error, Toast.LENGTH_SHORT).show();
@@ -292,7 +346,9 @@ public class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        handleIncomingIntent(intent);
+        if (!handleIncomingIntent(intent)) {
+            showHome();
+        }
     }
 
     @Override
@@ -310,10 +366,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack();
+        if (homeView.getVisibility() == View.VISIBLE) {
+            super.onBackPressed();
             return;
         }
-        super.onBackPressed();
+        if (currentPath != null && !currentPath.isEmpty()) {
+            showHome();
+            return;
+        }
+        showHome();
     }
 }

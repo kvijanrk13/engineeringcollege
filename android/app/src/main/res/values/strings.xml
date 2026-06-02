@@ -6,4 +6,13 @@
     <string name="download_started">Download started</string>
     <string name="file_picker_error">Unable to open file picker</string>
     <string name="google_signin_error">Unable to complete Gmail sign-in</string>
+    <string name="section_title">Engineering College</string>
+    <string name="section_subtitle">Open each module directly</string>
+    <string name="faculty">Faculty</string>
+    <string name="student">Student</string>
+    <string name="exam_branch">Exam Branch</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="gallery">Gallery</string>
+    <string name="subjects">Subjects</string>
+    <string name="back_to_icons">Back to icons</string>
 </resources>
