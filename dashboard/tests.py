@@ -4,6 +4,7 @@ import tempfile
 from datetime import date
 from pathlib import Path
 from unittest.mock import Mock, patch
+from urllib.parse import parse_qs, urlparse
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -44,6 +45,54 @@ class DashboardTests(TestCase):
         response = self.client.get(reverse('dashboard:login'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'ANURAG Engineering College')
+
+    @override_settings(
+        GOOGLE_OAUTH_CLIENT_ID='test-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-client-secret',
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
+    def test_mobile_google_callback_survives_lost_browser_session(self, mock_post, mock_get):
+        student = Student.objects.create(
+            ht_no='22IT001',
+            student_name='Mobile Student',
+            email='mobile@example.com',
+        )
+        start_response = self.client.get(
+            reverse('dashboard:google_login'),
+            {'role': 'student', 'mobile': '1', 'continue': '1'},
+        )
+        state = parse_qs(urlparse(start_response['Location']).query)['state'][0]
+
+        self.client.cookies.clear()
+        mock_post.return_value = Mock(
+            status_code=200,
+            json=lambda: {'access_token': 'access-token'},
+        )
+        mock_get.return_value = Mock(
+            status_code=200,
+            json=lambda: {'email': student.email, 'email_verified': True},
+        )
+
+        callback_response = self.client.get(
+            reverse('dashboard:google_callback'),
+            {'code': 'auth-code', 'state': state},
+        )
+
+        self.assertEqual(callback_response.status_code, 302)
+        self.assertTrue(callback_response['Location'].startswith('engineeringcollegeprojects://auth?token='))
+
+        token = parse_qs(urlparse(callback_response['Location']).query)['token'][0]
+        complete_response = self.client.get(
+            reverse('dashboard:google_mobile_complete'),
+            {'token': token},
+        )
+
+        self.assertEqual(complete_response.status_code, 302)
+        self.assertEqual(complete_response['Location'], reverse('dashboard:add_student'))
+        self.assertTrue(self.client.session['student_logged_in'])
+        self.assertEqual(self.client.session['student_id'], student.id)
 
     def test_pdf_generation_uses_dedicated_assets_boundary(self):
         self.assertEqual(STUDENT_PDF_TEMPLATE, 'dashboard/student_pdf.html')

@@ -3067,12 +3067,41 @@ def is_google_signin_enabled():
     return bool(settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET)
 
 
+class MobileAuthRedirect(HttpResponseRedirect):
+    allowed_schemes = HttpResponseRedirect.allowed_schemes + ['engineeringcollegeprojects']
+
+
+def redirect_to_mobile_auth(token):
+    return MobileAuthRedirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
     if request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
     return redirect('dashboard:admin_login')
+
+
+def _build_google_oauth_state(role, is_mobile_flow):
+    nonce = secrets.token_urlsafe(24)
+    return nonce, signing.dumps({
+        'nonce': nonce,
+        'role': role,
+        'mobile': is_mobile_flow,
+    })
+
+
+def _read_google_oauth_state(state):
+    payload = signing.loads(state, max_age=600)
+    role = payload.get('role', 'admin')
+    if role not in ('admin', 'student'):
+        role = 'admin'
+    return {
+        'nonce': payload.get('nonce'),
+        'role': role,
+        'mobile': bool(payload.get('mobile')),
+    }
 
 
 def google_login(request):
@@ -3103,10 +3132,8 @@ def google_login(request):
         )
         return redirect(login_route)
 
-    state = secrets.token_urlsafe(24)
-    request.session['google_oauth_state'] = state
-    request.session['google_oauth_role'] = role
-    request.session['google_oauth_mobile'] = is_mobile_flow
+    state_nonce, state = _build_google_oauth_state(role, is_mobile_flow)
+    request.session['google_oauth_state_nonce'] = state_nonce
 
     callback_url = request.build_absolute_uri(reverse('dashboard:google_callback'))
     params = {
@@ -3122,12 +3149,21 @@ def google_login(request):
 
 def google_callback(request):
     """Complete Google OAuth login and map the Gmail account to an app user."""
-    role = request.session.pop('google_oauth_role', 'admin')
-    is_mobile_flow = request.session.pop('google_oauth_mobile', False)
+    try:
+        state_payload = _read_google_oauth_state(request.GET.get('state', ''))
+    except signing.BadSignature:
+        state_payload = None
+
+    if not state_payload:
+        messages.error(request, "Google sign-in could not be verified. Please try again.")
+        return redirect('dashboard:admin_login')
+
+    role = state_payload['role']
+    is_mobile_flow = state_payload['mobile']
     login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
 
-    expected_state = request.session.pop('google_oauth_state', None)
-    if not expected_state or request.GET.get('state') != expected_state:
+    expected_nonce = request.session.pop('google_oauth_state_nonce', None)
+    if expected_nonce and expected_nonce != state_payload.get('nonce'):
         messages.error(request, "Google sign-in could not be verified. Please try again.")
         return redirect(login_route)
 
@@ -3187,7 +3223,7 @@ def google_callback(request):
         messages.success(request, f"Signed in with Gmail as {student.student_name}.")
         if is_mobile_flow:
             token = signing.dumps({'role': 'student', 'student_id': student.id})
-            return redirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
+            return redirect_to_mobile_auth(token)
         return redirect('dashboard:add_student')
 
     user = User.objects.filter(email__iexact=email).first()
@@ -3213,7 +3249,7 @@ def google_callback(request):
     messages.success(request, f"Signed in with Gmail as {user.get_username()}.")
     if is_mobile_flow:
         token = signing.dumps({'role': 'admin', 'user_id': user.id})
-        return redirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
+        return redirect_to_mobile_auth(token)
     return redirect('dashboard:add_faculty')
 
 
