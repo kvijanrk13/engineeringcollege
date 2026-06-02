@@ -15,4 +15,16 @@
     <string name="gallery">Gallery</string>
     <string name="subjects">Subjects</string>
     <string name="back_to_icons">Back to icons</string>
+    <string name="projects">Projects</string>
+    <string name="projects_title">B.Tech CSE Projects</string>
+    <string name="projects_subtitle">Choose a project domain</string>
+    <string name="main_icons">Main Icons</string>
+    <string name="ai_domain">AI Domain</string>
+    <string name="machine_learning_domain">Machine Learning Domain</string>
+    <string name="software_engineering_domain">Software Engineering Domain</string>
+    <string name="security_domain">Security Domain</string>
+    <string name="deep_learning_domain">Deep Learning Domain</string>
+    <string name="data_science_domain">Data Science Domain</string>
+    <string name="cloud_computing_domain">Cloud Computing Domain</string>
+    <string name="iot_edge_domain">IoT and Edge Computing Domain</string>
 </resources>

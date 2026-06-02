@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="@color/iot_domain" android:pathData="M14,14h20a4,4 0,0 1,4 4v12a4,4 0,0 1,-4 4H14a4,4 0,0 1,-4 -4V18a4,4 0,0 1,4 -4z" />
+    <path android:fillColor="@color/brand_gold" android:pathData="M18,21h12v6H18zM12,9h4v5h-4zM22,9h4v5h-4zM32,9h4v5h-4zM12,34h4v5h-4zM22,34h4v5h-4zM32,34h4v5h-4z" />
+</vector>

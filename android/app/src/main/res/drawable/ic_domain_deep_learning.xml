@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="@color/deep_learning_domain" android:pathData="M24,6a14,14 0,0 1,14 14v9a9,9 0,0 1,-9 9h-2v5h-6v-5h-2a9,9 0,0 1,-9 -9v-9A14,14 0,0 1,24 6z" />
+    <path android:strokeColor="@color/brand_gold" android:strokeWidth="3" android:fillColor="@android:color/transparent" android:pathData="M16,23h16M18,17h12M18,29h12M24,14v18" />
+</vector>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="@color/ml_domain" android:pathData="M10,26a7,7 0,1 1,7,-7a7,7 0,0 1,-7 7zM31,25a7,7 0,1 1,7,-7a7,7 0,0 1,-7 7zM22,42a7,7 0,1 1,7,-7a7,7 0,0 1,-7 7z" />
+    <path android:strokeColor="@color/brand_gold" android:strokeWidth="4" android:fillColor="@android:color/transparent" android:pathData="M15,22L22,31M27,30L31,24M17,18h7" />
+</vector>

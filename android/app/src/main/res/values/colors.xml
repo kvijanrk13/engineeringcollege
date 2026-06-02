@@ -13,4 +13,13 @@
     <color name="dashboard_navy">#172033</color>
     <color name="gallery_gold">#B57900</color>
     <color name="subjects_violet">#6341A7</color>
+    <color name="projects_teal">#0F766E</color>
+    <color name="ai_domain">#0E7490</color>
+    <color name="ml_domain">#2563EB</color>
+    <color name="software_domain">#4338CA</color>
+    <color name="security_domain">#B91C1C</color>
+    <color name="deep_learning_domain">#7C3AED</color>
+    <color name="data_science_domain">#047857</color>
+    <color name="cloud_domain">#0369A1</color>
+    <color name="iot_domain">#B45309</color>
 </resources>

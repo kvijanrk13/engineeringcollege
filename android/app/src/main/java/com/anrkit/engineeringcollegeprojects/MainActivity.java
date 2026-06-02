@@ -39,6 +39,7 @@ public class MainActivity extends Activity {
     private TextView offlineView;
     private View homeView;
     private View homeButton;
+    private View projectsView;
     private ValueCallback<Uri[]> filePathCallback;
     private boolean mainPageLoadFailed;
     private String currentPath = "";
@@ -53,11 +54,14 @@ public class MainActivity extends Activity {
         offlineView = findViewById(R.id.offlineView);
         homeView = findViewById(R.id.homeView);
         homeButton = findViewById(R.id.homeButton);
+        projectsView = findViewById(R.id.projectsView);
 
         offlineView.setOnClickListener(view -> reloadWebApp());
         homeButton.setOnClickListener(view -> showHome());
+        findViewById(R.id.projectsBackButton).setOnClickListener(view -> showHome());
         configureWebView();
         configureSectionTiles();
+        configureProjectDomainTiles();
 
         if (!handleIncomingIntent(getIntent())) {
             showHome();
@@ -71,6 +75,24 @@ public class MainActivity extends Activity {
         findViewById(R.id.dashboardTile).setOnClickListener(view -> openSection("dashboard/"));
         findViewById(R.id.galleryTile).setOnClickListener(view -> openSection("gallery/"));
         findViewById(R.id.subjectsTile).setOnClickListener(view -> openSection("syllabus/"));
+        findViewById(R.id.projectsTile).setOnClickListener(view -> showProjects());
+    }
+
+    private void configureProjectDomainTiles() {
+        attachDomainToast(R.id.aiDomainTile, R.string.ai_domain);
+        attachDomainToast(R.id.mlDomainTile, R.string.machine_learning_domain);
+        attachDomainToast(R.id.softwareDomainTile, R.string.software_engineering_domain);
+        attachDomainToast(R.id.securityDomainTile, R.string.security_domain);
+        attachDomainToast(R.id.deepLearningDomainTile, R.string.deep_learning_domain);
+        attachDomainToast(R.id.dataScienceDomainTile, R.string.data_science_domain);
+        attachDomainToast(R.id.cloudDomainTile, R.string.cloud_computing_domain);
+        attachDomainToast(R.id.iotDomainTile, R.string.iot_edge_domain);
+    }
+
+    private void attachDomainToast(int tileId, int labelId) {
+        findViewById(tileId).setOnClickListener(view ->
+                Toast.makeText(this, getString(labelId), Toast.LENGTH_SHORT).show()
+        );
     }
 
     private void configureWebView() {
@@ -255,6 +277,7 @@ public class MainActivity extends Activity {
     private void showOfflineMessage() {
         progressBar.setVisibility(View.GONE);
         homeView.setVisibility(View.GONE);
+        projectsView.setVisibility(View.GONE);
         homeButton.setVisibility(View.GONE);
         webView.setVisibility(View.GONE);
         offlineView.setVisibility(View.VISIBLE);
@@ -266,7 +289,18 @@ public class MainActivity extends Activity {
         offlineView.setVisibility(View.GONE);
         webView.setVisibility(View.GONE);
         homeButton.setVisibility(View.GONE);
+        projectsView.setVisibility(View.GONE);
         homeView.setVisibility(View.VISIBLE);
+    }
+
+    private void showProjects() {
+        currentPath = "";
+        progressBar.setVisibility(View.GONE);
+        offlineView.setVisibility(View.GONE);
+        webView.setVisibility(View.GONE);
+        homeButton.setVisibility(View.GONE);
+        homeView.setVisibility(View.GONE);
+        projectsView.setVisibility(View.VISIBLE);
     }
 
     private void openSection(String path) {
@@ -275,6 +309,7 @@ public class MainActivity extends Activity {
             progressBar.setVisibility(View.VISIBLE);
             offlineView.setVisibility(View.GONE);
             homeView.setVisibility(View.GONE);
+            projectsView.setVisibility(View.GONE);
             homeButton.setVisibility(View.VISIBLE);
             webView.setVisibility(View.VISIBLE);
             webView.loadUrl(BuildConfig.WEB_APP_URL + path);
@@ -333,6 +368,7 @@ public class MainActivity extends Activity {
             String encodedToken = URLEncoder.encode(token, "UTF-8");
             currentPath = "google/mobile-complete/";
             homeView.setVisibility(View.GONE);
+            projectsView.setVisibility(View.GONE);
             homeButton.setVisibility(View.VISIBLE);
             webView.setVisibility(View.VISIBLE);
             webView.loadUrl(BuildConfig.WEB_APP_URL + "google/mobile-complete/?token=" + encodedToken);
@@ -368,6 +404,10 @@ public class MainActivity extends Activity {
     public void onBackPressed() {
         if (homeView.getVisibility() == View.VISIBLE) {
             super.onBackPressed();
+            return;
+        }
+        if (projectsView.getVisibility() == View.VISIBLE) {
+            showHome();
             return;
         }
         if (currentPath != null && !currentPath.isEmpty()) {

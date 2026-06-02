@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="@color/cloud_domain" android:pathData="M17,36h19a8,8 0,0 0,1 -16a12,12 0,0 0,-23 -3a10,10 0,0 0,3 19z" />
+    <path android:fillColor="@color/brand_gold" android:pathData="M22,23h4v8h-4zM17,27h14v4H17z" />
+</vector>
