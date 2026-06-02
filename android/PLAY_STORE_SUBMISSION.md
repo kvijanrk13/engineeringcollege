@@ -28,7 +28,7 @@
 
 Google Play Console normally requires:
 
-- 512 x 512 app icon
+- 512 x 512 app icon: `store-assets/play-store-icon.png`
 - 1024 x 500 feature graphic
 - Phone screenshots
 - Short description
@@ -38,7 +38,7 @@ Google Play Console normally requires:
 - Data safety declaration
 - Content rating questionnaire
 
-Source artwork is included in `store-assets`. Export those SVG files to PNG before uploading them in Play Console.
+The app icon has been exported from `static/images/ICON LOGO.jpeg` to `store-assets/play-store-icon.png` for upload in Play Console.
 
 Privacy policy URL:
 

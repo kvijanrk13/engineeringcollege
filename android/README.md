@@ -45,7 +45,7 @@ app/build/outputs/bundle/release/app-release.aab
 
 - Deploy the Django app on HTTPS before review.
 - Add a privacy policy URL in Google Play Console.
-- Export the SVG files in `store-assets` to the 512x512 icon and 1024x500 feature graphic required by Play Console.
+- Upload `store-assets/play-store-icon.png` as the 512x512 Play Store app icon.
 - Use the same package name forever after publishing: `com.anrkit.engineeringcollegeprojects`.
 - Increase `versionCode` in `app/build.gradle` for every future release.
 
