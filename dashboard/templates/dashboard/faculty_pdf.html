@@ -174,7 +174,7 @@
     <table class="header-table">
         <tr>
             <td style="width: 75%; text-align: center; vertical-align: middle;">
-                <div class="college-name">ANURAG ENGINEERING COLLEGE</div>
+                <div class="college-name">ENGINEERING COLLEGE</div>
                 <div class="dept-name">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
                 <div style="font-size: 10px;">Employee Code: {{ faculty.employee_code }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
@@ -213,7 +213,7 @@
         <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Joining Date</td><td>{% if faculty.joining_date %}{{ faculty.joining_date|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
-        <tr><td class="label">Experience at Anurag</td><td>{{ faculty.exp_anurag|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Experience at Institution</td><td>{{ faculty.exp_anurag|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Experience (Other)</td><td>{{ faculty.exp_other|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Total Experience</td><td>{{ experience }}</td></tr>
         <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
@@ -623,7 +623,7 @@
     <!-- SECTION 19 (CLASSES TAKEN) REMOVED AS REQUESTED -->
 
     <div class="footer">
-        <p>This is an electronically generated official document of Anurag Engineering College.</p>
+        <p>This is an electronically generated official document of Engineering College.</p>
     </div>
 </body>
 </html>

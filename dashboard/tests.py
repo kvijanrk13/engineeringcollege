@@ -41,10 +41,11 @@ def make_test_pdf_bytes(label='Test PDF'):
 
 
 class DashboardTests(TestCase):
+    @override_settings(SECURE_SSL_REDIRECT=False)
     def test_login_page(self):
         response = self.client.get(reverse('dashboard:login'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'ANURAG Engineering College')
+        self.assertContains(response, 'Engineering College')
 
     @override_settings(
         GOOGLE_OAUTH_CLIENT_ID='test-client-id',

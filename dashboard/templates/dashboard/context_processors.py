@@ -18,8 +18,8 @@ def faculty_stats(request):
 def college_info(request):
     """Add college information to all templates"""
     return {
-        'college_name': 'ANURAG ENGINEERING COLLEGE',
-        'college_address': 'Anurag Nagar, Hyderabad, Telangana',
+        'college_name': 'ENGINEERING COLLEGE',
+        'college_address': 'Hyderabad, Telangana',
         'college_email': 'info@anurag.ac.in',
         'college_phone': '+91 9553122276',
     }

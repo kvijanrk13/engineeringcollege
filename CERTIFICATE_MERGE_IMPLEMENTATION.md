@@ -299,5 +299,5 @@ For issues or questions regarding certificate merging:
 
 **Version**: 1.0.0
 **Last Updated**: April 2026
-**Maintained By**: IT Department, ANURAG Engineering College
+**Maintained By**: IT Department, Engineering College
 

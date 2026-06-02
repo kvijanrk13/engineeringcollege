@@ -3345,7 +3345,7 @@ def admin_login(request):
         
         logger.info("Rendering login page")
         return render(request, 'dashboard/login.html', {
-            'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
+            'title': 'Admin Login - ENGINEERING COLLEGE',
             'admin_login': True, 'error': error,
             'google_signin_enabled': is_google_signin_enabled(),
         })
@@ -3430,7 +3430,7 @@ def home(request):
         return redirect('dashboard:student_dashboard_view')
     # Directly render login page instead of redirecting
     return render(request, 'dashboard/login.html', {
-        'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
+        'title': 'Admin Login - ENGINEERING COLLEGE',
         'admin_login': True,
         'google_signin_enabled': is_google_signin_enabled(),
     })
@@ -3620,7 +3620,7 @@ def redirect_to_dashboard(request):
 @login_required
 def syllabus_view(request):
     return render(request, 'dashboard/syllabus.html', {
-        'title': 'Syllabus & Common Subjects - ANURAG Engineering College',
+        'title': 'Syllabus & Common Subjects - Engineering College',
     })
 
 
@@ -5612,7 +5612,7 @@ def generate_student_pdf(
             fontName='Helvetica-Bold', alignment=1,
             textColor=colors.darkblue, spaceAfter=2
         )
-        elems.append(Paragraph("ANURAG ENGINEERING COLLEGE", header_style))
+        elems.append(Paragraph("ENGINEERING COLLEGE", header_style))
         elems.append(Paragraph(
             "<font size='12' color='navy'><b>DEPARTMENT OF INFORMATION TECHNOLOGY</b></font>",
             styles['Normal']
@@ -7540,7 +7540,7 @@ def profile_settings(request):
 @login_required
 def about_system(request):
     return render(request, 'dashboard/about.html', {
-        'title': 'About ANURAG Engineering College',
+        'title': 'About Engineering College',
         'version': '2.0.0',
         'release_date': '2024',
         'features': [
@@ -8199,9 +8199,9 @@ def simple_test(request):
     """Simple test view to verify Django is working"""
     return HttpResponse("""
     <html>
-    <head><title>ANURAG Engineering College</title></head>
+    <head><title>Engineering College</title></head>
     <body style="font-family: Arial; text-align: center; padding: 50px;">
-        <h1>🏫 ANURAG Engineering College</h1>
+        <h1>🏫 Engineering College</h1>
         <p>Django is working! Your application is running.</p>
         <hr>
         <p><a href="/admin-login/">🔐 Click here for Admin Login</a></p>

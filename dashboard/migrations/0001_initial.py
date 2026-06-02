@@ -64,7 +64,7 @@ class Migration(migrations.Migration):
                 ('scm', models.TextField(blank=True, help_text='Service Cum Merit details', null=True)),
                 ('about_yourself', models.TextField(blank=True, null=True)),
                 ('results', models.TextField(blank=True, help_text='Student results or academic performance', null=True)),
-                ('exp_anurag', models.CharField(blank=True, help_text='Experience at Anurag Engineering College', max_length=50, null=True)),
+                ('exp_anurag', models.CharField(blank=True, help_text='Experience at Engineering College', max_length=50, null=True)),
                 ('exp_other', models.CharField(blank=True, help_text='Experience at other institutions', max_length=50, null=True)),
                 ('photo', models.ImageField(blank=True, null=True, upload_to='faculty_photos/')),
                 ('classes_taken', models.IntegerField(blank=True, help_text='Number of classes taken by the faculty', null=True)),

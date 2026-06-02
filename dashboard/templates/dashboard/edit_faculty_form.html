@@ -1,7 +1,7 @@
 {% extends 'dashboard/base.html' %}
 {% load static %}
 
-{% block title %}Edit Faculty | {{ faculty.staff_name }} | ANURAG Engineering College{% endblock %}
+{% block title %}Edit Faculty | {{ faculty.staff_name }} | Engineering College{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
@@ -400,7 +400,7 @@
                                             <input type="text" name="orcid_id" class="form-control" value="{{ faculty.orcid_id }}">
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label class="form-label">Experience at Anurag</label>
+                                            <label class="form-label">Experience at Institution</label>
                                             <input type="text" name="exp_anurag" class="form-control" value="{{ faculty.exp_anurag }}">
                                         </div>
                                         <div class="col-md-4 mb-3">

@@ -93,7 +93,7 @@ class Faculty(models.Model):
 
     # Experience
     exp_anurag = models.CharField(max_length=50, blank=True, null=True,
-                                  help_text="Experience at Anurag Engineering College")
+                                  help_text="Experience at Engineering College")
     exp_other = models.CharField(max_length=50, blank=True, null=True, help_text="Experience at other institutions")
 
     # Photo

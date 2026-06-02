@@ -31,7 +31,7 @@ SECRET_KEY = os.environ.get(
 # ================================
 # COLLEGE SETTINGS
 # ================================
-COLLEGE_NAME = os.environ.get('COLLEGE_NAME', 'ANURAG Engineering College')
+COLLEGE_NAME = os.environ.get('COLLEGE_NAME', 'Engineering College')
 DEPARTMENT_NAME = os.environ.get('DEPARTMENT_NAME', 'Information Technology')
 ACADEMIC_YEAR = os.environ.get('ACADEMIC_YEAR', '2026-2027')
 

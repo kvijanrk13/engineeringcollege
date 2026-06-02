@@ -1,7 +1,7 @@
 # Configuration Checklist - Certificate Merging & PDF Generation
 
 **Generated:** April 24, 2026  
-**Project:** ANURAG Engineering College - IT Department  
+**Project:** Engineering College - IT Department  
 **Status:** ✅ CONFIGURATION VERIFIED
 
 ---
