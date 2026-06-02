@@ -5641,10 +5641,6 @@ def generate_student_pdf(
             textColor=colors.darkblue, spaceAfter=2
         )
         elems.append(Paragraph("ENGINEERING COLLEGE", header_style))
-        elems.append(Paragraph(
-            "<font size='12' color='navy'><b>DEPARTMENT OF INFORMATION TECHNOLOGY</b></font>",
-            styles['Normal']
-        ))
         elems.append(Spacer(1, 4))
         elems.append(Paragraph(
             "<b>STUDENT PROFILE</b>",
