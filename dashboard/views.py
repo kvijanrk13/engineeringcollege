@@ -5139,7 +5139,7 @@ def add_student(request):
                 messages.success(request, f'Student {student.student_name} added successfully!')
             if not user_authenticated:
                 set_student_login_session(request, student)
-            return redirect('dashboard:students_data')
+            return redirect('dashboard:students_data_password')
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -5362,7 +5362,7 @@ def edit_student(request, student_id):
                     logger.warning(f"Student updated, but PDF regeneration failed: {pdf_e}")
                     
                 messages.success(request, "Student updated successfully.")
-                return redirect('dashboard:students_data')
+                return redirect('dashboard:students_data_password')
             except Exception as e:
                 logger.error(f"Error updating student {student_id}: {e}", exc_info=True)
                 messages.error(request, f"An error occurred while updating the student: {str(e)}")
