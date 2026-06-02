@@ -9,6 +9,8 @@ import android.net.NetworkCapabilities;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.InputDevice;
+import android.view.MotionEvent;
 import android.view.View;
 import android.webkit.CookieManager;
 import android.webkit.DownloadListener;
@@ -30,6 +32,7 @@ import java.net.URLEncoder;
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQUEST_CODE = 1001;
     private static final String AUTH_DEEP_LINK_SCHEME = "engineeringcollegeprojects";
+    private static final int MOUSE_WHEEL_SCROLL_MULTIPLIER = 120;
 
     private WebView webView;
     private ProgressBar progressBar;
@@ -67,6 +70,29 @@ public class MainActivity extends Activity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+
+        webView.setVerticalScrollBarEnabled(true);
+        webView.setHorizontalScrollBarEnabled(true);
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
+        webView.setOnGenericMotionListener((view, event) -> {
+            if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) == 0
+                    || event.getAction() != MotionEvent.ACTION_SCROLL) {
+                return false;
+            }
+
+            float verticalScroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
+            float horizontalScroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+            if (verticalScroll == 0 && horizontalScroll == 0) {
+                return false;
+            }
+
+            webView.scrollBy(
+                    Math.round(-horizontalScroll * MOUSE_WHEEL_SCROLL_MULTIPLIER),
+                    Math.round(-verticalScroll * MOUSE_WHEEL_SCROLL_MULTIPLIER)
+            );
+            return true;
+        });
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
