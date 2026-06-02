@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.facultyTile).setOnClickListener(view -> openSection("faculty/list/"));
         findViewById(R.id.studentTile).setOnClickListener(view -> openSection("students/data/password/"));
         findViewById(R.id.examBranchTile).setOnClickListener(view -> openSection("exam-branch/"));
-        findViewById(R.id.dashboardTile).setOnClickListener(view -> openSection("dashboard/"));
+        findViewById(R.id.dashboardTile).setOnClickListener(view -> openSection("mobile-dashboard/"));
         findViewById(R.id.galleryTile).setOnClickListener(view -> openSection("gallery/"));
         findViewById(R.id.subjectsTile).setOnClickListener(view -> openSection("syllabus/"));
         findViewById(R.id.projectsTile).setOnClickListener(view -> showProjects());

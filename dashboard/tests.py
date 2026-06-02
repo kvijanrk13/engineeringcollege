@@ -47,6 +47,14 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Engineering College')
 
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_mobile_dashboard_page_is_available_without_admin_login(self):
+        response = self.client.get(reverse('dashboard:mobile_dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Engineering College')
+        self.assertContains(response, 'Department Command Center')
+
     @override_settings(
         GOOGLE_OAUTH_CLIENT_ID='test-client-id',
         GOOGLE_OAUTH_CLIENT_SECRET='test-client-secret',

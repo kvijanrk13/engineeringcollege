@@ -3517,6 +3517,46 @@ def home(request):
     })
 
 
+def mobile_dashboard(request):
+    try:
+        total_faculty = Faculty.objects.count()
+        active_faculty = Faculty.objects.filter(is_active=True).count()
+        total_students = Student.objects.count()
+        total_certificates = Certificate.objects.count()
+        with_phd = Faculty.objects.filter(phd_degree='Completed').count()
+        departments = list(
+            Faculty.objects.values('department')
+            .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
+            .order_by('-count')[:10]
+        )
+        for department in departments:
+            department['percentage'] = (
+                (department['count'] / total_faculty * 100)
+                if total_faculty > 0 else 0
+            )
+        recent_logs = FacultyLog.objects.select_related('faculty').order_by('-created_at')[:5]
+    except Exception as exc:
+        logger.error(f"Mobile dashboard data error: {exc}", exc_info=True)
+        total_faculty = 0
+        active_faculty = 0
+        total_students = 0
+        total_certificates = 0
+        with_phd = 0
+        departments = []
+        recent_logs = []
+
+    return render(request, "dashboard/dashboard.html", {
+        'title': 'Dashboard',
+        'total_faculty': total_faculty,
+        'active_faculty': active_faculty,
+        'total_students': total_students,
+        'total_certificates': total_certificates,
+        'with_phd': with_phd,
+        'departments': departments,
+        'recent_logs': recent_logs,
+    })
+
+
 @login_required
 
 
