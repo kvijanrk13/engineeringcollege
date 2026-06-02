@@ -6,7 +6,13 @@ package instead of going back into the large views module.
 """
 
 
-def generate_student_profile_pdf(student, return_bytes=False, photo_override_path=None, certificate_override_assets=None):
+def generate_student_profile_pdf(
+    student,
+    return_bytes=False,
+    photo_override_path=None,
+    certificate_override_assets=None,
+    email_pdf=False,
+):
     from dashboard import views as legacy_views
 
     return legacy_views.generate_student_pdf(
@@ -14,6 +20,7 @@ def generate_student_profile_pdf(student, return_bytes=False, photo_override_pat
         return_bytes=return_bytes,
         photo_override_path=photo_override_path,
         certificate_override_assets=certificate_override_assets,
+        email_pdf=email_pdf,
     )
 
 

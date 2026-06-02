@@ -23,12 +23,15 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.db.models import Q, Count
 from django.core import signing
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
+from django.core.mail import EmailMessage
+from django.core.validators import validate_email
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -510,6 +513,44 @@ def student_has_saved_pdf(student):
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     pdf_field = getattr(student, 'pdf_file', None)
     return bool(pdf_url or getattr(pdf_field, 'name', None))
+
+
+def send_student_profile_pdf_email(student, pdf_bytes):
+    recipient = (getattr(student, 'email', '') or '').strip()
+    if not recipient or not pdf_bytes:
+        return False
+
+    try:
+        validate_email(recipient)
+    except ValidationError:
+        logger.warning(f"Skipping student profile PDF email for {student.ht_no}: invalid email {recipient!r}")
+        return False
+
+    filename = f"student_{student.ht_no}_profile.pdf"
+    subject = f"Student Profile PDF - {student.student_name or student.ht_no}"
+    body = (
+        f"Dear {student.student_name or 'Student'},\n\n"
+        "Please find attached your generated student profile PDF.\n\n"
+        "Regards,\nEngineering College"
+    )
+
+    try:
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            to=[recipient],
+        )
+        email.attach(filename, pdf_bytes, 'application/pdf')
+        email.send(fail_silently=False)
+        logger.info(f"Student profile PDF emailed to {recipient} for {student.ht_no}")
+        return True
+    except Exception as exc:
+        logger.warning(
+            f"Could not email student profile PDF to {recipient} for {student.ht_no}: {exc}",
+            exc_info=True,
+        )
+        return False
 
 
 def choose_student_certificate_slot(student, requested_type=None, reserved_fields=None):
@@ -5122,12 +5163,12 @@ def add_student(request):
             # Ensure the student flow (add_student.html) always attempts
             # to build a single individual PDF that includes photo + certificates.
             try:
-                if student_has_upload_assets(student):
-                    generate_student_profile_pdf(
-                        student,
-                        photo_override_path=temp_photo_override_path,
-                        certificate_override_assets=certificate_override_assets,
-                    )
+                generate_student_profile_pdf(
+                    student,
+                    photo_override_path=temp_photo_override_path,
+                    certificate_override_assets=certificate_override_assets,
+                    email_pdf=True,
+                )
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
@@ -5490,6 +5531,7 @@ def generate_student_pdf(
     return_bytes=False,
     photo_override_path=None,
     certificate_override_assets=None,
+    email_pdf=False,
 ):
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
     print(f"  [DEBUG] cert_achieve: {student.cert_achieve}, cert_achieve_url: {student.cert_achieve_url}")
@@ -5981,6 +6023,9 @@ def generate_student_pdf(
 
     if used_reportlab_fallback:
         logger.info(f"Student PDF for {student.ht_no} used ReportLab fallback instead of pdfkit/wkhtmltopdf")
+
+    if email_pdf:
+        send_student_profile_pdf_email(student, final_pdf_bytes)
 
     print("=== STUDENT PDF GENERATION COMPLETE ===\n")
 
