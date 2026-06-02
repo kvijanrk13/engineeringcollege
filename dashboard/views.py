@@ -4355,7 +4355,11 @@ def add_faculty(request):
             except Exception as pdf_e:
                 logger.warning(f"Faculty added, but merged PDF generation failed: {pdf_e}")
 
-            messages.success(request, f'Faculty {faculty.staff_name} added successfully!')
+            messages.success(
+                request,
+                f'Faculty {faculty.staff_name} added successfully! '
+                'The profile will be mailed. Please check your mail inbox/spam.'
+            )
             print(f" [OK] Faculty {faculty.employee_code} fully saved. Redirecting to faculty list.")
             return redirect('dashboard:faculty_list')
 
@@ -5196,7 +5200,11 @@ def add_student(request):
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
-            messages.success(request, f'Student {student.student_name} added!')
+            messages.success(
+                request,
+                f'Student {student.student_name} added! '
+                'The profile will be mailed. Please check your mail inbox/spam.'
+            )
             if not user_authenticated:
                 set_student_login_session(request, student)
             return redirect('dashboard:students_data_password')
