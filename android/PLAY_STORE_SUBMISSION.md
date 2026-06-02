@@ -38,7 +38,7 @@ Google Play Console normally requires:
 - Data safety declaration
 - Content rating questionnaire
 
-The app icon has been exported from `static/images/ICON LOGO.jpeg` to `store-assets/play-store-icon.png` for upload in Play Console.
+The app icon for Play Console is available at `store-assets/play-store-icon.png`.
 
 Privacy policy URL:
 

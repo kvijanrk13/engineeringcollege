@@ -16,9 +16,7 @@ from dashboard import views as dashboard_views
 from dashboard.models import Certificate, CloudinaryUpload, FDP, Faculty, ResearchPublication, Student
 from dashboard.pdf_generation import (
     FACULTY_PDF_TEMPLATE,
-    PDF_HEADER_IMAGE_FILENAME,
     STUDENT_PDF_TEMPLATE,
-    get_pdf_header_image_path,
 )
 
 from PIL import Image
@@ -48,10 +46,8 @@ class DashboardTests(TestCase):
         self.assertContains(response, 'ANURAG Engineering College')
 
     def test_pdf_generation_uses_dedicated_assets_boundary(self):
-        self.assertEqual(PDF_HEADER_IMAGE_FILENAME, 'NEW ANURAG 25.png')
         self.assertEqual(STUDENT_PDF_TEMPLATE, 'dashboard/student_pdf.html')
         self.assertEqual(FACULTY_PDF_TEMPLATE, 'dashboard/faculty_pdf.html')
-        self.assertTrue(Path(get_pdf_header_image_path()).exists())
 
     def test_resolve_faculty_photo_for_pdf_uses_file_field(self):
         faculty = Faculty.objects.create(

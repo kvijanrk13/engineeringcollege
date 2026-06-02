@@ -1036,13 +1036,10 @@ def build_faculty_pdf_context(faculty):
             if temp_path not in temp_paths:
                 temp_paths.append(temp_path)
 
-    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
-
     context = {
         'faculty': faculty,
         'photo_url': photo_url,
         'local_photo_path': local_photo_path,
-        'anurag_header_url': build_file_uri(anurag_header_path),
         'experience': calculate_experience(faculty.joining_date) if faculty.joining_date else 'N/A',
         'certificates': certificates,
         'research_projects': research_projects,
@@ -3011,14 +3008,12 @@ def faculty_dashboard(request, faculty_id=None):
         exp = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
         # Resolve the faculty photo for the PDF template
         photo_url, local_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
-        anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
         context = {
             "faculty": faculty,
             "pdf_mode": True,
             "current_date": timezone.now(),
             "experience": exp,
             "photo_url": photo_url,
-            "anurag_header_url": build_file_uri(anurag_header_path),
             "cloudinary_status": {"has_pdf": bool(faculty.cloudinary_pdf_url)},
         }
         # Clean up any temp paths after rendering
@@ -5086,17 +5081,12 @@ def generate_student_pdf(
     if photo_url_for_pdf:
         print(f"  [OK] Photo ({photo_source}): {photo_url_for_pdf}")
 
-    # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
-    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
-    anurag_header_url = build_file_uri(anurag_header_path)
-
     # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
     context = {
         'student': student,
         'current_date': datetime.now(),
         'student_photo_url': photo_url_for_pdf,
         'local_photo_path': local_photo_path,
-        'anurag_header_url': anurag_header_url,
         'uploaded_documents': build_student_uploaded_documents(student),
     }
 
