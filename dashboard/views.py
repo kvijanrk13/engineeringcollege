@@ -553,6 +553,46 @@ def send_student_profile_pdf_email(student, pdf_bytes):
         return False
 
 
+def send_faculty_profile_pdf_email(faculty, pdf_bytes):
+    recipient = (getattr(faculty, 'email', '') or '').strip()
+    if not recipient or not pdf_bytes:
+        return False
+
+    try:
+        validate_email(recipient)
+    except ValidationError:
+        logger.warning(
+            f"Skipping faculty profile PDF email for {faculty.employee_code}: invalid email {recipient!r}"
+        )
+        return False
+
+    filename = f"faculty_{faculty.employee_code}_profile.pdf"
+    subject = f"Faculty Profile PDF - {faculty.staff_name or faculty.employee_code}"
+    body = (
+        f"Dear {faculty.staff_name or 'Faculty'},\n\n"
+        "Please find attached your generated faculty profile PDF.\n\n"
+        "Regards,\nEngineering College"
+    )
+
+    try:
+        email = EmailMessage(
+            subject=subject,
+            body=body,
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            to=[recipient],
+        )
+        email.attach(filename, pdf_bytes, 'application/pdf')
+        email.send(fail_silently=False)
+        logger.info(f"Faculty profile PDF emailed to {recipient} for {faculty.employee_code}")
+        return True
+    except Exception as exc:
+        logger.warning(
+            f"Could not email faculty profile PDF to {recipient} for {faculty.employee_code}: {exc}",
+            exc_info=True,
+        )
+        return False
+
+
 def choose_student_certificate_slot(student, requested_type=None, reserved_fields=None):
     reserved_fields = reserved_fields or set()
     slot_by_field = {
@@ -4306,28 +4346,12 @@ def add_faculty(request):
             )
 
             # Ensure the faculty flow (add_faculty_form.html) always attempts
-            # to build a single individual PDF that includes profile photo and docs.
+            # to build and email a single individual PDF after profile creation.
             try:
-                has_uploads = bool(
-                    faculty.photo or faculty.cloudinary_photo_url or
-                    faculty.aadhar_file or faculty.aadhar_url or
-                    faculty.pan_file or faculty.pan_url or
-                    faculty.apaar_file or faculty.apaar_url or
-                    faculty.scm_file or faculty.scm_url or
-                    faculty.jntuh_biodata or faculty.jntuh_biodata_url or
-                    faculty.ssc_certificate or faculty.ssc_certificate_url or
-                    faculty.inter_certificate or faculty.inter_certificate_url or
-                    faculty.ug_certificate or faculty.ug_certificate_url or
-                    faculty.pg_certificate or faculty.pg_certificate_url or
-                    faculty.phd_certificate or faculty.phd_certificate_url or
-                    faculty.research_proof or faculty.research_proof_url or
-                    faculty.fdp_certificate or faculty.fdp_certificate_url or
-                    faculty.experience_certificates or faculty.experience_certificates_url or
-                    faculty.other_documents or faculty.other_documents_url or
-                    Certificate.objects.filter(faculty=faculty).exists()
-                )
-                if has_uploads:
-                    generate_faculty_pdf(request, faculty.id)
+                pdf_bytes = build_faculty_profile_pdf_bytes(faculty)
+                if pdf_bytes and pdf_bytes.startswith(b'%PDF'):
+                    persist_faculty_profile_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+                    send_faculty_profile_pdf_email(faculty, pdf_bytes)
             except Exception as pdf_e:
                 logger.warning(f"Faculty added, but merged PDF generation failed: {pdf_e}")
 
@@ -5475,8 +5499,12 @@ def generate_student_pdf_view(request, student_id):
             return redirect(student_dashboard_redirect_route(request))
 
     try:
-        # Generate student PDF with merged certificates
-        pdf_bytes = generate_student_profile_pdf_bytes(student)
+        # Generate student PDF with merged certificates and email it to the registered address.
+        pdf_bytes = generate_student_profile_pdf(
+            student,
+            return_bytes=True,
+            email_pdf=True,
+        )
         if not pdf_bytes:
             messages.error(request, "Failed to generate PDF.")
             return redirect('dashboard:students_data' if user_authenticated else student_dashboard_redirect_route(request))
@@ -8485,10 +8513,14 @@ def generate_faculty_pdf(request, faculty_id):
             )
 
         pdf_bytes = _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=request.user.username)
+        send_faculty_profile_pdf_email(faculty, pdf_bytes)
         FacultyLog.objects.create(
             faculty=faculty,
             action='Faculty PDF Generated',
-            details=f'Merged faculty PDF generated for {faculty.staff_name} ({faculty.employee_code})',
+            details=(
+                f'Merged faculty PDF generated for {faculty.staff_name} ({faculty.employee_code}); '
+                'email delivery attempted to the registered address'
+            ),
             performed_by=request.user.username,
             ip_address=request.META.get('REMOTE_ADDR'),
         )
