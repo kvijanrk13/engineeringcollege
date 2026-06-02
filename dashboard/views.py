@@ -5172,12 +5172,7 @@ def add_student(request):
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
-            if files_up:
-                messages.success(request, f'Student {student.student_name} added! Cloudinary synced: {", ".join(files_up)}')
-            if files_lo:
-                messages.info(request, f'Local file copies saved: {", ".join(files_lo)}')
-            if not files_up and not files_lo:
-                messages.success(request, f'Student {student.student_name} added successfully!')
+            messages.success(request, f'Student {student.student_name} added!')
             if not user_authenticated:
                 set_student_login_session(request, student)
             return redirect('dashboard:students_data_password')
