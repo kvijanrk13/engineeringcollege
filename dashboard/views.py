@@ -1913,6 +1913,7 @@ def collect_faculty_files(faculty):
         ('pan_url', 'pan_file', 'PAN Card'),
         ('apaar_url', 'apaar_file', 'APAAR Document'),
         ('scm_url', 'scm_file', 'SCM Document'),
+        ('membership_proof_url', 'membership_proof', 'Membership Proof'),
         ('jntuh_biodata_url', 'jntuh_biodata', 'JNTUH Bio-Data'),
         ('ssc_certificate_url', 'ssc_certificate', 'SSC Certificate'),
         ('inter_certificate_url', 'inter_certificate', 'Intermediate Certificate'),
@@ -3443,6 +3444,21 @@ def faculty_list(request):
 
 
 # ==================== ADD FACULTY ====================
+def get_department_options():
+    return ['CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', 'MCA']
+
+
+def get_faculty_registration_context():
+    return {
+        "title": "Add New Faculty",
+        "departments": get_department_options(),
+        "designations": ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Senior Professor'],
+        "genders": ['Male', 'Female', 'Other'],
+        "caste_list": ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC', 'ST'],
+        "qualifications": ['Completed', 'Pursuing', 'Not Started'],
+    }
+
+
 @login_required
 def add_faculty(request):
     print("=" * 60)
@@ -3460,10 +3476,14 @@ def add_faculty(request):
         joining_date_raw = request.POST.get('joining_date', '')
         if dob_raw and parse_date(dob_raw) is None:
             messages.error(request, 'Invalid date of birth. Use YYYY-MM-DD format (e.g., 1990-01-15)')
-            return render(request, 'dashboard/add_faculty_form.html', {})
+            return render(request, 'dashboard/add_faculty_form.html', get_faculty_registration_context())
         if joining_date_raw and parse_date(joining_date_raw) is None:
             messages.error(request, 'Invalid joining date. Use YYYY-MM-DD format (e.g., 2020-01-15)')
-            return render(request, 'dashboard/add_faculty_form.html', {})
+            return render(request, 'dashboard/add_faculty_form.html', get_faculty_registration_context())
+
+        if not request.POST.get('jntuh_id', '').strip():
+            messages.error(request, 'Please fill the JNTUH ID before saving faculty registration.')
+            return render(request, 'dashboard/add_faculty_form.html', get_faculty_registration_context())
 
         try:
             phd_status = request.POST.get('phd_degree', '')
@@ -3963,19 +3983,7 @@ def add_faculty(request):
             messages.error(request, f"Error adding faculty: {str(e)}")
             return redirect("dashboard:add_faculty")
 
-    departments = ['CSE', 'IT', 'ECE', 'EEE', 'MECH', 'CIVIL', 'MBA', 'MCA']
-    designations = ['Professor', 'Associate Professor', 'Assistant Professor', 'Lecturer', 'Senior Professor']
-    genders = ['Male', 'Female', 'Other']
-    caste_list = ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC', 'ST']
-    qualifications = ['Completed', 'Pursuing', 'Not Started']
-    return render(request, "dashboard/add_faculty_form.html", {
-        "title": "Add New Faculty",
-        "departments": departments,
-        "designations": designations,
-        "genders": genders,
-        "caste_list": caste_list,
-        "qualifications": qualifications,
-    })
+    return render(request, "dashboard/add_faculty_form.html", get_faculty_registration_context())
 
 
 # ==================== EDIT FACULTY ====================
@@ -4652,6 +4660,7 @@ def add_student(request):
                 parent_phone=request.POST.get('parent_phone'),
                 student_phone=request.POST.get('student_phone'),
                 email=request.POST.get('email'),
+                department=request.POST.get('department'),
                 task_registered=request.POST.get('task_registered'),
                 task_username=request.POST.get('task_username'),
                 csi_registered=request.POST.get('csi_registered'),
@@ -4816,7 +4825,7 @@ def add_student(request):
             messages.error(request, f'Error adding student: {e}')
             return redirect('dashboard:add_student')
     try:
-        return render(request, 'dashboard/add_student.html')
+        return render(request, 'dashboard/add_student.html', {'departments': get_department_options()})
     except Exception as e:
         logger.error(f"Error in add_student view: {str(e)}", exc_info=True)
         from django.http import HttpResponseServerError
@@ -5027,7 +5036,12 @@ def edit_student(request, student_id):
             return redirect('dashboard:students_data')
     
     try:
-        return render(request, 'dashboard/add_student.html', {'form': form, 'title': 'Edit Student', 'student': student})
+        return render(request, 'dashboard/add_student.html', {
+            'form': form,
+            'title': 'Edit Student',
+            'student': student,
+            'departments': get_department_options(),
+        })
     except Exception as e:
         logger.error(f"Error rendering edit student page for student {student_id}: {e}", exc_info=True)
         messages.error(request, "An error occurred while loading the edit page.")
@@ -5901,6 +5915,47 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
         readers_keep = [] # Keep readers alive
 
         # --- helper: add a file (path) to writer ---
+        seen_asset_keys = set()
+
+        def _asset_key(file_field=None, url_value=None):
+            normalized_url = normalize_optional_url(url_value)
+            if normalized_url:
+                return ('url', normalized_url)
+            if file_field:
+                path_value = getattr(file_field, 'path', None)
+                if path_value:
+                    return ('path', os.path.normcase(os.path.abspath(path_value)))
+                name_value = getattr(file_field, 'name', None)
+                if name_value:
+                    return ('name', name_value)
+            return None
+
+        def _add_asset_once(file_field=None, url_value=None):
+            key = _asset_key(file_field, url_value)
+            if key and key in seen_asset_keys:
+                return False
+
+            asset_path, _ = get_local_or_remote_asset(file_field, url=url_value, default_suffix='.pdf')
+            if not asset_path:
+                return False
+
+            if key:
+                seen_asset_keys.add(key)
+            path_key = ('path', os.path.normcase(os.path.abspath(asset_path)))
+            if path_key in seen_asset_keys:
+                return False
+            seen_asset_keys.add(path_key)
+
+            is_local_field_path = (
+                file_field
+                and hasattr(file_field, 'path')
+                and getattr(file_field, 'path', None) == asset_path
+            )
+            if asset_path not in temp_files and not is_local_field_path:
+                temp_files.append(asset_path)
+
+            return _add_to_writer_internal(asset_path)
+
         def _add_to_writer_internal(path):
             if not path or not os.path.exists(path):
                 return False
@@ -5944,6 +5999,7 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             ('pan_url', 'pan_file'),
             ('apaar_url', 'apaar_file'),
             ('scm_url', 'scm_file'),
+            ('membership_proof_url', 'membership_proof'),
             ('jntuh_biodata_url', 'jntuh_biodata'),
             ('ssc_certificate_url', 'ssc_certificate'),
             ('inter_certificate_url', 'inter_certificate'),
@@ -5959,46 +6015,28 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
         for url_field, file_field in doc_fields:
             ff = getattr(faculty, file_field, None)
             url_val = getattr(faculty, url_field, None)
-            p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
-            if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
-                temp_files.append(p)
-            if p:
-                _add_to_writer_internal(p)
+            _add_asset_once(ff, url_val)
 
         # 3. Certificate records (related model)
         from .models import Certificate
         for cert in Certificate.objects.filter(faculty=faculty):
-            cert_p, _ = get_local_or_remote_asset(cert.certificate_file, url=cert.cloudinary_url, default_suffix='.pdf')
-            if cert_p and cert_p not in temp_files and not (cert.certificate_file and hasattr(cert.certificate_file, 'path') and getattr(cert.certificate_file, 'path', None) == cert_p):
-                temp_files.append(cert_p)
-            if cert_p:
-                _add_to_writer_internal(cert_p)
+            _add_asset_once(cert.certificate_file, cert.cloudinary_url)
 
         # 4. FDP Certificates
         from .models import FDP
         for fdp_rec in FDP.objects.filter(faculty=faculty):
-            fdp_p, _ = get_local_or_remote_asset(
+            _add_asset_once(
                 fdp_rec.certificate,
-                url=getattr(fdp_rec, 'certificate_url', None),
-                default_suffix='.pdf'
+                getattr(fdp_rec, 'certificate_url', None),
             )
-            if fdp_p and fdp_p not in temp_files and not (fdp_rec.certificate and hasattr(fdp_rec.certificate, 'path') and getattr(fdp_rec.certificate, 'path', None) == fdp_p):
-                temp_files.append(fdp_p)
-            if fdp_p:
-                _add_to_writer_internal(fdp_p)
 
         # 5. Research Proofs
         from .models import ResearchPublication
         for pub in ResearchPublication.objects.filter(faculty=faculty):
-            pub_p, _ = get_local_or_remote_asset(
+            _add_asset_once(
                 pub.proof_document,
-                url=getattr(pub, 'proof_document_url', None),
-                default_suffix='.pdf'
+                getattr(pub, 'proof_document_url', None),
             )
-            if pub_p and pub_p not in temp_files and not (pub.proof_document and hasattr(pub.proof_document, 'path') and getattr(pub.proof_document, 'path', None) == pub_p):
-                temp_files.append(pub_p)
-            if pub_p:
-                _add_to_writer_internal(pub_p)
 
         # Finalize
         pages_count = len(writer.pages)

@@ -387,8 +387,8 @@
                                             <input type="date" name="joining_date" class="form-control">
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label class="form-label">JNTUH ID</label>
-                                            <input type="text" name="jntuh_id" class="form-control">
+                                            <label class="form-label required-field">JNTUH ID</label>
+                                            <input type="text" name="jntuh_id" class="form-control" required>
                                         </div>
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label">AICTE ID</label>
@@ -707,7 +707,7 @@
                                 <div class="d-flex justify-content-end gap-2 mt-4">
                                     <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
                                     <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg"><i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form</button>
-                                     <button type="button" onclick="document.getElementById('addFacultyForm').submit()" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-save me-1"></i>Save Faculty</button>
+                                     <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-save me-1"></i>Save Faculty</button>
                                 </div>
                             </div>
                         </div>
@@ -1377,6 +1377,14 @@
     // FORM SUBMISSION
     // ============================================================
     document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
+        const jntuhInput = document.querySelector('input[name="jntuh_id"]');
+        if (jntuhInput && !jntuhInput.value.trim()) {
+            alert('Please fill the JNTUH ID before saving faculty registration.');
+            jntuhInput.focus();
+            e.preventDefault();
+            return;
+        }
+
         const requiredFields = document.querySelectorAll('[required]');
         let isValid = true;
         requiredFields.forEach(field => {

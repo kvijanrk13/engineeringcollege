@@ -425,6 +425,7 @@ class Student(models.Model):
     parent_phone = models.CharField(max_length=15, blank=True, null=True)
     student_phone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
     year = models.IntegerField(blank=True, null=True)
     sem = models.IntegerField(blank=True, null=True)
     ssc_year = models.CharField(max_length=20, blank=True, null=True)

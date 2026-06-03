@@ -638,6 +638,15 @@
                      <input type="text" name="eamcet_rank" value="{{ student.eamcet_rank|default:'' }}" placeholder="EAMCET Rank" pattern="[0-9]*">
                 </div>
                 <div class="form-group">
+                    <label class="required-field">Department</label>
+                    <select name="department" required>
+                        <option value="">Select Department</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept }}" {% if student.department == dept %}selected{% endif %}>{{ dept }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
                     <label class="required-field">Year</label>
                     <select name="year" required>
                         <option value="">Select Year</option>

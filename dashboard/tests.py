@@ -1087,6 +1087,7 @@ class DashboardTests(TestCase):
                 'email': 'faculty@example.com',
                 'department': 'IT',
                 'designation': 'Assistant Professor',
+                'jntuh_id': 'JNTUH-T9001',
                 'ssc_percent': '0',
                 'inter_percent': '0',
                 'ug_percentage': '0',

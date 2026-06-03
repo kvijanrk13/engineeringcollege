@@ -176,8 +176,8 @@
                                     <input type="date" name="joining_date" class="form-control">
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">JNTUH ID</label>
-                                    <input type="text" name="jntuh_id" class="form-control">
+                                    <label class="form-label required-field">JNTUH ID</label>
+                                    <input type="text" name="jntuh_id" class="form-control" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">AICTE ID</label>
@@ -462,6 +462,14 @@
 
 <script>
 document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
+    const jntuhInput = document.querySelector('input[name="jntuh_id"]');
+    if (jntuhInput && !jntuhInput.value.trim()) {
+        alert('Please fill the JNTUH ID before saving faculty registration.');
+        jntuhInput.focus();
+        e.preventDefault();
+        return;
+    }
+
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';

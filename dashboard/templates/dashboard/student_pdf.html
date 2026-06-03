@@ -114,6 +114,7 @@
 
     <div class="section-title">3. ACADEMIC INFORMATION</div>
     <table class="info-table">
+        <tr><td class="label">Department</td><td>{{ student.department|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Current Year</td><td>{{ student.year|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Current Semester</td><td>{{ student.sem|default:"Not Specified" }}</td></tr>
         <tr><td class="label">SSC Year</td><td>{{ student.ssc_year|default:"Not Specified" }}</td></tr>

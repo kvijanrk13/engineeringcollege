@@ -18,7 +18,7 @@ class StudentForm(forms.ModelForm):
             'ht_no', 'student_name', 'father_name', 'mother_name', 'gender',
             'dob', 'nationality', 'category', 'religion', 'blood_group',
             'aadhar', 'apaar_id', 'address', 'parent_phone', 'student_phone',
-            'email', 'year', 'sem', 'ssc_year', 'ssc_school_name', 'ssc_marks',
+            'email', 'department', 'year', 'sem', 'ssc_year', 'ssc_school_name', 'ssc_marks',
             'inter_year', 'inter_college_name', 'inter_marks',
             'btech_year', 'ug_college_name', 'cgpa',
             'task_registered', 'task_username', 'csi_registered', 'csi_membership_id',
@@ -49,6 +49,7 @@ class StudentForm(forms.ModelForm):
             'parent_phone': forms.TextInput(attrs={'maxlength': 15}),
             'student_phone': forms.TextInput(attrs={'maxlength': 15}),
             'email': forms.EmailInput(attrs={'maxlength': 254}),
+            'department': forms.TextInput(attrs={'maxlength': 100}),
             'ssc_year': forms.TextInput(attrs={'maxlength': 20}),
             'ssc_school_name': forms.TextInput(attrs={'maxlength': 255}),
             'ssc_marks': forms.TextInput(attrs={'maxlength': 20}),
@@ -126,6 +127,12 @@ class StudentForm(forms.ModelForm):
         val = self.cleaned_data.get('student_phone', '')
         if val and len(val) > 15:
             raise forms.ValidationError("Student phone must be 15 characters or less.")
+        return val
+
+    def clean_department(self):
+        val = self.cleaned_data.get('department', '')
+        if val and len(val) > 100:
+            raise forms.ValidationError("Department must be 100 characters or less.")
         return val
 
     def clean_ssc_marks(self):
