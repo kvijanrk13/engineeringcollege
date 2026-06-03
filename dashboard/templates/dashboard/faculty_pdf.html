@@ -628,6 +628,7 @@
         <tr><td class="label">Membership ID</td><td>{{ faculty.membership_id|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Membership Proof</td><td>{% if has_membership_proof %}Uploaded{% else %}Not Uploaded{% endif %}</td></tr>
         <tr><td class="label">Ratified</td><td>{{ ratified_status|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">PDF Password Protection</td><td>{% if faculty.pdf_password %}Enabled{% else %}Not Enabled{% endif %}</td></tr>
         <tr>
             <td class="label">SCM Document</td>
             <td>

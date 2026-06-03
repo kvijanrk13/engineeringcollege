@@ -1290,6 +1290,7 @@ def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
             ('Membership ID', getattr(faculty, 'membership_id', 'N/A')),
             ('Membership Proof', 'Uploaded' if getattr(getattr(faculty, 'membership_proof', None), 'name', '') or getattr(faculty, 'membership_proof_url', None) else 'N/A'),
             ('Ratified', 'Yes' if getattr(faculty, 'is_ratified', None) is True else 'No' if getattr(faculty, 'is_ratified', None) is False else 'N/A'),
+            ('PDF Password Protection', 'Enabled' if get_pdf_password(faculty) else 'Not Enabled'),
             ('SCM Details', getattr(faculty, 'scm', 'N/A')),
         ]
 
@@ -5357,6 +5358,7 @@ def generate_student_pdf(
             ("TASK Username", student_obj.task_username or "N/A"),
             ("CSI Registered", student_obj.csi_registered or "N/A"),
             ("CSI Membership ID", student_obj.csi_membership_id or "N/A"),
+            ("PDF Password Protection", "Enabled" if get_pdf_password(student_obj) else "Not Enabled"),
             ("RTRP Project", student_obj.rtrp_project_title or "N/A"),
             ("Internship Title", student_obj.intern_title or "N/A"),
             ("Final Project", student_obj.final_project_title or "N/A"),
