@@ -24,6 +24,7 @@ from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -162,6 +163,51 @@ def get_cloudinary_public_id_candidates(url):
         if public_id and public_id not in candidates:
             candidates.append(public_id)
     return candidates
+
+
+def get_pdf_password(profile_obj):
+    return (getattr(profile_obj, 'pdf_password', None) or '').strip()
+
+
+def encrypt_pdf_bytes(pdf_bytes, password):
+    password = (password or '').strip()
+    if not pdf_bytes or not password:
+        return pdf_bytes
+
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+    writer.encrypt(user_password=password, owner_password=password)
+    output = io.BytesIO()
+    writer.write(output)
+    return output.getvalue()
+
+
+def email_password_protected_pdf(*, recipient, display_name, pdf_bytes, filename, subject):
+    recipient = (recipient or '').strip()
+    if not recipient or not pdf_bytes:
+        return False
+
+    try:
+        message = EmailMessage(
+            subject=subject,
+            body=(
+                f"Dear {display_name or 'User'},\n\n"
+                "Please find attached your password-protected profile PDF.\n"
+                "Open it using the PDF password you entered during registration.\n\n"
+                "Regards,\nEngineering College"
+            ),
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            to=[recipient],
+        )
+        message.attach(filename, pdf_bytes, 'application/pdf')
+        message.send(fail_silently=False)
+        logger.info(f"Password-protected PDF emailed to {recipient}")
+        return True
+    except Exception as exc:
+        logger.warning(f"Could not email password-protected PDF to {recipient}: {exc}", exc_info=True)
+        return False
 
 
 def try_cloudinary_private_download(public_id, headers=None):
@@ -1187,9 +1233,10 @@ def generate_faculty_pdf_bytes(faculty):
         
         if not merged or not merged.startswith(b'%PDF'):
             logger.warning(f"Merge returned invalid PDF for {faculty.employee_code}, using base PDF")
-            return info_pdf_bytes
+            return encrypt_pdf_bytes(info_pdf_bytes, get_pdf_password(faculty))
         
         final_pdf = merged
+        final_pdf = encrypt_pdf_bytes(final_pdf, get_pdf_password(faculty))
         logger.info(f"Final merged PDF: {len(final_pdf)} bytes for {faculty.employee_code}")
         return final_pdf
     except Exception as exc:
@@ -3476,6 +3523,7 @@ def add_faculty(request):
                 membership_in=request.POST.get('membership_in', ''),
                 membership_id=request.POST.get('membership_id', ''),
                 is_ratified=True if request.POST.get('is_ratified') == 'yes' else False if request.POST.get('is_ratified') == 'no' else None,
+                pdf_password=request.POST.get('pdf_password', ''),
             )
 
             # ==================== PHOTO ====================
@@ -3883,10 +3931,23 @@ def add_faculty(request):
                     faculty.fdp_certificate or faculty.fdp_certificate_url or
                     faculty.experience_certificates or faculty.experience_certificates_url or
                     faculty.other_documents or faculty.other_documents_url or
+                    faculty.membership_proof or faculty.membership_proof_url or
                     Certificate.objects.filter(faculty=faculty).exists()
                 )
-                if has_uploads:
-                    generate_faculty_pdf(request, faculty.id)
+                should_generate_pdf = has_uploads or bool(get_pdf_password(faculty)) or bool(faculty.email)
+                generated_pdf_bytes = None
+                if should_generate_pdf:
+                    generated_pdf_bytes = generate_faculty_pdf_bytes(faculty)
+                    persist_faculty_pdf(faculty, generated_pdf_bytes, uploaded_by=request.user.username)
+                if get_pdf_password(faculty) and faculty.email and generated_pdf_bytes:
+                    if email_password_protected_pdf(
+                        recipient=faculty.email,
+                        display_name=faculty.staff_name,
+                        pdf_bytes=generated_pdf_bytes,
+                        filename=f"faculty_{faculty.employee_code}_profile.pdf",
+                        subject='Password Protected Faculty Profile PDF',
+                    ):
+                        messages.success(request, 'Password-protected faculty PDF emailed successfully.')
             except Exception as pdf_e:
                 logger.warning(f"Faculty added, but merged PDF generation failed: {pdf_e}")
 
@@ -3933,6 +3994,7 @@ def edit_faculty(request, faculty_id):
             'phd_degree', 'phd_title', 'phd_year', 'phd_university', 'phd_spec',
             'subjects_dealt', 'scm', 'about_yourself', 'results',
             'membership_academic_year', 'membership_in', 'membership_id',
+            'pdf_password',
             'exp_anurag', 'exp_other',
         ]
         for attr in text_fields:
@@ -4605,6 +4667,7 @@ def add_student(request):
                 intern_title=request.POST.get('intern_title'),
                 final_project_title=request.POST.get('final_project_title'),
                 other_training=request.POST.get('other_training'),
+                pdf_password=request.POST.get('pdf_password'),
                 photo=None, cert_achieve=None, cert_intern=None, cert_courses=None,
                 cert_sdp=None, cert_extra=None, cert_placement=None, cert_national=None,
             )
@@ -4718,12 +4781,24 @@ def add_student(request):
             # Ensure the student flow (add_student.html) always attempts
             # to build a single individual PDF that includes photo + certificates.
             try:
-                if student_has_upload_assets(student):
-                    generate_student_pdf(
+                should_generate_pdf = student_has_upload_assets(student) or bool(get_pdf_password(student)) or bool(student.email)
+                generated_pdf_bytes = None
+                if should_generate_pdf:
+                    generated_pdf_bytes = generate_student_pdf(
                         student,
                         photo_override_path=temp_photo_override_path,
                         certificate_override_assets=certificate_override_assets,
+                        return_bytes=True,
                     )
+                if get_pdf_password(student) and student.email and generated_pdf_bytes:
+                    if email_password_protected_pdf(
+                        recipient=student.email,
+                        display_name=student.student_name,
+                        pdf_bytes=generated_pdf_bytes,
+                        filename=f"student_{student.ht_no}_profile.pdf",
+                        subject='Password Protected Student Profile PDF',
+                    ):
+                        messages.success(request, 'Password-protected student PDF emailed successfully.')
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
@@ -5379,6 +5454,7 @@ def generate_student_pdf(
     print(f"  [DEBUG] Entering merge try block...")
     pdf_persisted = False
     pdf_file_saved = False
+    pdf_encrypted = False
     return_url = None
 
     try:
@@ -5484,39 +5560,44 @@ def generate_student_pdf(
             print(f"  [OK] Merged PDF: {len(writer.pages)} total pages, {file_size} bytes")
             with open(merged_tmp.name, 'rb') as mf:
                 final_pdf_bytes = mf.read()
+            final_pdf_bytes = encrypt_pdf_bytes(final_pdf_bytes, get_pdf_password(student))
+            pdf_encrypted = bool(get_pdf_password(student))
+            with open(merged_tmp.name, 'wb') as mf:
+                mf.write(final_pdf_bytes)
 
                 # Upload to Cloudinary
-                if is_cloudinary_configured():
-                    try:
-                        cloud_result = cloudinary.uploader.upload(
-                            merged_tmp.name,
-                            resource_type='raw',
-                            folder='student_pdfs',
-                            public_id=f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}",
-                            overwrite=True,
-                            format='pdf',
-                            type='upload',
-                            access_mode='public',
+            # Upload to Cloudinary
+            if is_cloudinary_configured():
+                try:
+                    cloud_result = cloudinary.uploader.upload(
+                        merged_tmp.name,
+                        resource_type='raw',
+                        folder='student_pdfs',
+                        public_id=f"student_{student.ht_no}_{date.today().strftime('%Y%m%d')}",
+                        overwrite=True,
+                        format='pdf',
+                        type='upload',
+                        access_mode='public',
+                    )
+                    if cloud_result and 'secure_url' in cloud_result:
+                        student.pdf_url = cloud_result['secure_url']
+                        return_url = cloud_result['secure_url']
+                        record_cloudinary_upload(
+                            upload_type='student_pdf',
+                            upload_result=cloud_result,
+                            student=student,
                         )
-                        if cloud_result and 'secure_url' in cloud_result:
-                            student.pdf_url = cloud_result['secure_url']
-                            return_url = cloud_result['secure_url']
-                            record_cloudinary_upload(
-                                upload_type='student_pdf',
-                                upload_result=cloud_result,
-                                student=student,
-                            )
-                            print(f"  [OK] Uploaded to Cloudinary: {cloud_result['secure_url']}")
-                            pdf_persisted = True
-                        else:
-                            print("  [WARN] Cloudinary upload failed (no secure_url)")
-                            return_url = None
-                    except Exception as cloud_err:
-                        print(f"  [WARN] Cloudinary upload error: {cloud_err}")
+                        print(f"  [OK] Uploaded to Cloudinary: {cloud_result['secure_url']}")
+                        pdf_persisted = True
+                    else:
+                        print("  [WARN] Cloudinary upload failed (no secure_url)")
                         return_url = None
-                else:
-                    print("  [INFO] Cloudinary not configured")
+                except Exception as cloud_err:
+                    print(f"  [WARN] Cloudinary upload error: {cloud_err}")
                     return_url = None
+            else:
+                print("  [INFO] Cloudinary not configured")
+                return_url = None
         else:
             print("  [WARN] No pages in writer — returning info PDF only")
             return_url = None
@@ -5527,6 +5608,10 @@ def generate_student_pdf(
 
     if not return_url:
         student.pdf_url = None
+
+    if final_pdf_bytes and get_pdf_password(student) and not pdf_encrypted:
+        final_pdf_bytes = encrypt_pdf_bytes(final_pdf_bytes, get_pdf_password(student))
+        pdf_encrypted = True
 
     # Always persist the generated PDF through the model storage backend as a durable fallback.
     if final_pdf_bytes:

@@ -966,6 +966,17 @@
             </div>
         </div>
 
+        <div class="form-section">
+            <h3 class="section-title">PDF PASSWORD</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>PDF PASSWORD</label>
+                    <input type="password" name="pdf_password" value="{{ student.pdf_password|default:'' }}" placeholder="Password required to open mailed PDF">
+                    <div class="help-text">The generated profile PDF will open only with this password.</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Form Actions -->
         <div class="form-actions">
             <button type="submit" class="btn-submit">{% if student %}UPDATE STUDENT{% else %}SAVE STUDENT{% endif %}</button>

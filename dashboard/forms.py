@@ -28,7 +28,7 @@ class StudentForm(forms.ModelForm):
             'cert_extra', 'cert_placement', 'cert_national',
             'cert_achieve_additional', 'cert_intern_additional', 'cert_courses_additional',
             'cert_sdp_additional', 'cert_extra_additional', 'cert_placement_additional',
-            'cert_national_additional'
+            'cert_national_additional', 'pdf_password'
         ]
         widgets = {
             'dob': forms.DateInput(attrs={'type': 'date'}),
@@ -60,6 +60,7 @@ class StudentForm(forms.ModelForm):
             'cgpa': forms.TextInput(attrs={'maxlength': 10}),
             'task_username': forms.TextInput(attrs={'maxlength': 100}),
             'csi_membership_id': forms.TextInput(attrs={'maxlength': 100}),
+            'pdf_password': forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
             'admission_type': forms.TextInput(attrs={'maxlength': 50}),
             'eamcet_rank': forms.TextInput(attrs={'maxlength': 20}),
             'rtrp_project_title': forms.TextInput(attrs={'maxlength': 500}),
@@ -173,6 +174,7 @@ class FacultyForm(forms.ModelForm):
             'membership_in': forms.TextInput(attrs={'placeholder': 'e.g., CSI, ISTE, IEEE'}),
             'membership_id': forms.TextInput(attrs={'placeholder': 'Membership ID'}),
             'membership_proof': forms.FileInput(attrs={'accept': '.pdf,.jpg,.jpeg,.png'}),
+            'pdf_password': forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
             'results': forms.Textarea(attrs={'rows': 2}),
             'phd_year': forms.NumberInput(attrs={'min': 2000, 'max': 2030}),  # supports 2028 from PDF
         }

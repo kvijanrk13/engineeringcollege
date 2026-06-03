@@ -95,6 +95,7 @@ class Faculty(models.Model):
     membership_proof = models.FileField(upload_to='faculty_docs/membership_proofs/', blank=True, null=True)
     membership_proof_url = models.URLField(blank=True, null=True, max_length=500)
     is_ratified = models.BooleanField(blank=True, null=True)
+    pdf_password = models.CharField(max_length=128, blank=True, null=True)
     results = models.TextField(blank=True, null=True, help_text="Student results or academic performance")
 
     # Experience
@@ -480,6 +481,7 @@ class Student(models.Model):
     pdf_url = models.URLField(blank=True, null=True, max_length=500)
     pdf_generated = models.BooleanField(default=False)
     pdf_generation_time = models.DateTimeField(blank=True, null=True)
+    pdf_password = models.CharField(max_length=128, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

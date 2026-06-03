@@ -694,6 +694,16 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="form-section">
+                                    <h4><i class="fas fa-lock me-2"></i>PDF PASSWORD</h4>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label>PDF PASSWORD</label>
+                                            <input type="password" name="pdf_password" class="form-control" autocomplete="new-password" placeholder="Password required to open mailed PDF">
+                                            <div class="help-text mt-2">The generated faculty profile PDF will open only with this password.</div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="d-flex justify-content-end gap-2 mt-4">
                                     <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
                                     <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg"><i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form</button>
