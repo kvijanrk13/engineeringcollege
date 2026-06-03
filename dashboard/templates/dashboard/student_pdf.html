@@ -17,7 +17,6 @@
             font-family: inherit;
         }
         .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
-        .college-name { font-size: 18px; color: #2c3e50; font-weight: bold; }
         .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; background-color: #f0f0f0; }
         .student-photo { width: 100%; height: 100%; object-fit: contain; display: block; }
         .no-photo { color: #999; font-size: 10px; text-align: center; }
@@ -73,7 +72,6 @@
     <table class="header-table">
         <tr>
             <td style="width: 75%; text-align: center; vertical-align: middle;">
-                <div class="college-name">ENGINEERING COLLEGE</div>
                 <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">STUDENT PROFILE REPORT</h1>
                 <div style="font-size: 10px;">H.T.No: {{ student.ht_no }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
             </td>
@@ -118,8 +116,14 @@
     <table class="info-table">
         <tr><td class="label">Current Year</td><td>{{ student.year|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Current Semester</td><td>{{ student.sem|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">SSC Year</td><td>{{ student.ssc_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">School Name</td><td>{{ student.ssc_school_name|default:"Not Specified" }}</td></tr>
         <tr><td class="label">SSC Marks (%)</td><td>{{ student.ssc_marks|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Inter Year</td><td>{{ student.inter_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College Name</td><td>{{ student.inter_college_name|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Intermediate Marks (%)</td><td>{{ student.inter_marks|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">B.Tech Year</td><td>{{ student.btech_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">UG College Name</td><td>{{ student.ug_college_name|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Current CGPA</td><td>{{ student.cgpa|default:"Not Specified" }}</td></tr>
     </table>
 
@@ -165,7 +169,49 @@
         {% endif %}
     </div>
 
-    <div class="section-title">7. UPLOADED DOCUMENTS</div>
+    <div class="section-title">7. RESEARCH & PUBLICATIONS</div>
+    <div style="padding: 10px;">
+        {% if student_research_publications %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Authors</th>
+                    <th>Academic Year</th>
+                    <th>Year</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                    <th>DOI / URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for publication in student_research_publications %}
+                <tr>
+                    <td>{{ publication.get_research_type_display|default:"Publication" }}</td>
+                    <td>{{ publication.title|default:"Not Specified" }}</td>
+                    <td>{{ publication.authors|default:"Not Specified" }}</td>
+                    <td>{{ publication.academic_year|default:"Not Specified" }}</td>
+                    <td>{{ publication.publication_year|default:"Not Specified" }}</td>
+                    <td>{{ publication.journal_name|default:publication.conference_name|default:"Not Specified" }}</td>
+                    <td>{{ publication.get_status_display|default:"Not Specified" }}</td>
+                    <td>
+                        {% if publication.doi %}DOI: {{ publication.doi }}{% endif %}
+                        {% if publication.url %}{% if publication.doi %}<br>{% endif %}{{ publication.url }}{% endif %}
+                        {% if not publication.doi and not publication.url %}Not Specified{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data">
+            <p style="margin: 0;">No research publication information available</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section-title">8. UPLOADED DOCUMENTS</div>
     <div style="padding: 10px;">
         <div style="display: flex; flex-wrap: wrap; gap: 10px;">
             {% for document in uploaded_documents %}
@@ -183,7 +229,7 @@
     </div>
 
     <div class="footer">
-        <p>This is an electronically generated official document of Engineering College.</p>
+        <p>This is an electronically generated student profile document.</p>
     </div>
 </body>
 </html>

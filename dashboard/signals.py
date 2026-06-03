@@ -42,12 +42,19 @@ def auto_initialize_student_profile(sender, instance, created, **kwargs):
     # (They should be by default from the model, but this ensures consistency)
     cert_fields = [
         'cert_achieve', 'cert_intern', 'cert_courses',
-        'cert_sdp', 'cert_extra', 'cert_placement', 'cert_national'
+        'cert_sdp', 'cert_extra', 'cert_placement', 'cert_national',
+        'cert_achieve_additional', 'cert_intern_additional', 'cert_courses_additional',
+        'cert_sdp_additional', 'cert_extra_additional', 'cert_placement_additional',
+        'cert_national_additional',
     ]
     
     cert_urls = [
         'cert_achieve_url', 'cert_intern_url', 'cert_courses_url',
-        'cert_sdp_url', 'cert_extra_url', 'cert_placement_url', 'cert_national_url'
+        'cert_sdp_url', 'cert_extra_url', 'cert_placement_url', 'cert_national_url',
+        'cert_achieve_additional_url', 'cert_intern_additional_url',
+        'cert_courses_additional_url', 'cert_sdp_additional_url',
+        'cert_extra_additional_url', 'cert_placement_additional_url',
+        'cert_national_additional_url',
     ]
     
     # Verify structure
@@ -85,7 +92,11 @@ def track_student_changes(sender, instance, **kwargs):
             # Check certificate fields
             cert_fields = [
                 'cert_achieve', 'cert_intern', 'cert_courses',
-                'cert_sdp', 'cert_extra', 'cert_placement', 'cert_national'
+                'cert_sdp', 'cert_extra', 'cert_placement', 'cert_national',
+                'cert_achieve_additional', 'cert_intern_additional',
+                'cert_courses_additional', 'cert_sdp_additional',
+                'cert_extra_additional', 'cert_placement_additional',
+                'cert_national_additional',
             ]
             for field in cert_fields:
                 old_val = getattr(old_instance, field, None)

@@ -9,34 +9,27 @@ import logging
 import zipfile
 import traceback
 import io
-import hashlib
-import re
-import secrets
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
-from urllib.parse import quote, unquote, urlencode, urlparse
+from urllib.parse import quote, urlencode
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest)
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ValidationError
 from django.db.models import Q, Count
-from django.core import signing
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
-from django.core.files.storage import FileSystemStorage
-from django.core.mail import EmailMessage
-from django.core.validators import validate_email
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.urls import reverse
+from django.core import signing
 from django.utils import timezone
 import django
 # PDF Generation imports
@@ -66,14 +59,6 @@ from .models import (
 from .forms import (
     StudentForm, CertificateForm,
     BulkUploadForm, FacultyProfileForm,
-)
-from .pdf_generation import (
-    FACULTY_PDF_TEMPLATE,
-    STUDENT_PDF_TEMPLATE,
-    build_faculty_profile_pdf_bytes,
-    generate_student_profile_pdf,
-    generate_student_profile_pdf_bytes,
-    persist_faculty_profile_pdf,
 )
 from .utils import (
     calculate_experience,
@@ -111,14 +96,7 @@ except ImportError:
 
 # ==================== HELPERS ====================
 def is_cloudinary_configured():
-    configured_flag = getattr(settings, 'CLOUDINARY_CONFIGURED', None)
-    if configured_flag is not None:
-        return bool(configured_flag)
-    return bool(
-        getattr(settings, 'CLOUDINARY_CLOUD_NAME', None)
-        and getattr(settings, 'CLOUDINARY_API_KEY', None)
-        and getattr(settings, 'CLOUDINARY_API_SECRET', None)
-    )
+    return getattr(settings, 'CLOUDINARY_CONFIGURED', False)
 
 
 def upload_file_to_cloudinary(file_path, folder, public_id, resource_type='auto', **kwargs):
@@ -230,48 +208,9 @@ def try_cloudinary_private_download(public_id, headers=None):
     return None
 
 
-def build_cloudinary_private_download_url(url, preferred_resource_type='raw'):
-    """Build a signed Cloudinary download URL for a stored asset URL."""
-    if not url or 'cloudinary.com' not in str(url) or not is_cloudinary_configured():
-        return None
-
-    for public_id in get_cloudinary_public_id_candidates(url):
-        if not public_id:
-            continue
-        try:
-            if preferred_resource_type == 'raw':
-                return cloudinary.utils.private_download_url(
-                    public_id,
-                    resource_type='raw',
-                    format=None,
-                    type='upload',
-                    attachment=False,
-                )
-
-            if '.' in public_id:
-                base_public_id, extension = public_id.rsplit('.', 1)
-            else:
-                base_public_id, extension = public_id, None
-            return cloudinary.utils.private_download_url(
-                base_public_id,
-                resource_type=preferred_resource_type,
-                format=extension,
-                type='upload',
-                attachment=False,
-            )
-        except Exception as exc:
-            logger.warning(f"Could not build Cloudinary private download URL for {public_id}: {exc}")
-            continue
-
-    return None
-
-
 def normalize_optional_url(value):
     value = (value or '').strip()
     if not value:
-        return ''
-    # Local media/storage paths are not remote URLs.
-    if value.startswith(('/', 'media/', '.\\', './')) or re.match(r'^[A-Za-z]:[\\/]', value):
         return ''
     if value.startswith('//'):
         return f'https:{value}'
@@ -279,110 +218,7 @@ def normalize_optional_url(value):
         return value
     if '://' in value:
         return ''
-    # Only promote bare host/path values that look like real domains.
-    first_segment = value.split('/', 1)[0]
-    if '.' not in first_segment:
-        return ''
     return f'https://{value.lstrip("/")}'
-
-
-def resolve_local_media_file_path(name_value):
-    """Resolve a storage name or relative media path to a real local file when available."""
-    if not name_value:
-        return None
-
-    raw_value = str(name_value).strip().replace('\\', '/')
-    if not raw_value:
-        return None
-
-    candidate_paths = []
-    candidate_dirs = []
-
-    def add_candidate(path_value):
-        if not path_value:
-            return
-        normalized = os.path.abspath(str(path_value))
-        if normalized not in candidate_paths:
-            candidate_paths.append(normalized)
-
-    def add_candidate_dir(path_value):
-        if not path_value:
-            return
-        normalized = os.path.abspath(str(path_value))
-        if normalized not in candidate_dirs:
-            candidate_dirs.append(normalized)
-
-    if os.path.isabs(raw_value):
-        add_candidate(raw_value)
-        add_candidate_dir(Path(raw_value).parent)
-
-    media_root = Path(settings.MEDIA_ROOT)
-    base_dir = Path(settings.BASE_DIR)
-
-    relative_candidates = [raw_value, raw_value.lstrip('/')]
-    if raw_value.startswith('media/'):
-        relative_candidates.append(raw_value[len('media/'):])
-
-    for relative_value in relative_candidates:
-        if not relative_value:
-            continue
-        media_candidate = media_root / relative_value
-        base_candidate = base_dir / relative_value
-        add_candidate(media_candidate)
-        add_candidate(base_candidate)
-        add_candidate_dir(media_candidate.parent)
-        add_candidate_dir(base_candidate.parent)
-
-    for candidate in candidate_paths:
-        if os.path.exists(candidate):
-            return candidate
-
-    raw_path = Path(raw_value)
-    raw_stem = raw_path.stem or raw_path.name
-    if raw_stem:
-        for candidate_dir in candidate_dirs:
-            try:
-                directory = Path(candidate_dir)
-                if not directory.exists():
-                    continue
-                for match in directory.glob(f"{raw_stem}.*"):
-                    if match.is_file():
-                        return str(match.resolve())
-            except OSError:
-                continue
-    return None
-
-
-def resolve_local_asset_reference(value):
-    """Resolve local-looking path/url values to a real file path when available."""
-    if not value:
-        return None
-
-    raw_value = str(value).strip().replace('\\', '/')
-    if not raw_value:
-        return None
-
-    parsed = urlparse(raw_value)
-    if parsed.scheme == 'file' and parsed.path:
-        try:
-            local_candidate = Path(unquote(parsed.path))
-            if local_candidate.exists():
-                return str(local_candidate.resolve())
-        except Exception:
-            pass
-
-    if parsed.scheme in ('http', 'https'):
-        netloc = (parsed.netloc or '').lower()
-        if netloc in {'media', 'localhost', '127.0.0.1'} or parsed.path.startswith('/media/'):
-            local_path = resolve_local_media_file_path(parsed.path)
-            if local_path:
-                return local_path
-        return None
-
-    if parsed.scheme:
-        return None
-
-    return resolve_local_media_file_path(raw_value)
 
 
 def parse_json_list(value):
@@ -513,84 +349,6 @@ def student_has_saved_pdf(student):
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     pdf_field = getattr(student, 'pdf_file', None)
     return bool(pdf_url or getattr(pdf_field, 'name', None))
-
-
-def send_student_profile_pdf_email(student, pdf_bytes):
-    recipient = (getattr(student, 'email', '') or '').strip()
-    if not recipient or not pdf_bytes:
-        return False
-
-    try:
-        validate_email(recipient)
-    except ValidationError:
-        logger.warning(f"Skipping student profile PDF email for {student.ht_no}: invalid email {recipient!r}")
-        return False
-
-    filename = f"student_{student.ht_no}_profile.pdf"
-    subject = f"Student Profile PDF - {student.student_name or student.ht_no}"
-    body = (
-        f"Dear {student.student_name or 'Student'},\n\n"
-        "Please find attached your generated student profile PDF.\n\n"
-        "Regards,\nEngineering College"
-    )
-
-    try:
-        email = EmailMessage(
-            subject=subject,
-            body=body,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-            to=[recipient],
-        )
-        email.attach(filename, pdf_bytes, 'application/pdf')
-        email.send(fail_silently=False)
-        logger.info(f"Student profile PDF emailed to {recipient} for {student.ht_no}")
-        return True
-    except Exception as exc:
-        logger.warning(
-            f"Could not email student profile PDF to {recipient} for {student.ht_no}: {exc}",
-            exc_info=True,
-        )
-        return False
-
-
-def send_faculty_profile_pdf_email(faculty, pdf_bytes):
-    recipient = (getattr(faculty, 'email', '') or '').strip()
-    if not recipient or not pdf_bytes:
-        return False
-
-    try:
-        validate_email(recipient)
-    except ValidationError:
-        logger.warning(
-            f"Skipping faculty profile PDF email for {faculty.employee_code}: invalid email {recipient!r}"
-        )
-        return False
-
-    filename = f"faculty_{faculty.employee_code}_profile.pdf"
-    subject = f"Faculty Profile PDF - {faculty.staff_name or faculty.employee_code}"
-    body = (
-        f"Dear {faculty.staff_name or 'Faculty'},\n\n"
-        "Please find attached your generated faculty profile PDF.\n\n"
-        "Regards,\nEngineering College"
-    )
-
-    try:
-        email = EmailMessage(
-            subject=subject,
-            body=body,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
-            to=[recipient],
-        )
-        email.attach(filename, pdf_bytes, 'application/pdf')
-        email.send(fail_silently=False)
-        logger.info(f"Faculty profile PDF emailed to {recipient} for {faculty.employee_code}")
-        return True
-    except Exception as exc:
-        logger.warning(
-            f"Could not email faculty profile PDF to {recipient} for {faculty.employee_code}: {exc}",
-            exc_info=True,
-        )
-        return False
 
 
 def choose_student_certificate_slot(student, requested_type=None, reserved_fields=None):
@@ -779,21 +537,12 @@ def download_remote_asset(url, default_suffix='.pdf'):
 def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
     """Return a readable local path for a FileField/URL plus whether it is a PDF."""
     try:
-        direct_local_path = resolve_local_asset_reference(url)
-        if direct_local_path and os.path.exists(direct_local_path):
-            return direct_local_path, direct_local_path.lower().endswith('.pdf')
-
-        normalized_url = normalize_optional_url(url)
-        if normalized_url and isinstance(normalized_url, str) and normalized_url.startswith('http'):
-            result, is_pdf = download_remote_asset(normalized_url, default_suffix=default_suffix)
+        if url and isinstance(url, str) and url.startswith('http'):
+            result, is_pdf = download_remote_asset(url, default_suffix=default_suffix)
             if result:
                 return result, is_pdf
 
         if file_field and getattr(file_field, 'name', ''):
-            local_media_path = resolve_local_media_file_path(getattr(file_field, 'name', None))
-            if local_media_path and os.path.exists(local_media_path):
-                return local_media_path, local_media_path.lower().endswith('.pdf')
-
             try:
                 local_path = file_field.path
                 if local_path and os.path.exists(local_path):
@@ -805,14 +554,8 @@ def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
                 field_url = getattr(file_field, 'url', None)
             except Exception:
                 field_url = None
-
-            local_field_url_path = resolve_local_asset_reference(field_url)
-            if local_field_url_path and os.path.exists(local_field_url_path):
-                return local_field_url_path, local_field_url_path.lower().endswith('.pdf')
-
-            normalized_field_url = normalize_optional_url(field_url)
-            if normalized_field_url and isinstance(normalized_field_url, str) and normalized_field_url.startswith('http'):
-                result, is_pdf = download_remote_asset(normalized_field_url, default_suffix=default_suffix)
+            if field_url and isinstance(field_url, str) and field_url.startswith('http'):
+                result, is_pdf = download_remote_asset(field_url, default_suffix=default_suffix)
                 if result:
                     return result, is_pdf
 
@@ -875,25 +618,19 @@ def collect_faculty_photo_candidates(faculty):
         seen.add(key)
         candidates.append({'url': normalized, 'source': source})
 
-    cloudinary_photo_value = getattr(faculty, 'cloudinary_photo_url', None)
-    add_path(resolve_local_asset_reference(cloudinary_photo_value), 'cloudinary_photo_url_local')
-    add_url(cloudinary_photo_value, 'cloudinary_photo_url')
+    add_url(getattr(faculty, 'cloudinary_photo_url', None), 'cloudinary_photo_url')
 
     photo_field = getattr(faculty, 'photo', None)
     if photo_field and getattr(photo_field, 'name', ''):
-        add_path(resolve_local_media_file_path(getattr(photo_field, 'name', None)), 'photo_field_media_name')
         try:
             add_path(photo_field.path, 'photo_field_path')
         except (NotImplementedError, ValueError, OSError, Exception):
             pass
 
         try:
-            photo_field_url = photo_field.url
+            add_url(photo_field.url, 'photo_field_url')
         except Exception:
-            photo_field_url = None
-
-        add_path(resolve_local_asset_reference(photo_field_url), 'photo_field_url_local')
-        add_url(photo_field_url, 'photo_field_url')
+            pass
 
     latest_uploads = (
         CloudinaryUpload.objects
@@ -930,80 +667,6 @@ def collect_faculty_photo_candidates(faculty):
     return candidates
 
 
-FACULTY_DOCUMENT_UPLOAD_TYPE_MAP = {
-    'aadhar_file': 'aadhar_file',
-    'pan_file': 'pan_file',
-    'apaar_file': 'apaar_file',
-    'scm_file': 'scm_file',
-    'jntuh_biodata': 'jntuh_biodata',
-    'ssc_certificate': 'ssc_certificate',
-    'inter_certificate': 'inter_certificate',
-    'ug_certificate': 'ug_certificate',
-    'pg_certificate': 'pg_certificate',
-    'phd_certificate': 'phd_certificate',
-    'research_proof': 'research_proof',
-    'fdp_certificate': 'fdp_certificate',
-    'experience_certificates': 'experience_certificates',
-    'other_documents': 'other_documents',
-}
-
-
-def collect_faculty_document_candidates(faculty, file_field_name, url_field_name):
-    """Return ordered document candidates for faculty PDFs and merges."""
-    candidates = []
-    seen = set()
-
-    def add_path(path_value, source):
-        if not path_value or not os.path.exists(path_value):
-            return
-        normalized = os.path.normcase(os.path.abspath(str(path_value)))
-        key = ('path', normalized)
-        if key in seen:
-            return
-        seen.add(key)
-        candidates.append({'source': source, 'path': str(path_value)})
-
-    def add_url(url_value, source):
-        normalized = normalize_optional_url(url_value)
-        if not normalized:
-            return
-        key = ('url', normalized)
-        if key in seen:
-            return
-        seen.add(key)
-        candidates.append({'source': source, 'url': normalized})
-
-    file_field = getattr(faculty, file_field_name, None)
-    if file_field and getattr(file_field, 'name', ''):
-        add_path(resolve_local_media_file_path(getattr(file_field, 'name', None)), f'{file_field_name}.media_name')
-        try:
-            add_path(file_field.path, f'{file_field_name}.path')
-        except (NotImplementedError, ValueError, OSError, Exception):
-            pass
-
-        try:
-            field_url = file_field.url
-        except Exception:
-            field_url = None
-        add_path(resolve_local_asset_reference(field_url), f'{file_field_name}.url_local')
-        add_url(field_url, f'{file_field_name}.url')
-
-    add_path(resolve_local_asset_reference(getattr(faculty, url_field_name, None)), f'{url_field_name}.local')
-    add_url(getattr(faculty, url_field_name, None), url_field_name)
-
-    upload_type = FACULTY_DOCUMENT_UPLOAD_TYPE_MAP.get(file_field_name, file_field_name)
-    latest_upload_urls = (
-        CloudinaryUpload.objects
-        .filter(faculty=faculty, upload_type=upload_type)
-        .order_by('-upload_date')
-        .values_list('cloudinary_url', flat=True)
-    )
-    for uploaded_url in latest_upload_urls:
-        add_url(uploaded_url, f'{file_field_name}.cloudinary_upload_history')
-
-    return candidates
-
-
 def resolve_faculty_photo_for_pdf(faculty):
     """Resolve the best faculty photo source and return a data URI plus cleanup temp paths."""
     temp_paths = []
@@ -1017,9 +680,6 @@ def resolve_faculty_photo_for_pdf(faculty):
             data_uri = encode_image_as_data_uri(path_value)
             if data_uri:
                 return data_uri, path_value, temp_paths, source
-            file_uri = build_file_uri(path_value)
-            if file_uri:
-                return file_uri, path_value, temp_paths, source
             logger.warning(f"Photo candidate from {source} could not be encoded: {path_value}")
 
         if url_value:
@@ -1035,32 +695,10 @@ def resolve_faculty_photo_for_pdf(faculty):
             data_uri = encode_image_as_data_uri(downloaded_path)
             if data_uri:
                 return data_uri, downloaded_path, temp_paths, source
-            file_uri = build_file_uri(downloaded_path)
-            if file_uri:
-                return file_uri, downloaded_path, temp_paths, source
 
             logger.warning(f"Downloaded photo candidate from {source} could not be encoded: {url_value}")
 
     return None, None, temp_paths, None
-
-
-def resolve_faculty_photo_for_dashboard(faculty):
-    """Resolve the best faculty photo URL for regular HTML views."""
-    if not faculty:
-        return ''
-
-    for candidate in collect_faculty_photo_candidates(faculty):
-        path_value = candidate.get('path')
-        if path_value and os.path.exists(path_value):
-            data_uri = encode_image_as_data_uri(path_value)
-            if data_uri:
-                return data_uri
-
-        url_value = normalize_optional_url(candidate.get('url'))
-        if url_value:
-            return url_value
-
-    return ''
 
 
 def collect_student_photo_candidates(student, photo_override_path=None):
@@ -1101,9 +739,6 @@ def collect_student_photo_candidates(student, photo_override_path=None):
 
     photo_field = getattr(student, 'photo', None)
     if photo_field and getattr(photo_field, 'name', ''):
-        local_media_path = resolve_local_media_file_path(photo_field.name)
-        add_path(local_media_path, 'student.photo.media_name')
-
         try:
             add_path(photo_field.path, 'student.photo.path')
         except (NotImplementedError, ValueError, OSError):
@@ -1114,7 +749,6 @@ def collect_student_photo_candidates(student, photo_override_path=None):
         except Exception:
             field_url = None
 
-        add_path(resolve_local_asset_reference(field_url), 'student.photo.url_local')
         if isinstance(field_url, str) and field_url.startswith(('http://', 'https://', '//')):
             add_url(field_url, 'student.photo.url')
 
@@ -1147,16 +781,12 @@ def collect_student_document_candidates(student, file_field_name, url_field_name
 
     file_field = getattr(student, file_field_name, None)
     if file_field and getattr(file_field, 'name', ''):
-        local_media_path = resolve_local_media_file_path(file_field.name)
-        add_path(local_media_path, f'{file_field_name}.media_name')
-
         try:
             add_path(file_field.path, f'{file_field_name}.path')
         except (NotImplementedError, ValueError, OSError):
             pass
 
     add_url(getattr(student, url_field_name, None), url_field_name)
-    add_path(resolve_local_asset_reference(getattr(student, url_field_name, None)), f'{url_field_name}.local')
 
     latest_upload_urls = (
         CloudinaryUpload.objects
@@ -1173,7 +803,6 @@ def collect_student_document_candidates(student, file_field_name, url_field_name
         except Exception:
             field_url = None
 
-        add_path(resolve_local_asset_reference(field_url), f'{file_field_name}.url_local')
         if isinstance(field_url, str) and field_url.startswith(('http://', 'https://', '//')):
             add_url(field_url, f'{file_field_name}.url')
 
@@ -1210,6 +839,10 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
         url_value = candidate.get('url')
 
         if path_value and os.path.exists(path_value):
+            data_uri = encode_image_as_data_uri(path_value)
+            if data_uri:
+                return data_uri, path_value, temp_paths, source
+            logger.warning(f"Student photo candidate from {source} could not be encoded: {path_value}")
             return build_file_uri(path_value), path_value, temp_paths, source
 
         if url_value:
@@ -1222,6 +855,11 @@ def resolve_student_photo_for_pdf(student, photo_override_path=None):
                 logger.warning(f"Student photo candidate from {source} resolved to a PDF, skipping: {url_value}")
                 continue
 
+            data_uri = encode_image_as_data_uri(downloaded_path)
+            if data_uri:
+                return data_uri, downloaded_path, temp_paths, source
+
+            logger.warning(f"Downloaded student photo candidate from {source} could not be encoded: {url_value}")
             return build_file_uri(downloaded_path), downloaded_path, temp_paths, source
 
     return None, None, temp_paths, None
@@ -1291,26 +929,10 @@ def build_faculty_results_context(results_value):
     return normalized_results, None
 
 
-def resolve_faculty_document_asset(file_field=None, url_value=None, default_suffix='.pdf', url_field_name=None):
+def resolve_faculty_document_asset(file_field=None, url_value=None, default_suffix='.pdf'):
     """Resolve a faculty document asset for PDF preview/summary use."""
     temp_paths = []
-    asset_path, is_pdf = None, False
-
-    if url_field_name and hasattr(file_field, 'instance') and hasattr(file_field, 'field'):
-        try:
-            instance = file_field.instance
-            field_name = file_field.field.name
-            if isinstance(instance, Faculty):
-                asset_path, is_pdf = resolve_asset_from_candidates(
-                    collect_faculty_document_candidates(instance, field_name, url_field_name),
-                    temp_paths,
-                    default_suffix=default_suffix,
-                )
-        except Exception as exc:
-            logger.warning(f"Could not resolve faculty document candidates for {getattr(file_field, 'name', '')}: {exc}")
-
-    if not asset_path:
-        asset_path, is_pdf = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
+    asset_path, is_pdf = get_local_or_remote_asset(file_field, url=url_value, default_suffix=default_suffix)
     if not asset_path or not os.path.exists(asset_path):
         return {
             'available': False,
@@ -1347,18 +969,8 @@ def build_faculty_document_collection_summary(asset_specs, default_suffix='.pdf'
     first_available_asset = None
     total_pages = 0
 
-    for asset_spec in asset_specs:
-        if len(asset_spec) == 3:
-            file_field, url_value, url_field_name = asset_spec
-        else:
-            file_field, url_value = asset_spec
-            url_field_name = None
-        asset = resolve_faculty_document_asset(
-            file_field,
-            url_value,
-            default_suffix=default_suffix,
-            url_field_name=url_field_name,
-        )
+    for file_field, url_value in asset_specs:
+        asset = resolve_faculty_document_asset(file_field, url_value, default_suffix=default_suffix)
         for temp_path in asset['temp_paths']:
             if temp_path not in temp_paths:
                 temp_paths.append(temp_path)
@@ -1401,12 +1013,12 @@ def build_faculty_pdf_context(faculty):
         return bool(getattr(file_field, 'name', '') or normalize_optional_url(url_value))
 
     research_summary = build_faculty_document_collection_summary(
-        [(faculty.research_proof, faculty.research_proof_url, 'research_proof_url')] +
+        [(faculty.research_proof, faculty.research_proof_url)] +
         [(pub.proof_document, getattr(pub, 'proof_document_url', None)) for pub in research_publications],
         default_suffix='.pdf',
     )
     fdp_summary = build_faculty_document_collection_summary(
-        [(faculty.fdp_certificate, faculty.fdp_certificate_url, 'fdp_certificate_url')] +
+        [(faculty.fdp_certificate, faculty.fdp_certificate_url)] +
         [(fdp.certificate, getattr(fdp, 'certificate_url', None)) for fdp in fdps],
         default_suffix='.pdf',
     )
@@ -1414,13 +1026,11 @@ def build_faculty_pdf_context(faculty):
         faculty.experience_certificates,
         faculty.experience_certificates_url,
         default_suffix='.pdf',
-        url_field_name='experience_certificates_url',
     )
     other_documents_summary = resolve_faculty_document_asset(
         faculty.other_documents,
         faculty.other_documents_url,
         default_suffix='.pdf',
-        url_field_name='other_documents_url',
     )
 
     for asset_summary in (research_summary, fdp_summary, experience_summary, other_documents_summary):
@@ -1428,10 +1038,19 @@ def build_faculty_pdf_context(faculty):
             if temp_path not in temp_paths:
                 temp_paths.append(temp_path)
 
+    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+    if getattr(faculty, 'is_ratified', None) is True:
+        ratified_status = 'Yes'
+    elif getattr(faculty, 'is_ratified', None) is False:
+        ratified_status = 'No'
+    else:
+        ratified_status = 'Not Specified'
+
     context = {
         'faculty': faculty,
         'photo_url': photo_url,
         'local_photo_path': local_photo_path,
+        'anurag_header_url': build_file_uri(anurag_header_path),
         'experience': calculate_experience(faculty.joining_date) if faculty.joining_date else 'N/A',
         'certificates': certificates,
         'research_projects': research_projects,
@@ -1441,6 +1060,7 @@ def build_faculty_pdf_context(faculty):
         'subjects_list': subjects_list,
         'results_data_list': results_data_list,
         'results_text': results_text,
+        'ratified_status': ratified_status,
         'current_date': timezone.now(),
         'cloudinary_status': {'has_pdf': bool(faculty.cloudinary_pdf_url)},
         'has_aadhar': has_file_or_url(faculty.aadhar_file, faculty.aadhar_url),
@@ -1527,11 +1147,10 @@ def persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=None):
 
 def generate_faculty_pdf_bytes(faculty):
     """Generate a merged faculty PDF as bytes."""
-    temp_paths = []
     try:
         logger.info(f"Starting PDF generation for faculty {faculty.employee_code}")
         context, temp_paths = build_faculty_pdf_context(faculty)
-        html_string = render_to_string(FACULTY_PDF_TEMPLATE, context)
+        html_string = render_to_string('dashboard/faculty_pdf.html', context)
         info_pdf_bytes = None
 
         try:
@@ -1543,14 +1162,17 @@ def generate_faculty_pdf_bytes(faculty):
         except Exception as exc:
             logger.warning(f"Faculty WeasyPrint generation failed for {faculty.employee_code}: {exc}")
             info_pdf_bytes = None
+        finally:
+            for temp_path in temp_paths:
+                try:
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                except Exception:
+                    pass
 
         if not info_pdf_bytes or not info_pdf_bytes.startswith(b'%PDF'):
             logger.warning(f"Faculty PDF generation failed with WeasyPrint for {faculty.employee_code}; falling back to ReportLab.")
-            info_pdf_bytes = _build_reportlab_faculty_pdf(
-                faculty,
-                photo_path=context.get('local_photo_path'),
-                temp_paths=temp_paths,
-            )
+            info_pdf_bytes = _build_reportlab_faculty_pdf(faculty, temp_paths)
 
         if not info_pdf_bytes:
             raise ValueError(f'Faculty profile PDF generation produced None for {faculty.employee_code}')
@@ -1572,13 +1194,6 @@ def generate_faculty_pdf_bytes(faculty):
     except Exception as exc:
         logger.error(f"generate_faculty_pdf_bytes failed for {faculty.employee_code}: {exc}", exc_info=True)
         raise
-    finally:
-        for temp_path in temp_paths:
-            try:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-            except Exception:
-                pass
 
 
 def calculate_correct_age(dob):
@@ -1604,43 +1219,14 @@ def build_file_uri(path_value):
         return 'file:///' + quote(str(path_value).replace('\\', '/'), safe=':/')
 
 
-def _build_reportlab_faculty_pdf(faculty, photo_path=None, temp_paths=None):
+def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
     """Build a simple faculty profile PDF using ReportLab as a fallback."""
     buffer = io.BytesIO()
-    managed_temp_paths = temp_paths if temp_paths is not None else []
     try:
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30,
                                 topMargin=30, bottomMargin=30)
         styles = getSampleStyleSheet()
         elems = [Paragraph('Faculty Profile', styles['Title']), Spacer(1, 12)]
-
-        resolved_photo_path = photo_path if photo_path and os.path.exists(photo_path) else None
-        if not resolved_photo_path:
-            _photo_data_uri, resolved_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
-            for temp_path in photo_temp_paths:
-                if temp_path not in managed_temp_paths:
-                    managed_temp_paths.append(temp_path)
-
-        if resolved_photo_path and os.path.exists(resolved_photo_path):
-            try:
-                photo_img = Image(resolved_photo_path, width=1.35 * inch, height=1.6 * inch)
-                header_table = Table(
-                    [[Paragraph('<b>FACULTY INFORMATION</b>', styles['Normal']), photo_img]],
-                    colWidths=[5.3 * inch, 1.3 * inch]
-                )
-                header_table.setStyle(TableStyle([
-                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-                ]))
-                elems.append(header_table)
-                elems.append(Spacer(1, 10))
-            except Exception as photo_err:
-                logger.warning(f"Faculty ReportLab photo embed failed: {photo_err}")
-                elems.append(Paragraph('<b>FACULTY INFORMATION</b>', styles['Normal']))
-                elems.append(Spacer(1, 10))
-        else:
-            elems.append(Paragraph('<b>FACULTY INFORMATION</b>', styles['Normal']))
-            elems.append(Spacer(1, 10))
 
         fields = [
             ('Employee Code', getattr(faculty, 'employee_code', 'N/A')),
@@ -1651,6 +1237,11 @@ def _build_reportlab_faculty_pdf(faculty, photo_path=None, temp_paths=None):
             ('Mobile', getattr(faculty, 'mobile', 'N/A')),
             ('Joining Date', str(getattr(faculty, 'joining_date', 'N/A'))),
             ('Academic Qualifications', getattr(faculty, 'academics', 'N/A')),
+            ('Membership Academic Year', getattr(faculty, 'membership_academic_year', 'N/A')),
+            ('Membership In', getattr(faculty, 'membership_in', 'N/A')),
+            ('Membership ID', getattr(faculty, 'membership_id', 'N/A')),
+            ('Ratified', 'Yes' if getattr(faculty, 'is_ratified', None) is True else 'No' if getattr(faculty, 'is_ratified', None) is False else 'N/A'),
+            ('SCM Details', getattr(faculty, 'scm', 'N/A')),
         ]
 
         for label, value in fields:
@@ -1671,13 +1262,6 @@ def _build_reportlab_faculty_pdf(faculty, photo_path=None, temp_paths=None):
         logger.error(f'Failed to generate fallback faculty PDF with ReportLab: {exc}', exc_info=True)
         return None
     finally:
-        if temp_paths is None:
-            for temp_path in managed_temp_paths:
-                try:
-                    if temp_path and os.path.exists(temp_path):
-                        os.remove(temp_path)
-                except Exception:
-                    pass
         try:
             buffer.close()
         except Exception:
@@ -1743,38 +1327,21 @@ def build_student_uploaded_documents(student):
         'cert_national': 'National Exam Certificates',
     }
     uploaded_documents = []
-    image_suffixes = ('.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp')
-
-    def infer_file_type(file_name):
-        lowered = (file_name or '').lower()
-        if lowered.endswith('.pdf'):
-            return 'PDF'
-        if lowered.endswith(image_suffixes):
-            return 'Image'
-        return 'Document'
 
     for field_name, _, url_field_name in STUDENT_CERTIFICATE_SLOTS:
         file_field = getattr(student, field_name, None)
-        file_name_value = getattr(file_field, 'name', None) or ''
+        url_value = normalize_optional_url(getattr(student, url_field_name, None))
+        available = bool(url_value or getattr(file_field, 'name', None))
 
-        available = False
         file_name = ''
         file_type = ''
-
-        for candidate in collect_student_document_candidates(student, field_name, url_field_name):
-            candidate_path = candidate.get('path')
-            if candidate_path and os.path.exists(candidate_path):
-                available = True
-                file_name = Path(candidate_path).name or Path(file_name_value).name or labels[field_name]
-                file_type = 'PDF' if candidate_path.lower().endswith('.pdf') else 'Image'
-                break
-
-            candidate_url = candidate.get('url')
-            if candidate_url:
-                available = True
-                file_name = Path(candidate_url.split('?', 1)[0]).name or Path(file_name_value).name or labels[field_name]
-                file_type = infer_file_type(file_name or file_name_value)
-                break
+        if url_value:
+            parsed_name = Path(url_value.split('?', 1)[0]).name
+            file_name = parsed_name or labels[field_name]
+            file_type = 'PDF' if file_name.lower().endswith('.pdf') else 'Image'
+        elif getattr(file_field, 'name', None):
+            file_name = Path(file_field.name).name
+            file_type = 'PDF' if file_name.lower().endswith('.pdf') else 'Image'
 
         uploaded_documents.append({
             'label': labels[field_name],
@@ -1817,15 +1384,9 @@ def get_file_from_field(file_field, url_field=None):
     if isinstance(file_field, str):
         if file_field.startswith('http'):
             return None, file_field
-        local_media_path = resolve_local_media_file_path(file_field)
-        if local_media_path:
-            return local_media_path, None
         elif os.path.exists(file_field):
             return file_field, None
         return None, None
-    local_media_path = resolve_local_media_file_path(getattr(file_field, 'name', None))
-    if local_media_path:
-        return local_media_path, None
     if hasattr(file_field, 'url') and file_field.url:
         return None, file_field.url
     if hasattr(file_field, 'path') and file_field.path:
@@ -2954,7 +2515,10 @@ def delete_btech_project(request, project_id):
     return redirect('dashboard:faculty_profile_view', faculty_id=faculty_id)
 
 
-@login_required
+def laboratory(request):
+    return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
+
+
 def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
@@ -2973,7 +2537,7 @@ def bulk_student_actions(request):
         for sid in student_ids:
             try:
                 student = Student.objects.get(id=sid)
-                pdf_url = generate_student_profile_pdf(student)
+                pdf_url = generate_student_pdf(student)
                 if pdf_url:
                     ok += 1
                 else:
@@ -3008,7 +2572,7 @@ def student_detail(request, student_id):
         if student_has_upload_assets(student):
             try:
                 logger.info(f"Auto-generating PDF for student {student.student_name} on first view")
-                pdf_url = generate_student_profile_pdf(student)
+                pdf_url = generate_student_pdf(student)
                 if pdf_url:
                     messages.info(request, 'Student PDF has been generated and is ready for download.')
             except Exception as e:
@@ -3088,7 +2652,7 @@ def upload_to_cloudinary(request, faculty_id):
             if not faculty.cloudinary_pdf_url:
                 existing_pdf_bytes = _read_faculty_pdf_bytes(faculty)
                 if existing_pdf_bytes:
-                    persist_faculty_profile_pdf(faculty, existing_pdf_bytes, uploaded_by=request.user.username)
+                    persist_faculty_pdf(faculty, existing_pdf_bytes, uploaded_by=request.user.username)
                 elif faculty.pdf_document and is_cloudinary_configured():
                     with faculty.pdf_document.open('rb') as pdf_file:
                         upload_result = cloudinary.uploader.upload(
@@ -3144,262 +2708,12 @@ def upload_to_cloudinary(request, faculty_id):
 
 
 # ==================== AUTHENTICATION (FIXED) ====================
-def is_google_signin_enabled():
-    return bool(settings.GOOGLE_OAUTH_CLIENT_ID and settings.GOOGLE_OAUTH_CLIENT_SECRET)
-
-
-class MobileAuthRedirect(HttpResponseRedirect):
-    allowed_schemes = HttpResponseRedirect.allowed_schemes + ['engineeringcollegeprojects']
-
-
-def redirect_to_mobile_auth(token):
-    return MobileAuthRedirect(f"engineeringcollegeprojects://auth?token={quote(token, safe='')}")
-
-
-def split_display_name(display_name):
-    parts = (display_name or '').strip().split()
-    if not parts:
-        return '', ''
-    return parts[0][:150], ' '.join(parts[1:])[:150]
-
-
-def student_display_name(student):
-    if student and getattr(student, 'student_name', None):
-        return student.student_name
-    return 'Student'
-
-
-def set_student_login_session(request, student):
-    request.session['student_logged_in'] = True
-    request.session['student_username'] = student.ht_no
-    request.session['student_display_name'] = student_display_name(student)
-    request.session['student_id'] = student.id
-    request.session['student_ht_no'] = student.ht_no
-
-
-def faculty_display_name_for_user(user, profile=None):
-    faculty = Faculty.objects.filter(email__iexact=user.email).first() if user.email else None
-    if faculty and faculty.staff_name:
-        return faculty.staff_name
-    full_name = user.get_full_name().strip()
-    if full_name:
-        return full_name
-    profile_name = (profile or {}).get('name') or ''
-    if profile_name.strip():
-        return profile_name.strip()
-    return user.get_username()
-
-
-def sync_google_user_display_name(user, profile):
-    display_name = faculty_display_name_for_user(user, profile)
-    first_name, last_name = split_display_name(display_name)
-    user.first_name = first_name
-    user.last_name = last_name
-    return display_name
-
-
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard:dashboard')
     if request.session.get('student_logged_in'):
         return redirect('dashboard:students_data')
     return redirect('dashboard:admin_login')
-
-
-def _build_google_oauth_state(role, is_mobile_flow):
-    nonce = secrets.token_urlsafe(24)
-    return nonce, signing.dumps({
-        'nonce': nonce,
-        'role': role,
-        'mobile': is_mobile_flow,
-    })
-
-
-def _read_google_oauth_state(state):
-    payload = signing.loads(state, max_age=600)
-    role = payload.get('role', 'admin')
-    if role not in ('admin', 'student'):
-        role = 'admin'
-    return {
-        'nonce': payload.get('nonce'),
-        'role': role,
-        'mobile': bool(payload.get('mobile')),
-    }
-
-
-def google_login(request):
-    """Start Google OAuth login for admin or student users."""
-    role = request.GET.get('role', 'admin')
-    if role not in ('admin', 'student'):
-        role = 'admin'
-
-    login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
-    google_configured = is_google_signin_enabled()
-    is_mobile_flow = request.GET.get('mobile') == '1'
-
-    if request.GET.get('continue') != '1':
-        continue_params = {'role': role, 'continue': '1'}
-        if is_mobile_flow:
-            continue_params['mobile'] = '1'
-        return render(request, 'dashboard/google_signin_confirm.html', {
-            'role': role,
-            'login_url': reverse(login_route),
-            'continue_url': f"{reverse('dashboard:google_login')}?{urlencode(continue_params)}",
-            'google_configured': google_configured,
-        })
-
-    if not google_configured:
-        messages.error(
-            request,
-            "Google sign-in is not configured yet. Please use username and password login."
-        )
-        return redirect(login_route)
-
-    state_nonce, state = _build_google_oauth_state(role, is_mobile_flow)
-    request.session['google_oauth_state_nonce'] = state_nonce
-
-    callback_url = request.build_absolute_uri(reverse('dashboard:google_callback'))
-    params = {
-        'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
-        'redirect_uri': callback_url,
-        'response_type': 'code',
-        'scope': 'openid email profile',
-        'state': state,
-        'prompt': 'select_account',
-    }
-    return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
-
-
-def google_callback(request):
-    """Complete Google OAuth login and map the Gmail account to an app user."""
-    try:
-        state_payload = _read_google_oauth_state(request.GET.get('state', ''))
-    except signing.BadSignature:
-        state_payload = None
-
-    if not state_payload:
-        messages.error(request, "Google sign-in could not be verified. Please try again.")
-        return redirect('dashboard:admin_login')
-
-    role = state_payload['role']
-    is_mobile_flow = state_payload['mobile']
-    login_route = 'dashboard:student_login' if role == 'student' else 'dashboard:admin_login'
-
-    expected_nonce = request.session.pop('google_oauth_state_nonce', None)
-    if expected_nonce and expected_nonce != state_payload.get('nonce'):
-        messages.error(request, "Google sign-in could not be verified. Please try again.")
-        return redirect(login_route)
-
-    if request.GET.get('error'):
-        messages.error(request, "Google sign-in was cancelled or denied.")
-        return redirect(login_route)
-
-    code = request.GET.get('code')
-    if not code:
-        messages.error(request, "Google did not return a sign-in code. Please try again.")
-        return redirect(login_route)
-
-    callback_url = request.build_absolute_uri(reverse('dashboard:google_callback'))
-    token_response = requests.post(
-        'https://oauth2.googleapis.com/token',
-        data={
-            'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
-            'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
-            'code': code,
-            'grant_type': 'authorization_code',
-            'redirect_uri': callback_url,
-        },
-        timeout=15,
-    )
-    if token_response.status_code != 200:
-        logger.warning("Google token exchange failed: %s", token_response.text[:500])
-        messages.error(request, "Google sign-in failed. Please use username and password login.")
-        return redirect(login_route)
-
-    access_token = token_response.json().get('access_token')
-    profile_response = requests.get(
-        'https://www.googleapis.com/oauth2/v3/userinfo',
-        headers={'Authorization': f'Bearer {access_token}'},
-        timeout=15,
-    )
-    if profile_response.status_code != 200:
-        logger.warning("Google profile lookup failed: %s", profile_response.text[:500])
-        messages.error(request, "Could not read your Gmail profile. Please try again.")
-        return redirect(login_route)
-
-    profile = profile_response.json()
-    email = (profile.get('email') or '').strip().lower()
-    if not email or not profile.get('email_verified'):
-        messages.error(request, "Please use a verified Gmail account.")
-        return redirect(login_route)
-
-    if role == 'student':
-        student = Student.objects.filter(email__iexact=email).first()
-        if not student:
-            messages.error(request, "This Gmail account is not linked to a student record.")
-            return redirect('dashboard:student_login')
-
-        set_student_login_session(request, student)
-        messages.success(request, f"Signed in with Gmail as {student_display_name(student)}.")
-        if is_mobile_flow:
-            token = signing.dumps({'role': 'student', 'student_id': student.id})
-            return redirect_to_mobile_auth(token)
-        return redirect('dashboard:add_student')
-
-    user = User.objects.filter(email__iexact=email).first()
-    if not user:
-        username_seed = re.sub(r'[^a-zA-Z0-9_]+', '_', email.split('@')[0]).strip('_') or 'google_user'
-        email_hash = hashlib.sha1(email.encode('utf-8')).hexdigest()[:8]
-        username = f"{username_seed[:40]}_{email_hash}"
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            first_name=profile.get('given_name', '')[:150],
-            last_name=profile.get('family_name', '')[:150],
-        )
-        user.set_unusable_password()
-
-    display_name = sync_google_user_display_name(user, profile)
-    if not user.is_staff:
-        user.is_staff = True
-    if not user.is_active:
-        user.is_active = True
-    user.save(update_fields=['is_staff', 'is_active', 'email', 'first_name', 'last_name', 'password'])
-
-    login(request, user)
-    messages.success(request, f"Signed in with Gmail as {display_name}.")
-    if is_mobile_flow:
-        token = signing.dumps({'role': 'admin', 'user_id': user.id})
-        return redirect_to_mobile_auth(token)
-    return redirect('dashboard:add_faculty')
-
-
-def google_mobile_complete(request):
-    """Receive a short-lived mobile auth token and establish the WebView session."""
-    token = request.GET.get('token', '')
-    try:
-        payload = signing.loads(token, max_age=300)
-    except signing.BadSignature:
-        messages.error(request, "Mobile Gmail sign-in expired. Please try again.")
-        return redirect('dashboard:admin_login')
-
-    if payload.get('role') == 'student':
-        student = get_object_or_404(Student, id=payload.get('student_id'))
-        set_student_login_session(request, student)
-        messages.success(request, f"Signed in with Gmail as {student_display_name(student)}.")
-        return redirect('dashboard:add_student')
-
-    user = get_object_or_404(User, id=payload.get('user_id'), is_active=True)
-    display_name = faculty_display_name_for_user(user)
-    if not user.is_staff:
-        user.is_staff = True
-    first_name, last_name = split_display_name(display_name)
-    user.first_name = first_name
-    user.last_name = last_name
-    user.save(update_fields=['is_staff', 'first_name', 'last_name'])
-    login(request, user)
-    messages.success(request, f"Signed in with Gmail as {display_name}.")
-    return redirect('dashboard:add_faculty')
 
 
 @csrf_protect
@@ -3426,9 +2740,10 @@ def admin_login(request):
         
         logger.info("Rendering login page")
         return render(request, 'dashboard/login.html', {
-            'title': 'Admin Login - ENGINEERING COLLEGE',
-            'admin_login': True, 'error': error,
-            'google_signin_enabled': is_google_signin_enabled(),
+            'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
+            'admin_login': True,
+            'error': error,
+            'google_signin_enabled': google_signin_enabled(),
         })
     except Exception as e:
         logger.error(f"Dashboard view error: {e}", exc_info=True)
@@ -3460,6 +2775,165 @@ def student_logout(request):
     return redirect('dashboard:student_login')
 
 
+def google_signin_enabled():
+    return bool(
+        getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
+        and getattr(settings, 'GOOGLE_OAUTH_CLIENT_SECRET', '')
+    )
+
+
+def google_callback_url(request):
+    return request.build_absolute_uri(reverse('dashboard:google_callback'))
+
+
+def set_student_session(request, student):
+    request.session['student_logged_in'] = True
+    request.session['student_username'] = student.ht_no
+    request.session['student_id'] = student.id
+    request.session['student_ht_no'] = student.ht_no
+    request.session['student_display_name'] = student.student_name
+
+
+def google_login(request):
+    if not google_signin_enabled():
+        messages.error(request, 'Google sign-in is not configured.')
+        return redirect('dashboard:admin_login')
+
+    role = request.GET.get('role', 'admin')
+    if role not in {'admin', 'student'}:
+        role = 'admin'
+
+    state_payload = {
+        'role': role,
+        'mobile': request.GET.get('mobile') == '1',
+        'continue': request.GET.get('continue') == '1',
+        'next': request.GET.get('next', ''),
+        'ts': timezone.now().isoformat(),
+    }
+    state = signing.dumps(state_payload, salt='google-oauth-state')
+    request.session['google_oauth_state'] = state
+
+    params = {
+        'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+        'redirect_uri': google_callback_url(request),
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'access_type': 'online',
+        'prompt': 'select_account',
+        'state': state,
+    }
+    return redirect(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
+
+
+def google_callback(request):
+    state = request.GET.get('state', '')
+    code = request.GET.get('code', '')
+    if not state or not code:
+        messages.error(request, 'Google sign-in was cancelled or incomplete.')
+        return redirect('dashboard:admin_login')
+
+    try:
+        state_payload = signing.loads(
+            state,
+            salt='google-oauth-state',
+            max_age=10 * 60,
+        )
+    except signing.BadSignature:
+        messages.error(request, 'Google sign-in session expired. Please try again.')
+        return redirect('dashboard:admin_login')
+
+    try:
+        token_response = requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+                'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
+                'redirect_uri': google_callback_url(request),
+                'grant_type': 'authorization_code',
+            },
+            timeout=20,
+        )
+        if token_response.status_code != 200:
+            raise ValueError('Token exchange failed')
+
+        access_token = token_response.json().get('access_token')
+        if not access_token:
+            raise ValueError('No access token returned by Google')
+
+        profile_response = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=20,
+        )
+        if profile_response.status_code != 200:
+            raise ValueError('Could not fetch Google profile')
+
+        profile = profile_response.json()
+        email = (profile.get('email') or '').strip().lower()
+        if not email or profile.get('email_verified') is False:
+            raise ValueError('Google email is not verified')
+
+        if state_payload.get('role') == 'student':
+            student = Student.objects.filter(email__iexact=email).first()
+            if not student:
+                messages.error(request, 'No student account is linked to this Gmail address.')
+                return redirect('dashboard:student_login')
+
+            if state_payload.get('mobile'):
+                token = signing.dumps({'student_id': student.id}, salt='google-mobile-complete')
+                response = HttpResponse(status=302)
+                response['Location'] = f"engineeringcollegeprojects://auth?{urlencode({'token': token})}"
+                return response
+
+            set_student_session(request, student)
+            return redirect('dashboard:add_student')
+
+        faculty = Faculty.objects.filter(email__iexact=email).first()
+        if not faculty:
+            messages.error(request, 'No faculty account is linked to this Gmail address.')
+            return redirect('dashboard:admin_login')
+
+        UserModel = get_user_model()
+        username_base = faculty.employee_code or email.split('@', 1)[0]
+        user = UserModel.objects.filter(email__iexact=email).first()
+        if not user:
+            username = username_base
+            counter = 1
+            while UserModel.objects.filter(username=username).exists():
+                counter += 1
+                username = f"{username_base}{counter}"
+            user = UserModel(username=username, email=email)
+
+        name_parts = (faculty.staff_name or '').strip().split(' ', 1)
+        user.first_name = name_parts[0] if name_parts else ''
+        user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        user.email = email
+        user.is_staff = True
+        user.is_active = True
+        user.set_unusable_password()
+        user.save()
+        login(request, user)
+        return redirect('dashboard:add_faculty')
+    except Exception as exc:
+        logger.error(f"Google sign-in failed: {exc}", exc_info=True)
+        messages.error(request, 'Google sign-in failed. Please try again.')
+        return redirect('dashboard:admin_login')
+
+
+def google_mobile_complete(request):
+    token = request.GET.get('token', '')
+    try:
+        payload = signing.loads(token, salt='google-mobile-complete', max_age=10 * 60)
+        student = Student.objects.get(id=payload.get('student_id'))
+    except Exception:
+        messages.error(request, 'Mobile Google sign-in expired. Please try again.')
+        return redirect('dashboard:student_login')
+
+    set_student_session(request, student)
+    return redirect('dashboard:add_student')
+
+
 def student_login(request):
     error = None
     try:
@@ -3473,10 +2947,9 @@ def student_login(request):
             if username == 'anrkitstudent' and password == 'anrkitstudent':
                 request.session['student_logged_in'] = True
                 request.session['student_username'] = username
-                request.session['student_display_name'] = 'Student User'
                 request.session.pop('student_id', None)
                 request.session.pop('student_ht_no', None)
-                return redirect('dashboard:add_student')
+                return redirect('dashboard:student_dashboard_view')
 
             student = Student.objects.filter(ht_no=username).first()
             if student:
@@ -3485,15 +2958,18 @@ def student_login(request):
                     valid_passwords.append(student.dob.strftime('%Y-%m-%d'))
                     valid_passwords.append(student.dob.strftime('%d-%m-%Y'))
                 if any(p and password == p for p in valid_passwords):
-                    set_student_login_session(request, student)
-                    return redirect('dashboard:add_student')
+                    request.session['student_logged_in'] = True
+                    request.session['student_username'] = username
+                    request.session['student_id'] = student.id
+                    request.session['student_ht_no'] = student.ht_no
+                    return redirect('dashboard:student_dashboard_view')
             error = 'Invalid student credentials'
             messages.error(request, error)
         return render(request, 'dashboard/login.html', {
             'title': 'Student Login',
             'student_login': True,
             'error': error,
-            'google_signin_enabled': is_google_signin_enabled(),
+            'google_signin_enabled': google_signin_enabled(),
         })
     except Exception as e:
         logger.error(f"Student login error: {e}", exc_info=True)
@@ -3511,19 +2987,20 @@ def home(request):
         return redirect('dashboard:student_dashboard_view')
     # Directly render login page instead of redirecting
     return render(request, 'dashboard/login.html', {
-        'title': 'Admin Login - ENGINEERING COLLEGE',
+        'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
         'admin_login': True,
-        'google_signin_enabled': is_google_signin_enabled(),
+        'google_signin_enabled': google_signin_enabled(),
     })
 
 
 def mobile_dashboard(request):
+    """Public mobile-friendly dashboard landing page."""
     try:
         total_faculty = Faculty.objects.count()
         active_faculty = Faculty.objects.filter(is_active=True).count()
-        total_students = Student.objects.count()
         total_certificates = Certificate.objects.count()
         with_phd = Faculty.objects.filter(phd_degree='Completed').count()
+
         departments = list(
             Faculty.objects.values('department')
             .annotate(count=Count('id'), active=Count('id', filter=Q(is_active=True)))
@@ -3531,25 +3008,25 @@ def mobile_dashboard(request):
         )
         for department in departments:
             department['percentage'] = (
-                (department['count'] / total_faculty * 100)
-                if total_faculty > 0 else 0
-            )
-        recent_logs = FacultyLog.objects.select_related('faculty').order_by('-created_at')[:5]
+                department['count'] / total_faculty * 100
+            ) if total_faculty else 0
+
+        recent_logs = list(
+            FacultyLog.objects.select_related('faculty').order_by('-created_at')[:5]
+        )
     except Exception as exc:
-        logger.error(f"Mobile dashboard data error: {exc}", exc_info=True)
+        logger.warning(f"Mobile dashboard data load failed: {exc}", exc_info=True)
         total_faculty = 0
         active_faculty = 0
-        total_students = 0
         total_certificates = 0
         with_phd = 0
         departments = []
         recent_logs = []
 
-    return render(request, "dashboard/dashboard.html", {
-        'title': 'Dashboard',
+    return render(request, 'dashboard/dashboard.html', {
+        'title': 'Engineering College',
         'total_faculty': total_faculty,
         'active_faculty': active_faculty,
-        'total_students': total_students,
         'total_certificates': total_certificates,
         'with_phd': with_phd,
         'departments': departments,
@@ -3698,8 +3175,7 @@ def student_dashboard(request):
         logger.error(f"Error getting student data: {e}")
     if not student:
         student = {
-            'ht_no': student_username,
-            'student_name': request.session.get('student_display_name', 'Student User'),
+            'ht_no': student_username, 'student_name': 'Student User',
             'year': 'II', 'sem': 'II', 'branch': 'Computer Science',
             'email': 'student@anurag.edu.in', 'student_phone': 'Not Available',
             'cgpa': None, 'photo': None, 'photo_url': None,
@@ -3741,7 +3217,7 @@ def redirect_to_dashboard(request):
 @login_required
 def syllabus_view(request):
     return render(request, 'dashboard/syllabus.html', {
-        'title': 'Syllabus & Common Subjects - Engineering College',
+        'title': 'Syllabus & Common Subjects - ANURAG Engineering College',
     })
 
 
@@ -3757,17 +3233,19 @@ def faculty_dashboard(request, faculty_id=None):
         exp = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
         # Resolve the faculty photo for the PDF template
         photo_url, local_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
+        anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
         context = {
             "faculty": faculty,
             "pdf_mode": True,
             "current_date": timezone.now(),
             "experience": exp,
             "photo_url": photo_url,
+            "anurag_header_url": build_file_uri(anurag_header_path),
             "cloudinary_status": {"has_pdf": bool(faculty.cloudinary_pdf_url)},
         }
         # Clean up any temp paths after rendering
         try:
-            return render(request, FACULTY_PDF_TEMPLATE, context)
+            return render(request, "dashboard/faculty_pdf.html", context)
         finally:
             for temp_path in photo_temp_paths:
                 try:
@@ -3810,11 +3288,6 @@ def faculty_dashboard(request, faculty_id=None):
         return faculty_analytics(request)
     experience = calculate_experience(faculty.joining_date) if faculty and faculty.joining_date else "N/A"
     departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
-    faculty_photo_url = resolve_faculty_photo_for_dashboard(faculty) if faculty else ''
-    faculty_list_photo_urls = {
-        item.id: resolve_faculty_photo_for_dashboard(item)
-        for item in faculties
-    }
     return render(request, 'dashboard/faculty_dashboard.html', {
         'faculties': faculties,
         'faculty': faculty,
@@ -3834,8 +3307,6 @@ def faculty_dashboard(request, faculty_id=None):
         'is_analytics': False,
         'pdf_mode': False,
         'departments': departments,
-        'faculty_photo_url': faculty_photo_url,
-        'faculty_list_photo_urls': faculty_list_photo_urls,
         'title': f'Faculty Profile - {faculty.staff_name}' if faculty else 'Faculty Dashboard',
     })
 
@@ -3999,6 +3470,10 @@ def add_faculty(request):
                 subjects_dealt=request.POST.get('subjects_dealt', ''),
                 scm=request.POST.get('scm', ''),
                 about_yourself=request.POST.get('about_yourself', ''),
+                membership_academic_year=request.POST.get('membership_academic_year', ''),
+                membership_in=request.POST.get('membership_in', ''),
+                membership_id=request.POST.get('membership_id', ''),
+                is_ratified=True if request.POST.get('is_ratified') == 'yes' else False if request.POST.get('is_ratified') == 'no' else None,
             )
 
             # ==================== PHOTO ====================
@@ -4386,20 +3861,32 @@ def add_faculty(request):
             )
 
             # Ensure the faculty flow (add_faculty_form.html) always attempts
-            # to build and email a single individual PDF after profile creation.
+            # to build a single individual PDF that includes profile photo and docs.
             try:
-                pdf_bytes = build_faculty_profile_pdf_bytes(faculty)
-                if pdf_bytes and pdf_bytes.startswith(b'%PDF'):
-                    persist_faculty_profile_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
-                    send_faculty_profile_pdf_email(faculty, pdf_bytes)
+                has_uploads = bool(
+                    faculty.photo or faculty.cloudinary_photo_url or
+                    faculty.aadhar_file or faculty.aadhar_url or
+                    faculty.pan_file or faculty.pan_url or
+                    faculty.apaar_file or faculty.apaar_url or
+                    faculty.scm_file or faculty.scm_url or
+                    faculty.jntuh_biodata or faculty.jntuh_biodata_url or
+                    faculty.ssc_certificate or faculty.ssc_certificate_url or
+                    faculty.inter_certificate or faculty.inter_certificate_url or
+                    faculty.ug_certificate or faculty.ug_certificate_url or
+                    faculty.pg_certificate or faculty.pg_certificate_url or
+                    faculty.phd_certificate or faculty.phd_certificate_url or
+                    faculty.research_proof or faculty.research_proof_url or
+                    faculty.fdp_certificate or faculty.fdp_certificate_url or
+                    faculty.experience_certificates or faculty.experience_certificates_url or
+                    faculty.other_documents or faculty.other_documents_url or
+                    Certificate.objects.filter(faculty=faculty).exists()
+                )
+                if has_uploads:
+                    generate_faculty_pdf(request, faculty.id)
             except Exception as pdf_e:
                 logger.warning(f"Faculty added, but merged PDF generation failed: {pdf_e}")
 
-            messages.success(
-                request,
-                f'Faculty {faculty.staff_name} added successfully! '
-                'The profile will be mailed. Please check your mail inbox/spam.'
-            )
+            messages.success(request, f'Faculty {faculty.staff_name} added successfully!')
             print(f" [OK] Faculty {faculty.employee_code} fully saved. Redirecting to faculty list.")
             return redirect('dashboard:faculty_list')
 
@@ -4441,6 +3928,7 @@ def edit_faculty(request, faculty_id):
             'pg_degree', 'pg_year', 'pg_percentage', 'pg_college', 'pg_spec',
             'phd_degree', 'phd_title', 'phd_year', 'phd_university', 'phd_spec',
             'subjects_dealt', 'scm', 'about_yourself', 'results',
+            'membership_academic_year', 'membership_in', 'membership_id',
             'exp_anurag', 'exp_other',
         ]
         for attr in text_fields:
@@ -4449,6 +3937,8 @@ def edit_faculty(request, faculty_id):
                 setattr(faculty, attr, val)
         if request.POST.get('phd_degree') != 'Completed':
             faculty.phd_title = ''
+        if request.POST.get('is_ratified') in {'yes', 'no'}:
+            faculty.is_ratified = request.POST.get('is_ratified') == 'yes'
         for date_attr in ['dob', 'joining_date']:
             val = request.POST.get(date_attr)
             setattr(faculty, date_attr, parse_date(val) if val else None)
@@ -4948,7 +4438,7 @@ def assign_subjects(request, faculty_id):
 
 # ==================== STUDENT MANAGEMENT ====================
 def students(request):
-    return students_data(request)
+    return redirect('dashboard:add_student')
 
 
 def students_data(request):
@@ -4963,31 +4453,6 @@ def students_data(request):
         qs = Student.objects.filter(id=session_student.id).order_by('-created_at')
     else:
         qs = Student.objects.all().order_by('-created_at')
-    years = qs.values_list("year", flat=True).distinct()
-    sems = qs.values_list("sem", flat=True).distinct()
-
-    search = (request.GET.get('search') or '').strip()
-    if search:
-        qs = qs.filter(
-            Q(student_name__icontains=search)
-            | Q(ht_no__icontains=search)
-            | Q(email__icontains=search)
-        )
-
-    year = request.GET.get('year')
-    if year:
-        qs = qs.filter(year=year)
-
-    sem = request.GET.get('sem')
-    if sem:
-        qs = qs.filter(sem=sem)
-
-    has_pdf = request.GET.get('has_pdf')
-    if has_pdf == 'yes':
-        qs = qs.filter(Q(pdf_url__isnull=False) & ~Q(pdf_url='') | Q(pdf_file__isnull=False) & ~Q(pdf_file=''))
-    elif has_pdf == 'no':
-        qs = qs.filter((Q(pdf_url__isnull=True) | Q(pdf_url='')) & (Q(pdf_file__isnull=True) | Q(pdf_file='')))
-
     paginator = Paginator(qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
@@ -4998,8 +4463,8 @@ def students_data(request):
         "total_students": qs.count(),
         "year_1_count": qs.filter(year=1).count(), "year_2_count": qs.filter(year=2).count(),
         "year_3_count": qs.filter(year=3).count(), "year_4_count": qs.filter(year=4).count(),
-        "years": years,
-        "sems": sems,
+        "years": Student.objects.values_list("year", flat=True).distinct(),
+        "sems": Student.objects.values_list("sem", flat=True).distinct(),
         "is_paginated": page_obj.has_other_pages(), "page_obj": page_obj,
     })
 
@@ -5007,7 +4472,6 @@ def students_data(request):
 def add_student(request):
     if request.method == 'POST':
         try:
-            user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
             ca = is_cloudinary_configured()
             temp_photo_override_path = None
             certificate_override_assets = []
@@ -5075,17 +4539,17 @@ def add_student(request):
                         'national': 'student_certs/national/',
                     }
                     upload_to = upload_paths.get(folder, f'student_{folder}/')
-                    storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
+                    from django.core.files.storage import default_storage
                     ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
                     filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
                     path = os.path.join(upload_to, filename)
-                    saved_path = storage.save(path, file)
+                    saved_path = default_storage.save(path, file)
                     print(f"  [SAVE-LOCAL] Saved {folder} file to: {saved_path}")
-                    print(f"  [SAVE-LOCAL] storage type: {type(storage)}")
+                    print(f"  [SAVE-LOCAL] default_storage type: {type(default_storage)}")
                     # For debugging, try to get the full path
-                    if hasattr(storage, 'path'):
+                    if hasattr(default_storage, 'path'):
                         try:
-                            full_path = storage.path(saved_path)
+                            full_path = default_storage.path(saved_path)
                             print(f"  [SAVE-LOCAL] Full filesystem path: {full_path}")
                         except Exception as path_err:
                             print(f"  [SAVE-LOCAL] Could not get full path: {path_err}")
@@ -5154,11 +4618,9 @@ def add_student(request):
             if request.FILES.get('photo'):
                 pf = request.FILES['photo']
                 temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
-                local_path = _save_local(pf, 'photos')
-                if local_path:
-                    student.photo = local_path
-                    files_lo.append('photo')
-                if ca:
+                if temp_photo_override_path:
+                    persist_snapshot_to_model_field(student, 'photo', temp_photo_override_path, getattr(pf, 'name', None))
+                if ca: # Cloudinary configured - prioritize Cloudinary
                     upload_result = _upload(pf, 'photos')
                     if upload_result and upload_result.get('secure_url'):
                         student.photo_url = upload_result['secure_url']
@@ -5169,10 +4631,18 @@ def add_student(request):
                             student=student,
                         )
                         files_up.append('photo')
-                    elif local_path:
-                        student.photo_url = None
+                    else:
+                        # Fallback to local storage if Cloudinary fails
+                        local_path = _save_local(pf, 'photos')
+                        if local_path:
+                            student.photo = local_path
+                            files_lo.append('photo')
                 else:
-                    student.photo_url = None
+                    # Local storage only when Cloudinary not configured
+                    local_path = _save_local(pf, 'photos')
+                    if local_path:
+                        student.photo = local_path
+                        files_lo.append('photo')
             
             # Handle certificates
             print(f"  [DEBUG] FILES received: {list(request.FILES.keys())}")
@@ -5195,14 +4665,15 @@ def add_student(request):
                         'path': temp_asset_path,
                         'is_pdf': temp_asset_is_pdf,
                     })
+                    persist_snapshot_to_model_field(
+                        student,
+                        field_name,
+                        temp_asset_path,
+                        getattr(certificate_file, 'name', None),
+                    )
                 print(f"  [DEBUG] Processing {upload_spec['source']} -> {field_name} ({folder})")
                 print(f"  [DEBUG] File: {certificate_file.name}, size: {certificate_file.size}")
-                local_path = _save_local(certificate_file, folder)
-                if local_path:
-                    setattr(student, field_name, local_path)
-                    files_lo.append(field_name)
-                    print(f"  [DEBUG] Saved {field_name} locally to {local_path}")
-                if ca:
+                if ca: # Cloudinary configured
                     upload_result = _upload(certificate_file, folder)
                     if upload_result and upload_result.get('secure_url'):
                         setattr(student, url_field_name, upload_result['secure_url'])
@@ -5214,10 +4685,20 @@ def add_student(request):
                         )
                         files_up.append(field_name)
                         print(f"  [DEBUG] Successfully uploaded {field_name} to {upload_result['secure_url']}")
-                    elif local_path:
-                        setattr(student, url_field_name, None)
+                    else:
+                        print(f"  [DEBUG] Cloudinary upload failed for {field_name}, trying local")
+                        local_path = _save_local(certificate_file, folder)
+                        if local_path:
+                            setattr(student, field_name, local_path)
+                            setattr(student, url_field_name, None)
+                            files_lo.append(field_name)
+                            print(f"  [DEBUG] Saved {field_name} locally to {local_path}")
                 else:
-                    setattr(student, url_field_name, None)
+                    local_path = _save_local(certificate_file, folder)
+                    if local_path:
+                        setattr(student, field_name, local_path)
+                        setattr(student, url_field_name, None)
+                        files_lo.append(field_name)
             student.save()
 
             if skipped_uploads:
@@ -5231,23 +4712,22 @@ def add_student(request):
             # Ensure the student flow (add_student.html) always attempts
             # to build a single individual PDF that includes photo + certificates.
             try:
-                generate_student_profile_pdf(
-                    student,
-                    photo_override_path=temp_photo_override_path,
-                    certificate_override_assets=certificate_override_assets,
-                    email_pdf=True,
-                )
+                if student_has_upload_assets(student):
+                    generate_student_pdf(
+                        student,
+                        photo_override_path=temp_photo_override_path,
+                        certificate_override_assets=certificate_override_assets,
+                    )
             except Exception as pdf_e:
                 logger.warning(f"Student added, but merged PDF generation failed: {pdf_e}")
 
-            messages.success(
-                request,
-                f'Student {student.student_name} added! '
-                'The profile will be mailed. Please check your mail inbox/spam.'
-            )
-            if not user_authenticated:
-                set_student_login_session(request, student)
-            return redirect('dashboard:students_data_password')
+            if files_up:
+                messages.success(request, f'Student {student.student_name} added! Cloudinary: {", ".join(files_up)}')
+            if files_lo:
+                messages.info(request, f'Some files saved locally: {", ".join(files_lo)}')
+            if not files_up and not files_lo:
+                messages.success(request, f'Student {student.student_name} added successfully!')
+            return redirect('dashboard:students_data')
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -5263,28 +4743,12 @@ def add_student(request):
 
 @require_POST
 def delete_student(request, student_id):
+    if not request.session.get('student_logged_in'):
+        return redirect('dashboard:students_data')
     student = get_object_or_404(Student, id=student_id)
-    user_authenticated = getattr(request, 'user', None) and request.user.is_authenticated
-    student_logged_in = request.session.get('student_logged_in')
-
-    if not (user_authenticated or student_logged_in):
-        messages.error(request, "Please log in to delete student records.")
-        return redirect('dashboard:student_login')
-
-    if student_logged_in and not user_authenticated:
-        if not student_session_can_access_record(request, student):
-            messages.error(request, "You can only delete your own student record.")
-            return redirect(student_dashboard_redirect_route(request))
-
     name, ht = student.student_name, student.ht_no
     student.delete()
     messages.success(request, f"Student {name} ({ht}) deleted successfully.")
-
-    if student_logged_in and not user_authenticated:
-        for key in ['student_logged_in', 'student_username', 'student_id', 'student_ht_no']:
-            request.session.pop(key, None)
-        return redirect('dashboard:student_login')
-
     return redirect('dashboard:students_data')
 
 
@@ -5312,7 +4776,7 @@ def edit_student(request, student_id):
 
     # Proceed with edit
     if request.method == 'POST':
-        form = StudentForm(request.POST, instance=student)
+        form = StudentForm(request.POST, request.FILES, instance=student)
         if form.is_valid():
             try:
                 ca = is_cloudinary_configured()
@@ -5354,44 +4818,38 @@ def edit_student(request, student_id):
                             'national': 'student_certs/national/',
                         }
                         upload_to = upload_paths.get(folder, f'student_{folder}/')
-                        storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
+                        from django.core.files.storage import default_storage
                         ext = os.path.splitext(file.name)[1] if file.name else '.pdf'
                         filename = f"{folder}_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
                         path = os.path.join(upload_to, filename)
-                        saved_path = storage.save(path, file)
+                        saved_path = default_storage.save(path, file)
                         return saved_path
                     except Exception as e:
                         logger.error(f"Local file save error ({folder}): {e}")
                         return None
 
-                updated_student = form.save(commit=False)
-                updated_student.save()
+                updated_student = form.save()
 
                 # Handle photo manually because we want Cloudinary support
                 if request.FILES.get('photo'):
                     pf = request.FILES['photo']
                     temp_photo_override_path, _ = snapshot_uploaded_file(pf, default_suffix='.jpg')
-                    local_path = _save_local(pf, 'photos')
-                    if local_path:
-                        updated_student.photo = local_path
+                    if temp_photo_override_path:
+                        persist_snapshot_to_model_field(updated_student, 'photo', temp_photo_override_path, getattr(pf, 'name', None))
                     if ca:
                         upload_result = _upload(pf, 'photos')
                         if upload_result and upload_result.get('secure_url'):
                             updated_student.photo_url = upload_result['secure_url']
+                            updated_student.save(update_fields=['photo', 'photo_url'])
                             record_cloudinary_upload(
                                 upload_type='photo',
                                 upload_result=upload_result,
                                 uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
                                 student=updated_student,
                             )
-                        elif local_path:
-                            updated_student.photo_url = None
                         else:
-                            logger.warning("Cloudinary photo upload failed, and local fallback save failed")
-                    else:
-                        updated_student.photo_url = None
-                    updated_student.save(update_fields=['photo', 'photo_url', 'updated_at'])
-
+                            logger.warning("Cloudinary photo upload failed, using local file")
+                    
                 # Calculate correct age from DOB if DOB was updated
                 if updated_student.dob:
                     try:
@@ -5418,9 +4876,12 @@ def edit_student(request, student_id):
                             'path': temp_asset_path,
                             'is_pdf': temp_asset_is_pdf,
                         })
-                    local_path = _save_local(certificate_file, folder)
-                    if local_path:
-                        setattr(updated_student, field_name, local_path)
+                        persist_snapshot_to_model_field(
+                            updated_student,
+                            field_name,
+                            temp_asset_path,
+                            getattr(certificate_file, 'name', None),
+                        )
                     if ca:
                         upload_result = _upload(certificate_file, folder)
                         if upload_result and upload_result.get('secure_url'):
@@ -5432,24 +4893,21 @@ def edit_student(request, student_id):
                                 student=updated_student,
                             )
                             any_cert_updated = True
-                            if not local_path:
-                                setattr(updated_student, field_name, None)
-                        elif local_path:
-                            setattr(updated_student, url_field_name, None)
-                            any_cert_updated = True
+                        else:
+                            local_path = _save_local(certificate_file, folder)
+                            if local_path:
+                                setattr(updated_student, field_name, local_path)
+                                setattr(updated_student, url_field_name, None)
+                                any_cert_updated = True
                     else:
+                        local_path = _save_local(certificate_file, folder)
                         if local_path:
+                            setattr(updated_student, field_name, local_path)
                             setattr(updated_student, url_field_name, None)
                             any_cert_updated = True
                 
                 if any_cert_updated:
-                    updated_student.save(update_fields=[
-                        'cert_achieve', 'cert_intern', 'cert_courses', 'cert_sdp',
-                        'cert_extra', 'cert_placement', 'cert_national',
-                        'cert_achieve_url', 'cert_intern_url', 'cert_courses_url',
-                        'cert_sdp_url', 'cert_extra_url', 'cert_placement_url',
-                        'cert_national_url', 'updated_at',
-                    ])
+                    updated_student.save()
 
                 if skipped_uploads:
                     skipped_names = ', '.join(item['filename'] for item in skipped_uploads[:3])
@@ -5461,7 +4919,7 @@ def edit_student(request, student_id):
 
                 try:
                     if form.has_changed() or request.FILES:
-                        generate_student_profile_pdf(
+                        generate_student_pdf(
                             updated_student,
                             photo_override_path=temp_photo_override_path,
                             certificate_override_assets=certificate_override_assets,
@@ -5470,7 +4928,7 @@ def edit_student(request, student_id):
                     logger.warning(f"Student updated, but PDF regeneration failed: {pdf_e}")
                     
                 messages.success(request, "Student updated successfully.")
-                return redirect('dashboard:students_data_password')
+                return redirect('dashboard:students_data')
             except Exception as e:
                 logger.error(f"Error updating student {student_id}: {e}", exc_info=True)
                 messages.error(request, f"An error occurred while updating the student: {str(e)}")
@@ -5496,23 +4954,7 @@ def edit_student(request, student_id):
 
 def student_photo_redirect(request, student_id):
     student = get_object_or_404(Student, id=student_id)
-    if student.photo:
-        local_photo_path = resolve_local_media_file_path(getattr(student.photo, 'name', None))
-        if local_photo_path and os.path.exists(local_photo_path):
-            local_media_relpath = os.path.relpath(local_photo_path, settings.MEDIA_ROOT).replace('\\', '/')
-            return redirect(f"{settings.MEDIA_URL.rstrip('/')}/{local_media_relpath}")
-        try:
-            return redirect(student.photo.url)
-        except Exception as exc:
-            logger.warning(f"Could not resolve student photo URL for {student.ht_no}: {exc}")
-
-    photo_url_value = getattr(student, 'photo_url', None)
-    local_photo_url_path = resolve_local_asset_reference(photo_url_value)
-    if local_photo_url_path and os.path.exists(local_photo_url_path):
-        local_media_relpath = os.path.relpath(local_photo_url_path, settings.MEDIA_ROOT).replace('\\', '/')
-        return redirect(f"{settings.MEDIA_URL.rstrip('/')}/{local_media_relpath}")
-
-    photo_url = normalize_optional_url(photo_url_value)
+    photo_url = normalize_optional_url(getattr(student, 'photo_url', None))
     if photo_url:
         return redirect(photo_url)
 
@@ -5526,6 +4968,12 @@ def student_photo_redirect(request, student_id):
     latest_upload_url = normalize_optional_url(latest_upload_url)
     if latest_upload_url:
         return redirect(latest_upload_url)
+
+    if student.photo:
+        try:
+            return redirect(student.photo.url)
+        except Exception as exc:
+            logger.warning(f"Could not resolve student photo URL for {student.ht_no}: {exc}")
 
     from django.http import Http404
     raise Http404("Photo not found")
@@ -5547,12 +4995,8 @@ def generate_student_pdf_view(request, student_id):
             return redirect(student_dashboard_redirect_route(request))
 
     try:
-        # Generate student PDF with merged certificates and email it to the registered address.
-        pdf_bytes = generate_student_profile_pdf(
-            student,
-            return_bytes=True,
-            email_pdf=True,
-        )
+        # Generate student PDF with merged certificates
+        pdf_bytes = generate_student_pdf(student, return_bytes=True)
         if not pdf_bytes:
             messages.error(request, "Failed to generate PDF.")
             return redirect('dashboard:students_data' if user_authenticated else student_dashboard_redirect_route(request))
@@ -5578,7 +5022,7 @@ def regenerate_student_pdf(request, student_id):
     try:
         student.pdf_generated = False
         student.save()
-        pdf_path = generate_student_profile_pdf(student)
+        pdf_path = generate_student_pdf(student)
         return JsonResponse({
             'success': True,
             'message': f'PDF regenerated for {student.student_name}',
@@ -5602,7 +5046,6 @@ def generate_student_pdf(
     return_bytes=False,
     photo_override_path=None,
     certificate_override_assets=None,
-    email_pdf=False,
 ):
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
     print(f"  [DEBUG] cert_achieve: {student.cert_achieve}, cert_achieve_url: {student.cert_achieve_url}")
@@ -5753,7 +5196,11 @@ def generate_student_pdf(
             fontName='Helvetica-Bold', alignment=1,
             textColor=colors.darkblue, spaceAfter=2
         )
-        elems.append(Paragraph("ENGINEERING COLLEGE", header_style))
+        elems.append(Paragraph("ANURAG ENGINEERING COLLEGE", header_style))
+        elems.append(Paragraph(
+            "<font size='12' color='navy'><b>DEPARTMENT OF INFORMATION TECHNOLOGY</b></font>",
+            styles['Normal']
+        ))
         elems.append(Spacer(1, 4))
         elems.append(Paragraph(
             "<b>STUDENT PROFILE</b>",
@@ -5866,10 +5313,11 @@ def generate_student_pdf(
     )
     temp_files.extend(photo_temp_paths)
     if photo_url_for_pdf:
-        photo_log_value = photo_url_for_pdf
-        if isinstance(photo_log_value, str) and photo_log_value.startswith('data:'):
-            photo_log_value = f"embedded data URI ({len(photo_log_value)} chars)"
-        print(f"  [OK] Photo ({photo_source}): {photo_log_value}")
+        print(f"  [OK] Photo ({photo_source}): {photo_url_for_pdf}")
+
+    # ── ANURAG HEADER IMAGE PATH ──────────────────────────────
+    anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
+    anurag_header_url = build_file_uri(anurag_header_path)
 
     # ── BUILD TEMPLATE CONTEXT ────────────────────────────────
     context = {
@@ -5877,11 +5325,12 @@ def generate_student_pdf(
         'current_date': datetime.now(),
         'student_photo_url': photo_url_for_pdf,
         'local_photo_path': local_photo_path,
+        'anurag_header_url': anurag_header_url,
         'uploaded_documents': build_student_uploaded_documents(student),
     }
 
     # ── GENERATE INFO PDF with WeasyPrint ─────────────────────────
-    html_string = render_to_string(STUDENT_PDF_TEMPLATE, context)
+    html_string = render_to_string('dashboard/student_pdf.html', context)
 
     info_pdf_bytes = None
     used_reportlab_fallback = False
@@ -5972,11 +5421,11 @@ def generate_student_pdf(
         temp_files.append(info_tmp.name)
         _add_to_writer(info_tmp.name)
 
-        # 2. Collect student certificates using the shared asset resolver.
-        # The student photo belongs on the first profile page, not as a separate merged page.
-        _, image_files, pdf_files, collected_temp_files = collect_student_files(
+        # 2. Collect all student certificates using the shared asset resolver
+        # photo_file is the student photo - we add it as a separate page in the merged PDF
+        photo_file, image_files, pdf_files, collected_temp_files = collect_student_files(
             student,
-            skip_photo=True,
+            skip_photo=bool(photo_override_path),
             skip_certificate_fields=override_certificate_fields,
         )
         temp_files.extend(collected_temp_files)
@@ -5990,6 +5439,19 @@ def generate_student_pdf(
                 if override_path not in image_files:
                     image_files.append(override_path)
         
+        # If the photo was already downloaded for the info PDF, use that path to avoid duplicate download
+        if photo_override_path and os.path.exists(photo_override_path):
+            print(f"  [DEBUG] Adding uploaded photo override as separate page: {photo_override_path}")
+            if photo_override_path not in image_files:
+                image_files.append(photo_override_path)
+        elif local_photo_path and os.path.exists(local_photo_path) and local_photo_path != photo_file:
+            print(f"  [DEBUG] Using pre-downloaded photo for merge: {local_photo_path}")
+            if local_photo_path not in image_files:
+                image_files.append(local_photo_path)
+        elif photo_file and os.path.exists(photo_file):
+            print(f"  [DEBUG] Adding student photo as separate page: {photo_file}")
+            if photo_file not in image_files:
+                image_files.append(photo_file)
         print(f"  [DEBUG] Certificates collected: {len(image_files)} images, {len(pdf_files)} PDFs")
         print(f"  [DEBUG] Writer pages before adding certificates: {len(writer.pages)}")
         print(f"  [DEBUG] PDF files: {[os.path.basename(p) for p in pdf_files]}")
@@ -6060,17 +5522,16 @@ def generate_student_pdf(
     if not return_url:
         student.pdf_url = None
 
-    # Keep a real local fallback PDF when Cloudinary upload is unavailable.
-    if final_pdf_bytes and not return_url:
+    # Always persist the generated PDF through the model storage backend as a durable fallback.
+    if final_pdf_bytes:
         try:
-            storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
-            saved_name = storage.save(os.path.join('student_pdfs', filename), ContentFile(final_pdf_bytes))
-            student.pdf_file = saved_name
+            student.pdf_file.save(filename, ContentFile(final_pdf_bytes), save=False)
             pdf_file_saved = True
-            return_url = storage.url(saved_name)
-            print(f"  [OK] PDF saved locally: {saved_name}")
+            if not return_url and student.pdf_file:
+                return_url = student.pdf_file.url
+            print(f"  [OK] PDF persisted via model storage: {return_url or filename}")
         except Exception as e:
-            print(f"  [ERR] Local PDF save failed: {e}")
+            print(f"  [ERR] Persistent PDF save failed: {e}")
             pdf_file_saved = False
 
     pdf_persisted = bool(return_url or pdf_file_saved)
@@ -6095,9 +5556,6 @@ def generate_student_pdf(
     if used_reportlab_fallback:
         logger.info(f"Student PDF for {student.ht_no} used ReportLab fallback instead of pdfkit/wkhtmltopdf")
 
-    if email_pdf:
-        send_student_profile_pdf_email(student, final_pdf_bytes)
-
     print("=== STUDENT PDF GENERATION COMPLETE ===\n")
 
     # If return_bytes is True, return the PDF content directly
@@ -6105,13 +5563,6 @@ def generate_student_pdf(
         return final_pdf_bytes
 
     return return_url
-
-
-
-
-
-
-
 
 def view_pdf(request, student_id):
     student = get_object_or_404(Student, id=student_id)
@@ -6128,21 +5579,8 @@ def view_pdf(request, student_id):
             messages.error(request, "You can only view your own PDF.")
             return redirect(student_dashboard_redirect_route(request))
 
-    try:
-        regenerated_pdf_bytes = generate_student_profile_pdf_bytes(student)
-        if regenerated_pdf_bytes:
-            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
-            response['Content-Length'] = len(regenerated_pdf_bytes)
-            return response
-    except Exception as exc:
-        logger.error(f"Failed to generate fresh student PDF for {student.ht_no}: {exc}")
-
     pdf_url = normalize_optional_url(getattr(student, 'pdf_url', None))
     if pdf_url:
-        private_pdf_url = build_cloudinary_private_download_url(pdf_url, preferred_resource_type='raw')
-        if private_pdf_url:
-            return redirect(private_pdf_url)
         temp_pdf_path = None
         try:
             temp_pdf_path, _ = download_remote_asset(pdf_url, default_suffix='.pdf')
@@ -6162,14 +5600,6 @@ def view_pdf(request, student_id):
 
     pdf_field = getattr(student, 'pdf_file', None)
     if pdf_field and getattr(pdf_field, 'name', ''):
-        local_pdf_path = resolve_local_media_file_path(pdf_field.name)
-        if local_pdf_path and os.path.exists(local_pdf_path):
-            with open(local_pdf_path, 'rb') as pdf_handle:
-                pdf_bytes = pdf_handle.read()
-            response = HttpResponse(pdf_bytes, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
-            response['Content-Length'] = len(pdf_bytes)
-            return response
         try:
             with pdf_field.open('rb') as pdf_handle:
                 pdf_bytes = pdf_handle.read()
@@ -6183,6 +5613,16 @@ def view_pdf(request, student_id):
                 return redirect(pdf_field.url)
             except Exception:
                 pass
+
+    try:
+        regenerated_pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        if regenerated_pdf_bytes:
+            response = HttpResponse(regenerated_pdf_bytes, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="student_{student.ht_no}.pdf"'
+            response['Content-Length'] = len(regenerated_pdf_bytes)
+            return response
+    except Exception as exc:
+        logger.error(f"Failed to regenerate stale student PDF for {student.ht_no}: {exc}")
 
     messages.error(request, "PDF not generated yet.")
     return redirect('dashboard:student_detail', student_id=student_id)
@@ -6354,7 +5794,6 @@ def merge_student_certificates(request, student_id):
             except Exception:
                 pass
 
-
 def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
     """
     Comprehensive merge of faculty profile PDF with all uploaded documents.
@@ -6367,7 +5806,6 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
         writer = PdfWriter()
         temp_files = []  # Track all temp files for cleanup
         readers_keep = [] # Keep readers alive
-        merged_asset_fingerprints = set()
 
         # --- helper: add a file (path) to writer ---
         def _add_to_writer_internal(path):
@@ -6399,66 +5837,40 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             except Exception:
                 return False
 
-        def _add_unique_asset(path):
-            if not path or not os.path.exists(path):
-                return False
-
-            fingerprint = None
-            try:
-                hasher = hashlib.sha256()
-                with open(path, 'rb') as asset_file:
-                    for chunk in iter(lambda: asset_file.read(65536), b''):
-                        hasher.update(chunk)
-                fingerprint = hasher.hexdigest()
-            except Exception:
-                pass
-
-            if fingerprint and fingerprint in merged_asset_fingerprints:
-                return False
-
-            added = _add_to_writer_internal(path)
-            if added and fingerprint:
-                merged_asset_fingerprints.add(fingerprint)
-            return added
-
         # 1. Add the main student/faculty profile PDF
         if pdf_bytes:
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tf:
                 tf.write(pdf_bytes)
                 tfp = tf.name
                 temp_files.append(tfp)
-            _add_unique_asset(tfp)
+            _add_to_writer_internal(tfp)
 
         # 2. Collect all faculty documents from model fields
         doc_fields = [
-            ('aadhar_file', 'aadhar_url'),
-            ('pan_file', 'pan_url'),
-            ('apaar_file', 'apaar_url'),
-            ('scm_file', 'scm_url'),
-            ('jntuh_biodata', 'jntuh_biodata_url'),
-            ('ssc_certificate', 'ssc_certificate_url'),
-            ('inter_certificate', 'inter_certificate_url'),
-            ('ug_certificate', 'ug_certificate_url'),
-            ('pg_certificate', 'pg_certificate_url'),
-            ('phd_certificate', 'phd_certificate_url'),
-            ('experience_certificates', 'experience_certificates_url'),
-            ('other_documents', 'other_documents_url'),
+            ('aadhar_url', 'aadhar_file'),
+            ('pan_url', 'pan_file'),
+            ('apaar_url', 'apaar_file'),
+            ('scm_url', 'scm_file'),
+            ('jntuh_biodata_url', 'jntuh_biodata'),
+            ('ssc_certificate_url', 'ssc_certificate'),
+            ('inter_certificate_url', 'inter_certificate'),
+            ('ug_certificate_url', 'ug_certificate'),
+            ('pg_certificate_url', 'pg_certificate'),
+            ('phd_certificate_url', 'phd_certificate'),
+            ('research_proof_url', 'research_proof'),
+            ('fdp_certificate_url', 'fdp_certificate'),
+            ('experience_certificates_url', 'experience_certificates'),
+            ('other_documents_url', 'other_documents'),
         ]
         
-        for file_field_name, url_field_name in doc_fields:
-            ff = getattr(faculty, file_field_name, None)
-            url_val = getattr(faculty, url_field_name, None)
-            p, _ = resolve_asset_from_candidates(
-                collect_faculty_document_candidates(faculty, file_field_name, url_field_name),
-                temp_files,
-                default_suffix='.pdf',
-            )
-            if not p:
-                p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
+        for url_field, file_field in doc_fields:
+            ff = getattr(faculty, file_field, None)
+            url_val = getattr(faculty, url_field, None)
+            p, _ = get_local_or_remote_asset(ff, url=url_val, default_suffix='.pdf')
             if p and p not in temp_files and not (ff and hasattr(ff, 'path') and getattr(ff, 'path', None) == p):
                 temp_files.append(p)
             if p:
-                _add_unique_asset(p)
+                _add_to_writer_internal(p)
 
         # 3. Certificate records (related model)
         from .models import Certificate
@@ -6467,223 +5879,33 @@ def merge_certificates_with_pdf_bytes(pdf_bytes, faculty):
             if cert_p and cert_p not in temp_files and not (cert.certificate_file and hasattr(cert.certificate_file, 'path') and getattr(cert.certificate_file, 'path', None) == cert_p):
                 temp_files.append(cert_p)
             if cert_p:
-                _add_unique_asset(cert_p)
+                _add_to_writer_internal(cert_p)
 
-        def _collect_related_document_candidates(file_field, url_value, source_prefix, upload_history_urls=None):
-            candidates = []
-            seen = set()
-
-            def add_path(path_value, source):
-                if not path_value or not os.path.exists(path_value):
-                    return
-                normalized = os.path.normcase(os.path.abspath(str(path_value)))
-                key = ('path', normalized)
-                if key in seen:
-                    return
-                seen.add(key)
-                candidates.append({'source': source, 'path': str(path_value)})
-
-            def add_url(raw_url, source):
-                normalized_url = normalize_optional_url(raw_url)
-                if not normalized_url:
-                    return
-                key = ('url', normalized_url)
-                if key in seen:
-                    return
-                seen.add(key)
-                candidates.append({'source': source, 'url': normalized_url})
-
-            if file_field and getattr(file_field, 'name', ''):
-                add_path(resolve_local_media_file_path(getattr(file_field, 'name', None)), f'{source_prefix}.media_name')
-                try:
-                    add_path(file_field.path, f'{source_prefix}.path')
-                except (NotImplementedError, ValueError, OSError, Exception):
-                    pass
-
-                try:
-                    field_url = file_field.url
-                except Exception:
-                    field_url = None
-
-                add_path(resolve_local_asset_reference(field_url), f'{source_prefix}.field_url_local')
-                add_url(field_url, f'{source_prefix}.field_url')
-
-            add_path(resolve_local_asset_reference(url_value), f'{source_prefix}.url_local')
-            add_url(url_value, f'{source_prefix}.url')
-            for uploaded_url in upload_history_urls or []:
-                add_url(uploaded_url, f'{source_prefix}.cloudinary_upload_history')
-            return candidates
-
-        def _asset_source_keys(file_field=None, url_value=None, upload_history_urls=None):
-            keys = set()
-
-            if file_field and getattr(file_field, 'name', ''):
-                media_path = resolve_local_media_file_path(getattr(file_field, 'name', None))
-                if media_path and os.path.exists(media_path):
-                    keys.add(('path', os.path.normcase(os.path.abspath(str(media_path)))))
-                try:
-                    field_path = file_field.path
-                except (NotImplementedError, ValueError, OSError, Exception):
-                    field_path = None
-                if field_path and os.path.exists(field_path):
-                    keys.add(('path', os.path.normcase(os.path.abspath(str(field_path)))))
-
-                try:
-                    field_url = file_field.url
-                except Exception:
-                    field_url = None
-                normalized_field_url = normalize_optional_url(field_url)
-                if normalized_field_url:
-                    keys.add(('url', normalized_field_url))
-
-            local_url_path = resolve_local_asset_reference(url_value)
-            if local_url_path and os.path.exists(local_url_path):
-                keys.add(('path', os.path.normcase(os.path.abspath(str(local_url_path)))))
-
-            normalized_url = normalize_optional_url(url_value)
-            if normalized_url:
-                keys.add(('url', normalized_url))
-
-            for uploaded_url in upload_history_urls or []:
-                normalized_uploaded_url = normalize_optional_url(uploaded_url)
-                if normalized_uploaded_url:
-                    keys.add(('url', normalized_uploaded_url))
-
-            return keys
-
-        # 4. Faculty-level FDP certificate
-        fdp_upload_history_urls = list(
-            CloudinaryUpload.objects
-            .filter(faculty=faculty, upload_type='fdp_certificate')
-            .order_by('-upload_date')
-            .values_list('cloudinary_url', flat=True)
-        )
-        merged_fdp_source_keys = _asset_source_keys(
-            getattr(faculty, 'fdp_certificate', None),
-            getattr(faculty, 'fdp_certificate_url', None),
-            upload_history_urls=fdp_upload_history_urls,
-        )
-        fdp_faculty_path, _ = resolve_asset_from_candidates(
-            collect_faculty_document_candidates(faculty, 'fdp_certificate', 'fdp_certificate_url'),
-            temp_files,
-            default_suffix='.pdf',
-        )
-        if not fdp_faculty_path:
-            fdp_faculty_path, _ = get_local_or_remote_asset(
-                getattr(faculty, 'fdp_certificate', None),
-                url=getattr(faculty, 'fdp_certificate_url', None),
-                default_suffix='.pdf',
-            )
-        if (
-            fdp_faculty_path and
-            fdp_faculty_path not in temp_files and
-            not (
-                getattr(faculty, 'fdp_certificate', None) and
-                hasattr(faculty.fdp_certificate, 'path') and
-                getattr(faculty.fdp_certificate, 'path', None) == fdp_faculty_path
-            )
-        ):
-            temp_files.append(fdp_faculty_path)
-        if fdp_faculty_path:
-            _add_unique_asset(fdp_faculty_path)
-
-        # 5. FDP Certificates attached to individual FDP records
+        # 4. FDP Certificates
         from .models import FDP
         for fdp_rec in FDP.objects.filter(faculty=faculty):
-            record_fdp_source_keys = _asset_source_keys(
+            fdp_p, _ = get_local_or_remote_asset(
                 fdp_rec.certificate,
-                getattr(fdp_rec, 'certificate_url', None),
+                url=getattr(fdp_rec, 'certificate_url', None),
+                default_suffix='.pdf'
             )
-            if record_fdp_source_keys and record_fdp_source_keys & merged_fdp_source_keys:
-                continue
-
-            fdp_p, _ = resolve_asset_from_candidates(
-                _collect_related_document_candidates(
-                    fdp_rec.certificate,
-                    getattr(fdp_rec, 'certificate_url', None),
-                    'fdp_certificate',
-                ),
-                temp_files,
-                default_suffix='.pdf',
-            )
-            if not fdp_p:
-                fdp_p, _ = get_local_or_remote_asset(
-                    fdp_rec.certificate,
-                    url=getattr(fdp_rec, 'certificate_url', None),
-                    default_suffix='.pdf'
-                )
             if fdp_p and fdp_p not in temp_files and not (fdp_rec.certificate and hasattr(fdp_rec.certificate, 'path') and getattr(fdp_rec.certificate, 'path', None) == fdp_p):
                 temp_files.append(fdp_p)
             if fdp_p:
-                _add_unique_asset(fdp_p)
-                merged_fdp_source_keys.update(record_fdp_source_keys)
+                _add_to_writer_internal(fdp_p)
 
-        # 6. Faculty-level research proof
-        research_upload_history_urls = list(
-            CloudinaryUpload.objects
-            .filter(faculty=faculty, upload_type='research_proof')
-            .order_by('-upload_date')
-            .values_list('cloudinary_url', flat=True)
-        )
-        merged_research_source_keys = _asset_source_keys(
-            getattr(faculty, 'research_proof', None),
-            getattr(faculty, 'research_proof_url', None),
-            upload_history_urls=research_upload_history_urls,
-        )
-        research_faculty_path, _ = resolve_asset_from_candidates(
-            collect_faculty_document_candidates(faculty, 'research_proof', 'research_proof_url'),
-            temp_files,
-            default_suffix='.pdf',
-        )
-        if not research_faculty_path:
-            research_faculty_path, _ = get_local_or_remote_asset(
-                getattr(faculty, 'research_proof', None),
-                url=getattr(faculty, 'research_proof_url', None),
-                default_suffix='.pdf',
-            )
-        if (
-            research_faculty_path and
-            research_faculty_path not in temp_files and
-            not (
-                getattr(faculty, 'research_proof', None) and
-                hasattr(faculty.research_proof, 'path') and
-                getattr(faculty.research_proof, 'path', None) == research_faculty_path
-            )
-        ):
-            temp_files.append(research_faculty_path)
-        if research_faculty_path:
-            _add_unique_asset(research_faculty_path)
-
-        # 7. Research proofs attached to individual publication records
+        # 5. Research Proofs
         from .models import ResearchPublication
         for pub in ResearchPublication.objects.filter(faculty=faculty):
-            record_research_source_keys = _asset_source_keys(
+            pub_p, _ = get_local_or_remote_asset(
                 pub.proof_document,
-                getattr(pub, 'proof_document_url', None),
+                url=getattr(pub, 'proof_document_url', None),
+                default_suffix='.pdf'
             )
-            if record_research_source_keys and record_research_source_keys & merged_research_source_keys:
-                continue
-
-            pub_p, _ = resolve_asset_from_candidates(
-                _collect_related_document_candidates(
-                    pub.proof_document,
-                    getattr(pub, 'proof_document_url', None),
-                    'research_proof',
-                ),
-                temp_files,
-                default_suffix='.pdf',
-            )
-            if not pub_p:
-                pub_p, _ = get_local_or_remote_asset(
-                    pub.proof_document,
-                    url=getattr(pub, 'proof_document_url', None),
-                    default_suffix='.pdf'
-                )
             if pub_p and pub_p not in temp_files and not (pub.proof_document and hasattr(pub.proof_document, 'path') and getattr(pub.proof_document, 'path', None) == pub_p):
                 temp_files.append(pub_p)
             if pub_p:
-                _add_unique_asset(pub_p)
-                merged_research_source_keys.update(record_research_source_keys)
+                _add_to_writer_internal(pub_p)
 
         # Finalize
         pages_count = len(writer.pages)
@@ -7680,7 +6902,7 @@ def profile_settings(request):
 @login_required
 def about_system(request):
     return render(request, 'dashboard/about.html', {
-        'title': 'About Engineering College',
+        'title': 'About ANURAG Engineering College',
         'version': '2.0.0',
         'release_date': '2024',
         'features': [
@@ -7721,7 +6943,6 @@ def contact_support(request):
 def privacy_policy(request):
     return render(request, 'dashboard/privacy_policy.html', {
         'title': 'Privacy Policy',
-        'effective_date': 'June 1, 2026',
     })
 
 
@@ -7937,151 +7158,45 @@ def exam_branch(request):
 @login_required
 @require_POST
 def exam_branch_download_lesson_plan(request):
+    payload = {}
     try:
-        raw_payload = request.POST.get('lesson_plan_payload')
-        payload = json.loads(raw_payload) if raw_payload else json.loads(request.body or '{}')
-    except json.JSONDecodeError:
-        return HttpResponseBadRequest('Invalid lesson plan payload.')
+        submitted_payload = request.POST.get('lesson_plan_payload', '{}')
+        parsed_payload = json.loads(submitted_payload)
+        if isinstance(parsed_payload, dict):
+            payload = parsed_payload
+    except (TypeError, ValueError, json.JSONDecodeError):
+        payload = {}
 
-    header = payload.get('header') or {}
-    rows = payload.get('rows') or []
-    total_classes = payload.get('totalClassesTaken', 0)
+    header = payload.get('header', {}) if isinstance(payload, dict) else {}
+    rows = payload.get('rows', []) if isinstance(payload, dict) else []
 
-    try:
-        from openpyxl import Workbook
-        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    except ImportError:
-        return JsonResponse({'success': False, 'error': 'openpyxl is not installed.'}, status=500)
-
-    workbook = Workbook()
-    worksheet = workbook.active
-    worksheet.title = 'Lesson Plan'
-
-    title_fill = PatternFill(fill_type='solid', start_color='1F4E78', end_color='1F4E78')
-    header_fill = PatternFill(fill_type='solid', start_color='D9EAF7', end_color='D9EAF7')
-    table_fill = PatternFill(fill_type='solid', start_color='EAF2F8', end_color='EAF2F8')
-    white_font = Font(color='FFFFFF', bold=True, size=14)
-    bold_font = Font(bold=True)
-    center_alignment = Alignment(horizontal='center', vertical='center')
-    wrap_alignment = Alignment(vertical='top', wrap_text=True)
-    thin_border = Border(
-        left=Side(style='thin', color='AAB7B8'),
-        right=Side(style='thin', color='AAB7B8'),
-        top=Side(style='thin', color='AAB7B8'),
-        bottom=Side(style='thin', color='AAB7B8'),
-    )
-
-    worksheet.merge_cells('A1:F1')
-    worksheet['A1'] = 'Lesson Plan'
-    worksheet['A1'].font = white_font
-    worksheet['A1'].fill = title_fill
-    worksheet['A1'].alignment = center_alignment
-    worksheet.row_dimensions[1].height = 24
-
-    metadata_rows = [
-        ('Branch', header.get('branch', ''), 'Year', header.get('year', ''), 'Semester', header.get('semester', '')),
-        ('Faculty', header.get('faculty', ''), 'Employee Code', header.get('employeeCode', ''), 'Class', header.get('className', '')),
-        ('Subject', header.get('subject', ''), 'Subject Code', header.get('subjectCode', ''), 'Saved On', timezone.localtime().strftime('%d-%m-%Y %I:%M %p')),
+    lines = [
+        'Teaching / Lesson Plan',
+        f"Branch: {header.get('branch', '')}",
+        f"Year: {header.get('year', '')}",
+        f"Semester: {header.get('semester', '')}",
+        f"Faculty: {header.get('faculty', '')}",
+        f"Employee Code: {header.get('employeeCode', '')}",
+        f"Subject: {header.get('subject', '')}",
+        f"Subject Code: {header.get('subjectCode', '')}",
+        '',
+        'S.No\tDate\tDay\tTopic\tMethod\tRemarks',
     ]
 
-    current_row = 3
-    for metadata in metadata_rows:
-        for column_index, value in enumerate(metadata, start=1):
-            cell = worksheet.cell(row=current_row, column=column_index, value=value)
-            cell.border = thin_border
-            cell.alignment = wrap_alignment
-            if column_index % 2 == 1:
-                cell.font = bold_font
-                cell.fill = header_fill
-        current_row += 1
+    for index, row in enumerate(rows, start=1):
+        if not isinstance(row, dict):
+            continue
+        lines.append('\t'.join([
+            str(index),
+            str(row.get('date', '')),
+            str(row.get('day', '')),
+            str(row.get('topic', '')),
+            str(row.get('method', '')),
+            str(row.get('remarks', '')),
+        ]))
 
-    current_row += 1
-    table_headers = [
-        'Date',
-        'Day Of The Week',
-        'Week No.',
-        'No. Of Classes Taken',
-        'Topics To Be Covered',
-        'Students Present',
-    ]
-
-    for column_index, header_label in enumerate(table_headers, start=1):
-        cell = worksheet.cell(row=current_row, column=column_index, value=header_label)
-        cell.font = bold_font
-        cell.fill = table_fill
-        cell.alignment = center_alignment
-        cell.border = thin_border
-
-    current_row += 1
-    if not rows:
-        rows = [{
-            'date': '',
-            'day': '',
-            'weekNum': '',
-            'classesTaken': '',
-            'topics': '',
-            'studentsPresent': '',
-        }]
-
-    for row_data in rows:
-        values = [
-            row_data.get('date', ''),
-            row_data.get('day', ''),
-            row_data.get('weekNum', ''),
-            row_data.get('classesTaken', ''),
-            row_data.get('topics', ''),
-            row_data.get('studentsPresent', ''),
-        ]
-        for column_index, value in enumerate(values, start=1):
-            cell = worksheet.cell(row=current_row, column=column_index, value=value)
-            cell.border = thin_border
-            cell.alignment = wrap_alignment if column_index == 5 else center_alignment
-        current_row += 1
-
-    worksheet.cell(row=current_row + 1, column=3, value='Total Classes Taken').font = bold_font
-    worksheet.cell(row=current_row + 1, column=3).fill = header_fill
-    worksheet.cell(row=current_row + 1, column=3).border = thin_border
-    worksheet.cell(row=current_row + 1, column=4, value=total_classes).font = bold_font
-    worksheet.cell(row=current_row + 1, column=4).border = thin_border
-    worksheet.cell(row=current_row + 1, column=4).alignment = center_alignment
-
-    column_widths = {
-        'A': 16,
-        'B': 20,
-        'C': 12,
-        'D': 20,
-        'E': 42,
-        'F': 18,
-    }
-    for column_letter, width in column_widths.items():
-        worksheet.column_dimensions[column_letter].width = width
-
-    safe_parts = [
-        str(header.get('branch') or 'branch').strip().replace(' ', '_'),
-        str(header.get('year') or 'year').strip().replace(' ', '_'),
-        str(header.get('semester') or 'semester').strip().replace(' ', '_'),
-        str(header.get('subjectCode') or header.get('subject') or 'lesson_plan').strip().replace(' ', '_'),
-    ]
-    safe_parts = [part for part in safe_parts if part]
-    filename = f"lesson_plan_{'_'.join(safe_parts)}_{date.today().strftime('%Y%m%d')}.xlsx"
-
-    output = io.BytesIO()
-    workbook.save(output)
-    output.seek(0)
-
-    FacultyLog.objects.create(
-        faculty=None,
-        action='Lesson Plan Export',
-        details=f'Lesson plan Excel exported with {len(rows)} teaching rows',
-        performed_by=request.user.username,
-        ip_address=request.META.get('REMOTE_ADDR')
-    )
-
-    response = HttpResponse(
-        output.getvalue(),
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response = HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="lesson_plan.txt"'
     return response
 
 
@@ -8302,10 +7417,10 @@ def students_data_password(request):
     if request.method == 'POST':
         password = request.POST.get('password')
         if password == 'aecithod':
-            return redirect('dashboard:students_data')
+            return redirect('dashboard:students')
         else:
             messages.error(request, 'Invalid password. Access denied.')
-            return redirect('dashboard:students_data_password')
+            return redirect('dashboard:students_data')
     return render(request, 'dashboard/students_data_password.html')
 
 
@@ -8339,9 +7454,9 @@ def simple_test(request):
     """Simple test view to verify Django is working"""
     return HttpResponse("""
     <html>
-    <head><title>Engineering College</title></head>
+    <head><title>ANURAG Engineering College</title></head>
     <body style="font-family: Arial; text-align: center; padding: 50px;">
-        <h1>🏫 Engineering College</h1>
+        <h1>🏫 ANURAG Engineering College</h1>
         <p>Django is working! Your application is running.</p>
         <hr>
         <p><a href="/admin-login/">🔐 Click here for Admin Login</a></p>
@@ -8480,16 +7595,11 @@ def _read_faculty_pdf_bytes(faculty):
     """Read a previously persisted faculty PDF from Cloudinary or local storage."""
     pdf_url = normalize_optional_url(getattr(faculty, 'cloudinary_pdf_url', None))
     if pdf_url:
-        temp_pdf_path = None
+        temp_pdf_path, is_pdf = download_remote_asset(pdf_url, default_suffix='.pdf')
         try:
-            temp_pdf_path, is_pdf = download_remote_asset(pdf_url, default_suffix='.pdf')
             if temp_pdf_path and os.path.exists(temp_pdf_path) and is_pdf:
                 with open(temp_pdf_path, 'rb') as pdf_file:
                     return pdf_file.read()
-        except Exception as exc:
-            logger.warning(
-                f"Could not download stored faculty PDF from Cloudinary for {faculty.employee_code}: {exc}"
-            )
         finally:
             try:
                 if temp_pdf_path and os.path.exists(temp_pdf_path):
@@ -8517,36 +7627,6 @@ def _faculty_pdf_response(pdf_bytes, employee_code, as_attachment=False):
     return response
 
 
-def _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=None):
-    """Generate a fresh faculty PDF, validate it, and persist the result."""
-    logger.info(f"Generating faculty PDF for {faculty.employee_code}")
-    pdf_bytes = build_faculty_profile_pdf_bytes(faculty)
-
-    if not pdf_bytes or not pdf_bytes.startswith(b'%PDF'):
-        logger.error(f"Generated PDF is invalid for {faculty.employee_code}")
-        raise ValueError(f"PDF generation failed for {faculty.employee_code}.")
-
-    persist_faculty_profile_pdf(faculty, pdf_bytes, uploaded_by=uploaded_by)
-    return pdf_bytes
-
-
-def _get_faculty_pdf_bytes_with_fallback(faculty, uploaded_by=None):
-    """Prefer a fresh faculty PDF and fall back to a previously saved copy when regeneration fails."""
-    try:
-        return _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=uploaded_by)
-    except Exception as exc:
-        logger.warning(
-            f"Fresh faculty PDF generation failed for {faculty.employee_code}; "
-            f"falling back to saved PDF if available: {exc}"
-        )
-
-    saved_pdf_bytes = _read_faculty_pdf_bytes(faculty)
-    if saved_pdf_bytes and saved_pdf_bytes.startswith(b'%PDF'):
-        return saved_pdf_bytes
-
-    raise ValueError(f"PDF generation failed for {faculty.employee_code}.")
-
-
 @login_required
 def generate_faculty_pdf(request, faculty_id):
     """Generate, persist, and return the merged faculty PDF."""
@@ -8560,15 +7640,22 @@ def generate_faculty_pdf(request, faculty_id):
                 content_type='text/plain'
             )
 
-        pdf_bytes = _generate_persisted_faculty_pdf_bytes(faculty, uploaded_by=request.user.username)
-        send_faculty_profile_pdf_email(faculty, pdf_bytes)
+        logger.info(f"Generating faculty PDF for {faculty.employee_code}")
+        pdf_bytes = generate_faculty_pdf_bytes(faculty)
+        
+        if not pdf_bytes or not pdf_bytes.startswith(b'%PDF'):
+            logger.error(f"Generated PDF is invalid for {faculty.employee_code}")
+            return HttpResponse(
+                f"PDF generation failed for {faculty.employee_code}.",
+                status=500,
+                content_type='text/plain'
+            )
+        
+        persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
         FacultyLog.objects.create(
             faculty=faculty,
             action='Faculty PDF Generated',
-            details=(
-                f'Merged faculty PDF generated for {faculty.staff_name} ({faculty.employee_code}); '
-                'email delivery attempted to the registered address'
-            ),
+            details=f'Merged faculty PDF generated for {faculty.staff_name} ({faculty.employee_code})',
             performed_by=request.user.username,
             ip_address=request.META.get('REMOTE_ADDR'),
         )
@@ -8597,11 +7684,14 @@ def faculty_charts(request):
 
 @login_required
 def faculty_pdf(request, faculty_id):
-    """View a fresh faculty PDF inline, falling back to a saved copy when regeneration fails."""
+    """View the saved faculty PDF inline, generating it on demand when necessary."""
     faculty = get_object_or_404(Faculty, id=faculty_id)
 
     try:
-        pdf_bytes = _get_faculty_pdf_bytes_with_fallback(faculty, uploaded_by=request.user.username)
+        pdf_bytes = _read_faculty_pdf_bytes(faculty)
+        if not pdf_bytes:
+            pdf_bytes = generate_faculty_pdf_bytes(faculty)
+            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
         return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=False)
     except Exception as exc:
         logger.error(f"Error viewing faculty PDF for {faculty_id}: {exc}", exc_info=True)
@@ -8611,11 +7701,14 @@ def faculty_pdf(request, faculty_id):
 
 @login_required
 def download_faculty_pdf(request, faculty_id):
-    """Download a fresh faculty PDF, falling back to a saved copy when regeneration fails."""
+    """Download the saved faculty PDF, generating it on demand when missing."""
     faculty = get_object_or_404(Faculty, id=faculty_id)
 
     try:
-        pdf_bytes = _get_faculty_pdf_bytes_with_fallback(faculty, uploaded_by=request.user.username)
+        pdf_bytes = _read_faculty_pdf_bytes(faculty)
+        if not pdf_bytes:
+            pdf_bytes = generate_faculty_pdf_bytes(faculty)
+            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
         return _faculty_pdf_response(pdf_bytes, faculty.employee_code, as_attachment=True)
     except Exception as exc:
         logger.error(f"Error downloading faculty PDF for {faculty_id}: {exc}", exc_info=True)
@@ -8655,8 +7748,8 @@ def bulk_generate_faculty_pdfs(request):
 
     for faculty in faculties:
         try:
-            pdf_bytes = build_faculty_profile_pdf_bytes(faculty)
-            persist_faculty_profile_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
+            pdf_bytes = generate_faculty_pdf_bytes(faculty)
+            persist_faculty_pdf(faculty, pdf_bytes, uploaded_by=request.user.username)
             generated_count += 1
         except Exception as exc:
             logger.error(f"Bulk faculty PDF generation failed for {faculty.employee_code}: {exc}")
@@ -8869,6 +7962,12 @@ def _unused_attendance_report_stub(request):
     return HttpResponse("Attendance report not yet implemented.", status=501)
 
 
+def _unused_laboratory_stub(request):
+    """Laboratory - not yet implemented."""
+    from django.http import HttpResponse
+    return HttpResponse("Laboratory not yet implemented.", status=501)
+
+
 def _unused_gallery_stub(request):
     """Gallery - not yet implemented."""
     from django.http import HttpResponse
@@ -9071,4 +8170,3 @@ def upload_certificate(request, *args, **kwargs):
 def upload_certificates_bulk(request, *args, **kwargs):
     from django.http import HttpResponse
     return HttpResponse("upload_certificates_bulk not yet implemented.", status=501)
-

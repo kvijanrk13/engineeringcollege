@@ -620,7 +620,26 @@
         {% endif %}
     </div>
 
-    <!-- SECTION 19 (CLASSES TAKEN) REMOVED AS REQUESTED -->
+    <!-- 19. MEMBERSHIP & RATIFICATION -->
+    <div class="section-title">19. MEMBERSHIP &amp; RATIFICATION</div>
+    <table class="info-table">
+        <tr><td class="label">Academic Year</td><td>{{ faculty.membership_academic_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Membership In</td><td>{{ faculty.membership_in|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Membership ID</td><td>{{ faculty.membership_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Ratified</td><td>{{ ratified_status|default:"Not Specified" }}</td></tr>
+        <tr>
+            <td class="label">SCM Document</td>
+            <td>
+                {% if faculty.is_ratified and has_scm %}
+                    Uploaded
+                {% elif faculty.is_ratified %}
+                    Not Uploaded
+                {% else %}
+                    Not Applicable
+                {% endif %}
+            </td>
+        </tr>
+    </table>
 
     <div class="footer">
         <p>This is an electronically generated official document of Engineering College.</p>

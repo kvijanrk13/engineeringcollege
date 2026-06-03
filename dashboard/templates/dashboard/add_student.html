@@ -309,6 +309,45 @@
         box-shadow: 0 0 15px #0ff;
     }
 
+    .certificate-upload-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .certificate-upload-row input[type="file"] {
+        flex: 1;
+    }
+
+    .btn-add-slot {
+        padding: 9px 16px;
+        background: transparent;
+        color: #0ff;
+        border: 2px solid #0ff;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 5px;
+        white-space: nowrap;
+    }
+
+    .btn-add-slot:hover {
+        background: #0ff;
+        color: #000;
+        box-shadow: 0 0 12px #0ff;
+    }
+
+    .additional-slot {
+        display: none;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed rgba(0, 255, 255, 0.5);
+    }
+
+    .additional-slot.is-visible {
+        display: block;
+    }
+
     /* Additional Certificate Fields */
     .additional-cert-group {
         margin-top: 15px;
@@ -368,6 +407,40 @@
         color: #f00;
     }
 
+    .research-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
+
+    .research-table th,
+    .research-table td {
+        border: 1px solid #0f0;
+        padding: 8px;
+        color: #0f0;
+        vertical-align: top;
+        font-size: 0.85rem;
+    }
+
+    .research-table th {
+        background: rgba(0, 255, 0, 0.14);
+    }
+
+    .btn-small-action {
+        padding: 8px 12px;
+        background: transparent;
+        color: #0ff;
+        border: 1px solid #0ff;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .btn-small-action:hover {
+        background: #0ff;
+        color: #000;
+    }
+
     /* Footer */
     .footer {
         text-align: center;
@@ -399,6 +472,7 @@
 
     <form method="POST" enctype="multipart/form-data" id="addStudentForm">
         {% csrf_token %}
+        <input type="hidden" name="student_research_publications_json" id="student_research_publications_json" value="{{ student_research_publications_json|default:'[]' }}">
 
         <!-- Basic Information Section -->
         <div class="form-section">
@@ -582,12 +656,36 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>SSC Year</label>
+                    <input type="text" name="ssc_year" value="{{ student.ssc_year|default:'' }}" placeholder="SSC passed year">
+                </div>
+                <div class="form-group">
+                    <label>School Name</label>
+                    <input type="text" name="ssc_school_name" value="{{ student.ssc_school_name|default:'' }}" placeholder="School name">
+                </div>
+                <div class="form-group">
                     <label>SSC Marks (%)</label>
                      <input type="text" step="0.01" name="ssc_marks" value="{{ student.ssc_marks|default:'' }}" placeholder="SSC Percentage" pattern="[0-9]*(\.[0-9]+)?">
                 </div>
                 <div class="form-group">
+                    <label>Inter Year</label>
+                    <input type="text" name="inter_year" value="{{ student.inter_year|default:'' }}" placeholder="Intermediate passed year">
+                </div>
+                <div class="form-group">
+                    <label>College Name</label>
+                    <input type="text" name="inter_college_name" value="{{ student.inter_college_name|default:'' }}" placeholder="Intermediate college name">
+                </div>
+                <div class="form-group">
                     <label>Intermediate Marks (%)</label>
                     <input type="number" step="0.01" name="inter_marks" value="{{ student.inter_marks|default:'' }}" placeholder="Intermediate Percentage">
+                </div>
+                <div class="form-group">
+                    <label>B.Tech Year</label>
+                    <input type="text" name="btech_year" value="{{ student.btech_year|default:'' }}" placeholder="B.Tech academic year">
+                </div>
+                <div class="form-group">
+                    <label>UG College Name</label>
+                    <input type="text" name="ug_college_name" value="{{ student.ug_college_name|default:'' }}" placeholder="UG college name">
                 </div>
                 <div class="form-group">
                     <label>CGPA</label>
@@ -619,6 +717,100 @@
             </div>
         </div>
 
+        <!-- Research & Publications Section -->
+        <div class="form-section">
+            <h3 class="section-title">Research & Publications</h3>
+            <p class="help-text" style="color: #0ff;">Add student journal papers, conference papers, books, patents, or academic publications.</p>
+
+            <div style="overflow-x: auto;">
+                <table class="research-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Title</th>
+                            <th>Authors</th>
+                            <th>Academic Year</th>
+                            <th>Year</th>
+                            <th>Journal / Conference</th>
+                            <th>ISSN</th>
+                            <th>Status</th>
+                            <th>DOI / URL</th>
+                            <th>Proof</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-research-tbody">
+                        <tr id="no-student-research-row">
+                            <td colspan="12" style="text-align: center; color: #888;">No publications added yet. Use the form below.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="studentResearchProofsContainer"></div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="srp-type">
+                        <option value="journal">Journal Article</option>
+                        <option value="conference">Conference Paper</option>
+                        <option value="book">Book / Chapter</option>
+                        <option value="patent">Patent</option>
+                        <option value="project">Research Project</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Publication Title</label>
+                    <input type="text" id="srp-title" placeholder="Full title of the publication">
+                </div>
+                <div class="form-group">
+                    <label>Authors</label>
+                    <input type="text" id="srp-authors" placeholder="Student name, co-authors">
+                </div>
+                <div class="form-group">
+                    <label>Academic Year</label>
+                    <input type="text" id="srp-academic-year" placeholder="e.g., 2025-26">
+                </div>
+                <div class="form-group">
+                    <label>Publication Year</label>
+                    <input type="text" id="srp-year" pattern="[0-9]*" placeholder="2026">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="srp-status">
+                        <option value="published">Published</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="in_progress">In Progress</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Journal / Conference Name</label>
+                    <input type="text" id="srp-journal" placeholder="Journal or conference name">
+                </div>
+                <div class="form-group">
+                    <label>ISSN</label>
+                    <input type="text" id="srp-issn" placeholder="e.g. 1234-5678">
+                </div>
+                <div class="form-group">
+                    <label>DOI</label>
+                    <input type="text" id="srp-doi" placeholder="10.1000/example">
+                </div>
+                <div class="form-group">
+                    <label>URL</label>
+                    <input type="url" id="srp-url" placeholder="https://example.com/publication">
+                </div>
+            </div>
+
+            <div class="certificate-actions">
+                <button type="button" class="btn-add-cert" onclick="addStudentResearchPublication()">+ ADD PUBLICATION</button>
+                <button type="button" class="btn-small-action" onclick="clearStudentResearchForm()">CLEAR</button>
+            </div>
+        </div>
+
         <!-- Photo Upload -->
         <div class="form-section">
             <h3 class="section-title">Student Photo</h3>
@@ -646,7 +838,17 @@
                         {% if student.cert_achieve_url or student.cert_achieve %}
                         <div class="help-text"><a href="{% if student.cert_achieve_url %}{{ student.cert_achieve_url }}{% else %}{{ student.cert_achieve.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-achieve-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-achieve-additional">
+                            {% if student.cert_achieve_additional_url or student.cert_achieve_additional %}
+                            <div class="help-text"><a href="{% if student.cert_achieve_additional_url %}{{ student.cert_achieve_additional_url }}{% else %}{{ student.cert_achieve_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_achieve_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional achievement certificate</div>
+                        </div>
                         <div class="help-text">Upload achievement certificates (PDF/Image)</div>
                     </div>
                     <div class="form-group">
@@ -654,7 +856,17 @@
                         {% if student.cert_intern_url or student.cert_intern %}
                         <div class="help-text"><a href="{% if student.cert_intern_url %}{{ student.cert_intern_url }}{% else %}{{ student.cert_intern.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-intern-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-intern-additional">
+                            {% if student.cert_intern_additional_url or student.cert_intern_additional %}
+                            <div class="help-text"><a href="{% if student.cert_intern_additional_url %}{{ student.cert_intern_additional_url }}{% else %}{{ student.cert_intern_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_intern_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional internship certificate</div>
+                        </div>
                         <div class="help-text">Upload internship certificates (PDF/Image)</div>
                     </div>
                     <div class="form-group">
@@ -662,7 +874,17 @@
                         {% if student.cert_courses_url or student.cert_courses %}
                         <div class="help-text"><a href="{% if student.cert_courses_url %}{{ student.cert_courses_url }}{% else %}{{ student.cert_courses.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-courses-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-courses-additional">
+                            {% if student.cert_courses_additional_url or student.cert_courses_additional %}
+                            <div class="help-text"><a href="{% if student.cert_courses_additional_url %}{{ student.cert_courses_additional_url }}{% else %}{{ student.cert_courses_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_courses_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional course certificate</div>
+                        </div>
                         <div class="help-text">Upload course completion certificates</div>
                     </div>
                     <div class="form-group">
@@ -670,7 +892,17 @@
                         {% if student.cert_sdp_url or student.cert_sdp %}
                         <div class="help-text"><a href="{% if student.cert_sdp_url %}{{ student.cert_sdp_url }}{% else %}{{ student.cert_sdp.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-sdp-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-sdp-additional">
+                            {% if student.cert_sdp_additional_url or student.cert_sdp_additional %}
+                            <div class="help-text"><a href="{% if student.cert_sdp_additional_url %}{{ student.cert_sdp_additional_url }}{% else %}{{ student.cert_sdp_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_sdp_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional SDP certificate</div>
+                        </div>
                         <div class="help-text">Upload Skill Development Program certificates</div>
                     </div>
                     <div class="form-group">
@@ -678,7 +910,17 @@
                         {% if student.cert_extra_url or student.cert_extra %}
                         <div class="help-text"><a href="{% if student.cert_extra_url %}{{ student.cert_extra_url }}{% else %}{{ student.cert_extra.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-extra-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-extra-additional">
+                            {% if student.cert_extra_additional_url or student.cert_extra_additional %}
+                            <div class="help-text"><a href="{% if student.cert_extra_additional_url %}{{ student.cert_extra_additional_url }}{% else %}{{ student.cert_extra_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_extra_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional extracurricular certificate</div>
+                        </div>
                         <div class="help-text">Upload extracurricular activity certificates</div>
                     </div>
                     <div class="form-group">
@@ -686,7 +928,17 @@
                         {% if student.cert_placement_url or student.cert_placement %}
                         <div class="help-text"><a href="{% if student.cert_placement_url %}{{ student.cert_placement_url }}{% else %}{{ student.cert_placement.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-placement-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-placement-additional">
+                            {% if student.cert_placement_additional_url or student.cert_placement_additional %}
+                            <div class="help-text"><a href="{% if student.cert_placement_additional_url %}{{ student.cert_placement_additional_url }}{% else %}{{ student.cert_placement_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_placement_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional placement certificate</div>
+                        </div>
                         <div class="help-text">Upload placement offer letters</div>
                     </div>
                     <div class="form-group">
@@ -694,7 +946,17 @@
                         {% if student.cert_national_url or student.cert_national %}
                         <div class="help-text"><a href="{% if student.cert_national_url %}{{ student.cert_national_url }}{% else %}{{ student.cert_national.url }}{% endif %}" target="_blank" style="color: #0ff;">View Current</a></div>
                         {% endif %}
-                        <input type="file" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="certificate-upload-row">
+                            <input type="file" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="btn-add-slot" data-target="cert-national-additional">ADD</button>
+                        </div>
+                        <div class="additional-slot" id="cert-national-additional">
+                            {% if student.cert_national_additional_url or student.cert_national_additional %}
+                            <div class="help-text"><a href="{% if student.cert_national_additional_url %}{{ student.cert_national_additional_url }}{% else %}{{ student.cert_national_additional.url }}{% endif %}" target="_blank" style="color: #0ff;">View Additional</a></div>
+                            {% endif %}
+                            <input type="file" name="cert_national_additional" accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="help-text">Additional national exam certificate</div>
+                        </div>
                         <div class="help-text">Upload national exam certificates</div>
                     </div>
                 </div>
@@ -779,6 +1041,148 @@
             label.textContent = `Selected: ${fileName}`;
         }
     });
+
+    document.querySelectorAll('.btn-add-slot').forEach(function(button) {
+        const target = document.getElementById(button.dataset.target);
+        if (!target) return;
+
+        if (target.querySelector('a')) {
+            target.classList.add('is-visible');
+            button.disabled = true;
+            button.textContent = 'ADDED';
+        }
+
+        button.addEventListener('click', function() {
+            target.classList.add('is-visible');
+            button.disabled = true;
+            button.textContent = 'ADDED';
+        });
+    });
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function normalizePublicationUrl(value) {
+        const trimmed = (value || '').trim();
+        if (!trimmed) return '';
+        return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    }
+
+    function formatStudentPublicationReference(publication) {
+        const refs = [];
+        if (publication.doi) refs.push(`DOI: ${escapeHtml(publication.doi)}`);
+        if (publication.url) {
+            const normalizedUrl = normalizePublicationUrl(publication.url);
+            refs.push(`<a href="${escapeHtml(normalizedUrl)}" target="_blank" style="color:#0ff;">Link</a>`);
+        }
+        return refs.length ? refs.join('<br>') : '—';
+    }
+
+    let studentResearchList = [];
+    try {
+        studentResearchList = JSON.parse(document.getElementById('student_research_publications_json').value || '[]');
+        if (!Array.isArray(studentResearchList)) studentResearchList = [];
+    } catch (error) {
+        studentResearchList = [];
+    }
+
+    function addStudentResearchPublication() {
+        const title = document.getElementById('srp-title').value.trim();
+        if (!title) {
+            alert('Publication title is required.');
+            document.getElementById('srp-title').focus();
+            return;
+        }
+
+        const type = document.getElementById('srp-type').value;
+        const venue = document.getElementById('srp-journal').value.trim();
+        studentResearchList.push({
+            research_type: type,
+            title: title,
+            authors: document.getElementById('srp-authors').value.trim(),
+            academic_year: document.getElementById('srp-academic-year').value.trim(),
+            publication_year: document.getElementById('srp-year').value.trim() || null,
+            journal_name: type !== 'conference' ? venue : '',
+            conference_name: type === 'conference' ? venue : '',
+            issn: document.getElementById('srp-issn').value.trim(),
+            doi: document.getElementById('srp-doi').value.trim(),
+            url: document.getElementById('srp-url').value.trim(),
+            status: document.getElementById('srp-status').value,
+            proof_document_url: '',
+        });
+        renderStudentResearchTable();
+        updateStudentResearchJson();
+        clearStudentResearchForm();
+    }
+
+    function removeStudentResearchPublication(index) {
+        studentResearchList.splice(index, 1);
+        renderStudentResearchTable();
+        updateStudentResearchJson();
+    }
+
+    function renderStudentResearchTable() {
+        const tbody = document.getElementById('student-research-tbody');
+        const proofContainer = document.getElementById('studentResearchProofsContainer');
+        if (!tbody || !proofContainer) return;
+
+        if (!studentResearchList.length) {
+            tbody.innerHTML = `<tr id="no-student-research-row"><td colspan="12" style="text-align:center;color:#888;">No publications added yet. Use the form below.</td></tr>`;
+            proofContainer.innerHTML = '';
+            return;
+        }
+
+        tbody.innerHTML = studentResearchList.map((publication, index) => {
+            const proofUrl = publication.proof_document_url || '';
+            const proofLink = proofUrl
+                ? `<a href="${escapeHtml(proofUrl)}" target="_blank" style="color:#0ff;">View Current</a><br>`
+                : '';
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${escapeHtml(publication.research_type || 'journal')}</td>
+                    <td>${escapeHtml(publication.title)}</td>
+                    <td>${escapeHtml(publication.authors || '—')}</td>
+                    <td>${escapeHtml(publication.academic_year || '—')}</td>
+                    <td>${escapeHtml(publication.publication_year || '—')}</td>
+                    <td>${escapeHtml(publication.journal_name || publication.conference_name || '—')}</td>
+                    <td>${escapeHtml(publication.issn || '—')}</td>
+                    <td>${escapeHtml(publication.status || '—')}</td>
+                    <td>${formatStudentPublicationReference(publication)}</td>
+                    <td>${proofLink}<input type="file" name="student_research_proof_files_${index + 1}" accept=".pdf,.jpg,.jpeg,.png"></td>
+                    <td><button type="button" class="remove-cert-btn" onclick="removeStudentResearchPublication(${index})">Remove</button></td>
+                </tr>
+            `;
+        }).join('');
+
+        proofContainer.innerHTML = '';
+    }
+
+    function updateStudentResearchJson() {
+        document.getElementById('student_research_publications_json').value = JSON.stringify(studentResearchList);
+    }
+
+    function clearStudentResearchForm() {
+        document.getElementById('srp-title').value = '';
+        document.getElementById('srp-authors').value = '';
+        document.getElementById('srp-academic-year').value = '';
+        document.getElementById('srp-year').value = '';
+        document.getElementById('srp-journal').value = '';
+        document.getElementById('srp-issn').value = '';
+        document.getElementById('srp-doi').value = '';
+        document.getElementById('srp-url').value = '';
+        document.getElementById('srp-type').value = 'journal';
+        document.getElementById('srp-status').value = 'published';
+    }
+
+    renderStudentResearchTable();
+    updateStudentResearchJson();
 
     // Add Certificate Functionality
     let certCounter = 0;

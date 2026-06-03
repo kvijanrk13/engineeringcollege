@@ -89,6 +89,10 @@ class Faculty(models.Model):
     subjects_dealt = models.TextField(blank=True, null=True, help_text="List of subjects handled, separated by commas")
     scm = models.TextField(blank=True, null=True, help_text="Service Cum Merit details")
     about_yourself = models.TextField(blank=True, null=True)
+    membership_academic_year = models.CharField(max_length=20, blank=True, null=True)
+    membership_in = models.CharField(max_length=255, blank=True, null=True)
+    membership_id = models.CharField(max_length=100, blank=True, null=True)
+    is_ratified = models.BooleanField(blank=True, null=True)
     results = models.TextField(blank=True, null=True, help_text="Student results or academic performance")
 
     # Experience
@@ -308,6 +312,34 @@ class ResearchPublication(models.Model):
         ordering = ['-publication_year']
 
 
+class StudentResearchPublication(models.Model):
+    RESEARCH_TYPES = ResearchPublication.RESEARCH_TYPES
+    STATUS_CHOICES = ResearchPublication.STATUS_CHOICES
+
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='research_publications')
+    research_type = models.CharField(max_length=20, choices=RESEARCH_TYPES, blank=True, null=True)
+    title = models.CharField(max_length=500)
+    authors = models.TextField(blank=True, null=True)
+    academic_year = models.CharField(max_length=20, blank=True, null=True)
+    publication_year = models.IntegerField(blank=True, null=True)
+    journal_name = models.CharField(max_length=300, blank=True, null=True)
+    conference_name = models.CharField(max_length=300, blank=True, null=True)
+    issn = models.CharField(max_length=20, blank=True, null=True)
+    doi = models.CharField(max_length=100, blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True, null=True)
+    proof_document = models.FileField(upload_to='student_research_proofs/', blank=True, null=True, max_length=500)
+    proof_document_url = models.URLField(blank=True, null=True, max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student.ht_no} - {self.title}"
+
+    class Meta:
+        ordering = ['-publication_year', '-id']
+
+
 class FDP(models.Model):
     FDP_TYPES = [
         ('fdp', 'FDP'),
@@ -392,8 +424,14 @@ class Student(models.Model):
     email = models.EmailField(blank=True, null=True)
     year = models.IntegerField(blank=True, null=True)
     sem = models.IntegerField(blank=True, null=True)
+    ssc_year = models.CharField(max_length=20, blank=True, null=True)
+    ssc_school_name = models.CharField(max_length=255, blank=True, null=True)
     ssc_marks = models.CharField(max_length=20, blank=True, null=True)
+    inter_year = models.CharField(max_length=20, blank=True, null=True)
+    inter_college_name = models.CharField(max_length=255, blank=True, null=True)
     inter_marks = models.CharField(max_length=20, blank=True, null=True)
+    btech_year = models.CharField(max_length=20, blank=True, null=True)
+    ug_college_name = models.CharField(max_length=255, blank=True, null=True)
     cgpa = models.CharField(max_length=10, blank=True, null=True)
     task_registered = models.CharField(max_length=10, blank=True, null=True, choices=[('Yes', 'Yes'), ('No', 'No')])
     task_username = models.CharField(max_length=100, blank=True, null=True)
@@ -415,6 +453,13 @@ class Student(models.Model):
     cert_extra = models.FileField(upload_to='student_certs/extra/', blank=True, null=True, max_length=500)
     cert_placement = models.FileField(upload_to='student_certs/placement/', blank=True, null=True, max_length=500)
     cert_national = models.FileField(upload_to='student_certs/national/', blank=True, null=True, max_length=500)
+    cert_achieve_additional = models.FileField(upload_to='student_certs/achievement/', blank=True, null=True, max_length=500)
+    cert_intern_additional = models.FileField(upload_to='student_certs/internship/', blank=True, null=True, max_length=500)
+    cert_courses_additional = models.FileField(upload_to='student_certs/courses/', blank=True, null=True, max_length=500)
+    cert_sdp_additional = models.FileField(upload_to='student_certs/sdp/', blank=True, null=True, max_length=500)
+    cert_extra_additional = models.FileField(upload_to='student_certs/extra/', blank=True, null=True, max_length=500)
+    cert_placement_additional = models.FileField(upload_to='student_certs/placement/', blank=True, null=True, max_length=500)
+    cert_national_additional = models.FileField(upload_to='student_certs/national/', blank=True, null=True, max_length=500)
     cert_achieve_url = models.URLField(blank=True, null=True, max_length=500)
     cert_intern_url = models.URLField(blank=True, null=True, max_length=500)
     cert_courses_url = models.URLField(blank=True, null=True, max_length=500)
@@ -422,6 +467,13 @@ class Student(models.Model):
     cert_extra_url = models.URLField(blank=True, null=True, max_length=500)
     cert_placement_url = models.URLField(blank=True, null=True, max_length=500)
     cert_national_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_achieve_additional_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_intern_additional_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_courses_additional_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_sdp_additional_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_extra_additional_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_placement_additional_url = models.URLField(blank=True, null=True, max_length=500)
+    cert_national_additional_url = models.URLField(blank=True, null=True, max_length=500)
     pdf_file = models.FileField(upload_to='student_pdfs/', blank=True, null=True, max_length=500)
     pdf_url = models.URLField(blank=True, null=True, max_length=500)
     pdf_generated = models.BooleanField(default=False)

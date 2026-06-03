@@ -18,12 +18,17 @@ class StudentForm(forms.ModelForm):
             'ht_no', 'student_name', 'father_name', 'mother_name', 'gender',
             'dob', 'nationality', 'category', 'religion', 'blood_group',
             'aadhar', 'apaar_id', 'address', 'parent_phone', 'student_phone',
-            'email', 'year', 'sem', 'ssc_marks', 'inter_marks', 'cgpa',
+            'email', 'year', 'sem', 'ssc_year', 'ssc_school_name', 'ssc_marks',
+            'inter_year', 'inter_college_name', 'inter_marks',
+            'btech_year', 'ug_college_name', 'cgpa',
             'task_registered', 'task_username', 'csi_registered', 'csi_membership_id',
             'admission_type', 'other_admission_details', 'eamcet_rank',
             'rtrp_project_title', 'intern_title', 'final_project_title', 'other_training',
             'photo', 'cert_achieve', 'cert_intern', 'cert_courses', 'cert_sdp',
-            'cert_extra', 'cert_placement', 'cert_national'
+            'cert_extra', 'cert_placement', 'cert_national',
+            'cert_achieve_additional', 'cert_intern_additional', 'cert_courses_additional',
+            'cert_sdp_additional', 'cert_extra_additional', 'cert_placement_additional',
+            'cert_national_additional'
         ]
         widgets = {
             'dob': forms.DateInput(attrs={'type': 'date'}),
@@ -44,8 +49,14 @@ class StudentForm(forms.ModelForm):
             'parent_phone': forms.TextInput(attrs={'maxlength': 15}),
             'student_phone': forms.TextInput(attrs={'maxlength': 15}),
             'email': forms.EmailInput(attrs={'maxlength': 254}),
+            'ssc_year': forms.TextInput(attrs={'maxlength': 20}),
+            'ssc_school_name': forms.TextInput(attrs={'maxlength': 255}),
             'ssc_marks': forms.TextInput(attrs={'maxlength': 20}),
+            'inter_year': forms.TextInput(attrs={'maxlength': 20}),
+            'inter_college_name': forms.TextInput(attrs={'maxlength': 255}),
             'inter_marks': forms.TextInput(attrs={'maxlength': 20}),
+            'btech_year': forms.TextInput(attrs={'maxlength': 20}),
+            'ug_college_name': forms.TextInput(attrs={'maxlength': 255}),
             'cgpa': forms.TextInput(attrs={'maxlength': 10}),
             'task_username': forms.TextInput(attrs={'maxlength': 100}),
             'csi_membership_id': forms.TextInput(attrs={'maxlength': 100}),
@@ -158,6 +169,9 @@ class FacultyForm(forms.ModelForm):
             'about_yourself': forms.Textarea(attrs={'rows': 4}),
             'subjects_dealt': forms.Textarea(attrs={'rows': 2}),
             'scm': forms.Textarea(attrs={'rows': 3}),
+            'membership_academic_year': forms.TextInput(attrs={'placeholder': 'e.g., 2025-26'}),
+            'membership_in': forms.TextInput(attrs={'placeholder': 'e.g., CSI, ISTE, IEEE'}),
+            'membership_id': forms.TextInput(attrs={'placeholder': 'Membership ID'}),
             'results': forms.Textarea(attrs={'rows': 2}),
             'phd_year': forms.NumberInput(attrs={'min': 2000, 'max': 2030}),  # supports 2028 from PDF
         }

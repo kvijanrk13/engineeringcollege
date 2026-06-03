@@ -360,7 +360,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">SCM Document</label>
-                                    <input type="file" name="scm_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                    <input type="file" name="scm_file" id="scm-file-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png" disabled>
                                 </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">JNTUH Bio-Data</label>
@@ -384,6 +384,34 @@
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">About Yourself</label>
                                     <textarea name="about_yourself" class="form-control" rows="4" placeholder="Brief introduction, achievements, interests"></textarea>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Academic Year</label>
+                                    <input type="text" name="membership_academic_year" id="membership-academic-year" class="form-control" placeholder="e.g., 2025-26">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Membership In</label>
+                                    <input type="text" name="membership_in" id="membership-in" class="form-control" placeholder="e.g., CSI, ISTE, IEEE">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Membership ID</label>
+                                    <input type="text" name="membership_id" id="membership-id" class="form-control" placeholder="Membership ID">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="addMembershipBtn"><i class="fas fa-plus me-1"></i>Add Membership</button>
+                                    <div class="form-text mt-2" id="membershipPreview">No membership added yet.</div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label d-block">Are you ratified?</label>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input ratified-radio" type="radio" name="is_ratified" id="is-ratified-yes" value="yes">
+                                        <label class="form-check-label" for="is-ratified-yes">Yes</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input ratified-radio" type="radio" name="is_ratified" id="is-ratified-no" value="no">
+                                        <label class="form-check-label" for="is-ratified-no">No</label>
+                                    </div>
+                                    <div class="form-text mt-2">SCM Document upload is enabled only when ratified is Yes.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Experience at Institution</label>
@@ -424,6 +452,38 @@ document.getElementById('addFacultyForm').addEventListener('submit', function(e)
 
     // Form will submit normally
 });
+
+function toggleScmDocumentInput() {
+    const scmInput = document.getElementById('scm-file-input');
+    const ratifiedYes = document.getElementById('is-ratified-yes');
+    if (!scmInput || !ratifiedYes) return;
+    const enabled = ratifiedYes.checked;
+    scmInput.disabled = !enabled;
+    if (!enabled) {
+        scmInput.value = '';
+    }
+}
+
+function updateMembershipPreview() {
+    const academicYear = document.getElementById('membership-academic-year');
+    const membershipIn = document.getElementById('membership-in');
+    const membershipId = document.getElementById('membership-id');
+    const preview = document.getElementById('membershipPreview');
+    if (!academicYear || !membershipIn || !membershipId || !preview) return;
+    const values = [academicYear.value, membershipIn.value, membershipId.value]
+        .map(value => value.trim())
+        .filter(Boolean);
+    preview.textContent = values.length ? values.join(' | ') : 'No membership added yet.';
+}
+
+document.querySelectorAll('.ratified-radio').forEach(function(radio) {
+    radio.addEventListener('change', toggleScmDocumentInput);
+});
+const addMembershipBtn = document.getElementById('addMembershipBtn');
+if (addMembershipBtn) {
+    addMembershipBtn.addEventListener('click', updateMembershipPreview);
+}
+toggleScmDocumentInput();
 
 // Photo preview
 document.querySelector('input[name="photo"]').addEventListener('change', function(e) {
