@@ -78,7 +78,7 @@ CSRF_TRUSTED_ORIGINS = [
 # ================================
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-if not DEBUG:
+if not DEBUG and os.environ.get('DISABLE_SSL_REDIRECT', 'False') != 'True':
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

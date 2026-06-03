@@ -92,6 +92,8 @@ class Faculty(models.Model):
     membership_academic_year = models.CharField(max_length=20, blank=True, null=True)
     membership_in = models.CharField(max_length=255, blank=True, null=True)
     membership_id = models.CharField(max_length=100, blank=True, null=True)
+    membership_proof = models.FileField(upload_to='faculty_docs/membership_proofs/', blank=True, null=True)
+    membership_proof_url = models.URLField(blank=True, null=True, max_length=500)
     is_ratified = models.BooleanField(blank=True, null=True)
     results = models.TextField(blank=True, null=True, help_text="Student results or academic performance")
 

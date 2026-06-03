@@ -1067,6 +1067,7 @@ def build_faculty_pdf_context(faculty):
         'has_pan': has_file_or_url(faculty.pan_file, faculty.pan_url),
         'has_apaar': has_file_or_url(faculty.apaar_file, faculty.apaar_url),
         'has_scm': has_file_or_url(faculty.scm_file, faculty.scm_url),
+        'has_membership_proof': has_file_or_url(faculty.membership_proof, faculty.membership_proof_url),
         'has_jntuh_biodata': has_file_or_url(faculty.jntuh_biodata, faculty.jntuh_biodata_url),
         'has_ssc_cert': has_file_or_url(faculty.ssc_certificate, faculty.ssc_certificate_url),
         'has_inter_cert': has_file_or_url(faculty.inter_certificate, faculty.inter_certificate_url),
@@ -1240,6 +1241,7 @@ def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
             ('Membership Academic Year', getattr(faculty, 'membership_academic_year', 'N/A')),
             ('Membership In', getattr(faculty, 'membership_in', 'N/A')),
             ('Membership ID', getattr(faculty, 'membership_id', 'N/A')),
+            ('Membership Proof', 'Uploaded' if getattr(getattr(faculty, 'membership_proof', None), 'name', '') or getattr(faculty, 'membership_proof_url', None) else 'N/A'),
             ('Ratified', 'Yes' if getattr(faculty, 'is_ratified', None) is True else 'No' if getattr(faculty, 'is_ratified', None) is False else 'N/A'),
             ('SCM Details', getattr(faculty, 'scm', 'N/A')),
         ]
@@ -3536,6 +3538,7 @@ def add_faculty(request):
                 'ssc_certificate', 'inter_certificate', 'ug_certificate',
                 'pg_certificate', 'phd_certificate', 'experience_certificates',
                 'research_proof', 'fdp_certificate', 'other_documents',
+                'membership_proof',
             ]
             # On Render (Cloudinary storage), clear FileFields to avoid automatic upload.
             # The explicit Cloudinary upload block below will handle files on local.
@@ -3573,6 +3576,7 @@ def add_faculty(request):
                     ('research_proof', 'research_proof_url', 'Research Proof'),
                     ('fdp_certificate', 'fdp_certificate_url', 'FDP Certificate'),
                     ('other_documents', 'other_documents_url', 'Other Documents'),
+                    ('membership_proof', 'membership_proof_url', 'Membership Proof'),
                 ]
                 for file_field, url_field, label in cloudinary_doc_fields:
                     if request.FILES.get(file_field) and hasattr(faculty, url_field):
@@ -4085,6 +4089,7 @@ def edit_faculty(request, faculty_id):
             'aadhar_file', 'pan_file', 'apaar_file', 'scm_file', 'jntuh_biodata',
             'ssc_certificate', 'inter_certificate',
             'ug_certificate', 'pg_certificate', 'phd_certificate',
+            'membership_proof',
         ]
         # On Render (Cloudinary storage), clear FileFields to avoid automatic upload.
         # The explicit Cloudinary upload below will handle files.
@@ -4112,6 +4117,7 @@ def edit_faculty(request, faculty_id):
                 ('ug_certificate', 'ug_certificate_url', 'UG Certificate'),
                 ('pg_certificate', 'pg_certificate_url', 'PG Certificate'),
                 ('phd_certificate', 'phd_certificate_url', 'PhD Certificate'),
+                ('membership_proof', 'membership_proof_url', 'Membership Proof'),
             ]
             for file_field, url_field, label in cloudinary_doc_fields:
                 if request.FILES.get(file_field) and hasattr(faculty, url_field):

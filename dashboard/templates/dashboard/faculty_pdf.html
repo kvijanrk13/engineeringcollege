@@ -626,6 +626,7 @@
         <tr><td class="label">Academic Year</td><td>{{ faculty.membership_academic_year|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Membership In</td><td>{{ faculty.membership_in|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Membership ID</td><td>{{ faculty.membership_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Membership Proof</td><td>{% if has_membership_proof %}Uploaded{% else %}Not Uploaded{% endif %}</td></tr>
         <tr><td class="label">Ratified</td><td>{{ ratified_status|default:"Not Specified" }}</td></tr>
         <tr>
             <td class="label">SCM Document</td>

@@ -7,12 +7,23 @@ This Android project packages the deployed Django site as a Play Store-ready Web
 - App name: `ENGINEERINGCOLLEGEPROJECTS`
 - Package name: `com.anrkit.engineeringcollegeprojects`
 - Web app URL: `https://engineeringcollege.onrender.com/`
+- Debug emulator URL: `http://10.0.2.2:8000/`
 - Minimum Android version: Android 6.0, API 23
 - Target SDK: API 35, matching the current Google Play requirement for new apps and app updates.
 
 ## Build Requirements
 
 Install Android Studio, then open this `android` folder as the project root. Android Studio will install the Android Gradle plugin, Gradle wrapper, SDK platform, and build tools if they are missing.
+
+## Android Studio Emulator
+
+Debug builds load the local Django server through `http://10.0.2.2:8000/`, which is the Android Emulator alias for your computer. Start Django from the `engineeringcollege` folder before opening the app in the emulator:
+
+```powershell
+python manage.py runserver 0.0.0.0:8000
+```
+
+The faculty add form and generated faculty PDF screens are served by Django in the WebView, so emulator debug builds show the same faculty membership, ratification, and SCM document changes as the browser.
 
 ## Build AAB for Play Store
 

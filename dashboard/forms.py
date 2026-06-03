@@ -172,6 +172,7 @@ class FacultyForm(forms.ModelForm):
             'membership_academic_year': forms.TextInput(attrs={'placeholder': 'e.g., 2025-26'}),
             'membership_in': forms.TextInput(attrs={'placeholder': 'e.g., CSI, ISTE, IEEE'}),
             'membership_id': forms.TextInput(attrs={'placeholder': 'Membership ID'}),
+            'membership_proof': forms.FileInput(attrs={'accept': '.pdf,.jpg,.jpeg,.png'}),
             'results': forms.Textarea(attrs={'rows': 2}),
             'phd_year': forms.NumberInput(attrs={'min': 2000, 'max': 2030}),  # supports 2028 from PDF
         }
