@@ -55,7 +55,7 @@ import cloudinary.utils
 from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
-    ResearchPublication, FDP, BTechProject
+    ResearchPublication, StudentResearchPublication, FDP, BTechProject
 )
 from .forms import (
     StudentForm, CertificateForm,
@@ -387,8 +387,19 @@ def student_has_certificate_assets(student):
     return False
 
 
+def student_has_research_publication_assets(student):
+    return StudentResearchPublication.objects.filter(student=student).filter(
+        Q(proof_document_url__isnull=False, proof_document_url__gt='')
+        | Q(proof_document__isnull=False, proof_document__gt='')
+    ).exists()
+
+
 def student_has_upload_assets(student):
-    return student_has_photo_asset(student) or student_has_certificate_assets(student)
+    return (
+        student_has_photo_asset(student)
+        or student_has_certificate_assets(student)
+        or student_has_research_publication_assets(student)
+    )
 
 
 def student_has_saved_pdf(student):
@@ -468,6 +479,116 @@ def build_student_certificate_upload_plan(request, student):
         })
 
     return upload_plan, skipped_uploads
+
+
+def build_student_research_publications_json(student):
+    publications = StudentResearchPublication.objects.filter(student=student).order_by('-publication_year', '-id')
+    return json.dumps([{
+        'id': publication.id,
+        'research_type': publication.research_type or 'journal',
+        'title': publication.title,
+        'authors': publication.authors or '',
+        'academic_year': publication.academic_year or '',
+        'publication_year': publication.publication_year,
+        'journal_name': publication.journal_name or '',
+        'conference_name': publication.conference_name or '',
+        'issn': publication.issn or '',
+        'doi': publication.doi or '',
+        'url': publication.url or '',
+        'status': publication.status or 'published',
+        'proof_document_url': publication.proof_document_url or '',
+    } for publication in publications])
+
+
+def save_student_research_publications_from_request(request, student, upload_func=None, clear_missing=True):
+    research_list = parse_json_list(request.POST.get('student_research_publications_json', '[]'))
+    existing_by_id = {
+        publication.id: publication
+        for publication in StudentResearchPublication.objects.filter(student=student)
+    }
+    saved_records = []
+    proof_override_assets = []
+    uploaded_labels = []
+    local_labels = []
+    seen_ids = set()
+
+    for index, item in enumerate(research_list, start=1):
+        if not isinstance(item, dict) or not (item.get('title') or '').strip():
+            continue
+
+        publication_id = item.get('id')
+        try:
+            publication_id = int(publication_id) if publication_id else None
+        except (TypeError, ValueError):
+            publication_id = None
+
+        publication = existing_by_id.get(publication_id)
+        if publication:
+            seen_ids.add(publication.id)
+        else:
+            publication = StudentResearchPublication(student=student)
+
+        pub_type = item.get('research_type') or item.get('type') or 'journal'
+        venue = (item.get('journal_name') or item.get('conference_name') or '').strip()
+        publication.research_type = pub_type
+        publication.title = (item.get('title') or '').strip()
+        publication.authors = (item.get('authors') or '').strip()
+        publication.academic_year = (item.get('academic_year') or '').strip()
+        publication_year = item.get('publication_year') or item.get('year') or None
+        try:
+            publication.publication_year = int(publication_year) if publication_year else None
+        except (TypeError, ValueError):
+            publication.publication_year = None
+        publication.journal_name = venue if pub_type != 'conference' else ''
+        publication.conference_name = venue if pub_type == 'conference' else ''
+        publication.issn = (item.get('issn') or '').strip()
+        publication.doi = (item.get('doi') or '').strip()
+        publication.url = normalize_optional_url(item.get('url'))
+        publication.status = item.get('status') or 'published'
+        if item.get('proof_document_url') and not publication.proof_document_url:
+            publication.proof_document_url = normalize_optional_url(item.get('proof_document_url'))
+        publication.save()
+        seen_ids.add(publication.id)
+
+        proof_file = request.FILES.get(f'student_research_proof_files_{index}')
+        if proof_file:
+            temp_asset_path, temp_asset_is_pdf = snapshot_uploaded_file(proof_file, default_suffix='.pdf')
+            if temp_asset_path:
+                proof_override_assets.append({
+                    'field_name': f'student_research_proof_{publication.id}',
+                    'path': temp_asset_path,
+                    'is_pdf': temp_asset_is_pdf,
+                })
+                persist_snapshot_to_model_field(
+                    publication,
+                    'proof_document',
+                    temp_asset_path,
+                    getattr(proof_file, 'name', None),
+                )
+
+            upload_result = upload_func(proof_file, 'research_proofs') if upload_func else None
+            if upload_result and upload_result.get('secure_url'):
+                publication.proof_document_url = upload_result['secure_url']
+                record_cloudinary_upload(
+                    upload_type='student_research_proof',
+                    upload_result=upload_result,
+                    uploaded_by=getattr(getattr(request, 'user', None), 'username', None),
+                    student=student,
+                )
+                uploaded_labels.append(f'research proof {index}')
+            else:
+                local_labels.append(f'research proof {index}')
+
+            publication.save()
+
+        saved_records.append(publication)
+
+    if clear_missing:
+        for publication_id, publication in existing_by_id.items():
+            if publication_id not in seen_ids:
+                publication.delete()
+
+    return saved_records, proof_override_assets, uploaded_labels, local_labels
 
 
 def record_cloudinary_upload(*, upload_type, upload_result, uploaded_by=None, faculty=None, student=None):
@@ -2172,7 +2293,43 @@ def collect_student_files(student, skip_photo=False, skip_certificate_fields=Non
         else:
             print(f"  [COLLECT] No asset found for {file_field_name}")
 
+    research_proof_count = 0
+    for publication in StudentResearchPublication.objects.filter(student=student).order_by('-publication_year', '-id'):
+        if f'student_research_proof_{publication.id}' in skip_certificate_fields:
+            print(f"  [COLLECT] Skipping research proof {publication.id} because an override asset is available")
+            continue
+        candidates = []
+        proof_field = getattr(publication, 'proof_document', None)
+        if proof_field and getattr(proof_field, 'name', ''):
+            try:
+                if os.path.exists(proof_field.path):
+                    candidates.append({'source': f'student_research_publication_{publication.id}.path', 'path': proof_field.path})
+            except (NotImplementedError, ValueError, OSError):
+                pass
+        proof_url = normalize_optional_url(getattr(publication, 'proof_document_url', None))
+        if proof_url:
+            candidates.append({'source': f'student_research_publication_{publication.id}.url', 'url': proof_url})
+        if proof_field and getattr(proof_field, 'name', ''):
+            try:
+                field_url = proof_field.url
+            except Exception:
+                field_url = None
+            field_url = normalize_optional_url(field_url)
+            if field_url:
+                candidates.append({'source': f'student_research_publication_{publication.id}.file_url', 'url': field_url})
+
+        asset_path, is_pdf = resolve_asset_from_candidates(candidates, temp_files, default_suffix='.pdf')
+        if asset_path:
+            research_proof_count += 1
+            if is_pdf:
+                pdf_files.append(asset_path)
+                print(f"  [COLLECT] Added research proof PDF: {asset_path}")
+            else:
+                image_files.append(asset_path)
+                print(f"  [COLLECT] Added research proof image: {asset_path}")
+
     print(f"  [COLLECT] Total certificates collected: {cert_count}")
+    print(f"  [COLLECT] Total research proofs collected: {research_proof_count}")
 
     return photo_file, image_files, pdf_files, temp_files
 
@@ -4788,10 +4945,26 @@ def add_student(request):
                     + ('...' if len(skipped_uploads) > 3 else '')
                 )
 
+            _, research_proof_assets, research_files_up, research_files_lo = save_student_research_publications_from_request(
+                request,
+                student,
+                upload_func=_upload if ca else None,
+            )
+            certificate_override_assets.extend(research_proof_assets)
+            files_up.extend(research_files_up)
+            files_lo.extend(research_files_lo)
+            if research_proof_assets and not files_up and not files_lo:
+                files_lo.append('research publications')
+
             # Ensure the student flow (add_student.html) always attempts
             # to build a single individual PDF that includes photo + certificates.
             try:
-                should_generate_pdf = student_has_upload_assets(student) or bool(get_pdf_password(student)) or bool(student.email)
+                should_generate_pdf = (
+                    student_has_upload_assets(student)
+                    or StudentResearchPublication.objects.filter(student=student).exists()
+                    or bool(get_pdf_password(student))
+                    or bool(student.email)
+                )
                 generated_pdf_bytes = None
                 if should_generate_pdf:
                     generated_pdf_bytes = generate_student_pdf(
@@ -4825,7 +4998,10 @@ def add_student(request):
             messages.error(request, f'Error adding student: {e}')
             return redirect('dashboard:add_student')
     try:
-        return render(request, 'dashboard/add_student.html', {'departments': get_department_options()})
+        return render(request, 'dashboard/add_student.html', {
+            'departments': get_department_options(),
+            'student_research_publications_json': '[]',
+        })
     except Exception as e:
         logger.error(f"Error in add_student view: {str(e)}", exc_info=True)
         from django.http import HttpResponseServerError
@@ -5008,8 +5184,15 @@ def edit_student(request, student_id):
                         + ('...' if len(skipped_uploads) > 3 else '')
                     )
 
+                _, research_proof_assets, _, _ = save_student_research_publications_from_request(
+                    request,
+                    updated_student,
+                    upload_func=_upload if ca else None,
+                )
+                certificate_override_assets.extend(research_proof_assets)
+
                 try:
-                    if form.has_changed() or request.FILES:
+                    if form.has_changed() or request.FILES or request.POST.get('student_research_publications_json'):
                         generate_student_pdf(
                             updated_student,
                             photo_override_path=temp_photo_override_path,
@@ -5041,6 +5224,7 @@ def edit_student(request, student_id):
             'title': 'Edit Student',
             'student': student,
             'departments': get_department_options(),
+            'student_research_publications_json': build_student_research_publications_json(student),
         })
     except Exception as e:
         logger.error(f"Error rendering edit student page for student {student_id}: {e}", exc_info=True)
@@ -5424,6 +5608,7 @@ def generate_student_pdf(
         'local_photo_path': local_photo_path,
         'anurag_header_url': anurag_header_url,
         'uploaded_documents': build_student_uploaded_documents(student),
+        'student_research_publications': StudentResearchPublication.objects.filter(student=student).order_by('-publication_year', '-id'),
     }
 
     # ── GENERATE INFO PDF with WeasyPrint ─────────────────────────

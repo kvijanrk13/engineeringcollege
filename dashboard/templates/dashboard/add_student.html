@@ -319,6 +319,41 @@
         flex: 1;
     }
 
+    .proof-upload-control {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start;
+    }
+
+    .proof-upload-control input[type="file"] {
+        display: none;
+    }
+
+    .proof-upload-btn {
+        display: inline-block;
+        padding: 6px 12px;
+        border: 1px solid #0ff;
+        border-radius: 5px;
+        color: #0ff;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .proof-upload-btn:hover {
+        background: #0ff;
+        color: #000;
+    }
+
+    .proof-file-name {
+        max-width: 170px;
+        color: #aaa;
+        font-size: 0.75rem;
+        word-break: break-word;
+    }
+
     .btn-add-slot {
         padding: 9px 16px;
         background: transparent;
@@ -1147,6 +1182,12 @@
         updateStudentResearchJson();
     }
 
+    function updateStudentResearchProofLabel(input, labelId) {
+        const label = document.getElementById(labelId);
+        if (!label) return;
+        label.textContent = input.files && input.files.length ? input.files[0].name : 'No file selected';
+    }
+
     function renderStudentResearchTable() {
         const tbody = document.getElementById('student-research-tbody');
         const proofContainer = document.getElementById('studentResearchProofsContainer');
@@ -1160,6 +1201,8 @@
 
         tbody.innerHTML = studentResearchList.map((publication, index) => {
             const proofUrl = publication.proof_document_url || '';
+            const proofInputId = `student-research-proof-${index + 1}`;
+            const proofLabelId = `student-research-proof-name-${index + 1}`;
             const proofLink = proofUrl
                 ? `<a href="${escapeHtml(proofUrl)}" target="_blank" style="color:#0ff;">View Current</a><br>`
                 : '';
@@ -1175,7 +1218,14 @@
                     <td>${escapeHtml(publication.issn || '—')}</td>
                     <td>${escapeHtml(publication.status || '—')}</td>
                     <td>${formatStudentPublicationReference(publication)}</td>
-                    <td>${proofLink}<input type="file" name="student_research_proof_files_${index + 1}" accept=".pdf,.jpg,.jpeg,.png"></td>
+                    <td>
+                        <div class="proof-upload-control">
+                            ${proofLink}
+                            <input type="file" id="${proofInputId}" name="student_research_proof_files_${index + 1}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateStudentResearchProofLabel(this, '${proofLabelId}')">
+                            <label class="proof-upload-btn" for="${proofInputId}">UPLOAD PROOF</label>
+                            <span class="proof-file-name" id="${proofLabelId}">No file selected</span>
+                        </div>
+                    </td>
                     <td><button type="button" class="remove-cert-btn" onclick="removeStudentResearchPublication(${index})">Remove</button></td>
                 </tr>
             `;

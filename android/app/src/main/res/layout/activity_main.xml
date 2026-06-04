@@ -163,66 +163,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/galleryTile"
-                    android:layout_width="0dp"
-                    android:layout_height="132dp"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/tile_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:contentDescription="@string/gallery"
-                        android:src="@drawable/ic_gallery" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:gravity="center"
-                        android:text="@string/gallery"
-                        android:textColor="@color/ink"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/subjectsTile"
-                    android:layout_width="0dp"
-                    android:layout_height="132dp"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/tile_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:contentDescription="@string/subjects"
-                        android:src="@drawable/ic_subjects" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:gravity="center"
-                        android:text="@string/subjects"
-                        android:textColor="@color/ink"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
                     android:id="@+id/projectsTile"
                     android:layout_width="0dp"
                     android:layout_height="132dp"
