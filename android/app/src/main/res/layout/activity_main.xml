@@ -133,36 +133,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/dashboardTile"
-                    android:layout_width="0dp"
-                    android:layout_height="132dp"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="6dp"
-                    android:background="@drawable/tile_background"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:contentDescription="@string/dashboard"
-                        android:src="@drawable/ic_dashboard" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
-                        android:gravity="center"
-                        android:text="@string/dashboard"
-                        android:textColor="@color/ink"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
                     android:id="@+id/projectsTile"
                     android:layout_width="0dp"
                     android:layout_height="132dp"
