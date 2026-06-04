@@ -69,8 +69,8 @@ public class MainActivity extends Activity {
     }
 
     private void configureSectionTiles() {
-        findViewById(R.id.facultyTile).setOnClickListener(view -> openSection("faculty/list/"));
-        findViewById(R.id.studentTile).setOnClickListener(view -> openSection("students/data/password/"));
+        findViewById(R.id.facultyTile).setOnClickListener(view -> openSection("faculty/add/"));
+        findViewById(R.id.studentTile).setOnClickListener(view -> openSection("add-student/"));
         findViewById(R.id.examBranchTile).setOnClickListener(view -> openSection("exam-branch/"));
         findViewById(R.id.projectsTile).setOnClickListener(view -> showProjects());
     }
