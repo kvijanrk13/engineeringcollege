@@ -3318,6 +3318,59 @@ def mobile_dashboard(request):
     })
 
 
+def projects(request):
+    """Public project directory for faculty-supervised and research projects."""
+    search_query = request.GET.get('q', '').strip()
+    department_filter = request.GET.get('department', '').strip()
+    batch_filter = request.GET.get('batch', '').strip()
+
+    btech_projects = BTechProject.objects.select_related('faculty').all()
+    research_projects = ResearchProject.objects.select_related('faculty').all()
+
+    if search_query:
+        btech_projects = btech_projects.filter(
+            Q(project_title__icontains=search_query) |
+            Q(student_name__icontains=search_query) |
+            Q(faculty__staff_name__icontains=search_query)
+        )
+        research_projects = research_projects.filter(
+            Q(title_of_project__icontains=search_query) |
+            Q(faculty__staff_name__icontains=search_query) |
+            Q(publisher_name__icontains=search_query)
+        )
+
+    if department_filter:
+        btech_projects = btech_projects.filter(faculty__department=department_filter)
+        research_projects = research_projects.filter(faculty__department=department_filter)
+
+    if batch_filter:
+        btech_projects = btech_projects.filter(batch=batch_filter)
+
+    departments = Faculty.objects.exclude(
+        department__isnull=True
+    ).exclude(
+        department=''
+    ).values_list('department', flat=True).distinct().order_by('department')
+    batches = BTechProject.objects.exclude(
+        batch__isnull=True
+    ).exclude(
+        batch=''
+    ).values_list('batch', flat=True).distinct().order_by('-batch')
+
+    return render(request, 'dashboard/projects.html', {
+        'btech_projects': btech_projects.order_by('-batch', '-created_at'),
+        'research_projects': research_projects.order_by('-year', '-id'),
+        'btech_project_count': btech_projects.count(),
+        'research_project_count': research_projects.count(),
+        'approved_project_count': btech_projects.filter(approved=True).count(),
+        'departments': departments,
+        'batches': batches,
+        'search_query': search_query,
+        'department_filter': department_filter,
+        'batch_filter': batch_filter,
+    })
+
+
 @login_required
 
 

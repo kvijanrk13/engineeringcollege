@@ -24,6 +24,7 @@ urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='dashboard'),
     path('mobile-dashboard/', views.mobile_dashboard, name='mobile_dashboard'),
     path('home/', views.home, name='home'),
+    path('projects/', views.projects, name='projects'),
 
     # Authentication routes
     path('login/', views.admin_login, name='login'),

@@ -1,0 +1,130 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Projects | Engineering College{% endblock %}
+
+{% block extra_css %}
+<style>
+    .projects-page { background: #f4f7fb; min-height: calc(100vh - 120px); }
+    .projects-header { background: #12314b; color: #fff; padding: 2rem 0; }
+    .projects-header h1 { font-size: 2rem; margin: 0; letter-spacing: 0; }
+    .projects-header p { color: #d7e4ed; margin: .5rem 0 0; }
+    .projects-toolbar { background: #fff; border-bottom: 1px solid #dfe7ee; padding: 1rem 0; position: sticky; top: 0; z-index: 10; }
+    .metric { border-left: 4px solid #16856f; padding: .6rem 1rem; background: #fff; }
+    .metric strong { display: block; font-size: 1.55rem; color: #12314b; }
+    .metric span { color: #657786; font-size: .85rem; }
+    .section-heading { color: #12314b; font-size: 1.25rem; margin: 0; }
+    .project-card { border: 1px solid #dce5ec; border-radius: 6px; height: 100%; box-shadow: none; }
+    .project-card:hover { transform: none; box-shadow: 0 4px 14px rgba(18, 49, 75, .09); }
+    .project-card .card-body { display: flex; flex-direction: column; gap: .7rem; }
+    .project-title { color: #12314b; font-size: 1.05rem; font-weight: 700; margin: 0; }
+    .project-meta { color: #607382; font-size: .88rem; }
+    .project-meta i { color: #16856f; width: 18px; }
+    .badge-soft { background: #e8f4f1; color: #116957; border: 1px solid #c9e5de; }
+    .empty-projects { border: 1px dashed #bdcbd6; background: #fff; color: #667985; padding: 2rem; text-align: center; }
+    @media (max-width: 767px) {
+        .projects-header { padding: 1.4rem 0; }
+        .projects-header h1 { font-size: 1.55rem; }
+        .projects-toolbar { position: static; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="projects-page">
+    <section class="projects-header">
+        <div class="container-fluid px-4">
+            <h1><i class="fas fa-project-diagram me-2"></i>Projects</h1>
+            <p>Browse student projects and faculty research work from one public directory.</p>
+        </div>
+    </section>
+
+    <section class="projects-toolbar">
+        <div class="container-fluid px-4">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-lg-5">
+                    <label class="form-label small mb-1">Search</label>
+                    <input type="search" name="q" value="{{ search_query }}" class="form-control" placeholder="Project title, student, or faculty guide">
+                </div>
+                <div class="col-md-3 col-lg-2">
+                    <label class="form-label small mb-1">Department</label>
+                    <select name="department" class="form-select">
+                        <option value="">All departments</option>
+                        {% for department in departments %}
+                        <option value="{{ department }}" {% if department_filter == department %}selected{% endif %}>{{ department }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 col-lg-2">
+                    <label class="form-label small mb-1">Batch</label>
+                    <select name="batch" class="form-select">
+                        <option value="">All batches</option>
+                        {% for batch in batches %}
+                        <option value="{{ batch }}" {% if batch_filter == batch %}selected{% endif %}>{{ batch }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1"><i class="fas fa-search me-1"></i>Search</button>
+                    <a href="{% url 'dashboard:projects' %}" class="btn btn-outline-secondary" title="Clear filters"><i class="fas fa-rotate-left"></i></a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="container-fluid px-4 py-4">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><div class="metric"><strong>{{ btech_project_count }}</strong><span>Student projects</span></div></div>
+            <div class="col-md-4"><div class="metric"><strong>{{ approved_project_count }}</strong><span>Approved student projects</span></div></div>
+            <div class="col-md-4"><div class="metric"><strong>{{ research_project_count }}</strong><span>Faculty research projects</span></div></div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-heading">Student Projects</h2>
+            <span class="text-muted small">{{ btech_project_count }} result{{ btech_project_count|pluralize }}</span>
+        </div>
+        <div class="row g-3 mb-5">
+            {% for project in btech_projects %}
+            <div class="col-md-6 col-xl-4">
+                <article class="card project-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between gap-2">
+                            <h3 class="project-title">{{ project.project_title }}</h3>
+                            {% if project.approved %}<span class="badge badge-soft align-self-start">Approved</span>{% endif %}
+                        </div>
+                        <div class="project-meta"><i class="fas fa-user-graduate"></i>{{ project.student_name }}</div>
+                        <div class="project-meta"><i class="fas fa-chalkboard-teacher"></i>{{ project.faculty.staff_name }}{% if project.faculty.department %} · {{ project.faculty.department }}{% endif %}</div>
+                        {% if project.batch %}<div class="project-meta"><i class="fas fa-calendar"></i>Batch {{ project.batch }}</div>{% endif %}
+                    </div>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-12"><div class="empty-projects">No student projects match the selected filters.</div></div>
+            {% endfor %}
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="section-heading">Faculty Research Projects</h2>
+            <span class="text-muted small">{{ research_project_count }} result{{ research_project_count|pluralize }}</span>
+        </div>
+        <div class="row g-3">
+            {% for project in research_projects %}
+            <div class="col-md-6 col-xl-4">
+                <article class="card project-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between gap-2">
+                            <h3 class="project-title">{{ project.title_of_project }}</h3>
+                            <span class="badge badge-soft align-self-start">{{ project.get_research_type_display }}</span>
+                        </div>
+                        <div class="project-meta"><i class="fas fa-chalkboard-teacher"></i>{{ project.faculty.staff_name }}{% if project.faculty.department %} · {{ project.faculty.department }}{% endif %}</div>
+                        {% if project.publisher_name %}<div class="project-meta"><i class="fas fa-building"></i>{{ project.publisher_name }}</div>{% endif %}
+                        {% if project.year %}<div class="project-meta"><i class="fas fa-calendar"></i>{{ project.year }}</div>{% endif %}
+                    </div>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-12"><div class="empty-projects">No research projects match the selected filters.</div></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

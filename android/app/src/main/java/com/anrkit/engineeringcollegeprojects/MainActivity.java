@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
         findViewById(R.id.facultyTile).setOnClickListener(view -> openSection("faculty/add/"));
         findViewById(R.id.studentTile).setOnClickListener(view -> openSection("add-student/"));
         findViewById(R.id.examBranchTile).setOnClickListener(view -> openSection("exam-branch/"));
-        findViewById(R.id.projectsTile).setOnClickListener(view -> showProjects());
+        findViewById(R.id.projectsTile).setOnClickListener(view -> openSection("projects/"));
     }
 
     private void configureProjectDomainTiles() {
