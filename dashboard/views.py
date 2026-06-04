@@ -275,6 +275,54 @@ def parse_json_list(value):
         return []
 
 
+def normalize_faculty_college_experiences(value):
+    """Validate college employment rows and calculate each displayed duration."""
+    experiences = []
+    for item in parse_json_list(value) if isinstance(value, str) else (value or []):
+        if not isinstance(item, dict):
+            continue
+        college_name = str(item.get('college_name') or '').strip()
+        college_address = str(item.get('college_address') or '').strip()
+        from_date = parse_date(str(item.get('from_date') or '').strip())
+        to_date = parse_date(str(item.get('to_date') or '').strip())
+        if not college_name or not college_address or not from_date or not to_date or to_date < from_date:
+            continue
+
+        total_days = (to_date - from_date).days + 1
+        years, remaining_days = divmod(total_days, 365)
+        months, days = divmod(remaining_days, 30)
+        duration_parts = []
+        if years:
+            duration_parts.append(f"{years} year{'s' if years != 1 else ''}")
+        if months:
+            duration_parts.append(f"{months} month{'s' if months != 1 else ''}")
+        if days or not duration_parts:
+            duration_parts.append(f"{days} day{'s' if days != 1 else ''}")
+
+        experiences.append({
+            'college_name': college_name,
+            'college_address': college_address,
+            'from_date': from_date.isoformat(),
+            'to_date': to_date.isoformat(),
+            'experience': ', '.join(duration_parts),
+            'total_days': total_days,
+        })
+    return experiences
+
+
+def normalize_tstsabas_entries(value):
+    """Return non-empty, trimmed TSTSABAS values."""
+    entries = parse_json_list(value) if isinstance(value, str) else (value or [])
+    normalized = []
+    for entry in entries:
+        if isinstance(entry, dict):
+            entry = entry.get('value')
+        text = str(entry or '').strip()
+        if text:
+            normalized.append(text)
+    return normalized
+
+
 def iter_indexed_uploaded_files(files, prefix):
     indexed_files = []
     for key in files.keys():
@@ -1175,6 +1223,12 @@ def build_faculty_pdf_context(faculty):
         subjects_list = [subject.strip() for subject in subjects_dealt.split(',') if subject.strip()]
 
     results_data_list, results_text = build_faculty_results_context(getattr(faculty, 'results', None))
+    college_experiences = normalize_faculty_college_experiences(
+        getattr(faculty, 'college_experiences', [])
+    )
+    tstsabas_entries = normalize_tstsabas_entries(
+        getattr(faculty, 'tstsabas_entries', [])
+    )
 
     def has_file_or_url(file_field, url_value):
         return bool(getattr(file_field, 'name', '') or normalize_optional_url(url_value))
@@ -1218,7 +1272,8 @@ def build_faculty_pdf_context(faculty):
         'photo_url': photo_url,
         'local_photo_path': local_photo_path,
         'anurag_header_url': build_file_uri(anurag_header_path),
-        'experience': calculate_experience(faculty.joining_date) if faculty.joining_date else 'N/A',
+        'college_experiences': college_experiences,
+        'tstsabas_entries': tstsabas_entries,
         'certificates': certificates,
         'research_projects': research_projects,
         'research_publications': research_publications,
@@ -1404,20 +1459,41 @@ def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
             ('Department', getattr(faculty, 'department', 'N/A')),
             ('Email', getattr(faculty, 'email', 'N/A')),
             ('Mobile', getattr(faculty, 'mobile', 'N/A')),
-            ('Joining Date', str(getattr(faculty, 'joining_date', 'N/A'))),
             ('Academic Qualifications', getattr(faculty, 'academics', 'N/A')),
             ('Membership Academic Year', getattr(faculty, 'membership_academic_year', 'N/A')),
             ('Membership In', getattr(faculty, 'membership_in', 'N/A')),
             ('Membership ID', getattr(faculty, 'membership_id', 'N/A')),
             ('Membership Proof', 'Uploaded' if getattr(getattr(faculty, 'membership_proof', None), 'name', '') or getattr(faculty, 'membership_proof_url', None) else 'N/A'),
             ('Ratified', 'Yes' if getattr(faculty, 'is_ratified', None) is True else 'No' if getattr(faculty, 'is_ratified', None) is False else 'N/A'),
-            ('PDF Password Protection', 'Enabled' if get_pdf_password(faculty) else 'Not Enabled'),
-            ('SCM Details', getattr(faculty, 'scm', 'N/A')),
         ]
 
         for label, value in fields:
             elems.append(Paragraph(f'<b>{label}:</b> {value or "N/A"}', styles['Normal']))
             elems.append(Spacer(1, 6))
+
+        college_experiences = normalize_faculty_college_experiences(
+            getattr(faculty, 'college_experiences', [])
+        )
+        if college_experiences:
+            elems.append(Spacer(1, 8))
+            elems.append(Paragraph('<b>College-wise Experience</b>', styles['Heading2']))
+            for entry in college_experiences:
+                value = (
+                    f"{entry['college_name']} | {entry['college_address']} | "
+                    f"{entry['from_date']} to {entry['to_date']} | {entry['experience']}"
+                )
+                elems.append(Paragraph(value, styles['Normal']))
+                elems.append(Spacer(1, 6))
+
+        tstsabas_entries = normalize_tstsabas_entries(
+            getattr(faculty, 'tstsabas_entries', [])
+        )
+        if tstsabas_entries:
+            elems.append(Spacer(1, 8))
+            elems.append(Paragraph('<b>TSTSABAS</b>', styles['Heading2']))
+            for entry in tstsabas_entries:
+                elems.append(Paragraph(entry, styles['Normal']))
+                elems.append(Spacer(1, 6))
 
         elems.append(Spacer(1, 12))
         elems.append(Paragraph(
@@ -3630,12 +3706,8 @@ def add_faculty(request):
         print("=" * 60)
 
         dob_raw = request.POST.get('dob', '')
-        joining_date_raw = request.POST.get('joining_date', '')
         if dob_raw and parse_date(dob_raw) is None:
             messages.error(request, 'Invalid date of birth. Use YYYY-MM-DD format (e.g., 1990-01-15)')
-            return render(request, 'dashboard/add_faculty_form.html', get_faculty_registration_context())
-        if joining_date_raw and parse_date(joining_date_raw) is None:
-            messages.error(request, 'Invalid joining date. Use YYYY-MM-DD format (e.g., 2020-01-15)')
             return render(request, 'dashboard/add_faculty_form.html', get_faculty_registration_context())
 
         if not request.POST.get('jntuh_id', '').strip():
@@ -3645,6 +3717,16 @@ def add_faculty(request):
         try:
             phd_status = request.POST.get('phd_degree', '')
             phd_title = request.POST.get('phd_title', '').strip() if phd_status == 'Completed' else ''
+            college_experiences = normalize_faculty_college_experiences(
+                request.POST.get('college_experiences_json', '[]')
+            )
+            tstsabas_entries = normalize_tstsabas_entries(
+                request.POST.get('tstsabas_entries_json', '[]')
+            )
+            joining_date = min(
+                (parse_date(item['from_date']) for item in college_experiences),
+                default=None,
+            )
 
             # ==================== CREATE FACULTY OBJECT ====================
             faculty = Faculty(
@@ -3664,15 +3746,15 @@ def add_faculty(request):
                 address=request.POST.get('address', ''),
                 department=request.POST.get('department', ''),
                 designation=request.POST.get('designation', ''),
-                joining_date=parse_date(request.POST.get('joining_date')),
+                joining_date=joining_date,
+                college_experiences=college_experiences,
+                tstsabas_entries=tstsabas_entries,
                 jntuh_id=request.POST.get('jntuh_id', ''),
                 aicte_id=request.POST.get('aicte_id', ''),
                 pan=request.POST.get('pan', ''),
                 aadhar=request.POST.get('aadhar', ''),
                 apaar_id=request.POST.get('apaar_id', ''),
                 orcid_id=request.POST.get('orcid_id', ''),
-                exp_anurag=request.POST.get('exp_anurag', ''),
-                exp_other=request.POST.get('exp_other', ''),
                 ssc_year=request.POST.get('ssc_year') or None,
                 ssc_percent=request.POST.get('ssc_percent', ''),
                 ssc_school=request.POST.get('ssc_school', ''),
@@ -4161,7 +4243,6 @@ def edit_faculty(request, faculty_id):
             'subjects_dealt', 'scm', 'about_yourself', 'results',
             'membership_academic_year', 'membership_in', 'membership_id',
             'pdf_password',
-            'exp_anurag', 'exp_other',
         ]
         for attr in text_fields:
             val = request.POST.get(attr)
@@ -4171,9 +4252,21 @@ def edit_faculty(request, faculty_id):
             faculty.phd_title = ''
         if request.POST.get('is_ratified') in {'yes', 'no'}:
             faculty.is_ratified = request.POST.get('is_ratified') == 'yes'
-        for date_attr in ['dob', 'joining_date']:
+        for date_attr in ['dob']:
             val = request.POST.get(date_attr)
             setattr(faculty, date_attr, parse_date(val) if val else None)
+        if 'college_experiences_json' in request.POST:
+            faculty.college_experiences = normalize_faculty_college_experiences(
+                request.POST.get('college_experiences_json', '[]')
+            )
+            faculty.joining_date = min(
+                (parse_date(item['from_date']) for item in faculty.college_experiences),
+                default=None,
+            )
+        if 'tstsabas_entries_json' in request.POST:
+            faculty.tstsabas_entries = normalize_tstsabas_entries(
+                request.POST.get('tstsabas_entries_json', '[]')
+            )
             
         # ==================== PROCESS COMPLEX JSON DATA ====================
         

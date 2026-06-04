@@ -193,6 +193,8 @@
                         <input type="hidden" name="btech_projects_json" id="btech_projects_json" value="{{ btech_projects_json|default:'[]' }}">
                         <input type="hidden" name="results_json" id="results_json" value="{{ results_json|default:'[]' }}">
                         <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="{{ fdp_entries_json|default:'[]' }}">
+                        <input type="hidden" name="college_experiences_json" id="college_experiences_json" value="[]">
+                        <input type="hidden" name="tstsabas_entries_json" id="tstsabas_entries_json" value="[]">
 
                         <!-- Tabs Navigation -->
                         <div class="faculty-tabs-shell">
@@ -346,6 +348,34 @@
                                 <div class="form-section">
                                     <h4><i class="fas fa-briefcase me-2"></i>Professional Information</h4>
                                     <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm align-middle">
+                                                    <thead class="table-light">
+                                                        <tr><th>#</th><th>College Name</th><th>College Address</th><th>From Date</th><th>To Date</th><th>Experience</th><th>Remove</th></tr>
+                                                    </thead>
+                                                    <tbody id="college-experience-tbody"></tbody>
+                                                </table>
+                                            </div>
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-3"><label class="form-label">College Name</label><input type="text" id="college-experience-name" class="form-control"></div>
+                                                <div class="col-md-3"><label class="form-label">College Address</label><input type="text" id="college-experience-address" class="form-control"></div>
+                                                <div class="col-md-2"><label class="form-label">From Date</label><input type="date" id="college-experience-from" class="form-control"></div>
+                                                <div class="col-md-2"><label class="form-label">To Date</label><input type="date" id="college-experience-to" class="form-control"></div>
+                                                <div class="col-md-2"><label class="form-label">Experience</label><input type="text" id="college-experience-duration" class="form-control" readonly></div>
+                                                <div class="col-12"><button type="button" class="btn btn-outline-primary btn-sm" onclick="addCollegeExperience()"><i class="fas fa-plus me-1"></i>Add College Experience</button></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">TSTSABAS</label>
+                                            <div class="input-group">
+                                                <input type="text" id="tstsabas-entry" class="form-control" placeholder="Enter TSTSABAS">
+                                                <button type="button" class="btn btn-outline-primary" onclick="addTstsabasEntry()">
+                                                    <i class="fas fa-plus me-1"></i>Add
+                                                </button>
+                                            </div>
+                                            <div id="tstsabas-list" class="mt-2"></div>
+                                        </div>
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label required-field">Department</label>
                                             <select name="department" class="form-control" required>
@@ -372,10 +402,6 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label class="form-label">Joining Date</label>
-                                            <input type="date" name="joining_date" class="form-control" value="{{ faculty.joining_date|date:'Y-m-d' }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
                                             <label class="form-label">JNTUH ID</label>
                                             <input type="text" name="jntuh_id" class="form-control" value="{{ faculty.jntuh_id }}">
                                         </div>
@@ -398,14 +424,6 @@
                                         <div class="col-md-4 mb-3">
                                             <label class="form-label">ORCID ID</label>
                                             <input type="text" name="orcid_id" class="form-control" value="{{ faculty.orcid_id }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Experience at Institution</label>
-                                            <input type="text" name="exp_anurag" class="form-control" value="{{ faculty.exp_anurag }}">
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Experience Elsewhere</label>
-                                            <input type="text" name="exp_other" class="form-control" value="{{ faculty.exp_other }}">
                                         </div>
                                     </div>
                                 </div>
@@ -1155,6 +1173,137 @@
         });
     }
 
+    let collegeExperienceList = [
+        {% for entry in faculty.college_experiences %}
+        {
+            college_name: "{{ entry.college_name|escapejs }}",
+            college_address: "{{ entry.college_address|escapejs }}",
+            from_date: "{{ entry.from_date|escapejs }}",
+            to_date: "{{ entry.to_date|escapejs }}",
+            experience: "{{ entry.experience|escapejs }}"
+        },
+        {% endfor %}
+    ];
+
+    function calculateCollegeExperience() {
+        const fromValue = document.getElementById('college-experience-from').value;
+        const toValue = document.getElementById('college-experience-to').value;
+        const durationField = document.getElementById('college-experience-duration');
+        if (!fromValue || !toValue) {
+            durationField.value = '';
+            return '';
+        }
+        const fromDate = new Date(`${fromValue}T00:00:00Z`);
+        const toDate = new Date(`${toValue}T00:00:00Z`);
+        if (toDate < fromDate) {
+            durationField.value = 'Invalid date range';
+            return '';
+        }
+        const totalDays = Math.floor((toDate - fromDate) / 86400000) + 1;
+        const years = Math.floor(totalDays / 365);
+        const months = Math.floor((totalDays % 365) / 30);
+        const days = (totalDays % 365) % 30;
+        const parts = [];
+        if (years) parts.push(`${years} year${years === 1 ? '' : 's'}`);
+        if (months) parts.push(`${months} month${months === 1 ? '' : 's'}`);
+        if (days || !parts.length) parts.push(`${days} day${days === 1 ? '' : 's'}`);
+        durationField.value = parts.join(', ');
+        return durationField.value;
+    }
+
+    function addCollegeExperience() {
+        const entry = {
+            college_name: document.getElementById('college-experience-name').value.trim(),
+            college_address: document.getElementById('college-experience-address').value.trim(),
+            from_date: document.getElementById('college-experience-from').value,
+            to_date: document.getElementById('college-experience-to').value,
+            experience: calculateCollegeExperience(),
+        };
+        if (!entry.college_name || !entry.college_address || !entry.from_date || !entry.to_date || !entry.experience) {
+            alert('Enter the college name, college address, and a valid From Date and To Date.');
+            return;
+        }
+        collegeExperienceList.push(entry);
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+        ['college-experience-name', 'college-experience-address', 'college-experience-from', 'college-experience-to', 'college-experience-duration'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+    }
+
+    function removeCollegeExperience(index) {
+        collegeExperienceList.splice(index, 1);
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+    }
+
+    function renderCollegeExperiences() {
+        const tbody = document.getElementById('college-experience-tbody');
+        if (!collegeExperienceList.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted fst-italic py-3">No college experience added yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = collegeExperienceList.map((entry, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(entry.college_name)}</td>
+                <td>${escapeHtml(entry.college_address)}</td>
+                <td>${escapeHtml(entry.from_date)}</td>
+                <td>${escapeHtml(entry.to_date)}</td>
+                <td>${escapeHtml(entry.experience)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeCollegeExperience(${index})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function updateCollegeExperiencesJSON() {
+        document.getElementById('college_experiences_json').value = JSON.stringify(collegeExperienceList);
+    }
+
+    let tstsabasList = [
+        {% for entry in faculty.tstsabas_entries %}
+        "{{ entry|escapejs }}",
+        {% endfor %}
+    ];
+
+    function addTstsabasEntry() {
+        const input = document.getElementById('tstsabas-entry');
+        const value = input.value.trim();
+        if (!value) {
+            alert('Enter a TSTSABAS value before adding it.');
+            input.focus();
+            return;
+        }
+        tstsabasList.push(value);
+        input.value = '';
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+    }
+
+    function removeTstsabasEntry(index) {
+        tstsabasList.splice(index, 1);
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+    }
+
+    function renderTstsabasEntries() {
+        const container = document.getElementById('tstsabas-list');
+        if (!tstsabasList.length) {
+            container.innerHTML = '<span class="text-muted small">No TSTSABAS entries added yet.</span>';
+            return;
+        }
+        container.innerHTML = tstsabasList.map((entry, index) => `
+            <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                <span>${escapeHtml(entry)}</span>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeTstsabasEntry(${index})"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('');
+    }
+
+    function updateTstsabasJSON() {
+        document.getElementById('tstsabas_entries_json').value = JSON.stringify(tstsabasList);
+    }
+
     function normalizePublicationUrl(value) {
         const trimmed = (value || '').trim();
         if (!trimmed) {
@@ -1616,6 +1765,8 @@
     // FORM SUBMIT — disable button + show spinner
     // ============================================================
     document.getElementById('editFacultyForm').addEventListener('submit', function(e) {
+        updateCollegeExperiencesJSON();
+        updateTstsabasJSON();
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
@@ -1628,6 +1779,12 @@
         renderProjectTable();
         renderFDPTable();
         renderResultsTable();
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+        document.getElementById('college-experience-from').addEventListener('change', calculateCollegeExperience);
+        document.getElementById('college-experience-to').addEventListener('change', calculateCollegeExperience);
         const phdStatus = document.getElementById('phd-degree');
         if (phdStatus) {
             phdStatus.addEventListener('change', togglePhdTitleField);

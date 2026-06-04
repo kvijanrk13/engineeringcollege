@@ -42,6 +42,16 @@ class Faculty(models.Model):
     department = models.CharField(max_length=100, blank=True, null=True)
     designation = models.CharField(max_length=100, blank=True, null=True)
     joining_date = models.DateField(blank=True, null=True)
+    college_experiences = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="College-wise employment history with address and date range",
+    )
+    tstsabas_entries = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Repeatable TSTSABAS professional information entries",
+    )
     jntuh_id = models.CharField(max_length=100, blank=True, null=True)
     aicte_id = models.CharField(max_length=100, blank=True, null=True)
     pan = models.CharField(max_length=20, blank=True, null=True)

@@ -151,13 +151,31 @@
     <table class="info-table">
         <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">Joining Date</td><td>{% if faculty.joining_date %}{{ faculty.joining_date|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
-        <tr><td class="label">Experience at Institution</td><td>{{ faculty.exp_anurag|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">Experience (Other)</td><td>{{ faculty.exp_other|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">Total Experience</td><td>{{ experience }}</td></tr>
+        {% for entry in faculty.college_experiences %}
+        <tr>
+            <td class="label">College Experience {{ forloop.counter }}</td>
+            <td>
+                <strong>{{ entry.college_name }}</strong><br>
+                {{ entry.college_address }}<br>
+                {{ entry.from_date }} to {{ entry.to_date }} ({{ entry.experience }})
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td class="label">College Experience</td><td>Not Specified</td></tr>
+        {% endfor %}
         <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Mobile</td><td>{{ faculty.mobile|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Phone</td><td>{{ faculty.phone|default:"Not Specified" }}</td></tr>
+        <tr>
+            <td class="label">TSTSABAS</td>
+            <td>
+                {% for entry in faculty.tstsabas_entries %}
+                    {{ forloop.counter }}. {{ entry }}{% if not forloop.last %}<br>{% endif %}
+                {% empty %}
+                    Not Specified
+                {% endfor %}
+            </td>
+        </tr>
         <tr><td class="label">Current Status</td><td style="color: green; font-weight: bold;">ACTIVE</td></tr>
     </table>
 

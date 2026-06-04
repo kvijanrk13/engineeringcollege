@@ -212,14 +212,38 @@
     <table class="info-table">
         <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">Joining Date</td><td>{% if faculty.joining_date %}{{ faculty.joining_date|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
-        <tr><td class="label">Experience at Institution</td><td>{{ faculty.exp_anurag|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">Experience (Other)</td><td>{{ faculty.exp_other|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">Total Experience</td><td>{{ experience }}</td></tr>
         <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Mobile</td><td>{{ faculty.mobile|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Phone</td><td>{{ faculty.phone|default:"Not Specified" }}</td></tr>
+        <tr>
+            <td class="label">TSTSABAS</td>
+            <td>
+                {% for entry in tstsabas_entries %}
+                    {{ forloop.counter }}. {{ entry }}{% if not forloop.last %}<br>{% endif %}
+                {% empty %}
+                    Not Specified
+                {% endfor %}
+            </td>
+        </tr>
         <tr><td class="label">Current Status</td><td style="color: green; font-weight: bold;">ACTIVE</td></tr>
+    </table>
+    <table class="data-table">
+        <thead>
+            <tr><th>College Name</th><th>College Address</th><th>From Date</th><th>To Date</th><th>Experience</th></tr>
+        </thead>
+        <tbody>
+            {% for entry in college_experiences %}
+            <tr>
+                <td>{{ entry.college_name }}</td>
+                <td>{{ entry.college_address }}</td>
+                <td>{{ entry.from_date }}</td>
+                <td>{{ entry.to_date }}</td>
+                <td>{{ entry.experience }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="no-data">No college experience specified</td></tr>
+            {% endfor %}
+        </tbody>
     </table>
 
     <!-- 3. PROFESSIONAL IDs -->
@@ -628,19 +652,6 @@
         <tr><td class="label">Membership ID</td><td>{{ faculty.membership_id|default:"Not Specified" }}</td></tr>
         <tr><td class="label">Membership Proof</td><td>{% if has_membership_proof %}Uploaded{% else %}Not Uploaded{% endif %}</td></tr>
         <tr><td class="label">Ratified</td><td>{{ ratified_status|default:"Not Specified" }}</td></tr>
-        <tr><td class="label">PDF Password Protection</td><td>{% if faculty.pdf_password %}Enabled{% else %}Not Enabled{% endif %}</td></tr>
-        <tr>
-            <td class="label">SCM Document</td>
-            <td>
-                {% if faculty.is_ratified and has_scm %}
-                    Uploaded
-                {% elif faculty.is_ratified %}
-                    Not Uploaded
-                {% else %}
-                    Not Applicable
-                {% endif %}
-            </td>
-        </tr>
     </table>
 
     <div class="footer">
