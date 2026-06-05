@@ -100,7 +100,7 @@
     <main>
         <a class="back-link" href="{% url 'dashboard:projects' %}">&larr; Project Domains</a>
         {% if is_software_engineering %}
-            <a class="folder folder-link" href="{% url 'dashboard:download_engineeringcollege_project' %}">
+            <a class="folder folder-link" href="{% url 'dashboard:project_download_payment' %}">
                 <span class="folder-icon" aria-hidden="true"></span>
                 <h1>EngineeringCollege Project</h1>
                 <p>Current executable Django hierarchy with a synchronized Modules folder.</p>
@@ -109,7 +109,7 @@
                         <li>{{ module }}</li>
                     {% endfor %}
                 </ul>
-                <span class="download-label">Download Project Folder</span>
+                <span class="download-label">Pay ₹1,000 and Download ZIP</span>
             </a>
         {% else %}
             <section class="folder" aria-label="{{ domain_name }} project folder">

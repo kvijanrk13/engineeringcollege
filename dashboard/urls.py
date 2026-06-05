@@ -30,6 +30,21 @@ urlpatterns = [
         views.download_engineeringcollege_project,
         name='download_engineeringcollege_project',
     ),
+    path(
+        'projects/software-engineering/engineeringcollege-project/payment/',
+        views.project_download_payment,
+        name='project_download_payment',
+    ),
+    path(
+        'projects/software-engineering/engineeringcollege-project/payment/start/',
+        views.initiate_project_download_payment,
+        name='initiate_project_download_payment',
+    ),
+    path(
+        'projects/software-engineering/engineeringcollege-project/payment/return/<str:merchant_order_id>/',
+        views.project_payment_return,
+        name='project_payment_return',
+    ),
     path('projects/<slug:domain_slug>/', views.project_domain, name='project_domain'),
 
     # Authentication routes

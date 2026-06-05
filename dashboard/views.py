@@ -56,7 +56,8 @@ import cloudinary.utils
 from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
-    ResearchPublication, StudentResearchPublication, FDP, BTechProject
+    ResearchPublication, StudentResearchPublication, FDP, BTechProject,
+    ProjectDownloadPayment,
 )
 from .forms import (
     StudentForm, CertificateForm,
@@ -3364,6 +3365,142 @@ PROJECT_MODULES = (
     ('Dashboard Application', ('dashboard/',)),
     ('Deployment', ('requirements.txt', 'Procfile', 'runtime.txt', 'build.sh', 'start.sh')),
 )
+PROJECT_DOWNLOAD_PRICE_PAISE = 100000
+
+
+class PhonePePaymentError(Exception):
+    pass
+
+
+def _phonepe_config():
+    environment = os.environ.get('PHONEPE_ENVIRONMENT', 'sandbox').lower()
+    base_url = (
+        'https://api.phonepe.com/apis/pg'
+        if environment == 'production'
+        else 'https://api-preprod.phonepe.com/apis/pg-sandbox'
+    )
+    config = {
+        'base_url': base_url,
+        'client_id': os.environ.get('PHONEPE_CLIENT_ID', ''),
+        'client_secret': os.environ.get('PHONEPE_CLIENT_SECRET', ''),
+        'client_version': os.environ.get('PHONEPE_CLIENT_VERSION', '1'),
+    }
+    config['configured'] = bool(config['client_id'] and config['client_secret'])
+    return config
+
+
+def _phonepe_access_token():
+    config = _phonepe_config()
+    if not config['configured']:
+        raise PhonePePaymentError('PhonePe merchant payment gateway is not configured.')
+    response = requests.post(
+        f"{config['base_url']}/v1/oauth/token",
+        data={
+            'client_id': config['client_id'],
+            'client_version': config['client_version'],
+            'client_secret': config['client_secret'],
+            'grant_type': 'client_credentials',
+        },
+        headers={'Content-Type': 'application/x-www-form-urlencoded'},
+        timeout=20,
+    )
+    response.raise_for_status()
+    token = response.json().get('access_token')
+    if not token:
+        raise PhonePePaymentError('PhonePe did not return an access token.')
+    return token
+
+
+def _find_gateway_value(payload, keys):
+    if isinstance(payload, dict):
+        for key in keys:
+            if key in payload and payload[key] not in (None, ''):
+                return payload[key]
+        for value in payload.values():
+            found = _find_gateway_value(value, keys)
+            if found not in (None, ''):
+                return found
+    elif isinstance(payload, list):
+        for value in payload:
+            found = _find_gateway_value(value, keys)
+            if found not in (None, ''):
+                return found
+    return None
+
+
+def _phonepe_create_payment(payment, redirect_url):
+    config = _phonepe_config()
+    token = _phonepe_access_token()
+    response = requests.post(
+        f"{config['base_url']}/checkout/v2/pay",
+        json={
+            'merchantOrderId': payment.merchant_order_id,
+            'amount': PROJECT_DOWNLOAD_PRICE_PAISE,
+            'expireAfter': 1200,
+            'metaInfo': {'udf1': 'EngineeringCollege Project ZIP'},
+            'paymentFlow': {
+                'type': 'PG_CHECKOUT',
+                'message': 'EngineeringCollege Project ZIP download',
+                'merchantUrls': {'redirectUrl': redirect_url},
+            },
+        },
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'O-Bearer {token}',
+        },
+        timeout=25,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    payment_url = _find_gateway_value(payload, ('redirectUrl', 'paymentUrl', 'url'))
+    if not payment_url:
+        raise PhonePePaymentError('PhonePe did not return a payment URL.')
+    payment.phonepe_order_id = str(_find_gateway_value(payload, ('orderId',)) or '')
+    payment.payment_url = payment_url
+    payment.gateway_response = payload
+    payment.status = 'PENDING'
+    payment.save(update_fields=[
+        'phonepe_order_id', 'payment_url', 'gateway_response', 'status', 'updated_at',
+    ])
+    return payment_url
+
+
+def _phonepe_verify_payment(payment):
+    config = _phonepe_config()
+    token = _phonepe_access_token()
+    response = requests.get(
+        f"{config['base_url']}/checkout/v2/order/{payment.merchant_order_id}/status",
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'O-Bearer {token}',
+        },
+        timeout=25,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    gateway_state = str(_find_gateway_value(payload, ('state', 'status')) or '').upper()
+    gateway_amount = _find_gateway_value(payload, ('amount',))
+    amount_matches = gateway_amount is None or int(gateway_amount) == PROJECT_DOWNLOAD_PRICE_PAISE
+    payment.gateway_response = payload
+    if (
+        gateway_state == 'COMPLETED'
+        and amount_matches
+        and payment.amount_paise == PROJECT_DOWNLOAD_PRICE_PAISE
+    ):
+        payment.status = 'COMPLETED'
+        payment.verified_at = timezone.now()
+    elif gateway_state in {'FAILED', 'CANCELLED', 'EXPIRED'}:
+        payment.status = 'FAILED'
+    else:
+        payment.status = 'PENDING'
+    payment.save(update_fields=['gateway_response', 'status', 'verified_at', 'updated_at'])
+    return payment.status == 'COMPLETED'
+
+
+def _request_session_key(request):
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key
 
 
 def _iter_engineeringcollege_source_files():
@@ -3423,7 +3560,21 @@ def _source_module_for(relative_path):
 
 @require_GET
 def download_engineeringcollege_project(request):
-    """Generate a synchronized, credential-safe Django source package."""
+    """Generate the source package only after server-verified PhonePe payment."""
+    payment = get_object_or_404(
+        ProjectDownloadPayment,
+        merchant_order_id=request.GET.get('order', ''),
+        session_key=_request_session_key(request),
+    )
+    try:
+        paid = _phonepe_verify_payment(payment)
+    except (PhonePePaymentError, requests.RequestException, ValueError):
+        paid = False
+    if not paid:
+        return redirect(
+            f"{reverse('dashboard:project_download_payment')}?order={payment.merchant_order_id}"
+        )
+
     archive_buffer = io.BytesIO()
     source_files = list(_iter_engineeringcollege_source_files())
     with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -3451,7 +3602,67 @@ def download_engineeringcollege_project(request):
     response = HttpResponse(archive_buffer.getvalue(), content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename="EngineeringCollege-Project.zip"'
     response['Cache-Control'] = 'no-store'
+    payment.download_count += 1
+    payment.save(update_fields=['download_count', 'updated_at'])
     return response
+
+
+@require_GET
+def project_download_payment(request):
+    payment = None
+    order_id = request.GET.get('order', '')
+    if order_id:
+        payment = ProjectDownloadPayment.objects.filter(
+            merchant_order_id=order_id,
+            session_key=_request_session_key(request),
+        ).first()
+        if payment and payment.status != 'COMPLETED':
+            try:
+                _phonepe_verify_payment(payment)
+            except (PhonePePaymentError, requests.RequestException, ValueError):
+                pass
+    return render(request, 'dashboard/project_payment.html', {
+        'amount_rupees': PROJECT_DOWNLOAD_PRICE_PAISE // 100,
+        'payment': payment,
+        'phonepe_configured': _phonepe_config()['configured'],
+    })
+
+
+@require_POST
+def initiate_project_download_payment(request):
+    if not _phonepe_config()['configured']:
+        messages.error(request, 'PhonePe merchant payment gateway is not configured yet.')
+        return redirect('dashboard:project_download_payment')
+    payment = ProjectDownloadPayment.objects.create(
+        merchant_order_id=f"ECPRJ{timezone.now():%Y%m%d%H%M%S}{os.urandom(5).hex()}",
+        session_key=_request_session_key(request),
+        amount_paise=PROJECT_DOWNLOAD_PRICE_PAISE,
+    )
+    redirect_url = request.build_absolute_uri(
+        reverse('dashboard:project_payment_return', args=[payment.merchant_order_id])
+    )
+    try:
+        return redirect(_phonepe_create_payment(payment, redirect_url))
+    except (PhonePePaymentError, requests.RequestException, ValueError) as exc:
+        payment.status = 'FAILED'
+        payment.gateway_response = {'error': str(exc)}
+        payment.save(update_fields=['status', 'gateway_response', 'updated_at'])
+        messages.error(request, 'Payment could not be initiated. Please try again later.')
+        return redirect('dashboard:project_download_payment')
+
+
+@require_GET
+def project_payment_return(request, merchant_order_id):
+    payment = get_object_or_404(
+        ProjectDownloadPayment,
+        merchant_order_id=merchant_order_id,
+        session_key=_request_session_key(request),
+    )
+    try:
+        _phonepe_verify_payment(payment)
+    except (PhonePePaymentError, requests.RequestException, ValueError):
+        messages.error(request, 'Payment verification is temporarily unavailable.')
+    return redirect(f"{reverse('dashboard:project_download_payment')}?order={merchant_order_id}")
 
 
 def project_domain(request, domain_slug):

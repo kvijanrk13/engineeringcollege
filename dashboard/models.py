@@ -417,6 +417,33 @@ class BTechProject(models.Model):
         ordering = ['-batch']
 
 
+class ProjectDownloadPayment(models.Model):
+    STATUS_CHOICES = [
+        ('CREATED', 'Created'),
+        ('PENDING', 'Pending'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+    ]
+
+    merchant_order_id = models.CharField(max_length=64, unique=True)
+    session_key = models.CharField(max_length=64, db_index=True)
+    amount_paise = models.PositiveIntegerField(default=100000)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='CREATED')
+    phonepe_order_id = models.CharField(max_length=128, blank=True)
+    payment_url = models.URLField(max_length=1000, blank=True)
+    gateway_response = models.JSONField(default=dict, blank=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    download_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.merchant_order_id} - {self.status}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
 class Student(models.Model):
     ht_no = models.CharField(max_length=50, unique=True)
     student_name = models.CharField(max_length=255)
