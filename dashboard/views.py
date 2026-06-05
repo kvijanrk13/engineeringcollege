@@ -33,6 +33,7 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.urls import reverse
 from django.core import signing
 from django.utils import timezone
+from django_ratelimit.decorators import ratelimit
 import django
 # PDF Generation imports
 from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Image,
@@ -3503,6 +3504,11 @@ def _request_session_key(request):
     return request.session.session_key
 
 
+def _payment_rate_key(group, request):
+    """Throttle payment actions per browser session and network address."""
+    return f"{request.META.get('REMOTE_ADDR', '')}:{request.session.session_key or 'anonymous'}"
+
+
 def _iter_engineeringcollege_source_files():
     """Yield the safe executable project files used to build the live source archive."""
     base_dir = Path(settings.BASE_DIR)
@@ -3607,6 +3613,7 @@ def download_engineeringcollege_project(request):
     return response
 
 
+@ratelimit(key=_payment_rate_key, rate='20/m', method='GET', block=True)
 @require_GET
 def project_download_payment(request):
     payment = None
@@ -3628,6 +3635,7 @@ def project_download_payment(request):
     })
 
 
+@ratelimit(key=_payment_rate_key, rate='5/m', method='POST', block=True)
 @require_POST
 def initiate_project_download_payment(request):
     if not _phonepe_config()['configured']:
@@ -3651,6 +3659,7 @@ def initiate_project_download_payment(request):
         return redirect('dashboard:project_download_payment')
 
 
+@ratelimit(key=_payment_rate_key, rate='20/m', method='GET', block=True)
 @require_GET
 def project_payment_return(request, merchant_order_id):
     payment = get_object_or_404(
