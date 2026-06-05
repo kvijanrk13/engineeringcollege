@@ -111,8 +111,9 @@
             font-size: 15px;
             line-height: 1.6;
         }
-        .dialog-close {
+        .dialog-enter {
             display: block;
+            width: fit-content;
             margin: 22px 0 0 auto;
             padding: 10px 18px;
             border: 0;
@@ -121,6 +122,7 @@
             color: #FFFFFF;
             font: inherit;
             font-weight: 700;
+            text-decoration: none;
             cursor: pointer;
         }
         @media (min-width: 761px) {
@@ -206,7 +208,7 @@
             <p id="dialog-description"></p>
             <h3>History</h3>
             <p id="dialog-history"></p>
-            <button class="dialog-close" id="dialog-close" type="button">Close</button>
+            <a class="dialog-enter" id="dialog-enter" href="#">Click to Enter</a>
         </section>
     </div>
 
@@ -258,7 +260,7 @@
         const dialogTitle = document.getElementById("dialog-title");
         const dialogDescription = document.getElementById("dialog-description");
         const dialogHistory = document.getElementById("dialog-history");
-        const closeButton = document.getElementById("dialog-close");
+        const enterButton = document.getElementById("dialog-enter");
         let activeTile = null;
 
         document.querySelectorAll(".domain-tile").forEach((tile) => {
@@ -268,8 +270,9 @@
                 dialogTitle.textContent = domain.title;
                 dialogDescription.textContent = domain.description;
                 dialogHistory.textContent = domain.history;
+                enterButton.href = `/projects/${tile.dataset.domain}/`;
                 dialog.hidden = false;
-                closeButton.focus();
+                enterButton.focus();
             });
         });
 
@@ -278,7 +281,6 @@
             if (activeTile) activeTile.focus();
         }
 
-        closeButton.addEventListener("click", closeDialog);
         dialog.addEventListener("click", (event) => {
             if (event.target === dialog) closeDialog();
         });

@@ -25,6 +25,7 @@ urlpatterns = [
     path('mobile-dashboard/', views.mobile_dashboard, name='mobile_dashboard'),
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
+    path('projects/<slug:domain_slug>/', views.project_domain, name='project_domain'),
 
     # Authentication routes
     path('login/', views.admin_login, name='login'),

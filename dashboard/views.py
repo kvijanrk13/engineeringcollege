@@ -15,7 +15,7 @@ import requests
 from urllib.parse import quote, urlencode
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
-                         HttpResponseBadRequest)
+                         HttpResponseBadRequest, Http404)
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
@@ -3321,6 +3321,29 @@ def mobile_dashboard(request):
 def projects(request):
     """Public icon-only project domain page matching the Android projects folder."""
     return render(request, 'dashboard/projects.html')
+
+
+PROJECT_DOMAINS = {
+    'ai': 'Artificial Intelligence',
+    'machine-learning': 'Machine Learning',
+    'software-engineering': 'Software Engineering',
+    'security': 'Cybersecurity',
+    'deep-learning': 'Deep Learning',
+    'data-science': 'Data Science',
+    'cloud-computing': 'Cloud Computing',
+    'iot-edge': 'IoT and Edge Computing',
+}
+
+
+def project_domain(request, domain_slug):
+    """Display the selected public project-domain folder."""
+    domain_name = PROJECT_DOMAINS.get(domain_slug)
+    if not domain_name:
+        raise Http404("Project domain not found")
+    return render(request, 'dashboard/project_domain.html', {
+        'domain_name': domain_name,
+        'domain_slug': domain_slug,
+    })
 
 
 @login_required
