@@ -1,5 +1,7 @@
 import io
 import json
+import hashlib
+import os
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -14,7 +16,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from dashboard import views as dashboard_views
-from dashboard.models import Certificate, CloudinaryUpload, FDP, Faculty, ResearchPublication, Student
+from dashboard.models import (
+    Certificate, CloudinaryUpload, FDP, Faculty, ProjectDownloadPayment,
+    ResearchPublication, Student,
+)
 from dashboard.pdf_generation import (
     FACULTY_PDF_TEMPLATE,
     STUDENT_PDF_TEMPLATE,
@@ -1452,3 +1457,160 @@ class DashboardTests(TestCase):
         self.assertEqual(download_response.status_code, 200)
         self.assertEqual(download_response['Content-Type'], 'application/pdf')
         self.assertIn('attachment;', download_response['Content-Disposition'])
+
+
+@override_settings(SECURE_SSL_REDIRECT=False)
+class PhonePeProjectDownloadTests(TestCase):
+    def setUp(self):
+        session = self.client.session
+        session['payment_test'] = True
+        session.save()
+        self.payment = ProjectDownloadPayment.objects.create(
+            merchant_order_id='ECPRJ-TEST-ORDER',
+            session_key=session.session_key,
+            amount_paise=dashboard_views.PROJECT_DOWNLOAD_PRICE_PAISE,
+            status='PENDING',
+        )
+
+    @patch('dashboard.views._phonepe_access_token', return_value='test-token')
+    @patch('dashboard.views.requests.get')
+    def test_completed_status_without_exact_order_and_amount_stays_locked(
+        self,
+        mock_get,
+        _mock_token,
+    ):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {'state': 'COMPLETED'}
+        mock_get.return_value = response
+
+        paid = dashboard_views._phonepe_verify_payment(self.payment)
+
+        self.assertFalse(paid)
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'PENDING')
+        self.assertIsNone(self.payment.verified_at)
+
+    @patch('dashboard.views._phonepe_access_token', return_value='test-token')
+    @patch('dashboard.views.requests.get')
+    def test_exact_completed_order_and_amount_unlocks_payment(self, mock_get, _mock_token):
+        response = Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            'merchantOrderId': self.payment.merchant_order_id,
+            'state': 'COMPLETED',
+            'amount': self.payment.amount_paise,
+        }
+        mock_get.return_value = response
+
+        paid = dashboard_views._phonepe_verify_payment(self.payment)
+
+        self.assertTrue(paid)
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.status, 'COMPLETED')
+        self.assertIsNotNone(self.payment.verified_at)
+
+    @patch('dashboard.views._phonepe_verify_payment')
+    def test_callback_rejects_invalid_authorization(self, mock_verify):
+        with patch.dict(os.environ, {
+            'PHONEPE_CALLBACK_USERNAME': 'callback-user',
+            'PHONEPE_CALLBACK_PASSWORD': 'callback-password',
+        }):
+            response = self.client.post(
+                reverse('dashboard:phonepe_payment_callback'),
+                data=json.dumps({'payload': {'merchantOrderId': self.payment.merchant_order_id}}),
+                content_type='application/json',
+                HTTP_AUTHORIZATION='forged',
+            )
+
+        self.assertEqual(response.status_code, 401)
+        mock_verify.assert_not_called()
+
+    @patch('dashboard.views._phonepe_verify_payment', return_value=True)
+    def test_authenticated_callback_rechecks_phonepe_status(self, mock_verify):
+        username = 'callback-user'
+        password = 'callback-password'
+        authorization = hashlib.sha256(f'{username}:{password}'.encode('utf-8')).hexdigest()
+        with patch.dict(os.environ, {
+            'PHONEPE_CALLBACK_USERNAME': username,
+            'PHONEPE_CALLBACK_PASSWORD': password,
+        }):
+            response = self.client.post(
+                reverse('dashboard:phonepe_payment_callback'),
+                data=json.dumps({'payload': {'merchantOrderId': self.payment.merchant_order_id}}),
+                content_type='application/json',
+                HTTP_AUTHORIZATION=authorization,
+            )
+
+        self.assertEqual(response.status_code, 204)
+        mock_verify.assert_called_once()
+        self.assertEqual(mock_verify.call_args.args[0].pk, self.payment.pk)
+
+    @patch('dashboard.views._phonepe_verify_payment', return_value=False)
+    def test_unverified_payment_cannot_download_zip(self, _mock_verify):
+        response = self.client.get(
+            reverse('dashboard:download_engineeringcollege_project'),
+            {'order': self.payment.merchant_order_id},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('dashboard:project_download_payment'), response['Location'])
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.download_count, 0)
+
+    @patch('dashboard.views._iter_engineeringcollege_source_files', return_value=[])
+    @patch('dashboard.views._phonepe_verify_payment', return_value=True)
+    def test_verified_payment_downloads_zip_and_counts_once(self, _mock_verify, _mock_files):
+        response = self.client.get(
+            reverse('dashboard:download_engineeringcollege_project'),
+            {'order': self.payment.merchant_order_id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        self.payment.refresh_from_db()
+        self.assertEqual(self.payment.download_count, 1)
+
+    def test_payment_url_qr_is_embedded_png(self):
+        qr_data_uri = dashboard_views._payment_url_qr_data_uri(
+            'https://mercury.phonepe.com/transact/checkout-test'
+        )
+
+        self.assertTrue(qr_data_uri.startswith('data:image/png;base64,'))
+        self.assertGreater(len(qr_data_uri), 100)
+
+    def test_non_phonepe_url_is_never_rendered_as_payment_qr(self):
+        self.assertEqual(
+            dashboard_views._payment_url_qr_data_uri('https://example.com/fake-payment'),
+            '',
+        )
+
+    @patch('dashboard.views._phonepe_create_payment')
+    def test_show_qr_action_creates_order_and_returns_to_payment_page(self, mock_create):
+        mock_create.return_value = 'https://mercury.phonepe.com/transact/checkout-test'
+        with patch.dict(os.environ, {
+            'PHONEPE_CLIENT_ID': 'test-client',
+            'PHONEPE_CLIENT_SECRET': 'test-secret',
+        }):
+            response = self.client.post(
+                reverse('dashboard:initiate_project_download_payment'),
+                {'checkout_mode': 'qr'},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('dashboard:project_download_payment'), response['Location'])
+        self.assertIn('order=', response['Location'])
+
+    @patch('dashboard.views._phonepe_verify_payment', return_value=False)
+    def test_pending_payment_page_displays_hosted_checkout_qr(self, _mock_verify):
+        self.payment.payment_url = 'https://mercury.phonepe.com/transact/checkout-test'
+        self.payment.save(update_fields=['payment_url', 'updated_at'])
+
+        response = self.client.get(
+            reverse('dashboard:project_download_payment'),
+            {'order': self.payment.merchant_order_id},
+        )
+
+        self.assertContains(response, 'data:image/png;base64,')
+        self.assertContains(response, 'Open PhonePe Checkout')

@@ -34,24 +34,36 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
-        value: "True"
+        value: "False"
       - key: RENDER
         value: "True"
       - key: CLOUDINARY_CLOUD_NAME
-        value: "dsndiruhe"  # ← Fixed - removed the 'h'
+        sync: false
       - key: CLOUDINARY_API_KEY
-        value: "473455725389669"  # ← Your actual API key
+        sync: false
       - key: CLOUDINARY_API_SECRET
-        value: "vztmkO4bDwTVvVNG7Mah9yPmkdY"  # ← Your actual secret
+        sync: false
+      - key: PHONEPE_ENVIRONMENT
+        value: "sandbox"
+      - key: PHONEPE_CLIENT_ID
+        sync: false
+      - key: PHONEPE_CLIENT_SECRET
+        sync: false
+      - key: PHONEPE_CLIENT_VERSION
+        value: "1"
+      - key: PHONEPE_CALLBACK_USERNAME
+        sync: false
+      - key: PHONEPE_CALLBACK_PASSWORD
+        sync: false
       - key: ALLOWED_HOSTS
         value: "engineeringcollege.onrender.com,anrkitdept.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://engineeringcollege.onrender.com,https://anrkitdept.onrender.com"
       - key: PYTHON_VERSION
         value: "3.10.11"
-       - key: DJANGO_SUPERUSER_USERNAME
-         value: "7001"
-       - key: DJANGO_SUPERUSER_EMAIL
-         value: "7001@anrkitdept.onrender.com"
-       - key: DJANGO_SUPERUSER_PASSWORD
-         value: "anrkithod"
+      - key: DJANGO_SUPERUSER_USERNAME
+        sync: false
+      - key: DJANGO_SUPERUSER_EMAIL
+        sync: false
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false

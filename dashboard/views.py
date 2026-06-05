@@ -10,10 +10,14 @@ import zipfile
 import traceback
 import io
 import re
+import hashlib
+import hmac
+import base64
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
-from urllib.parse import quote, urlencode
+import qrcode
+from urllib.parse import quote, urlencode, urlparse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest, Http404)
@@ -21,7 +25,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -3385,8 +3389,13 @@ def _phonepe_config():
         'client_id': os.environ.get('PHONEPE_CLIENT_ID', ''),
         'client_secret': os.environ.get('PHONEPE_CLIENT_SECRET', ''),
         'client_version': os.environ.get('PHONEPE_CLIENT_VERSION', '1'),
+        'callback_username': os.environ.get('PHONEPE_CALLBACK_USERNAME', ''),
+        'callback_password': os.environ.get('PHONEPE_CALLBACK_PASSWORD', ''),
     }
     config['configured'] = bool(config['client_id'] and config['client_secret'])
+    config['callback_configured'] = bool(
+        config['callback_username'] and config['callback_password']
+    )
     return config
 
 
@@ -3429,6 +3438,17 @@ def _find_gateway_value(payload, keys):
     return None
 
 
+def _is_phonepe_checkout_url(payment_url):
+    try:
+        parsed = urlparse(payment_url)
+    except (TypeError, ValueError):
+        return False
+    hostname = (parsed.hostname or '').lower()
+    return parsed.scheme == 'https' and (
+        hostname == 'phonepe.com' or hostname.endswith('.phonepe.com')
+    )
+
+
 def _phonepe_create_payment(payment, redirect_url):
     config = _phonepe_config()
     token = _phonepe_access_token()
@@ -3454,8 +3474,8 @@ def _phonepe_create_payment(payment, redirect_url):
     response.raise_for_status()
     payload = response.json()
     payment_url = _find_gateway_value(payload, ('redirectUrl', 'paymentUrl', 'url'))
-    if not payment_url:
-        raise PhonePePaymentError('PhonePe did not return a payment URL.')
+    if not _is_phonepe_checkout_url(payment_url):
+        raise PhonePePaymentError('PhonePe did not return a valid hosted checkout URL.')
     payment.phonepe_order_id = str(_find_gateway_value(payload, ('orderId',)) or '')
     payment.payment_url = payment_url
     payment.gateway_response = payload
@@ -3479,13 +3499,22 @@ def _phonepe_verify_payment(payment):
     )
     response.raise_for_status()
     payload = response.json()
-    gateway_state = str(_find_gateway_value(payload, ('state', 'status')) or '').upper()
-    gateway_amount = _find_gateway_value(payload, ('amount',))
-    amount_matches = gateway_amount is None or int(gateway_amount) == PROJECT_DOWNLOAD_PRICE_PAISE
+    if not isinstance(payload, dict):
+        raise PhonePePaymentError('PhonePe returned an invalid order status response.')
+    gateway_state = str(payload.get('state') or '').upper()
+    gateway_amount = payload.get('amount')
+    merchant_order_id = str(payload.get('merchantOrderId') or '')
+    amount_matches = (
+        isinstance(gateway_amount, int)
+        and not isinstance(gateway_amount, bool)
+        and gateway_amount == payment.amount_paise
+    )
+    order_matches = merchant_order_id == payment.merchant_order_id
     payment.gateway_response = payload
     if (
         gateway_state == 'COMPLETED'
         and amount_matches
+        and order_matches
         and payment.amount_paise == PROJECT_DOWNLOAD_PRICE_PAISE
     ):
         payment.status = 'COMPLETED'
@@ -3507,6 +3536,27 @@ def _request_session_key(request):
 def _payment_rate_key(group, request):
     """Throttle payment actions per browser session and network address."""
     return f"{request.META.get('REMOTE_ADDR', '')}:{request.session.session_key or 'anonymous'}"
+
+
+def _phonepe_callback_is_valid(request):
+    config = _phonepe_config()
+    if not config['callback_configured']:
+        return False
+    expected = hashlib.sha256(
+        f"{config['callback_username']}:{config['callback_password']}".encode('utf-8')
+    ).hexdigest()
+    return hmac.compare_digest(request.headers.get('Authorization', ''), expected)
+
+
+def _payment_url_qr_data_uri(payment_url):
+    """Build an in-page QR that opens PhonePe's hosted checkout URL."""
+    if not _is_phonepe_checkout_url(payment_url):
+        return ''
+    qr_image = qrcode.make(payment_url)
+    buffer = io.BytesIO()
+    qr_image.save(buffer, format='PNG')
+    encoded = base64.b64encode(buffer.getvalue()).decode('ascii')
+    return f'data:image/png;base64,{encoded}'
 
 
 def _iter_engineeringcollege_source_files():
@@ -3608,8 +3658,10 @@ def download_engineeringcollege_project(request):
     response = HttpResponse(archive_buffer.getvalue(), content_type='application/zip')
     response['Content-Disposition'] = 'attachment; filename="EngineeringCollege-Project.zip"'
     response['Cache-Control'] = 'no-store'
-    payment.download_count += 1
-    payment.save(update_fields=['download_count', 'updated_at'])
+    ProjectDownloadPayment.objects.filter(pk=payment.pk).update(
+        download_count=F('download_count') + 1,
+        updated_at=timezone.now(),
+    )
     return response
 
 
@@ -3632,6 +3684,7 @@ def project_download_payment(request):
         'amount_rupees': PROJECT_DOWNLOAD_PRICE_PAISE // 100,
         'payment': payment,
         'phonepe_configured': _phonepe_config()['configured'],
+        'payment_qr_data_uri': _payment_url_qr_data_uri(payment.payment_url) if payment else '',
     })
 
 
@@ -3650,7 +3703,12 @@ def initiate_project_download_payment(request):
         reverse('dashboard:project_payment_return', args=[payment.merchant_order_id])
     )
     try:
-        return redirect(_phonepe_create_payment(payment, redirect_url))
+        payment_url = _phonepe_create_payment(payment, redirect_url)
+        if request.POST.get('checkout_mode') == 'qr':
+            return redirect(
+                f"{reverse('dashboard:project_download_payment')}?order={payment.merchant_order_id}"
+            )
+        return redirect(payment_url)
     except (PhonePePaymentError, requests.RequestException, ValueError) as exc:
         payment.status = 'FAILED'
         payment.gateway_response = {'error': str(exc)}
@@ -3672,6 +3730,40 @@ def project_payment_return(request, merchant_order_id):
     except (PhonePePaymentError, requests.RequestException, ValueError):
         messages.error(request, 'Payment verification is temporarily unavailable.')
     return redirect(f"{reverse('dashboard:project_download_payment')}?order={merchant_order_id}")
+
+
+@csrf_exempt
+@ratelimit(key='ip', rate='60/m', method='POST', block=True)
+@require_POST
+def phonepe_payment_callback(request):
+    """Authenticate PhonePe's callback, then independently verify the order."""
+    if not _phonepe_callback_is_valid(request):
+        return JsonResponse({'detail': 'Invalid callback authorization.'}, status=401)
+
+    try:
+        callback = json.loads(request.body)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return JsonResponse({'detail': 'Invalid JSON body.'}, status=400)
+
+    if not isinstance(callback, dict) or not isinstance(callback.get('payload'), dict):
+        return JsonResponse({'detail': 'Invalid callback payload.'}, status=400)
+
+    callback_order_id = str(callback['payload'].get('merchantOrderId') or '')
+    if not callback_order_id:
+        return JsonResponse({'detail': 'Missing merchant order ID.'}, status=400)
+
+    payment = ProjectDownloadPayment.objects.filter(
+        merchant_order_id=callback_order_id,
+    ).first()
+    if not payment:
+        return JsonResponse({'detail': 'Unknown merchant order ID.'}, status=404)
+
+    try:
+        _phonepe_verify_payment(payment)
+    except (PhonePePaymentError, requests.RequestException, ValueError):
+        logger.exception('PhonePe callback verification failed for %s', callback_order_id)
+        return JsonResponse({'detail': 'Verification temporarily unavailable.'}, status=503)
+    return HttpResponse(status=204)
 
 
 def project_domain(request, domain_slug):

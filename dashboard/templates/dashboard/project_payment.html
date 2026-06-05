@@ -39,6 +39,8 @@
         .amount { margin: 18px 0 6px; font-size: 32px; font-weight: 700; }
         .status { margin: 20px 0; padding: 12px; border-radius: 6px; background: #EEF3F8; }
         .message { margin: 16px 0; padding: 12px; border-radius: 6px; background: #FFF4D6; }
+        .qr-code { width: 260px; max-width: 100%; margin: 18px auto 4px; }
+        .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
         .action {
             display: inline-block;
             margin-top: 20px;
@@ -59,9 +61,9 @@
     <main>
         <a class="back-link" href="{% url 'dashboard:project_domain' 'software-engineering' %}">&larr; Software Engineering Projects</a>
         <section class="payment-panel">
-            <span class="phonepe-mark" aria-hidden="true">पे</span>
+            <span class="phonepe-mark" aria-hidden="true">P</span>
             <h1>EngineeringCollege Project ZIP</h1>
-            <div class="amount">₹{{ amount_rupees }}</div>
+            <div class="amount">INR {{ amount_rupees }}</div>
             <p>Payment is authenticated through PhonePe Payment Gateway. The ZIP download unlocks only after the server independently verifies a successful payment.</p>
             <p>PhonePe will show secure payment options, including its payment QR where available.</p>
 
@@ -74,14 +76,26 @@
                 <a class="action" href="{% url 'dashboard:download_engineeringcollege_project' %}?order={{ payment.merchant_order_id }}">Download ZIP</a>
             {% elif payment %}
                 <div class="status">Payment status: {{ payment.get_status_display }}</div>
+                {% if payment_qr_data_uri %}
+                    <p>Scan this QR with PhonePe or another supported UPI app.</p>
+                    <img class="qr-code" src="{{ payment_qr_data_uri }}" alt="PhonePe hosted checkout QR code">
+                    <div class="actions">
+                        <a class="action" href="{{ payment.payment_url }}" rel="noopener noreferrer">Open PhonePe Checkout</a>
+                        <a class="action" href="?order={{ payment.merchant_order_id }}">Check Payment Status</a>
+                    </div>
+                {% else %}
                 <a class="action" href="?order={{ payment.merchant_order_id }}">Check Payment Status</a>
+                {% endif %}
             {% elif phonepe_configured %}
                 <form method="post" action="{% url 'dashboard:initiate_project_download_payment' %}">
                     {% csrf_token %}
-                    <button class="action" type="submit">Pay ₹{{ amount_rupees }} with PhonePe</button>
+                    <div class="actions">
+                        <button class="action" type="submit" name="checkout_mode" value="redirect">Pay with PhonePe</button>
+                        <button class="action" type="submit" name="checkout_mode" value="qr">Show Payment QR</button>
+                    </div>
                 </form>
             {% else %}
-                <div class="message">Secure payment is temporarily unavailable. The ZIP remains locked until PhonePe merchant credentials are configured.</div>
+                <div class="message">Payment and QR are unavailable until PhonePe merchant credentials are configured on the server.</div>
             {% endif %}
         </section>
     </main>

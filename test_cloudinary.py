@@ -9,9 +9,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get credentials
-cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', 'dsndirhuhe')
-api_key = os.environ.get('CLOUDINARY_API_KEY', '473455725389669')
-api_secret = os.environ.get('CLOUDINARY_API_SECRET', 'vztmkO4bDwTVvVNG7Mah9yPmkdY')
+cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', '')
+api_key = os.environ.get('CLOUDINARY_API_KEY', '')
+api_secret = os.environ.get('CLOUDINARY_API_SECRET', '')
+
+if not all((cloud_name, api_key, api_secret)):
+    raise RuntimeError('Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.')
 
 print("=" * 60)
 print("CLOUDINARY CONNECTION TEST")

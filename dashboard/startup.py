@@ -1,5 +1,6 @@
 # dashboard/startup.py
 import logging
+import os
 import sys
 
 from django.contrib.auth import get_user_model
@@ -7,9 +8,9 @@ from django.db import connection
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_ADMIN_USERNAME = '7001'
-DEFAULT_ADMIN_PASSWORD = 'anrkithod'
-DEFAULT_ADMIN_EMAIL = ''
+DEFAULT_ADMIN_USERNAME = os.environ.get('DJANGO_SUPERUSER_USERNAME', '')
+DEFAULT_ADMIN_PASSWORD = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '')
+DEFAULT_ADMIN_EMAIL = os.environ.get('DJANGO_SUPERUSER_EMAIL', '')
 
 
 def check_pdf_url_column():
@@ -42,7 +43,10 @@ def check_pdf_url_column():
 
 
 def ensure_default_admin_user(username=DEFAULT_ADMIN_USERNAME, password=DEFAULT_ADMIN_PASSWORD, email=DEFAULT_ADMIN_EMAIL):
-    """Create or update the default admin user so login works with known credentials."""
+    """Create or update the configured admin user when secure credentials exist."""
+    if not username or not password:
+        logger.warning('Admin environment variables are not set; skipping default admin creation.')
+        return False
     try:
         User = get_user_model()
         user = User.objects.filter(username=username).first()
