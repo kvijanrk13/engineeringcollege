@@ -26,6 +26,11 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
     path(
+        'projects/policies/<slug:policy_slug>/',
+        views.project_policy_pdf,
+        name='project_policy_pdf',
+    ),
+    path(
         'projects/software-engineering/engineeringcollege-project/download/',
         views.download_engineeringcollege_project,
         name='download_engineeringcollege_project',

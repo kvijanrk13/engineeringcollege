@@ -47,6 +47,29 @@ def make_test_pdf_bytes(label='Test PDF'):
 
 class DashboardTests(TestCase):
     @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_projects_page_links_to_public_policy_pdfs(self):
+        response = self.client.get(reverse('dashboard:projects'))
+
+        self.assertEqual(response.status_code, 200)
+        for policy_slug in dashboard_views.PROJECT_POLICY_FILES:
+            self.assertContains(
+                response,
+                reverse('dashboard:project_policy_pdf', args=[policy_slug]),
+            )
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_project_policy_pdfs_are_publicly_available(self):
+        for policy_slug, filename in dashboard_views.PROJECT_POLICY_FILES.items():
+            with self.subTest(policy=policy_slug):
+                response = self.client.get(
+                    reverse('dashboard:project_policy_pdf', args=[policy_slug])
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response['Content-Type'], 'application/pdf')
+                self.assertIn(filename, response['Content-Disposition'])
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
     def test_login_page(self):
         response = self.client.get(reverse('dashboard:login'))
         self.assertEqual(response.status_code, 200)

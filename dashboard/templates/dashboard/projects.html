@@ -125,6 +125,20 @@
             text-decoration: none;
             cursor: pointer;
         }
+        .policy-footer {
+            width: min(100%, 760px);
+            margin: 8px auto 0;
+            padding: 20px;
+            color: #3D4A5C;
+            font-size: 13px;
+            line-height: 1.7;
+            text-align: center;
+        }
+        .policy-footer a {
+            display: inline-block;
+            margin: 2px 7px;
+            color: #1456A0;
+        }
         @media (min-width: 761px) {
             .domain-grid { padding-top: 32px; }
         }
@@ -201,6 +215,14 @@
             <span>IoT and Edge Computing Domain</span>
         </button>
     </main>
+
+    <footer class="policy-footer" aria-label="Policies">
+        <a href="{% url 'dashboard:project_policy_pdf' 'terms-and-conditions' %}" target="_blank">Terms and Conditions</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'privacy-policy' %}" target="_blank">Privacy Policy</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'refund-cancellation-policy' %}" target="_blank">Refund and Cancellation Policy</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'return-policy' %}" target="_blank">Return Policy</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'shipping-policy' %}" target="_blank">Shipping Policy</a>
+    </footer>
 
     <div class="domain-dialog" id="domain-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden>
         <section class="domain-dialog-panel">

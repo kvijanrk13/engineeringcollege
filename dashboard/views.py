@@ -19,7 +19,7 @@ import requests
 import qrcode
 from urllib.parse import quote, urlencode, urlparse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import (HttpResponse, JsonResponse, HttpResponseRedirect,
+from django.http import (FileResponse, HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest, Http404)
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -3328,6 +3328,36 @@ def mobile_dashboard(request):
 def projects(request):
     """Public icon-only project domain page matching the Android projects folder."""
     return render(request, 'dashboard/projects.html')
+
+
+PROJECT_POLICY_FILES = {
+    'terms-and-conditions': 'terms-and-conditions.pdf',
+    'privacy-policy': 'privacy-policy.pdf',
+    'refund-cancellation-policy': 'refund-cancellation-policy.pdf',
+    'return-policy': 'return-policy.pdf',
+    'shipping-policy': 'shipping-policy.pdf',
+}
+
+
+@require_GET
+def project_policy_pdf(request, policy_slug):
+    """Serve a public project policy PDF from a stable, review-friendly URL."""
+    filename = PROJECT_POLICY_FILES.get(policy_slug)
+    if not filename:
+        raise Http404('Policy not found.')
+
+    policy_path = Path(settings.BASE_DIR) / 'static' / 'policies' / filename
+    if not policy_path.is_file():
+        raise Http404('Policy document not found.')
+
+    response = FileResponse(
+        policy_path.open('rb'),
+        content_type='application/pdf',
+        as_attachment=False,
+        filename=filename,
+    )
+    response['Cache-Control'] = 'public, max-age=3600'
+    return response
 
 
 PROJECT_DOMAINS = {
