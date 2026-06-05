@@ -25,6 +25,11 @@ urlpatterns = [
     path('mobile-dashboard/', views.mobile_dashboard, name='mobile_dashboard'),
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
+    path(
+        'projects/software-engineering/engineeringcollege-project/download/',
+        views.download_engineeringcollege_project,
+        name='download_engineeringcollege_project',
+    ),
     path('projects/<slug:domain_slug>/', views.project_domain, name='project_domain'),
 
     # Authentication routes

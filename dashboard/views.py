@@ -9,6 +9,7 @@ import logging
 import zipfile
 import traceback
 import io
+import re
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
@@ -3334,6 +3335,124 @@ PROJECT_DOMAINS = {
     'iot-edge': 'IoT and Edge Computing',
 }
 
+PROJECT_SOURCE_ROOT_FILES = (
+    'manage.py',
+    'requirements.txt',
+    'Procfile',
+    'runtime.txt',
+    'build.sh',
+    'start.sh',
+    'static/images/ECPRJ2026.jpeg',
+)
+PROJECT_SOURCE_DIRECTORIES = (
+    'dashboard',
+    'engineeringcollege',
+    'templates',
+    'static/css',
+    'static/js',
+)
+PROJECT_SOURCE_SUFFIXES = {
+    '.py', '.html', '.css', '.js', '.txt', '.md', '.json', '.yaml', '.yml', '.jpeg',
+}
+PROJECT_SOURCE_EXCLUDED_PARTS = {
+    '__pycache__', 'staticfiles', 'media', 'tmp_preview',
+}
+PROJECT_MODULES = (
+    ('Core Configuration', ('engineeringcollege/', 'manage.py')),
+    ('User Interface', ('dashboard/templates/', 'templates/')),
+    ('Static Assets', ('dashboard/static/', 'static/css/', 'static/js/', 'static/images/')),
+    ('Dashboard Application', ('dashboard/',)),
+    ('Deployment', ('requirements.txt', 'Procfile', 'runtime.txt', 'build.sh', 'start.sh')),
+)
+
+
+def _iter_engineeringcollege_source_files():
+    """Yield the safe executable project files used to build the live source archive."""
+    base_dir = Path(settings.BASE_DIR)
+    candidates = [base_dir / name for name in PROJECT_SOURCE_ROOT_FILES]
+    for directory in PROJECT_SOURCE_DIRECTORIES:
+        candidates.extend((base_dir / directory).rglob('*'))
+
+    seen = set()
+    for path in candidates:
+        if not path.is_file():
+            continue
+        relative_path = path.relative_to(base_dir)
+        relative_text = relative_path.as_posix()
+        if relative_text in seen:
+            continue
+        if any(part in PROJECT_SOURCE_EXCLUDED_PARTS for part in relative_path.parts):
+            continue
+        if path.suffix and path.suffix.lower() not in PROJECT_SOURCE_SUFFIXES:
+            continue
+        seen.add(relative_text)
+        yield path, relative_text
+
+
+def _sanitized_project_source(path):
+    """Remove known embedded credentials while preserving executable source structure."""
+    content = path.read_bytes()
+    if path.suffix.lower() not in {'.py', '.sh', '.yaml', '.yml', '.txt', '.md', '.html', '.css', '.js'}:
+        return content
+
+    text = content.decode('utf-8', errors='replace')
+    if path.as_posix().endswith('dashboard/startup.py'):
+        text = re.sub(
+            r"DEFAULT_ADMIN_PASSWORD\s*=\s*['\"][^'\"]*['\"]",
+            "DEFAULT_ADMIN_PASSWORD = os.environ.get('DJANGO_SUPERUSER_PASSWORD', '')",
+            text,
+        )
+        text = text.replace('import logging\nimport sys\n', 'import logging\nimport os\nimport sys\n')
+    if path.name == 'build.sh':
+        text = re.sub(
+            r"User\.objects\.create_superuser\([^)]*\)",
+            "User.objects.create_superuser(os.environ['DJANGO_SUPERUSER_USERNAME'], "
+            "os.environ['DJANGO_SUPERUSER_EMAIL'], os.environ['DJANGO_SUPERUSER_PASSWORD'])",
+            text,
+        )
+        text = text.replace('from django.contrib.auth import get_user_model\n', 'import os\nfrom django.contrib.auth import get_user_model\n')
+    return text.encode('utf-8')
+
+
+def _source_module_for(relative_path):
+    for module_name, prefixes in PROJECT_MODULES:
+        if any(relative_path == prefix or relative_path.startswith(prefix) for prefix in prefixes):
+            return module_name
+    return 'Supporting Code'
+
+
+@require_GET
+def download_engineeringcollege_project(request):
+    """Generate a synchronized, credential-safe Django source package."""
+    archive_buffer = io.BytesIO()
+    source_files = list(_iter_engineeringcollege_source_files())
+    with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(
+            'EngineeringCollege Project/README.txt',
+            'EngineeringCollege Django Project\n\n'
+            'Project Source preserves the executable Django hierarchy.\n'
+            'Modules contains the same current code grouped by responsibility.\n'
+            'This package is generated live, so it reflects the deployed source code.\n'
+            'Credentials, databases, uploads, logs, and generated artifacts are excluded.\n',
+        )
+        archive.writestr(
+            'EngineeringCollege Project/.env.example',
+            'SECRET_KEY=\nDATABASE_URL=\nDJANGO_SUPERUSER_USERNAME=\n'
+            'DJANGO_SUPERUSER_EMAIL=\nDJANGO_SUPERUSER_PASSWORD=\n'
+            'CLOUDINARY_CLOUD_NAME=\nCLOUDINARY_API_KEY=\nCLOUDINARY_API_SECRET=\n',
+        )
+        for path, relative_path in source_files:
+            content = _sanitized_project_source(path)
+            archive.writestr(f'EngineeringCollege Project/Project Source/{relative_path}', content)
+            module_name = _source_module_for(relative_path)
+            archive.writestr(f'EngineeringCollege Project/Modules/{module_name}/{relative_path}', content)
+
+    archive_buffer.seek(0)
+    response = HttpResponse(archive_buffer.getvalue(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="EngineeringCollege-Project.zip"'
+    response['Cache-Control'] = 'no-store'
+    return response
+
 
 def project_domain(request, domain_slug):
     """Display the selected public project-domain folder."""
@@ -3343,6 +3462,8 @@ def project_domain(request, domain_slug):
     return render(request, 'dashboard/project_domain.html', {
         'domain_name': domain_name,
         'domain_slug': domain_slug,
+        'is_software_engineering': domain_slug == 'software-engineering',
+        'project_modules': [name for name, _ in PROJECT_MODULES],
     })
 
 

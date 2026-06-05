@@ -33,6 +33,11 @@
             background: #FFFFFF;
             text-align: center;
         }
+        .folder-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
         .folder-icon {
             position: relative;
             display: block;
@@ -62,16 +67,57 @@
             color: #526174;
             line-height: 1.6;
         }
+        .module-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin: 28px auto 0;
+            padding: 0;
+            max-width: 520px;
+            list-style: none;
+            text-align: left;
+        }
+        .module-list li {
+            padding: 12px;
+            border: 1px solid #D8E0EA;
+            border-radius: 6px;
+            background: #F7F9FC;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .download-label {
+            display: inline-block;
+            margin-top: 28px;
+            padding: 11px 18px;
+            border-radius: 6px;
+            background: #1456A0;
+            color: #FFFFFF;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
     <main>
         <a class="back-link" href="{% url 'dashboard:projects' %}">&larr; Project Domains</a>
-        <section class="folder" aria-label="{{ domain_name }} project folder">
-            <span class="folder-icon" aria-hidden="true"></span>
-            <h1>{{ domain_name }} Projects</h1>
-            <p>This folder is ready for {{ domain_name }} project resources and submissions.</p>
-        </section>
+        {% if is_software_engineering %}
+            <a class="folder folder-link" href="{% url 'dashboard:download_engineeringcollege_project' %}">
+                <span class="folder-icon" aria-hidden="true"></span>
+                <h1>EngineeringCollege Project</h1>
+                <p>Current executable Django hierarchy with a synchronized Modules folder.</p>
+                <ul class="module-list" aria-label="EngineeringCollege project modules">
+                    {% for module in project_modules %}
+                        <li>{{ module }}</li>
+                    {% endfor %}
+                </ul>
+                <span class="download-label">Download Project Folder</span>
+            </a>
+        {% else %}
+            <section class="folder" aria-label="{{ domain_name }} project folder">
+                <span class="folder-icon" aria-hidden="true"></span>
+                <h1>{{ domain_name }} Projects</h1>
+                <p>This folder is ready for {{ domain_name }} project resources and submissions.</p>
+            </section>
+        {% endif %}
     </main>
 </body>
 </html>
