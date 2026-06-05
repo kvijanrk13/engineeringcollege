@@ -64,6 +64,14 @@
             height: auto;
             border-radius: 50%;
         }
+        .welcome-message {
+            grid-column: 1 / -1;
+            margin: 0 0 8px;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.3;
+            text-align: center;
+        }
         @media (min-width: 761px) {
             .domain-grid { padding-top: 32px; }
         }
@@ -74,6 +82,7 @@
         <div class="projects-logo">
             <img src="{% static 'images/ECPRJ2026.jpeg' %}" alt="Engineering College Projects">
         </div>
+        <p class="welcome-message">WELCOME TO ENGINEERING COLLEGE PROJECTS</p>
 
         <button class="domain-tile" type="button">
             <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
