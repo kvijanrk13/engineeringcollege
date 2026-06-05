@@ -181,6 +181,18 @@ class DashboardTests(TestCase):
         self.assertEqual(STUDENT_PDF_TEMPLATE, 'dashboard/student_pdf.html')
         self.assertEqual(FACULTY_PDF_TEMPLATE, 'dashboard/faculty_pdf.html')
 
+    def test_faculty_pdf_header_only_contains_report_title(self):
+        template_path = Path(__file__).parent / 'templates' / 'dashboard' / 'faculty_pdf.html'
+        template = template_path.read_text(encoding='utf-8')
+        header = template.split('<!-- 1. PERSONAL INFORMATION -->', 1)[0]
+
+        self.assertIn('FACULTY PROFILE REPORT', header)
+        self.assertNotIn('ENGINEERING COLLEGE', header)
+        self.assertNotIn('DEPARTMENT OF INFORMATION TECHNOLOGY', header)
+        self.assertNotIn('Employee Code:', header)
+        self.assertNotIn('Generated:', header)
+        self.assertIn('photo-box', header.split('<body>', 1)[1])
+
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_students_data_route_renders_directory_actions(self):
         user = get_user_model().objects.create_user(

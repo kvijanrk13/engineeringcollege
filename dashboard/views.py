@@ -1457,7 +1457,7 @@ def _build_reportlab_faculty_pdf(faculty, temp_paths=None):
         doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=30, leftMargin=30,
                                 topMargin=30, bottomMargin=30)
         styles = getSampleStyleSheet()
-        elems = [Paragraph('Faculty Profile', styles['Title']), Spacer(1, 12)]
+        elems = [Paragraph('FACULTY PROFILE REPORT', styles['Title']), Spacer(1, 12)]
 
         fields = [
             ('Employee Code', getattr(faculty, 'employee_code', 'N/A')),
