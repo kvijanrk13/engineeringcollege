@@ -218,7 +218,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:columnCount="2"
-                android:rowCount="4">
+                android:rowCount="5">
 
                 <LinearLayout
                     android:id="@+id/aiDomainTile"
@@ -395,6 +395,36 @@
                         android:layout_marginTop="10dp"
                         android:gravity="center"
                         android:text="@string/data_science_domain"
+                        android:textColor="@color/ink"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/dataMiningDomainTile"
+                    android:layout_width="0dp"
+                    android:layout_height="146dp"
+                    android:layout_columnWeight="1"
+                    android:layout_margin="6dp"
+                    android:background="@drawable/tile_background"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:contentDescription="@string/data_mining_domain"
+                        android:src="@drawable/ic_domain_data_mining" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center"
+                        android:text="@string/data_mining_domain"
                         android:textColor="@color/ink"
                         android:textSize="14sp"
                         android:textStyle="bold" />

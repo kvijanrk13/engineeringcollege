@@ -17,6 +17,7 @@
     <color name="security_domain">#B91C1C</color>
     <color name="deep_learning_domain">#7C3AED</color>
     <color name="data_science_domain">#047857</color>
+    <color name="data_mining_domain">#0F766E</color>
     <color name="cloud_domain">#0369A1</color>
     <color name="iot_domain">#B45309</color>
 </resources>

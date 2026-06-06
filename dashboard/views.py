@@ -3368,6 +3368,7 @@ PROJECT_DOMAINS = {
     'security': 'Cybersecurity',
     'deep-learning': 'Deep Learning',
     'data-science': 'Data Science',
+    'data-mining': 'Data Mining',
     'cloud-computing': 'Cloud Computing',
     'iot-edge': 'IoT and Edge Computing',
 }

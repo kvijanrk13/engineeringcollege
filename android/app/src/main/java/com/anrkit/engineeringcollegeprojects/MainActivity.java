@@ -82,6 +82,7 @@ public class MainActivity extends Activity {
         attachDomainToast(R.id.securityDomainTile, R.string.security_domain);
         attachDomainToast(R.id.deepLearningDomainTile, R.string.deep_learning_domain);
         attachDomainToast(R.id.dataScienceDomainTile, R.string.data_science_domain);
+        attachDomainToast(R.id.dataMiningDomainTile, R.string.data_mining_domain);
         attachDomainToast(R.id.cloudDomainTile, R.string.cloud_computing_domain);
         attachDomainToast(R.id.iotDomainTile, R.string.iot_edge_domain);
     }
