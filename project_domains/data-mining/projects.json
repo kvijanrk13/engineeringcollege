@@ -8,6 +8,7 @@
       "source_code_path": "project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/Source Code/",
       "datasets_path": "project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/datasets/",
       "github_reference": "https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning",
+      "demo_url": "/car-price/",
       "zip": {
         "enabled": true,
         "amount_paise": 100000,

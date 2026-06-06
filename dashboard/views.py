@@ -3689,6 +3689,7 @@ def _load_domain_projects(domain_slug):
             'source_code_path': str(project.get('source_code_path') or '').strip(),
             'datasets_path': str(project.get('datasets_path') or '').strip(),
             'github_reference': str(project.get('github_reference') or '').strip(),
+            'demo_url': str(project.get('demo_url') or '').strip(),
             'zip_enabled': zip_enabled and amount_paise > 0,
             'amount_paise': amount_paise,
             'amount_rupees': amount_paise // 100,
