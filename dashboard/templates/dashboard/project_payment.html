@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EngineeringCollege Project Payment</title>
+    <title>{{ project.name }} Payment</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -59,10 +59,10 @@
 </head>
 <body>
     <main>
-        <a class="back-link" href="{% url 'dashboard:project_domain' 'software-engineering' %}">&larr; Software Engineering Projects</a>
+        <a class="back-link" href="{% url 'dashboard:project_detail' domain_slug project.slug %}">&larr; {{ project.name }}</a>
         <section class="payment-panel">
             <span class="phonepe-mark" aria-hidden="true">P</span>
-            <h1>EngineeringCollege Project ZIP</h1>
+            <h1>{{ project.name }} ZIP</h1>
             <div class="amount">INR {{ amount_rupees }}</div>
             <p>Payment is authenticated through PhonePe Payment Gateway. The ZIP download unlocks only after the server independently verifies a successful payment.</p>
             <p>PhonePe will show secure payment options, including its payment QR where available.</p>
@@ -73,7 +73,7 @@
 
             {% if payment.status == 'COMPLETED' %}
                 <div class="status">Payment verified successfully.</div>
-                <a class="action" href="{% url 'dashboard:download_engineeringcollege_project' %}?order={{ payment.merchant_order_id }}">Download ZIP</a>
+                <a class="action" href="{% url 'dashboard:download_project_zip' domain_slug project.slug %}?order={{ payment.merchant_order_id }}">Download ZIP</a>
             {% elif payment %}
                 <div class="status">Payment status: {{ payment.get_status_display }}</div>
                 {% if payment_qr_data_uri %}
@@ -87,7 +87,7 @@
                 <a class="action" href="?order={{ payment.merchant_order_id }}">Check Payment Status</a>
                 {% endif %}
             {% elif phonepe_configured %}
-                <form method="post" action="{% url 'dashboard:initiate_project_download_payment' %}">
+                <form method="post" action="{% url 'dashboard:initiate_project_zip_payment' domain_slug project.slug %}">
                     {% csrf_token %}
                     <div class="actions">
                         <button class="action" type="submit" name="checkout_mode" value="redirect">Pay with PhonePe</button>

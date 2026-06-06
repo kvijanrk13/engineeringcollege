@@ -25,6 +25,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db import DatabaseError
 from django.db.models import Q, Count, F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
@@ -3370,6 +3371,7 @@ PROJECT_DOMAINS = {
     'cloud-computing': 'Cloud Computing',
     'iot-edge': 'IoT and Edge Computing',
 }
+PROJECT_DOMAIN_ROOT = Path(settings.BASE_DIR) / 'project_domains'
 
 PROJECT_SOURCE_ROOT_FILES = (
     'manage.py',
@@ -3383,6 +3385,7 @@ PROJECT_SOURCE_ROOT_FILES = (
 PROJECT_SOURCE_DIRECTORIES = (
     'dashboard',
     'engineeringcollege',
+    'project_domains',
     'templates',
     'static/css',
     'static/js',
@@ -3395,6 +3398,7 @@ PROJECT_SOURCE_EXCLUDED_PARTS = {
 }
 PROJECT_MODULES = (
     ('Core Configuration', ('engineeringcollege/', 'manage.py')),
+    ('Project Domains', ('project_domains/',)),
     ('User Interface', ('dashboard/templates/', 'templates/')),
     ('Static Assets', ('dashboard/static/', 'static/css/', 'static/js/', 'static/images/')),
     ('Dashboard Application', ('dashboard/',)),
@@ -3486,12 +3490,15 @@ def _phonepe_create_payment(payment, redirect_url):
         f"{config['base_url']}/checkout/v2/pay",
         json={
             'merchantOrderId': payment.merchant_order_id,
-            'amount': PROJECT_DOWNLOAD_PRICE_PAISE,
+            'amount': payment.amount_paise,
             'expireAfter': 1200,
-            'metaInfo': {'udf1': 'EngineeringCollege Project ZIP'},
+            'metaInfo': {
+                'udf1': f'{payment.domain_slug}/{payment.project_slug}',
+                'udf2': 'Project ZIP',
+            },
             'paymentFlow': {
                 'type': 'PG_CHECKOUT',
-                'message': 'EngineeringCollege Project ZIP download',
+                'message': f'{payment.project_slug} ZIP download',
                 'merchantUrls': {'redirectUrl': redirect_url},
             },
         },
@@ -3545,7 +3552,10 @@ def _phonepe_verify_payment(payment):
         gateway_state == 'COMPLETED'
         and amount_matches
         and order_matches
-        and payment.amount_paise == PROJECT_DOWNLOAD_PRICE_PAISE
+        and payment.amount_paise == _project_zip_price(
+            payment.domain_slug,
+            payment.project_slug,
+        )
     ):
         payment.status = 'COMPLETED'
         payment.verified_at = timezone.now()
@@ -3644,13 +3654,115 @@ def _source_module_for(relative_path):
     return 'Supporting Code'
 
 
+def _load_domain_projects(domain_slug):
+    """Read and validate the projects owned by one domain folder."""
+    manifest_path = PROJECT_DOMAIN_ROOT / domain_slug / 'projects.json'
+    try:
+        payload = json.loads(manifest_path.read_text(encoding='utf-8'))
+    except (OSError, ValueError, TypeError):
+        logger.warning('Could not read project-domain manifest: %s', manifest_path)
+        return []
+
+    projects = []
+    for project in payload.get('projects', []):
+        if not isinstance(project, dict):
+            continue
+        slug = str(project.get('slug') or '').strip()
+        name = str(project.get('name') or '').strip()
+        if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', slug) or not name:
+            continue
+        zip_config = project.get('zip') if isinstance(project.get('zip'), dict) else {}
+        zip_enabled = zip_config.get('enabled') is True
+        try:
+            amount_paise = int(zip_config.get('amount_paise', 0)) if zip_enabled else 0
+        except (TypeError, ValueError):
+            amount_paise = 0
+        zip_source = str(zip_config.get('source') or 'project-folder').strip()
+        if zip_source not in {'repository', 'project-folder'}:
+            zip_source = 'project-folder'
+        projects.append({
+            'slug': slug,
+            'name': name,
+            'description': str(project.get('description') or '').strip(),
+            'zip_enabled': zip_enabled and amount_paise > 0,
+            'amount_paise': amount_paise,
+            'amount_rupees': amount_paise // 100,
+            'zip_source': zip_source,
+        })
+    return projects
+
+
+def _get_domain_project(domain_slug, project_slug, require_paid_zip=False):
+    if domain_slug not in PROJECT_DOMAINS:
+        raise Http404("Project domain not found")
+    project = next(
+        (item for item in _load_domain_projects(domain_slug) if item['slug'] == project_slug),
+        None,
+    )
+    if not project or (require_paid_zip and not project['zip_enabled']):
+        raise Http404("Project not found")
+    return project
+
+
+def _project_zip_price(domain_slug, project_slug):
+    try:
+        return _get_domain_project(domain_slug, project_slug, require_paid_zip=True)['amount_paise']
+    except Http404:
+        return -1
+
+
+def _build_project_zip(domain_slug, project):
+    """Build a project ZIP from either the repository or its domain-owned folder."""
+    archive_buffer = io.BytesIO()
+    archive_root = project['name']
+    if project['zip_source'] == 'repository':
+        source_files = list(_iter_engineeringcollege_source_files())
+    else:
+        project_root = PROJECT_DOMAIN_ROOT / domain_slug / project['slug']
+        source_files = [
+            (path, path.relative_to(project_root).as_posix())
+            for path in project_root.rglob('*')
+            if path.is_file() and not any(
+                part in PROJECT_SOURCE_EXCLUDED_PARTS
+                for part in path.relative_to(project_root).parts
+            )
+        ]
+
+    with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(
+            f'{archive_root}/README.txt',
+            f"{project['name']}\n\n"
+            f"Domain: {PROJECT_DOMAINS[domain_slug]}\n"
+            "This package is generated live from the deployed project source.\n"
+            "Credentials, databases, uploads, logs, and generated artifacts are excluded.\n",
+        )
+        if project['zip_source'] == 'repository':
+            archive.writestr(
+                f'{archive_root}/.env.example',
+                'SECRET_KEY=\nDATABASE_URL=\nDJANGO_SUPERUSER_USERNAME=\n'
+                'DJANGO_SUPERUSER_EMAIL=\nDJANGO_SUPERUSER_PASSWORD=\n'
+                'CLOUDINARY_CLOUD_NAME=\nCLOUDINARY_API_KEY=\nCLOUDINARY_API_SECRET=\n',
+            )
+        for path, relative_path in source_files:
+            content = _sanitized_project_source(path)
+            archive.writestr(f'{archive_root}/Project Source/{relative_path}', content)
+            if project['zip_source'] == 'repository':
+                module_name = _source_module_for(relative_path)
+                archive.writestr(f'{archive_root}/Modules/{module_name}/{relative_path}', content)
+    return archive_buffer.getvalue()
+
+
 @require_GET
-def download_engineeringcollege_project(request):
-    """Generate the source package only after server-verified PhonePe payment."""
+def download_project_zip(request, domain_slug, project_slug):
+    """Generate a configured project ZIP only after server-verified PhonePe payment."""
+    project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
     payment = get_object_or_404(
         ProjectDownloadPayment,
         merchant_order_id=request.GET.get('order', ''),
         session_key=_request_session_key(request),
+        domain_slug=domain_slug,
+        project_slug=project_slug,
+        amount_paise=project['amount_paise'],
     )
     try:
         paid = _phonepe_verify_payment(payment)
@@ -3658,35 +3770,12 @@ def download_engineeringcollege_project(request):
         paid = False
     if not paid:
         return redirect(
-            f"{reverse('dashboard:project_download_payment')}?order={payment.merchant_order_id}"
+            f"{reverse('dashboard:project_zip_payment', args=[domain_slug, project_slug])}"
+            f"?order={payment.merchant_order_id}"
         )
 
-    archive_buffer = io.BytesIO()
-    source_files = list(_iter_engineeringcollege_source_files())
-    with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr(
-            'EngineeringCollege Project/README.txt',
-            'EngineeringCollege Django Project\n\n'
-            'Project Source preserves the executable Django hierarchy.\n'
-            'Modules contains the same current code grouped by responsibility.\n'
-            'This package is generated live, so it reflects the deployed source code.\n'
-            'Credentials, databases, uploads, logs, and generated artifacts are excluded.\n',
-        )
-        archive.writestr(
-            'EngineeringCollege Project/.env.example',
-            'SECRET_KEY=\nDATABASE_URL=\nDJANGO_SUPERUSER_USERNAME=\n'
-            'DJANGO_SUPERUSER_EMAIL=\nDJANGO_SUPERUSER_PASSWORD=\n'
-            'CLOUDINARY_CLOUD_NAME=\nCLOUDINARY_API_KEY=\nCLOUDINARY_API_SECRET=\n',
-        )
-        for path, relative_path in source_files:
-            content = _sanitized_project_source(path)
-            archive.writestr(f'EngineeringCollege Project/Project Source/{relative_path}', content)
-            module_name = _source_module_for(relative_path)
-            archive.writestr(f'EngineeringCollege Project/Modules/{module_name}/{relative_path}', content)
-
-    archive_buffer.seek(0)
-    response = HttpResponse(archive_buffer.getvalue(), content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename="EngineeringCollege-Project.zip"'
+    response = HttpResponse(_build_project_zip(domain_slug, project), content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{project_slug}.zip"'
     response['Cache-Control'] = 'no-store'
     ProjectDownloadPayment.objects.filter(pk=payment.pk).update(
         download_count=F('download_count') + 1,
@@ -3695,15 +3784,24 @@ def download_engineeringcollege_project(request):
     return response
 
 
+def download_engineeringcollege_project(request):
+    """Backward-compatible EngineeringCollege project ZIP URL."""
+    return download_project_zip(request, 'software-engineering', 'engineeringcollege-project')
+
+
 @ratelimit(key=_payment_rate_key, rate='20/m', method='GET', block=True)
 @require_GET
-def project_download_payment(request):
+def project_zip_payment(request, domain_slug, project_slug):
+    project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
     payment = None
     order_id = request.GET.get('order', '')
     if order_id:
         payment = ProjectDownloadPayment.objects.filter(
             merchant_order_id=order_id,
             session_key=_request_session_key(request),
+            domain_slug=domain_slug,
+            project_slug=project_slug,
+            amount_paise=project['amount_paise'],
         ).first()
         if payment and payment.status != 'COMPLETED':
             try:
@@ -3711,32 +3809,52 @@ def project_download_payment(request):
             except (PhonePePaymentError, requests.RequestException, ValueError):
                 pass
     return render(request, 'dashboard/project_payment.html', {
-        'amount_rupees': PROJECT_DOWNLOAD_PRICE_PAISE // 100,
+        'domain_name': PROJECT_DOMAINS[domain_slug],
+        'domain_slug': domain_slug,
+        'project': project,
+        'amount_rupees': project['amount_rupees'],
         'payment': payment,
         'phonepe_configured': _phonepe_config()['configured'],
         'payment_qr_data_uri': _payment_url_qr_data_uri(payment.payment_url) if payment else '',
     })
 
 
+def project_download_payment(request):
+    """Backward-compatible EngineeringCollege project payment URL."""
+    return project_zip_payment(request, 'software-engineering', 'engineeringcollege-project')
+
+
 @ratelimit(key=_payment_rate_key, rate='5/m', method='POST', block=True)
 @require_POST
-def initiate_project_download_payment(request):
+def initiate_project_zip_payment(request, domain_slug, project_slug):
+    project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
     if not _phonepe_config()['configured']:
         messages.error(request, 'PhonePe merchant payment gateway is not configured yet.')
-        return redirect('dashboard:project_download_payment')
-    payment = ProjectDownloadPayment.objects.create(
-        merchant_order_id=f"ECPRJ{timezone.now():%Y%m%d%H%M%S}{os.urandom(5).hex()}",
-        session_key=_request_session_key(request),
-        amount_paise=PROJECT_DOWNLOAD_PRICE_PAISE,
-    )
+        return redirect('dashboard:project_zip_payment', domain_slug, project_slug)
+    try:
+        payment = ProjectDownloadPayment.objects.create(
+            merchant_order_id=f"ECPRJ{timezone.now():%Y%m%d%H%M%S}{os.urandom(5).hex()}",
+            session_key=_request_session_key(request),
+            domain_slug=domain_slug,
+            project_slug=project_slug,
+            amount_paise=project['amount_paise'],
+        )
+    except DatabaseError:
+        logger.exception('Could not create project ZIP payment order.')
+        messages.error(request, 'Payment could not be initiated. Please try again later.')
+        return redirect('dashboard:project_zip_payment', domain_slug, project_slug)
     redirect_url = request.build_absolute_uri(
-        reverse('dashboard:project_payment_return', args=[payment.merchant_order_id])
+        reverse(
+            'dashboard:project_zip_payment_return',
+            args=[domain_slug, project_slug, payment.merchant_order_id],
+        )
     )
     try:
         payment_url = _phonepe_create_payment(payment, redirect_url)
         if request.POST.get('checkout_mode') == 'qr':
             return redirect(
-                f"{reverse('dashboard:project_download_payment')}?order={payment.merchant_order_id}"
+                f"{reverse('dashboard:project_zip_payment', args=[domain_slug, project_slug])}"
+                f"?order={payment.merchant_order_id}"
             )
         return redirect(payment_url)
     except (PhonePePaymentError, requests.RequestException, ValueError) as exc:
@@ -3744,22 +3862,46 @@ def initiate_project_download_payment(request):
         payment.gateway_response = {'error': str(exc)}
         payment.save(update_fields=['status', 'gateway_response', 'updated_at'])
         messages.error(request, 'Payment could not be initiated. Please try again later.')
+        return redirect('dashboard:project_zip_payment', domain_slug, project_slug)
+
+
+@require_http_methods(['GET', 'POST'])
+def initiate_project_download_payment(request):
+    """Backward-compatible EngineeringCollege project payment start URL."""
+    if request.method == 'GET':
         return redirect('dashboard:project_download_payment')
+    return initiate_project_zip_payment(request, 'software-engineering', 'engineeringcollege-project')
 
 
 @ratelimit(key=_payment_rate_key, rate='20/m', method='GET', block=True)
 @require_GET
-def project_payment_return(request, merchant_order_id):
+def project_zip_payment_return(request, domain_slug, project_slug, merchant_order_id):
+    _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
     payment = get_object_or_404(
         ProjectDownloadPayment,
         merchant_order_id=merchant_order_id,
         session_key=_request_session_key(request),
+        domain_slug=domain_slug,
+        project_slug=project_slug,
     )
     try:
         _phonepe_verify_payment(payment)
     except (PhonePePaymentError, requests.RequestException, ValueError):
         messages.error(request, 'Payment verification is temporarily unavailable.')
-    return redirect(f"{reverse('dashboard:project_download_payment')}?order={merchant_order_id}")
+    return redirect(
+        f"{reverse('dashboard:project_zip_payment', args=[domain_slug, project_slug])}"
+        f"?order={merchant_order_id}"
+    )
+
+
+def project_payment_return(request, merchant_order_id):
+    """Backward-compatible EngineeringCollege project payment return URL."""
+    return project_zip_payment_return(
+        request,
+        'software-engineering',
+        'engineeringcollege-project',
+        merchant_order_id,
+    )
 
 
 @csrf_exempt
@@ -3805,6 +3947,25 @@ def project_domain(request, domain_slug):
         'domain_name': domain_name,
         'domain_slug': domain_slug,
         'is_software_engineering': domain_slug == 'software-engineering',
+        'project_modules': [name for name, _ in PROJECT_MODULES],
+        'domain_projects': _load_domain_projects(domain_slug),
+    })
+
+
+def project_detail(request, domain_slug, project_slug):
+    """Display one project registered inside a domain folder."""
+    domain_name = PROJECT_DOMAINS.get(domain_slug)
+    if not domain_name:
+        raise Http404("Project domain not found")
+    project = _get_domain_project(domain_slug, project_slug)
+    return render(request, 'dashboard/project_detail.html', {
+        'domain_name': domain_name,
+        'domain_slug': domain_slug,
+        'project': project,
+        'is_engineeringcollege_project': (
+            domain_slug == 'software-engineering'
+            and project_slug == 'engineeringcollege-project'
+        ),
         'project_modules': [name for name, _ in PROJECT_MODULES],
     })
 

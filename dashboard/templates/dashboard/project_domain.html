@@ -94,13 +94,30 @@
             color: #FFFFFF;
             font-weight: 700;
         }
+        .project-list {
+            display: grid;
+            gap: 14px;
+            margin-top: 22px;
+        }
+        .project-card {
+            display: block;
+            padding: 18px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: inherit;
+            text-align: left;
+            text-decoration: none;
+        }
+        .project-card h2 { margin: 0; font-size: 18px; }
+        .project-card p { margin-top: 8px; }
     </style>
 </head>
 <body>
     <main>
         <a class="back-link" href="{% url 'dashboard:projects' %}">&larr; Project Domains</a>
         {% if is_software_engineering %}
-            <a class="folder folder-link" href="{% url 'dashboard:project_download_payment' %}">
+            <a class="folder folder-link" href="{% url 'dashboard:project_detail' domain_slug 'engineeringcollege-project' %}">
                 <span class="folder-icon" aria-hidden="true"></span>
                 <h1>EngineeringCollege Project</h1>
                 <p>Current executable Django hierarchy with a synchronized Modules folder.</p>
@@ -109,13 +126,26 @@
                         <li>{{ module }}</li>
                     {% endfor %}
                 </ul>
-                <span class="download-label">Pay ₹1,000 and Download ZIP</span>
+                <span class="download-label">
+                    Pay INR {{ domain_projects.0.amount_rupees }} and Open ZIP Download
+                </span>
             </a>
         {% else %}
             <section class="folder" aria-label="{{ domain_name }} project folder">
                 <span class="folder-icon" aria-hidden="true"></span>
                 <h1>{{ domain_name }} Projects</h1>
-                <p>This folder is ready for {{ domain_name }} project resources and submissions.</p>
+                {% if domain_projects %}
+                    <div class="project-list">
+                        {% for project in domain_projects %}
+                            <a class="project-card" href="{% url 'dashboard:project_detail' domain_slug project.slug %}">
+                                <h2>{{ project.name }}</h2>
+                                <p>{{ project.description|default:"Open project" }}</p>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>This folder is ready for {{ domain_name }} project resources and submissions.</p>
+                {% endif %}
             </section>
         {% endif %}
     </main>

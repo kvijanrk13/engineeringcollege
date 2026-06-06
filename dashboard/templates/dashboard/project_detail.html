@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.name }} | {{ domain_name }}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: #F7F9FC;
+            color: #172033;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        main {
+            width: min(100%, 760px);
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+        a { color: #1456A0; }
+        article {
+            margin-top: 24px;
+            padding: 28px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #FFFFFF;
+        }
+        h1 { margin-top: 0; }
+        p { color: #526174; line-height: 1.6; }
+        .action {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 11px 18px;
+            border-radius: 6px;
+            background: #1456A0;
+            color: #FFFFFF;
+            font-weight: 700;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <a href="{% url 'dashboard:project_domain' domain_slug %}">&larr; {{ domain_name }} Projects</a>
+        <article>
+            <h1>{{ project.name }}</h1>
+            <p>{{ project.description|default:"Project resources will be published here." }}</p>
+            {% if project.zip_enabled %}
+                <a class="action" href="{% url 'dashboard:project_zip_payment' domain_slug project.slug %}">
+                    Pay INR {{ project.amount_rupees }} and Download ZIP
+                </a>
+            {% endif %}
+        </article>
+    </main>
+</body>
+</html>

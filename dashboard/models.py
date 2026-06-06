@@ -427,6 +427,8 @@ class ProjectDownloadPayment(models.Model):
 
     merchant_order_id = models.CharField(max_length=64, unique=True)
     session_key = models.CharField(max_length=64, db_index=True)
+    domain_slug = models.SlugField(default='software-engineering', max_length=80)
+    project_slug = models.SlugField(default='engineeringcollege-project', max_length=120)
     amount_paise = models.PositiveIntegerField(default=100000)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='CREATED')
     phonepe_order_id = models.CharField(max_length=128, blank=True)

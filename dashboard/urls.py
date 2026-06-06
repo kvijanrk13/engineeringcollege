@@ -55,6 +55,31 @@ urlpatterns = [
         views.phonepe_payment_callback,
         name='phonepe_payment_callback',
     ),
+    path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/download/',
+        views.download_project_zip,
+        name='download_project_zip',
+    ),
+    path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/payment/',
+        views.project_zip_payment,
+        name='project_zip_payment',
+    ),
+    path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/payment/start/',
+        views.initiate_project_zip_payment,
+        name='initiate_project_zip_payment',
+    ),
+    path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/payment/return/<str:merchant_order_id>/',
+        views.project_zip_payment_return,
+        name='project_zip_payment_return',
+    ),
+    path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/',
+        views.project_detail,
+        name='project_detail',
+    ),
     path('projects/<slug:domain_slug>/', views.project_domain, name='project_domain'),
 
     # Authentication routes

@@ -3,6 +3,7 @@ import json
 import hashlib
 import os
 import tempfile
+import zipfile
 from datetime import date
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -11,6 +12,7 @@ from urllib.parse import parse_qs, urlparse
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import DatabaseError
 from django.http import HttpResponse
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -192,6 +194,50 @@ class DashboardTests(TestCase):
         self.assertNotIn('Employee Code:', header)
         self.assertNotIn('Generated:', header)
         self.assertIn('photo-box', header.split('<body>', 1)[1])
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_project_domain_folders_are_available_only_under_projects(self):
+        domain_root = Path(dashboard_views.PROJECT_DOMAIN_ROOT)
+
+        for domain_slug, domain_name in dashboard_views.PROJECT_DOMAINS.items():
+            with self.subTest(domain=domain_slug):
+                self.assertTrue((domain_root / domain_slug / 'projects.json').is_file())
+
+                canonical = reverse('dashboard:project_domain', args=[domain_slug])
+                response = self.client.get(canonical)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, domain_name)
+
+                root_response = self.client.get(f'/{domain_slug}/')
+                self.assertEqual(root_response.status_code, 404)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_registered_project_has_canonical_project_url(self):
+        project_folder = (
+            Path(dashboard_views.PROJECT_DOMAIN_ROOT)
+            / 'software-engineering'
+            / 'engineeringcollege-project'
+        )
+        self.assertTrue(project_folder.is_dir())
+
+        response = self.client.get(
+            reverse(
+                'dashboard:project_detail',
+                args=['software-engineering', 'engineeringcollege-project'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'EngineeringCollege Project')
+        self.assertContains(
+            response,
+            reverse(
+                'dashboard:project_zip_payment',
+                args=['software-engineering', 'engineeringcollege-project'],
+            ),
+        )
+        root_response = self.client.get('/software-engineering/engineeringcollege-project/')
+        self.assertEqual(root_response.status_code, 404)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_students_data_route_renders_directory_actions(self):
@@ -1607,6 +1653,84 @@ class PhonePeProjectDownloadTests(TestCase):
         self.payment.refresh_from_db()
         self.assertEqual(self.payment.download_count, 1)
 
+    @patch('dashboard.views._phonepe_verify_payment', return_value=True)
+    def test_software_engineering_zip_contains_updated_faculty_pdf_header(self, _mock_verify):
+        response = self.client.get(
+            reverse('dashboard:download_engineeringcollege_project'),
+            {'order': self.payment.merchant_order_id},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            paths = (
+                'EngineeringCollege Project/Project Source/dashboard/templates/dashboard/faculty_pdf.html',
+                'EngineeringCollege Project/Modules/User Interface/dashboard/templates/dashboard/faculty_pdf.html',
+            )
+            for path in paths:
+                with self.subTest(path=path):
+                    template = archive.read(path).decode('utf-8')
+                    header = template.split('<!-- 1. PERSONAL INFORMATION -->', 1)[0]
+                    body_header = header.split('<body>', 1)[1]
+
+                    self.assertIn('FACULTY PROFILE REPORT', body_header)
+                    self.assertIn('photo-box', body_header)
+                    self.assertNotIn('ENGINEERING COLLEGE', body_header)
+                    self.assertNotIn('DEPARTMENT OF INFORMATION TECHNOLOGY', body_header)
+                    self.assertNotIn('Employee Code:', body_header)
+                    self.assertNotIn('Generated:', body_header)
+
+            domain_manifest = archive.read(
+                'EngineeringCollege Project/Project Source/'
+                'project_domains/machine-learning/projects.json'
+            ).decode('utf-8')
+            self.assertIn('"projects"', domain_manifest)
+
+    @patch('dashboard.views._phonepe_verify_payment', return_value=True)
+    def test_domain_project_manifest_controls_zip_source_and_amount(self, _mock_verify):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            domain_root = Path(temp_dir)
+            project_folder = domain_root / 'machine-learning' / 'ml-demo'
+            project_folder.mkdir(parents=True)
+            (project_folder / 'model.py').write_text('print("ML demo")\n', encoding='utf-8')
+            (domain_root / 'machine-learning' / 'projects.json').write_text(
+                json.dumps({
+                    'projects': [{
+                        'slug': 'ml-demo',
+                        'name': 'ML Demo',
+                        'description': 'Isolated machine learning project.',
+                        'zip': {
+                            'enabled': True,
+                            'amount_paise': 25000,
+                            'source': 'project-folder',
+                        },
+                    }],
+                }),
+                encoding='utf-8',
+            )
+            payment = ProjectDownloadPayment.objects.create(
+                merchant_order_id='ML-DEMO-ORDER',
+                session_key=self.payment.session_key,
+                domain_slug='machine-learning',
+                project_slug='ml-demo',
+                amount_paise=25000,
+                status='COMPLETED',
+            )
+
+            with patch.object(dashboard_views, 'PROJECT_DOMAIN_ROOT', domain_root):
+                detail_response = self.client.get(
+                    reverse('dashboard:project_detail', args=['machine-learning', 'ml-demo'])
+                )
+                zip_response = self.client.get(
+                    reverse('dashboard:download_project_zip', args=['machine-learning', 'ml-demo']),
+                    {'order': payment.merchant_order_id},
+                )
+
+        self.assertContains(detail_response, 'Pay INR 250 and Download ZIP')
+        self.assertEqual(zip_response.status_code, 200)
+        with zipfile.ZipFile(io.BytesIO(zip_response.content)) as archive:
+            self.assertIn('ML Demo/Project Source/model.py', archive.namelist())
+            self.assertNotIn('ML Demo/Project Source/dashboard/views.py', archive.namelist())
+
     def test_payment_url_qr_is_embedded_png(self):
         qr_data_uri = dashboard_views._payment_url_qr_data_uri(
             'https://mercury.phonepe.com/transact/checkout-test'
@@ -1636,6 +1760,24 @@ class PhonePeProjectDownloadTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn(reverse('dashboard:project_download_payment'), response['Location'])
         self.assertIn('order=', response['Location'])
+
+    def test_direct_start_url_get_returns_to_payment_page(self):
+        response = self.client.get(reverse('dashboard:initiate_project_download_payment'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], reverse('dashboard:project_download_payment'))
+
+    @patch('dashboard.views.ProjectDownloadPayment.objects.create')
+    def test_order_creation_database_error_returns_to_payment_page(self, mock_create):
+        mock_create.side_effect = DatabaseError('missing payment table')
+        with patch.dict(os.environ, {
+            'PHONEPE_CLIENT_ID': 'test-client',
+            'PHONEPE_CLIENT_SECRET': 'test-secret',
+        }):
+            response = self.client.post(reverse('dashboard:initiate_project_download_payment'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], reverse('dashboard:project_download_payment'))
 
     @patch('dashboard.views._phonepe_verify_payment', return_value=False)
     def test_pending_payment_page_displays_hosted_checkout_qr(self, _mock_verify):
