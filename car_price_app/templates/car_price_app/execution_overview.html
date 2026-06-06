@@ -3,9 +3,9 @@
 {% block content %}
   <h1>GitHub Project Execution Pages</h1>
   <section>
-    <p>These pages follow the reference GitHub project style: load the Kaggle car dataset, preprocess it, compare machine learning models, save a model, and execute prediction.</p>
+    <p>These pages show how the depreciation prediction flow works: load the car dataset, preprocess it, compare models, save the prediction model, and run the final car price estimate.</p>
     {% if not registered %}
-      <p><a href="{% url 'registration' %}">Complete registration</a> before recording student execution details.</p>
+      <p><a href="{% url 'registration' %}">Complete registration</a> before continuing to the depreciation prediction steps.</p>
     {% endif %}
   </section>
 
