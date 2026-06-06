@@ -3957,6 +3957,173 @@ def _run_car_apriori_execution(project):
     }
 
 
+def _car_price_github_execution_templates():
+    """Execution templates based on the reference GitHub/Colab/Streamlit workflow."""
+    return {
+        'reference_title': 'SECOND-HAND-CAR-PRICE-PREDICTION-USING-MACHINE-LEARNING',
+        'reference_url': 'https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning',
+        'overview': (
+            'These templates reproduce the reference project flow first: load the Kaggle '
+            'car_data.csv file, explore the data, encode categorical fields, compare '
+            'regression models, save a pickle model, and execute a prediction screen.'
+        ),
+        'steps': [
+            {
+                'title': '1. Dataset Loading Template',
+                'purpose': 'Load the Kaggle Cardekho car dataset used by the reference project.',
+                'code': (
+                    "import pandas as pd\n\n"
+                    "car_data = pd.read_csv('car_data.csv')\n"
+                    "print(car_data.head())\n"
+                    "print(car_data.info())\n"
+                    "print(car_data.isnull().sum())\n"
+                    "print(car_data.describe())"
+                ),
+            },
+            {
+                'title': '2. Exploratory Data Analysis Template',
+                'purpose': 'Visualize fuel type, seller type, transmission, and numeric correlations.',
+                'code': (
+                    "import matplotlib.pyplot as plt\n"
+                    "import seaborn as sns\n\n"
+                    "fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)\n"
+                    "sns.barplot(x='Fuel_Type', y='Selling_Price', data=car_data, ax=axes[0])\n"
+                    "sns.barplot(x='Seller_Type', y='Selling_Price', data=car_data, ax=axes[1])\n"
+                    "sns.barplot(x='Transmission', y='Selling_Price', data=car_data, ax=axes[2])\n\n"
+                    "numeric_columns = car_data.select_dtypes(include=['float64', 'int64']).columns\n"
+                    "sns.heatmap(car_data[numeric_columns].corr(), annot=True)\n"
+                    "plt.title('Correlation between the columns')\n"
+                    "plt.show()"
+                ),
+            },
+            {
+                'title': '3. Preprocessing Template',
+                'purpose': 'Convert categorical values into numeric features before model training.',
+                'code': (
+                    "car_data.replace({'Fuel_Type': {'Petrol': 0, 'Diesel': 1, 'CNG': 2}}, inplace=True)\n"
+                    "car_data = pd.get_dummies(\n"
+                    "    car_data,\n"
+                    "    columns=['Seller_Type', 'Transmission'],\n"
+                    "    drop_first=True,\n"
+                    ")\n\n"
+                    "X = car_data.drop(['Car_Name', 'Selling_Price'], axis=1)\n"
+                    "y = car_data['Selling_Price']"
+                ),
+            },
+            {
+                'title': '4. Train/Test Split and Scaling Template',
+                'purpose': 'Prepare separate training and testing data like the GitHub notebook.',
+                'code': (
+                    "from sklearn.model_selection import train_test_split\n"
+                    "from sklearn.preprocessing import StandardScaler\n\n"
+                    "X_train, X_test, y_train, y_test = train_test_split(\n"
+                    "    X,\n"
+                    "    y,\n"
+                    "    test_size=0.3,\n"
+                    "    random_state=42,\n"
+                    ")\n\n"
+                    "scaler = StandardScaler()\n"
+                    "X_train = scaler.fit_transform(X_train)\n"
+                    "X_test = scaler.transform(X_test)"
+                ),
+            },
+            {
+                'title': '5. Model Comparison Template',
+                'purpose': 'Train and compare the algorithms used in the reference project.',
+                'code': (
+                    "from sklearn.linear_model import LinearRegression, Lasso, Ridge\n"
+                    "from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor\n"
+                    "from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score\n"
+                    "import pandas as pd\n\n"
+                    "models = {\n"
+                    "    'Linear Regression': LinearRegression(),\n"
+                    "    'Lasso Regression': Lasso(alpha=1.0),\n"
+                    "    'Ridge Regression': Ridge(alpha=1.0),\n"
+                    "    'Random Forest Regression': RandomForestRegressor(n_estimators=100, random_state=42),\n"
+                    "    'Gradient Boosting Regression': GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, random_state=42),\n"
+                    "}\n\n"
+                    "results = []\n"
+                    "for name, model in models.items():\n"
+                    "    model.fit(X_train, y_train)\n"
+                    "    predictions = model.predict(X_test)\n"
+                    "    results.append({\n"
+                    "        'Model': name,\n"
+                    "        'MAE': mean_absolute_error(y_test, predictions),\n"
+                    "        'MSE': mean_squared_error(y_test, predictions),\n"
+                    "        'R2 Score': r2_score(y_test, predictions),\n"
+                    "    })\n\n"
+                    "results_df = pd.DataFrame(results)\n"
+                    "print(results_df)"
+                ),
+            },
+            {
+                'title': '6. Cross Validation Template',
+                'purpose': 'Check whether the model performs consistently across folds.',
+                'code': (
+                    "from sklearn.model_selection import cross_val_score\n"
+                    "import numpy as np\n\n"
+                    "for name, model in models.items():\n"
+                    "    scores = cross_val_score(model, X, y, cv=5, scoring='r2')\n"
+                    "    print(name, 'Average R2:', np.mean(scores))"
+                ),
+            },
+            {
+                'title': '7. Save Model Template',
+                'purpose': 'Store the trained model as model.pkl for prediction/deployment.',
+                'code': (
+                    "import pickle\n\n"
+                    "final_model = LinearRegression()\n"
+                    "final_model.fit(X_train, y_train)\n\n"
+                    "with open('model.pkl', 'wb') as file:\n"
+                    "    pickle.dump(final_model, file)"
+                ),
+            },
+            {
+                'title': '8. Streamlit Prediction Template',
+                'purpose': 'Create the prediction input screen used by the GitHub project.',
+                'code': (
+                    "import pickle\n"
+                    "import pandas as pd\n"
+                    "import streamlit as st\n\n"
+                    "with open('model.pkl', 'rb') as file:\n"
+                    "    model = pickle.load(file)\n\n"
+                    "st.title('Car Price Prediction')\n"
+                    "present_price = st.number_input('Present Price in lakhs', min_value=0.0)\n"
+                    "kms_driven = st.number_input('Kms Driven', min_value=0)\n"
+                    "fuel_type = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG'])\n"
+                    "seller_type = st.selectbox('Seller Type', ['Dealer', 'Individual'])\n"
+                    "transmission = st.selectbox('Transmission', ['Manual', 'Automatic'])\n"
+                    "owner = st.selectbox('Owner', [0, 1, 2, 3])\n"
+                    "year = st.number_input('Year', min_value=1900, max_value=2026, step=1)\n\n"
+                    "if st.button('Predict'):\n"
+                    "    input_data = pd.DataFrame({\n"
+                    "        'Present_Price': [present_price],\n"
+                    "        'Kms_Driven': [kms_driven],\n"
+                    "        'Fuel_Type': [0 if fuel_type == 'Petrol' else 1 if fuel_type == 'Diesel' else 2],\n"
+                    "        'Owner': [owner],\n"
+                    "        'Year': [year],\n"
+                    "        'Seller_Type_Individual': [1 if seller_type == 'Individual' else 0],\n"
+                    "        'Transmission_Manual': [1 if transmission == 'Manual' else 0],\n"
+                    "    })\n"
+                    "    prediction = model.predict(input_data)[0]\n"
+                    "    st.success(f'Predicted Selling Price: INR {prediction * 100000:.2f}')"
+                ),
+            },
+        ],
+        'commands': [
+            'python -m venv .venv',
+            '.\\.venv\\Scripts\\python.exe -m pip install pandas scikit-learn matplotlib seaborn streamlit',
+            '.\\.venv\\Scripts\\python.exe model.py',
+            '.\\.venv\\Scripts\\streamlit.exe run app.py',
+        ],
+        'engineeringcollege_note': (
+            'In the EngineeringCollege version, these GitHub templates are kept as the baseline. '
+            'Future modifications can replace the final model with the best-performing model, add '
+            'depreciation prediction, and connect Apriori rules for Data Mining interpretation.'
+        ),
+    }
+
+
 def _build_project_zip(domain_slug, project):
     """Build a project ZIP from either the repository or its domain-owned folder."""
     archive_buffer = io.BytesIO()
@@ -4224,6 +4391,7 @@ def data_mining_project_detail_by_title(request, project_title):
         'domain_slug': 'data-mining',
         'project': project,
         'execution': _run_car_apriori_execution(project),
+        'github_execution_templates': _car_price_github_execution_templates(),
         'is_engineeringcollege_project': False,
         'project_modules': [name for name, _ in PROJECT_MODULES],
     })

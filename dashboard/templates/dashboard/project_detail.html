@@ -107,6 +107,40 @@
             background: #EAF1F8;
             color: #172033;
         }
+        .template-card {
+            margin-top: 16px;
+            padding: 16px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #FFFFFF;
+        }
+        .template-card p {
+            margin: 0 0 12px;
+        }
+        pre {
+            overflow-x: auto;
+            margin: 0;
+            padding: 14px;
+            border-radius: 6px;
+            background: #111827;
+            color: #F8FAFC;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        code {
+            font-family: Consolas, Monaco, "Courier New", monospace;
+        }
+        .command-list {
+            margin: 12px 0 0;
+            padding-left: 22px;
+            color: #526174;
+            line-height: 1.7;
+        }
+        .reference-note {
+            padding: 14px;
+            border-left: 4px solid #1456A0;
+            background: #F7F9FC;
+        }
     </style>
 </head>
 <body>
@@ -204,6 +238,35 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                </section>
+            {% endif %}
+            {% if github_execution_templates %}
+                <section class="execution" aria-label="GitHub project execution templates">
+                    <h2>GitHub Project Execution Templates</h2>
+                    <p>
+                        These are the baseline execution templates from
+                        <a href="{{ github_execution_templates.reference_url }}" target="_blank" rel="noopener">
+                            {{ github_execution_templates.reference_title }}
+                        </a>.
+                    </p>
+                    <p>{{ github_execution_templates.overview }}</p>
+
+                    {% for template in github_execution_templates.steps %}
+                        <div class="template-card">
+                            <h3>{{ template.title }}</h3>
+                            <p>{{ template.purpose }}</p>
+                            <pre><code>{{ template.code }}</code></pre>
+                        </div>
+                    {% endfor %}
+
+                    <h3>Execution Commands</h3>
+                    <ol class="command-list">
+                        {% for command in github_execution_templates.commands %}
+                            <li><code>{{ command }}</code></li>
+                        {% endfor %}
+                    </ol>
+
+                    <p class="reference-note">{{ github_execution_templates.engineeringcollege_note }}</p>
                 </section>
             {% endif %}
         </article>
