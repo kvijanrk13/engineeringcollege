@@ -17,7 +17,7 @@ from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
 import qrcode
-from urllib.parse import quote, urlencode, urlparse
+from urllib.parse import quote, urlencode, unquote, urlparse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (FileResponse, HttpResponse, JsonResponse, HttpResponseRedirect,
                          HttpResponseBadRequest, Http404)
@@ -3684,6 +3684,7 @@ def _load_domain_projects(domain_slug):
         projects.append({
             'slug': slug,
             'name': name,
+            'title_path': str(project.get('title_path') or '').strip(),
             'description': str(project.get('description') or '').strip(),
             'source_code_path': str(project.get('source_code_path') or '').strip(),
             'datasets_path': str(project.get('datasets_path') or '').strip(),
@@ -3704,6 +3705,20 @@ def _get_domain_project(domain_slug, project_slug, require_paid_zip=False):
         None,
     )
     if not project or (require_paid_zip and not project['zip_enabled']):
+        raise Http404("Project not found")
+    return project
+
+
+def _get_data_mining_project_by_title(project_title):
+    normalized_title = unquote(str(project_title or '')).strip().strip('/')
+    project = next(
+        (
+            item for item in _load_domain_projects('data-mining')
+            if item.get('title_path') == normalized_title or item['name'] == normalized_title
+        ),
+        None,
+    )
+    if not project:
         raise Http404("Project not found")
     return project
 
@@ -3746,13 +3761,13 @@ def _build_source_code_zip(domain_slug, project):
         raise Http404('Source code folder not found.')
 
     archive_buffer = io.BytesIO()
-    archive_root = project['slug']
+    archive_root = project.get('title_path') or project['slug']
     with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.writestr(
             f'{archive_root}/README.txt',
             f"{project['name']}\n\n"
             "This archive contains the project source code and available datasets.\n"
-            "Open Source Code/second-hand-car-price-depreciation/README.md for setup steps.\n",
+            "Open Source Code/README.md for setup steps.\n",
         )
         for path, archive_name in _iter_archive_files(source_root, f'{archive_root}/Source Code'):
             archive.write(path, archive_name)
@@ -3770,6 +3785,15 @@ def download_project_source_code(request, domain_slug, project_slug):
         raise Http404('Source code download not available.')
     response = HttpResponse(_build_source_code_zip(domain_slug, project), content_type='application/zip')
     response['Content-Disposition'] = f'attachment; filename="{project_slug}-source-code.zip"'
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
+def download_data_mining_project_source_code_by_title(request, project_title):
+    project = _get_data_mining_project_by_title(project_title)
+    response = HttpResponse(_build_source_code_zip('data-mining', project), content_type='application/zip')
+    filename = project.get('title_path') or project['slug']
+    response['Content-Disposition'] = f'attachment; filename="{filename}-source-code.zip"'
     response['Cache-Control'] = 'no-store'
     return response
 
@@ -4029,6 +4053,18 @@ def project_detail(request, domain_slug, project_slug):
             domain_slug == 'software-engineering'
             and project_slug == 'engineeringcollege-project'
         ),
+        'project_modules': [name for name, _ in PROJECT_MODULES],
+    })
+
+
+def data_mining_project_detail_by_title(request, project_title):
+    """Display a Data Mining project using its human-readable title URL."""
+    project = _get_data_mining_project_by_title(project_title)
+    return render(request, 'dashboard/project_detail.html', {
+        'domain_name': PROJECT_DOMAINS['data-mining'],
+        'domain_slug': 'data-mining',
+        'project': project,
+        'is_engineeringcollege_project': False,
         'project_modules': [name for name, _ in PROJECT_MODULES],
     })
 

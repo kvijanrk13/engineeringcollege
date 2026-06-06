@@ -79,7 +79,11 @@
                 </dl>
             {% endif %}
             {% if project.source_code_path %}
-                <a class="action" href="{% url 'dashboard:download_project_source_code' domain_slug project.slug %}">
+                {% if domain_slug == 'data-mining' and project.title_path %}
+                    <a class="action" href="{% url 'dashboard:download_data_mining_project_source_code_by_title' project.title_path %}">
+                {% else %}
+                    <a class="action" href="{% url 'dashboard:download_project_source_code' domain_slug project.slug %}">
+                {% endif %}
                     Download Source Code ZIP
                 </a>
             {% endif %}

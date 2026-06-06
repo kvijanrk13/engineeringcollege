@@ -137,7 +137,11 @@
                 {% if domain_projects %}
                     <div class="project-list">
                         {% for project in domain_projects %}
-                            <a class="project-card" href="{% url 'dashboard:project_detail' domain_slug project.slug %}">
+                            {% if domain_slug == 'data-mining' and project.title_path %}
+                                <a class="project-card" href="{% url 'dashboard:data_mining_project_detail_by_title' project.title_path %}">
+                            {% else %}
+                                <a class="project-card" href="{% url 'dashboard:project_detail' domain_slug project.slug %}">
+                            {% endif %}
                                 <h2>{{ project.name }}</h2>
                                 <p>{{ project.description|default:"Open project" }}</p>
                             </a>

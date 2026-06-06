@@ -81,6 +81,16 @@ urlpatterns = [
         name='download_project_source_code',
     ),
     path(
+        'projects/data-mining/<path:project_title>/source-code/download/',
+        views.download_data_mining_project_source_code_by_title,
+        name='download_data_mining_project_source_code_by_title',
+    ),
+    path(
+        'projects/data-mining/<path:project_title>/',
+        views.data_mining_project_detail_by_title,
+        name='data_mining_project_detail_by_title',
+    ),
+    path(
         'projects/<slug:domain_slug>/<slug:project_slug>/',
         views.project_detail,
         name='project_detail',

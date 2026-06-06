@@ -2,14 +2,14 @@
 
 This is a portable starter project for students to train machine learning models from the Kaggle car datasets stored in:
 
-`../../datasets/`
+`../datasets/`
 
 The default workflow trains a depreciation-focused model from the Cardekho `car data.csv` file because it contains both `Present_Price` and `Selling_Price`. Other datasets can be selected for ordinary used-car price prediction.
 
 ## Setup
 
 ```powershell
-cd "project_domains\data-mining\Source Code\second-hand-car-price-depreciation"
+cd "project_domains\data-mining\Predicting Second Hand Cars Price using Machine Learning Algorithms\Source Code"
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
@@ -17,7 +17,7 @@ python -m venv .venv
 On macOS/Linux:
 
 ```bash
-cd "project_domains/data-mining/Source Code/second-hand-car-price-depreciation"
+cd "project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/Source Code"
 python3 -m venv .venv
 ./.venv/bin/python -m pip install -r requirements.txt
 ```

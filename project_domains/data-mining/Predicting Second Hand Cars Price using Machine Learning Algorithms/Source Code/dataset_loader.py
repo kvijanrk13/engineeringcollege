@@ -8,7 +8,7 @@ import pandas as pd
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
-DATASETS_DIR = PROJECT_DIR.parents[1] / "datasets"
+DATASETS_DIR = PROJECT_DIR.parent / "datasets"
 
 
 DATASET_FILES = {

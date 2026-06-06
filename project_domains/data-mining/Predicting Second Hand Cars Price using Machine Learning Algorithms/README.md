@@ -12,7 +12,7 @@ This local folder is a project workspace for adapting the idea with the collecte
 
 The runnable starter source code is stored in:
 
-`../Source Code/second-hand-car-price-depreciation/`
+`Source Code/`
 
 ## Project Objective
 
