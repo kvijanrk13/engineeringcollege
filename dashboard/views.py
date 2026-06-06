@@ -3781,6 +3781,8 @@ def _build_source_code_zip(domain_slug, project):
 
 def download_project_source_code(request, domain_slug, project_slug):
     project = _get_domain_project(domain_slug, project_slug)
+    if project.get('zip_enabled'):
+        return redirect('dashboard:project_zip_payment', domain_slug, project_slug)
     if not project.get('source_code_path'):
         raise Http404('Source code download not available.')
     response = HttpResponse(_build_source_code_zip(domain_slug, project), content_type='application/zip')
@@ -3791,6 +3793,8 @@ def download_project_source_code(request, domain_slug, project_slug):
 
 def download_data_mining_project_source_code_by_title(request, project_title):
     project = _get_data_mining_project_by_title(project_title)
+    if project.get('zip_enabled'):
+        return redirect('dashboard:project_zip_payment', 'data-mining', project['slug'])
     response = HttpResponse(_build_source_code_zip('data-mining', project), content_type='application/zip')
     filename = project.get('title_path') or project['slug']
     response['Content-Disposition'] = f'attachment; filename="{filename}-source-code.zip"'
@@ -4131,7 +4135,8 @@ def _build_project_zip(domain_slug, project):
     if project['zip_source'] == 'repository':
         source_files = list(_iter_engineeringcollege_source_files())
     else:
-        project_root = PROJECT_DOMAIN_ROOT / domain_slug / project['slug']
+        project_folder_name = project.get('title_path') or project['slug']
+        project_root = PROJECT_DOMAIN_ROOT / domain_slug / project_folder_name
         source_files = [
             (path, path.relative_to(project_root).as_posix())
             for path in project_root.rglob('*')

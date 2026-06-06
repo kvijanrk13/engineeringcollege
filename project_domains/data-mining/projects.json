@@ -7,7 +7,12 @@
       "description": "Machine learning and data mining project workspace for predicting used-car prices and studying depreciation from make, model, year, mileage, fuel type, transmission, engine, seller, ownership, and condition data.",
       "source_code_path": "project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/Source Code/",
       "datasets_path": "project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/datasets/",
-      "github_reference": "https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning"
+      "github_reference": "https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning",
+      "zip": {
+        "enabled": true,
+        "amount_paise": 100000,
+        "source": "project-folder"
+      }
     }
   ]
 }
