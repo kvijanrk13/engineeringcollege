@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block page_title %}{{ title }}{% endblock %}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #162033;
+      background: #f5f7fb;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid #d7dfeb;
+    }
+    nav {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 14px 18px;
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    nav strong {
+      margin-right: auto;
+    }
+    nav a {
+      color: #125c8f;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 18px;
+    }
+    h2 {
+      font-size: 21px;
+      margin: 0 0 14px;
+    }
+    h3 {
+      font-size: 17px;
+      margin: 0 0 8px;
+    }
+    p {
+      color: #526174;
+      line-height: 1.6;
+    }
+    section, .panel {
+      background: #fff;
+      border: 1px solid #d7dfeb;
+      border-radius: 8px;
+      margin-top: 16px;
+      padding: 18px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #162033;
+      font-weight: 700;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #b9c5d6;
+      border-radius: 6px;
+      background: #fff;
+      font-size: 15px;
+    }
+    button, .button {
+      display: inline-block;
+      width: auto;
+      border: 0;
+      background: #125c8f;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 700;
+      padding: 10px 14px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+    }
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .step-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .step-card {
+      min-height: 150px;
+      border: 1px solid #d7dfeb;
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+    }
+    .step-card a {
+      color: #125c8f;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    pre {
+      overflow-x: auto;
+      margin: 0;
+      padding: 14px;
+      border-radius: 6px;
+      background: #111827;
+      color: #f8fafc;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    code {
+      font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      border: 1px solid #d7dfeb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-top: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid #e4e9f1;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+    }
+    .errorlist {
+      margin: 6px 0 0;
+      padding-left: 18px;
+      color: #a11818;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav>
+      <strong>{{ title }}</strong>
+      <a href="{% url 'registration' %}">Registration</a>
+      <a href="{% url 'execution-overview' %}">GitHub Execution Pages</a>
+      <a href="{% url 'apriori-execution' %}">Apriori Execution</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

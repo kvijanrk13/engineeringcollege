@@ -1,0 +1,26 @@
+{% extends "car_price_app/base.html" %}
+
+{% block content %}
+  <h1>GitHub Project Execution Pages</h1>
+  <section>
+    <p>These pages follow the reference GitHub project style: load the Kaggle car dataset, preprocess it, compare machine learning models, save a model, and execute prediction.</p>
+    {% if not registered %}
+      <p><a href="{% url 'registration' %}">Complete registration</a> before recording student execution details.</p>
+    {% endif %}
+  </section>
+
+  <div class="step-grid">
+    {% for step in steps %}
+      <article class="step-card">
+        <h3>{{ forloop.counter }}. {{ step.title }}</h3>
+        <p>{{ step.purpose }}</p>
+        <a href="{% url 'execution-step' step.slug %}">Open execution page</a>
+      </article>
+    {% endfor %}
+    <article class="step-card">
+      <h3>Apriori Data Mining Execution</h3>
+      <p>Run association-rule mining on price and depreciation bands for the car dataset.</p>
+      <a href="{% url 'apriori-execution' %}">Open Apriori page</a>
+    </article>
+  </div>
+{% endblock %}

@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
 
     'dashboard',
+    'car_price_app',
 ]
 
 # ================================
