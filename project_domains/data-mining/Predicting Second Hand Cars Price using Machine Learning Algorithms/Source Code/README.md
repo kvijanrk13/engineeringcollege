@@ -46,7 +46,21 @@ Open:
 
 `http://127.0.0.1:8000/`
 
-The page executes the Apriori Algorithm on the selected car dataset and displays association rules for price and depreciation patterns.
+The first page is student registration. After registration, the app opens the GitHub-style execution pages:
+
+- dataset loading
+- exploratory data analysis
+- preprocessing
+- train/test split and scaling
+- model comparison
+- cross validation
+- model saving
+- prediction page
+- Apriori Data Mining execution
+
+The Apriori page is also available directly at:
+
+`http://127.0.0.1:8000/apriori/`
 
 ## Train
 
@@ -87,5 +101,5 @@ The model and metrics are written to `artifacts/`.
 - `predict_price.py`: loads the trained model and predicts a price from command-line inputs
 - `manage.py`: runs the local Django execution page
 - `car_price_project/`: local Django settings and URL configuration
-- `car_price_app/`: local Django app that renders the Apriori execution output
+- `car_price_app/`: local Django app that renders registration, GitHub execution pages, and Apriori execution output
 - `requirements.txt`: minimal Python packages needed on a student laptop

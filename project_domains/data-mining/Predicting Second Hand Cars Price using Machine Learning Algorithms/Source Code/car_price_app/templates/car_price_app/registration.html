@@ -1,0 +1,23 @@
+{% extends "car_price_app/base.html" %}
+
+{% block content %}
+  <h1>Student Registration</h1>
+  <section>
+    <p>Register first to start the local execution flow for the second-hand car price prediction project.</p>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        {% for field in form %}
+          <div>
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="actions">
+        <button type="submit">Continue to Execution Pages</button>
+      </div>
+    </form>
+  </section>
+{% endblock %}
