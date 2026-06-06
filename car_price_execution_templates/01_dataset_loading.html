@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 1: Dataset Loading - Car Price Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fb;
+      color: #162033;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      border-bottom: 2px solid #125c8f;
+      padding-bottom: 10px;
+      color: #125c8f;
+    }
+    .purpose {
+      background-color: #eef3f8;
+      padding: 15px;
+      border-left: 4px solid #125c8f;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border: 1px solid #d7dfeb;
+      border-radius: 6px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .button {
+      display: inline-block;
+      background-color: #125c8f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-right: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .button:hover {
+      background-color: #0d3a52;
+    }
+    .modification-guide {
+      background-color: #fffbea;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 1: Dataset Loading</h1>
+    
+    <div class="purpose">
+      <strong>Purpose:</strong> Load the Kaggle Cardekho car_data.csv file and inspect the first records.
+    </div>
+
+    <h2>Code</h2>
+    <div class="code-block">
+import pandas as pd
+
+car_data = pd.read_csv('car_data.csv')
+print(car_data.head())
+print(car_data.info())
+print(car_data.isnull().sum())
+print(car_data.describe())
+    </div>
+
+    <div class="modification-guide">
+      <strong>📝 Modification Guide:</strong>
+      <ul>
+        <li>Change dataset file path: Replace 'car_data.csv' with your dataset path</li>
+        <li>Add filtering: Apply filters like car_data[car_data['Selling_Price'] > 5] after loading</li>
+        <li>Add column transformations: Normalize data types or rename columns</li>
+        <li>Export summary: Add car_data.to_csv('summary.csv') to save results</li>
+      </ul>
+    </div>
+
+    <h2>Expected Output</h2>
+    <ul>
+      <li>First 5 rows of the dataset</li>
+      <li>Data types of each column</li>
+      <li>Count of null values per column</li>
+      <li>Statistical summary (mean, std, min, max, etc.)</li>
+    </ul>
+
+    <button class="button">Back to Execution Pages</button>
+    <button class="button">Next Step: EDA</button>
+  </div>
+</body>
+</html>

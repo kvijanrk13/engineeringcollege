@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 4: Train/Test Split & Scaling - Car Price Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fb;
+      color: #162033;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      border-bottom: 2px solid #125c8f;
+      padding-bottom: 10px;
+      color: #125c8f;
+    }
+    .purpose {
+      background-color: #eef3f8;
+      padding: 15px;
+      border-left: 4px solid #125c8f;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border: 1px solid #d7dfeb;
+      border-radius: 6px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .button {
+      display: inline-block;
+      background-color: #125c8f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-right: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .button:hover {
+      background-color: #0d3a52;
+    }
+    .modification-guide {
+      background-color: #fffbea;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 4: Train/Test Split & Scaling</h1>
+    
+    <div class="purpose">
+      <strong>Purpose:</strong> Prepare train/test data and scale numeric features before model training.
+    </div>
+
+    <h2>Code</h2>
+    <div class="code-block">
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.3,
+    random_state=42,
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+    </div>
+
+    <div class="modification-guide">
+      <strong>📝 Modification Guide:</strong>
+      <ul>
+        <li>Change train/test ratio: Modify test_size (0.2 for 80/20 split, 0.25 for 75/25, etc.)</li>
+        <li>Use different scaler: Replace StandardScaler with MinMaxScaler or RobustScaler</li>
+        <li>K-Fold Cross-Validation: Use KFold instead of simple train/test split</li>
+        <li>Stratified split: Add stratify=y for classification tasks</li>
+        <li>Save scaler: Add pickle.dump(scaler, open('scaler.pkl', 'wb'))</li>
+        <li>Verify shapes: Add print statements: print(X_train.shape, X_test.shape)</li>
+      </ul>
+    </div>
+
+    <h2>Expected Output</h2>
+    <ul>
+      <li>X_train and X_test: Feature matrices (scaled to mean=0, std=1)</li>
+      <li>y_train and y_test: Target vectors</li>
+      <li>Training set size: ~70% of original data</li>
+      <li>Test set size: ~30% of original data</li>
+      <li>All features normalized to comparable scales</li>
+    </ul>
+
+    <button class="button">Back to Execution Pages</button>
+    <button class="button">Next Step: Model Comparison</button>
+  </div>
+</body>
+</html>
