@@ -4,6 +4,8 @@ This is a portable starter project for students to train machine learning models
 
 `../datasets/`
 
+This `Source Code` folder is also a complete local Django project. After extracting the ZIP file, students can run Django migrations and execute the Apriori data mining page locally.
+
 The default workflow trains a depreciation-focused model from the Cardekho `car data.csv` file because it contains both `Present_Price` and `Selling_Price`. Other datasets can be selected for ordinary used-car price prediction.
 
 ## Setup
@@ -21,6 +23,30 @@ cd "project_domains/data-mining/Predicting Second Hand Cars Price using Machine 
 python3 -m venv .venv
 ./.venv/bin/python -m pip install -r requirements.txt
 ```
+
+## Run the Django Execution Page
+
+Windows:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py makemigrations
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver
+```
+
+macOS/Linux:
+
+```bash
+./.venv/bin/python manage.py makemigrations
+./.venv/bin/python manage.py migrate
+./.venv/bin/python manage.py runserver
+```
+
+Open:
+
+`http://127.0.0.1:8000/`
+
+The page executes the Apriori Algorithm on the selected car dataset and displays association rules for price and depreciation patterns.
 
 ## Train
 
@@ -59,4 +85,7 @@ The model and metrics are written to `artifacts/`.
 - `train_model.py`: trains a regression model and stores artifacts
 - `apriori_analysis.py`: runs association-rule mining for price/depreciation bands
 - `predict_price.py`: loads the trained model and predicts a price from command-line inputs
+- `manage.py`: runs the local Django execution page
+- `car_price_project/`: local Django settings and URL configuration
+- `car_price_app/`: local Django app that renders the Apriori execution output
 - `requirements.txt`: minimal Python packages needed on a student laptop
