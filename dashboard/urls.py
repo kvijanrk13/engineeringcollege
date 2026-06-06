@@ -76,6 +76,11 @@ urlpatterns = [
         name='project_zip_payment_return',
     ),
     path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/source-code/download/',
+        views.download_project_source_code,
+        name='download_project_source_code',
+    ),
+    path(
         'projects/<slug:domain_slug>/<slug:project_slug>/',
         views.project_detail,
         name='project_detail',

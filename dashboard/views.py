@@ -3685,6 +3685,9 @@ def _load_domain_projects(domain_slug):
             'slug': slug,
             'name': name,
             'description': str(project.get('description') or '').strip(),
+            'source_code_path': str(project.get('source_code_path') or '').strip(),
+            'datasets_path': str(project.get('datasets_path') or '').strip(),
+            'github_reference': str(project.get('github_reference') or '').strip(),
             'zip_enabled': zip_enabled and amount_paise > 0,
             'amount_paise': amount_paise,
             'amount_rupees': amount_paise // 100,
@@ -3710,6 +3713,65 @@ def _project_zip_price(domain_slug, project_slug):
         return _get_domain_project(domain_slug, project_slug, require_paid_zip=True)['amount_paise']
     except Http404:
         return -1
+
+
+def _safe_project_domain_path(domain_slug, relative_path):
+    """Resolve a manifest path and require it to stay inside its domain folder."""
+    if not relative_path:
+        return None
+    domain_root = (PROJECT_DOMAIN_ROOT / domain_slug).resolve()
+    candidate = (Path(settings.BASE_DIR) / relative_path).resolve()
+    try:
+        candidate.relative_to(domain_root)
+    except ValueError:
+        return None
+    return candidate
+
+
+def _iter_archive_files(root, archive_prefix):
+    excluded_parts = {'.venv', '__pycache__', 'artifacts'}
+    for path in root.rglob('*'):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root)
+        if any(part in excluded_parts for part in relative.parts):
+            continue
+        yield path, f"{archive_prefix}/{relative.as_posix()}"
+
+
+def _build_source_code_zip(domain_slug, project):
+    source_root = _safe_project_domain_path(domain_slug, project.get('source_code_path', ''))
+    datasets_root = _safe_project_domain_path(domain_slug, project.get('datasets_path', ''))
+    if not source_root or not source_root.is_dir():
+        raise Http404('Source code folder not found.')
+
+    archive_buffer = io.BytesIO()
+    archive_root = project['slug']
+    with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(
+            f'{archive_root}/README.txt',
+            f"{project['name']}\n\n"
+            "This archive contains the project source code and available datasets.\n"
+            "Open Source Code/second-hand-car-price-depreciation/README.md for setup steps.\n",
+        )
+        for path, archive_name in _iter_archive_files(source_root, f'{archive_root}/Source Code'):
+            archive.write(path, archive_name)
+        if datasets_root and datasets_root.is_dir():
+            for path, archive_name in _iter_archive_files(datasets_root, f'{archive_root}/datasets'):
+                archive.write(path, archive_name)
+
+    archive_buffer.seek(0)
+    return archive_buffer.getvalue()
+
+
+def download_project_source_code(request, domain_slug, project_slug):
+    project = _get_domain_project(domain_slug, project_slug)
+    if not project.get('source_code_path'):
+        raise Http404('Source code download not available.')
+    response = HttpResponse(_build_source_code_zip(domain_slug, project), content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{project_slug}-source-code.zip"'
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 def _build_project_zip(domain_slug, project):

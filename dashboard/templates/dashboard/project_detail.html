@@ -27,9 +27,26 @@
         }
         h1 { margin-top: 0; }
         p { color: #526174; line-height: 1.6; }
+        dl {
+            display: grid;
+            grid-template-columns: 140px minmax(0, 1fr);
+            gap: 10px 14px;
+            margin: 22px 0 0;
+            color: #526174;
+            line-height: 1.5;
+        }
+        dt {
+            color: #172033;
+            font-weight: 700;
+        }
+        dd {
+            margin: 0;
+            overflow-wrap: anywhere;
+        }
         .action {
             display: inline-block;
             margin-top: 18px;
+            margin-right: 10px;
             padding: 11px 18px;
             border-radius: 6px;
             background: #1456A0;
@@ -45,6 +62,27 @@
         <article>
             <h1>{{ project.name }}</h1>
             <p>{{ project.description|default:"Project resources will be published here." }}</p>
+            {% if project.source_code_path or project.datasets_path or project.github_reference %}
+                <dl>
+                    {% if project.source_code_path %}
+                        <dt>Source Code</dt>
+                        <dd>{{ project.source_code_path }}</dd>
+                    {% endif %}
+                    {% if project.datasets_path %}
+                        <dt>Datasets</dt>
+                        <dd>{{ project.datasets_path }}</dd>
+                    {% endif %}
+                    {% if project.github_reference %}
+                        <dt>Reference</dt>
+                        <dd><a href="{{ project.github_reference }}" target="_blank" rel="noopener">{{ project.github_reference }}</a></dd>
+                    {% endif %}
+                </dl>
+            {% endif %}
+            {% if project.source_code_path %}
+                <a class="action" href="{% url 'dashboard:download_project_source_code' domain_slug project.slug %}">
+                    Download Source Code ZIP
+                </a>
+            {% endif %}
             {% if project.zip_enabled %}
                 <a class="action" href="{% url 'dashboard:project_zip_payment' domain_slug project.slug %}">
                     Pay INR {{ project.amount_rupees }} and Download ZIP
