@@ -8435,9 +8435,7 @@ def contact_support(request):
 
 
 def privacy_policy(request):
-    return render(request, 'dashboard/privacy_policy.html', {
-        'title': 'Privacy Policy',
-    })
+    return redirect('dashboard:project_policy_pdf', policy_slug='privacy-policy')
 
 
 # ==================== EXAM BRANCH VIEWS ====================

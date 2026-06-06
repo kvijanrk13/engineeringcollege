@@ -3,7 +3,7 @@
 ## Before Building
 
 - Confirm the Django site is live at `https://engineeringcollege.onrender.com/`.
-- Confirm the privacy policy opens at `https://engineeringcollege.onrender.com/privacy-policy/`.
+- Confirm the privacy policy opens at `https://engineeringcollege.onrender.com/projects/policies/privacy-policy/`.
 - Test admin login, student login, Gmail login, file upload, and PDF download on the website.
 - Open the `android` folder in Android Studio and let Gradle sync.
 - Or build from the `android` folder with `.\gradlew.bat bundleRelease`.

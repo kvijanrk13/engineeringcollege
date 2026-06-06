@@ -42,7 +42,7 @@ The app icon for Play Console is available at `store-assets/play-store-icon.png`
 
 Privacy policy URL:
 
-`https://engineeringcollege.onrender.com/privacy-policy/`
+`https://engineeringcollege.onrender.com/projects/policies/privacy-policy/`
 
 ## Suggested Listing Text
 
