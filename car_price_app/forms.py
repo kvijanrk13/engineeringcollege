@@ -9,10 +9,17 @@ class StudentRegistrationForm(forms.ModelForm):
     class Meta:
         model = StudentRegistration
         fields = ["full_name", "roll_number", "email", "department", "college"]
+        labels = {
+            "full_name": "Customer Name",
+            "roll_number": "Contact Number / Reference ID",
+            "email": "Email Address",
+            "department": "Car Model",
+            "college": "Budget or Notes",
+        }
         widgets = {
-            "full_name": forms.TextInput(attrs={"placeholder": "Student full name"}),
-            "roll_number": forms.TextInput(attrs={"placeholder": "Roll number / hall ticket number"}),
-            "email": forms.EmailInput(attrs={"placeholder": "student@example.com"}),
-            "department": forms.TextInput(attrs={"placeholder": "Information Technology"}),
-            "college": forms.TextInput(attrs={"placeholder": "Engineering College"}),
+            "full_name": forms.TextInput(attrs={"placeholder": "Customer full name"}),
+            "roll_number": forms.TextInput(attrs={"placeholder": "Phone number or customer ID"}),
+            "email": forms.EmailInput(attrs={"placeholder": "customer@example.com"}),
+            "department": forms.TextInput(attrs={"placeholder": "Example: Swift, City, Creta"}),
+            "college": forms.TextInput(attrs={"placeholder": "Budget range or purchase notes"}),
         }

@@ -1,9 +1,9 @@
 {% extends "car_price_app/base.html" %}
 
 {% block content %}
-  <h1>Student Registration</h1>
+  <h1>Customer Depreciation Registration</h1>
   <section>
-    <p>Register first to start the local execution flow for the second-hand car price prediction project.</p>
+    <p>Enter your details to calculate the predicted depreciation value for a second-hand car purchase.</p>
     <form method="post">
       {% csrf_token %}
       <div class="form-grid">
@@ -16,7 +16,7 @@
         {% endfor %}
       </div>
       <div class="actions">
-        <button type="submit">Continue to Execution Pages</button>
+        <button type="submit">Continue to Depreciation Prediction</button>
       </div>
     </form>
   </section>
