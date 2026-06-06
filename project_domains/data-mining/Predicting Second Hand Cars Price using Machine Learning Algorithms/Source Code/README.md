@@ -28,6 +28,14 @@ python3 -m venv .venv
 .\.venv\Scripts\python.exe train_model.py --dataset cardekho-depreciation
 ```
 
+## Apriori Analysis
+
+Apriori is used here as an association-rule mechanism, not as the final regression model. The car records are converted into transaction items such as `Age=Newer`, `Kilometers=Low KM`, `Fuel=Petrol`, `Transmission=Manual`, `Price=High`, and `Depreciation=Low`. Apriori then discovers frequent attribute combinations that imply price or depreciation bands.
+
+```powershell
+.\.venv\Scripts\python.exe apriori_analysis.py --dataset cardekho-depreciation
+```
+
 Other dataset keys:
 
 - `used-cars-large`
@@ -49,5 +57,6 @@ The model and metrics are written to `artifacts/`.
 
 - `dataset_loader.py`: loads and normalizes the available Kaggle CSV files
 - `train_model.py`: trains a regression model and stores artifacts
+- `apriori_analysis.py`: runs association-rule mining for price/depreciation bands
 - `predict_price.py`: loads the trained model and predicts a price from command-line inputs
 - `requirements.txt`: minimal Python packages needed on a student laptop

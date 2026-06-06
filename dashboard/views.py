@@ -3798,6 +3798,165 @@ def download_data_mining_project_source_code_by_title(request, project_title):
     return response
 
 
+def _price_band(value, low, high):
+    if value <= low:
+        return 'Low'
+    if value <= high:
+        return 'Medium'
+    return 'High'
+
+
+def _bucket_kilometers(value):
+    if value <= 30000:
+        return 'Low KM'
+    if value <= 80000:
+        return 'Medium KM'
+    return 'High KM'
+
+
+def _run_car_apriori_execution(project):
+    """Run a small Apriori analysis for the live project page using stdlib only."""
+    datasets_root = _safe_project_domain_path('data-mining', project.get('datasets_path', ''))
+    dataset_path = (
+        datasets_root / 'vehicle-dataset-from-cardekho' / 'car data.csv'
+        if datasets_root else None
+    )
+    if not dataset_path or not dataset_path.is_file():
+        return None
+
+    rows = []
+    try:
+        with dataset_path.open(newline='', encoding='utf-8') as handle:
+            for row in csv.DictReader(handle):
+                try:
+                    selling_price = float(row.get('Selling_Price') or 0)
+                    present_price = float(row.get('Present_Price') or 0)
+                    year = int(float(row.get('Year') or 0))
+                    kilometers = float(row.get('Kms_Driven') or 0)
+                except (TypeError, ValueError):
+                    continue
+                if selling_price <= 0:
+                    continue
+                rows.append({
+                    'selling_price': selling_price,
+                    'present_price': present_price,
+                    'year': year,
+                    'kilometers': kilometers,
+                    'fuel': (row.get('Fuel_Type') or 'Unknown').strip() or 'Unknown',
+                    'seller': (row.get('Seller_Type') or 'Unknown').strip() or 'Unknown',
+                    'transmission': (row.get('Transmission') or 'Unknown').strip() or 'Unknown',
+                    'owner': (row.get('Owner') or 'Unknown').strip() or 'Unknown',
+                })
+    except OSError:
+        logger.warning('Could not read Apriori dataset: %s', dataset_path)
+        return None
+
+    if not rows:
+        return None
+
+    sorted_prices = sorted(row['selling_price'] for row in rows)
+    low_price = sorted_prices[len(sorted_prices) // 3]
+    high_price = sorted_prices[(len(sorted_prices) * 2) // 3]
+    current_year = datetime.now().year
+    transactions = []
+    depreciation_values = []
+    for row in rows:
+        age = max(current_year - row['year'], 0)
+        depreciation_percent = None
+        if row['present_price'] > 0:
+            depreciation_percent = (
+                (row['present_price'] - row['selling_price']) / row['present_price']
+            ) * 100
+            depreciation_values.append(depreciation_percent)
+
+        items = {
+            f"Price={_price_band(row['selling_price'], low_price, high_price)}",
+            f"Kilometers={_bucket_kilometers(row['kilometers'])}",
+            f"Fuel={row['fuel']}",
+            f"Seller={row['seller']}",
+            f"Transmission={row['transmission']}",
+            f"Owner={row['owner']}",
+            f"Age={'Newer' if age <= 5 else 'Mid Age' if age <= 10 else 'Older'}",
+        }
+        if depreciation_percent is not None:
+            items.add(
+                'Depreciation=' + (
+                    'Low' if depreciation_percent <= 25
+                    else 'Medium' if depreciation_percent <= 55
+                    else 'High'
+                )
+            )
+        transactions.append(frozenset(items))
+
+    min_support = 0.08
+    min_confidence = 0.45
+    transaction_count = len(transactions)
+    item_counts = {}
+    pair_counts = {}
+    for transaction in transactions:
+        for item in transaction:
+            item_counts[item] = item_counts.get(item, 0) + 1
+        items = sorted(transaction)
+        for left_index, left in enumerate(items):
+            for right in items[left_index + 1:]:
+                pair = frozenset((left, right))
+                pair_counts[pair] = pair_counts.get(pair, 0) + 1
+
+    target_prefixes = ('Price=', 'Depreciation=')
+    rules = []
+    for pair, count in pair_counts.items():
+        support = count / transaction_count
+        if support < min_support:
+            continue
+        first, second = tuple(pair)
+        for antecedent, consequent in ((first, second), (second, first)):
+            if not consequent.startswith(target_prefixes):
+                continue
+            confidence = count / item_counts[antecedent]
+            if confidence < min_confidence:
+                continue
+            consequent_support = item_counts[consequent] / transaction_count
+            lift = confidence / consequent_support if consequent_support else 0
+            rules.append({
+                'if': antecedent,
+                'then': consequent,
+                'support': round(support * 100, 2),
+                'confidence': round(confidence * 100, 2),
+                'lift': round(lift, 2),
+            })
+
+    rules = sorted(
+        rules,
+        key=lambda rule: (rule['lift'], rule['confidence'], rule['support']),
+        reverse=True,
+    )[:10]
+
+    average_depreciation = (
+        sum(depreciation_values) / len(depreciation_values)
+        if depreciation_values else None
+    )
+    return {
+        'dataset_name': 'Vehicle Dataset from Cardekho - car data.csv',
+        'rows': transaction_count,
+        'algorithm': 'Apriori Association Rule Mining',
+        'purpose': (
+            'Find frequent combinations of car attributes that are strongly associated '
+            'with high or low price and depreciation bands.'
+        ),
+        'price_thresholds': {
+            'low_max_lakh': round(low_price, 2),
+            'medium_max_lakh': round(high_price, 2),
+        },
+        'average_depreciation_percent': (
+            round(average_depreciation, 2)
+            if average_depreciation is not None else None
+        ),
+        'min_support_percent': round(min_support * 100, 2),
+        'min_confidence_percent': round(min_confidence * 100, 2),
+        'rules': rules,
+    }
+
+
 def _build_project_zip(domain_slug, project):
     """Build a project ZIP from either the repository or its domain-owned folder."""
     archive_buffer = io.BytesIO()
@@ -4064,6 +4223,7 @@ def data_mining_project_detail_by_title(request, project_title):
         'domain_name': PROJECT_DOMAINS['data-mining'],
         'domain_slug': 'data-mining',
         'project': project,
+        'execution': _run_car_apriori_execution(project),
         'is_engineeringcollege_project': False,
         'project_modules': [name for name, _ in PROJECT_MODULES],
     })
