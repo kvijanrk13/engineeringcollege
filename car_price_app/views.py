@@ -4,9 +4,10 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from apriori_analysis import apriori_rules, make_transactions
-from dataset_loader import available_datasets, normalize_dataset
+from dataset_loader import DATASET_FILES, available_datasets, normalize_dataset, read_csv
+import pandas as pd
 
-from .forms import StudentRegistrationForm
+from .forms import CarEstimateForm, StudentRegistrationForm
 from .models import ExecutionLog
 
 
@@ -215,6 +216,131 @@ def execution_step(request, step_slug):
     )
 
 
+def _normalize_owner(owner_value: str) -> str:
+    owner_text = str(owner_value or "").strip().lower()
+    if owner_text.startswith("first"):
+        return "First Owner"
+    if owner_text.startswith("second"):
+        return "Second Owner"
+    if owner_text.startswith("third"):
+        return "Third Owner"
+    if owner_text.isdigit():
+        return {
+            "1": "First Owner",
+            "2": "Second Owner",
+            "3": "Third Owner",
+        }.get(owner_text, "More than Third Owner")
+    return owner_text.title() if owner_text else "Unknown"
+
+
+def _bucket_kilometers(value: float) -> str:
+    if pd.isna(value):
+        return "Unknown"
+    if value <= 30000:
+        return "Low KM"
+    if value <= 80000:
+        return "Medium KM"
+    return "High KM"
+
+
+def _build_input_items(cleaned_data: dict) -> set[str]:
+    year = cleaned_data.get("model_year")
+    age_item = "Unknown Age"
+    if isinstance(year, int):
+        if year >= pd.Timestamp.today().year - 5:
+            age_item = "Age=Newer"
+        elif year >= pd.Timestamp.today().year - 10:
+            age_item = "Age=Mid Age"
+        else:
+            age_item = "Age=Older"
+
+    km_item = _bucket_kilometers(cleaned_data.get("kilometers", 0))
+    owner_item = f"Owner={_normalize_owner(cleaned_data.get('owners'))}"
+
+    items = {age_item, f"Kilometers={km_item}" if km_item else "Kilometers=Unknown", owner_item}
+    return items
+
+
+def _match_apriori_rules(rules: list[dict], input_items: set[str]) -> list[dict]:
+    matched = [rule for rule in rules if rule["if"] in input_items]
+    return sorted(matched, key=lambda rule: (rule["lift"], rule["confidence_percent"]), reverse=True)[:6]
+
+
+def _estimate_price(data: pd.DataFrame, dataset_key: str, cleaned_data: dict) -> dict:
+    raw = read_csv(DATASET_FILES[dataset_key])
+    original_price_unit = "INR"
+    price_multiplier = 1.0
+    if dataset_key == "cardekho-depreciation":
+        price_multiplier = 100000.0
+        original_price_unit = "INR"
+    elif dataset_key in {"cardekho-v3", "cardekho-v4"}:
+        original_price_unit = "INR"
+    else:
+        original_price_unit = "dataset units"
+
+    candidates = data.copy()
+    brand = str(cleaned_data.get("brand") or "").strip().lower()
+    model = str(cleaned_data.get("model") or "").strip().lower()
+    year = cleaned_data.get("model_year")
+    engine_capacity = cleaned_data.get("engine_capacity")
+    owner = _normalize_owner(cleaned_data.get("owners"))
+    kilometer_bucket = _bucket_kilometers(cleaned_data.get("kilometers", 0))
+
+    if brand:
+        candidates = candidates[candidates["make"].fillna("").str.lower().str.contains(brand, regex=False)]
+    if model:
+        candidates = candidates[candidates["model"].fillna("").str.lower().str.contains(model, regex=False)]
+    if year is not None:
+        candidates = candidates[candidates["year"].between(year - 1, year + 1)]
+    if not candidates.empty and pd.notna(engine_capacity):
+        candidates = candidates[(candidates["engine_size"].between(engine_capacity - 300, engine_capacity + 300)) | candidates["engine_size"].isna()]
+    if not candidates.empty:
+        candidates = candidates[candidates["owner"].fillna("").str.contains(owner, case=False, regex=False)]
+    if not candidates.empty:
+        candidates = candidates[candidates["mileage"].apply(lambda value: _bucket_kilometers(value) == kilometer_bucket if pd.notna(value) else False)]
+
+    if len(candidates) < 10:
+        candidates = data.copy()
+        if brand:
+            candidates = candidates[candidates["make"].fillna("").str.lower().str.contains(brand, regex=False)]
+        if year is not None:
+            candidates = candidates[candidates["year"].between(year - 2, year + 2)]
+        if not candidates.empty and pd.notna(engine_capacity):
+            candidates = candidates[(candidates["engine_size"].between(engine_capacity - 500, engine_capacity + 500)) | candidates["engine_size"].isna()]
+        if not candidates.empty:
+            candidates = candidates[candidates["mileage"].apply(lambda value: _bucket_kilometers(value) == kilometer_bucket if pd.notna(value) else False)]
+
+    if candidates.empty:
+        average_price = data["target_price"].mean()
+        note = "Used the full dataset because no close matches were found."
+    else:
+        average_price = candidates["target_price"].mean()
+        note = f"Based on {len(candidates)} similar listings from the selected dataset."
+
+    adjustment = 1.0
+    if cleaned_data.get("accident") == "yes":
+        adjustment -= 0.10
+    if cleaned_data.get("repairs") == "yes":
+        adjustment -= 0.08
+    if cleaned_data.get("tyres_modified") == "yes":
+        adjustment -= 0.05
+    if cleaned_data.get("owners") == "Third":
+        adjustment -= 0.05
+    if cleaned_data.get("owners") == "More":
+        adjustment -= 0.10
+
+    estimated_price = max(average_price * adjustment, 0)
+    return {
+        "dataset_key": dataset_key,
+        "average_price": average_price,
+        "estimated_price": estimated_price,
+        "currency": original_price_unit,
+        "display_price": estimated_price * price_multiplier,
+        "note": note,
+        "depreciation_adjustment": round((1 - adjustment) * 100, 1),
+    }
+
+
 def apriori_execution(request):
     dataset_key = request.GET.get("dataset", "cardekho-depreciation")
     if dataset_key not in available_datasets():
@@ -223,6 +349,18 @@ def apriori_execution(request):
     data = normalize_dataset(dataset_key)
     transactions = make_transactions(data)
     rules = apriori_rules(transactions, min_support=0.08, min_confidence=0.45)[:15]
+    prediction = None
+    matching_rules = []
+
+    if request.method == "POST":
+        form = CarEstimateForm(request.POST)
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            prediction = _estimate_price(data, dataset_key, cleaned_data)
+            matching_rules = _match_apriori_rules(rules, _build_input_items(cleaned_data))
+    else:
+        form = CarEstimateForm()
+
     ExecutionLog.objects.create(
         algorithm="Apriori Association Rule Mining",
         dataset=dataset_key,
@@ -240,5 +378,8 @@ def apriori_execution(request):
             "transaction_count": len(transactions),
             "rules": rules,
             "latest_runs": ExecutionLog.objects.order_by("-created_at")[:5],
+            "form": form,
+            "prediction": prediction,
+            "matching_rules": matching_rules,
         },
     )

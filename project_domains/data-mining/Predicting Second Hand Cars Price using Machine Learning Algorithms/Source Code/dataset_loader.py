@@ -19,6 +19,7 @@ DATASET_FILES = {
     "used-car-cleaned": DATASETS_DIR / "used-car-price-prediction-dataset-cleaned" / "used_car_cleaned.csv",
     "car-price-2025": DATASETS_DIR / "car-price-prediction-2025" / "car_price_prediction_.csv",
     "ann-car-sales": DATASETS_DIR / "ann-car-sales-price-prediction" / "car_purchasing.csv",
+    "maruti-suzuki-khammam": DATASETS_DIR / "maruti_suzuki_khammam.csv",
 }
 
 

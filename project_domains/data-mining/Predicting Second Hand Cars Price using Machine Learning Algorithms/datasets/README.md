@@ -12,6 +12,7 @@ This folder stores Kaggle datasets collected for the Data Mining project:
 | `vehicle-dataset-from-cardekho/` | https://www.kaggle.com/datasets/nehalbirla/vehicle-dataset-from-cardekho | `car data.csv`, `CAR DETAILS FROM CAR DEKHO.csv`, `Car details v3.csv`, `car details v4.csv` | 301 / 4,340 / 8,128 / 2,059 | Cardekho vehicle datasets with selling price, present price, kilometers driven, fuel, transmission, owner, engine, and power fields. |
 | `ann-car-sales-price-prediction/` | https://www.kaggle.com/datasets/yashpaloswal/ann-car-sales-price-prediction | `car_purchasing.csv` | 500 | Car purchase amount dataset using customer demographics and financial features. Useful as a sales-price prediction baseline, not vehicle depreciation. |
 | `car-price-prediction-2025/` | https://www.kaggle.com/datasets/aliiihussain/car-price-prediction | `car_price_prediction_.csv` | 2,500 | Newer car listing dataset with brand, year, engine size, fuel, transmission, mileage, condition, price, and model. |
+| `maruti_suzuki_khammam.csv` | custom | `maruti_suzuki_khammam.csv` | 1 | Template dataset for Maruti Suzuki models from 2015 onward, designed for Khammam district on-road price records and image references. |
 
 The `.zip` archives are kept beside the extracted folders so the original Kaggle downloads remain available.
 
