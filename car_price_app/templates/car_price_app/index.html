@@ -173,6 +173,45 @@
       </div>
       <p>{{ prediction.note }}</p>
     </section>
+    {% endif %}
+
+    {% if spec_records %}
+    <section>
+      <h2>Yearly Specifications</h2>
+      <p>Showing {{ spec_records|length }} matching records from 2015 to 2026.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Fuel</th>
+            <th>Transmission</th>
+            <th>Engine CC</th>
+            <th>Mileage</th>
+            <th>Price</th>
+            <th>Depreciation %</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in spec_records %}
+          <tr>
+            <td>{{ record.year }}</td>
+            <td>{{ record.make }}</td>
+            <td>{{ record.model }}</td>
+            <td>{{ record.fuel_type|default:'-' }}</td>
+            <td>{{ record.transmission|default:'-' }}</td>
+            <td>{{ record.engine_size|default:'-' }}</td>
+            <td>{{ record.mileage|default:'-' }}</td>
+            <td>{{ record.target_price|default:'-' }}</td>
+            <td>{{ record.depreciation_percent|default:'-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+
     {% if matching_rules %}
     <section>
       <h2>Relevant Apriori Rules</h2>

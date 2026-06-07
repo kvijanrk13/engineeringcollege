@@ -351,6 +351,7 @@ def apriori_execution(request):
     rules = apriori_rules(transactions, min_support=0.08, min_confidence=0.45)[:15]
     prediction = None
     matching_rules = []
+    spec_records = []
 
     if request.method == "POST":
         form = CarEstimateForm(request.POST)
@@ -358,6 +359,17 @@ def apriori_execution(request):
             cleaned_data = form.cleaned_data
             prediction = _estimate_price(data, dataset_key, cleaned_data)
             matching_rules = _match_apriori_rules(rules, _build_input_items(cleaned_data))
+
+            brand = str(cleaned_data.get("brand") or "").strip().lower()
+            model = str(cleaned_data.get("model") or "").strip().lower()
+            specs = data.copy()
+            if brand:
+                specs = specs[specs["make"].fillna("").str.lower().str.contains(brand, regex=False)]
+            if model:
+                specs = specs[specs["model"].fillna("").str.lower().str.contains(model, regex=False)]
+            specs = specs[specs["year"].between(2015, 2026)]
+            specs = specs.sort_values(["model", "year"]).reset_index(drop=True)
+            spec_records = specs.to_dict(orient="records")
     else:
         form = CarEstimateForm()
 

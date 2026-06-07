@@ -68,9 +68,22 @@ def normalize_dataset(dataset_key: str) -> pd.DataFrame:
         mileage = mileage * 1.60934
 
     target_price = numeric_series(
-        first_existing(df, ["Selling_Price", "selling_price", "Price", "price", "car purchase amount"])
+        first_existing(
+            df,
+            [
+                "Selling_Price",
+                "selling_price",
+                "Price",
+                "price",
+                "car purchase amount",
+                "price_inr",
+                "on_road_price_inr",
+            ],
+        )
     )
-    original_price = numeric_series(first_existing(df, ["Present_Price"]))
+    original_price = numeric_series(
+        first_existing(df, ["Present_Price", "price_inr", "on_road_price_inr"])
+    )
 
     make = first_existing(df, ["Make", "Brand", "brand"])
     model = first_existing(df, ["Model", "model", "name", "Car_Name"])
