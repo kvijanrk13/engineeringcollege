@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import quote as urlquote
 
 from django.http import Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, reverse
 
 from apriori_analysis import apriori_rules, make_transactions
 from dataset_loader import DATASET_FILES, available_datasets, normalize_dataset, read_csv
@@ -190,6 +191,20 @@ def registration(request):
     )
 
 
+def _require_gmail_or_registered(request, next_url=None):
+    is_gmail_logged_in = (
+        request.session.get("google_oauth_email", "").endswith("@gmail.com")
+        or request.user.is_authenticated
+        and getattr(request.user, "email", "").lower().endswith("@gmail.com")
+    )
+    has_registration = request.session.get("student_registration_id") is not None
+    if not (is_gmail_logged_in or has_registration):
+        if next_url is None:
+            next_url = request.build_absolute_uri()
+        return redirect(f"{reverse('dashboard:google_login')}?role=student&continue=1&next={urlquote(next_url)}")
+    return None
+
+
 def _maruti_execution_context(title: str) -> dict:
     maruti_data = maruti_project_dataset()
     return {
@@ -201,6 +216,9 @@ def _maruti_execution_context(title: str) -> dict:
 
 
 def execution_overview(request):
+    redirect_response = _require_gmail_or_registered(request)
+    if redirect_response is not None:
+        return redirect_response
     return render(
         request,
         "car_price_app/execution_overview.html",
@@ -209,6 +227,9 @@ def execution_overview(request):
 
 
 def execution_step(request, step_slug):
+    redirect_response = _require_gmail_or_registered(request)
+    if redirect_response is not None:
+        return redirect_response
     step = next(
         (item for item in GITHUB_EXECUTION_STEPS if item["slug"] == step_slug),
         None,

@@ -1,0 +1,122 @@
+{% extends "car_price_app/base.html" %}
+{% load markdown_deux %}
+
+{% block content %}
+<div style="max-width: 980px; margin: 0 auto; padding: 20px;">
+  <h1>K-RADIUS+ Research Paper</h1>
+  <p>
+    <strong>K-RADIUS+ (Khammam Registered Automobile Depreciation Using Inspection Score Plus)</strong><br>
+    A NovenHybrid Algorithm for Explainable Second-Hand Car Price Prediction and Risk Assessment
+  </p>
+  <p style="margin-bottom: 20px;">
+    <a class="button" href="{% url 'maruti-prices' %}">Back to Maruti Prices</a>
+    <a class="button" style="background: #0d3a52;" href="{% url 'apriori-execution' %}">View Apriori Execution</a>
+  </p>
+  <hr style="border: 1px solid #d7dfeb; margin: 20px 0;">
+
+  {% if research_content %}
+    <div style="line-height: 1.7; color: #162033;">
+      {{ research_content|safe }}
+    </div>
+  {% else %}
+    <p style="color: #475569;">Research paper content is available in the repository at:</p>
+    <pre style="background: #f8f9fa; border: 1px solid #d7dfeb; border-radius: 6px; padding: 15px; overflow-x: auto;">engineeringcollege/car_price_app/KRADIUS_PLUS_RESEARCH_PAPER.md</pre>
+    <p style="color: #475569; margin-top: 20px;">
+      For the full formatted paper with mathematical formulas, literature review, novelty analysis,
+      and comparative results, refer to the markdown file in the project source code.
+    </p>
+    <h2>Abstract Summary</h2>
+    <p>
+      K-RADIUS+ is a novel hybrid algorithm combining Apriori association rule mining,
+      a 15-factor explainable depreciation formula, buyer confidence scoring (0-100),
+      and risk categorization. Unlike commercial platforms (Spinny, Cars24, Gaddi, OLX),
+      K-RADIUS+ publishes its complete mathematical formula for transparency and reproducibility.
+    </p>
+    <h2>Key Novel Contributions</h2>
+    <ul>
+      <li><strong>First published hybrid algorithm</strong> integrating Apriori mining + multiplicative depreciation + confidence scoring</li>
+      <li><strong>15 named factors</strong> with documented weights (vs. black-box models)</li>
+      <li><strong>Odometer tampering risk detection</strong> based on verification source</li>
+      <li><strong>Buyer Confidence Score</strong> (0-100) with Low/Medium/High Risk flags</li>
+      <li><strong>Local RTO/city-specific pricing</strong> for Khammam, Telangana</li>
+      <li><strong>Seller advice engine</strong> with actionable pre-sale recommendations</li>
+      <li><strong>Fully reproducible</strong> — all code published, all formulas documented</li>
+    </ul>
+    <h2>Mathematical Formula (Core)</h2>
+    <pre style="background: #0f172a; color: #e2e8f0; padding: 15px; border-radius: 6px; overflow-x: auto;">
+Predicted Price = Base Price
+               × Age Factor × KM Factor × Odometer Factor × Repair Factor
+               × Colour Factor × Owner Factor × Insurance Factor × Service Factor
+               × Accident Factor × Challan Factor × Tyre Factor × Body Factor
+               × Usage Factor × Urgency Factor × Local Factor × K-RADIUS Adjustment
+    </pre>
+    <h2>Uniqueness vs Commercial Platforms</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+      <thead>
+        <tr style="background: #eef3f8;">
+          <th style="padding: 10px; border: 1px solid #d7dfeb;">Feature</th>
+          <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: center;">K-RADIUS+</th>
+          <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: center;">Cars24</th>
+          <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: center;">Spinny</th>
+          <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: center;">Gaddi / OLX</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Published Formula</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+        <tr style="background: #f8fafc;">
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Apriori Pattern Mining</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Buyer Confidence Score</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+        <tr style="background: #f8fafc;">
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Odometer Tampering Detection</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Challan Status Factor</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+        <tr style="background: #f8fafc;">
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Seller Advice Engine</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; border: 1px solid #d7dfeb;">Reproducible / Open</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #16a34a; font-weight: bold;">YES</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+          <td style="padding: 8px; border: 1px solid #d7dfeb; text-align: center; color: #dc2626;">NO</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="margin-top: 20px; color: #64748b;">
+      Full research paper with literature review, mathematical derivations, Apriori rule examples,
+      model comparison results, and future work is documented in the project markdown file.
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

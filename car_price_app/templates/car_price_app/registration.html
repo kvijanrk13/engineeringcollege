@@ -1,23 +1,40 @@
 {% extends "car_price_app/base.html" %}
 
 {% block content %}
-  <h1>Customer Depreciation Registration</h1>
-  <section>
-    <p>Enter your details to calculate the predicted depreciation value for a second-hand car purchase.</p>
-    <form method="post">
-      {% csrf_token %}
-      <div class="form-grid">
-        {% for field in form %}
-          <div>
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {{ field.errors }}
+  <section style="max-width: 860px; margin: 0 auto;">
+    <h1 style="text-align: center; margin-bottom: 6px;">Car Price Prediction <span style="font-size: 0.6em; vertical-align: middle;">✨</span></h1>
+    <p style="text-align: center; margin-bottom: 22px;">Sign in with your Gmail to get started, then enter vehicle details for a K-RADIUS+ prediction.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; align-items: start;">
+      <section>
+        <h3>Quick Access</h3>
+        <div class="actions">
+          <a class="button" style="background: linear-gradient(135deg,#ea4335,#fbbf24);" href="{% url 'dashboard:google_login' %}?role=student&continue=1&next={% url 'registration' %}">
+            <span>Sign in with Gmail</span>
+          </a>
+        </div>
+        <p style="font-size: 13px; margin-top: 10px;">Uses the same Google OAuth flow as faculty/student login.</p>
+      </section>
+
+      <section>
+        <h3>Registration</h3>
+        <p style="font-size: 13px;">Only <strong>@gmail.com</strong> addresses are accepted.</p>
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-grid">
+            {% for field in form %}
+              <div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endfor %}
           </div>
-        {% endfor %}
-      </div>
-      <div class="actions">
-        <button type="submit">Continue to Depreciation Prediction</button>
-      </div>
-    </form>
+          <div class="actions">
+            <button type="submit">Continue →</button>
+          </div>
+        </form>
+      </section>
+    </div>
   </section>
 {% endblock %}

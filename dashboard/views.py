@@ -3761,13 +3761,23 @@ def _build_source_code_zip(domain_slug, project):
     if not source_root or not source_root.is_dir():
         raise Http404('Source code folder not found.')
 
+    project_root = source_root.parent
+    asset_folders = {
+        'Documentation': 'Documentation',
+        'PPT': 'PPT',
+        'Test Cases': 'Test Cases',
+        'Video': 'Video',
+        'Modules': 'Modules',
+        'UML Diagrams': 'UML Diagrams',
+    }
+
     archive_buffer = io.BytesIO()
     archive_root = project.get('title_path') or project['slug']
     with zipfile.ZipFile(archive_buffer, 'w', zipfile.ZIP_DEFLATED) as archive:
         archive.writestr(
             f'{archive_root}/README.txt',
             f"{project['name']}\n\n"
-            "This archive contains the project source code and available datasets.\n"
+            "This archive contains the project source code, datasets, documentation, PPT, test cases, video, modules, and UML diagrams.\n"
             "Open Source Code/README.md for setup steps.\n",
         )
         for path, archive_name in _iter_archive_files(source_root, f'{archive_root}/Source Code'):
@@ -3775,6 +3785,11 @@ def _build_source_code_zip(domain_slug, project):
         if datasets_root and datasets_root.is_dir():
             for path, archive_name in _iter_archive_files(datasets_root, f'{archive_root}/datasets'):
                 archive.write(path, archive_name)
+        for folder_name, archive_prefix in asset_folders.items():
+            folder_root = (project_root / folder_name).resolve()
+            if folder_root.is_dir():
+                for path, archive_name in _iter_archive_files(folder_root, f'{archive_root}/{archive_prefix}'):
+                    archive.write(path, archive_name)
 
     archive_buffer.seek(0)
     return archive_buffer.getvalue()
