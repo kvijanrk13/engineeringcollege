@@ -8,6 +8,7 @@ from dataset_loader import DATASET_FILES, available_datasets, normalize_dataset,
 import pandas as pd
 
 from .forms import CarEstimateForm, StudentRegistrationForm
+from .maruti_data import YEARS, maruti_project_dataset
 from .models import ExecutionLog
 
 
@@ -393,5 +394,18 @@ def apriori_execution(request):
             "form": form,
             "prediction": prediction,
             "matching_rules": matching_rules,
+            "spec_records": spec_records,
+        },
+    )
+
+
+def maruti_prices(request):
+    return render(
+        request,
+        'car_price_app/maruti_apriori.html',
+        {
+            'title': 'Maruti Suzuki Cars - Khammam District On-Road Prices (2015-2026)',
+            'years': YEARS,
+            'maruti_data': maruti_project_dataset(),
         },
     )

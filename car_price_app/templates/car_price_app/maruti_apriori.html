@@ -1,0 +1,78 @@
+{% extends 'car_price_app/base.html' %}
+{% block content %}
+<main style='max-width: 1200px; margin: 0 auto; padding: 20px;'>
+  <h1 style='text-align: center; margin-bottom: 30px;'>{{ title }}</h1>
+  <div style='background: #fff8e5; border: 1px solid #f2d38a; border-radius: 8px; margin-bottom: 24px; padding: 16px; color: #5d4300;'>
+    <strong>Project dataset note:</strong>
+    The prices shown below are approximate Khammam/Telangana on-road estimates for academic modelling.
+    They are built from model launch availability, typical ex-showroom price growth, and Telangana on-road cost assumptions.
+    For real purchase quotes, use the official Maruti Suzuki/NEXA dealer price for the exact variant and year.
+  </div>
+  {% for model in maruti_data %}
+  <section style='background: #fff; border: 1px solid #d7dfeb; border-radius: 8px; margin-bottom: 40px; padding: 20px;'>
+    <div style='display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-bottom: 20px;'>
+      <img src='{{ model.image_url }}' alt='{{ model.name }}' style='width: 220px; max-width: 100%; border-radius: 8px; background: #eef3f8;'>
+      <div>
+        <h2 style='margin: 0 0 10px 0;'>{{ model.name }}</h2>
+        <p style='margin: 0 0 6px 0; color: #334155;'><strong>Segment:</strong> {{ model.segment }}</p>
+        <p style='margin: 0; color: #555;'>{{ model.key_specs }}</p>
+      </div>
+    </div>
+
+    <h3 style='margin: 18px 0 10px 0;'>Horizontal Year-Wise On-Road Price</h3>
+    <div style='overflow-x: auto;'>
+      <table style='width: 100%; border-collapse: collapse; text-align: center;'>
+        <thead>
+          <tr style='background: #eef3f8;'>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Details</th>
+            {% for year in years %}
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>{{ year }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th style='padding: 10px; border: 1px solid #e4e9f1; background: #f8fafc;'>On-road price</th>
+            {% for price in model.prices %}
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ price }}</td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style='margin: 24px 0 10px 0;'>Year-Wise Specifications</h3>
+    <div style='overflow-x: auto;'>
+      <table style='width: 100%; border-collapse: collapse; min-width: 980px;'>
+        <thead>
+          <tr style='background: #eef3f8;'>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Year</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Approx. On-Road Price</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Engine</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Power</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Mileage</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Fuel</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Transmission</th>
+            <th style='padding: 10px; border: 1px solid #e4e9f1;'>Status / Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in model.yearly_specs %}
+          <tr>
+            <td style='padding: 10px; border: 1px solid #e4e9f1; text-align: center;'>{{ row.year }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1; text-align: center;'>{{ row.price }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ row.engine }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ row.power }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ row.mileage }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ row.fuel_types }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ row.transmission }}</td>
+            <td style='padding: 10px; border: 1px solid #e4e9f1;'>{{ row.status }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endfor %}
+</main>
+{% endblock %}
