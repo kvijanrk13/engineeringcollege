@@ -152,6 +152,89 @@
       <p id="repair-word-count" style="margin: 6px 0 0;">0 / 3000 words</p>
     </div>
 
+    <div class="form-grid" style="margin-top: 18px;">
+      <div>
+        <label for="owner-count">6. Number of Previous Owners</label>
+        <select id="owner-count" name="owner_count">
+          <option value="1">First owner</option>
+          <option value="2">Second owner</option>
+          <option value="3">Third owner</option>
+          <option value="4">More than three owners</option>
+        </select>
+      </div>
+      <div>
+        <label for="insurance-status">7. Insurance Status</label>
+        <select id="insurance-status" name="insurance_status">
+          <option value="valid_comprehensive">Valid comprehensive insurance</option>
+          <option value="valid_third_party">Valid third-party insurance</option>
+          <option value="expired">Expired insurance</option>
+          <option value="unknown">Not sure</option>
+        </select>
+      </div>
+      <div>
+        <label for="service-history">8. Service History</label>
+        <select id="service-history" name="service_history">
+          <option value="authorized_complete">Complete authorized Maruti service record</option>
+          <option value="partial">Partial service record</option>
+          <option value="local_garage">Mostly local garage service</option>
+          <option value="none">No service record</option>
+        </select>
+      </div>
+      <div>
+        <label for="accident-status">9. Accident History</label>
+        <select id="accident-status" name="accident_status">
+          <option value="none">No accident reported</option>
+          <option value="minor">Minor accident / scratches / dents</option>
+          <option value="major">Major accident / structural repair</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </div>
+      <div>
+        <label for="challan-status">10. Traffic Challan Status</label>
+        <select id="challan-status" name="challan_status">
+          <option value="none">No pending challans verified</option>
+          <option value="minor">Minor pending challans</option>
+          <option value="major">Major pending challans</option>
+          <option value="unknown">Not verified</option>
+        </select>
+      </div>
+      <div>
+        <label for="tyre-condition">11. Tyre Condition</label>
+        <select id="tyre-condition" name="tyre_condition">
+          <option value="new">New / excellent</option>
+          <option value="good">Good</option>
+          <option value="average">Average</option>
+          <option value="poor">Needs replacement</option>
+        </select>
+      </div>
+      <div>
+        <label for="body-condition">12. Body and Interior Condition</label>
+        <select id="body-condition" name="body_condition">
+          <option value="excellent">Excellent</option>
+          <option value="good">Good</option>
+          <option value="average">Average</option>
+          <option value="poor">Poor</option>
+        </select>
+      </div>
+      <div>
+        <label for="ownership-type">13. Vehicle Usage Type</label>
+        <select id="ownership-type" name="ownership_type">
+          <option value="personal">Personal use</option>
+          <option value="company">Company use</option>
+          <option value="taxi">Taxi / commercial use</option>
+          <option value="rental">Rental / fleet use</option>
+        </select>
+      </div>
+      <div>
+        <label for="seller-urgency">14. Seller Urgency</label>
+        <select id="seller-urgency" name="seller_urgency">
+          <option value="normal">Normal sale</option>
+          <option value="urgent">Urgent sale</option>
+          <option value="premium">Expecting premium price</option>
+        </select>
+      </div>
+    </div>
+
     <div class="actions">
       <button id="predict-price-button" type="button">Predict Used Car Price</button>
     </div>
@@ -182,6 +265,11 @@ Selected Year Khammam On-Road Price
 × Repair Condition Factor
 × Colour Demand Factor</code></pre>
 
+    <p>
+      The expanded questionnaire also applies ownership, insurance, service history, accident/challan,
+      tyre/body condition, usage type, and seller urgency factors to estimate a realistic resale price.
+    </p>
+
     <table style="margin-top: 16px;">
       <tbody>
         <tr>
@@ -204,6 +292,30 @@ Selected Year Khammam On-Road Price
           <th>Colour demand factor</th>
           <td id="formula-color-factor">-</td>
         </tr>
+        <tr>
+          <th>Ownership factor</th>
+          <td id="formula-owner-factor">-</td>
+        </tr>
+        <tr>
+          <th>Insurance factor</th>
+          <td id="formula-insurance-factor">-</td>
+        </tr>
+        <tr>
+          <th>Service history factor</th>
+          <td id="formula-service-factor">-</td>
+        </tr>
+        <tr>
+          <th>Accident/challan factor</th>
+          <td id="formula-legal-factor">-</td>
+        </tr>
+        <tr>
+          <th>Tyre/body condition factor</th>
+          <td id="formula-condition-factor">-</td>
+        </tr>
+        <tr>
+          <th>Usage/seller urgency factor</th>
+          <td id="formula-usage-factor">-</td>
+        </tr>
       </tbody>
     </table>
   </section>
@@ -216,7 +328,8 @@ Selected Year Khammam On-Road Price
       <code>LinearRegression</code>, <code>Lasso</code>, <code>Ridge</code>,
       <code>RandomForestRegressor</code>, and <code>GradientBoostingRegressor</code>.
       Random Forest is suitable here because depreciation is affected by non-linear combinations of age,
-      kilometers driven, repairs, model segment, fuel type, transmission, and colour demand.
+      kilometers driven, repairs, ownership count, insurance, service history, accident/challan status,
+      body condition, usage type, model segment, fuel type, transmission, and colour demand.
     </p>
     <pre><code>from sklearn.ensemble import RandomForestRegressor
 
@@ -261,6 +374,42 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         <tr>
           <th>colour</th>
           <td id="feature-color">-</td>
+        </tr>
+        <tr>
+          <th>owner_count</th>
+          <td id="feature-owner-count">-</td>
+        </tr>
+        <tr>
+          <th>insurance_status</th>
+          <td id="feature-insurance">-</td>
+        </tr>
+        <tr>
+          <th>service_history</th>
+          <td id="feature-service">-</td>
+        </tr>
+        <tr>
+          <th>accident_status</th>
+          <td id="feature-accident">-</td>
+        </tr>
+        <tr>
+          <th>challan_status</th>
+          <td id="feature-challan">-</td>
+        </tr>
+        <tr>
+          <th>tyre_condition</th>
+          <td id="feature-tyre">-</td>
+        </tr>
+        <tr>
+          <th>body_condition</th>
+          <td id="feature-body">-</td>
+        </tr>
+        <tr>
+          <th>usage_type</th>
+          <td id="feature-usage">-</td>
+        </tr>
+        <tr>
+          <th>seller_urgency</th>
+          <td id="feature-urgency">-</td>
         </tr>
       </tbody>
     </table>
@@ -395,6 +544,10 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       return 1.00;
     }
 
+    function selectFactor(value, factors, fallback = 1.00) {
+      return Object.prototype.hasOwnProperty.call(factors, value) ? factors[value] : fallback;
+    }
+
     function calculatePrediction() {
       if (!selectedModel || !selectedSpec) {
         return;
@@ -411,12 +564,84 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       const kilometers = Number(document.getElementById("kilometers-driven").value || 0);
       const repairsDone = getSelectedRadioValue("repairs_done") || "No";
       const color = getSelectedRadioValue("color") || "Not selected";
+      const ownerCount = document.getElementById("owner-count").value;
+      const insuranceStatus = document.getElementById("insurance-status").value;
+      const serviceHistory = document.getElementById("service-history").value;
+      const accidentStatus = document.getElementById("accident-status").value;
+      const challanStatus = document.getElementById("challan-status").value;
+      const tyreCondition = document.getElementById("tyre-condition").value;
+      const bodyCondition = document.getElementById("body-condition").value;
+      const ownershipType = document.getElementById("ownership-type").value;
+      const sellerUrgency = document.getElementById("seller-urgency").value;
 
       const ageFactor = Math.max(0.35, Math.pow(0.88, age));
       const kmFactor = Math.max(0.70, 1 - Math.min(kilometers, 200000) / 1000000);
       const repairFactor = repairsDone === "Yes" ? 0.88 : 1.00;
       const colorFactor = colourDemandFactor(color);
-      const predictedPrice = basePrice * ageFactor * kmFactor * repairFactor * colorFactor;
+      const ownerFactor = selectFactor(ownerCount, {"1": 1.00, "2": 0.94, "3": 0.88, "4": 0.82});
+      const insuranceFactor = selectFactor(insuranceStatus, {
+        valid_comprehensive: 1.03,
+        valid_third_party: 1.00,
+        expired: 0.95,
+        unknown: 0.97,
+      });
+      const serviceFactor = selectFactor(serviceHistory, {
+        authorized_complete: 1.05,
+        partial: 1.00,
+        local_garage: 0.96,
+        none: 0.92,
+      });
+      const accidentFactor = selectFactor(accidentStatus, {
+        none: 1.00,
+        minor: 0.93,
+        major: 0.78,
+        unknown: 0.95,
+      });
+      const challanFactor = selectFactor(challanStatus, {
+        none: 1.00,
+        minor: 0.98,
+        major: 0.94,
+        unknown: 0.97,
+      });
+      const tyreFactor = selectFactor(tyreCondition, {
+        new: 1.03,
+        good: 1.00,
+        average: 0.97,
+        poor: 0.93,
+      });
+      const bodyFactor = selectFactor(bodyCondition, {
+        excellent: 1.04,
+        good: 1.00,
+        average: 0.94,
+        poor: 0.86,
+      });
+      const usageFactor = selectFactor(ownershipType, {
+        personal: 1.00,
+        company: 0.96,
+        taxi: 0.84,
+        rental: 0.82,
+      });
+      const urgencyFactor = selectFactor(sellerUrgency, {
+        normal: 1.00,
+        urgent: 0.96,
+        premium: 1.03,
+      });
+      const legalFactor = accidentFactor * challanFactor;
+      const conditionFactor = tyreFactor * bodyFactor;
+      const usageUrgencyFactor = usageFactor * urgencyFactor;
+      const predictedPrice = (
+        basePrice *
+        ageFactor *
+        kmFactor *
+        repairFactor *
+        colorFactor *
+        ownerFactor *
+        insuranceFactor *
+        serviceFactor *
+        legalFactor *
+        conditionFactor *
+        usageUrgencyFactor
+      );
       const depreciation = Math.max(basePrice - predictedPrice, 0);
 
       setText("predicted-price-value", formatRupees(predictedPrice));
@@ -426,6 +651,12 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("formula-km-factor", `${kmFactor.toFixed(3)} (${kilometers.toLocaleString("en-IN")} km)`);
       setText("formula-repair-factor", `${repairFactor.toFixed(3)} (${repairsDone})`);
       setText("formula-color-factor", `${colorFactor.toFixed(3)} (${color})`);
+      setText("formula-owner-factor", `${ownerFactor.toFixed(3)} (${ownerCount} owner${ownerCount === "1" ? "" : "s"})`);
+      setText("formula-insurance-factor", `${insuranceFactor.toFixed(3)} (${insuranceStatus.replaceAll("_", " ")})`);
+      setText("formula-service-factor", `${serviceFactor.toFixed(3)} (${serviceHistory.replaceAll("_", " ")})`);
+      setText("formula-legal-factor", `${legalFactor.toFixed(3)} (accident: ${accidentStatus}, challan: ${challanStatus})`);
+      setText("formula-condition-factor", `${conditionFactor.toFixed(3)} (tyre: ${tyreCondition}, body: ${bodyCondition})`);
+      setText("formula-usage-factor", `${usageUrgencyFactor.toFixed(3)} (usage: ${ownershipType}, urgency: ${sellerUrgency})`);
 
       predictionPanel.style.display = "block";
       algorithmPanel.style.display = "block";
@@ -435,6 +666,15 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         kilometers,
         repairsDone,
         color,
+        ownerCount,
+        insuranceStatus,
+        serviceHistory,
+        accidentStatus,
+        challanStatus,
+        tyreCondition,
+        bodyCondition,
+        ownershipType,
+        sellerUrgency,
       });
     }
 
@@ -450,6 +690,15 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("feature-engine", selectedSpec ? selectedSpec.engine : "-");
       setText("feature-repairs", values ? values.repairsDone : "-");
       setText("feature-color", values ? values.color : "-");
+      setText("feature-owner-count", values ? values.ownerCount : "-");
+      setText("feature-insurance", values ? values.insuranceStatus : "-");
+      setText("feature-service", values ? values.serviceHistory : "-");
+      setText("feature-accident", values ? values.accidentStatus : "-");
+      setText("feature-challan", values ? values.challanStatus : "-");
+      setText("feature-tyre", values ? values.tyreCondition : "-");
+      setText("feature-body", values ? values.bodyCondition : "-");
+      setText("feature-usage", values ? values.ownershipType : "-");
+      setText("feature-urgency", values ? values.sellerUrgency : "-");
     }
 
     predictButton.addEventListener("click", calculatePrediction);
