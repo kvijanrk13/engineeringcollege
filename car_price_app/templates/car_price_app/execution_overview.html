@@ -284,6 +284,28 @@
       </div>
     </div>
 
+    <h3 style="margin-top: 18px;">Unique Project Formula: K-RADIUS</h3>
+    <p>
+      <strong>K-RADIUS</strong> means <strong>Khammam Registered Automobile Depreciation Using Inspection Score</strong>.
+      Unlike common resale websites, this formula openly combines local Khammam/RTO context, registration risk,
+      challan/accident status, ownership trust, service records, usage stress, and seller urgency into one explainable
+      depreciation score.
+    </p>
+    <pre><code>K-RADIUS Predicted Price =
+Selected Year Khammam On-Road Price
+* Standard Depreciation Factors
+* Khammam Locality Factor
+* Registration Risk Factor
+* Documentation Trust Factor
+* Buyer Confidence Booster</code></pre>
+
+    <pre><code>K-RADIUS Index =
+(Buyer Confidence Score / 100)
+* Khammam Locality Factor
+* Registration Risk Factor
+* Documentation Trust Factor
+* Usage Stress Factor</code></pre>
+
     <h3 style="margin-top: 18px;">Depreciation Formula Used Now</h3>
     <pre><code>Predicted Price =
 Selected Year Khammam On-Road Price
@@ -346,6 +368,14 @@ Selected Year Khammam On-Road Price
         <tr>
           <th>Khammam/Telangana local factor</th>
           <td id="formula-local-factor">-</td>
+        </tr>
+        <tr>
+          <th>K-RADIUS index</th>
+          <td id="formula-kradius-index">-</td>
+        </tr>
+        <tr>
+          <th>K-RADIUS adjustment</th>
+          <td id="formula-kradius-adjustment">-</td>
         </tr>
       </tbody>
     </table>
@@ -680,6 +710,62 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       return advice;
     }
 
+    function calculateKRadiusIndex(values) {
+      const confidenceComponent = values.confidenceScore / 100;
+      const registrationRiskFactor = values.rtoLocation === "other_state" ? 0.92 : values.rtoLocation === "other_telanga" ? 0.97 : 1.00;
+      const documentationTrustFactor = (
+        selectFactor(values.insuranceStatus, {
+          valid_comprehensive: 1.04,
+          valid_third_party: 1.00,
+          expired: 0.93,
+          unknown: 0.95,
+        }) *
+        selectFactor(values.serviceHistory, {
+          authorized_complete: 1.05,
+          partial: 1.00,
+          local_garage: 0.96,
+          none: 0.90,
+        })
+      );
+      const legalCleanlinessFactor = (
+        selectFactor(values.accidentStatus, {
+          none: 1.00,
+          minor: 0.92,
+          major: 0.75,
+          unknown: 0.94,
+        }) *
+        selectFactor(values.challanStatus, {
+          none: 1.00,
+          minor: 0.97,
+          major: 0.92,
+          unknown: 0.96,
+        })
+      );
+      const usageStressFactor = selectFactor(values.ownershipType, {
+        personal: 1.00,
+        company: 0.96,
+        taxi: 0.82,
+        rental: 0.80,
+      });
+
+      return Math.max(
+        0.55,
+        Math.min(
+          1.08,
+          confidenceComponent *
+          values.localFactor *
+          registrationRiskFactor *
+          documentationTrustFactor *
+          legalCleanlinessFactor *
+          usageStressFactor
+        )
+      );
+    }
+
+    function kRadiusAdjustment(index) {
+      return Math.max(0.92, Math.min(1.04, 0.96 + (index * 0.08)));
+    }
+
     function renderSellerAdvice(advice) {
       sellerAdviceList.innerHTML = "";
       advice.forEach((item) => {
@@ -787,9 +873,13 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         ownershipType,
         sellerUrgency,
         rtoLocation,
+        localFactor,
       };
       const confidenceScore = calculateBuyerConfidenceScore(scoringValues);
       const risk = riskCategory(confidenceScore, scoringValues);
+      scoringValues.confidenceScore = confidenceScore;
+      const kRadiusIndex = calculateKRadiusIndex(scoringValues);
+      const kRadiusFactor = kRadiusAdjustment(kRadiusIndex);
       const predictedPrice = (
         basePrice *
         ageFactor *
@@ -802,7 +892,8 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         legalFactor *
         conditionFactor *
         usageUrgencyFactor *
-        localFactor
+        localFactor *
+        kRadiusFactor
       );
       const depreciation = Math.max(basePrice - predictedPrice, 0);
 
@@ -822,6 +913,8 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("formula-condition-factor", `${conditionFactor.toFixed(3)} (tyre: ${tyreCondition}, body: ${bodyCondition})`);
       setText("formula-usage-factor", `${usageUrgencyFactor.toFixed(3)} (usage: ${ownershipType}, urgency: ${sellerUrgency})`);
       setText("formula-local-factor", `${localFactor.toFixed(3)} (${rtoLocation.replaceAll("_", " ")})`);
+      setText("formula-kradius-index", kRadiusIndex.toFixed(3));
+      setText("formula-kradius-adjustment", `${kRadiusFactor.toFixed(3)} (${kRadiusFactor >= 1 ? "confidence premium" : "risk deduction"})`);
 
       predictionPanel.style.display = "block";
       algorithmPanel.style.display = "block";
