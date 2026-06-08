@@ -118,7 +118,7 @@
     </table>
   </section>
 
-  <section id="questionnaire-panel" style="display: none;">
+  <section id="questionnaire-panel">
     <h2>Registered Car Questionnaire</h2>
     <p>
       Enter the vehicle details below for the selected model/year. Use the official Telangana / Parivahan links
@@ -143,7 +143,7 @@
     <div style="margin-top: 18px;">
       <label>1. Colour</label>
       <p style="margin-top: 0;">Available colours are loaded from current official Maruti Suzuki/NEXA colour information where available.</p>
-      <div id="color-options" class="form-grid"></div>
+      <div id="color-options" class="form-grid">Select a Maruti Suzuki car model to load colour options.</div>
     </div>
 
     <div class="form-grid" style="margin-top: 18px;">
@@ -542,10 +542,12 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       if (!model || !year) {
         resultPanel.style.display = "none";
         specPanel.style.display = "none";
-        questionnairePanel.style.display = "none";
+        questionnairePanel.style.display = "block";
         predictionPanel.style.display = "none";
         algorithmPanel.style.display = "none";
         sellerAdvicePanel.style.display = "none";
+        document.getElementById("questionnaire-engine").value = "";
+        colorOptions.textContent = "Select a Maruti Suzuki car model to load colour options.";
         selectedSpec = null;
         selectedModel = null;
         return;
