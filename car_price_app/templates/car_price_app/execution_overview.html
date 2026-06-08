@@ -151,6 +151,119 @@
       <textarea id="repair-description" name="repair_description" rows="8" placeholder="Describe the repair type, date, workshop, parts replaced, insurance claim, and current condition. Maximum 3000 words." style="width: 100%; padding: 10px; border: 1px solid #b9c5d6; border-radius: 6px; font-size: 15px;"></textarea>
       <p id="repair-word-count" style="margin: 6px 0 0;">0 / 3000 words</p>
     </div>
+
+    <div class="actions">
+      <button id="predict-price-button" type="button">Predict Used Car Price</button>
+    </div>
+  </section>
+
+  <section id="prediction-panel" style="display: none;">
+    <h2>Predicted Used Car Price</h2>
+    <div class="metrics">
+      <div class="metric">
+        Estimated Current Value
+        <strong id="predicted-price-value">-</strong>
+      </div>
+      <div class="metric">
+        Depreciation
+        <strong id="depreciation-value">-</strong>
+      </div>
+      <div class="metric">
+        Confidence Band
+        <strong id="confidence-value">Approx. +/- 8%</strong>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 18px;">Depreciation Formula Used Now</h3>
+    <pre><code>Predicted Price =
+Selected Year Khammam On-Road Price
+× Age Depreciation Factor
+× Kilometer Usage Factor
+× Repair Condition Factor
+× Colour Demand Factor</code></pre>
+
+    <table style="margin-top: 16px;">
+      <tbody>
+        <tr>
+          <th>Selected year on-road price</th>
+          <td id="formula-base-price">-</td>
+        </tr>
+        <tr>
+          <th>Age depreciation factor</th>
+          <td id="formula-age-factor">-</td>
+        </tr>
+        <tr>
+          <th>Kilometer usage factor</th>
+          <td id="formula-km-factor">-</td>
+        </tr>
+        <tr>
+          <th>Repair condition factor</th>
+          <td id="formula-repair-factor">-</td>
+        </tr>
+        <tr>
+          <th>Colour demand factor</th>
+          <td id="formula-color-factor">-</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="algorithm-panel" style="display: none;">
+    <h2>Suitable Machine Learning Algorithm</h2>
+    <p>
+      Recommended algorithm from this project workflow:
+      <strong>Random Forest Regression</strong>. The GitHub execution templates already compare
+      <code>LinearRegression</code>, <code>Lasso</code>, <code>Ridge</code>,
+      <code>RandomForestRegressor</code>, and <code>GradientBoostingRegressor</code>.
+      Random Forest is suitable here because depreciation is affected by non-linear combinations of age,
+      kilometers driven, repairs, model segment, fuel type, transmission, and colour demand.
+    </p>
+    <pre><code>from sklearn.ensemble import RandomForestRegressor
+
+model = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42,
+)
+model.fit(X_train, y_train)
+predicted_price = model.predict(input_features)[0]</code></pre>
+
+    <h3 style="margin-top: 18px;">Feature Vector for This Page</h3>
+    <table>
+      <tbody>
+        <tr>
+          <th>model_name</th>
+          <td id="feature-model">-</td>
+        </tr>
+        <tr>
+          <th>model_year</th>
+          <td id="feature-year">-</td>
+        </tr>
+        <tr>
+          <th>on_road_price_khammam</th>
+          <td id="feature-on-road-price">-</td>
+        </tr>
+        <tr>
+          <th>vehicle_age</th>
+          <td id="feature-age">-</td>
+        </tr>
+        <tr>
+          <th>kilometers_driven</th>
+          <td id="feature-km">-</td>
+        </tr>
+        <tr>
+          <th>engine_capacity</th>
+          <td id="feature-engine">-</td>
+        </tr>
+        <tr>
+          <th>repairs_done</th>
+          <td id="feature-repairs">-</td>
+        </tr>
+        <tr>
+          <th>colour</th>
+          <td id="feature-color">-</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <section>
@@ -169,9 +282,24 @@
     const resultPanel = document.getElementById("result-panel");
     const specPanel = document.getElementById("spec-panel");
     const questionnairePanel = document.getElementById("questionnaire-panel");
+    const predictionPanel = document.getElementById("prediction-panel");
+    const algorithmPanel = document.getElementById("algorithm-panel");
     const colorOptions = document.getElementById("color-options");
     const repairDescription = document.getElementById("repair-description");
     const repairWordCount = document.getElementById("repair-word-count");
+    const predictButton = document.getElementById("predict-price-button");
+    const currentCalendarYear = new Date().getFullYear();
+    let selectedSpec = null;
+    let selectedModel = null;
+
+    function parseRupees(value) {
+      const digits = String(value || "").replace(/[^\d]/g, "");
+      return digits ? Number(digits) : 0;
+    }
+
+    function formatRupees(value) {
+      return `Rs ${Math.round(value).toLocaleString("en-IN")}`;
+    }
 
     function setText(id, value) {
       document.getElementById(id).textContent = value || "-";
@@ -186,15 +314,23 @@
         resultPanel.style.display = "none";
         specPanel.style.display = "none";
         questionnairePanel.style.display = "none";
+        predictionPanel.style.display = "none";
+        algorithmPanel.style.display = "none";
+        selectedSpec = null;
+        selectedModel = null;
         return;
       }
 
       const spec = model.yearly_specs.find((row) => String(row.year) === String(year));
+      selectedSpec = spec;
+      selectedModel = model;
       const image = document.getElementById("car-image");
 
       resultPanel.style.display = "block";
       specPanel.style.display = "block";
       questionnairePanel.style.display = "block";
+      predictionPanel.style.display = "none";
+      algorithmPanel.style.display = "block";
 
       image.src = model.image_url;
       image.alt = model.name;
@@ -211,6 +347,7 @@
       setText("key-specs-value", model.key_specs);
       setText("status-value", spec ? spec.status : "-");
       document.getElementById("questionnaire-engine").value = spec ? spec.engine : "";
+      updateFeatureVector(null);
 
       colorOptions.innerHTML = "";
       if (model.color_options && model.color_options.length) {
@@ -238,5 +375,83 @@
       }
       repairWordCount.textContent = `${Math.min(words.length, 3000)} / 3000 words`;
     });
+
+    function getSelectedRadioValue(name) {
+      const selected = document.querySelector(`input[name="${name}"]:checked`);
+      return selected ? selected.value : "";
+    }
+
+    function colourDemandFactor(color) {
+      const normalized = String(color || "").toLowerCase();
+      if (["white", "silver", "grey", "gray", "black", "nexa blue"].some((item) => normalized.includes(item))) {
+        return 1.02;
+      }
+      if (["red", "blue", "brown"].some((item) => normalized.includes(item))) {
+        return 1.00;
+      }
+      if (["green", "yellow", "orange", "khaki"].some((item) => normalized.includes(item))) {
+        return 0.98;
+      }
+      return 1.00;
+    }
+
+    function calculatePrediction() {
+      if (!selectedModel || !selectedSpec) {
+        return;
+      }
+
+      const basePrice = parseRupees(selectedSpec.price);
+      if (!basePrice) {
+        alert("This model was not on sale for the selected year. Please select another year.");
+        return;
+      }
+
+      const selectedYear = Number(yearSelect.value);
+      const age = Math.max(currentCalendarYear - selectedYear, 0);
+      const kilometers = Number(document.getElementById("kilometers-driven").value || 0);
+      const repairsDone = getSelectedRadioValue("repairs_done") || "No";
+      const color = getSelectedRadioValue("color") || "Not selected";
+
+      const ageFactor = Math.max(0.35, Math.pow(0.88, age));
+      const kmFactor = Math.max(0.70, 1 - Math.min(kilometers, 200000) / 1000000);
+      const repairFactor = repairsDone === "Yes" ? 0.88 : 1.00;
+      const colorFactor = colourDemandFactor(color);
+      const predictedPrice = basePrice * ageFactor * kmFactor * repairFactor * colorFactor;
+      const depreciation = Math.max(basePrice - predictedPrice, 0);
+
+      setText("predicted-price-value", formatRupees(predictedPrice));
+      setText("depreciation-value", `${formatRupees(depreciation)} (${((depreciation / basePrice) * 100).toFixed(1)}%)`);
+      setText("formula-base-price", formatRupees(basePrice));
+      setText("formula-age-factor", `${ageFactor.toFixed(3)} (${age} years old)`);
+      setText("formula-km-factor", `${kmFactor.toFixed(3)} (${kilometers.toLocaleString("en-IN")} km)`);
+      setText("formula-repair-factor", `${repairFactor.toFixed(3)} (${repairsDone})`);
+      setText("formula-color-factor", `${colorFactor.toFixed(3)} (${color})`);
+
+      predictionPanel.style.display = "block";
+      algorithmPanel.style.display = "block";
+      updateFeatureVector({
+        basePrice,
+        age,
+        kilometers,
+        repairsDone,
+        color,
+      });
+    }
+
+    function updateFeatureVector(values) {
+      const selectedYear = yearSelect.value || "-";
+      const basePrice = selectedSpec ? parseRupees(selectedSpec.price) : 0;
+      const age = selectedYear !== "-" ? Math.max(currentCalendarYear - Number(selectedYear), 0) : "-";
+      setText("feature-model", selectedModel ? selectedModel.name : "-");
+      setText("feature-year", selectedYear);
+      setText("feature-on-road-price", basePrice ? formatRupees(basePrice) : "-");
+      setText("feature-age", age);
+      setText("feature-km", values ? values.kilometers.toLocaleString("en-IN") : "-");
+      setText("feature-engine", selectedSpec ? selectedSpec.engine : "-");
+      setText("feature-repairs", values ? values.repairsDone : "-");
+      setText("feature-color", values ? values.color : "-");
+    }
+
+    predictButton.addEventListener("click", calculatePrediction);
   </script>
 {% endblock %}
