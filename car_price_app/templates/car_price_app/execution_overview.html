@@ -152,13 +152,34 @@
         <input id="questionnaire-engine" name="engine_capacity" type="text" readonly>
       </div>
       <div>
-        <label for="kilometers-driven">3. Number of Kilometers Driven</label>
-        <input id="kilometers-driven" name="kilometers_driven" type="number" min="0" step="1" placeholder="Enter kilometers driven">
+        <label for="kilometers-driven">3. Total Kilometers Driven from Registration to Till Date</label>
+        <input id="kilometers-driven" name="kilometers_driven" type="number" min="0" step="1" placeholder="Enter odometer reading as of today">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top: 18px;">
+      <div>
+        <label for="odometer-source">4. Odometer Reading Verification</label>
+        <select id="odometer-source" name="odometer_source">
+          <option value="service_verified">Verified with service records</option>
+          <option value="insurance_verified">Verified with insurance/inspection record</option>
+          <option value="owner_claim">Owner claim only</option>
+          <option value="suspicious">Suspicious / mismatch found</option>
+        </select>
+      </div>
+      <div>
+        <label for="expected-usage-type">Expected Usage Pattern</label>
+        <select id="expected-usage-type" name="expected_usage_type">
+          <option value="normal">Normal personal use</option>
+          <option value="low">Low usage / occasional use</option>
+          <option value="high">High usage / long commute</option>
+          <option value="commercial">Commercial style usage</option>
+        </select>
       </div>
     </div>
 
     <div style="margin-top: 18px;">
-      <label>4. Any Repairs Done?</label>
+      <label>5. Any Repairs Done?</label>
       <div class="actions" style="margin-top: 0;">
         <label style="font-weight: 400;"><input type="radio" name="repairs_done" value="Yes" style="width: auto;"> Yes</label>
         <label style="font-weight: 400;"><input type="radio" name="repairs_done" value="No" style="width: auto;"> No</label>
@@ -166,14 +187,14 @@
     </div>
 
     <div style="margin-top: 18px;">
-      <label for="repair-description">5. If Repairs Done, Describe the Repairs</label>
+      <label for="repair-description">6. If Repairs Done, Describe the Repairs</label>
       <textarea id="repair-description" name="repair_description" rows="8" placeholder="Describe the repair type, date, workshop, parts replaced, insurance claim, and current condition. Maximum 3000 words." style="width: 100%; padding: 10px; border: 1px solid #b9c5d6; border-radius: 6px; font-size: 15px;"></textarea>
       <p id="repair-word-count" style="margin: 6px 0 0;">0 / 3000 words</p>
     </div>
 
     <div class="form-grid" style="margin-top: 18px;">
       <div>
-        <label for="owner-count">6. Number of Previous Owners</label>
+        <label for="owner-count">7. Number of Previous Owners</label>
         <select id="owner-count" name="owner_count">
           <option value="1">First owner</option>
           <option value="2">Second owner</option>
@@ -182,7 +203,7 @@
         </select>
       </div>
       <div>
-        <label for="insurance-status">7. Insurance Status</label>
+        <label for="insurance-status">8. Insurance Status</label>
         <select id="insurance-status" name="insurance_status">
           <option value="valid_comprehensive">Valid comprehensive insurance</option>
           <option value="valid_third_party">Valid third-party insurance</option>
@@ -191,7 +212,7 @@
         </select>
       </div>
       <div>
-        <label for="service-history">8. Service History</label>
+        <label for="service-history">9. Service History</label>
         <select id="service-history" name="service_history">
           <option value="authorized_complete">Complete authorized Maruti service record</option>
           <option value="partial">Partial service record</option>
@@ -200,7 +221,7 @@
         </select>
       </div>
       <div>
-        <label for="accident-status">9. Accident History</label>
+        <label for="accident-status">10. Accident History</label>
         <select id="accident-status" name="accident_status">
           <option value="none">No accident reported</option>
           <option value="minor">Minor accident / scratches / dents</option>
@@ -209,7 +230,7 @@
         </select>
       </div>
       <div>
-        <label for="challan-status">10. Traffic Challan Status</label>
+        <label for="challan-status">11. Traffic Challan Status</label>
         <select id="challan-status" name="challan_status">
           <option value="none">No pending challans verified</option>
           <option value="minor">Minor pending challans</option>
@@ -218,7 +239,7 @@
         </select>
       </div>
       <div>
-        <label for="tyre-condition">11. Tyre Condition</label>
+        <label for="tyre-condition">12. Tyre Condition</label>
         <select id="tyre-condition" name="tyre_condition">
           <option value="new">New / excellent</option>
           <option value="good">Good</option>
@@ -227,7 +248,7 @@
         </select>
       </div>
       <div>
-        <label for="body-condition">12. Body and Interior Condition</label>
+        <label for="body-condition">13. Body and Interior Condition</label>
         <select id="body-condition" name="body_condition">
           <option value="excellent">Excellent</option>
           <option value="good">Good</option>
@@ -236,7 +257,7 @@
         </select>
       </div>
       <div>
-        <label for="ownership-type">13. Vehicle Usage Type</label>
+        <label for="ownership-type">14. Vehicle Usage Type</label>
         <select id="ownership-type" name="ownership_type">
           <option value="personal">Personal use</option>
           <option value="company">Company use</option>
@@ -245,7 +266,7 @@
         </select>
       </div>
       <div>
-        <label for="seller-urgency">14. Seller Urgency</label>
+        <label for="seller-urgency">15. Seller Urgency</label>
         <select id="seller-urgency" name="seller_urgency">
           <option value="normal">Normal sale</option>
           <option value="urgent">Urgent sale</option>
@@ -332,6 +353,14 @@ Selected Year Khammam On-Road Price
         <tr>
           <th>Kilometer usage factor</th>
           <td id="formula-km-factor">-</td>
+        </tr>
+        <tr>
+          <th>Expected kilometer range</th>
+          <td id="formula-expected-km">-</td>
+        </tr>
+        <tr>
+          <th>Odometer verification/tampering factor</th>
+          <td id="formula-odometer-factor">-</td>
         </tr>
         <tr>
           <th>Repair condition factor</th>
@@ -428,6 +457,18 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         <tr>
           <th>kilometers_driven</th>
           <td id="feature-km">-</td>
+        </tr>
+        <tr>
+          <th>expected_kilometers_till_date</th>
+          <td id="feature-expected-km">-</td>
+        </tr>
+        <tr>
+          <th>odometer_verification</th>
+          <td id="feature-odometer-source">-</td>
+        </tr>
+        <tr>
+          <th>odometer_tampering_risk</th>
+          <td id="feature-odometer-risk">-</td>
         </tr>
         <tr>
           <th>engine_capacity</th>
@@ -641,10 +682,45 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       });
     }
 
+    function expectedKilometerRange(age, usageType) {
+      const yearlyUsage = selectFactor(usageType, {
+        low: 6000,
+        normal: 12000,
+        high: 18000,
+        commercial: 28000,
+      }, 12000);
+      const expected = Math.max(age, 1) * yearlyUsage;
+      return {
+        expected,
+        low: Math.round(expected * 0.45),
+        high: Math.round(expected * 1.75),
+      };
+    }
+
+    function odometerRiskLevel(kilometers, range, source) {
+      if (source === "suspicious") return "High";
+      if (kilometers > 0 && kilometers < range.low) return "Medium";
+      if (kilometers > range.high) return "Medium";
+      if (source === "owner_claim") return "Medium";
+      return "Low";
+    }
+
+    function odometerTamperingFactor(risk, source) {
+      if (risk === "High") return 0.82;
+      if (risk === "Medium" && source === "owner_claim") return 0.93;
+      if (risk === "Medium") return 0.90;
+      if (source === "service_verified") return 1.02;
+      if (source === "insurance_verified") return 1.01;
+      return 1.00;
+    }
+
     function calculateBuyerConfidenceScore(values) {
       let score = 100;
       score -= Math.min(values.age * 2, 24);
       score -= Math.min(Math.floor(values.kilometers / 10000) * 2, 20);
+      if (values.odometerRisk === "Medium") score -= 10;
+      if (values.odometerRisk === "High") score -= 24;
+      if (values.odometerSource === "owner_claim") score -= 6;
       if (values.repairsDone === "Yes") score -= 10;
       if (values.ownerCount === "2") score -= 5;
       if (values.ownerCount === "3") score -= 10;
@@ -672,7 +748,7 @@ predicted_price = model.predict(input_features)[0]</code></pre>
     }
 
     function riskCategory(score, values) {
-      if (values.accidentStatus === "major" || values.ownershipType === "taxi" || values.ownershipType === "rental") {
+      if (values.odometerRisk === "High" || values.accidentStatus === "major" || values.ownershipType === "taxi" || values.ownershipType === "rental") {
         return "High Risk";
       }
       if (score >= 80) return "Low Risk";
@@ -684,6 +760,9 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       const advice = [];
       if (values.challanStatus !== "none") {
         advice.push("Clear pending traffic challans and keep payment receipts before negotiating with buyers.");
+      }
+      if (values.odometerRisk !== "Low") {
+        advice.push("Verify odometer reading with service records, insurance inspection, or repair bills because suspicious readings reduce buyer confidence.");
       }
       if (values.insuranceStatus === "expired" || values.insuranceStatus === "unknown") {
         advice.push("Renew or verify insurance to avoid buyer deductions during documentation.");
@@ -792,6 +871,8 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       const selectedYear = Number(yearSelect.value);
       const age = Math.max(currentCalendarYear - selectedYear, 0);
       const kilometers = Number(document.getElementById("kilometers-driven").value || 0);
+      const odometerSource = document.getElementById("odometer-source").value;
+      const expectedUsageType = document.getElementById("expected-usage-type").value;
       const repairsDone = getSelectedRadioValue("repairs_done") || "No";
       const color = getSelectedRadioValue("color") || "Not selected";
       const ownerCount = document.getElementById("owner-count").value;
@@ -807,6 +888,9 @@ predicted_price = model.predict(input_features)[0]</code></pre>
 
       const ageFactor = Math.max(0.35, Math.pow(0.88, age));
       const kmFactor = Math.max(0.70, 1 - Math.min(kilometers, 200000) / 1000000);
+      const expectedRange = expectedKilometerRange(age, expectedUsageType);
+      const odometerRisk = odometerRiskLevel(kilometers, expectedRange, odometerSource);
+      const odometerFactor = odometerTamperingFactor(odometerRisk, odometerSource);
       const repairFactor = repairsDone === "Yes" ? 0.88 : 1.00;
       const colorFactor = colourDemandFactor(color);
       const ownerFactor = selectFactor(ownerCount, {"1": 1.00, "2": 0.94, "3": 0.88, "4": 0.82});
@@ -876,6 +960,9 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         sellerUrgency,
         rtoLocation,
         localFactor,
+        odometerSource,
+        expectedUsageType,
+        odometerRisk,
       };
       const confidenceScore = calculateBuyerConfidenceScore(scoringValues);
       const risk = riskCategory(confidenceScore, scoringValues);
@@ -886,6 +973,7 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         basePrice *
         ageFactor *
         kmFactor *
+        odometerFactor *
         repairFactor *
         colorFactor *
         ownerFactor *
@@ -906,6 +994,11 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("formula-base-price", formatRupees(basePrice));
       setText("formula-age-factor", `${ageFactor.toFixed(3)} (${age} years old)`);
       setText("formula-km-factor", `${kmFactor.toFixed(3)} (${kilometers.toLocaleString("en-IN")} km)`);
+      setText(
+        "formula-expected-km",
+        `${expectedRange.low.toLocaleString("en-IN")} - ${expectedRange.high.toLocaleString("en-IN")} km (${expectedUsageType.replaceAll("_", " ")})`
+      );
+      setText("formula-odometer-factor", `${odometerFactor.toFixed(3)} (${odometerRisk} risk, ${odometerSource.replaceAll("_", " ")})`);
       setText("formula-repair-factor", `${repairFactor.toFixed(3)} (${repairsDone})`);
       setText("formula-color-factor", `${colorFactor.toFixed(3)} (${color})`);
       setText("formula-owner-factor", `${ownerFactor.toFixed(3)} (${ownerCount} owner${ownerCount === "1" ? "" : "s"})`);
@@ -925,6 +1018,10 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         basePrice,
         age,
         kilometers,
+        expectedRange,
+        odometerSource,
+        expectedUsageType,
+        odometerRisk,
         repairsDone,
         color,
         ownerCount,
@@ -951,6 +1048,12 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("feature-on-road-price", basePrice ? formatRupees(basePrice) : "-");
       setText("feature-age", age);
       setText("feature-km", values ? values.kilometers.toLocaleString("en-IN") : "-");
+      setText(
+        "feature-expected-km",
+        values ? `${values.expectedRange.low.toLocaleString("en-IN")} - ${values.expectedRange.high.toLocaleString("en-IN")}` : "-"
+      );
+      setText("feature-odometer-source", values ? values.odometerSource : "-");
+      setText("feature-odometer-risk", values ? values.odometerRisk : "-");
       setText("feature-engine", selectedSpec ? selectedSpec.engine : "-");
       setText("feature-repairs", values ? values.repairsDone : "-");
       setText("feature-color", values ? values.color : "-");
