@@ -1,26 +1,158 @@
 {% extends "car_price_app/base.html" %}
 
 {% block content %}
-  <h1>GitHub Project Execution Pages</h1>
+  <h1>{{ title }}</h1>
+
   <section>
-    <p>These pages show how the depreciation prediction flow works: load the car dataset, preprocess it, compare models, save the prediction model, and run the final car price estimate.</p>
-    {% if not registered %}
-      <p><a href="{% url 'registration' %}">Complete registration</a> before continuing to the depreciation prediction steps.</p>
-    {% endif %}
+    <h2>Select Maruti Suzuki Car Details</h2>
+    <p>
+      Choose a Maruti Suzuki model and year to view the available specification fields and
+      approximate on-road price for Khammam District, Telangana. The fields are ready now;
+      exact official year-wise specifications can be updated model-by-model later.
+    </p>
+
+    <div class="form-grid">
+      <div>
+        <label for="car-model">Maruti Suzuki Car Model</label>
+        <select id="car-model">
+          <option value="">Select car model</option>
+          {% for model in maruti_data %}
+            <option value="{{ model.name }}">{{ model.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="car-year">Manufacturing / Price Year</label>
+        <select id="car-year">
+          <option value="">Select year</option>
+          {% for year in years %}
+            <option value="{{ year }}">{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
   </section>
 
-  <div class="step-grid">
-    {% for step in steps %}
-      <article class="step-card">
-        <h3>{{ forloop.counter }}. {{ step.title }}</h3>
-        <p>{{ step.purpose }}</p>
-        <a href="{% url 'execution-step' step.slug %}">Open execution page</a>
-      </article>
-    {% endfor %}
-    <article class="step-card">
-      <h3>Apriori Data Mining Execution</h3>
-      <p>Run association-rule mining on price and depreciation bands for the car dataset.</p>
-      <a href="{% url 'apriori-execution' %}">Open Apriori page</a>
-    </article>
-  </div>
+  <section id="result-panel" style="display: none;">
+    <div style="display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 20px; align-items: start;">
+      <div>
+        <img id="car-image" src="" alt="" style="width: 100%; border-radius: 8px; border: 1px solid #d7dfeb; background: #eef3f8;">
+      </div>
+      <div>
+        <h2 id="selected-title">Selected Car</h2>
+        <div class="metrics">
+          <div class="metric">
+            Segment
+            <strong id="segment-value">-</strong>
+          </div>
+          <div class="metric">
+            Khammam On-Road Price
+            <strong id="price-value">-</strong>
+          </div>
+          <div class="metric">
+            Selected Year
+            <strong id="year-value">-</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="spec-panel" style="display: none;">
+    <h2>Car Specifications</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th>Official Specification Source</th>
+          <td id="source-value">Maruti Suzuki official website / brochure verification pending for selected historical year</td>
+        </tr>
+        <tr>
+          <th>Engine</th>
+          <td id="engine-value">-</td>
+        </tr>
+        <tr>
+          <th>Power</th>
+          <td id="power-value">-</td>
+        </tr>
+        <tr>
+          <th>Mileage</th>
+          <td id="mileage-value">-</td>
+        </tr>
+        <tr>
+          <th>Fuel Type</th>
+          <td id="fuel-value">-</td>
+        </tr>
+        <tr>
+          <th>Transmission</th>
+          <td id="transmission-value">-</td>
+        </tr>
+        <tr>
+          <th>Key Specifications</th>
+          <td id="key-specs-value">-</td>
+        </tr>
+        <tr>
+          <th>Status / Notes</th>
+          <td id="status-value">-</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Available Models and Years</h2>
+    <p>
+      This screen currently covers {{ maruti_data|length }} Maruti Suzuki models and years 2015 to 2026.
+      If a model was not available in a selected year, the price/specification area will show it as not on sale.
+    </p>
+  </section>
+
+  {{ maruti_lookup|json_script:"maruti-data" }}
+  <script>
+    const marutiData = JSON.parse(document.getElementById("maruti-data").textContent);
+    const modelSelect = document.getElementById("car-model");
+    const yearSelect = document.getElementById("car-year");
+    const resultPanel = document.getElementById("result-panel");
+    const specPanel = document.getElementById("spec-panel");
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value || "-";
+    }
+
+    function updateSelection() {
+      const modelName = modelSelect.value;
+      const year = yearSelect.value;
+      const model = marutiData[modelName];
+
+      if (!model || !year) {
+        resultPanel.style.display = "none";
+        specPanel.style.display = "none";
+        return;
+      }
+
+      const spec = model.yearly_specs.find((row) => String(row.year) === String(year));
+      const image = document.getElementById("car-image");
+
+      resultPanel.style.display = "block";
+      specPanel.style.display = "block";
+
+      image.src = model.image_url;
+      image.alt = model.name;
+
+      setText("selected-title", model.name);
+      setText("segment-value", model.segment);
+      setText("price-value", spec ? spec.price : "-");
+      setText("year-value", year);
+      setText("engine-value", spec ? spec.engine : "-");
+      setText("power-value", spec ? spec.power : "-");
+      setText("mileage-value", spec ? spec.mileage : "-");
+      setText("fuel-value", spec ? spec.fuel_types : "-");
+      setText("transmission-value", spec ? spec.transmission : "-");
+      setText("key-specs-value", model.key_specs);
+      setText("status-value", spec ? spec.status : "-");
+    }
+
+    modelSelect.addEventListener("change", updateSelection);
+    yearSelect.addEventListener("change", updateSelection);
+  </script>
 {% endblock %}

@@ -191,13 +191,15 @@ def registration(request):
 
 
 def execution_overview(request):
+    maruti_data = maruti_project_dataset()
     return render(
         request,
         "car_price_app/execution_overview.html",
         {
-            "title": PROJECT_TITLE,
-            "steps": GITHUB_EXECUTION_STEPS,
-            "registered": bool(request.session.get("student_registration_id")),
+            "title": "Maruti Suzuki Khammam Car Price Selection",
+            "years": YEARS,
+            "maruti_data": maruti_data,
+            "maruti_lookup": {model["name"]: model for model in maruti_data},
         },
     )
 
