@@ -190,17 +190,21 @@ def registration(request):
     )
 
 
-def execution_overview(request):
+def _maruti_execution_context(title: str) -> dict:
     maruti_data = maruti_project_dataset()
+    return {
+        "title": title,
+        "years": YEARS,
+        "maruti_data": maruti_data,
+        "maruti_lookup": {model["name"]: model for model in maruti_data},
+    }
+
+
+def execution_overview(request):
     return render(
         request,
         "car_price_app/execution_overview.html",
-        {
-            "title": "Maruti Suzuki Khammam Car Price Selection",
-            "years": YEARS,
-            "maruti_data": maruti_data,
-            "maruti_lookup": {model["name"]: model for model in maruti_data},
-        },
+        _maruti_execution_context("Maruti Suzuki Khammam Car Price Selection"),
     )
 
 
@@ -385,10 +389,6 @@ def apriori_execution(request):
 def maruti_prices(request):
     return render(
         request,
-        'car_price_app/maruti_apriori.html',
-        {
-            'title': 'Maruti Suzuki Cars - Khammam District On-Road Prices (2015-2026)',
-            'years': YEARS,
-            'maruti_data': maruti_project_dataset(),
-        },
+        "car_price_app/execution_overview.html",
+        _maruti_execution_context("Maruti Suzuki Cars - Khammam Price, Questionnaire, and K-RADIUS Prediction"),
     )
