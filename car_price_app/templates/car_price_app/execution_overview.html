@@ -99,6 +99,60 @@
     </table>
   </section>
 
+  <section id="questionnaire-panel" style="display: none;">
+    <h2>Registered Car Questionnaire</h2>
+    <p>
+      Enter the vehicle details below for the selected model/year. Use the official Telangana / Parivahan links
+      to manually verify traffic challan status for the registration number. Accident or criminal case details are
+      not exposed as a simple public RTA API, so keep those as manually verified project inputs.
+    </p>
+
+    <div class="form-grid">
+      <div>
+        <label for="registration-number">Registration Number</label>
+        <input id="registration-number" name="registration_number" type="text" placeholder="Example: TG04AB1234">
+      </div>
+      <div>
+        <label>Official Verification Links</label>
+        <div class="actions" style="margin-top: 0;">
+          <a class="button" href="https://echallan.tspolice.gov.in/publicview/" target="_blank" rel="noopener">Telangana e-Challan</a>
+          <a class="button" href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">Parivahan Challan</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <label>1. Colour</label>
+      <p style="margin-top: 0;">Available colours are loaded from current official Maruti Suzuki/NEXA colour information where available.</p>
+      <div id="color-options" class="form-grid"></div>
+    </div>
+
+    <div class="form-grid" style="margin-top: 18px;">
+      <div>
+        <label for="questionnaire-engine">2. Engine Capacity</label>
+        <input id="questionnaire-engine" name="engine_capacity" type="text" readonly>
+      </div>
+      <div>
+        <label for="kilometers-driven">3. Number of Kilometers Driven</label>
+        <input id="kilometers-driven" name="kilometers_driven" type="number" min="0" step="1" placeholder="Enter kilometers driven">
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <label>4. Any Repairs Done?</label>
+      <div class="actions" style="margin-top: 0;">
+        <label style="font-weight: 400;"><input type="radio" name="repairs_done" value="Yes" style="width: auto;"> Yes</label>
+        <label style="font-weight: 400;"><input type="radio" name="repairs_done" value="No" style="width: auto;"> No</label>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <label for="repair-description">5. If Repairs Done, Describe the Repairs</label>
+      <textarea id="repair-description" name="repair_description" rows="8" placeholder="Describe the repair type, date, workshop, parts replaced, insurance claim, and current condition. Maximum 3000 words." style="width: 100%; padding: 10px; border: 1px solid #b9c5d6; border-radius: 6px; font-size: 15px;"></textarea>
+      <p id="repair-word-count" style="margin: 6px 0 0;">0 / 3000 words</p>
+    </div>
+  </section>
+
   <section>
     <h2>Available Models and Years</h2>
     <p>
@@ -114,6 +168,10 @@
     const yearSelect = document.getElementById("car-year");
     const resultPanel = document.getElementById("result-panel");
     const specPanel = document.getElementById("spec-panel");
+    const questionnairePanel = document.getElementById("questionnaire-panel");
+    const colorOptions = document.getElementById("color-options");
+    const repairDescription = document.getElementById("repair-description");
+    const repairWordCount = document.getElementById("repair-word-count");
 
     function setText(id, value) {
       document.getElementById(id).textContent = value || "-";
@@ -127,6 +185,7 @@
       if (!model || !year) {
         resultPanel.style.display = "none";
         specPanel.style.display = "none";
+        questionnairePanel.style.display = "none";
         return;
       }
 
@@ -135,6 +194,7 @@
 
       resultPanel.style.display = "block";
       specPanel.style.display = "block";
+      questionnairePanel.style.display = "block";
 
       image.src = model.image_url;
       image.alt = model.name;
@@ -150,9 +210,33 @@
       setText("transmission-value", spec ? spec.transmission : "-");
       setText("key-specs-value", model.key_specs);
       setText("status-value", spec ? spec.status : "-");
+      document.getElementById("questionnaire-engine").value = spec ? spec.engine : "";
+
+      colorOptions.innerHTML = "";
+      if (model.color_options && model.color_options.length) {
+        model.color_options.forEach((color) => {
+          const option = document.createElement("label");
+          option.style.fontWeight = "400";
+          option.style.border = "1px solid #d7dfeb";
+          option.style.borderRadius = "6px";
+          option.style.padding = "10px";
+          option.style.background = "#fff";
+          option.innerHTML = `<input type="radio" name="color" value="${color}" style="width: auto;"> ${color}`;
+          colorOptions.appendChild(option);
+        });
+      } else {
+        colorOptions.textContent = "Colour list not available for this model.";
+      }
     }
 
     modelSelect.addEventListener("change", updateSelection);
     yearSelect.addEventListener("change", updateSelection);
+    repairDescription.addEventListener("input", () => {
+      const words = repairDescription.value.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 3000) {
+        repairDescription.value = words.slice(0, 3000).join(" ");
+      }
+      repairWordCount.textContent = `${Math.min(words.length, 3000)} / 3000 words`;
+    });
   </script>
 {% endblock %}

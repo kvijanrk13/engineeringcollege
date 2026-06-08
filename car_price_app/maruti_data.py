@@ -314,6 +314,39 @@ MARUTI_MODELS = [
     ),
 ]
 
+COLOR_OPTIONS = {
+    "Alto 800": ["Solid White", "Silky Silver", "Granite Grey", "Uptown Red", "Mojito Green"],
+    "Alto K10": ["Sizzling Red", "Silky Silver", "Granite Grey", "Speedy Blue", "Solid White", "Earth Gold"],
+    "S-Presso": ["Solid White", "Silky Silver", "Granite Grey", "Sizzling Red", "Pearl Starry Blue"],
+    "Celerio": ["Solid Fire Red", "Speedy Blue", "Glistening Grey", "Silky Silver", "Arctic White", "Caffeine Brown"],
+    "Wagon R": ["Solid White", "Silky Silver", "Magma Grey", "Poolside Blue", "Gallant Red", "Nutmeg Brown"],
+    "Swift": [
+        "Sizzling Red with Bluish Black Roof",
+        "Luster Blue with Bluish Black Roof",
+        "Pearl Arctic White with Bluish Black Roof",
+        "Sizzling Red",
+        "Bluish Black",
+        "Luster Blue",
+        "Novel Orange",
+        "Magma Grey",
+        "Splendid Silver",
+        "Pearl Arctic White",
+    ],
+    "Baleno": ["Arctic White", "Opulent Red", "Bluish Black", "Grandeur Grey", "Luxe Beige", "NEXA Blue", "Splendid Silver"],
+    "Ignis": ["NEXA Blue", "Turquoise Blue", "Lucent Orange", "Silky Silver", "Glistening Grey", "Pearl Arctic White"],
+    "Dzire": ["Gallant Red", "Alluring Blue", "Nutmeg Brown", "Magma Grey", "Splendid Silver", "Pearl Arctic White"],
+    "Ciaz": ["NEXA Blue", "Pearl Metallic Dignity Brown", "Pearl Midnight Black", "Metallic Magma Grey", "Pearl Snow White", "Splendid Silver"],
+    "Vitara Brezza / Brezza": ["Sizzling Red", "Brave Khaki", "Exuberant Blue", "Magma Grey", "Splendid Silver", "Pearl Arctic White"],
+    "Ertiga": ["Pearl Metallic Auburn Red", "Prime Oxford Blue", "Magma Grey", "Splendid Silver", "Dignity Brown", "Pearl Arctic White"],
+    "Eeco": ["Solid White", "Metallic Silky Silver", "Pearl Midnight Black", "Metallic Glistening Grey", "Metallic Brisk Blue"],
+    "S-Cross": ["NEXA Blue", "Caffeine Brown", "Granite Grey", "Premium Silver", "Pearl Arctic White"],
+    "XL6": ["NEXA Blue", "Opulent Red", "Brave Khaki", "Grandeur Grey", "Splendid Silver", "Arctic White"],
+    "Fronx": ["NEXA Blue", "Opulent Red", "Splendid Silver", "Grandeur Grey", "Earthen Brown", "Bluish Black", "Arctic White"],
+    "Grand Vitara": ["NEXA Blue", "Opulent Red", "Chestnut Brown", "Grandeur Grey", "Splendid Silver", "Arctic White", "Bluish Black"],
+    "Jimny": ["Kinetic Yellow", "Sizzling Red", "NEXA Blue", "Granite Grey", "Bluish Black", "Pearl Arctic White"],
+    "Invicto": ["NEXA Blue", "Mystic White", "Stellar Bronze", "Majestic Silver"],
+}
+
 
 def _starting_price(model: MarutiModel) -> int:
     if model.base_price_2015 is not None:
@@ -380,6 +413,7 @@ def maruti_project_dataset() -> list[dict]:
                 "segment": model.segment,
                 "image_url": model.image_url,
                 "key_specs": model.key_specs,
+                "color_options": COLOR_OPTIONS.get(model.name, []),
                 "prices": [row["price"] for row in yearly_specs],
                 "yearly_specs": yearly_specs,
             }
