@@ -28,7 +28,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Alto 800",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/cw/ec/20917/Maruti-Suzuki-Alto-800-Right-Front-Three-Quarter-76783.jpg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:17671701-80a4-42fa-a1f1-b3425350e910/as/TVC-Banner_desktop_2000x1171.jpg?height=1171&width=2000&id=1&preferwebp=true",
         2015,
         2023,
         315000,
@@ -44,7 +44,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Alto K10",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/130591/alto-k10-exterior-right-front-three-quarter-72.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:17671701-80a4-42fa-a1f1-b3425350e910/as/TVC-Banner_desktop_2000x1171.jpg?height=1171&width=2000&id=1&preferwebp=true",
         2015,
         None,
         360000,
@@ -59,7 +59,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "S-Presso",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/40737/s-presso-exterior-right-front-three-quarter-8.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:daf91fb5-29d8-4979-8482-a6c79033c70b/as/Centre_Desktop.png?height=1080&width=1920",
         2019,
         None,
         None,
@@ -74,7 +74,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Celerio",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/53695/celerio-exterior-right-front-three-quarter-5.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:ed83cc03-2b30-4383-ba46-b52ca89fc2df/as/Variant-Banner-TVC-2000-1171.png?width=2000&id=1&preferwebp=true",
         2015,
         None,
         430000,
@@ -89,7 +89,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Wagon R",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/112947/wagon-r-exterior-right-front-three-quarter-3.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:e4d500dc-a6ea-458f-8940-867a1ae4a10e/as/wagenr_TVC-Banner_2000x1171.jpg?height=1171&width=2000&id=1&preferwebp=true",
         2015,
         None,
         470000,
@@ -104,7 +104,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Swift",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/54399/swift-exterior-right-front-three-quarter-64.jpeg",
+        "https://www.marutisuzuki.com/js/arenabrandjs/threesixtyjs/img/RED/SUZUKI_SWIFT_EXT_360_RED_V-1_1.webp",
         2015,
         None,
         550000,
@@ -119,7 +119,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Baleno",
         "Premium hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/106257/baleno-exterior-right-front-three-quarter-2.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:d1f6c965-1ce7-46c9-b3d5-46cac019f825/as/Baleno_Fold_Desktop_Image.png?width=2000&id=1&preferwebp=true",
         2015,
         None,
         610000,
@@ -134,7 +134,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Ignis",
         "Hatchback",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/40325/ignis-exterior-right-front-three-quarter-2.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:36ff1028-4590-4958-a35c-5952d22c390f/as/Ignis_fold_4k_Desktop_Image.png?width=2000&id=1&preferwebp=true",
         2017,
         None,
         None,
@@ -149,7 +149,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Dzire",
         "Compact sedan",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/45691/dzire-exterior-right-front-three-quarter-3.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:dcb80bf0-b7be-4ddc-9ba0-1b248acf6654/as/Dzire_TVC_Desktop_Dummy.png?width=2000&id=1&preferwebp=true",
         2015,
         None,
         620000,
@@ -164,7 +164,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Ciaz",
         "Sedan",
-        "https://imgd.aeplcdn.com/310x174/cw/ec/19242/Maruti-Suzuki-Ciaz-Right-Front-Three-Quarter-60066.jpg",
+        "https://www.nexaexperience.com/default-meta-image.png?width=1200&format=pjpg&optimize=medium",
         2015,
         None,
         850000,
@@ -179,7 +179,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Vitara Brezza / Brezza",
         "Compact SUV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/123185/brezza-exterior-right-front-three-quarter-4.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:06493d36-fbc0-47d9-8f6e-6eb08a229718/as/Brezza_Desktop_Banner_web.jpg?height=820&width=2000&id=1&preferwebp=true",
         2016,
         None,
         None,
@@ -194,7 +194,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Ertiga",
         "MPV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/115777/ertiga-exterior-right-front-three-quarter-3.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:1ec89dd0-f4fc-4499-9401-1a69459f13e7/as/Desktop-Ertiga-Dual-tone-carousel-image.jpg?height=1440&width=2560",
         2015,
         None,
         760000,
@@ -209,7 +209,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Eeco",
         "Van",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/40741/eeco-exterior-right-front-three-quarter.jpeg",
+        "https://www.marutisuzuki.com/adobe/assets/urn:aaid:aem:d0ee7111-dcb5-479c-b354-d01b87744c0c/as/Eeco_varient_2000x1117_desktop.png?width=2000&id=1&preferwebp=true",
         2015,
         None,
         390000,
@@ -224,7 +224,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "S-Cross",
         "Crossover",
-        "https://imgd.aeplcdn.com/310x174/cw/ec/17316/Maruti-Suzuki-S-Cross-Right-Front-Three-Quarter-72084.jpg",
+        "https://www.nexaexperience.com/default-meta-image.png?width=1200&format=pjpg&optimize=medium",
         2015,
         2022,
         950000,
@@ -240,7 +240,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "XL6",
         "MPV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/42355/xl6-exterior-right-front-three-quarter-12.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:f4a1c81c-8c3a-4a7b-94d3-d407e2d86ac5/as/XL6_Banner_Image_Desktop.png?width=2000&id=1&preferwebp=true",
         2019,
         None,
         None,
@@ -255,7 +255,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Fronx",
         "Compact SUV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/130591/fronx-exterior-right-front-three-quarter-111.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:cbaaf7a8-eef9-4137-9e91-8e914f6ba4f2/as/fronx_fold_Desktop_Image.png?width=2000&id=1&preferwebp=true",
         2023,
         None,
         None,
@@ -270,7 +270,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Grand Vitara",
         "SUV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/115601/grand-vitara-exterior-right-front-three-quarter-3.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:15d5ba20-d055-4b82-b8ef-985d685e9a8a/as/GV-Desktop-Banner.jpg?height=2160&width=2000&id=1&preferwebp=true",
         2022,
         None,
         None,
@@ -285,7 +285,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Jimny",
         "Off-road SUV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/131849/jimny-exterior-right-front-three-quarter-27.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:5716197a-a15e-424a-ad05-52b52dada745/as/JIMNY_fold_desktop_image.png?width=2000&id=1&preferwebp=true",
         2023,
         None,
         None,
@@ -300,7 +300,7 @@ MARUTI_MODELS = [
     MarutiModel(
         "Invicto",
         "Premium MPV",
-        "https://imgd.aeplcdn.com/310x174/n/cw/ec/132527/invicto-exterior-right-front-three-quarter-4.jpeg",
+        "https://www.nexaexperience.com/adobe/assets/urn:aaid:aem:93db3aba-c00e-45a0-b973-12cfe59f25d9/as/Invicto_Banner_Image.png?width=2000&id=1&preferwebp=true",
         2023,
         None,
         None,
