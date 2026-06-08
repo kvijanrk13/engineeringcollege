@@ -4,6 +4,15 @@
   <h1>{{ title }}</h1>
 
   <section>
+    <h2>Project Identity</h2>
+    <p>
+      <strong>Maruti Suzuki Registered Car Resale Price and Risk Prediction System for Khammam District using Depreciation and Machine Learning.</strong>
+      This project is different from normal car selling websites because it combines Khammam/Telangana local price context,
+      registration risk checks, transparent depreciation factors, buyer confidence scoring, and seller improvement advice.
+    </p>
+  </section>
+
+  <section>
     <h2>Select Maruti Suzuki Car Details</h2>
     <p>
       Choose a Maruti Suzuki model and year to view the available specification fields and
@@ -29,6 +38,16 @@
           {% for year in years %}
             <option value="{{ year }}">{{ year }}</option>
           {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="rto-location">Khammam / Telangana RTO Context</label>
+        <select id="rto-location">
+          <option value="khammam">Khammam District - TG/TS04</option>
+          <option value="nearby_telanga">Nearby Telangana district</option>
+          <option value="other_telanga">Other Telangana district</option>
+          <option value="other_state">Other state registration</option>
         </select>
       </div>
     </div>
@@ -255,6 +274,14 @@
         Confidence Band
         <strong id="confidence-value">Approx. +/- 8%</strong>
       </div>
+      <div class="metric">
+        Buyer Confidence Score
+        <strong id="buyer-score-value">-</strong>
+      </div>
+      <div class="metric">
+        Risk Category
+        <strong id="risk-category-value">-</strong>
+      </div>
     </div>
 
     <h3 style="margin-top: 18px;">Depreciation Formula Used Now</h3>
@@ -316,8 +343,17 @@ Selected Year Khammam On-Road Price
           <th>Usage/seller urgency factor</th>
           <td id="formula-usage-factor">-</td>
         </tr>
+        <tr>
+          <th>Khammam/Telangana local factor</th>
+          <td id="formula-local-factor">-</td>
+        </tr>
       </tbody>
     </table>
+  </section>
+
+  <section id="seller-advice-panel" style="display: none;">
+    <h2>Seller Advice to Improve Resale Value</h2>
+    <ul id="seller-advice-list"></ul>
   </section>
 
   <section id="algorithm-panel" style="display: none;">
@@ -411,6 +447,18 @@ predicted_price = model.predict(input_features)[0]</code></pre>
           <th>seller_urgency</th>
           <td id="feature-urgency">-</td>
         </tr>
+        <tr>
+          <th>rto_location_factor</th>
+          <td id="feature-rto">-</td>
+        </tr>
+        <tr>
+          <th>buyer_confidence_score</th>
+          <td id="feature-confidence-score">-</td>
+        </tr>
+        <tr>
+          <th>risk_category</th>
+          <td id="feature-risk-category">-</td>
+        </tr>
       </tbody>
     </table>
   </section>
@@ -433,6 +481,8 @@ predicted_price = model.predict(input_features)[0]</code></pre>
     const questionnairePanel = document.getElementById("questionnaire-panel");
     const predictionPanel = document.getElementById("prediction-panel");
     const algorithmPanel = document.getElementById("algorithm-panel");
+    const sellerAdvicePanel = document.getElementById("seller-advice-panel");
+    const sellerAdviceList = document.getElementById("seller-advice-list");
     const colorOptions = document.getElementById("color-options");
     const repairDescription = document.getElementById("repair-description");
     const repairWordCount = document.getElementById("repair-word-count");
@@ -465,6 +515,7 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         questionnairePanel.style.display = "none";
         predictionPanel.style.display = "none";
         algorithmPanel.style.display = "none";
+        sellerAdvicePanel.style.display = "none";
         selectedSpec = null;
         selectedModel = null;
         return;
@@ -480,6 +531,7 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       questionnairePanel.style.display = "block";
       predictionPanel.style.display = "none";
       algorithmPanel.style.display = "block";
+      sellerAdvicePanel.style.display = "none";
 
       image.src = model.image_url;
       image.alt = model.name;
@@ -548,6 +600,96 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       return Object.prototype.hasOwnProperty.call(factors, value) ? factors[value] : fallback;
     }
 
+    function localMarketFactor(rtoLocation) {
+      return selectFactor(rtoLocation, {
+        khammam: 1.00,
+        nearby_telanga: 0.99,
+        other_telanga: 0.98,
+        other_state: 0.94,
+      });
+    }
+
+    function calculateBuyerConfidenceScore(values) {
+      let score = 100;
+      score -= Math.min(values.age * 2, 24);
+      score -= Math.min(Math.floor(values.kilometers / 10000) * 2, 20);
+      if (values.repairsDone === "Yes") score -= 10;
+      if (values.ownerCount === "2") score -= 5;
+      if (values.ownerCount === "3") score -= 10;
+      if (values.ownerCount === "4") score -= 16;
+      if (values.insuranceStatus === "expired") score -= 8;
+      if (values.insuranceStatus === "unknown") score -= 5;
+      if (values.serviceHistory === "partial") score -= 4;
+      if (values.serviceHistory === "local_garage") score -= 7;
+      if (values.serviceHistory === "none") score -= 12;
+      if (values.accidentStatus === "minor") score -= 10;
+      if (values.accidentStatus === "major") score -= 25;
+      if (values.accidentStatus === "unknown") score -= 8;
+      if (values.challanStatus === "minor") score -= 4;
+      if (values.challanStatus === "major") score -= 10;
+      if (values.challanStatus === "unknown") score -= 6;
+      if (values.tyreCondition === "average") score -= 4;
+      if (values.tyreCondition === "poor") score -= 8;
+      if (values.bodyCondition === "average") score -= 7;
+      if (values.bodyCondition === "poor") score -= 15;
+      if (values.ownershipType === "company") score -= 5;
+      if (values.ownershipType === "taxi") score -= 16;
+      if (values.ownershipType === "rental") score -= 18;
+      if (values.rtoLocation === "other_state") score -= 8;
+      return Math.max(0, Math.min(100, score));
+    }
+
+    function riskCategory(score, values) {
+      if (values.accidentStatus === "major" || values.ownershipType === "taxi" || values.ownershipType === "rental") {
+        return "High Risk";
+      }
+      if (score >= 80) return "Low Risk";
+      if (score >= 60) return "Medium Risk";
+      return "High Risk";
+    }
+
+    function buildSellerAdvice(values) {
+      const advice = [];
+      if (values.challanStatus !== "none") {
+        advice.push("Clear pending traffic challans and keep payment receipts before negotiating with buyers.");
+      }
+      if (values.insuranceStatus === "expired" || values.insuranceStatus === "unknown") {
+        advice.push("Renew or verify insurance to avoid buyer deductions during documentation.");
+      }
+      if (values.serviceHistory !== "authorized_complete") {
+        advice.push("Collect service records, repair invoices, and Maruti service history where available.");
+      }
+      if (values.tyreCondition === "poor" || values.tyreCondition === "average") {
+        advice.push("Improve tyre condition or disclose replacement cost clearly to improve buyer trust.");
+      }
+      if (values.bodyCondition === "poor" || values.bodyCondition === "average") {
+        advice.push("Fix visible dents, scratches, interior stains, and broken trim before showing the car.");
+      }
+      if (values.repairsDone === "Yes") {
+        advice.push("Describe repairs honestly and upload bills/photos so buyers can distinguish minor repairs from major damage.");
+      }
+      if (values.accidentStatus !== "none") {
+        advice.push("Disclose accident history with repair proof; hidden accident records reduce confidence heavily.");
+      }
+      if (values.rtoLocation === "other_state") {
+        advice.push("Prepare NOC or transfer documents because other-state registration can reduce local Khammam resale value.");
+      }
+      if (!advice.length) {
+        advice.push("The car profile is strong. Keep RC, insurance, PUC, service records, spare key, and clear photos ready.");
+      }
+      return advice;
+    }
+
+    function renderSellerAdvice(advice) {
+      sellerAdviceList.innerHTML = "";
+      advice.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        sellerAdviceList.appendChild(li);
+      });
+      sellerAdvicePanel.style.display = "block";
+    }
+
     function calculatePrediction() {
       if (!selectedModel || !selectedSpec) {
         return;
@@ -573,6 +715,7 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       const bodyCondition = document.getElementById("body-condition").value;
       const ownershipType = document.getElementById("ownership-type").value;
       const sellerUrgency = document.getElementById("seller-urgency").value;
+      const rtoLocation = document.getElementById("rto-location").value;
 
       const ageFactor = Math.max(0.35, Math.pow(0.88, age));
       const kmFactor = Math.max(0.70, 1 - Math.min(kilometers, 200000) / 1000000);
@@ -629,6 +772,24 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       const legalFactor = accidentFactor * challanFactor;
       const conditionFactor = tyreFactor * bodyFactor;
       const usageUrgencyFactor = usageFactor * urgencyFactor;
+      const localFactor = localMarketFactor(rtoLocation);
+      const scoringValues = {
+        age,
+        kilometers,
+        repairsDone,
+        ownerCount,
+        insuranceStatus,
+        serviceHistory,
+        accidentStatus,
+        challanStatus,
+        tyreCondition,
+        bodyCondition,
+        ownershipType,
+        sellerUrgency,
+        rtoLocation,
+      };
+      const confidenceScore = calculateBuyerConfidenceScore(scoringValues);
+      const risk = riskCategory(confidenceScore, scoringValues);
       const predictedPrice = (
         basePrice *
         ageFactor *
@@ -640,12 +801,15 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         serviceFactor *
         legalFactor *
         conditionFactor *
-        usageUrgencyFactor
+        usageUrgencyFactor *
+        localFactor
       );
       const depreciation = Math.max(basePrice - predictedPrice, 0);
 
       setText("predicted-price-value", formatRupees(predictedPrice));
       setText("depreciation-value", `${formatRupees(depreciation)} (${((depreciation / basePrice) * 100).toFixed(1)}%)`);
+      setText("buyer-score-value", `${confidenceScore} / 100`);
+      setText("risk-category-value", risk);
       setText("formula-base-price", formatRupees(basePrice));
       setText("formula-age-factor", `${ageFactor.toFixed(3)} (${age} years old)`);
       setText("formula-km-factor", `${kmFactor.toFixed(3)} (${kilometers.toLocaleString("en-IN")} km)`);
@@ -657,9 +821,11 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("formula-legal-factor", `${legalFactor.toFixed(3)} (accident: ${accidentStatus}, challan: ${challanStatus})`);
       setText("formula-condition-factor", `${conditionFactor.toFixed(3)} (tyre: ${tyreCondition}, body: ${bodyCondition})`);
       setText("formula-usage-factor", `${usageUrgencyFactor.toFixed(3)} (usage: ${ownershipType}, urgency: ${sellerUrgency})`);
+      setText("formula-local-factor", `${localFactor.toFixed(3)} (${rtoLocation.replaceAll("_", " ")})`);
 
       predictionPanel.style.display = "block";
       algorithmPanel.style.display = "block";
+      renderSellerAdvice(buildSellerAdvice(scoringValues));
       updateFeatureVector({
         basePrice,
         age,
@@ -675,6 +841,9 @@ predicted_price = model.predict(input_features)[0]</code></pre>
         bodyCondition,
         ownershipType,
         sellerUrgency,
+        rtoLocation,
+        confidenceScore,
+        risk,
       });
     }
 
@@ -699,6 +868,9 @@ predicted_price = model.predict(input_features)[0]</code></pre>
       setText("feature-body", values ? values.bodyCondition : "-");
       setText("feature-usage", values ? values.ownershipType : "-");
       setText("feature-urgency", values ? values.sellerUrgency : "-");
+      setText("feature-rto", values ? values.rtoLocation : document.getElementById("rto-location").value);
+      setText("feature-confidence-score", values ? `${values.confidenceScore} / 100` : "-");
+      setText("feature-risk-category", values ? values.risk : "-");
     }
 
     predictButton.addEventListener("click", calculatePrediction);
