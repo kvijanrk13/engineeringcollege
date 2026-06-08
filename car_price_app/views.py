@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from django.http import Http404
 from django.shortcuts import redirect, render
 
@@ -13,6 +15,7 @@ from .models import ExecutionLog
 
 
 PROJECT_TITLE = "Predicting Second Hand Cars Price using Machine Learning Algorithms"
+EXECUTION_TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "car_price_execution_templates"
 
 
 GITHUB_EXECUTION_STEPS = [
@@ -342,59 +345,37 @@ def _estimate_price(data: pd.DataFrame, dataset_key: str, cleaned_data: dict) ->
     }
 
 
+def _load_execution_files() -> list[dict[str, str]]:
+    execution_files = []
+    for path in sorted(EXECUTION_TEMPLATES_DIR.glob("*")):
+        if path.suffix.lower() not in {".py", ".html"}:
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            content = path.read_text(encoding="ISO-8859-1")
+        execution_files.append(
+            {
+                "name": path.name,
+                "type": "Python" if path.suffix.lower() == ".py" else "HTML",
+                "content": content,
+            }
+        )
+    return execution_files
+
+
 def apriori_execution(request):
-    dataset_key = request.GET.get("dataset", "cardekho-depreciation")
-    if dataset_key not in available_datasets():
-        dataset_key = "cardekho-depreciation"
-
-    data = normalize_dataset(dataset_key)
-    transactions = make_transactions(data)
-    rules = apriori_rules(transactions, min_support=0.08, min_confidence=0.45)[:15]
-    prediction = None
-    matching_rules = []
-    spec_records = []
-
-    if request.method == "POST":
-        form = CarEstimateForm(request.POST)
-        if form.is_valid():
-            cleaned_data = form.cleaned_data
-            prediction = _estimate_price(data, dataset_key, cleaned_data)
-            matching_rules = _match_apriori_rules(rules, _build_input_items(cleaned_data))
-
-            brand = str(cleaned_data.get("brand") or "").strip().lower()
-            model = str(cleaned_data.get("model") or "").strip().lower()
-            specs = data.copy()
-            if brand:
-                specs = specs[specs["make"].fillna("").str.lower().str.contains(brand, regex=False)]
-            if model:
-                specs = specs[specs["model"].fillna("").str.lower().str.contains(model, regex=False)]
-            specs = specs[specs["year"].between(2015, 2026)]
-            specs = specs.sort_values(["model", "year"]).reset_index(drop=True)
-            spec_records = specs.to_dict(orient="records")
-    else:
-        form = CarEstimateForm()
-
-    ExecutionLog.objects.create(
-        algorithm="Apriori Association Rule Mining",
-        dataset=dataset_key,
-        rows_executed=len(data),
-    )
+    maruti_data = maruti_project_dataset()
 
     return render(
         request,
-        "car_price_app/index.html",
+        "car_price_app/maruti_apriori.html",
         {
-            "title": PROJECT_TITLE,
-            "dataset_key": dataset_key,
-            "datasets": available_datasets(),
-            "row_count": len(data),
-            "transaction_count": len(transactions),
-            "rules": rules,
-            "latest_runs": ExecutionLog.objects.order_by("-created_at")[:5],
-            "form": form,
-            "prediction": prediction,
-            "matching_rules": matching_rules,
-            "spec_records": spec_records,
+            "title": "Maruti Suzuki Khammam Car Price Prediction Execution",
+            "years": YEARS,
+            "maruti_data": maruti_data,
+            "execution_files": _load_execution_files(),
+            "model_count": len(maruti_data),
         },
     )
 

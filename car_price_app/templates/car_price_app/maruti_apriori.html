@@ -8,6 +8,30 @@
     They are built from model launch availability, typical ex-showroom price growth, and Telangana on-road cost assumptions.
     For real purchase quotes, use the official Maruti Suzuki/NEXA dealer price for the exact variant and year.
   </div>
+
+  <section style='background: #fff; border: 1px solid #d7dfeb; border-radius: 8px; margin-bottom: 40px; padding: 20px;'>
+    <h2 style='margin-top: 0;'>Execution Overview</h2>
+    <p style='color: #475569; line-height: 1.6;'>
+      This page replaces the earlier Apriori demo content with the Maruti Suzuki Khammam project requirement:
+      model images, yearly approximate on-road prices from 2015 to 2026, yearly specifications, and the executed
+      Python/HTML files used for the car price prediction workflow.
+    </p>
+    <div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px;'>
+      <div style='border: 1px solid #e4e9f1; border-radius: 8px; padding: 14px; background: #f8fafc;'>
+        <strong style='display: block; font-size: 24px;'>{{ model_count }}</strong>
+        Maruti Suzuki models
+      </div>
+      <div style='border: 1px solid #e4e9f1; border-radius: 8px; padding: 14px; background: #f8fafc;'>
+        <strong style='display: block; font-size: 24px;'>2015-2026</strong>
+        Year-wise price range
+      </div>
+      <div style='border: 1px solid #e4e9f1; border-radius: 8px; padding: 14px; background: #f8fafc;'>
+        <strong style='display: block; font-size: 24px;'>{{ execution_files|length }}</strong>
+        Executed source files
+      </div>
+    </div>
+  </section>
+
   {% for model in maruti_data %}
   <section style='background: #fff; border: 1px solid #d7dfeb; border-radius: 8px; margin-bottom: 40px; padding: 20px;'>
     <div style='display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-bottom: 20px;'>
@@ -74,5 +98,23 @@
     </div>
   </section>
   {% endfor %}
+
+  {% if execution_files %}
+  <section style='background: #fff; border: 1px solid #d7dfeb; border-radius: 8px; margin-bottom: 40px; padding: 20px;'>
+    <h2 style='margin-top: 0;'>Executed Python and HTML Files</h2>
+    <p style='color: #475569; line-height: 1.6;'>
+      These are the project execution files inserted directly into this page for review. Open each block to see the
+      complete source code.
+    </p>
+    {% for file in execution_files %}
+    <details style='border: 1px solid #e4e9f1; border-radius: 8px; margin: 12px 0; background: #f8fafc;'>
+      <summary style='cursor: pointer; padding: 12px 14px; font-weight: 700; color: #0f3d5f;'>
+        {{ file.name }} <span style='font-weight: 400; color: #64748b;'>({{ file.type }})</span>
+      </summary>
+      <pre style='margin: 0; padding: 16px; overflow-x: auto; background: #0f172a; color: #e2e8f0; font-size: 13px; line-height: 1.5; border-radius: 0 0 8px 8px; white-space: pre-wrap;'>{{ file.content }}</pre>
+    </details>
+    {% endfor %}
+  </section>
+  {% endif %}
 </main>
 {% endblock %}
