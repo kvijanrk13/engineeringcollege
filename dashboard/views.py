@@ -3769,6 +3769,7 @@ def _build_source_code_zip(domain_slug, project):
         'Video': 'Video',
         'Modules': 'Modules',
         'UML Diagrams': 'UML Diagrams',
+        'Databases': 'Databases',
     }
 
     archive_buffer = io.BytesIO()
@@ -3777,7 +3778,7 @@ def _build_source_code_zip(domain_slug, project):
         archive.writestr(
             f'{archive_root}/README.txt',
             f"{project['name']}\n\n"
-            "This archive contains the project source code, datasets, documentation, PPT, test cases, video, modules, and UML diagrams.\n"
+            "This archive contains the project source code, datasets, databases, documentation, PPT, test cases, video, modules, and UML diagrams.\n"
             "Open Source Code/README.md for setup steps.\n",
         )
         for path, archive_name in _iter_archive_files(source_root, f'{archive_root}/Source Code'):

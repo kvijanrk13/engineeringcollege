@@ -1692,9 +1692,11 @@ class PhonePeProjectDownloadTests(TestCase):
             project_folder = domain_root / 'machine-learning' / 'ml-demo'
             project_folder.mkdir(parents=True)
             (project_folder / 'Documentation').mkdir()
+            (project_folder / 'Databases').mkdir()
             (project_folder / '.venv').mkdir()
             (project_folder / 'model.py').write_text('print("ML demo")\n', encoding='utf-8')
             (project_folder / 'Documentation' / 'README.md').write_text('Run locally\n', encoding='utf-8')
+            (project_folder / 'Databases' / 'README.md').write_text('Database notes\n', encoding='utf-8')
             (project_folder / '.venv' / 'private.txt').write_text('do not package\n', encoding='utf-8')
             (domain_root / 'machine-learning' / 'projects.json').write_text(
                 json.dumps({
@@ -1734,6 +1736,7 @@ class PhonePeProjectDownloadTests(TestCase):
         with zipfile.ZipFile(io.BytesIO(zip_response.content)) as archive:
             self.assertIn('ML Demo/model.py', archive.namelist())
             self.assertIn('ML Demo/Documentation/README.md', archive.namelist())
+            self.assertIn('ML Demo/Databases/README.md', archive.namelist())
             self.assertNotIn('ML Demo/.venv/private.txt', archive.namelist())
             self.assertNotIn('ML Demo/dashboard/views.py', archive.namelist())
 

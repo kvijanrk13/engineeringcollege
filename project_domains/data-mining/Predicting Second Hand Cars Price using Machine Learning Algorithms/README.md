@@ -21,6 +21,7 @@ This project folder is organized for student submission and download:
 - `Video/` - demo script or video link notes
 - `Test Cases/` - manual and command-line test cases
 - `UML Diagrams/` - use case, activity, class, and component diagrams
+- `Databases/` - database notes, schema references, migration notes, and SQLite guidance
 - `datasets/` - Kaggle datasets and generated Khammam Maruti Suzuki sample data
 
 The runnable starter source code is stored in:

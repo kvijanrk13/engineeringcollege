@@ -11,6 +11,7 @@ Show the downloaded project folder containing:
 - `Video`
 - `Test Cases`
 - `UML Diagrams`
+- `Databases`
 - `datasets`
 
 ## Scene 2: Setup
