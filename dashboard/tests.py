@@ -1691,7 +1691,11 @@ class PhonePeProjectDownloadTests(TestCase):
             domain_root = Path(temp_dir)
             project_folder = domain_root / 'machine-learning' / 'ml-demo'
             project_folder.mkdir(parents=True)
+            (project_folder / 'Documentation').mkdir()
+            (project_folder / '.venv').mkdir()
             (project_folder / 'model.py').write_text('print("ML demo")\n', encoding='utf-8')
+            (project_folder / 'Documentation' / 'README.md').write_text('Run locally\n', encoding='utf-8')
+            (project_folder / '.venv' / 'private.txt').write_text('do not package\n', encoding='utf-8')
             (domain_root / 'machine-learning' / 'projects.json').write_text(
                 json.dumps({
                     'projects': [{
@@ -1728,8 +1732,10 @@ class PhonePeProjectDownloadTests(TestCase):
         self.assertContains(detail_response, 'Pay INR 250 and Download ZIP')
         self.assertEqual(zip_response.status_code, 200)
         with zipfile.ZipFile(io.BytesIO(zip_response.content)) as archive:
-            self.assertIn('ML Demo/Project Source/model.py', archive.namelist())
-            self.assertNotIn('ML Demo/Project Source/dashboard/views.py', archive.namelist())
+            self.assertIn('ML Demo/model.py', archive.namelist())
+            self.assertIn('ML Demo/Documentation/README.md', archive.namelist())
+            self.assertNotIn('ML Demo/.venv/private.txt', archive.namelist())
+            self.assertNotIn('ML Demo/dashboard/views.py', archive.namelist())
 
     def test_payment_url_qr_is_embedded_png(self):
         qr_data_uri = dashboard_views._payment_url_qr_data_uri(

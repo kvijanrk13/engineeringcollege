@@ -3395,7 +3395,7 @@ PROJECT_SOURCE_SUFFIXES = {
     '.py', '.html', '.css', '.js', '.txt', '.md', '.json', '.yaml', '.yml', '.jpeg',
 }
 PROJECT_SOURCE_EXCLUDED_PARTS = {
-    '__pycache__', 'staticfiles', 'media', 'tmp_preview',
+    '.venv', 'venv', '__pycache__', 'artifacts', 'staticfiles', 'media', 'tmp_preview',
 }
 PROJECT_MODULES = (
     ('Core Configuration', ('engineeringcollege/', 'manage.py')),
@@ -4179,10 +4179,12 @@ def _build_project_zip(domain_slug, project):
             )
         for path, relative_path in source_files:
             content = _sanitized_project_source(path)
-            archive.writestr(f'{archive_root}/Project Source/{relative_path}', content)
             if project['zip_source'] == 'repository':
+                archive.writestr(f'{archive_root}/Project Source/{relative_path}', content)
                 module_name = _source_module_for(relative_path)
                 archive.writestr(f'{archive_root}/Modules/{module_name}/{relative_path}', content)
+            else:
+                archive.writestr(f'{archive_root}/{relative_path}', content)
     return archive_buffer.getvalue()
 
 
