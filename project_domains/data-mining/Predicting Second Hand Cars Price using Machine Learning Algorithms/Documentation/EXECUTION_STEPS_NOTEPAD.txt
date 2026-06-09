@@ -1,0 +1,41 @@
+PREDICTING SECOND HAND CARS PRICE USING MACHINE LEARNING ALGORITHMS
+NOTEPAD EXECUTION STEPS
+
+1. Extract the ZIP file.
+2. Open the project folder in VS Code, PyCharm, or Cursor.
+3. Open terminal inside the Source Code folder.
+4. Run:
+
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py makemigrations
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver
+
+5. Open:
+
+http://127.0.0.1:8000/
+
+6. Important pages:
+
+http://127.0.0.1:8000/
+http://127.0.0.1:8000/execution/
+http://127.0.0.1:8000/apriori/
+
+7. Train model:
+
+.\.venv\Scripts\python.exe train_model.py --dataset cardekho-depreciation
+
+8. Run Apriori:
+
+.\.venv\Scripts\python.exe apriori_analysis.py --dataset cardekho-depreciation
+
+9. Predict price:
+
+.\.venv\Scripts\python.exe predict_price.py --year 2018 --mileage 45000 --fuel Petrol --transmission Manual --make Honda --model City --engine-size 1.5
+
+10. For doubts, email:
+
+ecprj2026@gmail.com

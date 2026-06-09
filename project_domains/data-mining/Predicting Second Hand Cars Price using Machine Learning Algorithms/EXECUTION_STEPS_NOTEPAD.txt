@@ -1,0 +1,194 @@
+PREDICTING SECOND HAND CARS PRICE USING MACHINE LEARNING ALGORITHMS
+EXECUTION STEPS FOR STUDENTS
+
+This file is intentionally saved as .txt so it opens directly in Notepad.
+
+============================================================
+1. OPEN THE PROJECT
+============================================================
+
+After extracting the ZIP, open this folder in VS Code, PyCharm, or Cursor:
+
+Predicting Second Hand Cars Price using Machine Learning Algorithms
+
+Then open the executable Django project folder:
+
+Source Code
+
+Confirm these files are present:
+
+- manage.py
+- requirements.txt
+- car_price_project
+- car_price_app
+- dataset_loader.py
+- train_model.py
+- apriori_analysis.py
+- predict_price.py
+
+============================================================
+2. CREATE VIRTUAL ENVIRONMENT
+============================================================
+
+Open terminal inside the Source Code folder.
+
+Windows PowerShell:
+
+python -m venv .venv
+
+Activate is optional if you use the direct python path below.
+
+============================================================
+3. INSTALL REQUIRED PACKAGES
+============================================================
+
+Windows PowerShell:
+
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+Required packages include:
+
+- Django
+- pandas
+- numpy
+- scikit-learn
+- joblib
+
+============================================================
+4. RUN DJANGO CHECK
+============================================================
+
+Windows PowerShell:
+
+.\.venv\Scripts\python.exe manage.py check
+
+Expected output:
+
+System check identified no issues.
+
+============================================================
+5. RUN MIGRATIONS
+============================================================
+
+Windows PowerShell:
+
+.\.venv\Scripts\python.exe manage.py makemigrations
+.\.venv\Scripts\python.exe manage.py migrate
+
+Expected result:
+
+All migrations should apply successfully.
+
+This creates or updates the local SQLite database:
+
+db.sqlite3
+
+============================================================
+6. RUN SERVER
+============================================================
+
+Windows PowerShell:
+
+.\.venv\Scripts\python.exe manage.py runserver
+
+Open in browser:
+
+http://127.0.0.1:8000/
+
+============================================================
+7. OPEN PROJECT PAGES
+============================================================
+
+Registration page:
+
+http://127.0.0.1:8000/
+
+Execution steps page:
+
+http://127.0.0.1:8000/execution/
+
+Apriori data mining page:
+
+http://127.0.0.1:8000/apriori/
+
+============================================================
+8. TRAIN THE MACHINE LEARNING MODEL
+============================================================
+
+Open another terminal in Source Code and run:
+
+.\.venv\Scripts\python.exe train_model.py --dataset cardekho-depreciation
+
+Expected result:
+
+The script trains a model and writes output files to the artifacts folder.
+
+============================================================
+9. RUN APRIORI ANALYSIS
+============================================================
+
+Windows PowerShell:
+
+.\.venv\Scripts\python.exe apriori_analysis.py --dataset cardekho-depreciation
+
+Expected result:
+
+The script prints association rules for price and depreciation patterns.
+
+============================================================
+10. RUN PRICE PREDICTION
+============================================================
+
+Windows PowerShell:
+
+.\.venv\Scripts\python.exe predict_price.py --year 2018 --mileage 45000 --fuel Petrol --transmission Manual --make Honda --model City --engine-size 1.5
+
+Expected result:
+
+The predicted second-hand car price is printed in the terminal.
+
+============================================================
+11. COMMON ERRORS AND SOLUTIONS
+============================================================
+
+Error: python is not recognized
+Solution: Install Python and tick "Add Python to PATH" during installation.
+
+Error: No module named django
+Solution: Run pip install command from Step 3.
+
+Error: manage.py not found
+Solution: Make sure terminal is inside the Source Code folder.
+
+Error: port 8000 already in use
+Solution: Run:
+
+.\.venv\Scripts\python.exe manage.py runserver 8001
+
+Then open:
+
+http://127.0.0.1:8001/
+
+Error: dataset file not found
+Solution: Keep the datasets folder beside Source Code after extracting the ZIP.
+
+============================================================
+12. PROJECT SUPPORT
+============================================================
+
+For project execution doubts, email:
+
+ecprj2026@gmail.com
+
+Mention:
+
+- your name
+- project name
+- error screenshot
+- exact command you ran
+- full error message
+
+============================================================
+END OF EXECUTION STEPS
+============================================================

@@ -1,0 +1,67 @@
+CAR PRICE PREDICTION PROJECT - TEST EXECUTION STEPS
+
+Use this file while testing the extracted student project.
+
+TEST 1: Django check
+
+Command:
+.\.venv\Scripts\python.exe manage.py check
+
+Expected:
+System check identified no issues.
+
+TEST 2: Migrations
+
+Command:
+.\.venv\Scripts\python.exe manage.py migrate
+
+Expected:
+All migrations apply successfully.
+
+TEST 3: Run server
+
+Command:
+.\.venv\Scripts\python.exe manage.py runserver
+
+Expected:
+Server starts at http://127.0.0.1:8000/
+
+TEST 4: Registration page
+
+Open:
+http://127.0.0.1:8000/
+
+Expected:
+Student registration page loads.
+
+TEST 5: Execution page
+
+Open:
+http://127.0.0.1:8000/execution/
+
+Expected:
+Project execution steps load.
+
+TEST 6: Apriori page
+
+Open:
+http://127.0.0.1:8000/apriori/
+
+Expected:
+Apriori data mining output loads.
+
+TEST 7: Train model
+
+Command:
+.\.venv\Scripts\python.exe train_model.py --dataset cardekho-depreciation
+
+Expected:
+Model training completes and artifacts are generated.
+
+TEST 8: Prediction
+
+Command:
+.\.venv\Scripts\python.exe predict_price.py --year 2018 --mileage 45000 --fuel Petrol --transmission Manual --make Honda --model City --engine-size 1.5
+
+Expected:
+Predicted price appears in terminal.

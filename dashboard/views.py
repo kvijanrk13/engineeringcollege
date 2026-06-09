@@ -3916,6 +3916,10 @@ def _build_source_code_zip(domain_slug, project):
             "This archive contains the project source code, datasets, databases, documentation, PPT, test cases, video, modules, and UML diagrams.\n"
             "Open Source Code/README.md for setup steps.\n",
         )
+        for root_file_name in ('EXECUTION_STEPS_NOTEPAD.txt',):
+            root_file = project_root / root_file_name
+            if root_file.is_file():
+                archive.write(root_file, f'{archive_root}/{root_file_name}')
         for path, archive_name in _iter_archive_files(source_root, f'{archive_root}/Source Code'):
             archive.write(path, archive_name)
         if datasets_root and datasets_root.is_dir():
