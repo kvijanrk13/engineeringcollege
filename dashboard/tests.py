@@ -1684,6 +1684,14 @@ class PhonePeProjectDownloadTests(TestCase):
                 'project_domains/machine-learning/projects.json'
             ).decode('utf-8')
             self.assertIn('"projects"', domain_manifest)
+            self.assertIn(
+                'EngineeringCollege Project/Documentation/LOCAL_RUN_GUIDE.md',
+                archive.namelist(),
+            )
+            self.assertIn(
+                'EngineeringCollege Project/Databases/SCHEMA_NOTES.md',
+                archive.namelist(),
+            )
 
     @patch('dashboard.views._phonepe_verify_payment', return_value=True)
     def test_domain_project_manifest_controls_zip_source_and_amount(self, _mock_verify):

@@ -3405,6 +3405,16 @@ PROJECT_MODULES = (
     ('Dashboard Application', ('dashboard/',)),
     ('Deployment', ('requirements.txt', 'Procfile', 'runtime.txt', 'build.sh', 'start.sh')),
 )
+PROJECT_ACADEMIC_ASSET_FOLDERS = (
+    'Source Code',
+    'Modules',
+    'Documentation',
+    'PPT',
+    'Video',
+    'Test Cases',
+    'UML Diagrams',
+    'Databases',
+)
 PROJECT_DOWNLOAD_PRICE_PAISE = 100000
 
 
@@ -4178,6 +4188,18 @@ def _build_project_zip(domain_slug, project):
                 'DJANGO_SUPERUSER_EMAIL=\nDJANGO_SUPERUSER_PASSWORD=\n'
                 'CLOUDINARY_CLOUD_NAME=\nCLOUDINARY_API_KEY=\nCLOUDINARY_API_SECRET=\n',
             )
+            project_folder_name = project.get('title_path') or project['slug']
+            academic_root = PROJECT_DOMAIN_ROOT / domain_slug / project_folder_name
+            if academic_root.is_dir():
+                for folder_name in PROJECT_ACADEMIC_ASSET_FOLDERS:
+                    folder_root = academic_root / folder_name
+                    if not folder_root.is_dir():
+                        continue
+                    for path, archive_name in _iter_archive_files(
+                        folder_root,
+                        f'{archive_root}/{folder_name}',
+                    ):
+                        archive.write(path, archive_name)
         for path, relative_path in source_files:
             content = _sanitized_project_source(path)
             if project['zip_source'] == 'repository':
