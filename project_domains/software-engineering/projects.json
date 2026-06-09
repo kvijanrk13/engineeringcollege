@@ -7,7 +7,8 @@
       "zip": {
         "enabled": true,
         "amount_paise": 100000,
-        "source": "repository"
+        "source": "repository",
+        "payment_enabled": false
       }
     }
   ]

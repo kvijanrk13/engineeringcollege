@@ -3701,6 +3701,11 @@ def _load_domain_projects(domain_slug):
             'github_reference': str(project.get('github_reference') or '').strip(),
             'demo_url': str(project.get('demo_url') or '').strip(),
             'zip_enabled': zip_enabled and amount_paise > 0,
+            'payment_enabled': (
+                zip_enabled
+                and amount_paise > 0
+                and zip_config.get('payment_enabled', True) is True
+            ),
             'amount_paise': amount_paise,
             'amount_rupees': amount_paise // 100,
             'zip_source': zip_source,
@@ -3732,6 +3737,20 @@ def _get_data_mining_project_by_title(project_title):
     if not project:
         raise Http404("Project not found")
     return project
+
+
+def _project_academic_folders(domain_slug, project):
+    project_folder_name = project.get('title_path') or project['slug']
+    project_root = PROJECT_DOMAIN_ROOT / domain_slug / project_folder_name
+    folders = []
+    for folder_name in PROJECT_ACADEMIC_ASSET_FOLDERS:
+        folder_root = project_root / folder_name
+        if folder_root.is_dir():
+            folders.append({
+                'name': folder_name,
+                'file_count': sum(1 for path in folder_root.rglob('*') if path.is_file()),
+            })
+    return folders
 
 
 def _project_zip_price(domain_slug, project_slug):
@@ -3808,7 +3827,7 @@ def _build_source_code_zip(domain_slug, project):
 
 def download_project_source_code(request, domain_slug, project_slug):
     project = _get_domain_project(domain_slug, project_slug)
-    if project.get('zip_enabled'):
+    if project.get('payment_enabled'):
         return redirect('dashboard:project_zip_payment', domain_slug, project_slug)
     if not project.get('source_code_path'):
         raise Http404('Source code download not available.')
@@ -3820,7 +3839,7 @@ def download_project_source_code(request, domain_slug, project_slug):
 
 def download_data_mining_project_source_code_by_title(request, project_title):
     project = _get_data_mining_project_by_title(project_title)
-    if project.get('zip_enabled'):
+    if project.get('payment_enabled'):
         return redirect('dashboard:project_zip_payment', 'data-mining', project['slug'])
     response = HttpResponse(_build_source_code_zip('data-mining', project), content_type='application/zip')
     filename = project.get('title_path') or project['slug']
@@ -4421,6 +4440,7 @@ def project_detail(request, domain_slug, project_slug):
         'domain_name': domain_name,
         'domain_slug': domain_slug,
         'project': project,
+        'academic_folders': _project_academic_folders(domain_slug, project),
         'is_engineeringcollege_project': (
             domain_slug == 'software-engineering'
             and project_slug == 'engineeringcollege-project'
@@ -4438,6 +4458,7 @@ def data_mining_project_detail_by_title(request, project_title):
         'project': project,
         'execution': _run_car_apriori_execution(project),
         'github_execution_templates': _car_price_github_execution_templates(),
+        'academic_folders': _project_academic_folders('data-mining', project),
         'is_engineeringcollege_project': False,
         'project_modules': [name for name, _ in PROJECT_MODULES],
     })

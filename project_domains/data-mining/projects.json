@@ -12,7 +12,8 @@
       "zip": {
         "enabled": true,
         "amount_paise": 100000,
-        "source": "project-folder"
+        "source": "project-folder",
+        "payment_enabled": false
       }
     }
   ]

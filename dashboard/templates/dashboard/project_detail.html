@@ -165,7 +165,7 @@
                     {% endif %}
                 </dl>
             {% endif %}
-            {% if project.source_code_path and not project.zip_enabled %}
+            {% if project.source_code_path and not project.payment_enabled %}
                 {% if domain_slug == 'data-mining' and project.title_path %}
                     <a class="action" href="{% url 'dashboard:download_data_mining_project_source_code_by_title' project.title_path %}">
                 {% else %}
@@ -174,10 +174,32 @@
                     Download Source Code ZIP
                 </a>
             {% endif %}
-            {% if project.zip_enabled %}
+            {% if project.payment_enabled %}
                 <a class="action" href="{% url 'dashboard:project_zip_payment' domain_slug project.slug %}">
                     Pay INR {{ project.amount_rupees }} and Download ZIP
                 </a>
+            {% endif %}
+            {% if academic_folders %}
+                <section class="execution" aria-label="Project folder structure">
+                    <h2>Project Folders</h2>
+                    <p>Project ZIP payment is disabled for now. These are the folders currently prepared for this project.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Folder</th>
+                                <th>Files</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for folder in academic_folders %}
+                                <tr>
+                                    <td>{{ folder.name }}</td>
+                                    <td>{{ folder.file_count }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </section>
             {% endif %}
             {% if execution %}
                 <section class="execution" aria-label="Project execution output">

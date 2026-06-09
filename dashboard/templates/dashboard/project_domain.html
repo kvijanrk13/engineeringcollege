@@ -127,7 +127,11 @@
                     {% endfor %}
                 </ul>
                 <span class="download-label">
-                    Pay INR {{ domain_projects.0.amount_rupees }} and Open ZIP Download
+                    {% if domain_projects.0.payment_enabled %}
+                        Pay INR {{ domain_projects.0.amount_rupees }} and Open ZIP Download
+                    {% else %}
+                        Open Project Folders
+                    {% endif %}
                 </span>
             </a>
         {% else %}
