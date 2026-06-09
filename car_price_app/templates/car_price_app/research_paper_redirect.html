@@ -1,12 +1,11 @@
 {% extends "car_price_app/base.html" %}
-{% load markdown_deux %}
 
 {% block content %}
 <div style="max-width: 980px; margin: 0 auto; padding: 20px;">
   <h1>K-RADIUS+ Research Paper</h1>
   <p>
     <strong>K-RADIUS+ (Khammam Registered Automobile Depreciation Using Inspection Score Plus)</strong><br>
-    A NovenHybrid Algorithm for Explainable Second-Hand Car Price Prediction and Risk Assessment
+    A Novel Hybrid Algorithm for Explainable Second-Hand Car Price Prediction and Risk Assessment
   </p>
   <p style="margin-bottom: 20px;">
     <a class="button" href="{% url 'maruti-prices' %}">Back to Maruti Prices</a>
@@ -25,6 +24,109 @@
       For the full formatted paper with mathematical formulas, literature review, novelty analysis,
       and comparative results, refer to the markdown file in the project source code.
     </p>
+    <h2>Freely Available Base Papers</h2>
+    <p style="color: #475569;">
+      These open papers are suitable base references for the GitHub car-pricing project and for the
+      K-RADIUS+ extension because they cover used-car price prediction, feature engineering,
+      ensemble models, and interpretable regression baselines.
+    </p>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
+        <thead>
+          <tr style="background: #eef3f8;">
+            <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: left;">Paper</th>
+            <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: left;">Why it is useful</th>
+            <th style="padding: 10px; border: 1px solid #d7dfeb; text-align: left;">Access</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <strong>Price Prediction of Used Cars Using Machine Learning Techniques</strong><br>
+              Dange, Kamthe, and Lembhe, 2026
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              India-focused used-car valuation with Linear Regression, Decision Tree, Random Forest,
+              Gradient Boosting, and AdaBoost comparisons.
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <a href="https://zenodo.org/records/19679229" target="_blank" rel="noopener">Zenodo open article</a><br>
+              License: CC BY 4.0
+            </td>
+          </tr>
+          <tr style="background: #f8fafc;">
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <strong>Price Prediction for Pre-Owned Cars Using Ensemble Machine Learning Techniques</strong><br>
+              Longani, Potharaju, and Deore, 2026
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              Pre-owned car price prediction for the Mumbai region using Random Forest and XGBoost,
+              directly aligned with regional second-hand market modeling.
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <a href="https://journals.sagepub.com/doi/10.3233/APC210194" target="_blank" rel="noopener">SAGE open access</a><br>
+              License: CC BY-NC 4.0
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <strong>Advanced Feature Engineering and Machine Learning Techniques for High Accurate Price Prediction of Heterogeneous Pre-Own Cars</strong><br>
+              Fayyaz, Ali, and Khairunnesa, 2025
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              Shows how categorical encoding, outlier handling, scaling, vehicle age, horsepower,
+              and ensemble methods improve structured car-price prediction.
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <a href="https://www.mdpi.com/2624-8921/7/3/94" target="_blank" rel="noopener">MDPI open access</a><br>
+              DOI: 10.3390/vehicles7030094
+            </td>
+          </tr>
+          <tr style="background: #f8fafc;">
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <strong>Predicting Used Car Price Based on Machine Learning</strong><br>
+              Lin, 2025
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              Concise baseline paper comparing regression approaches and feature correlation for used-car
+              price forecasting.
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <a href="https://www.scitepress.org/Papers/2024/132705/132705.pdf" target="_blank" rel="noopener">Free PDF</a><br>
+              License: CC BY-NC-ND 4.0
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <strong>Car Price Prediction Using Machine Learning</strong><br>
+              ECAI 2024 proceedings, 2025
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              Useful for literature review framing, feature preprocessing, and model comparison
+              for automotive price prediction.
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <a href="https://www.scitepress.org/Papers/2024/132701/132701.pdf" target="_blank" rel="noopener">Free PDF</a><br>
+              License: CC BY-NC-ND 4.0
+            </td>
+          </tr>
+          <tr style="background: #f8fafc;">
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <strong>AI Blue Book: Vehicle Price Prediction using Visual Features</strong><br>
+              Chen et al., 2018
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              Adds a visual-feature perspective for future extensions that estimate vehicle value from
+              images or inspection photos.
+            </td>
+            <td style="padding: 10px; border: 1px solid #d7dfeb;">
+              <a href="https://arxiv.org/abs/1803.11227" target="_blank" rel="noopener">arXiv free paper</a><br>
+              Preprint access
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <h2>Abstract Summary</h2>
     <p>
       K-RADIUS+ is a novel hybrid algorithm combining Apriori association rule mining,
@@ -40,15 +142,15 @@
       <li><strong>Buyer Confidence Score</strong> (0-100) with Low/Medium/High Risk flags</li>
       <li><strong>Local RTO/city-specific pricing</strong> for Khammam, Telangana</li>
       <li><strong>Seller advice engine</strong> with actionable pre-sale recommendations</li>
-      <li><strong>Fully reproducible</strong> — all code published, all formulas documented</li>
+      <li><strong>Fully reproducible</strong> - all code published, all formulas documented</li>
     </ul>
     <h2>Mathematical Formula (Core)</h2>
     <pre style="background: #0f172a; color: #e2e8f0; padding: 15px; border-radius: 6px; overflow-x: auto;">
 Predicted Price = Base Price
-               × Age Factor × KM Factor × Odometer Factor × Repair Factor
-               × Colour Factor × Owner Factor × Insurance Factor × Service Factor
-               × Accident Factor × Challan Factor × Tyre Factor × Body Factor
-               × Usage Factor × Urgency Factor × Local Factor × K-RADIUS Adjustment
+               x Age Factor x KM Factor x Odometer Factor x Repair Factor
+               x Colour Factor x Owner Factor x Insurance Factor x Service Factor
+               x Accident Factor x Challan Factor x Tyre Factor x Body Factor
+               x Usage Factor x Urgency Factor x Local Factor x K-RADIUS Adjustment
     </pre>
     <h2>Uniqueness vs Commercial Platforms</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
