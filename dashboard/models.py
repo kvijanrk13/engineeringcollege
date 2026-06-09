@@ -424,6 +424,10 @@ class ProjectDownloadPayment(models.Model):
         ('COMPLETED', 'Completed'),
         ('FAILED', 'Failed'),
     ]
+    PAYMENT_METHOD_CHOICES = [
+        ('PHONEPE', 'PhonePe Gateway'),
+        ('RECEIPT', 'Manual Receipt'),
+    ]
 
     merchant_order_id = models.CharField(max_length=64, unique=True)
     session_key = models.CharField(max_length=64, db_index=True)
@@ -431,9 +435,17 @@ class ProjectDownloadPayment(models.Model):
     project_slug = models.SlugField(default='engineeringcollege-project', max_length=120)
     amount_paise = models.PositiveIntegerField(default=100000)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='CREATED')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, default='PHONEPE')
     phonepe_order_id = models.CharField(max_length=128, blank=True)
     payment_url = models.URLField(max_length=1000, blank=True)
     gateway_response = models.JSONField(default=dict, blank=True)
+    receipt_student_name = models.CharField(max_length=160, blank=True)
+    receipt_student_email = models.EmailField(blank=True)
+    receipt_student_phone = models.CharField(max_length=30, blank=True)
+    receipt_filename = models.CharField(max_length=255, blank=True)
+    receipt_message = models.TextField(blank=True)
+    receipt_uploaded_at = models.DateTimeField(blank=True, null=True)
+    admin_note = models.TextField(blank=True)
     verified_at = models.DateTimeField(blank=True, null=True)
     download_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

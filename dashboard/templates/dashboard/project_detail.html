@@ -165,7 +165,7 @@
                     {% endif %}
                 </dl>
             {% endif %}
-            {% if project.source_code_path and not project.payment_enabled %}
+            {% if project.source_code_path and not project.payment_enabled and not project.receipt_required %}
                 {% if domain_slug == 'data-mining' and project.title_path %}
                     <a class="action" href="{% url 'dashboard:download_data_mining_project_source_code_by_title' project.title_path %}">
                 {% else %}
@@ -173,6 +173,9 @@
                 {% endif %}
                     Download Source Code ZIP
                 </a>
+            {% endif %}
+            {% if project_support_download_url %}
+                <a class="action" href="{{ project_support_download_url }}">Download Confirmed ZIP</a>
             {% endif %}
             {% if project.payment_enabled %}
                 <a class="action" href="{% url 'dashboard:project_zip_payment' domain_slug project.slug %}">
@@ -277,5 +280,6 @@
             </section>
         </article>
     </main>
+{% include "dashboard/partials/project_support_chatbot.html" %}
 </body>
 </html>

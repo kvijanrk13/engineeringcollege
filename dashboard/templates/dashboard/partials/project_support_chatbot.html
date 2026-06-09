@@ -1,0 +1,205 @@
+<style>
+    .project-support-fab {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 30;
+        width: 58px;
+        height: 58px;
+        border: 0;
+        border-radius: 50%;
+        background: #1456A0;
+        color: #FFFFFF;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 12px 28px rgba(20, 86, 160, 0.28);
+    }
+    .project-support-panel[hidden] { display: none; }
+    .project-support-panel {
+        position: fixed;
+        right: 18px;
+        bottom: 88px;
+        z-index: 31;
+        width: min(94vw, 390px);
+        max-height: min(82vh, 720px);
+        overflow-y: auto;
+        border: 1px solid #D8E0EA;
+        border-radius: 8px;
+        background: #FFFFFF;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
+    }
+    .project-support-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: #1456A0;
+        color: #FFFFFF;
+    }
+    .project-support-header strong { font-size: 15px; }
+    .project-support-close {
+        border: 0;
+        background: transparent;
+        color: #FFFFFF;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+    }
+    .project-support-body { padding: 16px; }
+    .project-support-bubble {
+        margin: 0 0 12px;
+        padding: 11px 12px;
+        border-radius: 8px;
+        background: #F1F5F9;
+        color: #243244;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .project-support-command {
+        margin: 12px 0;
+        padding: 10px 12px;
+        border: 1px solid #D8E0EA;
+        border-radius: 8px;
+        background: #F8FAFC;
+        color: #172033;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .project-support-form label {
+        display: block;
+        margin-top: 10px;
+        color: #172033;
+        font-size: 13px;
+        font-weight: 700;
+    }
+    .project-support-form input,
+    .project-support-form textarea {
+        width: 100%;
+        margin-top: 5px;
+        padding: 9px 10px;
+        border: 1px solid #C9D4E2;
+        border-radius: 6px;
+        font: inherit;
+        font-size: 14px;
+    }
+    .project-support-form textarea {
+        min-height: 82px;
+        resize: vertical;
+    }
+    .project-support-submit,
+    .project-support-download {
+        display: inline-block;
+        width: 100%;
+        margin-top: 14px;
+        padding: 11px 14px;
+        border: 0;
+        border-radius: 6px;
+        background: #1456A0;
+        color: #FFFFFF;
+        font: inherit;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .project-support-status {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: #FFF4D6;
+        color: #5F4300;
+        font-size: 13px;
+        line-height: 1.45;
+    }
+    .project-support-status.ready {
+        background: #E7F7ED;
+        color: #166534;
+    }
+    .project-support-muted {
+        color: #526174;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+</style>
+
+<button class="project-support-fab" type="button" id="project-support-open" aria-controls="project-support-panel" aria-expanded="false">Chat</button>
+<section class="project-support-panel" id="project-support-panel" aria-label="Project support chatbot" hidden>
+    <div class="project-support-header">
+        <strong>Project Support Bot</strong>
+        <button class="project-support-close" type="button" id="project-support-close" aria-label="Close project support">&times;</button>
+    </div>
+    <div class="project-support-body">
+        {% for message in messages %}
+            <div class="project-support-status">{{ message }}</div>
+        {% endfor %}
+
+        <p class="project-support-bubble">
+            Share your project execution doubts to
+            <a href="mailto:{{ project_support_email }}">{{ project_support_email }}</a>.
+            The team will rectify student doubts while executing the project.
+        </p>
+
+        {% if project_support_project %}
+            <div class="project-support-command">Command: share your PhonePe receipt and send</div>
+            <p class="project-support-muted">
+                Upload your PhonePe acknowledgement here. The ZIP download stays locked until admin confirmation.
+            </p>
+
+            {% if project_support_confirmed_order and project_support_download_url %}
+                <div class="project-support-status ready">
+                    Receipt confirmed. Request ID: {{ project_support_confirmed_order.merchant_order_id }}
+                </div>
+                <a class="project-support-download" href="{{ project_support_download_url }}">Download ZIP</a>
+            {% elif project_support_pending_order %}
+                <div class="project-support-status">
+                    Receipt request {{ project_support_pending_order.merchant_order_id }} is {{ project_support_pending_order.get_status_display }}.
+                    Download unlocks only after confirmation.
+                </div>
+            {% endif %}
+
+            <form class="project-support-form" method="post" enctype="multipart/form-data"
+                  action="{% url 'dashboard:submit_project_receipt' project_support_domain_slug project_support_project.slug %}">
+                {% csrf_token %}
+                <label for="support-student-name">Student name</label>
+                <input id="support-student-name" name="student_name" maxlength="160" required>
+
+                <label for="support-student-email">Student email</label>
+                <input id="support-student-email" name="student_email" type="email" required>
+
+                <label for="support-student-phone">Phone number</label>
+                <input id="support-student-phone" name="student_phone" maxlength="30">
+
+                <label for="support-message">Project doubt or note</label>
+                <textarea id="support-message" name="receipt_message" placeholder="Describe any issue while executing the project."></textarea>
+
+                <label for="support-receipt-file">PhonePe acknowledgement</label>
+                <input id="support-receipt-file" name="receipt_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required>
+
+                <button class="project-support-submit" type="submit">Send Receipt for Confirmation</button>
+            </form>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    (() => {
+        const openButton = document.getElementById("project-support-open");
+        const closeButton = document.getElementById("project-support-close");
+        const panel = document.getElementById("project-support-panel");
+        if (!openButton || !closeButton || !panel) return;
+
+        function setOpen(isOpen) {
+            panel.hidden = !isOpen;
+            openButton.setAttribute("aria-expanded", String(isOpen));
+            if (isOpen) closeButton.focus();
+        }
+
+        openButton.addEventListener("click", () => setOpen(panel.hidden));
+        closeButton.addEventListener("click", () => setOpen(false));
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !panel.hidden) setOpen(false);
+        });
+    })();
+</script>

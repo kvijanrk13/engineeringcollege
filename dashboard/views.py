@@ -3328,7 +3328,7 @@ def mobile_dashboard(request):
 
 def projects(request):
     """Public icon-only project domain page matching the Android projects folder."""
-    return render(request, 'dashboard/projects.html')
+    return render(request, 'dashboard/projects.html', _receipt_support_context(request))
 
 
 PROJECT_POLICY_FILES = {
@@ -3416,6 +3416,7 @@ PROJECT_ACADEMIC_ASSET_FOLDERS = (
     'Databases',
 )
 PROJECT_DOWNLOAD_PRICE_PAISE = 100000
+PROJECT_SUPPORT_EMAIL = 'ecprj2026@gmail.com'
 
 
 class PhonePePaymentError(Exception):
@@ -3706,6 +3707,11 @@ def _load_domain_projects(domain_slug):
                 and amount_paise > 0
                 and zip_config.get('payment_enabled', True) is True
             ),
+            'receipt_required': (
+                zip_enabled
+                and amount_paise > 0
+                and zip_config.get('receipt_required', False) is True
+            ),
             'amount_paise': amount_paise,
             'amount_rupees': amount_paise // 100,
             'zip_source': zip_source,
@@ -3751,6 +3757,106 @@ def _project_academic_folders(domain_slug, project):
                 'file_count': sum(1 for path in folder_root.rglob('*') if path.is_file()),
             })
     return folders
+
+
+def _project_detail_url(domain_slug, project):
+    if domain_slug == 'data-mining' and project.get('title_path'):
+        return reverse('dashboard:data_mining_project_detail_by_title', args=[project['title_path']])
+    return reverse('dashboard:project_detail', args=[domain_slug, project['slug']])
+
+
+def _project_receipt_orders(request, domain_slug, project):
+    if not request.session.session_key:
+        return ProjectDownloadPayment.objects.none()
+    return ProjectDownloadPayment.objects.filter(
+        session_key=request.session.session_key,
+        domain_slug=domain_slug,
+        project_slug=project['slug'],
+        amount_paise=project['amount_paise'],
+        payment_method='RECEIPT',
+    )
+
+
+def _project_confirmed_receipt(request, domain_slug, project):
+    order_id = request.GET.get('order', '')
+    orders = _project_receipt_orders(request, domain_slug, project).filter(status='COMPLETED')
+    if order_id:
+        orders = orders.filter(merchant_order_id=order_id)
+    return orders.order_by('-verified_at', '-updated_at').first()
+
+
+def _project_latest_receipt(request, domain_slug, project):
+    order_id = request.GET.get('order', '')
+    orders = _project_receipt_orders(request, domain_slug, project)
+    if order_id:
+        orders = orders.filter(merchant_order_id=order_id)
+    return orders.order_by('-created_at').first()
+
+
+def _receipt_support_context(request, domain_slug=None, project=None):
+    pending_order = None
+    confirmed_order = None
+    download_url = ''
+    if domain_slug and project:
+        pending_order = _project_latest_receipt(request, domain_slug, project)
+        confirmed_order = _project_confirmed_receipt(request, domain_slug, project)
+        if confirmed_order:
+            if project.get('source_code_path') and not project.get('payment_enabled'):
+                if domain_slug == 'data-mining' and project.get('title_path'):
+                    download_url = (
+                        reverse('dashboard:download_data_mining_project_source_code_by_title', args=[project['title_path']])
+                        + f'?order={confirmed_order.merchant_order_id}'
+                    )
+                else:
+                    download_url = (
+                        reverse('dashboard:download_project_source_code', args=[domain_slug, project['slug']])
+                        + f'?order={confirmed_order.merchant_order_id}'
+                    )
+            else:
+                download_url = (
+                    reverse('dashboard:download_project_zip', args=[domain_slug, project['slug']])
+                    + f'?order={confirmed_order.merchant_order_id}'
+                )
+    return {
+        'project_support_email': PROJECT_SUPPORT_EMAIL,
+        'project_support_domain_slug': domain_slug or '',
+        'project_support_project': project,
+        'project_support_pending_order': pending_order,
+        'project_support_confirmed_order': confirmed_order,
+        'project_support_download_url': download_url,
+    }
+
+
+def _send_project_receipt_email(payment, project, receipt_file):
+    subject = f"Project ZIP receipt pending confirmation: {project['name']}"
+    body = (
+        f"Project: {project['name']}\n"
+        f"Domain: {payment.domain_slug}\n"
+        f"Project slug: {payment.project_slug}\n"
+        f"Request ID: {payment.merchant_order_id}\n"
+        f"Amount: INR {payment.amount_paise // 100}\n\n"
+        f"Student name: {payment.receipt_student_name}\n"
+        f"Student email: {payment.receipt_student_email}\n"
+        f"Student phone: {payment.receipt_student_phone}\n\n"
+        f"Message / doubt:\n{payment.receipt_message or 'No message provided.'}\n\n"
+        "To unlock the ZIP, open Django admin, review this request, and set status to COMPLETED "
+        "or use the admin action to confirm selected receipt requests."
+    )
+    message = EmailMessage(
+        subject=subject,
+        body=body,
+        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+        to=[PROJECT_SUPPORT_EMAIL],
+        reply_to=[payment.receipt_student_email] if payment.receipt_student_email else None,
+    )
+    if receipt_file:
+        receipt_file.seek(0)
+        message.attach(
+            getattr(receipt_file, 'name', payment.receipt_filename or 'phonepe-receipt'),
+            receipt_file.read(),
+            getattr(receipt_file, 'content_type', None) or 'application/octet-stream',
+        )
+    message.send(fail_silently=False)
 
 
 def _project_zip_price(domain_slug, project_slug):
@@ -3829,6 +3935,9 @@ def download_project_source_code(request, domain_slug, project_slug):
     project = _get_domain_project(domain_slug, project_slug)
     if project.get('payment_enabled'):
         return redirect('dashboard:project_zip_payment', domain_slug, project_slug)
+    if project.get('receipt_required') and not _project_confirmed_receipt(request, domain_slug, project):
+        messages.info(request, 'Please share your PhonePe receipt through project support. ZIP download unlocks after confirmation.')
+        return redirect(_project_detail_url(domain_slug, project))
     if not project.get('source_code_path'):
         raise Http404('Source code download not available.')
     response = HttpResponse(_build_source_code_zip(domain_slug, project), content_type='application/zip')
@@ -3841,6 +3950,9 @@ def download_data_mining_project_source_code_by_title(request, project_title):
     project = _get_data_mining_project_by_title(project_title)
     if project.get('payment_enabled'):
         return redirect('dashboard:project_zip_payment', 'data-mining', project['slug'])
+    if project.get('receipt_required') and not _project_confirmed_receipt(request, 'data-mining', project):
+        messages.info(request, 'Please share your PhonePe receipt through project support. ZIP download unlocks after confirmation.')
+        return redirect(_project_detail_url('data-mining', project))
     response = HttpResponse(_build_source_code_zip('data-mining', project), content_type='application/zip')
     filename = project.get('title_path') or project['slug']
     response['Content-Disposition'] = f'attachment; filename="{filename}-source-code.zip"'
@@ -4234,6 +4346,9 @@ def _build_project_zip(domain_slug, project):
 def download_project_zip(request, domain_slug, project_slug):
     """Generate a configured project ZIP only after server-verified PhonePe payment."""
     project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
+    if not request.GET.get('order') and project.get('receipt_required') and not project.get('payment_enabled'):
+        messages.info(request, 'Please share your PhonePe receipt through project support. ZIP download unlocks after confirmation.')
+        return redirect(_project_detail_url(domain_slug, project))
     payment = get_object_or_404(
         ProjectDownloadPayment,
         merchant_order_id=request.GET.get('order', ''),
@@ -4242,11 +4357,19 @@ def download_project_zip(request, domain_slug, project_slug):
         project_slug=project_slug,
         amount_paise=project['amount_paise'],
     )
-    try:
-        paid = _phonepe_verify_payment(payment)
-    except (PhonePePaymentError, requests.RequestException, ValueError):
-        paid = False
+    if payment.payment_method == 'RECEIPT':
+        paid = payment.status == 'COMPLETED'
+    else:
+        try:
+            paid = _phonepe_verify_payment(payment)
+        except (PhonePePaymentError, requests.RequestException, ValueError):
+            paid = False
     if not paid:
+        if payment.payment_method == 'RECEIPT':
+            messages.info(request, 'Receipt is pending confirmation. ZIP download is locked until admin approval.')
+            return redirect(
+                f"{_project_detail_url(domain_slug, project)}?order={payment.merchant_order_id}"
+            )
         return redirect(
             f"{reverse('dashboard:project_zip_payment', args=[domain_slug, project_slug])}"
             f"?order={payment.merchant_order_id}"
@@ -4265,6 +4388,69 @@ def download_project_zip(request, domain_slug, project_slug):
 def download_engineeringcollege_project(request):
     """Backward-compatible EngineeringCollege project ZIP URL."""
     return download_project_zip(request, 'software-engineering', 'engineeringcollege-project')
+
+
+@ratelimit(key=_payment_rate_key, rate='5/m', method='POST', block=True)
+@require_POST
+def submit_project_receipt(request, domain_slug, project_slug):
+    project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
+    if not project.get('receipt_required'):
+        raise Http404('Receipt upload is not enabled for this project.')
+
+    student_name = (request.POST.get('student_name') or '').strip()
+    student_email = (request.POST.get('student_email') or '').strip()
+    student_phone = (request.POST.get('student_phone') or '').strip()
+    receipt_message = (request.POST.get('receipt_message') or '').strip()
+    receipt_file = request.FILES.get('receipt_file')
+
+    if not student_name or not student_email or not receipt_file:
+        messages.error(request, 'Please enter your name, email, and attach the PhonePe receipt.')
+        return redirect(_project_detail_url(domain_slug, project))
+
+    if receipt_file.size > 5 * 1024 * 1024:
+        messages.error(request, 'Receipt file must be 5 MB or smaller.')
+        return redirect(_project_detail_url(domain_slug, project))
+
+    content_type = (getattr(receipt_file, 'content_type', '') or '').lower()
+    allowed_types = {
+        'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
+    }
+    if content_type not in allowed_types:
+        messages.error(request, 'Upload a PDF, JPG, PNG, or WebP PhonePe receipt.')
+        return redirect(_project_detail_url(domain_slug, project))
+
+    payment = ProjectDownloadPayment.objects.create(
+        merchant_order_id=f"ECRCP{timezone.now():%Y%m%d%H%M%S}{os.urandom(5).hex()}",
+        session_key=_request_session_key(request),
+        domain_slug=domain_slug,
+        project_slug=project['slug'],
+        amount_paise=project['amount_paise'],
+        status='PENDING',
+        payment_method='RECEIPT',
+        receipt_student_name=student_name,
+        receipt_student_email=student_email,
+        receipt_student_phone=student_phone,
+        receipt_filename=getattr(receipt_file, 'name', ''),
+        receipt_message=receipt_message,
+        receipt_uploaded_at=timezone.now(),
+    )
+
+    try:
+        _send_project_receipt_email(payment, project, receipt_file)
+    except Exception as exc:
+        logger.exception('Could not email project receipt %s: %s', payment.merchant_order_id, exc)
+        messages.warning(
+            request,
+            f'Receipt request {payment.merchant_order_id} was saved, but email delivery failed. '
+            f'Please also email your receipt to {PROJECT_SUPPORT_EMAIL}.',
+        )
+    else:
+        messages.success(
+            request,
+            f'Receipt request {payment.merchant_order_id} was sent for confirmation. '
+            'ZIP download unlocks only after admin approval.',
+        )
+    return redirect(f"{_project_detail_url(domain_slug, project)}?order={payment.merchant_order_id}")
 
 
 @ratelimit(key=_payment_rate_key, rate='20/m', method='GET', block=True)
@@ -4421,12 +4607,16 @@ def project_domain(request, domain_slug):
     domain_name = PROJECT_DOMAINS.get(domain_slug)
     if not domain_name:
         raise Http404("Project domain not found")
+    domain_projects = _load_domain_projects(domain_slug)
+    support_project = domain_projects[0] if domain_projects else None
+    support_context = _receipt_support_context(request, domain_slug, support_project) if support_project else _receipt_support_context(request)
     return render(request, 'dashboard/project_domain.html', {
         'domain_name': domain_name,
         'domain_slug': domain_slug,
         'is_software_engineering': domain_slug == 'software-engineering',
         'project_modules': [name for name, _ in PROJECT_MODULES],
-        'domain_projects': _load_domain_projects(domain_slug),
+        'domain_projects': domain_projects,
+        **support_context,
     })
 
 
@@ -4446,6 +4636,7 @@ def project_detail(request, domain_slug, project_slug):
             and project_slug == 'engineeringcollege-project'
         ),
         'project_modules': [name for name, _ in PROJECT_MODULES],
+        **_receipt_support_context(request, domain_slug, project),
     })
 
 
@@ -4461,6 +4652,7 @@ def data_mining_project_detail_by_title(request, project_title):
         'academic_folders': _project_academic_folders('data-mining', project),
         'is_engineeringcollege_project': False,
         'project_modules': [name for name, _ in PROJECT_MODULES],
+        **_receipt_support_context(request, 'data-mining', project),
     })
 
 

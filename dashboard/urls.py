@@ -71,6 +71,11 @@ urlpatterns = [
         name='initiate_project_zip_payment',
     ),
     path(
+        'projects/<slug:domain_slug>/<slug:project_slug>/receipt/submit/',
+        views.submit_project_receipt,
+        name='submit_project_receipt',
+    ),
+    path(
         'projects/<slug:domain_slug>/<slug:project_slug>/payment/return/<str:merchant_order_id>/',
         views.project_zip_payment_return,
         name='project_zip_payment_return',
