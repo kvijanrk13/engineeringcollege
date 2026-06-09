@@ -144,7 +144,8 @@
         {% if project_support_project %}
             <div class="project-support-command">Command: share your PhonePe receipt and send</div>
             <p class="project-support-muted">
-                Upload your PhonePe acknowledgement here. The ZIP download stays locked until admin confirmation.
+                Amount: INR {{ project_support_project.amount_rupees }}. Upload your PhonePe acknowledgement here.
+                The complete project folder Google Drive link is mailed to your email after admin confirmation.
             </p>
 
             {% if project_support_confirmed_order and project_support_download_url %}

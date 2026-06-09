@@ -445,6 +445,8 @@ class ProjectDownloadPayment(models.Model):
     receipt_filename = models.CharField(max_length=255, blank=True)
     receipt_message = models.TextField(blank=True)
     receipt_uploaded_at = models.DateTimeField(blank=True, null=True)
+    delivery_drive_link = models.URLField(max_length=1000, blank=True)
+    delivered_at = models.DateTimeField(blank=True, null=True)
     admin_note = models.TextField(blank=True)
     verified_at = models.DateTimeField(blank=True, null=True)
     download_count = models.PositiveIntegerField(default=0)

@@ -1,0 +1,9 @@
+Place the exact PhonePe Accepted Here QR image here with this filename:
+
+phonepe-accepted-qr.png
+
+The project payment section references:
+
+static/images/phonepe-accepted-qr.png
+
+The chat image in the conversation is not directly available to the repository filesystem, so the original QR image file must be saved at that path for the live page to display the exact scannable QR.

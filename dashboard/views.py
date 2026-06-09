@@ -3824,6 +3824,7 @@ def _receipt_support_context(request, domain_slug=None, project=None):
         'project_support_pending_order': pending_order,
         'project_support_confirmed_order': confirmed_order,
         'project_support_download_url': download_url,
+        'project_support_qr_static_path': 'images/phonepe-accepted-qr.png',
     }
 
 
