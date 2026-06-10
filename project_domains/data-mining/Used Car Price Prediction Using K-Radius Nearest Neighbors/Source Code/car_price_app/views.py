@@ -203,15 +203,35 @@ def execution_overview(request):
 
 
 def gmail_sign_in(request):
-    request.session["google_oauth_email"] = "local.gmail@example.com"
+    request.session["google_oauth_email"] = "local@gmail.com"
     return redirect("maruti-prices")
 
 
+def _require_gmail_sign_in(request):
+    if request.session.get("google_oauth_email", "").endswith("@gmail.com"):
+        return None
+    return redirect("registration")
+
+
 def maruti_prices(request):
+    redirect_response = _require_gmail_sign_in(request)
+    if redirect_response is not None:
+        return redirect_response
     return render(
         request,
         "car_price_app/execution_overview.html",
         _maruti_execution_context("Maruti Suzuki Cars - Khammam Price, Questionnaire, and K-RADIUS Prediction"),
+    )
+
+
+def research_paper(request):
+    redirect_response = _require_gmail_sign_in(request)
+    if redirect_response is not None:
+        return redirect_response
+    return render(
+        request,
+        "car_price_app/research_paper_redirect.html",
+        {"title": PROJECT_TITLE},
     )
 
 

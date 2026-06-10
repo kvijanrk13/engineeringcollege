@@ -405,8 +405,22 @@ def apriori_execution(request):
 
 
 def maruti_prices(request):
+    redirect_response = _require_gmail_or_registered(request)
+    if redirect_response is not None:
+        return redirect_response
     return render(
         request,
         "car_price_app/execution_overview.html",
         _maruti_execution_context("Maruti Suzuki Cars - Khammam Price, Questionnaire, and K-RADIUS Prediction"),
+    )
+
+
+def research_paper(request):
+    redirect_response = _require_gmail_or_registered(request)
+    if redirect_response is not None:
+        return redirect_response
+    return render(
+        request,
+        "car_price_app/research_paper_redirect.html",
+        {"title": PROJECT_TITLE},
     )
