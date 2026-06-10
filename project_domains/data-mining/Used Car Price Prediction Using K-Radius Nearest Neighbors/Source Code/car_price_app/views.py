@@ -7,6 +7,7 @@ from apriori_analysis import apriori_rules, make_transactions
 from dataset_loader import available_datasets, normalize_dataset
 
 from .forms import StudentRegistrationForm
+from .maruti_data import YEARS, maruti_project_dataset
 from .models import ExecutionLog
 
 
@@ -171,7 +172,7 @@ def registration(request):
         if form.is_valid():
             registration_record = form.save()
             request.session["student_registration_id"] = registration_record.id
-            return redirect("execution-overview")
+            return redirect("maruti-prices")
     else:
         form = StudentRegistrationForm()
 
@@ -185,15 +186,27 @@ def registration(request):
     )
 
 
+def _maruti_execution_context(title: str) -> dict:
+    maruti_data = maruti_project_dataset()
+    return {
+        "title": PROJECT_TITLE,
+        "page_heading": PROJECT_TITLE,
+        "page_subtitle": title,
+        "years": YEARS,
+        "maruti_data": maruti_data,
+        "maruti_lookup": {model["name"]: model for model in maruti_data},
+    }
+
+
 def execution_overview(request):
+    return redirect("maruti-prices")
+
+
+def maruti_prices(request):
     return render(
         request,
         "car_price_app/execution_overview.html",
-        {
-            "title": PROJECT_TITLE,
-            "steps": GITHUB_EXECUTION_STEPS,
-            "registered": bool(request.session.get("student_registration_id")),
-        },
+        _maruti_execution_context("Maruti Suzuki Cars - Khammam Price, Questionnaire, and K-RADIUS Prediction"),
     )
 
 
