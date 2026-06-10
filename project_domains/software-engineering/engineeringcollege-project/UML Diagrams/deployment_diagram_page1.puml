@@ -42,7 +42,6 @@ node "Client Device\nBrowser / Mobile Web" as Client {
 cloud "Render Cloud Platform\n(render.com)" as Render {
   node "Django Application\n(Gunicorn / Python)" as DjangoApp {
     component "dashboard app" as dashboard
-    component "car_price_app\nGmail OAuth protected\nML Demo" as car_app
     component "engineeringcollege\nproject config" as project
   }
   artifact "Static Files\nWhiteNoise / staticfiles" as StaticFiles
@@ -50,11 +49,9 @@ cloud "Render Cloud Platform\n(render.com)" as Render {
 }
 
 cloud "Cloudinary\nPhotos, certificates, PDFs" as CloudStorage
-cloud "PhonePe Gateway\nPayment Processing" as PhonePe
 
 Client --> Render : HTTPS (443)
 Render --> CloudStorage : Upload / Download documents
-Render --> PhonePe : Payment API
 DjangoApp --> StaticFiles : serve assets
 DjangoApp --> MediaFiles : read / write runtime
 @enduml

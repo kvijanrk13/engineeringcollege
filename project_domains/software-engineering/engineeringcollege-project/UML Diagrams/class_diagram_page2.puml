@@ -69,27 +69,8 @@ package "dashboard.models" {
   }
 }
 
-package "car_price_app.models" {
-  class StudentRegistration {
-    +full_name: CharField
-    +roll_number: CharField
-    +email: EmailField
-    +department: CharField
-    +college: CharField
-  }
-
-  class ExecutionLog {
-    +algorithm: CharField
-    +dataset: CharField
-    +rows_executed: PositiveIntegerField
-  }
-}
-
 Faculty "*" --o "*" Subject : subjects
 Faculty "1" --o "*" FDP : fdps
 Faculty "1" --o "*" BTechProject : btech_projects
-Subject --o Faculty
-FDP --o Faculty
-BTechProject --o Faculty
-ProjectDownloadPayment --o Student
+ProjectDownloadPayment "1" --o "1" Student : payment
 @enduml
