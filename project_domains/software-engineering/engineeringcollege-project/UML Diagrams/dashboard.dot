@@ -3,8 +3,10 @@ digraph model_graph {
   // Created: 2026-06-10 17:31
   // Cli Options: dashboard --dot -o project_domains\software-engineering\engineeringcollege-project\UML Diagrams\dashboard.dot
 
+  label = "CLASS DIAGRAM\nEngineeringCollege Project - Dashboard Models"
+  labelloc = "t"
   fontname = "Arial"
-  fontsize = 24
+  fontsize = 32
   splines  = true
   rankdir = "TB"
   
@@ -2049,14 +2051,6 @@ digraph model_graph {
     <FONT COLOR="#7B7B7B" FACE="Arial">payment_url</FONT>
     </TD><TD ALIGN="LEFT">
     <FONT COLOR="#7B7B7B" FACE="Arial">URLField</FONT>
-    </TD></TR>
-  
-  
-  
-    <TR><TD ALIGN="LEFT" BORDER="0">
-    <FONT COLOR="#7B7B7B" FACE="Arial">phonepe_order_id</FONT>
-    </TD><TD ALIGN="LEFT">
-    <FONT COLOR="#7B7B7B" FACE="Arial">CharField</FONT>
     </TD></TR>
   
   

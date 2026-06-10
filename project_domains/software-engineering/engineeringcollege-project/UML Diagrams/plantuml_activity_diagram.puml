@@ -1,0 +1,52 @@
+@startuml
+title ACTIVITY DIAGRAM\nEngineeringCollege Project - Manage Profile
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam titleFontSize 26
+skinparam titleFontStyle bold
+skinparam activity {
+  BorderColor #2F5597
+  BackgroundColor #F8FBFF
+  DiamondBorderColor #2F5597
+  DiamondBackgroundColor #D9EAF7
+  StartColor #2F5597
+  EndColor #2F5597
+  FontSize 12
+}
+
+start
+
+:User logs into System;
+
+if (Role is Admin?) then (Yes)
+  :Admin accesses management panel;
+  if (Action?) then (Faculty)
+    :Manage Faculty Profiles;
+    :Upload documents;
+    :Generate Faculty PDF;
+    stop
+  else (Student)
+    :Manage Student Profiles;
+    :Upload certificates;
+    :Generate Student PDF;
+    stop
+  endif
+else (No)
+  if (Role is Faculty?) then (Yes)
+    :Faculty accesses dashboard;
+    :Update profile data;
+    :Upload certificates and FDP;
+    :Generate Profile PDF;
+    stop
+  else (Student)
+    :Student accesses dashboard;
+    :View and edit profile;
+    :Upload certificates;
+    :Merge and download PDF;
+    stop
+  endif
+endif
+@enduml

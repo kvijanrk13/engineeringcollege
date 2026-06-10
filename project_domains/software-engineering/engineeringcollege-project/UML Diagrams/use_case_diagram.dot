@@ -1,0 +1,90 @@
+graph use_case_diagram {
+  graph [
+    label="USE CASE DIAGRAM\nEngineeringCollege Project",
+    labelloc=t,
+    fontsize=32,
+    fontname="Arial",
+    rankdir=LR,
+    bgcolor="white",
+    splines=true,
+    nodesep=0.55,
+    ranksep=0.9
+  ];
+  node [fontname="Arial", fontsize=14, color="#2f5597", penwidth=1.7, style="filled", fillcolor="white"];
+  edge [fontname="Arial", fontsize=11, color="#4f5b66", penwidth=1.2];
+
+  Admin [shape=plaintext, label=<
+    <TABLE BORDER="0" CELLBORDER="0">
+      <TR><TD><FONT POINT-SIZE="30">&#9675;</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/|\</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/ \</FONT></TD></TR>
+      <TR><TD><B>Admin</B></TD></TR>
+    </TABLE>
+  >];
+  FacultyActor [shape=plaintext, label=<
+    <TABLE BORDER="0" CELLBORDER="0">
+      <TR><TD><FONT POINT-SIZE="30">&#9675;</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/|\</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/ \</FONT></TD></TR>
+      <TR><TD><B>Faculty</B></TD></TR>
+    </TABLE>
+  >];
+  StudentActor [shape=plaintext, label=<
+    <TABLE BORDER="0" CELLBORDER="0">
+      <TR><TD><FONT POINT-SIZE="30">&#9675;</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/|\</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/ \</FONT></TD></TR>
+      <TR><TD><B>Student</B></TD></TR>
+    </TABLE>
+  >];
+  Visitor [shape=plaintext, label=<
+    <TABLE BORDER="0" CELLBORDER="0">
+      <TR><TD><FONT POINT-SIZE="30">&#9675;</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/|\</FONT></TD></TR>
+      <TR><TD><FONT POINT-SIZE="26">/ \</FONT></TD></TR>
+      <TR><TD><B>Visitor</B></TD></TR>
+    </TABLE>
+  >];
+  subgraph cluster_system {
+    label="EngineeringCollege Django System";
+    fontname="Arial";
+    fontsize=18;
+    color="#8faadc";
+    penwidth=2;
+    style="rounded";
+    Login [shape=ellipse, label="Login / Google OAuth"];
+    FacultyManage [shape=ellipse, label="Manage Faculty Profiles"];
+    StudentManage [shape=ellipse, label="Manage Student Profiles"];
+    UploadDocs [shape=ellipse, label="Upload Photos and Certificates"];
+    GeneratePDF [shape=ellipse, label="Generate / Merge PDFs"];
+    Gallery [shape=ellipse, label="View Gallery"];
+    ExamBranch [shape=ellipse, label="Exam Branch Dashboard"];
+    Subjects [shape=ellipse, label="View Subjects / Syllabus"];
+    ProjectShowcase [shape=ellipse, label="Browse Project Domains"];
+    PayDownload [shape=ellipse, label="Pay and Download Project ZIP"];
+    Reports [shape=ellipse, label="Generate Reports"];
+  }
+
+  Admin -- Login;
+  Admin -- FacultyManage;
+  Admin -- StudentManage;
+  Admin -- UploadDocs;
+  Admin -- GeneratePDF;
+  Admin -- ExamBranch;
+  Admin -- Reports;
+  FacultyActor -- Login;
+  FacultyActor -- FacultyManage;
+  FacultyActor -- UploadDocs;
+  FacultyActor -- GeneratePDF;
+  StudentActor -- Login;
+  StudentActor -- StudentManage;
+  StudentActor -- UploadDocs;
+  StudentActor -- GeneratePDF;
+  Visitor -- Gallery;
+  Visitor -- Subjects;
+  Visitor -- ProjectShowcase;
+  Visitor -- PayDownload;
+
+  UploadDocs -- GeneratePDF [style=dashed, label="<<include>>"];
+  PayDownload -- ProjectShowcase [style=dashed, label="<<extend>>"];
+}

@@ -31,7 +31,7 @@ flowchart TB
     Models[Models]
     DB[(Database)]
     Cloudinary[Cloudinary]
-    Payments[PhonePe Payment]
+    Payments[Payment]
     ProjectZip[ZIP Builder]
 
     Browser --> Django
@@ -51,5 +51,5 @@ flowchart LR
     Render --> Django[Django App]
     Django --> Postgres[(PostgreSQL)]
     Django --> Cloudinary[Cloudinary Assets]
-    Django --> PhonePe[PhonePe Gateway]
+    Django --> Payment[Payment Service]
 ```

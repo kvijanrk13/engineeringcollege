@@ -1,0 +1,38 @@
+digraph state_chart_diagram {
+  graph [
+    label="STATE CHART DIAGRAM\nEngineeringCollege Project - Project Download Payment",
+    labelloc=t,
+    fontsize=32,
+    fontname="Arial",
+    rankdir=LR,
+    bgcolor="white",
+    splines=true,
+    nodesep=0.55,
+    ranksep=0.8
+  ];
+  node [fontname="Arial", fontsize=13, style="rounded,filled", fillcolor="#f8fbff", color="#2f5597", penwidth=1.6];
+  edge [fontname="Arial", fontsize=11, color="#4f5b66", arrowsize=0.8];
+
+  Start [shape=circle, width=0.3, label="", fillcolor="#2f5597"];
+  Created [shape=box, label="CREATED\nOrder initialized"];
+  Pending [shape=box, label="PENDING\nCheckout URL / QR visible"];
+  Completed [shape=box, label="COMPLETED\nVerified order and amount"];
+  Failed [shape=box, label="FAILED\nPayment validation failed"];
+  Locked [shape=box, label="LOCKED\nDownload denied"];
+  Delivered [shape=box, label="DELIVERED\nZIP downloaded"];
+  ManualReview [shape=box, label="MANUAL REVIEW\nReceipt uploaded"];
+  End [shape=doublecircle, width=0.35, label="", fillcolor="#2f5597"];
+
+  Start -> Created [label="create payment"];
+  Created -> Pending [label="checkout created"];
+  Created -> Failed [label="gateway error"];
+  Pending -> Completed [label="callback / verify success"];
+  Pending -> Failed [label="verify failed"];
+  Pending -> ManualReview [label="manual receipt"];
+  Failed -> Locked [label="invalid payment"];
+  Locked -> Pending [label="retry"];
+  ManualReview -> Completed [label="admin verifies"];
+  Completed -> Delivered [label="download ZIP"];
+  Delivered -> Delivered [label="increment download_count"];
+  Delivered -> End;
+}

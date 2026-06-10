@@ -1,0 +1,48 @@
+digraph activity_diagram {
+  graph [
+    label="ACTIVITY DIAGRAM\nEngineeringCollege Project - Manage Profile and Generate PDF",
+    labelloc=t,
+    fontsize=32,
+    fontname="Arial",
+    rankdir=TB,
+    bgcolor="white",
+    splines=ortho,
+    nodesep=0.55,
+    ranksep=0.65
+  ];
+  node [fontname="Arial", fontsize=13, style="filled", fillcolor="#f8fbff", color="#2f5597", penwidth=1.6];
+  edge [fontname="Arial", fontsize=11, color="#4f5b66", arrowsize=0.8];
+
+  Start [shape=circle, width=0.28, label="", fillcolor="#2f5597"];
+  Login [shape=box, label="Open portal and login"];
+  Role [shape=diamond, label="Select role / module"];
+  Faculty [shape=box, label="Enter faculty profile data"];
+  Student [shape=box, label="Enter student profile data"];
+  Upload [shape=box, label="Upload photo and certificates"];
+  Validate [shape=diamond, label="Valid form data?"];
+  Fix [shape=box, label="Show validation errors"];
+  Save [shape=box, label="Save model records"];
+  Assets [shape=box, label="Resolve local and Cloudinary assets"];
+  Render [shape=box, label="Render profile PDF"];
+  Merge [shape=box, label="Merge certificate PDFs/images"];
+  Store [shape=box, label="Store PDF locally / Cloudinary"];
+  Display [shape=box, label="Display detail page and PDF action"];
+  End [shape=doublecircle, width=0.35, label="", fillcolor="#2f5597"];
+
+  Start -> Login;
+  Login -> Role;
+  Role -> Faculty [label="Faculty"];
+  Role -> Student [label="Student"];
+  Faculty -> Upload;
+  Student -> Upload;
+  Upload -> Validate;
+  Validate -> Fix [label="No"];
+  Fix -> Upload;
+  Validate -> Save [label="Yes"];
+  Save -> Assets;
+  Assets -> Render;
+  Render -> Merge;
+  Merge -> Store;
+  Store -> Display;
+  Display -> End;
+}

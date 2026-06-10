@@ -374,40 +374,26 @@ def _load_execution_files() -> list[dict[str, str]]:
 
 
 def apriori_execution(request):
-    maruti_data = maruti_project_dataset()
-
-    return render(
-        request,
-        "car_price_app/maruti_apriori.html",
-        {
-            "title": PROJECT_TITLE,
-            "page_heading": PROJECT_TITLE,
-            "page_subtitle": "Maruti Suzuki Khammam Car Price Prediction Execution",
-            "years": YEARS,
-            "maruti_data": maruti_data,
-            "execution_files": _load_execution_files(),
-            "model_count": len(maruti_data),
-        },
-    )
-
-
-def maruti_prices(request):
-    redirect_response = _require_gmail_sign_in(request)
-    if redirect_response is not None:
-        return redirect_response
-    return render(
-        request,
-        "car_price_app/execution_overview.html",
-        _maruti_execution_context("Maruti Suzuki Cars - Khammam Price, Questionnaire, and K-RADIUS Prediction"),
-    )
-
-
-def research_paper(request):
-    redirect_response = _require_gmail_sign_in(request)
-    if redirect_response is not None:
-        return redirect_response
-    return render(
-        request,
-        "car_price_app/research_paper_redirect.html",
-        {"title": PROJECT_TITLE},
-    )
+    models = [
+        {'name': 'Swift', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/54399/swift-exterior-right-front-three-quarter-64.jpeg', 'specs': 'Engine: 1197 cc | Power: 88.50 bhp | Mileage: 22.38 kmpl', 'base_price': 550000},
+        {'name': 'Baleno', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/106257/baleno-exterior-right-front-three-quarter-2.jpeg', 'specs': 'Engine: 1197 cc | Power: 88.50 bhp | Mileage: 22.35 kmpl', 'base_price': 600000},
+        {'name': 'Dzire', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/45691/dzire-exterior-right-front-three-quarter-3.jpeg', 'specs': 'Engine: 1197 cc | Power: 88.50 bhp | Mileage: 23.26 kmpl', 'base_price': 620000},
+        {'name': 'Brezza', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/123185/brezza-exterior-right-front-three-quarter-4.jpeg', 'specs': 'Engine: 1462 cc | Power: 101.65 bhp | Mileage: 19.8 kmpl', 'base_price': 800000},
+        {'name': 'Ertiga', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/115777/ertiga-exterior-right-front-three-quarter-3.jpeg', 'specs': 'Engine: 1462 cc | Power: 101.65 bhp | Mileage: 20.51 kmpl', 'base_price': 850000},
+        {'name': 'Alto K10', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/130591/alto-k10-exterior-right-front-three-quarter-72.jpeg', 'specs': 'Engine: 998 cc | Power: 65.71 bhp | Mileage: 24.39 kmpl', 'base_price': 350000},
+        {'name': 'Wagon R', 'image_url': 'https://imgd.aeplcdn.com/310x174/n/cw/ec/112947/wagon-r-exterior-right-front-three-quarter-3.jpeg', 'specs': 'Engine: 1197 cc | Power: 88.50 bhp | Mileage: 24.35 kmpl', 'base_price': 500000},
+    ]
+    years = list(range(2015, 2027))
+    maruti_data = []
+    for model in models:
+        model_data = {'name': model['name'], 'image_url': model['image_url'], 'specs': model['specs'], 'prices': []}
+        current_ex_showroom = model['base_price']
+        for year in years:
+            year_idx = year - 2015
+            ex_showroom_that_year = current_ex_showroom * ((1.04) ** year_idx)
+            on_road_price = int(ex_showroom_that_year * 1.16)
+            on_road_price = round(on_road_price, -3)
+            formatted_price = f'Rs {on_road_price:,.0f}'
+            model_data['prices'].append(formatted_price)
+        maruti_data.append(model_data)
+    return render(request, 'car_price_app/maruti_apriori.html', {'title': 'Used Car Price Prediction Using K-Radius Nearest Neighbors', 'years': years, 'maruti_data': maruti_data})
