@@ -193,11 +193,15 @@ def execution_overview(request):
 
 def gmail_sign_in(request):
     request.session["google_oauth_email"] = "local@gmail.com"
+    request.session["car_price_gmail_verified"] = True
     return redirect("maruti-prices")
 
 
 def _require_gmail_sign_in(request):
-    if request.session.get("google_oauth_email", "").endswith("@gmail.com"):
+    if (
+        request.session.get("google_oauth_email", "").endswith("@gmail.com")
+        and request.session.get("car_price_gmail_verified") is True
+    ):
         return None
     return redirect("registration")
 

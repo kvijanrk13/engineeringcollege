@@ -183,8 +183,7 @@ def registration(request):
 def _require_gmail_sign_in(request, next_url=None):
     is_gmail_logged_in = (
         request.session.get("google_oauth_email", "").endswith("@gmail.com")
-        or request.user.is_authenticated
-        and getattr(request.user, "email", "").lower().endswith("@gmail.com")
+        and request.session.get("car_price_gmail_verified") is True
     )
     if not is_gmail_logged_in:
         if next_url is None:

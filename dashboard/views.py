@@ -3175,6 +3175,7 @@ def google_callback(request):
 
                 request.session['google_oauth_email'] = email
                 request.session['google_oauth_name'] = profile.get('name', '')
+                request.session['car_price_gmail_verified'] = True
                 next_url = state_payload.get('next') or '/car-price/maruti-prices/'
                 if not url_has_allowed_host_and_scheme(
                     next_url,
