@@ -1,0 +1,31 @@
+@startuml
+title DEPLOYMENT DIAGRAM\nEngineeringCollege Django Project - Page 2
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 28
+skinparam titleFontSize 32
+skinparam titleFontStyle bold
+skinparam database {
+  BorderColor #2F5597
+  BackgroundColor #F8FBFF
+  FontSize 26
+}
+skinparam node {
+  BorderColor #2F5597
+  BackgroundColor #F8FBFF
+  FontSize 26
+}
+skinparam ArrowColor #4F5B66
+
+database "PostgreSQL / Neon\nApplication Database" as Postgres {
+  component "Dashboard\nModels" as DBModels
+}
+
+node "GitHub Repository" as GitHub within "Source Control"
+
+Client --> Render : HTTPS (443)
+Render --> Postgres : Django ORM
+GitHub --> Render : auto deploy from main
+@enduml

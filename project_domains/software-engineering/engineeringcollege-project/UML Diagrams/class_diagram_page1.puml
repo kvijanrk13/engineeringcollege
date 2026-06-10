@@ -1,0 +1,106 @@
+@startuml
+title CLASS DIAGRAM\nEngineeringCollege Django Project - Page 1
+
+skinparam backgroundColor white
+skinparam handwritten false
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 28
+skinparam titleFontSize 32
+skinparam titleFontStyle bold
+skinparam class {
+  BorderColor #2F5597
+  BackgroundColor #F8FBFF
+  HeaderBackgroundColor #D9EAF7
+  ArrowColor #4F5B66
+  FontSize 28
+}
+skinparam package {
+  BorderColor #2F5597
+  BackgroundColor #EEF4FB
+  FontSize 32
+  FontStyle bold
+}
+
+package "dashboard.models" {
+  class Subject {
+    +name: CharField(200)
+    +code: CharField(50)
+    +credits: IntegerField
+  }
+
+  class Faculty {
+    +staff_name: CharField
+    +employee_code: CharField(unique)
+    +department: CharField
+    +designation: CharField
+    +email: EmailField
+    +photo: ImageField
+    +pdf_document: FileField
+    +cloudinary_pdf_url: URLField
+    +is_active: BooleanField
+    +subjects: M2M[Subject]
+  }
+
+  class FacultyProfile {
+    +experience_other: CharField
+    +experience_at_anurag: CharField
+    +batch_number: CharField
+  }
+
+  class Certificate {
+    +certificate_type: CharField
+    +certificate_file: FileField
+    +cloudinary_url: URLField
+    +issued_by: CharField
+    +issue_date: DateField
+  }
+
+  class FacultyLog {
+    +action: CharField
+    +details: TextField
+    +performed_by: CharField
+    +ip_address: GenericIPAddressField
+  }
+
+  class CloudinaryUpload {
+    +upload_type: CharField
+    +cloudinary_url: URLField
+    +public_id: CharField
+    +resource_type: CharField
+  }
+
+  class ResearchProject {
+    +research_type: CharField
+    +title_of_project: CharField
+    +journal_name: CharField
+    +year: IntegerField
+  }
+
+  class ResearchPublication {
+    +research_type: CharField
+    +title: CharField
+    +publication_year: IntegerField
+    +status: CharField
+    +doi: CharField
+  }
+
+  class StudentResearchPublication {
+    +research_type: CharField
+    +title: CharField
+    +publication_year: IntegerField
+    +status: CharField
+  }
+}
+
+Faculty "1" --o "1" FacultyProfile : profile
+Faculty "1" --o "*" Certificate : certificates
+Faculty "1" --o "*" FacultyLog : logs
+Student "1" --o "*" FacultyLog : logs
+Faculty "1" --o "*" CloudinaryUpload : uploads
+Student "1" --o "*" CloudinaryUpload : uploads
+Faculty "1" --o "*" ResearchProject : research_projects
+Faculty "1" --o "*" ResearchPublication : publications
+Student "1" --o "*" StudentResearchPublication : publications
+@enduml

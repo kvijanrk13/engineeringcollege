@@ -1,0 +1,50 @@
+@startuml
+title COLLABORATION DIAGRAM\nEngineeringCollege Project - Faculty Profile & PDF Flow
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 28
+skinparam titleFontSize 32
+skinparam titleFontStyle bold
+skinparam noteFontSize 24
+skinparam object {
+  BorderColor #2F5597
+  BackgroundColor #F8FBFF
+}
+skinparam ArrowColor #4F5B66
+
+object "Admin / Faculty / Student\n: user interface" as User
+object "Browser\n: Web Client" as Browser
+object "views : dashboard.views\n: Django Views" as Views
+object "Faculty Model\n: dashboard.models" as Faculty
+object "Student Model\n: dashboard.models" as Student
+object "Subject Model\n: dashboard.models" as Subject
+object "Certificate Model\n: dashboard.models" as Certificate
+object "PDF Service\n: WeasyPrint / ReportLab" as PDF
+object "Media / Cloud Storage\n: Cloudinary + Local" as Storage
+object "db : PostgreSQL\n: Application DB" as DB
+
+User --> Browser : 1. login / navigate
+Browser --> Views : 2. HTTP request
+Views --> DB : 3. query / fetch
+DB --> Views : 4. return data
+Views --> Faculty : 5. read / update
+Faculty --> DB : 6. persist
+Views --> Student : 5. read / update
+Student --> DB : 6. persist
+Views --> Subject : 5. fetch subjects
+Subject --> DB : 6. query
+Views --> Certificate : 5. fetch certificates
+Certificate --> DB : 6. query
+Views --> PDF : 7. generate_student_pdf()
+PDF --> Faculty : 8. read document fields
+PDF --> Student : 8. read document fields
+PDF --> Storage : 9. fetch photos & certificates
+Storage --> PDF : 10. return asset bytes
+PDF --> Storage : 11. upload generated PDF
+Storage --> PDF : 12. return PDF URL
+PDF --> Views : 13. return completed PDF
+Views --> Browser : 14. redirect / stream
+Browser --> User : 15. display result
+@enduml
