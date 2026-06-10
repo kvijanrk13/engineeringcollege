@@ -99,6 +99,7 @@ INSTALLED_APPS = [
 
     'cloudinary',
     'cloudinary_storage',
+    'django_extensions',
 
     'dashboard',
     'car_price_app',
