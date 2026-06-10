@@ -3731,8 +3731,18 @@ def _get_domain_project(domain_slug, project_slug, require_paid_zip=False):
     return project
 
 
-def _get_data_mining_project_by_title(project_title):
+DATA_MINING_PROJECT_TITLE_ALIASES = {
+    "Predicting Second Hand Cars Price using Machine Learning Algorithms": "Used Car Price Prediction Using K-Radius Nearest Neighbors",
+}
+
+
+def _normalize_project_title(project_title):
     normalized_title = unquote(str(project_title or '')).strip().strip('/')
+    return DATA_MINING_PROJECT_TITLE_ALIASES.get(normalized_title, normalized_title)
+
+
+def _get_data_mining_project_by_title(project_title):
+    normalized_title = _normalize_project_title(project_title)
     project = next(
         (
             item for item in _load_domain_projects('data-mining')
@@ -4648,6 +4658,9 @@ def project_detail(request, domain_slug, project_slug):
 def data_mining_project_detail_by_title(request, project_title):
     """Display a Data Mining project using its human-readable title URL."""
     project = _get_data_mining_project_by_title(project_title)
+    canonical_title = project.get('title_path') or project['name']
+    if unquote(str(project_title or '')).strip().strip('/') != canonical_title:
+        return redirect('dashboard:data_mining_project_detail_by_title', canonical_title)
     return render(request, 'dashboard/project_detail.html', {
         'domain_name': PROJECT_DOMAINS['data-mining'],
         'domain_slug': 'data-mining',
