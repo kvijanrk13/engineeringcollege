@@ -1,23 +1,23 @@
 {% extends "car_price_app/base.html" %}
 
 {% block content %}
-  <h1>Student Registration</h1>
-  <section>
-    <p>Register first to start the local execution flow for the second-hand car price prediction project.</p>
-    <form method="post">
-      {% csrf_token %}
-      <div class="form-grid">
-        {% for field in form %}
-          <div>
-            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            {{ field }}
-            {{ field.errors }}
-          </div>
-        {% endfor %}
+  <section style="max-width: 760px; margin: 0 auto; text-align: center;">
+    <h1 style="text-align: center; margin-bottom: 6px;">{{ title }}</h1>
+    <p style="text-align: center; margin-bottom: 22px;">Sign in with Gmail to get started, then enter vehicle details for a K-Radius nearest neighbors prediction.</p>
+
+    <section style="max-width: 420px; margin: 0 auto;">
+      <div class="actions" style="justify-content: center;">
+        <a class="button" style="background: #fff; color: #1f2937; border: 1px solid #d7dfeb; box-shadow: 0 8px 20px rgba(15,23,42,0.10);" href="{% url 'gmail-sign-in' %}">
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" focusable="false">
+            <path fill="#EA4335" d="M12 11.1v2.9h6.8c-.3 1.7-2.1 5-6.8 5-4.1 0-7.4-3.4-7.4-7.5S7.9 4 12 4c2.3 0 3.9 1 4.8 1.9l2.1-2.1C17.5 2.5 15.2 1.3 12 1.3 6.4 1.3 1.9 5.8 1.9 11.5S6.4 21.7 12 21.7c6.9 0 9.6-4.8 9.6-9.7 0-.6-.1-1-.1-.9H12z"/>
+            <path fill="#4285F4" d="M21.5 11.1H12v2.9h5.4c-.5 2.7-2.8 5-5.4 5v2.7c5.8 0 9.6-4 9.6-9.7 0-.4 0-.7-.1-.9z"/>
+            <path fill="#FBBC05" d="M4.9 14.6c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.8H2.1c-.8 1.5-1.2 3.1-1.2 4.8s.4 3.3 1.2 4.8l2.8-2.8z"/>
+            <path fill="#34A853" d="M12 21.7c2.6 0 4.8-.9 6.4-2.4l-3.1-2.4c-.8.6-1.9 1-3.3 1-2.6 0-4.9-1.8-5.7-4.2H2.1v2.7c1.7 3.1 5.1 5.3 9.9 5.3z"/>
+          </svg>
+          <span>Sign in with Gmail</span>
+        </a>
       </div>
-      <div class="actions">
-        <button type="submit">Continue to Execution Pages</button>
-      </div>
-    </form>
+      <p style="font-size: 13px; margin-top: 14px;">In the deployed project this uses Google OAuth; in this standalone source copy it opens the Maruti prediction flow.</p>
+    </section>
   </section>
 {% endblock %}

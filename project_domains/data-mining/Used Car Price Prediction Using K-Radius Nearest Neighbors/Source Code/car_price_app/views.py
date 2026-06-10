@@ -202,6 +202,11 @@ def execution_overview(request):
     return redirect("maruti-prices")
 
 
+def gmail_sign_in(request):
+    request.session["google_oauth_email"] = "local.gmail@example.com"
+    return redirect("maruti-prices")
+
+
 def maruti_prices(request):
     return render(
         request,
