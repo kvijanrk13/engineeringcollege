@@ -177,7 +177,7 @@ def registration(request):
         if form.is_valid():
             registration_record = form.save()
             request.session["student_registration_id"] = registration_record.id
-            return redirect("execution-overview")
+            return redirect("maruti-prices")
     else:
         form = StudentRegistrationForm()
 
@@ -218,14 +218,7 @@ def _maruti_execution_context(title: str) -> dict:
 
 
 def execution_overview(request):
-    redirect_response = _require_gmail_or_registered(request)
-    if redirect_response is not None:
-        return redirect_response
-    return render(
-        request,
-        "car_price_app/execution_overview.html",
-        _maruti_execution_context("Maruti Suzuki Khammam Car Price Selection"),
-    )
+    return redirect("maruti-prices")
 
 
 def execution_step(request, step_slug):
