@@ -56,7 +56,6 @@ rectangle "EngineeringCollege Django System" {
   usecase "Download\nProject ZIP" as UC_Download
   usecase "View Exam\nBranch" as UC_Exam
   usecase "View\nSubjects" as UC_Subjects
-  usecase "Car Price\nPrediction" as UC_CarPrice
 }
 
 Admin --> UC_AdminFaculty
@@ -89,7 +88,6 @@ Visitor --> UC_Projects
 Visitor --> UC_Download
 Visitor --> UC_Exam
 Visitor --> UC_Subjects
-Visitor --> UC_CarPrice
 
 UC_FacultyUpload ..> UC_FacultyPDF : <<include>>
 UC_StudentUpload ..> UC_StudentPDF : <<include>>
