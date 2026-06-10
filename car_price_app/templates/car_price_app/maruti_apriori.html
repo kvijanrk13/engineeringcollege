@@ -1,7 +1,10 @@
 {% extends 'car_price_app/base.html' %}
 {% block content %}
 <main style='max-width: 1200px; margin: 0 auto; padding: 20px;'>
-  <h1 style='text-align: center; margin-bottom: 30px;'>{{ title }}</h1>
+  <h1 style='text-align: center; margin-bottom: 8px;'>{{ page_heading|default:title }}</h1>
+  {% if page_subtitle %}
+  <p style='text-align: center; margin: 0 0 30px 0;'>{{ page_subtitle }}</p>
+  {% endif %}
   <div style='background: #fff8e5; border: 1px solid #f2d38a; border-radius: 8px; margin-bottom: 24px; padding: 16px; color: #5d4300;'>
     <strong>Project dataset note:</strong>
     The prices shown below are approximate Khammam/Telangana on-road estimates for academic modelling.

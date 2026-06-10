@@ -1,12 +1,15 @@
 {% extends "car_price_app/base.html" %}
 
 {% block content %}
-  <h1>{{ title }}</h1>
+  <h1>{{ page_heading|default:title }}</h1>
+  {% if page_subtitle %}
+    <p>{{ page_subtitle }}</p>
+  {% endif %}
 
   <section>
     <h2>Project Identity</h2>
     <p>
-      <strong>Maruti Suzuki Registered Car Resale Price and Risk Prediction System for Khammam District using Depreciation and Machine Learning.</strong>
+      <strong>{{ title }}</strong>
       This project is different from normal car selling websites because it combines Khammam/Telangana local price context,
       registration risk checks, transparent depreciation factors, buyer confidence scoring, and seller improvement advice.
     </p>

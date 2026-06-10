@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Step 8: Prediction Page - Car Price Prediction</title>
+  <title>Step 8: Prediction Page - Used Car Price Prediction Using K-Radius Nearest Neighbors</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -86,7 +86,7 @@ import streamlit as st
 with open('model.pkl', 'rb') as file:
     model = pickle.load(file)
 
-st.title('Car Price Prediction')
+st.title('Used Car Price Prediction Using K-Radius Nearest Neighbors')
 present_price = st.number_input('Present Price in lakhs', min_value=0.0)
 kms_driven = st.number_input('Kms Driven', min_value=0)
 fuel_type = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG'])

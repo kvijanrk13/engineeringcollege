@@ -10,6 +10,7 @@ urlpatterns = [
     path('apriori/', apriori_execution, name='apriori-execution'),
     path('maruti-prices/', maruti_prices, name='maruti-prices'),
     path('research-paper/', TemplateView.as_view(
-        template_name='car_price_app/research_paper_redirect.html'
+        template_name='car_price_app/research_paper_redirect.html',
+        extra_context={'title': 'Used Car Price Prediction Using K-Radius Nearest Neighbors'},
     ), name='research-paper'),
 ]

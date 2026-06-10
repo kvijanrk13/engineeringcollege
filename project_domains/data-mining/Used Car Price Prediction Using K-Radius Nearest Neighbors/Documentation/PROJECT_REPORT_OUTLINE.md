@@ -2,7 +2,7 @@
 
 ## Title
 
-Predicting Second Hand Cars Price using Machine Learning Algorithms
+Used Car Price Prediction Using K-Radius Nearest Neighbors
 
 ## Abstract
 

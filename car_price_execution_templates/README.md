@@ -1,7 +1,7 @@
-# Car Price Prediction - Execution Templates
+# Used Car Price Prediction Using K-Radius Nearest Neighbors - Execution Templates
 ## Complete Guide to Standalone Python & HTML Files for Modification
 
-This directory contains **standalone, modifiable templates** for the Car Price Prediction Machine Learning project. Each template is available in both **HTML** (for viewing) and **Python** (for execution) formats.
+This directory contains **standalone, modifiable templates** for the Used Car Price Prediction Using K-Radius Nearest Neighbors project. Each template is available in both **HTML** (for viewing) and **Python** (for execution) formats.
 
 ---
 
@@ -448,7 +448,7 @@ For questions about specific steps:
 These templates are created for the **Engineering College Django Project** - Machine Learning Demonstrations.
 
 **Original GitHub Reference:**
-- Project: Predicting Second Hand Cars Price using Machine Learning Algorithms
+- Project: Used Car Price Prediction Using K-Radius Nearest Neighbors
 - Dataset: Kaggle CarDekho dataset
 
 ---

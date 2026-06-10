@@ -1,4 +1,4 @@
-# Predicting Prices of Second-Hand Cars and Depreciation
+# Used Car Price Prediction Using K-Radius Nearest Neighbors
 
 ## Identified GitHub Reference Project
 
@@ -43,7 +43,7 @@ Build machine learning and data mining models that estimate second-hand car pric
 
 Use:
 
-`project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/datasets/`
+`project_domains/data-mining/Used Car Price Prediction Using K-Radius Nearest Neighbors/datasets/`
 
 The dataset manifest in that folder lists source URLs, extracted CSV files, row counts, and suggested target/depreciation fields.
 

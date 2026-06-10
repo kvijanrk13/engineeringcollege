@@ -15,7 +15,7 @@ from .maruti_data import YEARS, maruti_project_dataset
 from .models import ExecutionLog
 
 
-PROJECT_TITLE = "Predicting Second Hand Cars Price using Machine Learning Algorithms"
+PROJECT_TITLE = "Used Car Price Prediction Using K-Radius Nearest Neighbors"
 EXECUTION_TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "car_price_execution_templates"
 
 
@@ -146,7 +146,7 @@ import streamlit as st
 with open('model.pkl', 'rb') as file:
     model = pickle.load(file)
 
-st.title('Car Price Prediction')
+st.title('Used Car Price Prediction Using K-Radius Nearest Neighbors')
 present_price = st.number_input('Present Price in lakhs', min_value=0.0)
 kms_driven = st.number_input('Kms Driven', min_value=0)
 fuel_type = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG'])
@@ -208,7 +208,9 @@ def _require_gmail_or_registered(request, next_url=None):
 def _maruti_execution_context(title: str) -> dict:
     maruti_data = maruti_project_dataset()
     return {
-        "title": title,
+        "title": PROJECT_TITLE,
+        "page_heading": PROJECT_TITLE,
+        "page_subtitle": title,
         "years": YEARS,
         "maruti_data": maruti_data,
         "maruti_lookup": {model["name"]: model for model in maruti_data},
@@ -398,7 +400,9 @@ def apriori_execution(request):
         request,
         "car_price_app/maruti_apriori.html",
         {
-            "title": "Maruti Suzuki Khammam Car Price Prediction Execution",
+            "title": PROJECT_TITLE,
+            "page_heading": PROJECT_TITLE,
+            "page_subtitle": "Maruti Suzuki Khammam Car Price Prediction Execution",
             "years": YEARS,
             "maruti_data": maruti_data,
             "execution_files": _load_execution_files(),

@@ -25,8 +25,8 @@ model = load_model()
 scaler = load_scaler()
 
 # Streamlit app layout
-st.set_page_config(page_title="Car Price Predictor", layout="wide")
-st.title("🚗 Second-Hand Car Price Predictor")
+st.set_page_config(page_title="Used Car Price Prediction Using K-Radius Nearest Neighbors", layout="wide")
+st.title("Used Car Price Prediction Using K-Radius Nearest Neighbors")
 st.markdown("---")
 
 # Create input columns

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block page_title %}{{ title }}{% endblock %}</title>
+  <title>{% block page_title %}{{ title|default:"Used Car Price Prediction Using K-Radius Nearest Neighbors" }}{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -78,7 +78,8 @@
       transform-style: preserve-3d;
     }
     nav strong {
-      margin-right: auto;
+      flex: 1 0 100%;
+      margin-right: 0;
       font-weight: 800;
       letter-spacing: -0.02em;
       font-size: 18px;
@@ -265,7 +266,7 @@
 
   <header>
     <nav>
-      <strong>{{ title }}</strong>
+      <strong>{{ title|default:"Used Car Price Prediction Using K-Radius Nearest Neighbors" }}</strong>
       <a href="{% url 'registration' %}">Registration</a>
       <a href="{% url 'execution-overview' %}">Overview</a>
       <a href="{% url 'maruti-prices' %}">Maruti Prices</a>

@@ -9,7 +9,7 @@ This file is intentionally saved as .txt so it opens directly in Notepad.
 
 After extracting the ZIP, open this folder in VS Code, PyCharm, or Cursor:
 
-Predicting Second Hand Cars Price using Machine Learning Algorithms
+Used Car Price Prediction Using K-Radius Nearest Neighbors
 
 Then open the executable Django project folder:
 

@@ -1,4 +1,4 @@
-# Quick Start Guide - Car Price Prediction Templates
+# Quick Start Guide - Used Car Price Prediction Using K-Radius Nearest Neighbors Templates
 
 ## 🎯 First Time Users
 

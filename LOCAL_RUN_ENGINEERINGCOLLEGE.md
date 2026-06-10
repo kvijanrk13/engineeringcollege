@@ -27,4 +27,4 @@ Useful car-price URLs:
 - The full EngineeringCollege project uses the root `requirements.txt`.
 - For local SQLite development, provide a local `.env` with a valid `DATABASE_URL` or use the existing configured development database.
 - The standalone Data Mining car-pricing student project is in:
-  `project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/Source Code/`
+  `project_domains/data-mining/Used Car Price Prediction Using K-Radius Nearest Neighbors/Source Code/`

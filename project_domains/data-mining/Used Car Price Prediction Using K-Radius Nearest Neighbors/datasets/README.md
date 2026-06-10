@@ -1,7 +1,7 @@
-# Car Price Prediction Datasets
+# Used Car Price Prediction Using K-Radius Nearest Neighbors Datasets
 
 This folder stores Kaggle datasets collected for the Data Mining project:
-`Predicting Prices of Second-Hand Cars and Depreciation`.
+`Used Car Price Prediction Using K-Radius Nearest Neighbors`.
 
 ## Downloaded Sources
 

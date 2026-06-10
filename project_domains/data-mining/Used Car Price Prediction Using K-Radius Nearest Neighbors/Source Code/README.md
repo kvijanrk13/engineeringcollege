@@ -1,4 +1,4 @@
-# Second-Hand Car Price and Depreciation Prediction
+# Used Car Price Prediction Using K-Radius Nearest Neighbors
 
 This is a portable starter project for students to train machine learning models from the Kaggle car datasets stored in:
 
@@ -11,7 +11,7 @@ The default workflow trains a depreciation-focused model from the Cardekho `car 
 ## Setup
 
 ```powershell
-cd "project_domains\data-mining\Predicting Second Hand Cars Price using Machine Learning Algorithms\Source Code"
+cd "project_domains\data-mining\Used Car Price Prediction Using K-Radius Nearest Neighbors\Source Code"
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
@@ -19,7 +19,7 @@ python -m venv .venv
 On macOS/Linux:
 
 ```bash
-cd "project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/Source Code"
+cd "project_domains/data-mining/Used Car Price Prediction Using K-Radius Nearest Neighbors/Source Code"
 python3 -m venv .venv
 ./.venv/bin/python -m pip install -r requirements.txt
 ```

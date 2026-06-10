@@ -1,6 +1,6 @@
 import shutil
 import pathlib
-src_base = pathlib.Path('project_domains/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/Source Code')
+src_base = pathlib.Path('project_domains/data-mining/Used Car Price Prediction Using K-Radius Nearest Neighbors/Source Code')
 dest_base = pathlib.Path('.')
 
 src_app = src_base / 'car_price_app'

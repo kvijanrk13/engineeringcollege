@@ -10,7 +10,7 @@ from .forms import StudentRegistrationForm
 from .models import ExecutionLog
 
 
-PROJECT_TITLE = "Predicting Second Hand Cars Price using Machine Learning Algorithms"
+PROJECT_TITLE = "Used Car Price Prediction Using K-Radius Nearest Neighbors"
 
 
 GITHUB_EXECUTION_STEPS = [
@@ -140,7 +140,7 @@ import streamlit as st
 with open('model.pkl', 'rb') as file:
     model = pickle.load(file)
 
-st.title('Car Price Prediction')
+st.title('Used Car Price Prediction Using K-Radius Nearest Neighbors')
 present_price = st.number_input('Present Price in lakhs', min_value=0.0)
 kms_driven = st.number_input('Kms Driven', min_value=0)
 fuel_type = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG'])

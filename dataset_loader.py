@@ -8,7 +8,7 @@ import pandas as pd
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
-DATASETS_DIR = PROJECT_DIR / "project_domains" / "data-mining" / "Predicting Second Hand Cars Price using Machine Learning Algorithms" / "datasets"
+DATASETS_DIR = PROJECT_DIR / "project_domains" / "data-mining" / "Used Car Price Prediction Using K-Radius Nearest Neighbors" / "datasets"
 
 
 DATASET_FILES = {
