@@ -1,8 +1,9 @@
 {% extends "car_price_app/base.html" %}
 
 {% block content %}
-  <h1>{{ step.title }}</h1>
+  <h1>{{ title }}</h1>
   <section>
+    <h2>{{ step.title }}</h2>
     <p>{{ step.purpose }}</p>
     <pre><code>{{ step.code }}</code></pre>
     <div class="actions">

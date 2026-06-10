@@ -3,7 +3,7 @@
 ## Identified GitHub Reference Project
 
 - Repository: https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning
-- Title: `SECOND-HAND-CAR-PRICE-PREDICTION-USING-MACHINE-LEARNING`
+- Title: `Used Car Price Prediction Using K-Radius Nearest Neighbors`
 - Repository description: Predicting price of second hand automotives.
 - Main artifacts visible on GitHub: `carprice_prediction.ipynb`, `model.py`, `app.py`, `model.pkl`, `car_data.csv`, and Streamlit templates.
 - Topics visible on GitHub include machine learning algorithms, prediction, pandas, Kaggle, regression models, scikit-learn, and Streamlit.

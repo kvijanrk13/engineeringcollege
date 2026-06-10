@@ -4127,7 +4127,7 @@ def _run_car_apriori_execution(project):
 def _car_price_github_execution_templates():
     """Execution templates based on the reference GitHub/Colab/Streamlit workflow."""
     return {
-        'reference_title': 'SECOND-HAND-CAR-PRICE-PREDICTION-USING-MACHINE-LEARNING',
+        'reference_title': 'Used Car Price Prediction Using K-Radius Nearest Neighbors',
         'reference_url': 'https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning',
         'overview': (
             'These templates reproduce the reference project flow first: load the Kaggle '

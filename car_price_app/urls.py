@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import TemplateView
 
-from .views import apriori_execution, execution_overview, execution_step, maruti_prices, registration
+from .views import PROJECT_TITLE, apriori_execution, execution_overview, execution_step, maruti_prices, registration
 
 urlpatterns = [
     path('', registration, name='registration'),
@@ -11,6 +11,6 @@ urlpatterns = [
     path('maruti-prices/', maruti_prices, name='maruti-prices'),
     path('research-paper/', TemplateView.as_view(
         template_name='car_price_app/research_paper_redirect.html',
-        extra_context={'title': 'Used Car Price Prediction Using K-Radius Nearest Neighbors'},
+        extra_context={'title': PROJECT_TITLE},
     ), name='research-paper'),
 ]
