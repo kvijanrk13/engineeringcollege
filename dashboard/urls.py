@@ -91,6 +91,11 @@ urlpatterns = [
         name='download_data_mining_project_source_code_by_title',
     ),
     path(
+        'projects/data-mining/Predicting Second Hand Cars Price using Machine Learning Algorithms/',
+        views.data_mining_legacy_car_project_redirect,
+        name='data_mining_legacy_car_project_redirect',
+    ),
+    path(
         'projects/data-mining/<path:project_title>/',
         views.data_mining_project_detail_by_title,
         name='data_mining_project_detail_by_title',

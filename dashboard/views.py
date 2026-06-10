@@ -3755,6 +3755,14 @@ def _get_data_mining_project_by_title(project_title):
     return project
 
 
+def data_mining_legacy_car_project_redirect(request):
+    """Redirect the previous public car-price project URL to the renamed project page."""
+    return redirect(
+        'dashboard:data_mining_project_detail_by_title',
+        DATA_MINING_PROJECT_TITLE_ALIASES["Predicting Second Hand Cars Price using Machine Learning Algorithms"],
+    )
+
+
 def _project_academic_folders(domain_slug, project):
     project_folder_name = project.get('title_path') or project['slug']
     project_root = PROJECT_DOMAIN_ROOT / domain_slug / project_folder_name
