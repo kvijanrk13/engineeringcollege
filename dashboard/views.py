@@ -25,6 +25,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import DatabaseError
 from django.db.models import Q, Count, F
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -3167,6 +3168,22 @@ def google_callback(request):
             raise ValueError('Google email is not verified')
 
         if state_payload.get('role') == 'student':
+            if state_payload.get('continue'):
+                if not email.endswith('@gmail.com'):
+                    messages.error(request, 'Please sign in with a Gmail address.')
+                    return redirect('dashboard:student_login')
+
+                request.session['google_oauth_email'] = email
+                request.session['google_oauth_name'] = profile.get('name', '')
+                next_url = state_payload.get('next') or '/car-price/maruti-prices/'
+                if not url_has_allowed_host_and_scheme(
+                    next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    next_url = '/car-price/maruti-prices/'
+                return redirect(next_url)
+
             student = Student.objects.filter(email__iexact=email).first()
             if not student:
                 messages.error(request, 'No student account is linked to this Gmail address.')
