@@ -6,7 +6,6 @@ from django.shortcuts import redirect, render
 from apriori_analysis import apriori_rules, make_transactions
 from dataset_loader import available_datasets, normalize_dataset
 
-from .forms import StudentRegistrationForm
 from .maruti_data import YEARS, maruti_project_dataset
 from .models import ExecutionLog
 
@@ -167,21 +166,11 @@ if st.button('Predict'):
 
 
 def registration(request):
-    if request.method == "POST":
-        form = StudentRegistrationForm(request.POST)
-        if form.is_valid():
-            registration_record = form.save()
-            request.session["student_registration_id"] = registration_record.id
-            return redirect("maruti-prices")
-    else:
-        form = StudentRegistrationForm()
-
     return render(
         request,
         "car_price_app/registration.html",
         {
             "title": PROJECT_TITLE,
-            "form": form,
         },
     )
 

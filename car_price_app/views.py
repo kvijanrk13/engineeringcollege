@@ -10,7 +10,6 @@ from apriori_analysis import apriori_rules, make_transactions
 from dataset_loader import DATASET_FILES, available_datasets, normalize_dataset, read_csv
 import pandas as pd
 
-from .forms import CarEstimateForm, StudentRegistrationForm
 from .maruti_data import YEARS, maruti_project_dataset
 from .models import ExecutionLog
 
@@ -172,33 +171,22 @@ if st.button('Predict'):
 
 
 def registration(request):
-    if request.method == "POST":
-        form = StudentRegistrationForm(request.POST)
-        if form.is_valid():
-            registration_record = form.save()
-            request.session["student_registration_id"] = registration_record.id
-            return redirect("maruti-prices")
-    else:
-        form = StudentRegistrationForm()
-
     return render(
         request,
         "car_price_app/registration.html",
         {
             "title": PROJECT_TITLE,
-            "form": form,
         },
     )
 
 
-def _require_gmail_or_registered(request, next_url=None):
+def _require_gmail_sign_in(request, next_url=None):
     is_gmail_logged_in = (
         request.session.get("google_oauth_email", "").endswith("@gmail.com")
         or request.user.is_authenticated
         and getattr(request.user, "email", "").lower().endswith("@gmail.com")
     )
-    has_registration = request.session.get("student_registration_id") is not None
-    if not (is_gmail_logged_in or has_registration):
+    if not is_gmail_logged_in:
         if next_url is None:
             next_url = request.build_absolute_uri()
         return redirect(f"{reverse('dashboard:google_login')}?role=student&continue=1&next={urlquote(next_url)}")
@@ -222,7 +210,7 @@ def execution_overview(request):
 
 
 def execution_step(request, step_slug):
-    redirect_response = _require_gmail_or_registered(request)
+    redirect_response = _require_gmail_sign_in(request)
     if redirect_response is not None:
         return redirect_response
     step = next(
@@ -405,7 +393,7 @@ def apriori_execution(request):
 
 
 def maruti_prices(request):
-    redirect_response = _require_gmail_or_registered(request)
+    redirect_response = _require_gmail_sign_in(request)
     if redirect_response is not None:
         return redirect_response
     return render(
@@ -416,7 +404,7 @@ def maruti_prices(request):
 
 
 def research_paper(request):
-    redirect_response = _require_gmail_or_registered(request)
+    redirect_response = _require_gmail_sign_in(request)
     if redirect_response is not None:
         return redirect_response
     return render(
