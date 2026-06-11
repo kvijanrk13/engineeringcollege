@@ -3379,6 +3379,18 @@ def project_policy_pdf(request, policy_slug):
     return response
 
 
+@require_GET
+def phonepe_payment_qr(request):
+    """Serve the manual PhonePe QR without depending on collected static files."""
+    qr_path = Path(settings.BASE_DIR) / 'static' / 'images' / 'phonepe-accepted-qr.png'
+    if not qr_path.is_file():
+        raise Http404('PhonePe QR code not found.')
+
+    response = FileResponse(qr_path.open('rb'), content_type='image/png')
+    response['Cache-Control'] = 'public, max-age=3600'
+    return response
+
+
 PROJECT_DOMAINS = {
     'ai': 'Artificial Intelligence',
     'machine-learning': 'Machine Learning',

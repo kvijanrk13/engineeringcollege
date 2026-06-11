@@ -254,7 +254,7 @@
                         After verification, the complete project folder Google Drive link will be mailed to the student email ID.
                     </p>
                     <div class="manual-payment-grid">
-                        <img src="{% static project_support_qr_static_path %}" alt="PhonePe payment QR code">
+                        <img src="{% url 'dashboard:phonepe_payment_qr' %}" alt="PhonePe payment QR code">
                         <form method="post" enctype="multipart/form-data"
                               action="{% url 'dashboard:submit_project_receipt' domain_slug project.slug %}">
                             {% csrf_token %}

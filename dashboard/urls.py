@@ -31,6 +31,11 @@ urlpatterns = [
         name='project_policy_pdf',
     ),
     path(
+        'projects/payment/phonepe-qr/',
+        views.phonepe_payment_qr,
+        name='phonepe_payment_qr',
+    ),
+    path(
         'projects/software-engineering/engineeringcollege-project/download/',
         views.download_engineeringcollege_project,
         name='download_engineeringcollege_project',
