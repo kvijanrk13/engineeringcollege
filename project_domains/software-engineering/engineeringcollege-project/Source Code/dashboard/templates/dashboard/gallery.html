@@ -1,0 +1,77 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Gallery - Engineering College{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    h1 {
+        color: #1e293b;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+    .gallery-item {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .gallery-item .caption {
+        font-weight: 500;
+        color: #1e293b;
+    }
+    .pdf-card {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f8fafc;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .pdf-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+</style>
+
+<div class="container">
+    <h1>Gallery</h1>
+    <div class="gallery-grid">
+        <div class="gallery-item">
+            <div class="caption">CONNECT HACKATHON 2026</div>
+        </div>
+        <div class="gallery-item">
+            <div class="caption">ITECH Activities</div>
+            <p>LAUNCH OF ITECH-2K26 on 01-04-2026</p>
+        </div>
+    </div>
+
+    <div class="pdf-card">
+        <h4 class="mb-3">ITECH Event Brochure</h4>
+        <p class="mb-3">ITECH 2K26 Event Brochure - Available for download</p>
+        <div class="pdf-actions">
+            <a href="{% static 'images/ITECH-2K26.pdf' %}" target="_blank" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-1"></i>Open PDF
+            </a>
+            <a href="{% static 'images/ITECH-2K26.pdf' %}" download class="btn btn-primary">
+                <i class="fas fa-download me-1"></i>Download PDF
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

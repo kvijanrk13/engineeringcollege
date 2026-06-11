@@ -1,0 +1,1795 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Edit Faculty | {{ faculty.staff_name }} | Engineering College{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
+<style>
+    .form-section {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        padding: 20px;
+    }
+    .form-section h4 {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        color: #007bff;
+    }
+    .required-field:after {
+        content: "*";
+        color: red;
+        margin-left: 5px;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .help-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .nav-tabs .nav-link {
+        color: #495057;
+        font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+        color: #007bff;
+        font-weight: 600;
+    }
+    .tab-content {
+        padding: 20px 0;
+    }
+    .pct-auto {
+        background-color: #f0fff0;
+        font-weight: bold;
+    }
+    #rs-percentage {
+        transition: color 0.3s;
+    }
+    .fdp-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: bold;
+    }
+    .fdp-badge-fdp {
+        background-color: #e3f2fd;
+        color: #1565c0;
+    }
+    .fdp-badge-workshop {
+        background-color: #e8f5e8;
+        color: #2e7d32;
+    }
+    .fdp-badge-seminar {
+        background-color: #fff3e0;
+        color: #e65100;
+    }
+    .fdp-badge-conference {
+        background-color: #f3e5f5;
+        color: #7b1fa2;
+    }
+    .fdp-badge-training {
+        background-color: #e1f5fe;
+        color: #01579b;
+    }
+    .delete-btn {
+        transition: all 0.3s ease;
+    }
+    .delete-btn:hover {
+        transform: scale(1.05);
+    }
+    .custom-confirm-modal .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    .custom-confirm-modal .modal-header {
+        background-color: #dc3545;
+        color: white;
+        border-bottom: none;
+    }
+    .custom-confirm-modal .modal-footer {
+        border-top: none;
+    }
+    .btn-danger-custom {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        transition: all 0.3s ease;
+    }
+    .btn-danger-custom:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .publication-reference {
+        font-size: 12px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+    .faculty-edit-page .card-body {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 faculty-experience-page faculty-edit-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-user-pen"></i>
+                Faculty Editing Workspace
+            </span>
+            <h1 class="faculty-hero-title">Refine and maintain faculty profiles</h1>
+            <p class="faculty-hero-copy">
+                Update the complete academic and administrative record for {{ faculty.staff_name }},
+                from professional details to research, results, and supporting documents.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:faculty_list' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-list"></i>
+                    Back to Faculty Directory
+                </a>
+                <a href="{% url 'dashboard:faculty' %}?id={{ faculty.id }}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-id-card"></i>
+                    View Faculty Profile
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Faculty</span>
+                <strong>{{ faculty.staff_name }} ({{ faculty.employee_code }})</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Role</span>
+                <strong>{{ faculty.designation|default:"Faculty" }} in {{ faculty.department|default:"the department" }}</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Editing Scope</span>
+                <strong>Personal, research, workshops, projects, results, and documents</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Control</span>
+                <strong>Update safely from one tabbed page with direct delete access</strong>
+            </div>
+        </div>
+    </section>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow faculty-panel-card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-user-edit me-2"></i>Edit Faculty: {{ faculty.staff_name }}
+                        </h4>
+                        <!-- DELETE BUTTON - RED BUTTON IN HEADER -->
+                        <button type="button" class="btn btn-danger delete-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#deleteConfirmModal"
+                                data-faculty-id="{{ faculty.id }}"
+                                data-faculty-name="{{ faculty.staff_name }}"
+                                data-employee-code="{{ faculty.employee_code }}">
+                            <i class="fas fa-trash me-1"></i>Delete Faculty
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:edit_faculty' faculty.id %}" id="editFacultyForm">
+                        {% csrf_token %}
+
+                        <!-- Hidden JSON fields submitted with the form -->
+                        <input type="hidden" name="research_publications_json" id="research_publications_json" value="{{ research_publications_json|default:'[]' }}">
+                        <input type="hidden" name="btech_projects_json" id="btech_projects_json" value="{{ btech_projects_json|default:'[]' }}">
+                        <input type="hidden" name="results_json" id="results_json" value="{{ results_json|default:'[]' }}">
+                        <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="{{ fdp_entries_json|default:'[]' }}">
+                        <input type="hidden" name="college_experiences_json" id="college_experiences_json" value="[]">
+                        <input type="hidden" name="tstsabas_entries_json" id="tstsabas_entries_json" value="[]">
+
+                        <!-- Tabs Navigation -->
+                        <div class="faculty-tabs-shell">
+                        <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
+                                    <i class="fas fa-user me-1"></i>Personal
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="professional-tab" data-bs-toggle="tab" data-bs-target="#professional" type="button">
+                                    <i class="fas fa-briefcase me-1"></i>Professional
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="education-tab" data-bs-toggle="tab" data-bs-target="#education" type="button">
+                                    <i class="fas fa-graduation-cap me-1"></i>Education
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                                    <i class="fas fa-file-alt me-1"></i>Documents
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional" type="button">
+                                    <i class="fas fa-info-circle me-1"></i>Additional
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#tab-research" type="button">
+                                    <i class="fas fa-book-open me-1"></i>Research &amp; Publications
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#tab-projects" type="button">
+                                    <i class="fas fa-project-diagram me-1"></i>B.Tech Projects
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="fdp-tab" data-bs-toggle="tab" data-bs-target="#tab-fdp" type="button">
+                                    <i class="fas fa-chalkboard-user me-1"></i>FDP / Workshops
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#tab-results" type="button">
+                                    <i class="fas fa-chart-line me-1"></i>Results
+                                </button>
+                            </li>
+                        </ul>
+                        </div>
+
+                        <div class="tab-content">
+                            <!-- ==================== TAB 1: PERSONAL ==================== -->
+                            <div class="tab-pane fade show active" id="personal">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-user me-2"></i>Personal Information</h4>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Staff Name</label>
+                                            <input type="text" name="staff_name" class="form-control" value="{{ faculty.staff_name }}" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Employee Code</label>
+                                            <input type="text" name="employee_code" class="form-control" value="{{ faculty.employee_code }}" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Photo</label>
+                                            <input type="file" name="photo" class="form-control" accept="image/*" id="photoInput">
+                                            {% if faculty.cloudinary_photo_url %}
+                                            <div class="mt-2">
+                                                <img src="{{ faculty.cloudinary_photo_url }}" style="max-width: 100px; max-height: 100px;" class="img-thumbnail">
+                                                <small class="text-muted d-block">Current photo</small>
+                                            </div>
+                                            {% elif faculty.photo %}
+                                            <div class="mt-2">
+                                                <img src="{{ faculty.photo.url }}" style="max-width: 100px; max-height: 100px;" class="img-thumbnail">
+                                                <small class="text-muted d-block">Current photo</small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Father's Name</label>
+                                            <input type="text" name="father_name" class="form-control" value="{{ faculty.father_name }}" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Mother's Name</label>
+                                            <input type="text" name="mother_name" class="form-control" value="{{ faculty.mother_name }}" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Date of Birth</label>
+                                            <input type="date" name="dob" class="form-control" value="{{ faculty.dob|date:'Y-m-d' }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Gender</label>
+                                            <select name="gender" class="form-control" required>
+                                                <option value="">Select Gender</option>
+                                                <option value="Male" {% if faculty.gender == 'Male' %}selected{% endif %}>Male</option>
+                                                <option value="Female" {% if faculty.gender == 'Female' %}selected{% endif %}>Female</option>
+                                                <option value="Other" {% if faculty.gender == 'Other' %}selected{% endif %}>Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">State</label>
+                                            <input type="text" name="state" class="form-control" value="{{ faculty.state }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Caste</label>
+                                            <select name="caste" class="form-control">
+                                                <option value="">Select Caste</option>
+                                                <option value="OC" {% if faculty.caste == 'OC' %}selected{% endif %}>OC</option>
+                                                <option value="BC-A" {% if faculty.caste == 'BC-A' %}selected{% endif %}>BC-A</option>
+                                                <option value="BC-B" {% if faculty.caste == 'BC-B' %}selected{% endif %}>BC-B</option>
+                                                <option value="BC-C" {% if faculty.caste == 'BC-C' %}selected{% endif %}>BC-C</option>
+                                                <option value="BC-D" {% if faculty.caste == 'BC-D' %}selected{% endif %}>BC-D</option>
+                                                <option value="BC-E" {% if faculty.caste == 'BC-E' %}selected{% endif %}>BC-E</option>
+                                                <option value="SC" {% if faculty.caste == 'SC' %}selected{% endif %}>SC</option>
+                                                <option value="ST" {% if faculty.caste == 'ST' %}selected{% endif %}>ST</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Sub Caste</label>
+                                            <input type="text" name="sub_caste" class="form-control" value="{{ faculty.sub_caste }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Nationality</label>
+                                            <input type="text" name="nationality" class="form-control" value="{{ faculty.nationality|default:'Indian' }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Mobile Number</label>
+                                            <input type="tel" name="mobile" class="form-control" value="{{ faculty.mobile }}" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Phone (Landline)</label>
+                                            <input type="tel" name="phone" class="form-control" value="{{ faculty.phone }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Email</label>
+                                            <input type="email" name="email" class="form-control" value="{{ faculty.email }}" required>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">Address</label>
+                                            <textarea name="address" class="form-control" rows="3">{{ faculty.address }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 2: PROFESSIONAL ==================== -->
+                            <div class="tab-pane fade" id="professional">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-briefcase me-2"></i>Professional Information</h4>
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm align-middle">
+                                                    <thead class="table-light">
+                                                        <tr><th>#</th><th>College Name</th><th>College Address</th><th>From Date</th><th>To Date</th><th>Experience</th><th>Remove</th></tr>
+                                                    </thead>
+                                                    <tbody id="college-experience-tbody"></tbody>
+                                                </table>
+                                            </div>
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-3"><label class="form-label">College Name</label><input type="text" id="college-experience-name" class="form-control"></div>
+                                                <div class="col-md-3"><label class="form-label">College Address</label><input type="text" id="college-experience-address" class="form-control"></div>
+                                                <div class="col-md-2"><label class="form-label">From Date</label><input type="date" id="college-experience-from" class="form-control"></div>
+                                                <div class="col-md-2"><label class="form-label">To Date</label><input type="date" id="college-experience-to" class="form-control"></div>
+                                                <div class="col-md-2"><label class="form-label">Experience</label><input type="text" id="college-experience-duration" class="form-control" readonly></div>
+                                                <div class="col-12"><button type="button" class="btn btn-outline-primary btn-sm" onclick="addCollegeExperience()"><i class="fas fa-plus me-1"></i>Add College Experience</button></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">TSTSABAS</label>
+                                            <div class="input-group">
+                                                <input type="text" id="tstsabas-entry" class="form-control" placeholder="Enter TSTSABAS">
+                                                <button type="button" class="btn btn-outline-primary" onclick="addTstsabasEntry()">
+                                                    <i class="fas fa-plus me-1"></i>Add
+                                                </button>
+                                            </div>
+                                            <div id="tstsabas-list" class="mt-2"></div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Department</label>
+                                            <select name="department" class="form-control" required>
+                                                <option value="">Select Department</option>
+                                                <option value="CSE" {% if faculty.department == 'CSE' %}selected{% endif %}>CSE</option>
+                                                <option value="IT" {% if faculty.department == 'IT' %}selected{% endif %}>IT</option>
+                                                <option value="ECE" {% if faculty.department == 'ECE' %}selected{% endif %}>ECE</option>
+                                                <option value="EEE" {% if faculty.department == 'EEE' %}selected{% endif %}>EEE</option>
+                                                <option value="MECH" {% if faculty.department == 'MECH' %}selected{% endif %}>MECH</option>
+                                                <option value="CIVIL" {% if faculty.department == 'CIVIL' %}selected{% endif %}>CIVIL</option>
+                                                <option value="MBA" {% if faculty.department == 'MBA' %}selected{% endif %}>MBA</option>
+                                                <option value="MCA" {% if faculty.department == 'MCA' %}selected{% endif %}>MCA</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Designation</label>
+                                            <select name="designation" class="form-control" required>
+                                                <option value="">Select Designation</option>
+                                                <option value="Professor" {% if faculty.designation == 'Professor' %}selected{% endif %}>Professor</option>
+                                                <option value="Associate Professor" {% if faculty.designation == 'Associate Professor' %}selected{% endif %}>Associate Professor</option>
+                                                <option value="Assistant Professor" {% if faculty.designation == 'Assistant Professor' %}selected{% endif %}>Assistant Professor</option>
+                                                <option value="Lecturer" {% if faculty.designation == 'Lecturer' %}selected{% endif %}>Lecturer</option>
+                                                <option value="Senior Professor" {% if faculty.designation == 'Senior Professor' %}selected{% endif %}>Senior Professor</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">JNTUH ID</label>
+                                            <input type="text" name="jntuh_id" class="form-control" value="{{ faculty.jntuh_id }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">AICTE ID</label>
+                                            <input type="text" name="aicte_id" class="form-control" value="{{ faculty.aicte_id }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">PAN Number</label>
+                                            <input type="text" name="pan" class="form-control" value="{{ faculty.pan }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Aadhar Number</label>
+                                            <input type="text" name="aadhar" class="form-control" value="{{ faculty.aadhar }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">APAAR ID</label>
+                                            <input type="text" name="apaar_id" class="form-control" value="{{ faculty.apaar_id }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">ORCID ID</label>
+                                            <input type="text" name="orcid_id" class="form-control" value="{{ faculty.orcid_id }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 3: EDUCATION ==================== -->
+                            <div class="tab-pane fade" id="education">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-graduation-cap me-2"></i>Education Details</h4>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label>SSC Year</label>
+                                             <input type="text" name="ssc_year" class="form-control" value="{{ faculty.ssc_year }}" pattern="[0-9]*">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>SSC Percentage</label>
+                                            <input type="text" name="ssc_percent" class="form-control" value="{{ faculty.ssc_percent }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>School Name</label>
+                                            <input type="text" name="ssc_school" class="form-control" value="{{ faculty.ssc_school }}">
+                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>Intermediate Year</label>
+                                             <input type="text" name="inter_year" class="form-control" value="{{ faculty.inter_year }}" pattern="[0-9]*">
+                                         </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>Intermediate Percentage</label>
+                                            <input type="text" name="inter_percent" class="form-control" value="{{ faculty.inter_percent }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>College Name</label>
+                                            <input type="text" name="inter_college" class="form-control" value="{{ faculty.inter_college }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>UG Degree</label>
+                                            <input type="text" name="ug_degree" class="form-control" value="{{ faculty.ug_degree }}">
+                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>SSC Year</label>
+                                             <input type="text" name="ssc_year" class="form-control" value="{{ faculty.ssc_year }}" pattern="[0-9]*">
+                                         </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>UG Percentage/CGPA</label>
+                                            <input type="text" name="ug_percentage" class="form-control" value="{{ faculty.ug_percentage }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>UG College</label>
+                                            <input type="text" name="ug_college" class="form-control" value="{{ faculty.ug_college }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>UG Specialization</label>
+                                            <input type="text" name="ug_spec" class="form-control" value="{{ faculty.ug_spec }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PG Degree</label>
+                                            <input type="text" name="pg_degree" class="form-control" value="{{ faculty.pg_degree }}">
+                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>UG Year</label>
+                                             <input type="text" name="ug_year" class="form-control" value="{{ faculty.ug_year }}" pattern="[0-9]*">
+                                         </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PG Percentage</label>
+                                            <input type="text" name="pg_percentage" class="form-control" value="{{ faculty.pg_percentage }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PG College</label>
+                                            <input type="text" name="pg_college" class="form-control" value="{{ faculty.pg_college }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PG Specialization</label>
+                                            <input type="text" name="pg_spec" class="form-control" value="{{ faculty.pg_spec }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PhD Status</label>
+                                            <select name="phd_degree" id="phd-degree" class="form-control">
+                                                <option value="">Select Status</option>
+                                                <option value="Completed" {% if faculty.phd_degree == 'Completed' %}selected{% endif %}>Completed</option>
+                                                <option value="Pursuing" {% if faculty.phd_degree == 'Pursuing' %}selected{% endif %}>Pursuing</option>
+                                                <option value="Not Started" {% if faculty.phd_degree == 'Not Started' %}selected{% endif %}>Not Started</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-8 mb-3 {% if faculty.phd_degree != 'Completed' %}d-none{% endif %}" id="phd-title-group">
+                                            <label>Ph.D Title</label>
+                                            <input type="text" name="phd_title" id="phd-title" class="form-control" maxlength="500" value="{{ faculty.phd_title|default:'' }}">
+                                        </div>
+                                         <div class="col-md-4 mb-3">
+                                             <label>PG Year</label>
+                                             <input type="text" name="pg_year" class="form-control" value="{{ faculty.pg_year }}" pattern="[0-9]*">
+                                         </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PhD University</label>
+                                            <input type="text" name="phd_university" class="form-control" value="{{ faculty.phd_university }}">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>PhD Specialization</label>
+                                            <input type="text" name="phd_spec" class="form-control" value="{{ faculty.phd_spec }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 4: DOCUMENTS ==================== -->
+                            <div class="tab-pane fade" id="documents">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-file-alt me-2"></i>Documents</h4>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label>Aadhar Card</label>
+                                            <input type="file" name="aadhar_file" class="form-control">
+                                            {% if faculty.aadhar_file or faculty.aadhar_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>PAN Card</label>
+                                            <input type="file" name="pan_file" class="form-control">
+                                            {% if faculty.pan_file or faculty.pan_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>APAAR Document</label>
+                                            <input type="file" name="apaar_file" class="form-control">
+                                            {% if faculty.apaar_file or faculty.apaar_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>SCM Document</label>
+                                            <input type="file" name="scm_file" class="form-control">
+                                            {% if faculty.scm_file or faculty.scm_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>JNTUH Bio-Data</label>
+                                            <input type="file" name="jntuh_biodata" class="form-control">
+                                            {% if faculty.jntuh_biodata or faculty.jntuh_biodata_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>SSC Certificate</label>
+                                            <input type="file" name="ssc_certificate" class="form-control">
+                                            {% if faculty.ssc_certificate or faculty.ssc_certificate_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>Intermediate Certificate</label>
+                                            <input type="file" name="inter_certificate" class="form-control">
+                                            {% if faculty.inter_certificate or faculty.inter_certificate_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>UG Certificate</label>
+                                            <input type="file" name="ug_certificate" class="form-control">
+                                            {% if faculty.ug_certificate or faculty.ug_certificate_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>PG Certificate</label>
+                                            <input type="file" name="pg_certificate" class="form-control">
+                                            {% if faculty.pg_certificate or faculty.pg_certificate_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>PhD Certificate</label>
+                                            <input type="file" name="phd_certificate" class="form-control">
+                                            {% if faculty.phd_certificate or faculty.phd_certificate_url %}
+                                            <small class="text-success d-block mt-1">✓ Already uploaded</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 5: ADDITIONAL ==================== -->
+                            <div class="tab-pane fade" id="additional">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-info-circle me-2"></i>Additional Information</h4>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label>Subjects Dealt</label>
+                                            <textarea name="subjects_dealt" class="form-control" rows="3">{{ faculty.subjects_dealt }}</textarea>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>SCM (Service Cum Merit)</label>
+                                            <textarea name="scm" class="form-control" rows="3">{{ faculty.scm }}</textarea>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>About Yourself</label>
+                                            <textarea name="about_yourself" class="form-control" rows="4">{{ faculty.about_yourself }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 6: RESEARCH & PUBLICATIONS ==================== -->
+                            <div class="tab-pane fade" id="tab-research">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1">
+                                        <i class="fas fa-book-open me-2"></i>Research &amp; Publications
+                                    </h5>
+                                    <p class="text-muted small mb-3">Add journal papers, conference papers, books, or patents.</p>
+
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="research-table">
+                                             <thead class="table-light">
+                                                 <tr>
+                                                     <th>#</th>
+                                                     <th>Type</th>
+                                                     <th>Title</th>
+                                                     <th>Authors</th>
+                                                     <th>Year</th>
+                                                     <th>Journal / Conference</th>
+                                                     <th>ISSN</th>
+                                                     <th>Status</th>
+                                                     <th>DOI / URL</th>
+                                                     <th>Remove</th>
+                                                 </tr>
+                                             </thead>
+                                            <tbody id="research-tbody">
+                                                {% if research_publications %}
+                                                    {% for pub in research_publications %}
+                                                     <tr id="research-row-{{ forloop.counter0 }}">
+                                                         <td>{{ forloop.counter }}</td>
+                                                         <td><span class="badge bg-info text-dark">{{ pub.research_type }}</span></td>
+                                                         <td>{{ pub.title }}</td>
+                                                         <td>{{ pub.authors|default:'—' }}</td>
+                                                         <td>{{ pub.publication_year|default:'—' }}</td>
+                                                         <td>{{ pub.journal_name|default:pub.conference_name|default:'—' }}</td>
+                                                         <td>{{ pub.issn|default:'—' }}</td>
+                                                         <td><span class="badge bg-success">{{ pub.status }}</span></td>
+                                                         <td class="publication-reference">
+                                                             {% if pub.doi %}
+                                                                 <div><strong>DOI:</strong> {{ pub.doi }}</div>
+                                                             {% endif %}
+                                                             {% if pub.url %}
+                                                                 <div><strong>URL:</strong> <a href="{{ pub.url }}" target="_blank" rel="noopener noreferrer">{{ pub.url }}</a></div>
+                                                             {% endif %}
+                                                             {% if not pub.doi and not pub.url %}—{% endif %}
+                                                         </td>
+                                                         <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
+                                                     </tr>
+                                                    {% endfor %}
+                                                 {% else %}
+                                                     <tr id="no-research-row">
+                                                         <td colspan="10" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td>
+                                                     </tr>
+                                                 {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white py-2">
+                                            <i class="fas fa-plus me-1"></i>Add Publication
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-2">
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Type *</label>
+                                                    <select class="form-select form-select-sm" id="rp-type">
+                                                        <option value="journal">Journal Article</option>
+                                                        <option value="conference">Conference Paper</option>
+                                                        <option value="book">Book / Chapter</option>
+                                                        <option value="patent">Patent</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <label class="form-label small fw-bold">Title *</label>
+                                                    <input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label small fw-bold">Authors</label>
+                                                    <input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold">Year</label>
+                                                    <input type="number" class="form-control form-control-sm" id="rp-year" min="1990" max="2030" placeholder="2024">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small fw-bold">Status</label>
+                                                    <select class="form-select form-select-sm" id="rp-status">
+                                                        <option value="published">Published</option>
+                                                        <option value="accepted">Accepted</option>
+                                                        <option value="under_review">Under Review</option>
+                                                        <option value="submitted">Submitted</option>
+                                                    </select>
+                                                </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">Journal / Conference Name</label>
+                                                     <input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name">
+                                                 </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">ISSN</label>
+                                                     <input type="text" class="form-control form-control-sm" id="rp-issn" placeholder="e.g. 1234-5678">
+                                                 </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">DOI</label>
+                                                     <input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="10.1000/xyz123">
+                                                 </div>
+                                                 <div class="col-md-3">
+                                                     <label class="form-label small fw-bold">URL</label>
+                                                     <input type="url" class="form-control form-control-sm" id="rp-url" placeholder="https://example.com/publication">
+                                                 </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="addResearchPublication()">
+                                                    <i class="fas fa-plus me-1"></i>Add Publication
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResearchForm()">Clear</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card border-primary mt-4">
+                                        <div class="card-header bg-primary text-white py-2">
+                                            <i class="fas fa-upload me-1"></i>Upload Research &amp; Publications Proof
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <label class="form-label">Proof Document</label>
+                                                    <input type="file" name="research_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                                    <div class="help-text">Upload supporting proof (PDF, JPG, or PNG) for the research publications.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 7: B.TECH PROJECTS ==================== -->
+                            <div class="tab-pane fade" id="tab-projects">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1">
+                                        <i class="fas fa-project-diagram me-2"></i>B.Tech Projects Handled
+                                    </h5>
+                                    <p class="text-muted small mb-3">Add B.Tech student projects supervised by this faculty.</p>
+
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="projects-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>H.T. No.</th>
+                                                    <th>Student Name</th>
+                                                    <th>Batch</th>
+                                                    <th>Project Title</th>
+                                                    <th>Approved</th>
+                                                    <th>Marks</th>
+                                                    <th>Remove</th>
+                                                 </tr>
+                                            </thead>
+                                            <tbody id="projects-tbody">
+                                                {% if btech_projects %}
+                                                    {% for proj in btech_projects %}
+                                                    <tr id="project-row-{{ forloop.counter0 }}">
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td><code>{{ proj.ht_no|default:'—' }}</code></td>
+                                                        <td>{{ proj.student_name }}</td>
+                                                        <td>{{ proj.batch|default:'—' }}</td>
+                                                        <td>{{ proj.project_title }}</td>
+                                                        <td><span class="badge {% if proj.approved %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ proj.approved|yesno:"Yes,No" }}</span></td>
+                                                        <td>{{ proj.marks|default:'—' }}</td>
+                                                        <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeProject({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <tr id="no-projects-row">
+                                                        <td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below.</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white py-2">
+                                            <i class="fas fa-plus me-1"></i>Add Project
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-2">
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">H.T. No. *</label>
+                                                    <input type="text" class="form-control form-control-sm" id="bp-htno" placeholder="e.g. 19A81A0501">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small fw-bold">Student Name *</label>
+                                                    <input type="text" class="form-control form-control-sm" id="bp-student" placeholder="Full name of student">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold">Batch</label>
+                                                    <input type="text" class="form-control form-control-sm" id="bp-batch" placeholder="e.g. 2019-23">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Marks (out of 100)</label>
+                                                    <input type="number" class="form-control form-control-sm" id="bp-marks" min="0" max="100" placeholder="Marks">
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <label class="form-label small fw-bold">Project Title *</label>
+                                                    <input type="text" class="form-control form-control-sm" id="bp-title" placeholder="Full project title">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Approved?</label>
+                                                    <select class="form-select form-select-sm" id="bp-approved">
+                                                        <option value="true">Yes</option>
+                                                        <option value="false">No</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-primary btn-sm" onclick="addBTechProject()">
+                                                    <i class="fas fa-plus me-1"></i>Add Project
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearProjectForm()">Clear</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 8: FDP / WORKSHOPS ==================== -->
+                            <div class="tab-pane fade" id="tab-fdp">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1">
+                                        <i class="fas fa-chalkboard-user me-2"></i>FDP / Workshops Attended
+                                    </h5>
+                                    <p class="text-muted small mb-3">Add Faculty Development Programs, Workshops, Seminars, Conferences, and Training Programs attended by this faculty.</p>
+
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="fdp-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Type</th>
+                                                    <th>Title</th>
+                                                    <th>From Date</th>
+                                                    <th>To Date</th>
+                                                    <th>Organized By</th>
+                                                    <th>Place</th>
+                                                    <th>Role</th>
+                                                    <th>Remove</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="fdp-tbody">
+                                                {% if fdps %}
+                                                    {% for fdp in fdps %}
+                                                    <tr id="fdp-row-{{ forloop.counter0 }}">
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td><span class="badge {% if fdp.fdp_type == 'fdp' %}fdp-badge-fdp{% elif fdp.fdp_type == 'workshop' %}fdp-badge-workshop{% elif fdp.fdp_type == 'seminar' %}fdp-badge-seminar{% elif fdp.fdp_type == 'conference' %}fdp-badge-conference{% else %}fdp-badge-training{% endif %}">{{ fdp.get_fdp_type_display|upper }}</span></td>
+                                                        <td>{{ fdp.title }}</td>
+                                                        <td>{{ fdp.from_date|date:'Y-m-d' }}</td>
+                                                        <td>{{ fdp.to_date|date:'Y-m-d' }}</td>
+                                                        <td>{{ fdp.organized_by|default:'—' }}</td>
+                                                        <td>{{ fdp.place|default:'—' }}</td>
+                                                        <td>{{ fdp.get_role_display|default:'—' }}</td>
+                                                        <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeFDP({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <tr id="no-fdp-row">
+                                                        <td colspan="9" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white py-2">
+                                            <i class="fas fa-plus me-1"></i>Add FDP / Workshop
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-2">
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Type *</label>
+                                                    <select class="form-select form-select-sm" id="fdp-type">
+                                                        <option value="fdp">FDP</option>
+                                                        <option value="workshop">Workshop</option>
+                                                        <option value="seminar">Seminar</option>
+                                                        <option value="conference">Conference</option>
+                                                        <option value="training">Training Program</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <label class="form-label small fw-bold">Title *</label>
+                                                    <input type="text" class="form-control form-control-sm" id="fdp-title" placeholder="Title of FDP/Workshop">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">From Date *</label>
+                                                    <input type="date" class="form-control form-control-sm" id="fdp-from">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">To Date *</label>
+                                                    <input type="date" class="form-control form-control-sm" id="fdp-to">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Organized By</label>
+                                                    <input type="text" class="form-control form-control-sm" id="fdp-organized" placeholder="Organizing institution">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Place</label>
+                                                    <input type="text" class="form-control form-control-sm" id="fdp-place" placeholder="Location">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Mode</label>
+                                                    <select class="form-select form-select-sm" id="fdp-mode">
+                                                        <option value="offline">Offline</option>
+                                                        <option value="online">Online</option>
+                                                        <option value="hybrid">Hybrid</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Level</label>
+                                                    <select class="form-select form-select-sm" id="fdp-level">
+                                                        <option value="institute">Institute Level</option>
+                                                        <option value="college">College Level</option>
+                                                        <option value="university">University Level</option>
+                                                        <option value="state">State Level</option>
+                                                        <option value="national">National Level</option>
+                                                        <option value="international">International Level</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Role</label>
+                                                    <select class="form-select form-select-sm" id="fdp-role">
+                                                        <option value="participant">Participant</option>
+                                                        <option value="presenter">Presenter</option>
+                                                        <option value="resource_person">Resource Person</option>
+                                                        <option value="organizer">Organizer</option>
+                                                        <option value="coordinator">Coordinator</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label small fw-bold">Sponsored By</label>
+                                                    <input type="text" class="form-control form-control-sm" id="fdp-sponsored" placeholder="Sponsoring agency">
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <label class="form-label small fw-bold">Remarks</label>
+                                                    <input type="text" class="form-control form-control-sm" id="fdp-remarks" placeholder="Any remarks">
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-info btn-sm" onclick="addFDP()">
+                                                    <i class="fas fa-plus me-1"></i>Add FDP / Workshop
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearFDPForm()">Clear</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="card border-info mt-4">
+                                        <div class="card-header bg-info text-white py-2">
+                                            <i class="fas fa-upload me-1"></i>Upload FDP Certificate
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <label class="form-label">FDP Certificate</label>
+                                                    <input type="file" name="fdp_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                                    <div class="help-text">Upload certificate for the FDP/Workshop (optional).</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== TAB 9: RESULTS (AUTO-CALCULATED) ==================== -->
+                            <div class="tab-pane fade" id="tab-results">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1">
+                                        <i class="fas fa-chart-line me-2"></i>Results / Academic Performance
+                                    </h5>
+                                    <p class="text-muted small mb-3">
+                                        Enter students attempted and passed. <strong class="text-success">Pass percentage is calculated automatically.</strong>
+                                    </p>
+
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="results-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Subject Name</th>
+                                                    <th>Subject Code</th>
+                                                    <th>Attempted</th>
+                                                    <th>Passed</th>
+                                                    <th class="text-success">Pass % <small>(Auto)</small></th>
+                                                    <th>Remove</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="results-tbody">
+                                                {% if results_list %}
+                                                    {% for result in results_list %}
+                                                    <tr id="result-row-{{ forloop.counter0 }}">
+                                                        <td>{{ forloop.counter }}</td>
+                                                        <td><strong>{{ result.subject_name }}</strong></td>
+                                                        <td>{{ result.subject_code|default:'—' }}</td>
+                                                        <td class="text-center">{{ result.students_attempted }}</td>
+                                                        <td class="text-center">{{ result.students_passed }}</td>
+                                                        <td class="text-center fw-bold" style="color: {% if result.percentage >= 75 %}green{% elif result.percentage >= 50 %}orange{% else %}red{% endif %};">{{ result.percentage }}%</td>
+                                                        <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResult({{ forloop.counter0 }})"><i class="fas fa-trash"></i></button></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <tr id="no-results-row">
+                                                        <td colspan="7" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below.</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white py-2">
+                                            <i class="fas fa-plus me-1"></i>Add Subject Result
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small fw-bold">Subject Name *</label>
+                                                    <input type="text" class="form-control form-control-sm" id="rs-subject" placeholder="e.g. DBMS">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold">Subject Code</label>
+                                                    <input type="text" class="form-control form-control-sm" id="rs-code" placeholder="e.g. CS501">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold">Attempted *</label>
+                                                    <input type="number" class="form-control form-control-sm" id="rs-attempted" min="0" placeholder="60" oninput="autoCalculatePercent()">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold">Passed *</label>
+                                                    <input type="number" class="form-control form-control-sm" id="rs-passed" min="0" placeholder="54" oninput="autoCalculatePercent()">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label small fw-bold text-success">Pass % (Auto)</label>
+                                                    <input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0.00%">
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="addResult()">
+                                                    <i class="fas fa-plus me-1"></i>Add Result
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResultForm()">Clear</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between gap-2 mt-4">
+                            <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-1"></i>Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-save me-1"></i>Update Faculty
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal - FIXED URL -->
+<div class="modal fade custom-confirm-modal" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-user-times fa-4x text-danger mb-3"></i>
+                <h5>Are you sure you want to delete this faculty?</h5>
+                <div class="alert alert-warning mt-3">
+                    <strong id="deleteFacultyName"></strong><br>
+                    <span id="deleteEmployeeCode"></span>
+                </div>
+                <p class="text-danger small mt-3">
+                    <i class="fas fa-exclamation-circle me-1"></i>
+                    This action cannot be undone!
+                </p>
+                <p class="text-muted small">
+                    All data associated with this faculty will be permanently removed from the system.
+                </p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <!-- CORRECT URL: Uses Django URL reverse to generate /faculty/ID/delete/ -->
+                <form method="POST" action="{% url 'dashboard:delete_faculty' faculty.id %}" style="display: inline;" id="deleteForm">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-danger-custom" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-1"></i>Yes, Delete Faculty
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function(char) {
+            return ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[char];
+        });
+    }
+
+    let collegeExperienceList = [
+        {% for entry in faculty.college_experiences %}
+        {
+            college_name: "{{ entry.college_name|escapejs }}",
+            college_address: "{{ entry.college_address|escapejs }}",
+            from_date: "{{ entry.from_date|escapejs }}",
+            to_date: "{{ entry.to_date|escapejs }}",
+            experience: "{{ entry.experience|escapejs }}"
+        },
+        {% endfor %}
+    ];
+
+    function calculateCollegeExperience() {
+        const fromValue = document.getElementById('college-experience-from').value;
+        const toValue = document.getElementById('college-experience-to').value;
+        const durationField = document.getElementById('college-experience-duration');
+        if (!fromValue || !toValue) {
+            durationField.value = '';
+            return '';
+        }
+        const fromDate = new Date(`${fromValue}T00:00:00Z`);
+        const toDate = new Date(`${toValue}T00:00:00Z`);
+        if (toDate < fromDate) {
+            durationField.value = 'Invalid date range';
+            return '';
+        }
+        const totalDays = Math.floor((toDate - fromDate) / 86400000) + 1;
+        const years = Math.floor(totalDays / 365);
+        const months = Math.floor((totalDays % 365) / 30);
+        const days = (totalDays % 365) % 30;
+        const parts = [];
+        if (years) parts.push(`${years} year${years === 1 ? '' : 's'}`);
+        if (months) parts.push(`${months} month${months === 1 ? '' : 's'}`);
+        if (days || !parts.length) parts.push(`${days} day${days === 1 ? '' : 's'}`);
+        durationField.value = parts.join(', ');
+        return durationField.value;
+    }
+
+    function addCollegeExperience() {
+        const entry = {
+            college_name: document.getElementById('college-experience-name').value.trim(),
+            college_address: document.getElementById('college-experience-address').value.trim(),
+            from_date: document.getElementById('college-experience-from').value,
+            to_date: document.getElementById('college-experience-to').value,
+            experience: calculateCollegeExperience(),
+        };
+        if (!entry.college_name || !entry.college_address || !entry.from_date || !entry.to_date || !entry.experience) {
+            alert('Enter the college name, college address, and a valid From Date and To Date.');
+            return;
+        }
+        collegeExperienceList.push(entry);
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+        ['college-experience-name', 'college-experience-address', 'college-experience-from', 'college-experience-to', 'college-experience-duration'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+    }
+
+    function removeCollegeExperience(index) {
+        collegeExperienceList.splice(index, 1);
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+    }
+
+    function renderCollegeExperiences() {
+        const tbody = document.getElementById('college-experience-tbody');
+        if (!collegeExperienceList.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted fst-italic py-3">No college experience added yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = collegeExperienceList.map((entry, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(entry.college_name)}</td>
+                <td>${escapeHtml(entry.college_address)}</td>
+                <td>${escapeHtml(entry.from_date)}</td>
+                <td>${escapeHtml(entry.to_date)}</td>
+                <td>${escapeHtml(entry.experience)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeCollegeExperience(${index})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function updateCollegeExperiencesJSON() {
+        document.getElementById('college_experiences_json').value = JSON.stringify(collegeExperienceList);
+    }
+
+    let tstsabasList = [
+        {% for entry in faculty.tstsabas_entries %}
+        "{{ entry|escapejs }}",
+        {% endfor %}
+    ];
+
+    function addTstsabasEntry() {
+        const input = document.getElementById('tstsabas-entry');
+        const value = input.value.trim();
+        if (!value) {
+            alert('Enter a TSTSABAS value before adding it.');
+            input.focus();
+            return;
+        }
+        tstsabasList.push(value);
+        input.value = '';
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+    }
+
+    function removeTstsabasEntry(index) {
+        tstsabasList.splice(index, 1);
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+    }
+
+    function renderTstsabasEntries() {
+        const container = document.getElementById('tstsabas-list');
+        if (!tstsabasList.length) {
+            container.innerHTML = '<span class="text-muted small">No TSTSABAS entries added yet.</span>';
+            return;
+        }
+        container.innerHTML = tstsabasList.map((entry, index) => `
+            <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                <span>${escapeHtml(entry)}</span>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeTstsabasEntry(${index})"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('');
+    }
+
+    function updateTstsabasJSON() {
+        document.getElementById('tstsabas_entries_json').value = JSON.stringify(tstsabasList);
+    }
+
+    function normalizePublicationUrl(value) {
+        const trimmed = (value || '').trim();
+        if (!trimmed) {
+            return '';
+        }
+        if (/^https?:\/\//i.test(trimmed)) {
+            return trimmed;
+        }
+        if (trimmed.startsWith('//')) {
+            return `https:${trimmed}`;
+        }
+        if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+            return '';
+        }
+        return `https://${trimmed.replace(/^\/+/, '')}`;
+    }
+
+    function formatPublicationReferenceCell(publication) {
+        const refs = [];
+        const doi = (publication.doi || '').trim();
+        const rawUrl = (publication.url || '').trim();
+
+        if (doi) {
+            const doiHref = /^https?:\/\//i.test(doi) ? doi : `https://doi.org/${doi}`;
+            refs.push(`<div><strong>DOI:</strong> <a href="${escapeHtml(doiHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(doi)}</a></div>`);
+        }
+
+        if (rawUrl) {
+            const normalizedUrl = normalizePublicationUrl(rawUrl);
+            if (normalizedUrl) {
+                refs.push(`<div><strong>URL:</strong> <a href="${escapeHtml(normalizedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(rawUrl)}</a></div>`);
+            } else {
+                refs.push(`<div><strong>URL:</strong> ${escapeHtml(rawUrl)}</div>`);
+            }
+        }
+
+        return refs.length ? `<div class="publication-reference">${refs.join('')}</div>` : '—';
+    }
+
+    function togglePhdTitleField() {
+        const phdStatus = document.getElementById('phd-degree');
+        const phdTitleGroup = document.getElementById('phd-title-group');
+        const phdTitleInput = document.getElementById('phd-title');
+        if (!phdStatus || !phdTitleGroup || !phdTitleInput) {
+            return;
+        }
+
+        const shouldShow = phdStatus.value === 'Completed';
+        phdTitleGroup.classList.toggle('d-none', !shouldShow);
+        if (!shouldShow) {
+            phdTitleInput.value = '';
+        }
+    }
+
+    // ============================================================
+    // RESEARCH PUBLICATIONS
+    // ============================================================
+    let researchList = [];
+
+    // Load existing research publications
+    {% if research_publications %}
+        researchList = [
+            {% for pub in research_publications %}
+            {
+                research_type: "{{ pub.research_type }}",
+                title: "{{ pub.title|escapejs }}",
+                authors: "{{ pub.authors|escapejs }}",
+                publication_year: "{{ pub.publication_year }}",
+                journal_name: "{{ pub.journal_name|escapejs }}",
+                conference_name: "{{ pub.conference_name|escapejs }}",
+                doi: "{{ pub.doi|escapejs }}",
+                url: "{{ pub.url|escapejs }}",
+                status: "{{ pub.status }}"
+            },
+            {% endfor %}
+        ];
+    {% endif %}
+
+    function addResearchPublication() {
+        const title = document.getElementById('rp-title').value.trim();
+        if (!title) {
+            alert('Publication title is required.');
+            document.getElementById('rp-title').focus();
+            return;
+        }
+        const type = document.getElementById('rp-type').value;
+        const venue = document.getElementById('rp-journal').value.trim();
+        const entry = {
+            research_type: type,
+            title: title,
+            authors: document.getElementById('rp-authors').value.trim(),
+            publication_year: document.getElementById('rp-year').value || null,
+            journal_name: (type !== 'conference') ? venue : '',
+            conference_name: (type === 'conference') ? venue : '',
+            issn: document.getElementById('rp-issn').value.trim(),
+            doi: document.getElementById('rp-doi').value.trim(),
+            url: document.getElementById('rp-url').value.trim(),
+            status: document.getElementById('rp-status').value,
+        };
+        researchList.push(entry);
+        renderResearchTable();
+        updateResearchJSON();
+        clearResearchForm();
+    }
+
+    function removeResearch(index) {
+        researchList.splice(index, 1);
+        renderResearchTable();
+        updateResearchJSON();
+    }
+
+    function renderResearchTable() {
+        const tbody = document.getElementById('research-tbody');
+        if (researchList.length === 0) {
+            tbody.innerHTML = `<tr id="no-research-row"><td colspan="10" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = researchList.map((r, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><span class="badge bg-info text-dark">${escapeHtml(r.research_type)}</span></td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.authors || '—')}</td>
+                <td>${escapeHtml(r.publication_year || '—')}</td>
+                <td>${escapeHtml(r.journal_name || r.conference_name || '—')}</td>
+                <td>${escapeHtml(r.issn || '—')}</td>
+                <td><span class="badge bg-success">${escapeHtml(r.status || '—')}</span></td>
+                <td>${formatPublicationReferenceCell(r)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function updateResearchJSON() {
+        document.getElementById('research_publications_json').value = JSON.stringify(researchList);
+    }
+
+    function clearResearchForm() {
+        ['rp-title', 'rp-authors', 'rp-year', 'rp-journal', 'rp-issn', 'rp-doi', 'rp-url'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+    }
+
+    // ============================================================
+    // B.TECH PROJECTS
+    // ============================================================
+    let projectList = [];
+
+    {% if btech_projects %}
+        projectList = [
+            {% for proj in btech_projects %}
+            {
+                ht_no: "{{ proj.ht_no|escapejs }}",
+                student_name: "{{ proj.student_name|escapejs }}",
+                batch: "{{ proj.batch|escapejs }}",
+                project_title: "{{ proj.project_title|escapejs }}",
+                approved: {{ proj.approved|lower }},
+                marks: "{{ proj.marks }}"
+            },
+            {% endfor %}
+        ];
+    {% endif %}
+
+    function addBTechProject() {
+        const title = document.getElementById('bp-title').value.trim();
+        const student = document.getElementById('bp-student').value.trim();
+        if (!title || !student) {
+            alert('Student name and project title are required.');
+            return;
+        }
+        const entry = {
+            ht_no: document.getElementById('bp-htno').value.trim(),
+            student_name: student,
+            batch: document.getElementById('bp-batch').value.trim(),
+            project_title: title,
+            approved: document.getElementById('bp-approved').value === 'true',
+            marks: document.getElementById('bp-marks').value || null,
+        };
+        projectList.push(entry);
+        renderProjectTable();
+        updateProjectJSON();
+        clearProjectForm();
+    }
+
+    function removeProject(index) {
+        projectList.splice(index, 1);
+        renderProjectTable();
+        updateProjectJSON();
+    }
+
+    function renderProjectTable() {
+        const tbody = document.getElementById('projects-tbody');
+        if (projectList.length === 0) {
+            tbody.innerHTML = `<tr id="no-projects-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = projectList.map((p, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><code>${p.ht_no || '—'}</code></td>
+                <td>${p.student_name}</td>
+                <td>${p.batch || '—'}</td>
+                <td>${p.project_title}</td>
+                <td><span class="badge ${p.approved ? 'bg-success' : 'bg-warning text-dark'}">${p.approved ? 'Yes' : 'No'}</span></td>
+                <td>${p.marks || '—'}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeProject(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function updateProjectJSON() {
+        document.getElementById('btech_projects_json').value = JSON.stringify(projectList);
+    }
+
+    function clearProjectForm() {
+        ['bp-htno', 'bp-student', 'bp-batch', 'bp-title', 'bp-marks'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('bp-approved').value = 'true';
+    }
+
+    // ============================================================
+    // FDP / WORKSHOPS
+    // ============================================================
+    let fdpList = [];
+
+    {% if fdps %}
+        fdpList = [
+            {% for fdp in fdps %}
+            {
+                fdp_type: "{{ fdp.fdp_type }}",
+                title: "{{ fdp.title|escapejs }}",
+                from_date: "{{ fdp.from_date|date:'Y-m-d' }}",
+                to_date: "{{ fdp.to_date|date:'Y-m-d' }}",
+                organized_by: "{{ fdp.organized_by|escapejs }}",
+                place: "{{ fdp.place|escapejs }}",
+                mode: "{{ fdp.mode }}",
+                level: "{{ fdp.level }}",
+                role: "{{ fdp.role }}",
+                sponsored_by: "{{ fdp.sponsored_by|escapejs }}",
+                remarks: "{{ fdp.remarks|escapejs }}"
+            },
+            {% endfor %}
+        ];
+    {% endif %}
+
+    function addFDP() {
+        const title = document.getElementById('fdp-title').value.trim();
+        const fromDate = document.getElementById('fdp-from').value;
+        const toDate = document.getElementById('fdp-to').value;
+
+        if (!title) {
+            alert('FDP/Workshop title is required.');
+            document.getElementById('fdp-title').focus();
+            return;
+        }
+        if (!fromDate) {
+            alert('From Date is required.');
+            document.getElementById('fdp-from').focus();
+            return;
+        }
+        if (!toDate) {
+            alert('To Date is required.');
+            document.getElementById('fdp-to').focus();
+            return;
+        }
+
+        const entry = {
+            fdp_type: document.getElementById('fdp-type').value,
+            title: title,
+            from_date: fromDate,
+            to_date: toDate,
+            organized_by: document.getElementById('fdp-organized').value.trim(),
+            place: document.getElementById('fdp-place').value.trim(),
+            mode: document.getElementById('fdp-mode').value,
+            level: document.getElementById('fdp-level').value,
+            role: document.getElementById('fdp-role').value,
+            sponsored_by: document.getElementById('fdp-sponsored').value.trim(),
+            remarks: document.getElementById('fdp-remarks').value.trim(),
+        };
+        fdpList.push(entry);
+        renderFDPTable();
+        updateFDPJSON();
+        clearFDPForm();
+    }
+
+    function removeFDP(index) {
+        fdpList.splice(index, 1);
+        renderFDPTable();
+        updateFDPJSON();
+    }
+
+    function renderFDPTable() {
+        const tbody = document.getElementById('fdp-tbody');
+        if (fdpList.length === 0) {
+            tbody.innerHTML = `<tr id="no-fdp-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = fdpList.map((f, i) => {
+            let typeClass = '';
+            if (f.fdp_type === 'fdp') typeClass = 'fdp-badge-fdp';
+            else if (f.fdp_type === 'workshop') typeClass = 'fdp-badge-workshop';
+            else if (f.fdp_type === 'seminar') typeClass = 'fdp-badge-seminar';
+            else if (f.fdp_type === 'conference') typeClass = 'fdp-badge-conference';
+            else typeClass = 'fdp-badge-training';
+
+            return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><span class="badge ${typeClass}">${f.fdp_type.toUpperCase()}</span></td>
+                <td>${f.title}</td>
+                <td>${f.from_date}</td>
+                <td>${f.to_date}</td>
+                <td>${f.organized_by || '—'}</td>
+                <td>${f.place || '—'}</td>
+                <td>${f.role || '—'}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeFDP(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `}).join('');
+    }
+
+    function updateFDPJSON() {
+        document.getElementById('fdp_entries_json').value = JSON.stringify(fdpList);
+    }
+
+    function clearFDPForm() {
+        ['fdp-title', 'fdp-from', 'fdp-to', 'fdp-organized', 'fdp-place', 'fdp-sponsored', 'fdp-remarks'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('fdp-type').value = 'fdp';
+        document.getElementById('fdp-mode').value = 'offline';
+        document.getElementById('fdp-level').value = 'national';
+        document.getElementById('fdp-role').value = 'participant';
+    }
+
+    // ============================================================
+    // RESULTS — AUTO-CALCULATED PERCENTAGE
+    // ============================================================
+    let resultsList = [];
+
+    {% if results_list %}
+        resultsList = [
+            {% for result in results_list %}
+            {
+                subject_name: "{{ result.subject_name|escapejs }}",
+                subject_code: "{{ result.subject_code|escapejs }}",
+                students_attempted: {{ result.students_attempted }},
+                students_passed: {{ result.students_passed }},
+                percentage: {{ result.percentage }}
+            },
+            {% endfor %}
+        ];
+    {% endif %}
+
+    function autoCalculatePercent() {
+        const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
+        const passed = parseInt(document.getElementById('rs-passed').value) || 0;
+        const pctField = document.getElementById('rs-percentage');
+        if (attempted > 0) {
+            const pct = ((passed / attempted) * 100).toFixed(2);
+            pctField.value = pct + '%';
+            if (pct >= 75) {
+                pctField.style.color = 'green';
+            } else if (pct >= 50) {
+                pctField.style.color = 'orange';
+            } else {
+                pctField.style.color = 'red';
+            }
+        } else {
+            pctField.value = '';
+            pctField.style.color = '';
+        }
+    }
+
+    function addResult() {
+        const subject = document.getElementById('rs-subject').value.trim();
+        const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
+        const passed = parseInt(document.getElementById('rs-passed').value) || 0;
+        if (!subject) {
+            alert('Subject name is required.');
+            document.getElementById('rs-subject').focus();
+            return;
+        }
+        if (attempted <= 0) {
+            alert('Students attempted must be greater than 0.');
+            document.getElementById('rs-attempted').focus();
+            return;
+        }
+        if (passed > attempted) {
+            alert('Students passed cannot exceed students attempted.');
+            document.getElementById('rs-passed').focus();
+            return;
+        }
+        const percentage = parseFloat(((passed / attempted) * 100).toFixed(2));
+        const entry = {
+            subject_name: subject,
+            subject_code: document.getElementById('rs-code').value.trim(),
+            students_attempted: attempted,
+            students_passed: passed,
+            percentage: percentage,
+        };
+        resultsList.push(entry);
+        renderResultsTable();
+        updateResultsJSON();
+        clearResultForm();
+    }
+
+    function removeResult(index) {
+        resultsList.splice(index, 1);
+        renderResultsTable();
+        updateResultsJSON();
+    }
+
+    function renderResultsTable() {
+        const tbody = document.getElementById('results-tbody');
+        if (resultsList.length === 0) {
+            tbody.innerHTML = `<tr id="no-results-row"><td colspan="7" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = resultsList.map((r, i) => {
+            const color = r.percentage >= 75 ? 'green' : r.percentage >= 50 ? 'orange' : 'red';
+            return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${r.subject_name}</strong></td>
+                <td>${r.subject_code || '—'}</td>
+                <td class="text-center">${r.students_attempted}</td>
+                <td class="text-center">${r.students_passed}</td>
+                <td class="text-center fw-bold" style="color:${color};">${r.percentage}%</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResult(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `}).join('');
+    }
+
+    function updateResultsJSON() {
+        document.getElementById('results_json').value = JSON.stringify(resultsList);
+    }
+
+    function clearResultForm() {
+        ['rs-subject', 'rs-code', 'rs-attempted', 'rs-passed'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        const pctField = document.getElementById('rs-percentage');
+        pctField.value = '';
+        pctField.style.color = '';
+    }
+
+    // ============================================================
+    // MODAL DATA
+    // ============================================================
+    document.querySelector('[data-bs-target="#deleteConfirmModal"]').addEventListener('click', function() {
+        const facultyName = this.getAttribute('data-faculty-name');
+        const employeeCode = this.getAttribute('data-employee-code');
+        document.getElementById('deleteFacultyName').innerHTML = facultyName;
+        document.getElementById('deleteEmployeeCode').innerHTML = `<small>Employee Code: ${employeeCode}</small>`;
+    });
+
+    // ============================================================
+    // FORM SUBMIT — disable button + show spinner
+    // ============================================================
+    document.getElementById('editFacultyForm').addEventListener('submit', function(e) {
+        updateCollegeExperiencesJSON();
+        updateTstsabasJSON();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+        return true;
+    });
+
+    // Initialize tables on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        renderResearchTable();
+        renderProjectTable();
+        renderFDPTable();
+        renderResultsTable();
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+        document.getElementById('college-experience-from').addEventListener('change', calculateCollegeExperience);
+        document.getElementById('college-experience-to').addEventListener('change', calculateCollegeExperience);
+        const phdStatus = document.getElementById('phd-degree');
+        if (phdStatus) {
+            phdStatus.addEventListener('change', togglePhdTitleField);
+            togglePhdTitleField();
+        }
+    });
+</script>
+{% endblock %}

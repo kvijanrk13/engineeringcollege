@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Profile - {{ student.student_name }}</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        :root { --student-pdf-font: 'Times New Roman', 'Liberation Serif', Times, serif; }
+        body {
+            font-family: var(--student-pdf-font);
+            line-height: 1.4;
+            color: #333;
+            font-size: 11px;
+        }
+        table, th, td, div, p, span, strong, h1, h2, h3 {
+            font-family: inherit;
+        }
+        .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
+        .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; background-color: #f0f0f0; }
+        .student-photo { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .no-photo { color: #999; font-size: 10px; text-align: center; }
+        .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
+        .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
+        .project-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
+        .document-box {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .training-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            white-space: pre-line;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 9px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+        }
+        .admission-details {
+            white-space: pre-line;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 75%; text-align: center; vertical-align: middle;">
+                <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">STUDENT PROFILE REPORT</h1>
+                <div style="font-size: 10px;">H.T.No: {{ student.ht_no }} | Generated: {{ current_date|date:"d-m-Y" }}</div>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <div class="photo-box">
+                    {% if student_photo_url %}
+                        <img src="{{ student_photo_url }}" class="student-photo" alt="Student Photo">
+                    {% else %}
+                        <div class="no-photo">NO PHOTO</div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">1. PERSONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Full Name</td><td>{{ student.student_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">H.T.No</td><td>{{ student.ht_no|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Father's Name</td><td>{{ student.father_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mother's Name</td><td>{{ student.mother_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Date of Birth</td><td>{% if student.dob %}{{ student.dob|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Age</td><td>{{ student.age|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Gender</td><td>{{ student.gender|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Blood Group</td><td>{{ student.blood_group|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Category</td><td>{{ student.category|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Religion</td><td>{{ student.religion|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Nationality</td><td>{{ student.nationality|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Aadhar Number</td><td>{{ student.aadhar|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">APAAR ID</td><td>{{ student.apaar_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Permanent Address</td><td>{{ student.address|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <div class="section-title">2. CONTACT INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Student Phone</td><td>{{ student.student_phone|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Parent Phone</td><td>{{ student.parent_phone|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Email</td><td>{{ student.email|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <div class="section-title">3. ACADEMIC INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Department</td><td>{{ student.department|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Current Year</td><td>{{ student.year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Current Semester</td><td>{{ student.sem|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">SSC Year</td><td>{{ student.ssc_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">School Name</td><td>{{ student.ssc_school_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">SSC Marks (%)</td><td>{{ student.ssc_marks|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Inter Year</td><td>{{ student.inter_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College Name</td><td>{{ student.inter_college_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Intermediate Marks (%)</td><td>{{ student.inter_marks|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">B.Tech Year</td><td>{{ student.btech_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">UG College Name</td><td>{{ student.ug_college_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Current CGPA</td><td>{{ student.cgpa|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <div class="section-title">4. ADMISSION DETAILS</div>
+    <table class="info-table">
+        <tr><td class="label">Admission Type</td><td>{{ student.admission_type|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">EAMCET Rank</td><td>{{ student.eamcet_rank|default:"Not Specified" }}</td></tr>
+        {% if student.other_admission_details %}
+        <tr><td class="label">Other Admission Details</td><td class="admission-details">{{ student.other_admission_details }}</td></tr>
+        {% endif %}
+    </table>
+
+    <div class="section-title">5. ACTIVITIES & REGISTRATIONS</div>
+    <table class="info-table">
+        <tr><td class="label">TASK Registration</td><td>{{ student.task_registered|default:"Not Specified" }}{% if student.task_username %} ({{ student.task_username }}){% endif %}</td></tr>
+        <tr><td class="label">CSI Registration</td><td>{{ student.csi_registered|default:"Not Specified" }}{% if student.csi_membership_id %} ({{ student.csi_membership_id }}){% endif %}</td></tr>
+    </table>
+
+    <div class="section-title">6. PROJECTS & TRAINING</div>
+    <div style="padding: 10px;">
+        {% if student.rtrp_project_title or student.intern_title or student.final_project_title or student.other_training %}
+            <div style="margin-bottom: 15px;">
+                {% if student.rtrp_project_title %}
+                <div class="project-item"><strong>RTRP Project:</strong> {{ student.rtrp_project_title }}</div>
+                {% endif %}
+                {% if student.intern_title %}
+                <div class="project-item"><strong>Internship:</strong> {{ student.intern_title }}</div>
+                {% endif %}
+                {% if student.final_project_title %}
+                <div class="project-item"><strong>Final Project:</strong> {{ student.final_project_title }}</div>
+                {% endif %}
+            </div>
+            {% if student.other_training %}
+            <div class="training-content">
+                <strong>Other Training:</strong><br>
+                {{ student.other_training }}
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-data">
+                <p style="margin: 0;">No project or training information available</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="section-title">7. RESEARCH & PUBLICATIONS</div>
+    <div style="padding: 10px;">
+        {% if student_research_publications %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Authors</th>
+                    <th>Academic Year</th>
+                    <th>Year</th>
+                    <th>Venue</th>
+                    <th>Status</th>
+                    <th>DOI / URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for publication in student_research_publications %}
+                <tr>
+                    <td>{{ publication.get_research_type_display|default:"Publication" }}</td>
+                    <td>{{ publication.title|default:"Not Specified" }}</td>
+                    <td>{{ publication.authors|default:"Not Specified" }}</td>
+                    <td>{{ publication.academic_year|default:"Not Specified" }}</td>
+                    <td>{{ publication.publication_year|default:"Not Specified" }}</td>
+                    <td>{{ publication.journal_name|default:publication.conference_name|default:"Not Specified" }}</td>
+                    <td>{{ publication.get_status_display|default:"Not Specified" }}</td>
+                    <td>
+                        {% if publication.doi %}DOI: {{ publication.doi }}{% endif %}
+                        {% if publication.url %}{% if publication.doi %}<br>{% endif %}{{ publication.url }}{% endif %}
+                        {% if not publication.doi and not publication.url %}Not Specified{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-data">
+            <p style="margin: 0;">No research publication information available</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section-title">8. UPLOADED DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            {% for document in uploaded_documents %}
+            <div class="document-box">
+                <strong>{{ document.label }}:</strong>
+                {% if document.available %}
+                    <span style="color: green;">Uploaded ({{ document.file_type }})</span><br>
+                    <span style="color: #555; font-size: 10px;">{{ document.file_name }}</span>
+                {% else %}
+                    <span style="color: #999;">Not Uploaded</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="section-title">9. PDF SECURITY</div>
+    <table class="info-table">
+        <tr><td class="label">PDF Password Protection</td><td>{% if student.pdf_password %}Enabled{% else %}Not Enabled{% endif %}</td></tr>
+    </table>
+
+    <div class="footer">
+        <p>This is an electronically generated student profile document.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,622 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Profile - {{ faculty.staff_name }}</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; line-height: 1.4; color: #333; font-size: 11px; }
+        .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
+        .college-name { font-size: 22px; font-weight: bold; color: #2c3e50; }
+        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; }
+        .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; }
+        .faculty-photo { width: 100%; height: 100%; object-fit: cover; }
+        .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; }
+        .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10px; }
+        .certificate-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
+        .signature-section { margin-top: 30px; border-top: 2px solid #2c3e50; padding-top: 20px; }
+        .signature-box { width: 250px; text-align: center; }
+        .signature-line { width: 100%; height: 1px; border-top: 1px solid #333; margin: 40px auto 5px; }
+        .footer { text-align: center; margin-top: 30px; font-size: 9px; color: #7f8c8d; border-top: 1px solid #ddd; padding-top: 10px; }
+        .barcode { text-align: center; font-family: 'Libre Barcode 128', cursive; font-size: 16px; margin: 10px 0; }
+        .document-box {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .scm-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            white-space: pre-line;
+        }
+        .research-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        .journal-badge {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .conference-badge {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        .patent-badge {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .project-badge {
+            background-color: #e1f5fe;
+            color: #01579b;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .status-published {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-accepted {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-under_review {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-submitted {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .status-in_progress {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .classes-taken-box {
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        .classes-taken-number {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 75%; text-align: center; vertical-align: middle;">
+                <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <div class="photo-box">
+                    {% if local_photo_path %}
+                        <img src="file:///{{ local_photo_path }}" class="faculty-photo" style="width: 100%; height: auto;">
+                    {% elif faculty.cloudinary_photo_url %}
+                        <img src="{{ faculty.cloudinary_photo_url }}" class="faculty-photo" style="width: 100%; height: auto;">
+                    {% elif faculty.photo %}
+                        <img src="{{ faculty.photo.url }}" class="faculty-photo" style="width: 100%; height: auto;">
+                    {% else %}
+                        <div style="padding-top: 55px; color: #ccc; font-size: 10px;">NO PHOTO</div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 1. PERSONAL INFORMATION -->
+    <div class="section-title">1. PERSONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Full Name</td><td>{{ faculty.staff_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Employee Code</td><td>{{ faculty.employee_code|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Father's Name</td><td>{{ faculty.father_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mother's Name</td><td>{{ faculty.mother_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Date of Birth</td><td>{% if faculty.dob %}{{ faculty.dob|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Gender</td><td>{{ faculty.gender|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">State</td><td>{{ faculty.state|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Caste</td><td>{{ faculty.caste|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Sub-Caste</td><td>{{ faculty.sub_caste|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Nationality</td><td>{{ faculty.nationality|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Permanent Address</td><td>{{ faculty.address|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 2. PROFESSIONAL INFORMATION -->
+    <div class="section-title">2. PROFESSIONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
+        {% for entry in faculty.college_experiences %}
+        <tr>
+            <td class="label">College Experience {{ forloop.counter }}</td>
+            <td>
+                <strong>{{ entry.college_name }}</strong><br>
+                {{ entry.college_address }}<br>
+                {{ entry.from_date }} to {{ entry.to_date }} ({{ entry.experience }})
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td class="label">College Experience</td><td>Not Specified</td></tr>
+        {% endfor %}
+        <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mobile</td><td>{{ faculty.mobile|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Phone</td><td>{{ faculty.phone|default:"Not Specified" }}</td></tr>
+        <tr>
+            <td class="label">TSTSABAS</td>
+            <td>
+                {% for entry in faculty.tstsabas_entries %}
+                    {{ forloop.counter }}. {{ entry }}{% if not forloop.last %}<br>{% endif %}
+                {% empty %}
+                    Not Specified
+                {% endfor %}
+            </td>
+        </tr>
+        <tr><td class="label">Current Status</td><td style="color: green; font-weight: bold;">ACTIVE</td></tr>
+    </table>
+
+    <!-- 3. PROFESSIONAL IDs -->
+    <div class="section-title">3. PROFESSIONAL IDs</div>
+    <table class="info-table">
+        <tr><td class="label">JNTUH ID</td><td>{{ faculty.jntuh_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">AICTE ID</td><td>{{ faculty.aicte_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">PAN Number</td><td>{{ faculty.pan|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Aadhar Number</td><td>{{ faculty.aadhar|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">APAAR ID</td><td>{{ faculty.apaar_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">ORCID ID</td><td>{{ faculty.orcid_id|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH -->
+    <div class="section-title">4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH</div>
+    <table class="info-table">
+        <tr><td class="label">Year</td><td>{{ faculty.ssc_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.ssc_percent|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">School</td><td>{{ faculty.ssc_school|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE -->
+    <div class="section-title">5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE</div>
+    <table class="info-table">
+        <tr><td class="label">Year</td><td>{{ faculty.inter_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.inter_percent|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.inter_college|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 6. EDUCATIONAL QUALIFICATIONS - UG -->
+    <div class="section-title">6. EDUCATIONAL QUALIFICATIONS - UG</div>
+    <table class="info-table">
+        <tr><td class="label">Degree</td><td>{{ faculty.ug_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.ug_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.ug_percentage|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.ug_college|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.ug_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 7. EDUCATIONAL QUALIFICATIONS - PG -->
+    <div class="section-title">7. EDUCATIONAL QUALIFICATIONS - PG</div>
+    <table class="info-table">
+        <tr><td class="label">Degree</td><td>{{ faculty.pg_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.pg_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.pg_percentage|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.pg_college|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.pg_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 8. EDUCATIONAL QUALIFICATIONS - PhD -->
+    <div class="section-title">8. EDUCATIONAL QUALIFICATIONS - PhD</div>
+    <table class="info-table">
+        <tr><td class="label">Status</td><td>{{ faculty.phd_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.phd_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">University</td><td>{{ faculty.phd_university|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.phd_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 9. SUBJECTS DEALT -->
+    <div class="section-title">9. SUBJECTS DEALT</div>
+    <div style="padding: 10px;">
+        {% if subjects_list %}
+            {% for subject in subjects_list %}
+                <span class="certificate-item">{{ subject }}</span>
+            {% endfor %}
+        {% elif faculty.subjects_dealt %}
+            {% for subject in faculty.subjects_dealt.split %}
+                <span class="certificate-item">{{ subject }}</span>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No subjects specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 10. SCM (SERVICE/CONSULTANCY/MOU) -->
+    <div class="section-title">10. SCM (SERVICE/CONSULTANCY/MOU)</div>
+    <div class="scm-content">
+        {% if faculty.scm %}
+            {{ faculty.scm|linebreaks }}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">No SCM details specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 11. RESEARCH & PUBLICATIONS -->
+    <div class="section-title">11. RESEARCH & PUBLICATIONS</div>
+    {% if research_publications %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pub in research_publications %}
+                <tr>
+                    <td>
+                        <span class="research-type-badge
+                            {% if pub.research_type == 'journal' %}journal-badge{% endif %}
+                            {% if pub.research_type == 'conference' %}conference-badge{% endif %}
+                            {% if pub.research_type == 'patent' %}patent-badge{% endif %}
+                            {% if pub.research_type == 'project' %}project-badge{% endif %}">
+                            {{ pub.get_research_type_display }}
+                        </span>
+                    </td>
+                    <td>{{ pub.title|default:"—" }}</td>
+                    <td>{{ pub.publication_year|default:"—" }}</td>
+                    <td>
+                        {% if pub.status %}
+                        <span class="status-badge status-{{ pub.status }}">
+                            {{ pub.get_status_display }}
+                        </span>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if pub.authors %}<strong>Authors:</strong> {{ pub.authors }}<br>{% endif %}
+                        {% if pub.journal_name %}<strong>Journal:</strong> {{ pub.journal_name }}<br>{% endif %}
+                        {% if pub.conference_name %}<strong>Conference:</strong> {{ pub.conference_name }}<br>{% endif %}
+                        {% if pub.doi %}<strong>DOI:</strong> {{ pub.doi }}<br>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No research publications data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 12. RESEARCH PROJECTS -->
+    {% if research_projects %}
+    <div class="section-title">12. RESEARCH PROJECTS</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Marks</th>
+                <th>Journal/Publisher</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in research_projects %}
+            <tr>
+                <td>{{ project.get_research_type_display }}</td>
+                <td>{{ project.title_of_project }}</td>
+                <td>{{ project.marks_awarded|default:"—" }}</td>
+                <td>
+                    {% if project.journal_name %}{{ project.journal_name }}{% endif %}
+                    {% if project.publisher_name %}{{ project.publisher_name }}{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- 13. FDP / WORKSHOPS ATTENDED -->
+    <div class="section-title">13. FDP / WORKSHOPS ATTENDED</div>
+    {% if fdps %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Duration</th>
+                <th>Organized By</th>
+                <th>Place</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fdp in fdps %}
+            <tr>
+                <td>{{ fdp.get_fdp_type_display }}</td>
+                <td>{{ fdp.title }}</td>
+                <td>{{ fdp.from_date|date:"d M Y" }} to {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
+                <td>{{ fdp.organized_by|default:"—" }}</td>
+                <td>{{ fdp.place|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No FDP/Workshop data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 14. B.TECH PROJECTS HANDLED -->
+    <div class="section-title">14. B.TECH PROJECTS HANDLED</div>
+    {% if btech_projects %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>H.T.No.</th>
+                <th>Student Name</th>
+                <th>Batch</th>
+                <th>Project Title</th>
+                <th>Approved</th>
+                <th>Marks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in btech_projects %}
+            <tr>
+                <td>{{ project.ht_no }}</td>
+                <td>{{ project.student_name }}</td>
+                <td>{{ project.batch|default:"—" }}</td>
+                <td>{{ project.project_title }}</td>
+                <td style="color: {% if project.approved %}green{% else %}red{% endif %};">
+                    {% if project.approved %}Yes{% else %}No{% endif %}
+                </td>
+                <td>{{ project.marks|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee; text-align: center;">
+            <p style="color: #888; font-style: italic; margin: 0;">No project data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 15. RESULTS / ACADEMIC PERFORMANCE -->
+    <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if results_data %}
+            {% if results_data is iterable and results_data is not string %}
+                <div>
+                    {% for result in results_data %}
+                    <div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 4px;">
+                        <strong>{{ result.subject_name }}</strong> ({{ result.subject_code }})<br>
+                        Students Attempted: {{ result.students_attempted }} | Passed: {{ result.students_passed }}<br>
+                        <strong>Pass Percentage: {{ result.percentage }}%</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="white-space: pre-line;">{{ results_data }}</div>
+            {% endif %}
+        {% elif faculty.results %}
+            <div style="white-space: pre-line;">{{ faculty.results }}</div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No results data specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 16. ABOUT YOURSELF -->
+    <div class="section-title">16. ABOUT YOURSELF</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if faculty.about_yourself %}
+            <div style="white-space: pre-line;">{{ faculty.about_yourself }}</div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No information provided</p>
+        {% endif %}
+    </div>
+
+    <!-- 17. UPLOADED DOCUMENTS -->
+    <div class="section-title">17. UPLOADED DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div class="document-box">
+                <strong>Aadhar Card:</strong>
+                {% if faculty.aadhar_file or faculty.aadhar_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PAN Card:</strong>
+                {% if faculty.pan_file or faculty.pan_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>APAAR Document:</strong>
+                {% if faculty.apaar_file or faculty.apaar_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>SCM Document:</strong>
+                {% if faculty.scm_file or faculty.scm_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>JNTUH Bio-Data:</strong>
+                {% if faculty.jntuh_biodata or faculty.jntuh_biodata_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>SSC Certificate:</strong>
+                {% if faculty.ssc_certificate or faculty.ssc_certificate_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>Intermediate Certificate:</strong>
+                {% if faculty.inter_certificate or faculty.inter_certificate_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>UG Certificate:</strong>
+                {% if faculty.ug_certificate or faculty.ug_certificate_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PG Certificate:</strong>
+                {% if faculty.pg_certificate or faculty.pg_certificate_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+            <div class="document-box">
+                <strong>PhD Certificate:</strong>
+                {% if faculty.phd_certificate or faculty.phd_certificate_url %}
+                    <span style="color: green;">✓ Uploaded</span>
+                {% else %}
+                    <span style="color: #999;">✗ Not Uploaded</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 18. ADDITIONAL DOCUMENTS -->
+    <div class="section-title">18. ADDITIONAL DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div class="document-box">
+            <strong>Experience Certificates:</strong>
+            {% if faculty.experience_certificates or faculty.experience_certificates_url %}
+                <span style="color: green;">✓ Uploaded</span>
+            {% else %}
+                <span style="color: #999;">✗ Not Uploaded</span>
+            {% endif %}
+        </div>
+        <div class="document-box">
+            <strong>Other Documents:</strong>
+            {% if faculty.other_documents or faculty.other_documents_url %}
+                <span style="color: green;">✓ Uploaded</span>
+            {% else %}
+                <span style="color: #999;">✗ Not Uploaded</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 19. CLASSES TAKEN -->
+    <div class="section-title">19. CLASSES TAKEN</div>
+    <div class="classes-taken-box">
+        {% if faculty.classes_taken %}
+            <div class="classes-taken-number">
+                {{ faculty.classes_taken }} Classes
+            </div>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">Not specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 20. CERTIFICATES -->
+    <div class="section-title">20. CERTIFICATES</div>
+    <div style="padding: 10px; margin-bottom: 15px;">
+        {% if certificates %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Certificate Type</th>
+                        <th>Issued By</th>
+                        <th>Issue Date</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                    <tr>
+                        <td><strong>{{ cert.certificate_type }}</strong></td>
+                        <td>{{ cert.issued_by|default:"—" }}</td>
+                        <td>{% if cert.issue_date %}{{ cert.issue_date|date:"d M Y" }}{% else %}—{% endif %}</td>
+                        <td>{{ cert.description|truncatechars:50|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p style="text-align: right; font-size: 9px; margin-top: 5px;">
+                <em>Total {{ certificates|length }} certificate(s) merged with this document</em>
+            </p>
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic;">No additional certificates uploaded</p>
+        {% endif %}
+    </div>
+
+    <!-- 21. VERIFICATION & AUTHORIZATION -->
+    <div class="section-title">21. VERIFICATION & AUTHORIZATION</div>
+    <div style="margin: 20px 0; text-align: center; font-size: 10px;">
+        This document verifies that the information contained herein is accurate and complete to the best of our knowledge.
+    </div>
+
+    <div class="signature-section">
+        <table style="width: 100%;">
+            <tr>
+                <td class="signature-box">
+                    <div class="signature-line"></div>
+                    <div>{{ faculty.staff_name }}<br>Faculty Member<br>Date: _________</div>
+                </td>
+                <td class="signature-box">
+                    <div class="signature-line"></div>
+                    <div>Head of Department<br>{{ faculty.department }}<br>Date: _________</div>
+                </td>
+            </tr>
+        </table>
+        <div style="text-align: center; margin-top: 40px;">
+            <div style="width: 300px; margin: 0 auto 5px; border-top: 2px solid #333;"></div>
+            <div>Principal<br>Engineering College<br>Date: _________</div>
+        </div>
+    </div>
+
+    <div class="barcode">*FAC-{{ faculty.employee_code }}-{{ current_date|date:"Ymd" }}*</div>
+
+    <div class="footer">
+        <p>This is an electronically generated official document of Engineering College.</p>
+    </div>
+</body>
+</html>

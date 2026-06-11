@@ -15,10 +15,13 @@ Open:
 
 - `http://127.0.0.1:8000/`
 - `http://127.0.0.1:8000/dashboard/`
-- `http://127.0.0.1:8000/car-price/`
+- `http://127.0.0.1:8000/faculty/`
+- `http://127.0.0.1:8000/students/`
+- `http://127.0.0.1:8000/syllabus/`
+- `http://127.0.0.1:8000/gallery/`
 
 ## Notes
 
-- Add a local `.env` before running if database or third-party credentials are required.
+- Add a local `.env` before running if database credentials are required.
 - Do not commit real secrets or production credentials.
-- Run migrations before opening admin, dashboard, student, faculty, or project pages.
+- Run migrations before opening admin, dashboard, student, faculty, syllabus, or gallery pages.

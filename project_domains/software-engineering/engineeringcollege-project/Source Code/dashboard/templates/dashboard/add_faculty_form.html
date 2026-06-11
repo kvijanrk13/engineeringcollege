@@ -1,0 +1,1596 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Add New Faculty | Engineering College{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
+<style>
+    .form-section {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        padding: 20px;
+    }
+    .form-section h4 {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        color: #007bff;
+    }
+    .required-field:after {
+        content: "*";
+        color: red;
+        margin-left: 5px;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .help-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .nav-tabs .nav-link {
+        color: #495057;
+        font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+        color: #007bff;
+        font-weight: 600;
+    }
+    .tab-content > .tab-pane {
+        display: none;
+    }
+    .tab-content > .active {
+        display: block;
+    }
+    .tab-content {
+        padding: 20px 0;
+    }
+    .pct-auto {
+        background-color: #f0fff0;
+        font-weight: bold;
+    }
+    #rs-percentage {
+        transition: color 0.3s;
+    }
+    .fdp-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 9px;
+        font-weight: bold;
+    }
+    .fdp-badge-fdp { background-color: #e3f2fd; color: #1565c0; }
+    .fdp-badge-workshop { background-color: #e8f5e8; color: #2e7d32; }
+    .fdp-badge-seminar { background-color: #fff3e0; color: #e65100; }
+    .fdp-badge-conference { background-color: #f3e5f5; color: #7b1fa2; }
+    .fdp-badge-training { background-color: #e1f5fe; color: #01579b; }
+    .document-card {
+        background: #f8f9fa;
+        border-left: 4px solid #28a745;
+        margin-bottom: 15px;
+        padding: 12px;
+        border-radius: 5px;
+    }
+    .btn-add-doc {
+        margin-top: 10px;
+        width: 100%;
+    }
+    .documents-list {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+    }
+    .document-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .document-item .doc-name {
+        font-weight: 500;
+        word-break: break-all;
+    }
+    .document-item .doc-actions .btn-sm {
+        padding: 2px 8px;
+        font-size: 12px;
+    }
+    .academic-year-input {
+        width: 120px;
+        display: inline-block;
+        margin-left: 10px;
+    }
+    .table .academic-year-col {
+        width: 100px;
+    }
+    .delete-btn {
+        margin-right: 10px;
+    }
+    .research-proof-item, .fdp-cert-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 12px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+    .research-proof-item .remove-proof, .fdp-cert-item .remove-cert {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    .other-doc-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 12px;
+        margin-bottom: 12px;
+        position: relative;
+    }
+    .other-doc-item .remove-other {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .tab-navigation {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    .publication-reference {
+        font-size: 12px;
+        line-height: 1.35;
+        word-break: break-word;
+    }
+    .faculty-add-page .card-body {
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 faculty-experience-page faculty-add-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-user-plus"></i>
+                Faculty Onboarding Studio
+            </span>
+            <h1 class="faculty-hero-title">Create a complete faculty profile</h1>
+            <p class="faculty-hero-copy">
+                Add personal details, qualifications, research, projects, results, and supporting
+                documents from one guided workspace with a cleaner tabbed experience.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:faculty_list' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-list"></i>
+                    Open Faculty Directory
+                </a>
+                <a href="{% url 'dashboard:faculty' %}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-id-card"></i>
+                    Faculty Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Workflow</span>
+                <strong>Multi-tab entry covering the full faculty record lifecycle</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Coverage</span>
+                <strong>Personal, professional, education, research, results, and documents</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Validation</span>
+                <strong>Required fields and tab-level guidance before final save</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Goal</span>
+                <strong>Make large data entry feel cleaner, calmer, and more premium</strong>
+            </div>
+        </div>
+    </section>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow faculty-panel-card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Add New Faculty
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'dashboard:add_faculty' %}" id="addFacultyForm">
+                        {% csrf_token %}
+                        <!-- Hidden JSON fields submitted with the form -->
+                        <input type="hidden" name="research_publications_json" id="research_publications_json" value="[]">
+                        <input type="hidden" name="btech_projects_json" id="btech_projects_json" value="[]">
+                        <input type="hidden" name="results_json" id="results_json" value="[]">
+                        <input type="hidden" name="fdp_entries_json" id="fdp_entries_json" value="[]">
+                        <input type="hidden" name="college_experiences_json" id="college_experiences_json" value="[]">
+                        <input type="hidden" name="tstsabas_entries_json" id="tstsabas_entries_json" value="[]">
+                        <!-- Hidden fields for multiple research proofs and FDP certificates -->
+                        <input type="hidden" name="research_proofs_data" id="research_proofs_data" value="[]">
+                        <input type="hidden" name="fdp_certificates_data" id="fdp_certificates_data" value="[]">
+
+                        <!-- Hidden field for multiple other documents -->
+                        <input type="hidden" name="other_documents_data" id="other_documents_data" value="[]">
+                        <!-- Tabs Navigation -->
+                        <div class="faculty-tabs-shell">
+                        <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
+                                    <i class="fas fa-user me-1"></i>Personal
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="professional-tab" data-bs-toggle="tab" data-bs-target="#professional" type="button">
+                                    <i class="fas fa-briefcase me-1"></i>Professional
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="education-tab" data-bs-toggle="tab" data-bs-target="#education" type="button">
+                                    <i class="fas fa-graduation-cap me-1"></i>Education
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="additional-tab" data-bs-toggle="tab" data-bs-target="#additional" type="button">
+                                    <i class="fas fa-info-circle me-1"></i>Additional
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#tab-research" type="button">
+                                    <i class="fas fa-book-open me-1"></i>Research &amp; Publications
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#tab-projects" type="button">
+                                    <i class="fas fa-project-diagram me-1"></i>B.Tech Projects
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="fdp-tab" data-bs-toggle="tab" data-bs-target="#tab-fdp" type="button">
+                                    <i class="fas fa-chalkboard-user me-1"></i>FDP / Workshops
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#tab-results" type="button">
+                                    <i class="fas fa-chart-line me-1"></i>Results
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                                    <i class="fas fa-file-alt me-1"></i>Documents
+                                </button>
+                            </li>
+                        </ul>
+                        </div>
+                        <div class="tab-content">
+                            <!-- ==================== TAB 1: PERSONAL ==================== -->
+                            <div class="tab-pane fade show active" id="personal">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-user me-2"></i>Personal Information</h4>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Staff Name</label>
+                                            <input type="text" name="staff_name" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Employee Code</label>
+                                            <input type="text" name="employee_code" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Photo</label>
+                                             <input type="file" name="photo" class="form-control" accept="image/*" id="photoInput" onchange="previewPhoto(this)">
+                                        <div id="photoPreview" style="margin-top: 10px;">
+                                            <img src="#" alt="Photo Preview" style="display: none; max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 5px;" id="photoPreviewImg">
+                                        </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Father's Name</label>
+                                            <input type="text" name="father_name" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Mother's Name</label>
+                                            <input type="text" name="mother_name" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Date of Birth</label>
+                                            <input type="date" name="dob" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Gender</label>
+                                            <select name="gender" class="form-control" required>
+                                                <option value="">Select Gender</option>
+                                                {% for gender in genders %}
+                                                <option value="{{ gender }}">{{ gender }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">State</label>
+                                            <input type="text" name="state" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Caste</label>
+                                            <select name="caste" class="form-control">
+                                                <option value="">Select Caste</option>
+                                                {% for caste in caste_list %}
+                                                <option value="{{ caste }}">{{ caste }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Sub Caste</label>
+                                            <input type="text" name="sub_caste" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Nationality</label>
+                                            <input type="text" name="nationality" class="form-control" value="Indian">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Mobile Number</label>
+                                            <input type="tel" name="mobile" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Phone (Landline)</label>
+                                            <input type="tel" name="phone" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Email</label>
+                                            <input type="email" name="email" class="form-control" required>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">Address</label>
+                                            <textarea name="address" class="form-control" rows="3"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('professional')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 2: PROFESSIONAL ==================== -->
+                            <div class="tab-pane fade" id="professional">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-briefcase me-2"></i>Professional Information</h4>
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm align-middle">
+                                                    <thead class="table-light">
+                                                        <tr><th>#</th><th>College Name</th><th>College Address</th><th>From Date</th><th>To Date</th><th>Experience</th><th>Remove</th></tr>
+                                                    </thead>
+                                                    <tbody id="college-experience-tbody">
+                                                        <tr><td colspan="7" class="text-center text-muted fst-italic py-3">No college experience added yet.</td></tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">College Name</label>
+                                                    <input type="text" id="college-experience-name" class="form-control">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">College Address</label>
+                                                    <input type="text" id="college-experience-address" class="form-control">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">From Date</label>
+                                                    <input type="date" id="college-experience-from" class="form-control">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">To Date</label>
+                                                    <input type="date" id="college-experience-to" class="form-control">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <label class="form-label">Experience</label>
+                                                    <input type="text" id="college-experience-duration" class="form-control" readonly>
+                                                </div>
+                                                <div class="col-12">
+                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="addCollegeExperience()">
+                                                        <i class="fas fa-plus me-1"></i>Add College Experience
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mb-3">
+                                            <label class="form-label">TSTSABAS</label>
+                                            <div class="input-group">
+                                                <input type="text" id="tstsabas-entry" class="form-control" placeholder="Enter TSTSABAS">
+                                                <button type="button" class="btn btn-outline-primary" onclick="addTstsabasEntry()">
+                                                    <i class="fas fa-plus me-1"></i>Add
+                                                </button>
+                                            </div>
+                                            <div id="tstsabas-list" class="mt-2"></div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Department</label>
+                                            <select name="department" class="form-control" required>
+                                                <option value="">Select Department</option>
+                                                {% for dept in departments %}
+                                                <option value="{{ dept }}">{{ dept }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">Designation</label>
+                                            <select name="designation" class="form-control" required>
+                                                <option value="">Select Designation</option>
+                                                {% for desig in designations %}
+                                                <option value="{{ desig }}">{{ desig }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label required-field">JNTUH ID</label>
+                                            <input type="text" name="jntuh_id" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">AICTE ID</label>
+                                            <input type="text" name="aicte_id" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">PAN Number</label>
+                                            <input type="text" name="pan" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Aadhar Number</label>
+                                            <input type="text" name="aadhar" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">APAAR ID</label>
+                                            <input type="text" name="apaar_id" class="form-control">
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">ORCID ID</label>
+                                            <input type="text" name="orcid_id" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('education')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 3: EDUCATION ==================== -->
+                            <div class="tab-pane fade" id="education">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-graduation-cap me-2"></i>Education Details</h4>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3"><label>SSC Year</label><input type="text" name="ssc_year" class="form-control" pattern="[0-9]*"></div>
+                                        <div class="col-md-4 mb-3"><label>SSC Percentage</label><input type="text" name="ssc_percent" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>School Name</label><input type="text" name="ssc_school" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>Intermediate Year</label><input type="text" name="inter_year" class="form-control" pattern="[0-9]*"></div>
+                                        <div class="col-md-4 mb-3"><label>Intermediate Percentage</label><input type="text" name="inter_percent" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>College Name</label><input type="text" name="inter_college" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Degree</label><input type="text" name="ug_degree" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Year</label><input type="text" name="ug_year" class="form-control" pattern="[0-9]*"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Percentage/CGPA</label><input type="text" name="ug_percentage" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG College</label><input type="text" name="ug_college" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>UG Specialization</label><input type="text" name="ug_spec" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Degree</label><input type="text" name="pg_degree" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Year</label><input type="text" name="pg_year" class="form-control" pattern="[0-9]*"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Percentage</label><input type="text" name="pg_percentage" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG College</label><input type="text" name="pg_college" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PG Specialization</label><input type="text" name="pg_spec" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Status</label><select name="phd_degree" id="phd-degree" class="form-control"><option value="">Select Status</option>{% for qual in qualifications %}<option value="{{ qual }}">{{ qual }}</option>{% endfor %}</select></div>
+                                        <div class="col-md-8 mb-3 d-none" id="phd-title-group"><label>Ph.D Title</label><input type="text" name="phd_title" id="phd-title" class="form-control" maxlength="500" placeholder="Enter Ph.D title"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Year</label><input type="text" name="phd_year" class="form-control" pattern="[0-9]*"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD University</label><input type="text" name="phd_university" class="form-control"></div>
+                                        <div class="col-md-4 mb-3"><label>PhD Specialization</label><input type="text" name="phd_spec" class="form-control"></div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('additional')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 4: ADDITIONAL ==================== -->
+                            <div class="tab-pane fade" id="additional">
+                                <div class="form-section">
+                                    <h4><i class="fas fa-info-circle me-2"></i>Additional Information</h4>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3"><label>Subjects Dealt</label><textarea name="subjects_dealt" class="form-control" rows="3" placeholder="e.g. DBMS, PPS, DATA MINING (comma separated)"></textarea></div>
+                                        <div class="col-md-12 mb-3"><label>SCM (Service Cum Merit)</label><textarea name="scm" class="form-control" rows="3"></textarea></div>
+                                        <div class="col-md-12 mb-3"><label>About Yourself (Mention Your Roles and Responsibilities)</label><textarea name="about_yourself" class="form-control" rows="4" placeholder="e.g., HOD of IT Department, Class Coordinator, Examination Coordinator, NBA Coordinator, etc."></textarea><div class="help-text">Please mention your roles and responsibilities in the college.</div></div>
+                                        <div class="col-md-4 mb-3"><label>Academic Year</label><input type="text" name="membership_academic_year" id="membership-academic-year" class="form-control" placeholder="e.g., 2025-26"></div>
+                                        <div class="col-md-4 mb-3"><label>Membership In</label><input type="text" name="membership_in" id="membership-in" class="form-control" placeholder="e.g., CSI, ISTE, IEEE"></div>
+                                        <div class="col-md-4 mb-3"><label>Membership ID</label><input type="text" name="membership_id" id="membership-id" class="form-control" placeholder="Membership ID"></div>
+                                        <div class="col-md-12 mb-3"><label>Membership Proof</label><input type="file" name="membership_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png"><div class="help-text">Upload membership proof document.</div></div>
+                                        <div class="col-md-12 mb-3">
+                                            <button type="button" class="btn btn-outline-primary btn-sm" id="addMembershipBtn"><i class="fas fa-plus me-1"></i>Add Membership</button>
+                                            <div class="help-text mt-2" id="membershipPreview">No membership added yet.</div>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label class="d-block mb-2">Are you ratified?</label>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input ratified-radio" type="radio" name="is_ratified" id="is-ratified-yes" value="yes">
+                                                <label class="form-check-label" for="is-ratified-yes">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input ratified-radio" type="radio" name="is_ratified" id="is-ratified-no" value="no">
+                                                <label class="form-check-label" for="is-ratified-no">No</label>
+                                            </div>
+                                            <div class="help-text mt-2">SCM Document upload is enabled only when ratified is Yes.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-research')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 5: RESEARCH & PUBLICATIONS ==================== -->
+                            <div class="tab-pane fade" id="tab-research">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1"><i class="fas fa-book-open me-2"></i>Research &amp; Publications</h5>
+                                    <p class="text-muted small mb-3">Add journal papers, conference papers, books, or patents.</p>
+                                    <!-- Research Publications Proof Documents with ADD BUTTON -->
+                                    <div class="card border-info mb-3">
+                                        <div class="card-header bg-info text-white py-2 d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-upload me-1"></i>Research Publications Proof Documents</span>
+                                            <button type="button" class="btn btn-sm btn-light" id="addResearchProofBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Proof Document
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="researchProofsContainer"></div>
+                                            <div class="help-text mt-2">Upload supporting proof documents for research publications. Click "Add Proof Document" to add multiple files.</div>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="research-table">
+                                             <thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Authors</th><th>Academic Year</th><th>Year</th><th>Journal / Conference</th><th>ISSN</th><th>Status</th><th>DOI / URL</th><th>Remove</th></tr></thead>
+                                             <tbody id="research-tbody"><tr id="no-research-row"><td colspan="11" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr></tbody>
+                                         </table>
+                                    </div>
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white py-2"><i class="fas fa-plus me-1"></i>Add Publication</div>
+                                        <div class="card-body">
+                                             <div class="row g-2">
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Type *</label><select class="form-select form-select-sm" id="rp-type"><option value="journal">Journal Article</option><option value="conference">Conference Paper</option><option value="book">Book / Chapter</option><option value="patent">Patent</option></select></div>
+                                                 <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="rp-title" placeholder="Full title of the publication"></div>
+                                                 <div class="col-md-5"><label class="form-label small fw-bold">Authors</label><input type="text" class="form-control form-control-sm" id="rp-authors" placeholder="e.g. K. Vijay Kumar, A. Sharma"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rp-academic-year" placeholder="e.g., 2023-24"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Year</label><input type="text" class="form-control form-control-sm" id="rp-year" pattern="[0-9]*" placeholder="2024"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Status</label><select class="form-select form-select-sm" id="rp-status"><option value="published">Published</option><option value="accepted">Accepted</option><option value="under_review">Under Review</option><option value="submitted">Submitted</option></select></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Journal / Conference Name</label><input type="text" class="form-control form-control-sm" id="rp-journal" placeholder="Journal or conference name"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">ISSN</label><input type="text" class="form-control form-control-sm" id="rp-issn" placeholder="e.g. 1234-5678"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">DOI</label><input type="text" class="form-control form-control-sm" id="rp-doi" placeholder="10.1000/xyz123"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">URL</label><input type="url" class="form-control form-control-sm" id="rp-url" placeholder="https://example.com/publication"></div>
+                                             </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-primary btn-sm" onclick="addResearchPublication()"><i class="fas fa-plus me-1"></i>Add Publication</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResearchForm()">Clear</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-projects')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 6: B.TECH PROJECTS ==================== -->
+                            <div class="tab-pane fade" id="tab-projects">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1"><i class="fas fa-project-diagram me-2"></i>B.Tech Projects Handled</h5>
+                                    <p class="text-muted small mb-3">Add B.Tech student projects supervised by this faculty.</p>
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="projects-table"><thead class="table-light"><tr><th>#</th><th>H.T. No.</th><th>Student Name</th><th>Batch</th><th>Project Title</th><th>Approved</th><th>Marks</th><th>Remove</th></tr></thead><tbody id="projects-tbody"><tr id="no-projects-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below.</td></tr></tbody></table>
+                                    </div>
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white py-2"><i class="fas fa-plus me-1"></i>Add Project</div>
+                                        <div class="card-body">
+                                            <div class="row g-2">
+                                                <div class="col-md-3"><label class="form-label small fw-bold">H.T. No. *</label><input type="text" class="form-control form-control-sm" id="bp-htno" placeholder="e.g. 19A81A0501"></div>
+                                                <div class="col-md-4"><label class="form-label small fw-bold">Student Name *</label><input type="text" class="form-control form-control-sm" id="bp-student" placeholder="Full name of student"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Batch</label><input type="text" class="form-control form-control-sm" id="bp-batch" placeholder="e.g. 2019-23"></div>
+                                                 <div class="col-md-3"><label class="form-label small fw-bold">Marks (out of 100)</label><input type="text" class="form-control form-control-sm" id="bp-marks" pattern="[0-9]*" placeholder="Marks"></div>
+                                                <div class="col-md-9"><label class="form-label small fw-bold">Project Title *</label><input type="text" class="form-control form-control-sm" id="bp-title" placeholder="Full project title"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Approved?</label><select class="form-select form-select-sm" id="bp-approved"><option value="true">Yes</option><option value="false">No</option></select></div>
+                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-primary btn-sm" onclick="addBTechProject()"><i class="fas fa-plus me-1"></i>Add Project</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearProjectForm()">Clear</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-fdp')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 7: FDP / WORKSHOPS ==================== -->
+                            <div class="tab-pane fade" id="tab-fdp">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1"><i class="fas fa-chalkboard-user me-2"></i>FDP / Workshops Attended</h5>
+                                    <p class="text-muted small mb-3">Add Faculty Development Programs, Workshops, Seminars, Conferences, and Training Programs attended by this faculty.</p>
+                                    <!-- FDP Certificates with ADD BUTTON -->
+                                    <div class="card border-warning mb-3">
+                                        <div class="card-header bg-warning text-white py-2 d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-certificate me-1"></i>FDP Certificates</span>
+                                            <button type="button" class="btn btn-sm btn-light" id="addFDPCertificateBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Certificate
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="fdpCertificatesContainer"></div>
+                                            <div class="help-text mt-2">Upload FDP/Workshop certificates. Click "Add Certificate" to upload multiple files.</div>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="fdp-table"><thead class="table-light"><tr><th>#</th><th>Type</th><th>Title</th><th>Academic Year</th><th>From Date</th><th>To Date</th><th>Organized By</th><th>Place</th><th>Role</th><th>Remove</th></tr></thead><tbody id="fdp-tbody"><tr id="no-fdp-row"><td colspan="10" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td></tr></tbody></table>
+                                    </div>
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white py-2"><i class="fas fa-plus me-1"></i>Add FDP / Workshop</div>
+                                        <div class="card-body">
+                                            <div class="row g-2">
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Type *</label><select class="form-select form-select-sm" id="fdp-type"><option value="fdp">FDP</option><option value="workshop">Workshop</option><option value="seminar">Seminar</option><option value="conference">Conference</option><option value="training">Training Program</option></select></div>
+                                                <div class="col-md-9"><label class="form-label small fw-bold">Title *</label><input type="text" class="form-control form-control-sm" id="fdp-title" placeholder="Title of FDP/Workshop"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="fdp-academic-year" placeholder="e.g., 2023-24"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">From Date *</label><input type="date" class="form-control form-control-sm" id="fdp-from"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">To Date *</label><input type="date" class="form-control form-control-sm" id="fdp-to"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Organized By</label><input type="text" class="form-control form-control-sm" id="fdp-organized" placeholder="Organizing institution"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Place</label><input type="text" class="form-control form-control-sm" id="fdp-place" placeholder="Location"></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Mode</label><select class="form-select form-select-sm" id="fdp-mode"><option value="offline">Offline</option><option value="online">Online</option><option value="hybrid">Hybrid</option></select></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Level</label><select class="form-select form-select-sm" id="fdp-level"><option value="institute">Institute Level</option><option value="college">College Level</option><option value="university">University Level</option><option value="state">State Level</option><option value="national">National Level</option><option value="international">International Level</option></select></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Role</label><select class="form-select form-select-sm" id="fdp-role"><option value="participant">Participant</option><option value="presenter">Presenter</option><option value="resource_person">Resource Person</option><option value="organizer">Organizer</option><option value="coordinator">Coordinator</option></select></div>
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Sponsored By</label><input type="text" class="form-control form-control-sm" id="fdp-sponsored" placeholder="Sponsoring agency"></div>
+                                                <div class="col-md-12"><label class="form-label small fw-bold">Remarks</label><input type="text" class="form-control form-control-sm" id="fdp-remarks" placeholder="Any remarks"></div>
+                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-info btn-sm" onclick="addFDP()"><i class="fas fa-plus me-1"></i>Add FDP / Workshop</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearFDPForm()">Clear</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('tab-results')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 8: RESULTS ==================== -->
+                            <div class="tab-pane fade" id="tab-results">
+                                <div class="p-3">
+                                    <h5 class="text-primary mb-1"><i class="fas fa-chart-line me-2"></i>Results / Academic Performance</h5>
+                                    <p class="text-muted small mb-3">Enter subject-wise results. <strong class="text-success">Pass percentage is calculated automatically.</strong></p>
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm align-middle" id="results-table">
+                                            <thead class="table-light"><tr><th>#</th><th>Subject Name</th><th>Subject Code</th><th>Academic Year</th><th>Classes Taken</th><th>Attempted</th><th>Passed</th><th class="text-success">Pass % <small>(Auto)</small></th><th>Remove</th></tr></thead>
+                                            <tbody id="results-tbody"><tr id="no-results-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below.</td></tr></tbody>
+                                        </table>
+                                    </div>
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white py-2"><i class="fas fa-plus me-1"></i>Add Subject Result</div>
+                                        <div class="card-body">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-md-3"><label class="form-label small fw-bold">Subject Name *</label><input type="text" class="form-control form-control-sm" id="rs-subject" placeholder="e.g. DBMS"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Subject Code</label><input type="text" class="form-control form-control-sm" id="rs-code" placeholder="e.g. CS501"></div>
+                                                <div class="col-md-2"><label class="form-label small fw-bold">Academic Year</label><input type="text" class="form-control form-control-sm" id="rs-academic-year" placeholder="e.g., 2023-24"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Classes Taken *</label><input type="text" class="form-control form-control-sm" id="rs-classes" pattern="[0-9]*" placeholder="e.g. 45"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Attempted *</label><input type="text" class="form-control form-control-sm" id="rs-attempted" pattern="[0-9]*" placeholder="60" oninput="autoCalculatePercent()"></div>
+                                                 <div class="col-md-2"><label class="form-label small fw-bold">Passed *</label><input type="text" class="form-control form-control-sm" id="rs-passed" pattern="[0-9]*" placeholder="54" oninput="autoCalculatePercent()"></div>
+                                                <div class="col-md-1"><label class="form-label small fw-bold text-success">Pass %</label><input type="text" class="form-control form-control-sm pct-auto" id="rs-percentage" readonly placeholder="0%"></div>
+                                            </div>
+                                            <div class="mt-3"><button type="button" class="btn btn-success btn-sm" onclick="addResult()"><i class="fas fa-plus me-1"></i>Add Result</button><button type="button" class="btn btn-outline-secondary btn-sm ms-2" onclick="clearResultForm()">Clear</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-navigation">
+                                    <button type="button" class="btn btn-primary" onclick="goToFacultyTab('documents')">
+                                        Next <i class="fas fa-arrow-right ms-1"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- ==================== TAB 9: DOCUMENTS ==================== -->
+                            <div class="tab-pane fade" id="documents">
+                                <div class="form-section"><h4><i class="fas fa-file-alt me-2"></i>Identity Documents</h4>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3"><label>Aadhar Card</label><input type="file" name="aadhar_file" class="form-control"></div>
+                                        <div class="col-md-6 mb-3"><label>PAN Card</label><input type="file" name="pan_file" class="form-control"></div>
+                                        <div class="col-md-6 mb-3"><label>APAAR Document</label><input type="file" name="apaar_file" class="form-control"></div>
+                                        <div class="col-md-6 mb-3"><label>SCM Document</label><input type="file" name="scm_file" id="scm-file-input" class="form-control" disabled></div>
+                                        <div class="col-md-12 mb-3"><label>JNTUH Bio-Data</label><input type="file" name="jntuh_biodata" class="form-control"></div>
+                                    </div>
+                                </div>
+                                <div class="form-section"><h4><i class="fas fa-graduation-cap me-2"></i>Educational Certificates</h4>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3"><label>SSC Certificate</label><input type="file" name="ssc_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>Intermediate Certificate</label><input type="file" name="inter_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>UG Certificate</label><input type="file" name="ug_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>PG Certificate</label><input type="file" name="pg_certificate" class="form-control"></div>
+                                        <div class="col-md-12 mb-3"><label>PhD Certificate</label><input type="file" name="phd_certificate" class="form-control"></div>
+                                    </div>
+                                </div>
+                                <div class="form-section"><h4><i class="fas fa-briefcase me-2"></i>Experience Certificates</h4>
+                                    <div class="document-card"><div class="row g-2"><div class="col-md-6"><label>Upload Experience Certificate (PDF, JPG, PNG)</label><input type="file" name="experience_certificates" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div><div class="col-md-6"><label>Academic Year</label><input type="text" name="experience_certificates_academic_year" class="form-control" placeholder="e.g., 2023-24"></div></div><div class="help-text mt-2">Upload experience certificates.</div></div>
+                                </div>
+                                <!-- ==================== OTHER DOCUMENTS SECTION WITH ADD BUTTON ==================== -->
+                                <div class="form-section">
+                                    <h4><i class="fas fa-folder-open me-2"></i>Other Documents</h4>
+                                    <div class="card border-secondary mb-3">
+                                        <div class="card-header bg-secondary text-white py-2 d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-upload me-1"></i>Other Documents</span>
+                                            <button type="button" class="btn btn-sm btn-light" id="addOtherDocumentBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Document
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="otherDocumentsContainer"></div>
+                                            <div class="help-text mt-2">Upload any other relevant documents with academic year. Click "Add Document" to add multiple entries.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-section">
+                                    <h4><i class="fas fa-lock me-2"></i>PDF PASSWORD</h4>
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label>PDF PASSWORD</label>
+                                            <input type="password" name="pdf_password" class="form-control" autocomplete="new-password" placeholder="Password required to open mailed PDF">
+                                            <div class="help-text mt-2">The generated faculty profile PDF will open only with this password.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">Cancel</a>
+                                    <button type="button" onclick="clearAllForm()" class="btn btn-danger btn-lg"><i class="fas fa-trash-alt me-1"></i>Delete / Clear All Form</button>
+                                     <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-save me-1"></i>Save Faculty</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+<script>
+    function goToFacultyTab(tabId) {
+        const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
+        if (!tabButton || typeof bootstrap === 'undefined' || !bootstrap.Tab) {
+            return;
+        }
+        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, function(char) {
+            return ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[char];
+        });
+    }
+
+    function normalizePublicationUrl(value) {
+        const trimmed = (value || '').trim();
+        if (!trimmed) {
+            return '';
+        }
+        if (/^https?:\/\//i.test(trimmed)) {
+            return trimmed;
+        }
+        if (trimmed.startsWith('//')) {
+            return `https:${trimmed}`;
+        }
+        if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+            return '';
+        }
+        return `https://${trimmed.replace(/^\/+/, '')}`;
+    }
+
+    function formatPublicationReferenceCell(publication) {
+        const refs = [];
+        const doi = (publication.doi || '').trim();
+        const rawUrl = (publication.url || '').trim();
+
+        if (doi) {
+            const doiHref = /^https?:\/\//i.test(doi) ? doi : `https://doi.org/${doi}`;
+            refs.push(`<div><strong>DOI:</strong> <a href="${escapeHtml(doiHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(doi)}</a></div>`);
+        }
+
+        if (rawUrl) {
+            const normalizedUrl = normalizePublicationUrl(rawUrl);
+            if (normalizedUrl) {
+                refs.push(`<div><strong>URL:</strong> <a href="${escapeHtml(normalizedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(rawUrl)}</a></div>`);
+            } else {
+                refs.push(`<div><strong>URL:</strong> ${escapeHtml(rawUrl)}</div>`);
+            }
+        }
+
+        return refs.length ? `<div class="publication-reference">${refs.join('')}</div>` : '—';
+    }
+
+    function togglePhdTitleField() {
+        const phdStatus = document.getElementById('phd-degree');
+        const phdTitleGroup = document.getElementById('phd-title-group');
+        const phdTitleInput = document.getElementById('phd-title');
+        if (!phdStatus || !phdTitleGroup || !phdTitleInput) {
+            return;
+        }
+
+        const shouldShow = phdStatus.value === 'Completed';
+        phdTitleGroup.classList.toggle('d-none', !shouldShow);
+        if (!shouldShow) {
+            phdTitleInput.value = '';
+        }
+    }
+
+    function toggleScmDocumentInput() {
+        const scmInput = document.getElementById('scm-file-input');
+        const ratifiedYes = document.getElementById('is-ratified-yes');
+        if (!scmInput || !ratifiedYes) {
+            return;
+        }
+        const enabled = ratifiedYes.checked;
+        scmInput.disabled = !enabled;
+        if (!enabled) {
+            scmInput.value = '';
+        }
+    }
+
+    function updateMembershipPreview() {
+        const academicYear = document.getElementById('membership-academic-year');
+        const membershipIn = document.getElementById('membership-in');
+        const membershipId = document.getElementById('membership-id');
+        const preview = document.getElementById('membershipPreview');
+        if (!academicYear || !membershipIn || !membershipId || !preview) {
+            return;
+        }
+        const values = [academicYear.value, membershipIn.value, membershipId.value]
+            .map(value => value.trim())
+            .filter(Boolean);
+        preview.textContent = values.length ? values.join(' | ') : 'No membership added yet.';
+    }
+
+    // ============================================================
+    // MULTIPLE RESEARCH PROOFS WITH ADD BUTTON - WORKING VERSION
+    // ============================================================
+    let researchProofCounter = 0;
+    function addResearchProof() {
+        researchProofCounter++;
+        const container = document.getElementById('researchProofsContainer');
+        const newId = 'research-proof-' + researchProofCounter;
+        const newItem = document.createElement('div');
+        newItem.className = 'research-proof-item';
+        newItem.id = newId;
+        newItem.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm remove-proof" onclick="removeResearchProof(this)">×</button>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Upload Proof (PDF, JPG, PNG)</label>
+                    <input type="file" class="form-control research-proof-file" name="research_proof_files_${researchProofCounter}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateResearchProofsData()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control research-proof-academic-year" placeholder="e.g., 2023-24" onchange="updateResearchProofsData()">
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        updateResearchProofsData();
+    }
+    function removeResearchProof(btn) {
+        btn.closest('.research-proof-item').remove();
+        updateResearchProofsData();
+    }
+    function updateResearchProofsData() {
+        const proofs = [];
+        document.querySelectorAll('#researchProofsContainer .research-proof-item').forEach(item => {
+            const fileInput = item.querySelector('.research-proof-file');
+            const academicYear = item.querySelector('.research-proof-academic-year').value;
+            if (fileInput.files.length > 0) {
+                proofs.push({
+                    file: fileInput.files[0],
+                    academic_year: academicYear
+                });
+            }
+        });
+        const proofsData = proofs.map(p => ({ academic_year: p.academic_year, file_name: p.file ? p.file.name : '' }));
+        document.getElementById('research_proofs_data').value = JSON.stringify(proofsData);
+    }
+    // ============================================================
+    // MULTIPLE FDP CERTIFICATES WITH ADD BUTTON - WORKING VERSION
+    // ============================================================
+    let fdpCertCounter = 0;
+    function addFDPCertificate() {
+        fdpCertCounter++;
+        const container = document.getElementById('fdpCertificatesContainer');
+        const newId = 'fdp-cert-' + fdpCertCounter;
+        const newItem = document.createElement('div');
+        newItem.className = 'fdp-cert-item';
+        newItem.id = newId;
+        newItem.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm remove-cert" onclick="removeFDPCertificate(this)">×</button>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Upload Certificate (PDF, JPG, PNG)</label>
+                    <input type="file" class="form-control fdp-cert-file" name="fdp_cert_files_${fdpCertCounter}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFDPCertificatesData()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control fdp-cert-academic-year" placeholder="e.g., 2023-24" onchange="updateFDPCertificatesData()">
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        updateFDPCertificatesData();
+    }
+    function removeFDPCertificate(btn) {
+        btn.closest('.fdp-cert-item').remove();
+        updateFDPCertificatesData();
+    }
+    function updateFDPCertificatesData() {
+        const certs = [];
+        document.querySelectorAll('#fdpCertificatesContainer .fdp-cert-item').forEach(item => {
+            const fileInput = item.querySelector('.fdp-cert-file');
+            const academicYear = item.querySelector('.fdp-cert-academic-year').value;
+            if (fileInput.files.length > 0) {
+                certs.push({
+                    file: fileInput.files[0],
+                    academic_year: academicYear
+                });
+            }
+        });
+        const certsData = certs.map(c => ({ academic_year: c.academic_year, file_name: c.file ? c.file.name : '' }));
+        document.getElementById('fdp_certificates_data').value = JSON.stringify(certsData);
+    }
+    // ============================================================
+    // OTHER DOCUMENTS - ADD BUTTON + ACADEMIC YEAR (ONLY CHANGE)
+    // ============================================================
+    let otherDocCounter = 0;
+    function addOtherDocument() {
+        otherDocCounter++;
+        const container = document.getElementById('otherDocumentsContainer');
+        const newId = 'other-doc-' + otherDocCounter;
+        const newItem = document.createElement('div');
+        newItem.className = 'other-doc-item';
+        newItem.id = newId;
+        newItem.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm remove-other" onclick="removeOtherDocument(this)">×</button>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label">Upload Document (PDF, JPG, PNG)</label>
+                    <input type="file" class="form-control other-doc-file" name="other_doc_files_${otherDocCounter}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateOtherDocumentsData()">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="text" class="form-control other-doc-academic-year" placeholder="e.g., 2023-24" onchange="updateOtherDocumentsData()">
+                </div>
+            </div>
+        `;
+        container.appendChild(newItem);
+        updateOtherDocumentsData();
+    }
+    function removeOtherDocument(btn) {
+        btn.closest('.other-doc-item').remove();
+        updateOtherDocumentsData();
+    }
+    function updateOtherDocumentsData() {
+        const docs = [];
+        document.querySelectorAll('#otherDocumentsContainer .other-doc-item').forEach(item => {
+            const fileInput = item.querySelector('.other-doc-file');
+            const academicYear = item.querySelector('.other-doc-academic-year').value;
+            if (fileInput.files.length > 0) {
+                docs.push({
+                    file: fileInput.files[0],
+                    academic_year: academicYear
+                });
+            }
+        });
+        const docsData = docs.map(d => ({ academic_year: d.academic_year, file_name: d.file ? d.file.name : '' }));
+        document.getElementById('other_documents_data').value = JSON.stringify(docsData);
+    }
+    // ============================================================
+    // RESEARCH PUBLICATIONS (WITH ACADEMIC YEAR)
+    // ============================================================
+    let researchList = [];
+    function addResearchPublication() {
+        const title = document.getElementById('rp-title').value.trim();
+        if (!title) {
+            alert('Publication title is required.');
+            document.getElementById('rp-title').focus();
+            return;
+        }
+        const type = document.getElementById('rp-type').value;
+        const venue = document.getElementById('rp-journal').value.trim();
+        const academicYear = document.getElementById('rp-academic-year').value.trim();
+        const entry = {
+            research_type: type,
+            title: title,
+            authors: document.getElementById('rp-authors').value.trim(),
+            academic_year: academicYear,
+            publication_year: document.getElementById('rp-year').value || null,
+            journal_name: (type !== 'conference') ? venue : '',
+            conference_name: (type === 'conference') ? venue : '',
+            issn: document.getElementById('rp-issn').value.trim(),
+            doi: document.getElementById('rp-doi').value.trim(),
+            url: document.getElementById('rp-url').value.trim(),
+            status: document.getElementById('rp-status').value,
+        };
+        researchList.push(entry);
+        renderResearchTable();
+        updateResearchJSON();
+        clearResearchForm();
+    }
+    function removeResearch(index) {
+        researchList.splice(index, 1);
+        renderResearchTable();
+        updateResearchJSON();
+    }
+    function renderResearchTable() {
+        const tbody = document.getElementById('research-tbody');
+        if (researchList.length === 0) {
+            tbody.innerHTML = `<tr id="no-research-row"><td colspan="11" class="text-center text-muted fst-italic py-3">No publications added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = researchList.map((r, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><span class="badge bg-info text-dark">${escapeHtml(r.research_type)}</span></td>
+                <td>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(r.authors || '—')}</td>
+                <td>${escapeHtml(r.academic_year || '—')}</td>
+                <td>${escapeHtml(r.publication_year || '—')}</td>
+                <td>${escapeHtml(r.journal_name || r.conference_name || '—')}</td>
+                <td>${escapeHtml(r.issn || '—')}</td>
+                <td><span class="badge bg-success">${escapeHtml(r.status || '—')}</span></td>
+                <td>${formatPublicationReferenceCell(r)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResearch(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+    function updateResearchJSON() {
+        document.getElementById('research_publications_json').value = JSON.stringify(researchList);
+    }
+    function clearResearchForm() {
+        document.getElementById('rp-title').value = '';
+        document.getElementById('rp-authors').value = '';
+        document.getElementById('rp-academic-year').value = '';
+        document.getElementById('rp-year').value = '';
+        document.getElementById('rp-journal').value = '';
+        document.getElementById('rp-issn').value = '';
+        document.getElementById('rp-doi').value = '';
+        document.getElementById('rp-url').value = '';
+        document.getElementById('rp-type').value = 'journal';
+        document.getElementById('rp-status').value = 'published';
+    }
+    // ============================================================
+    // B.TECH PROJECTS
+    // ============================================================
+    let projectList = [];
+    function addBTechProject() {
+        const title = document.getElementById('bp-title').value.trim();
+        const student = document.getElementById('bp-student').value.trim();
+        if (!title || !student) {
+            alert('Student name and project title are required.');
+            return;
+        }
+        const entry = {
+            ht_no: document.getElementById('bp-htno').value.trim(),
+            student_name: student,
+            batch: document.getElementById('bp-batch').value.trim(),
+            project_title: title,
+            approved: document.getElementById('bp-approved').value === 'true',
+            marks: document.getElementById('bp-marks').value || null,
+        };
+        projectList.push(entry);
+        renderProjectTable();
+        updateProjectJSON();
+        clearProjectForm();
+    }
+    function removeProject(index) {
+        projectList.splice(index, 1);
+        renderProjectTable();
+        updateProjectJSON();
+    }
+    function renderProjectTable() {
+        const tbody = document.getElementById('projects-tbody');
+        if (projectList.length === 0) {
+            tbody.innerHTML = `<tr id="no-projects-row"><td colspan="8" class="text-center text-muted fst-italic py-3">No projects added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = projectList.map((p, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><code>${p.ht_no || '—'}</code></td>
+                <td>${p.student_name}</td>
+                <td>${p.batch || '—'}</td>
+                <td>${p.project_title}</td>
+                <td><span class="badge ${p.approved ? 'bg-success' : 'bg-warning text-dark'}">${p.approved ? 'Yes' : 'No'}</span></td>
+                <td>${p.marks || '—'}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeProject(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+    function updateProjectJSON() {
+        document.getElementById('btech_projects_json').value = JSON.stringify(projectList);
+    }
+    function clearProjectForm() {
+        document.getElementById('bp-htno').value = '';
+        document.getElementById('bp-student').value = '';
+        document.getElementById('bp-batch').value = '';
+        document.getElementById('bp-title').value = '';
+        document.getElementById('bp-marks').value = '';
+        document.getElementById('bp-approved').value = 'true';
+    }
+    // ============================================================
+    // FDP / WORKSHOPS (WITH ACADEMIC YEAR)
+    // ============================================================
+    let fdpList = [];
+    function addFDP() {
+        const title = document.getElementById('fdp-title').value.trim();
+        const fromDate = document.getElementById('fdp-from').value;
+        const toDate = document.getElementById('fdp-to').value;
+        if (!title) {
+            alert('FDP/Workshop title is required.');
+            document.getElementById('fdp-title').focus();
+            return;
+        }
+        if (!fromDate) {
+            alert('From Date is required.');
+            document.getElementById('fdp-from').focus();
+            return;
+        }
+        if (!toDate) {
+            alert('To Date is required.');
+            document.getElementById('fdp-to').focus();
+            return;
+        }
+        const entry = {
+            fdp_type: document.getElementById('fdp-type').value,
+            title: title,
+            academic_year: document.getElementById('fdp-academic-year').value.trim(),
+            from_date: fromDate,
+            to_date: toDate,
+            organized_by: document.getElementById('fdp-organized').value.trim(),
+            place: document.getElementById('fdp-place').value.trim(),
+            mode: document.getElementById('fdp-mode').value,
+            level: document.getElementById('fdp-level').value,
+            role: document.getElementById('fdp-role').value,
+            sponsored_by: document.getElementById('fdp-sponsored').value.trim(),
+            remarks: document.getElementById('fdp-remarks').value.trim(),
+        };
+        fdpList.push(entry);
+        renderFDPTable();
+        updateFDPJSON();
+        clearFDPForm();
+    }
+    function removeFDP(index) {
+        fdpList.splice(index, 1);
+        renderFDPTable();
+        updateFDPJSON();
+    }
+    function renderFDPTable() {
+        const tbody = document.getElementById('fdp-tbody');
+        if (fdpList.length === 0) {
+            tbody.innerHTML = `<tr id="no-fdp-row"><td colspan="10" class="text-center text-muted fst-italic py-3">No FDP/Workshop entries added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = fdpList.map((f, i) => {
+            let typeClass = '';
+            if (f.fdp_type === 'fdp') typeClass = 'fdp-badge-fdp';
+            else if (f.fdp_type === 'workshop') typeClass = 'fdp-badge-workshop';
+            else if (f.fdp_type === 'seminar') typeClass = 'fdp-badge-seminar';
+            else if (f.fdp_type === 'conference') typeClass = 'fdp-badge-conference';
+            else typeClass = 'fdp-badge-training';
+            return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><span class="badge ${typeClass}">${f.fdp_type.toUpperCase()}</span></td>
+                <td>${f.title}</td>
+                <td>${f.academic_year || '—'}</td>
+                <td>${f.from_date}</td>
+                <td>${f.to_date}</td>
+                <td>${f.organized_by || '—'}</td>
+                <td>${f.place || '—'}</td>
+                <td>${f.role || '—'}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeFDP(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+    function updateFDPJSON() {
+        document.getElementById('fdp_entries_json').value = JSON.stringify(fdpList);
+    }
+    function clearFDPForm() {
+        document.getElementById('fdp-title').value = '';
+        document.getElementById('fdp-academic-year').value = '';
+        document.getElementById('fdp-from').value = '';
+        document.getElementById('fdp-to').value = '';
+        document.getElementById('fdp-organized').value = '';
+        document.getElementById('fdp-place').value = '';
+        document.getElementById('fdp-sponsored').value = '';
+        document.getElementById('fdp-remarks').value = '';
+        document.getElementById('fdp-type').value = 'fdp';
+        document.getElementById('fdp-mode').value = 'offline';
+        document.getElementById('fdp-level').value = 'national';
+        document.getElementById('fdp-role').value = 'participant';
+    }
+    // ============================================================
+    // RESULTS (WITH ACADEMIC YEAR AND CLASSES TAKEN)
+    // ============================================================
+    let resultsList = [];
+    function autoCalculatePercent() {
+        const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
+        const passed = parseInt(document.getElementById('rs-passed').value) || 0;
+        const pctField = document.getElementById('rs-percentage');
+        if (attempted > 0) {
+            const pct = ((passed / attempted) * 100).toFixed(2);
+            pctField.value = pct + '%';
+            if (pct >= 75) {
+                pctField.style.color = 'green';
+            } else if (pct >= 50) {
+                pctField.style.color = 'orange';
+            } else {
+                pctField.style.color = 'red';
+            }
+        } else {
+            pctField.value = '';
+            pctField.style.color = '';
+        }
+    }
+    function addResult() {
+        const subject = document.getElementById('rs-subject').value.trim();
+        const academicYear = document.getElementById('rs-academic-year').value.trim();
+        const classesTaken = parseInt(document.getElementById('rs-classes').value) || 0;
+        const attempted = parseInt(document.getElementById('rs-attempted').value) || 0;
+        const passed = parseInt(document.getElementById('rs-passed').value) || 0;
+        if (!subject) {
+            alert('Subject name is required.');
+            document.getElementById('rs-subject').focus();
+            return;
+        }
+        if (classesTaken < 0) {
+            alert('Classes Taken must be 0 or greater.');
+            document.getElementById('rs-classes').focus();
+            return;
+        }
+        if (attempted <= 0) {
+            alert('Students attempted must be greater than 0.');
+            document.getElementById('rs-attempted').focus();
+            return;
+        }
+        if (passed > attempted) {
+            alert('Students passed cannot exceed students attempted.');
+            document.getElementById('rs-passed').focus();
+            return;
+        }
+        const percentage = parseFloat(((passed / attempted) * 100).toFixed(2));
+        const entry = {
+            subject_name: subject,
+            subject_code: document.getElementById('rs-code').value.trim(),
+            academic_year: academicYear,
+            classes_taken: classesTaken,
+            students_attempted: attempted,
+            students_passed: passed,
+            percentage: percentage,
+        };
+        resultsList.push(entry);
+        renderResultsTable();
+        updateResultsJSON();
+        clearResultForm();
+    }
+    function removeResult(index) {
+        resultsList.splice(index, 1);
+        renderResultsTable();
+        updateResultsJSON();
+    }
+    function renderResultsTable() {
+        const tbody = document.getElementById('results-tbody');
+        if (resultsList.length === 0) {
+            tbody.innerHTML = `<tr id="no-results-row"><td colspan="9" class="text-center text-muted fst-italic py-3">No results added yet. Use the form below.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = resultsList.map((r, i) => {
+            const color = r.percentage >= 75 ? 'green' : r.percentage >= 50 ? 'orange' : 'red';
+            return `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${r.subject_name}</strong></td>
+                <td>${r.subject_code || '—'}</td>
+                <td>${r.academic_year || '—'}</td>
+                <td class="text-center">${r.classes_taken || 0}</td>
+                <td class="text-center">${r.students_attempted}</td>
+                <td class="text-center">${r.students_passed}</td>
+                <td class="text-center" style="color: ${color}; font-weight: bold;">${r.percentage}%</td>
+                <td class="text-center"><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeResult(${i})"><i class="fas fa-trash"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+    function updateResultsJSON() {
+        document.getElementById('results_json').value = JSON.stringify(resultsList);
+    }
+    function clearResultForm() {
+        document.getElementById('rs-subject').value = '';
+        document.getElementById('rs-code').value = '';
+        document.getElementById('rs-academic-year').value = '';
+        document.getElementById('rs-classes').value = '';
+        document.getElementById('rs-attempted').value = '';
+        document.getElementById('rs-passed').value = '';
+        document.getElementById('rs-percentage').value = '';
+    }
+    // ============================================================
+    // COLLEGE-WISE EXPERIENCE
+    // ============================================================
+    let collegeExperienceList = [];
+
+    function calculateCollegeExperience() {
+        const fromValue = document.getElementById('college-experience-from').value;
+        const toValue = document.getElementById('college-experience-to').value;
+        const durationField = document.getElementById('college-experience-duration');
+        if (!fromValue || !toValue) {
+            durationField.value = '';
+            return '';
+        }
+        const fromDate = new Date(`${fromValue}T00:00:00Z`);
+        const toDate = new Date(`${toValue}T00:00:00Z`);
+        if (toDate < fromDate) {
+            durationField.value = 'Invalid date range';
+            return '';
+        }
+        const totalDays = Math.floor((toDate - fromDate) / 86400000) + 1;
+        const years = Math.floor(totalDays / 365);
+        const months = Math.floor((totalDays % 365) / 30);
+        const days = (totalDays % 365) % 30;
+        const parts = [];
+        if (years) parts.push(`${years} year${years === 1 ? '' : 's'}`);
+        if (months) parts.push(`${months} month${months === 1 ? '' : 's'}`);
+        if (days || !parts.length) parts.push(`${days} day${days === 1 ? '' : 's'}`);
+        durationField.value = parts.join(', ');
+        return durationField.value;
+    }
+
+    function addCollegeExperience() {
+        const collegeName = document.getElementById('college-experience-name').value.trim();
+        const collegeAddress = document.getElementById('college-experience-address').value.trim();
+        const fromDate = document.getElementById('college-experience-from').value;
+        const toDate = document.getElementById('college-experience-to').value;
+        const experience = calculateCollegeExperience();
+        if (!collegeName || !collegeAddress || !fromDate || !toDate || !experience) {
+            alert('Enter the college name, college address, and a valid From Date and To Date.');
+            return;
+        }
+        collegeExperienceList.push({
+            college_name: collegeName,
+            college_address: collegeAddress,
+            from_date: fromDate,
+            to_date: toDate,
+            experience: experience,
+        });
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+        ['college-experience-name', 'college-experience-address', 'college-experience-from', 'college-experience-to', 'college-experience-duration'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+    }
+
+    function removeCollegeExperience(index) {
+        collegeExperienceList.splice(index, 1);
+        renderCollegeExperiences();
+        updateCollegeExperiencesJSON();
+    }
+
+    function renderCollegeExperiences() {
+        const tbody = document.getElementById('college-experience-tbody');
+        if (!collegeExperienceList.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted fst-italic py-3">No college experience added yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = collegeExperienceList.map((entry, index) => `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${escapeHtml(entry.college_name)}</td>
+                <td>${escapeHtml(entry.college_address)}</td>
+                <td>${escapeHtml(entry.from_date)}</td>
+                <td>${escapeHtml(entry.to_date)}</td>
+                <td>${escapeHtml(entry.experience)}</td>
+                <td><button type="button" class="btn btn-danger btn-sm py-0" onclick="removeCollegeExperience(${index})"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function updateCollegeExperiencesJSON() {
+        document.getElementById('college_experiences_json').value = JSON.stringify(collegeExperienceList);
+    }
+    // ============================================================
+    // TSTSABAS
+    // ============================================================
+    let tstsabasList = [];
+
+    function addTstsabasEntry() {
+        const input = document.getElementById('tstsabas-entry');
+        const value = input.value.trim();
+        if (!value) {
+            alert('Enter a TSTSABAS value before adding it.');
+            input.focus();
+            return;
+        }
+        tstsabasList.push(value);
+        input.value = '';
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+    }
+
+    function removeTstsabasEntry(index) {
+        tstsabasList.splice(index, 1);
+        renderTstsabasEntries();
+        updateTstsabasJSON();
+    }
+
+    function renderTstsabasEntries() {
+        const container = document.getElementById('tstsabas-list');
+        if (!tstsabasList.length) {
+            container.innerHTML = '<span class="text-muted small">No TSTSABAS entries added yet.</span>';
+            return;
+        }
+        container.innerHTML = tstsabasList.map((entry, index) => `
+            <div class="d-flex justify-content-between align-items-center border rounded p-2 mb-2">
+                <span>${escapeHtml(entry)}</span>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeTstsabasEntry(${index})"><i class="fas fa-trash"></i></button>
+            </div>
+        `).join('');
+    }
+
+    function updateTstsabasJSON() {
+        document.getElementById('tstsabas_entries_json').value = JSON.stringify(tstsabasList);
+    }
+    // ============================================================
+    // CLEAR ALL FORM DATA
+    // ============================================================
+    function clearAllForm() {
+        if (confirm('Are you sure you want to clear all form data? This action cannot be undone.')) {
+            const form = document.getElementById('addFacultyForm');
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                if (input.type !== 'submit' && input.type !== 'button' && input.type !== 'reset') {
+                    if (input.type === 'file') {
+                        input.value = '';
+                    } else if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                }
+            });
+            researchList = [];
+            projectList = [];
+            fdpList = [];
+            resultsList = [];
+            collegeExperienceList = [];
+            tstsabasList = [];
+            researchProofCounter = 0;
+            fdpCertCounter = 0;
+            otherDocCounter = 0;
+            const researchProofsContainer = document.getElementById('researchProofsContainer');
+            const fdpCertContainer = document.getElementById('fdpCertificatesContainer');
+            const otherContainer = document.getElementById('otherDocumentsContainer');
+            if (researchProofsContainer) researchProofsContainer.innerHTML = '';
+            if (fdpCertContainer) fdpCertContainer.innerHTML = '';
+            if (otherContainer) otherContainer.innerHTML = '';
+            renderResearchTable();
+            renderProjectTable();
+            renderFDPTable();
+            renderResultsTable();
+            renderCollegeExperiences();
+            renderTstsabasEntries();
+            updateResearchJSON();
+            updateProjectJSON();
+            updateFDPJSON();
+            updateResultsJSON();
+            updateCollegeExperiencesJSON();
+            updateTstsabasJSON();
+            updateResearchProofsData();
+            updateFDPCertificatesData();
+            updateOtherDocumentsData();
+            alert('All form data has been cleared.');
+        }
+    }
+    // ============================================================
+    // INITIALIZE ADD BUTTONS
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        const addResearchBtn = document.getElementById('addResearchProofBtn');
+        const addFDPCertBtn = document.getElementById('addFDPCertificateBtn');
+        const addOtherBtn = document.getElementById('addOtherDocumentBtn');
+        const phdStatus = document.getElementById('phd-degree');
+        const addMembershipBtn = document.getElementById('addMembershipBtn');
+        const experienceFrom = document.getElementById('college-experience-from');
+        const experienceTo = document.getElementById('college-experience-to');
+        if (addResearchBtn) addResearchBtn.addEventListener('click', addResearchProof);
+        if (addFDPCertBtn) addFDPCertBtn.addEventListener('click', addFDPCertificate);
+        if (addOtherBtn) addOtherBtn.addEventListener('click', addOtherDocument);
+        if (addMembershipBtn) addMembershipBtn.addEventListener('click', updateMembershipPreview);
+        if (experienceFrom) experienceFrom.addEventListener('change', calculateCollegeExperience);
+        if (experienceTo) experienceTo.addEventListener('change', calculateCollegeExperience);
+        document.querySelectorAll('.ratified-radio').forEach(function(radio) {
+            radio.addEventListener('change', toggleScmDocumentInput);
+        });
+        if (phdStatus) {
+            phdStatus.addEventListener('change', togglePhdTitleField);
+            togglePhdTitleField();
+        }
+        toggleScmDocumentInput();
+        renderTstsabasEntries();
+    });
+    // ============================================================
+    // PHOTO PREVIEW FUNCTION
+    // ============================================================
+    function previewPhoto(input) {
+        const previewDiv = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('photoPreviewImg');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewImg.style.display = 'block';
+                previewDiv.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            previewImg.style.display = 'none';
+            previewDiv.style.display = 'none';
+        }
+    }
+    // ============================================================
+    // FORM SUBMISSION
+    // ============================================================
+    document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
+        const jntuhInput = document.querySelector('input[name="jntuh_id"]');
+        if (jntuhInput && !jntuhInput.value.trim()) {
+            alert('Please fill the JNTUH ID before saving faculty registration.');
+            jntuhInput.focus();
+            e.preventDefault();
+            return;
+        }
+
+        const requiredFields = document.querySelectorAll('[required]');
+        let isValid = true;
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+                const tabPane = field.closest('.tab-pane');
+                if (tabPane) {
+                    const tabId = tabPane.getAttribute('id');
+                    const tabButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
+                    if (tabButton) {
+                        tabButton.classList.add('text-danger');
+                    }
+                }
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        if (!isValid) {
+            alert('Please fill all required fields (marked with *). Required tabs are highlighted in red.');
+            e.preventDefault();
+            return;
+        }
+        updateResearchProofsData();
+        updateFDPCertificatesData();
+        updateOtherDocumentsData();
+        updateCollegeExperiencesJSON();
+        updateTstsabasJSON();
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,536 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Add New Faculty | Engineering College{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        padding: 20px;
+    }
+    .form-section h4 {
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        color: #007bff;
+    }
+    .required-field:after {
+        content: "*";
+        color: red;
+        margin-left: 5px;
+    }
+    .form-label {
+        font-weight: 500;
+    }
+    .help-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .file-input-wrapper {
+        position: relative;
+    }
+    .file-input-wrapper input[type="file"] {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        width: 100%;
+    }
+    .preview-image {
+        max-width: 150px;
+        max-height: 150px;
+        margin-top: 10px;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Add New Faculty
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="addFacultyForm">
+                        {% csrf_token %}
+
+                        <!-- Personal Information -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-user me-2"></i>Personal Information</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Staff Name</label>
+                                    <input type="text" name="staff_name" class="form-control" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Employee Code</label>
+                                    <input type="text" name="employee_code" class="form-control" required>
+                                    <div class="help-text">Unique employee identifier</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Photo</label>
+                                    <input type="file" name="photo" class="form-control" accept="image/*">
+                                    <div class="help-text">Upload faculty photo (optional)</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Father's Name</label>
+                                    <input type="text" name="father_name" class="form-control" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Mother's Name</label>
+                                    <input type="text" name="mother_name" class="form-control" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" name="dob" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Gender</label>
+                                    <select name="gender" class="form-control" required>
+                                        <option value="">Select Gender</option>
+                                        {% for gender in genders %}
+                                        <option value="{{ gender }}">{{ gender }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">State</label>
+                                    <input type="text" name="state" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Caste</label>
+                                    <select name="caste" class="form-control">
+                                        <option value="">Select Caste</option>
+                                        {% for caste in caste_list %}
+                                        <option value="{{ caste }}">{{ caste }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Sub Caste</label>
+                                    <input type="text" name="sub_caste" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Nationality</label>
+                                    <input type="text" name="nationality" class="form-control" value="Indian">
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">Address</label>
+                                    <textarea name="address" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-phone me-2"></i>Contact Information</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Mobile Number</label>
+                                    <input type="tel" name="mobile" class="form-control" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Phone (Landline)</label>
+                                    <input type="tel" name="phone" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Email</label>
+                                    <input type="email" name="email" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-briefcase me-2"></i>Professional Information</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Department</label>
+                                    <select name="department" class="form-control" required>
+                                        <option value="">Select Department</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept }}">{{ dept }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">Designation</label>
+                                    <select name="designation" class="form-control" required>
+                                        <option value="">Select Designation</option>
+                                        {% for desig in designations %}
+                                        <option value="{{ desig }}">{{ desig }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Joining Date</label>
+                                    <input type="date" name="joining_date" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label required-field">JNTUH ID</label>
+                                    <input type="text" name="jntuh_id" class="form-control" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">AICTE ID</label>
+                                    <input type="text" name="aicte_id" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">PAN Number</label>
+                                    <input type="text" name="pan" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Aadhar Number</label>
+                                    <input type="text" name="aadhar" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">APAAR ID</label>
+                                    <input type="text" name="apaar_id" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">ORCID ID</label>
+                                    <input type="text" name="orcid_id" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education - SSC -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-graduation-cap me-2"></i>SSC / 10th Education</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                     <label class="form-label">SSC Year of Passing</label>
+                                     <input type="text" name="ssc_year" class="form-control" min="1990" max="2025" pattern="[0-9]*">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                     <label class="form-label">SSC Percentage</label>
+                                     <input type="text" name="ssc_percent" class="form-control" step="0.01" min="0" max="100" pattern="[0-9]*(\.[0-9]+)?">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">School Name</label>
+                                    <input type="text" name="ssc_school" class="form-control">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">SSC Certificate</label>
+                                    <input type="file" name="ssc_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education - Intermediate -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-graduation-cap me-2"></i>Intermediate / 12th Education</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                     <label class="form-label">Intermediate Year</label>
+                                     <input type="text" name="inter_year" class="form-control" min="1990" max="2025" pattern="[0-9]*">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                     <label class="form-label">Intermediate Percentage</label>
+                                     <input type="text" name="inter_percent" class="form-control" step="0.01" min="0" max="100" pattern="[0-9]*(\.[0-9]+)?">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">College Name</label>
+                                    <input type="text" name="inter_college" class="form-control">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Intermediate Certificate</label>
+                                    <input type="file" name="inter_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education - UG -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-graduation-cap me-2"></i>Undergraduate Education</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">UG Degree</label>
+                                    <input type="text" name="ug_degree" class="form-control" placeholder="e.g., B.Tech, B.E., B.Sc">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">UG Year of Passing</label>
+                                    <input type="number" name="ug_year" class="form-control" min="1990" max="2025">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">UG Percentage/CGPA</label>
+                                    <input type="text" name="ug_percentage" class="form-control" placeholder="e.g., 75% or 8.5 CGPA">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">College Name</label>
+                                    <input type="text" name="ug_college" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Specialization</label>
+                                    <input type="text" name="ug_spec" class="form-control" placeholder="e.g., Computer Science">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">UG Certificate</label>
+                                    <input type="file" name="ug_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education - PG -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-graduation-cap me-2"></i>Postgraduate Education</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">PG Degree</label>
+                                    <input type="text" name="pg_degree" class="form-control" placeholder="e.g., M.Tech, M.E., M.Sc">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">PG Year of Passing</label>
+                                    <input type="number" name="pg_year" class="form-control" min="1990" max="2025">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">PG Percentage/CGPA</label>
+                                    <input type="text" name="pg_percentage" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">College Name</label>
+                                    <input type="text" name="pg_college" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Specialization</label>
+                                    <input type="text" name="pg_spec" class="form-control">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">PG Certificate</label>
+                                    <input type="file" name="pg_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education - PhD -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-graduation-cap me-2"></i>Doctoral Education (PhD)</h4>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">PhD Status</label>
+                                    <select name="phd_degree" class="form-control">
+                                        <option value="">Select Status</option>
+                                        {% for qual in qualifications %}
+                                        <option value="{{ qual }}">{{ qual }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">PhD Year</label>
+                                    <input type="number" name="phd_year" class="form-control" min="1990" max="2025">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">University Name</label>
+                                    <input type="text" name="phd_university" class="form-control">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Specialization</label>
+                                    <input type="text" name="phd_spec" class="form-control">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">PhD Certificate</label>
+                                    <input type="file" name="phd_certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Documents -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-file-alt me-2"></i>Important Documents</h4>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Aadhar Card</label>
+                                    <input type="file" name="aadhar_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">PAN Card</label>
+                                    <input type="file" name="pan_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">APAAR Document</label>
+                                    <input type="file" name="apaar_file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">SCM Document</label>
+                                    <input type="file" name="scm_file" id="scm-file-input" class="form-control" accept=".pdf,.jpg,.jpeg,.png" disabled>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">JNTUH Bio-Data</label>
+                                    <input type="file" name="jntuh_biodata" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="form-section">
+                            <h4><i class="fas fa-info-circle me-2"></i>Additional Information</h4>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Subjects Dealt</label>
+                                    <textarea name="subjects_dealt" class="form-control" rows="3" placeholder="List subjects taught, separated by commas"></textarea>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">SCM (Service Cum Merit)</label>
+                                    <textarea name="scm" class="form-control" rows="3" placeholder="Any SCM details"></textarea>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">About Yourself</label>
+                                    <textarea name="about_yourself" class="form-control" rows="4" placeholder="Brief introduction, achievements, interests"></textarea>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Academic Year</label>
+                                    <input type="text" name="membership_academic_year" id="membership-academic-year" class="form-control" placeholder="e.g., 2025-26">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Membership In</label>
+                                    <input type="text" name="membership_in" id="membership-in" class="form-control" placeholder="e.g., CSI, ISTE, IEEE">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Membership ID</label>
+                                    <input type="text" name="membership_id" id="membership-id" class="form-control" placeholder="Membership ID">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Membership Proof</label>
+                                    <input type="file" name="membership_proof" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                    <div class="form-text">Upload membership proof document.</div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="addMembershipBtn"><i class="fas fa-plus me-1"></i>Add Membership</button>
+                                    <div class="form-text mt-2" id="membershipPreview">No membership added yet.</div>
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label d-block">Are you ratified?</label>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input ratified-radio" type="radio" name="is_ratified" id="is-ratified-yes" value="yes">
+                                        <label class="form-check-label" for="is-ratified-yes">Yes</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input ratified-radio" type="radio" name="is_ratified" id="is-ratified-no" value="no">
+                                        <label class="form-check-label" for="is-ratified-no">No</label>
+                                    </div>
+                                    <div class="form-text mt-2">SCM Document upload is enabled only when ratified is Yes.</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Experience at Institution</label>
+                                    <input type="text" name="exp_anurag" class="form-control" placeholder="e.g., 5 years">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Experience Elsewhere</label>
+                                    <input type="text" name="exp_other" class="form-control" placeholder="e.g., 3 years">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Results</label>
+                                    <textarea name="results" class="form-control" rows="2" placeholder="Any notable results"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4><i class="fas fa-lock me-2"></i>PDF PASSWORD</h4>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">PDF PASSWORD</label>
+                                    <input type="password" name="pdf_password" class="form-control" autocomplete="new-password" placeholder="Password required to open mailed PDF">
+                                    <div class="form-text">The generated faculty profile PDF will open only with this password.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'dashboard:faculty_list' %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="fas fa-save me-2"></i>Save Faculty
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('addFacultyForm').addEventListener('submit', function(e) {
+    const jntuhInput = document.querySelector('input[name="jntuh_id"]');
+    if (jntuhInput && !jntuhInput.value.trim()) {
+        alert('Please fill the JNTUH ID before saving faculty registration.');
+        jntuhInput.focus();
+        e.preventDefault();
+        return;
+    }
+
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+    // Form will submit normally
+});
+
+function toggleScmDocumentInput() {
+    const scmInput = document.getElementById('scm-file-input');
+    const ratifiedYes = document.getElementById('is-ratified-yes');
+    if (!scmInput || !ratifiedYes) return;
+    const enabled = ratifiedYes.checked;
+    scmInput.disabled = !enabled;
+    if (!enabled) {
+        scmInput.value = '';
+    }
+}
+
+function updateMembershipPreview() {
+    const academicYear = document.getElementById('membership-academic-year');
+    const membershipIn = document.getElementById('membership-in');
+    const membershipId = document.getElementById('membership-id');
+    const preview = document.getElementById('membershipPreview');
+    if (!academicYear || !membershipIn || !membershipId || !preview) return;
+    const values = [academicYear.value, membershipIn.value, membershipId.value]
+        .map(value => value.trim())
+        .filter(Boolean);
+    preview.textContent = values.length ? values.join(' | ') : 'No membership added yet.';
+}
+
+document.querySelectorAll('.ratified-radio').forEach(function(radio) {
+    radio.addEventListener('change', toggleScmDocumentInput);
+});
+const addMembershipBtn = document.getElementById('addMembershipBtn');
+if (addMembershipBtn) {
+    addMembershipBtn.addEventListener('click', updateMembershipPreview);
+}
+toggleScmDocumentInput();
+
+// Photo preview
+document.querySelector('input[name="photo"]').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            // Remove existing preview
+            const existingPreview = document.querySelector('.preview-image');
+            if (existingPreview) existingPreview.remove();
+
+            // Create preview
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.className = 'preview-image';
+            img.style.maxWidth = '150px';
+            img.style.maxHeight = '150px';
+            img.style.marginTop = '10px';
+            img.style.borderRadius = '5px';
+            e.target.parentNode.appendChild(img);
+        }
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Home - {{ college_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="welcome-banner text-center py-5 mb-4" style="
+                background: linear-gradient(135deg, rgba(0, 80, 0, 0.8), rgba(0, 40, 0, 0.9));
+                border: 1px solid #00aa00;
+                border-radius: 12px;
+            ">
+                <h1 style="color: #00ff00; margin-bottom: 20px;">
+                    <i class="fas fa-university me-2"></i>Welcome to {{ college_name }}
+                </h1>
+                <h3 style="color: #90ee90; margin-bottom: 30px;">{{ department_name }} Department</h3>
+                <p class="lead" style="color: #aaffaa;">
+                    Empowering students with quality education and cutting-edge technology
+                </p>
+
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="stats-number">8</div>
+                        <div class="stats-label">Faculty Members</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-number">240</div>
+                        <div class="stats-label">Students</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-number">15</div>
+                        <div class="stats-label">Courses</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-number">6</div>
+                        <div class="stats-label">Labs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h3 class="card-title">
+                    <i class="fas fa-bullhorn me-2"></i>Announcements
+                </h3>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item bg-transparent border-secondary text-light">
+                        <i class="fas fa-calendar-check text-success me-2"></i>
+                        Semester exams schedule released
+                    </div>
+                    <div class="list-group-item bg-transparent border-secondary text-light">
+                        <i class="fas fa-chalkboard-teacher text-info me-2"></i>
+                        Faculty development program next week
+                    </div>
+                    <div class="list-group-item bg-transparent border-secondary text-light">
+                        <i class="fas fa-graduation-cap text-warning me-2"></i>
+                        Campus recruitment drive on Jan 30th
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h3 class="card-title">
+                    <i class="fas fa-clock me-2"></i>Quick Links
+                </h3>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'dashboard:dashboard' %}" class="btn btn-outline-success">
+                        <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{% url 'dashboard:faculty' %}" class="btn btn-outline-success">
+                        <i class="fas fa-users me-2"></i>Faculty Directory
+                    </a>
+                    <a href="{% url 'dashboard:students' %}" class="btn btn-outline-success">
+                        <i class="fas fa-user-graduate me-2"></i>Student Portal
+                    </a>
+                    <a href="{% url 'dashboard:library' %}" class="btn btn-outline-success">
+                        <i class="fas fa-book me-2"></i>Library Resources
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

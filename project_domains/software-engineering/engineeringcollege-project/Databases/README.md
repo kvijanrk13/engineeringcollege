@@ -1,12 +1,12 @@
-# Databases
+# EngineeringCollege DBMS Notes
 
-This folder documents the database layer for the EngineeringCollege Software Engineering project.
+This folder documents the database layer for the EngineeringCollege Department Management System. It covers only the department-management database objects used for faculty, student, certificate, research, FDP, subject, project-guidance, profile, and audit-log workflows.
 
-## Development Database
+## Database Configuration
 
-The project can run with PostgreSQL through `DATABASE_URL`. For student local execution, configure a local database URL in `.env`.
+The application is a Django project, so database tables are created from Django models through migrations. PostgreSQL is recommended for deployment, while SQLite may be used for isolated local development or demonstrations.
 
-Example `.env` shape:
+Example local `.env` shape:
 
 ```text
 SECRET_KEY=local-development-key
@@ -22,12 +22,9 @@ cd "Project Source"
 .\.venv\Scripts\python.exe manage.py migrate
 ```
 
-## What to Store Here
+## Included Documentation
 
-- schema notes
-- migration screenshots
-- ER diagrams
-- backup/restore notes
-- sample SQL queries
+- `SCHEMA_NOTES.md` - DBMS schema description and sample queries
+- UML ER diagrams are available in `../UML Diagrams/`
 
-Do not store production credentials, private database URLs, or exported personal data.
+Do not store production credentials, private database URLs, or exported personal data in this folder.

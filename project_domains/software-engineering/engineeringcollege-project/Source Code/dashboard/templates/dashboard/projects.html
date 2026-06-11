@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects</title>
+    <style>
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
+        body {
+            margin: 0;
+            background: #F7F9FC;
+            color: #172033;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .domain-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            width: min(100%, 760px);
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .domain-tile {
+            appearance: none;
+            background: #FFFFFF;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            color: #172033;
+            min-height: 146px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 1.25;
+            text-align: center;
+            cursor: pointer;
+        }
+        .domain-tile:hover,
+        .domain-tile:focus-visible,
+        .domain-tile:active {
+            background: #EAF1F8;
+            border-color: #1456A0;
+        }
+        .domain-icon {
+            display: block;
+            flex: 0 0 auto;
+            width: 48px;
+            height: 48px;
+        }
+        .projects-logo {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            padding: 8px 0;
+        }
+        .projects-logo img {
+            display: block;
+            width: min(52vw, 240px);
+            height: auto;
+            border-radius: 50%;
+        }
+        .welcome-message {
+            grid-column: 1 / -1;
+            margin: 0 0 8px;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.3;
+            text-align: center;
+        }
+        .domain-dialog[hidden] { display: none; }
+        .domain-dialog {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.62);
+        }
+        .domain-dialog-panel {
+            width: min(100%, 620px);
+            max-height: min(82vh, 720px);
+            overflow-y: auto;
+            background: #FFFFFF;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.24);
+        }
+        .domain-dialog h2 {
+            margin: 0 0 14px;
+            font-size: 22px;
+            line-height: 1.25;
+        }
+        .domain-dialog h3 {
+            margin: 20px 0 8px;
+            font-size: 16px;
+        }
+        .domain-dialog p {
+            margin: 0;
+            color: #3D4A5C;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .dialog-enter {
+            display: block;
+            width: fit-content;
+            margin: 22px 0 0 auto;
+            padding: 10px 18px;
+            border: 0;
+            border-radius: 6px;
+            background: #1456A0;
+            color: #FFFFFF;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .policy-footer {
+            width: min(100%, 760px);
+            margin: 8px auto 0;
+            padding: 20px;
+            color: #3D4A5C;
+            font-size: 13px;
+            line-height: 1.7;
+            text-align: center;
+        }
+        .policy-footer a {
+            display: inline-block;
+            margin: 2px 7px;
+            color: #1456A0;
+        }
+        @media (min-width: 761px) {
+            .domain-grid { padding-top: 32px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="domain-grid" aria-label="Project domains">
+        <div class="projects-logo">
+            <img src="{% static 'images/ECPRJ2026.jpeg' %}" alt="Engineering College Projects">
+        </div>
+        <p class="welcome-message">WELCOME TO ENGINEERING COLLEGE PROJECTS</p>
+
+        <button class="domain-tile" type="button" data-domain="ai">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#0E7490" d="M13,12h22a5,5 0,0 1,5 5v14a5,5 0,0 1,-5 5H13a5,5 0,0 1,-5 -5V17a5,5 0,0 1,5 -5z"/>
+                <path fill="#F2B705" d="M16,20h4l5,12h-4l-1,-3h-5l-1,3h-4zM16,26h3l-1.5,-4zM29,20h4v12h-4z"/>
+            </svg>
+            <span>AI Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="machine-learning">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#2563EB" d="M10,26a7,7 0,1 1,7,-7a7,7 0,0 1,-7 7zM31,25a7,7 0,1 1,7,-7a7,7 0,0 1,-7 7zM22,42a7,7 0,1 1,7,-7a7,7 0,0 1,-7 7z"/>
+                <path fill="none" stroke="#F2B705" stroke-width="4" d="M15,22L22,31M27,30L31,24M17,18h7"/>
+            </svg>
+            <span>Machine Learning Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="software-engineering">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#4338CA" d="M7,10h34a3,3 0,0 1,3 3v22a3,3 0,0 1,-3 3H7a3,3 0,0 1,-3 -3V13a3,3 0,0 1,3 -3z"/>
+                <path fill="#F2B705" d="M15,18l-6,6l6,6l3,-3l-3,-3l3,-3zM33,18l6,6l-6,6l-3,-3l3,-3l-3,-3zM23,31l-4,-1l6,-13l4,1z"/>
+            </svg>
+            <span>Software Engineering Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="security">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#B91C1C" d="M24,5l16,7v10c0,10 -6,18 -16,22C14,40 8,32 8,22V12z"/>
+                <path fill="#F2B705" d="M18,23h12v9H18zM20,21a4,4 0,0 1,8 0v2h-3v-2a1,1 0,0 0,-2 0v2h-3z"/>
+            </svg>
+            <span>Security Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="deep-learning">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#7C3AED" d="M24,6a14,14 0,0 1,14 14v9a9,9 0,0 1,-9 9h-2v5h-6v-5h-2a9,9 0,0 1,-9 -9v-9A14,14 0,0 1,24 6z"/>
+                <path fill="none" stroke="#F2B705" stroke-width="3" d="M16,23h16M18,17h12M18,29h12M24,14v18"/>
+            </svg>
+            <span>Deep Learning Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="data-science">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#047857" d="M8,11c0,-5 32,-5 32,0v26c0,5 -32,5 -32,0z"/>
+                <path fill="#F2B705" d="M13,20h5v14h-5zM21,15h5v19h-5zM29,24h5v10h-5z"/>
+            </svg>
+            <span>Data Science Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="data-mining">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#0F766E" d="M9,10h30v8H9zM9,20h30v8H9zM9,30h30v8H9z"/>
+                <path fill="#F2B705" d="M15,14h10v3H15zM15,24h17v3H15zM15,34h13v3H15z"/>
+                <circle fill="#172033" cx="35" cy="35" r="5"/>
+                <path fill="none" stroke="#172033" stroke-width="3" d="M38,38l5,5"/>
+            </svg>
+            <span>Data Mining Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="cloud-computing">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#0369A1" d="M17,36h19a8,8 0,0 0,1 -16a12,12 0,0 0,-23 -3a10,10 0,0 0,3 19z"/>
+                <path fill="#F2B705" d="M22,23h4v8h-4zM17,27h14v4H17z"/>
+            </svg>
+            <span>Cloud Computing Domain</span>
+        </button>
+
+        <button class="domain-tile" type="button" data-domain="iot-edge">
+            <svg class="domain-icon" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#B45309" d="M14,14h20a4,4 0,0 1,4 4v12a4,4 0,0 1,-4 4H14a4,4 0,0 1,-4 -4V18a4,4 0,0 1,4 -4z"/>
+                <path fill="#F2B705" d="M18,21h12v6H18zM12,9h4v5h-4zM22,9h4v5h-4zM32,9h4v5h-4zM12,34h4v5h-4zM22,34h4v5h-4zM32,34h4v5h-4z"/>
+            </svg>
+            <span>IoT and Edge Computing Domain</span>
+        </button>
+    </main>
+
+    <footer class="policy-footer" aria-label="Policies">
+        <a href="{% url 'dashboard:project_policy_pdf' 'terms-and-conditions' %}" target="_blank">Terms and Conditions</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'privacy-policy' %}" target="_blank">Privacy Policy</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'refund-cancellation-policy' %}" target="_blank">Refund and Cancellation Policy</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'return-policy' %}" target="_blank">Return Policy</a>
+        <a href="{% url 'dashboard:project_policy_pdf' 'shipping-policy' %}" target="_blank">Shipping Policy</a>
+    </footer>
+
+    <div class="domain-dialog" id="domain-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" hidden>
+        <section class="domain-dialog-panel">
+            <h2 id="dialog-title"></h2>
+            <p id="dialog-description"></p>
+            <h3>History</h3>
+            <p id="dialog-history"></p>
+            <a class="dialog-enter" id="dialog-enter" href="#">Click to Enter</a>
+        </section>
+    </div>
+
+    <script>
+        const domains = {
+            "ai": {
+                title: "Artificial Intelligence",
+                description: "Artificial Intelligence is the field of building computer systems that can perform tasks normally associated with human intelligence, including reasoning, planning, language understanding, perception, and decision-making. AI projects include chatbots, recommendation systems, expert systems, computer vision, and intelligent automation.",
+                history: "The modern field began in the 1950s, with the term Artificial Intelligence introduced at the 1956 Dartmouth workshop. Early rule-based systems were followed by expert systems, statistical learning, and today's large-scale neural networks and generative AI."
+            },
+            "machine-learning": {
+                title: "Machine Learning",
+                description: "Machine Learning is a branch of AI in which systems learn patterns from data instead of relying only on explicitly programmed rules. It is used for prediction, classification, recommendations, fraud detection, forecasting, and many other data-driven applications.",
+                history: "Machine learning grew from early work on pattern recognition and neural networks in the 1950s. Progress accelerated with larger datasets, improved algorithms, and powerful computers, making it a major practical technology from the 1990s onward."
+            },
+            "software-engineering": {
+                title: "Software Engineering",
+                description: "Software Engineering applies systematic engineering methods to the design, development, testing, deployment, and maintenance of software. It helps teams create reliable, secure, maintainable applications while managing complexity, cost, quality, and changing requirements.",
+                history: "The term became prominent during the 1968 NATO Software Engineering Conference, which addressed the growing software crisis. The field later developed structured methods, object-oriented design, agile practices, DevOps, and modern cloud-native development."
+            },
+            "security": {
+                title: "Cybersecurity",
+                description: "Cybersecurity protects computers, networks, applications, and data from unauthorized access, disruption, damage, and theft. Projects may focus on secure authentication, encryption, vulnerability assessment, threat detection, digital forensics, or privacy.",
+                history: "Computer security developed as networked systems expanded in the 1970s and 1980s. The growth of the internet made cybersecurity essential, leading to modern practices such as zero-trust architecture, ethical hacking, security operations, and continuous monitoring."
+            },
+            "deep-learning": {
+                title: "Deep Learning",
+                description: "Deep Learning is a specialized form of machine learning that uses neural networks with many layers to learn complex representations from large amounts of data. It powers speech recognition, image analysis, language models, autonomous systems, and generative AI.",
+                history: "Its foundations trace back to early artificial neural networks in the 1940s and 1950s. Deep learning achieved major breakthroughs after 2006 and especially in the 2010s, when improved training methods, GPUs, and large datasets became available."
+            },
+            "data-science": {
+                title: "Data Science",
+                description: "Data Science combines statistics, programming, mathematics, and domain knowledge to collect, clean, analyze, visualize, and interpret data. Its goal is to discover useful insights and support better decisions through evidence and predictive models.",
+                history: "The field emerged from statistics, scientific computing, and database research. The term gained broad popularity in the 2000s as organizations began working with increasingly large and diverse datasets, creating demand for data-focused tools and professionals."
+            },
+            "data-mining": {
+                title: "Data Mining",
+                description: "Data Mining is the process of discovering useful patterns, relationships, trends, and anomalies from large datasets. It uses methods from databases, statistics, machine learning, and visualization to support tasks such as classification, clustering, association rule mining, forecasting, and fraud or risk detection.",
+                history: "Data mining grew from database systems, statistics, and artificial intelligence research in the late 20th century. It became widely recognized in the 1990s as data warehouses, business intelligence systems, and knowledge discovery in databases made large-scale pattern discovery practical for organizations."
+            },
+            "cloud-computing": {
+                title: "Cloud Computing",
+                description: "Cloud Computing delivers servers, storage, databases, networking, software, and computing power over the internet. It allows applications to scale on demand, reduces the need for local infrastructure, and supports rapid deployment and global access.",
+                history: "Its concepts grew from time-sharing and distributed computing. Modern cloud services took shape in the 2000s with widely available infrastructure platforms, followed by platform services, software services, containers, serverless computing, and multi-cloud systems."
+            },
+            "iot-edge": {
+                title: "IoT and Edge Computing",
+                description: "The Internet of Things connects physical devices, sensors, machines, and everyday objects so they can collect and exchange data. Edge Computing processes that data close to where it is created, reducing delay, bandwidth use, and dependence on distant cloud servers.",
+                history: "Connected-device ideas developed through embedded systems and early internet research. The term Internet of Things appeared in 1999, and the field expanded with affordable sensors, wireless networks, cloud platforms, and edge processors during the 2010s."
+            }
+        };
+
+        const dialog = document.getElementById("domain-dialog");
+        const dialogTitle = document.getElementById("dialog-title");
+        const dialogDescription = document.getElementById("dialog-description");
+        const dialogHistory = document.getElementById("dialog-history");
+        const enterButton = document.getElementById("dialog-enter");
+        let activeTile = null;
+
+        document.querySelectorAll(".domain-tile").forEach((tile) => {
+            tile.addEventListener("click", () => {
+                const domain = domains[tile.dataset.domain];
+                activeTile = tile;
+                dialogTitle.textContent = domain.title;
+                dialogDescription.textContent = domain.description;
+                dialogHistory.textContent = domain.history;
+                enterButton.href = `/projects/${tile.dataset.domain}/`;
+                dialog.hidden = false;
+                enterButton.focus();
+            });
+        });
+
+        function closeDialog() {
+            dialog.hidden = true;
+            if (activeTile) activeTile.focus();
+        }
+
+        dialog.addEventListener("click", (event) => {
+            if (event.target === dialog) closeDialog();
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !dialog.hidden) closeDialog();
+        });
+    </script>
+    {% include "dashboard/partials/project_support_chatbot.html" %}
+</body>
+</html>

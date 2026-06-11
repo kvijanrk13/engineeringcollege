@@ -1,0 +1,518 @@
+{% extends 'dashboard/base.html' %}
+{% load static dashboard_filters %}
+
+{% block title %}Faculty Management | Engineering College{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/faculty-experience.css' %}">
+<style>
+    .faculty-sidebar .list-group-item { cursor: pointer; transition: all 0.3s ease; }
+    .faculty-sidebar .list-group-item:hover { background-color: #f8f9fa; transform: translateX(5px); }
+    .faculty-sidebar .list-group-item.active { background-color: #0d6efd; border-color: #0d6efd; color: white; }
+    .nav-tabs .nav-link { color: #495057; font-weight: 500; }
+    .nav-tabs .nav-link.active { color: #0d6efd; font-weight: 600; border-bottom: 3px solid #0d6efd; }
+    .publication-card, .fdp-card, .project-card {
+        background: #f8f9fa; border-left: 4px solid #0d6efd; margin-bottom: 15px;
+        padding: 15px; border-radius: 8px; transition: all 0.3s ease;
+    }
+    .publication-card:hover, .fdp-card:hover, .project-card:hover {
+        background: #e9ecef; transform: translateX(5px); box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .result-card {
+        background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #0d6efd;
+    }
+    .progress { height: 10px; border-radius: 5px; }
+    .stats-number { font-size: 2.2rem; font-weight: bold; }
+    .faculty-avatar {
+        width: 100px; height: 100px; object-fit: cover; border-radius: 50%;
+        border: 3px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .info-label { font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-value { font-weight: 600; color: #2c3e50; }
+    .empty-state { text-align: center; padding: 60px 20px; color: #6c757d; }
+    .empty-state i { font-size: 48px; margin-bottom: 20px; opacity: 0.5; }
+    .tab-pane { min-height: 400px; }
+    .btn-group .btn { margin-right: 5px; }
+    .faculty-dashboard-page .card-body {
+        padding: 1.5rem;
+    }
+    .faculty-dashboard-page .faculty-sidebar .card-body {
+        padding: 0 !important;
+    }
+    .faculty-dashboard-page .faculty-sidebar .list-group-item {
+        border: 0;
+        border-bottom: 1px solid rgba(111, 143, 169, 0.12);
+        background: transparent;
+    }
+    .faculty-dashboard-page .faculty-sidebar .list-group-item:last-child {
+        border-bottom: 0;
+    }
+    .faculty-dashboard-page .table-sm th {
+        color: #163149;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 faculty-experience-page faculty-dashboard-page">
+    <div class="faculty-shell">
+    <section class="faculty-hero">
+        <div>
+            <span class="faculty-kicker">
+                <i class="fas fa-chalkboard-teacher"></i>
+                Faculty Workspace
+            </span>
+            <h1 class="faculty-hero-title">Faculty management with a richer profile experience</h1>
+            <p class="faculty-hero-copy">
+                Browse the faculty directory, open a complete profile, review research and results,
+                and move between actions with a cleaner and more premium tabbed layout.
+            </p>
+            <div class="faculty-hero-actions">
+                <a href="{% url 'dashboard:add_faculty' %}" class="faculty-hero-btn primary">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Faculty
+                </a>
+                <a href="{% url 'dashboard:faculty_list' %}" class="faculty-hero-btn secondary">
+                    <i class="fas fa-list"></i>
+                    Faculty Directory
+                </a>
+            </div>
+        </div>
+        <div class="faculty-hero-metrics">
+            <div class="faculty-metric">
+                <span>Faculty Records</span>
+                <strong>{{ faculties|length }} available in the current view</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Selected Faculty</span>
+                <strong>{% if faculty %}{{ faculty.staff_name }}{% else %}Choose a profile{% endif %}</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Research Items</span>
+                <strong>{{ research_publications|length|default:"0" }} publications and {{ fdps|length|default:"0" }} FDP records</strong>
+            </div>
+            <div class="faculty-metric">
+                <span>Projects</span>
+                <strong>{{ btech_projects|length|default:"0" }} B.Tech projects with results and documents tabs</strong>
+            </div>
+        </div>
+    </section>
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow faculty-sidebar faculty-panel-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Faculty Directory
+                        <span class="badge bg-light text-dark ms-2">{{ faculties|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                    <div class="list-group list-group-flush">
+                        {% for f in faculties %}
+                        <a href="?id={{ f.id }}" class="list-group-item list-group-item-action {% if faculty and faculty.id == f.id %}active{% endif %}">
+                            <div class="d-flex align-items-center">
+                                {% with list_photo_url=faculty_list_photo_urls|get_item:f.id %}
+                                {% if list_photo_url %}
+                                <img src="{{ list_photo_url }}" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                     style="width: 35px; height: 35px; display: none !important;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                {% else %}
+                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px;">
+                                    <i class="fas fa-user text-white"></i>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                                <div class="flex-grow-1">
+                                    <strong>{{ f.staff_name|truncatechars:25 }}</strong><br>
+                                    <small class="text-muted">{{ f.employee_code }}</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted py-4">
+                            <i class="fas fa-users fa-2x mb-2"></i><p>No faculty records found</p>
+                            <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary btn-sm mt-2">
+                                <i class="fas fa-user-plus"></i> Add First Faculty
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary btn-sm w-100">
+                        <i class="fas fa-user-plus me-1"></i>Add New Faculty
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            {% if faculty %}
+            <div class="card shadow faculty-panel-card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                            <h4 class="mb-0"><i class="fas fa-user-circle me-2"></i>{{ faculty.staff_name }}
+                                <small class="text-white-50">({{ faculty.employee_code }})</small>
+                            </h4>
+                            <small>{{ faculty.designation|default:"Faculty" }} | {{ faculty.department|default:"Not Assigned" }}</small>
+                        </div>
+                        <div>
+                            <a href="{% url 'dashboard:edit_faculty' faculty.id %}" class="btn btn-light btn-sm">
+                                <i class="fas fa-edit me-1"></i>Edit
+                            </a>
+                            <a href="{% url 'dashboard:faculty_pdf' faculty.id %}" class="btn btn-info btn-sm" target="_blank">
+                                <i class="fas fa-file-pdf me-1"></i>View PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Profile Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-2 text-center">
+                            {% if faculty_photo_url %}
+                            <img src="{{ faculty_photo_url }}" class="faculty-avatar"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; display: none !important;">
+                                <i class="fas fa-user fa-3x text-white"></i>
+                            </div>
+                            {% else %}
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px;">
+                                <i class="fas fa-user fa-3x text-white"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-10">
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><div class="info-label">Department</div><div class="info-value">{{ faculty.department|default:"Not Assigned" }}</div></div>
+                                <div class="col-md-4 mb-2"><div class="info-label">Designation</div><div class="info-value">{{ faculty.designation|default:"Not Assigned" }}</div></div>
+                                <div class="col-md-4 mb-2"><div class="info-label">Experience</div><div class="info-value">{{ experience }}</div></div>
+                                <div class="col-md-4 mb-2"><div class="info-label">Email</div><div class="info-value">{{ faculty.email|default:"—" }}</div></div>
+                                <div class="col-md-4 mb-2"><div class="info-label">Mobile</div><div class="info-value">{{ faculty.mobile|default:"—" }}</div></div>
+                                <div class="col-md-4 mb-2"><div class="info-label">Status</div><div><span class="badge bg-success">Active</span></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="faculty-tabs-shell">
+                    <ul class="nav nav-tabs" id="facultyTabs" role="tablist">
+                        <li class="nav-item"><button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal"><i class="fas fa-user me-1"></i>Personal</button></li>
+                        <li class="nav-item"><button class="nav-link" id="education-tab" data-bs-toggle="tab" data-bs-target="#education"><i class="fas fa-graduation-cap me-1"></i>Education</button></li>
+                        <li class="nav-item"><button class="nav-link" id="research-tab" data-bs-toggle="tab" data-bs-target="#research"><i class="fas fa-book-open me-1"></i>Research & Publications {% if research_publications %}<span class="badge bg-danger ms-1">{{ research_publications|length }}</span>{% endif %}</button></li>
+                        <li class="nav-item"><button class="nav-link" id="fdp-tab" data-bs-toggle="tab" data-bs-target="#fdp"><i class="fas fa-chalkboard-teacher me-1"></i>FDP/Workshops {% if fdps %}<span class="badge bg-warning ms-1">{{ fdps|length }}</span>{% endif %}</button></li>
+                        <li class="nav-item"><button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects"><i class="fas fa-project-diagram me-1"></i>B.Tech Projects {% if btech_projects %}<span class="badge bg-success ms-1">{{ btech_projects|length }}</span>{% endif %}</button></li>
+                        <li class="nav-item"><button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results"><i class="fas fa-chart-line me-1"></i>Results</button></li>
+                        <li class="nav-item"><button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents"><i class="fas fa-file-alt me-1"></i>Documents</button></li>
+                    </ul>
+                    </div>
+
+                    <div class="tab-content mt-3">
+                        <!-- Personal Tab -->
+                        <div class="tab-pane fade show active" id="personal">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-user me-2"></i>Personal Details</h6>
+                                    <table class="table table-sm">
+                                        <tr><th width="35%">Father's Name</th><td>{{ faculty.father_name|default:"—" }}</td></tr>
+                                        <tr><th>Mother's Name</th><td>{{ faculty.mother_name|default:"—" }}</td></tr>
+                                        <tr><th>Date of Birth</th><td>{{ faculty.dob|date:"d M Y"|default:"—" }}</td></tr>
+                                        <tr><th>Gender</th><td>{{ faculty.gender|default:"—" }}</td></tr>
+                                        <tr><th>State</th><td>{{ faculty.state|default:"—" }}</td></tr>
+                                        <tr><th>Caste</th><td>{{ faculty.caste|default:"—" }}</td></tr>
+                                        <tr><th>Nationality</th><td>{{ faculty.nationality|default:"—" }}</td></tr>
+                                        <tr><th>Address</th><td>{{ faculty.address|default:"—"|linebreaks }}</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-id-card me-2"></i>Professional IDs</h6>
+                                    <table class="table table-sm">
+                                        <tr><th width="35%">JNTUH ID</th><td>{{ faculty.jntuh_id|default:"—" }}</td></tr>
+                                        <tr><th>AICTE ID</th><td>{{ faculty.aicte_id|default:"—" }}</td></tr>
+                                        <tr><th>PAN Number</th><td>{{ faculty.pan|default:"—" }}</td></tr>
+                                        <tr><th>Aadhar Number</th><td>{{ faculty.aadhar|default:"—" }}</td></tr>
+                                        <tr><th>APAAR ID</th><td>{{ faculty.apaar_id|default:"—" }}</td></tr>
+                                        <tr><th>ORCID ID</th><td>{{ faculty.orcid_id|default:"—" }}</td></tr>
+                                    </table>
+                                    <h6 class="mt-3"><i class="fas fa-book me-2"></i>Subjects Dealt</h6>
+                                    <div>
+                                        {% if subjects_list %}
+                                            {% for subject in subjects_list %}<span class="badge bg-info me-1 mb-1">{{ subject }}</span>{% endfor %}
+                                        {% else %}<span class="text-muted">No subjects specified</span>{% endif %}
+                                    </div>
+                                    <h6 class="mt-3"><i class="fas fa-info-circle me-2"></i>SCM</h6>
+                                    <div class="bg-light p-2 rounded">{{ faculty.scm|default:"No SCM details"|linebreaks }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Education Tab -->
+                        <div class="tab-pane fade" id="education">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>SSC / 10th</h6>
+                                    <table class="table table-sm">
+                                        <tr><th>Year</th><td>{{ faculty.ssc_year|default:"—" }}</td></tr>
+                                        <tr><th>Percentage</th><td>{{ faculty.ssc_percent|default:"—" }}%</td></tr>
+                                        <tr><th>School</th><td>{{ faculty.ssc_school|default:"—" }}</td></tr>
+                                    </table>
+                                    <h6 class="mt-3">Intermediate / 12th</h6>
+                                    <table class="table table-sm">
+                                        <tr><th>Year</th><td>{{ faculty.inter_year|default:"—" }}</td></tr>
+                                        <tr><th>Percentage</th><td>{{ faculty.inter_percent|default:"—" }}%</td></tr>
+                                        <tr><th>College</th><td>{{ faculty.inter_college|default:"—" }}</td></tr>
+                                    </table>
+                                    <h6 class="mt-3">UG Education</h6>
+                                    <table class="table table-sm">
+                                        <tr><th>Degree</th><td>{{ faculty.ug_degree|default:"—" }}</td></tr>
+                                        <tr><th>Year</th><td>{{ faculty.ug_year|default:"—" }}</td></tr>
+                                        <tr><th>Percentage</th><td>{{ faculty.ug_percentage|default:"—" }}%</td></tr>
+                                        <tr><th>College</th><td>{{ faculty.ug_college|default:"—" }}</td></tr>
+                                        <tr><th>Specialization</th><td>{{ faculty.ug_spec|default:"—" }}</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>PG Education</h6>
+                                    <table class="table table-sm">
+                                        <tr><th>Degree</th><td>{{ faculty.pg_degree|default:"—" }}</td></tr>
+                                        <tr><th>Year</th><td>{{ faculty.pg_year|default:"—" }}</td></tr>
+                                        <tr><th>Percentage</th><td>{{ faculty.pg_percentage|default:"—" }}%</td></tr>
+                                        <tr><th>College</th><td>{{ faculty.pg_college|default:"—" }}</td></tr>
+                                        <tr><th>Specialization</th><td>{{ faculty.pg_spec|default:"—" }}</td></tr>
+                                    </table>
+                                    <h6 class="mt-3">PhD Education</h6>
+                                    <table class="table table-sm">
+                                        <tr><th>Status</th><td>{{ faculty.phd_degree|default:"—" }}</td></tr>
+                                        <tr><th>Year</th><td>{{ faculty.phd_year|default:"—" }}</td></tr>
+                                        <tr><th>University</th><td>{{ faculty.phd_university|default:"—" }}</td></tr>
+                                        <tr><th>Specialization</th><td>{{ faculty.phd_spec|default:"—" }}</td></tr>
+                                    </table>
+                                    <h6 class="mt-3">About Yourself</h6>
+                                    <div class="bg-light p-2 rounded">{{ faculty.about_yourself|default:"No information provided"|linebreaks }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Research Tab -->
+                        <div class="tab-pane fade" id="research">
+                            {% if research_publications %}
+                                {% for pub in research_publications %}
+                                <div class="publication-card">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <span class="badge {% if pub.research_type == 'journal' %}bg-success{% elif pub.research_type == 'conference' %}bg-primary{% elif pub.research_type == 'patent' %}bg-warning{% else %}bg-secondary{% endif %} mb-2">{{ pub.get_research_type_display }}</span>
+                                            <h6 class="mb-1">{{ pub.title }}</h6>
+                                            <small class="text-muted">{% if pub.authors %}Authors: {{ pub.authors }}<br>{% endif %}{% if pub.journal_name %}Journal: {{ pub.journal_name }}{% endif %}{% if pub.conference_name %}Conference: {{ pub.conference_name }}{% endif %}</small>
+                                        </div>
+                                        <div class="text-end ms-3">
+                                            <span class="badge {% if pub.status == 'published' %}bg-success{% elif pub.status == 'accepted' %}bg-info{% elif pub.status == 'under_review' %}bg-warning{% else %}bg-secondary{% endif %}">{{ pub.get_status_display|default:pub.status|default:"—" }}</span>
+                                            <div class="mt-1">{{ pub.publication_year|default:"—" }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state"><i class="fas fa-book-open"></i><h5>No Research Publications</h5><p>No research publications have been added yet.</p></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- FDP Tab -->
+                        <div class="tab-pane fade" id="fdp">
+                            {% if fdps %}
+                                {% for fdp in fdps %}
+                                <div class="fdp-card">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <span class="badge bg-info mb-2">{{ fdp.get_fdp_type_display }}</span>
+                                            <h6 class="mb-1">{{ fdp.title }}</h6>
+                                            <small class="text-muted"><i class="fas fa-calendar-alt me-1"></i>{{ fdp.from_date|date:"d M Y" }} - {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</small><br>
+                                            <small class="text-muted"><i class="fas fa-building me-1"></i>{{ fdp.organized_by|default:"—" }}</small>
+                                        </div>
+                                        {% if fdp.certificate %}<a href="{{ fdp.certificate.url }}" class="btn btn-sm btn-success" target="_blank"><i class="fas fa-certificate"></i> View</a>{% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state"><i class="fas fa-chalkboard-teacher"></i><h5>No FDP/Workshop Records</h5><p>No records added yet.</p></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- B.Tech Projects Tab -->
+                        <div class="tab-pane fade" id="projects">
+                            {% if btech_projects %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light"><tr><th>H.T. No.</th><th>Student Name</th><th>Batch</th><th>Project Title</th><th>Approved</th><th>Marks</th></tr></thead>
+                                        <tbody>
+                                            {% for project in btech_projects %}
+                                            <tr>
+                                                <td><code>{{ project.ht_no }}</code></td>
+                                                <td>{{ project.student_name }}</td>
+                                                <td>{{ project.batch|default:"—" }}</td>
+                                                <td><strong>{{ project.project_title }}</strong></td>
+                                                <td>{% if project.approved %}<span class="badge bg-success">Approved</span>{% else %}<span class="badge bg-warning">Pending</span>{% endif %}</td>
+                                                <td>{{ project.marks|default:"—" }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="empty-state"><i class="fas fa-project-diagram"></i><h5>No B.Tech Projects</h5><p>No projects supervised yet.</p></div>
+                            {% endif %}
+                        </div>
+
+                        <!-- RESULTS TAB -->
+                        <div class="tab-pane fade" id="results">
+                            {% if results_data and results_data|length > 0 %}
+                                {% for result in results_data %}
+                                <div class="result-card">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-12 mb-3">
+                                            <h5 class="mb-1">{{ result.subject_name|default:"Subject" }}</h5>
+                                            <small class="text-muted">Code: {{ result.subject_code|default:"—" }}</small>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <div class="stats-number text-primary">{{ result.students_attempted|default:0 }}</div>
+                                            <small class="text-muted">Students Attempted</small>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            <div class="stats-number text-success">{{ result.students_passed|default:0 }}</div>
+                                            <small class="text-muted">Students Passed</small>
+                                        </div>
+                                        <div class="col-4 text-center">
+                                            {% with percentage=result.percentage|default:0 %}
+                                            <div class="stats-number {% if percentage >= 75 %}text-success{% elif percentage >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ percentage }}%</div>
+                                            <small class="text-muted">Pass Percentage</small>
+                                            <div class="progress mt-2" style="height: 10px;">
+                                                <div class="progress-bar {% if percentage >= 75 %}bg-success{% elif percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ percentage }}%"></div>
+                                            </div>
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% elif results_data %}
+                                <div class="bg-light p-4 rounded">{{ results_data|linebreaks }}</div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-chart-line fa-3x mb-3 text-muted"></i>
+                                    <h5>No Results Data</h5>
+                                    <p class="text-muted">Add JSON data in the <strong>Results</strong> field of the faculty form.</p>
+                                    <small class="text-info">Example JSON:</small><br>
+                                    <code style="background:#f8f9fa;padding:8px;border-radius:4px;font-size:0.85rem;">
+                                        [{"subject_name":"DBMS","subject_code":"CS501","students_attempted":60,"students_passed":54,"percentage":90}]
+                                    </code>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Documents Tab -->
+                        <div class="tab-pane fade" id="documents">
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                                        <div>
+                                            <h6 class="mb-1"><i class="fas fa-file-pdf me-2 text-danger"></i>Faculty PDF</h6>
+                                            <p class="text-muted mb-0">Preview the generated faculty profile PDF directly from this page.</p>
+                                        </div>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <a href="{% url 'dashboard:faculty_pdf' faculty.id %}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                                <i class="fas fa-external-link-alt me-1"></i>Open in New Tab
+                                            </a>
+                                            <a href="{% url 'dashboard:download_faculty_pdf' faculty.id %}" class="btn btn-outline-success btn-sm" target="_blank">
+                                                <i class="fas fa-download me-1"></i>Download PDF
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <iframe
+                                        src="{% url 'dashboard:faculty_pdf' faculty.id %}"
+                                        title="Faculty PDF Preview"
+                                        style="width: 100%; min-height: 780px; border: 1px solid rgba(111, 143, 169, 0.25); border-radius: 14px; background: #fff;"
+                                    ></iframe>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-id-card me-2"></i>Identity Documents</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Aadhar Card <span>{% if faculty.aadhar_file or faculty.aadhar_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">PAN Card <span>{% if faculty.pan_file or faculty.pan_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">APAAR Document <span>{% if faculty.apaar_file or faculty.apaar_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-graduation-cap me-2"></i>Educational Certificates</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">SSC Certificate <span>{% if faculty.ssc_certificate or faculty.ssc_certificate_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">Intermediate Certificate <span>{% if faculty.inter_certificate or faculty.inter_certificate_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">UG Certificate <span>{% if faculty.ug_certificate or faculty.ug_certificate_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">PG Certificate <span>{% if faculty.pg_certificate or faculty.pg_certificate_url %}<i class="fas fa-check-circle text-success"></i> Uploaded{% else %}<i class="fas fa-times-circle text-danger"></i> Not Uploaded{% endif %}</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== CARD FOOTER WITH DELETE BUTTON ==================== -->
+                <div class="card-footer">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'dashboard:edit_faculty' faculty.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Edit Faculty
+                        </a>
+
+                        <!-- DELETE BUTTON - CORRECT VERSION -->
+                        <form method="POST" action="{% url 'dashboard:delete_faculty' faculty.id %}"
+                              onsubmit="return confirm('Are you sure you want to delete {{ faculty.staff_name }}? This action cannot be undone.');"
+                              style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Delete Faculty
+                            </button>
+                        </form>
+
+                        <a href="{% url 'dashboard:faculty_pdf' faculty.id %}" class="btn btn-success" target="_blank">
+                            <i class="fas fa-file-pdf"></i> View PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow faculty-panel-card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
+                    <h5>Select a faculty member from the list</h5>
+                    <p class="text-muted">Choose a faculty to view their complete profile</p>
+                    <a href="{% url 'dashboard:add_faculty' %}" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i>Add New Faculty</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const activeTab = localStorage.getItem('activeFacultyTab');
+    if (activeTab) {
+        const tabTrigger = document.querySelector(`button[data-bs-target="${activeTab}"]`);
+        if (tabTrigger) new bootstrap.Tab(tabTrigger).show();
+    }
+    const tabs = document.querySelectorAll('#facultyTabs button');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(event) {
+            localStorage.setItem('activeFacultyTab', event.target.getAttribute('data-bs-target'));
+        });
+    });
+});
+</script>
+{% endblock %}

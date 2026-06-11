@@ -1,0 +1,183 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Library - IT Department{% endblock %}
+
+{% block content %}
+<style>
+    .library-section {
+        background: rgba(0, 30, 0, 0.6);
+        padding: 25px;
+        border-radius: 10px;
+        border: 1px solid #00aa00;
+        margin-bottom: 25px;
+    }
+
+    .book-category {
+        color: #00ff00;
+        margin: 20px 0 15px 0;
+        border-bottom: 2px solid #00ff00;
+        padding-bottom: 8px;
+    }
+
+    .book-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 15px;
+    }
+
+    .book-card {
+        background: rgba(0, 40, 0, 0.4);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #00aa00;
+        transition: transform 0.3s;
+    }
+
+    .book-card:hover {
+        transform: translateY(-3px);
+        border-color: #00ff00;
+    }
+
+    .book-title {
+        color: #00ff00;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .book-author {
+        color: #90ee90;
+        font-style: italic;
+        margin-bottom: 8px;
+    }
+
+    .availability {
+        color: #00ff00;
+        font-size: 0.9em;
+    }
+
+    .borrow-btn {
+        background: #00aa00;
+        color: #000;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+        width: 100%;
+        transition: background 0.3s;
+    }
+
+    .borrow-btn:hover {
+        background: #00ff00;
+    }
+
+    .library-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: rgba(0, 40, 0, 0.6);
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        border: 1px solid #00aa00;
+    }
+
+    .stat-number {
+        font-size: 2em;
+        color: #00ff00;
+        font-weight: bold;
+    }
+</style>
+
+<h1 style="color: #00ff00; margin-bottom: 20px; text-align: center;">Digital Library</h1>
+
+<div class="library-stats">
+    <div class="stat-card">
+        <div class="stat-number">15,000+</div>
+        <div>Books Available</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">5,000+</div>
+        <div>E-Books</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">50+</div>
+        <div>Journal Subscriptions</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">24/7</div>
+        <div>Digital Access</div>
+    </div>
+</div>
+
+<div class="library-section">
+    <h2 class="book-category">Programming & Development</h2>
+    <div class="book-grid">
+        <div class="book-card">
+            <div class="book-title">Clean Code</div>
+            <div class="book-author">Robert C. Martin</div>
+            <div class="availability">Available (5 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+        <div class="book-card">
+            <div class="book-title">Introduction to Algorithms</div>
+            <div class="book-author">Cormen, Leiserson, Rivest</div>
+            <div class="availability">Available (3 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+        <div class="book-card">
+            <div class="book-title">The Pragmatic Programmer</div>
+            <div class="book-author">Andrew Hunt, David Thomas</div>
+            <div class="availability">Available (4 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+    </div>
+</div>
+
+<div class="library-section">
+    <h2 class="book-category">Data Science & AI</h2>
+    <div class="book-grid">
+        <div class="book-card">
+            <div class="book-title">Python for Data Analysis</div>
+            <div class="book-author">Wes McKinney</div>
+            <div class="availability">Available (6 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+        <div class="book-card">
+            <div class="book-title">Hands-On Machine Learning</div>
+            <div class="book-author">Aurélien Géron</div>
+            <div class="availability">Available (4 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+        <div class="book-card">
+            <div class="book-title">Deep Learning</div>
+            <div class="book-author">Ian Goodfellow</div>
+            <div class="availability">Available (3 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+    </div>
+</div>
+
+<div class="library-section">
+    <h2 class="book-category">Networking & Security</h2>
+    <div class="book-grid">
+        <div class="book-card">
+            <div class="book-title">Computer Networks</div>
+            <div class="book-author">Andrew S. Tanenbaum</div>
+            <div class="availability">Available (5 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+        <div class="book-card">
+            <div class="book-title">Network Security Essentials</div>
+            <div class="book-author">William Stallings</div>
+            <div class="availability">Available (4 copies)</div>
+            <button class="borrow-btn">Borrow Book</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,386 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Students Data - Engineering College{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/students-experience.css' %}">
+<style>
+    .students-data-page .card-body {
+        padding: 1.5rem;
+    }
+    .students-data-page .search-toolbar {
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        border: 1px solid rgba(111, 143, 169, 0.14);
+    }
+    .students-data-page .table code {
+        background: #eef5ff;
+        color: #163149;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+    }
+    .students-data-page .pagination .page-link {
+        border-radius: 12px !important;
+        margin: 0 0.2rem;
+        border: 0;
+    }
+    .students-data-page .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    }
+    .students-data-page .students-directory-table {
+        min-width: 980px;
+    }
+    .students-data-page .students-directory-table th,
+    .students-data-page .students-directory-table td {
+        vertical-align: middle;
+    }
+    .students-data-page .passport-photo-cell {
+        width: 76px;
+        text-align: center;
+    }
+    .students-data-page .student-passport-thumb,
+    .students-data-page .student-photo-fallback {
+        width: 48px;
+        height: 60px;
+        border-radius: 10px;
+        border: 1px solid rgba(15, 76, 129, 0.16);
+        box-shadow: 0 8px 20px rgba(15, 76, 129, 0.12);
+    }
+    .students-data-page .student-passport-thumb {
+        object-fit: cover;
+        background: #f4f8fb;
+    }
+    .students-data-page .student-photo-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(180deg, #f9fbfd 0%, #eaf2f9 100%);
+        color: #5e7488;
+        font-size: 0.68rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.35rem;
+        text-align: center;
+    }
+    .students-data-page .student-htno {
+        font-weight: 700;
+        color: #163149;
+        white-space: nowrap;
+    }
+    .students-data-page .student-name-link {
+        color: #14324b;
+        font-weight: 600;
+    }
+    .students-data-page .student-name-link:hover {
+        color: #0f4c81;
+        text-decoration: none;
+    }
+    .students-data-page .student-branch-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: #eef5ff;
+        color: #163149;
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+    .students-data-page .student-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .students-data-page .student-actions .btn {
+        min-width: 34px;
+        min-height: 34px;
+        padding: 0.35rem 0.45rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 students-experience-page students-data-page">
+    <div class="students-shell">
+    <section class="students-hero">
+        <div>
+            <span class="students-kicker">
+                <i class="fas fa-user-graduate"></i>
+                Students Directory
+            </span>
+            <h1 class="students-hero-title">Manage and view student records beautifully</h1>
+            <p class="students-hero-copy">
+                Search, filter, review status, and jump into edit, PDF, and profile actions from a
+                directory page that feels cleaner and more intentional.
+            </p>
+            <div class="students-hero-actions">
+                <a href="{% url 'dashboard:add_student' %}" class="students-hero-btn primary">
+                    <i class="fas fa-user-plus"></i>
+                    Add New Student
+                </a>
+                <a href="{% url 'dashboard:student_dashboard_view' %}" class="students-hero-btn secondary">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Student Dashboard
+                </a>
+            </div>
+        </div>
+        <div class="students-hero-metrics">
+            <div class="students-metric">
+                <span>Total in View</span>
+                <strong>{{ total_students|default:"0" }} student records</strong>
+            </div>
+            <div class="students-metric">
+                <span>Year Distribution</span>
+                <strong>Y1: {{ year_1_count|default:"0" }} | Y2: {{ year_2_count|default:"0" }} | Y3: {{ year_3_count|default:"0" }} | Y4: {{ year_4_count|default:"0" }}</strong>
+            </div>
+            <div class="students-metric">
+                <span>Operations</span>
+                <strong>Profile view, edit, PDF generation, bulk actions, and exports</strong>
+            </div>
+            <div class="students-metric">
+                <span>Flow</span>
+                <strong>Designed to feel aligned with the new add and edit student pages</strong>
+            </div>
+        </div>
+    </section>
+    <div class="row">
+        <div class="col-12">
+            <div class="card students-panel-card">
+                <div class="card-header">
+                    <div class="students-directory-toolbar">
+                        <h3 class="card-title mb-0">Students Directory</h3>
+                        <div class="card-tools d-flex gap-2 flex-wrap">
+                            <a href="{% url 'dashboard:add_student' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Add New Student
+                            </a>
+                            <a href="{% url 'dashboard:export_students_excel' %}" class="btn btn-info btn-sm">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Search Form -->
+                    <form method="GET" class="search-toolbar">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" name="search" class="form-control" placeholder="Search by name, HT No, email..." value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <select name="year" class="form-control">
+                                    <option value="">All Years</option>
+                                    {% for year in years %}
+                                        <option value="{{ year }}" {% if request.GET.year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>Year {{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="sem" class="form-control">
+                                    <option value="">All Semesters</option>
+                                    {% for sem in sems %}
+                                        <option value="{{ sem }}" {% if request.GET.sem|stringformat:"s" == sem|stringformat:"s" %}selected{% endif %}>Semester {{ sem }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="cgpa_range" class="form-control">
+                                    <option value="">All CGPA Ranges</option>
+                                    <option value="high" {% if request.GET.cgpa_range == 'high' %}selected{% endif %}>High (>= 8.5)</option>
+                                    <option value="medium" {% if request.GET.cgpa_range == 'medium' %}selected{% endif %}>Medium (6.0-8.4)</option>
+                                    <option value="low" {% if request.GET.cgpa_range == 'low' %}selected{% endif %}>Low (< 6.0)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="has_pdf" class="form-control">
+                                    <option value="">PDF Status</option>
+                                    <option value="yes" {% if request.GET.has_pdf == 'yes' %}selected{% endif %}>Has PDF</option>
+                                    <option value="no" {% if request.GET.has_pdf == 'no' %}selected{% endif %}>No PDF</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary btn-block">Search</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Students Table -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover students-directory-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all"></th>
+                                    <th>Photo</th>
+                                    <th>Hall Ticket Number</th>
+                                    <th>Name</th>
+                                    <th>Branch</th>
+                                    <th>Year</th>
+                                    <th>Sem</th>
+                                    <th>B.Tech CGPA</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td><input type="checkbox" class="student-select" value="{{ student.id }}"></td>
+                                    <td class="passport-photo-cell">
+                                        <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-passport-thumb" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex'">
+                                        <div class="student-photo-fallback" style="display: none;">No Photo</div>
+                                    </td>
+
+                                    <td><span class="student-htno">{{ student.ht_no }}</span></td>
+
+                                    <td>
+                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="student-name-link text-decoration-none">
+                                            {{ student.student_name }}
+                                        </a>
+                                    </td>
+
+                                    <td>
+                                        <span class="student-branch-pill">{{ student.branch|default:"IT" }}</span>
+                                    </td>
+
+                                    <td><span class="badge bg-primary">Y{{ student.year|default:"-" }}</span></td>
+
+                                    <td><span class="badge bg-info">S{{ student.sem|default:"-" }}</span></td>
+
+                                    <td>
+                                        {% if student.cgpa %}
+                                            {% if student.cgpa >= 8.5 %}
+                                                <span class="badge bg-success">{{ student.cgpa }}</span>
+                                            {% elif student.cgpa >= 6.0 %}
+                                                <span class="badge bg-warning text-dark">{{ student.cgpa }}</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ student.cgpa }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="text-center">
+                                        <div class="student-actions">
+                                            <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-info btn-sm" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <form method="POST" action="{% url 'dashboard:delete_student' student.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete {{ student.student_name }}? This action cannot be undone.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm" title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% if student.pdf_url or student.pdf_file %}
+                                                <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn btn-success btn-sm" title="View PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            {% else %}
+                                                <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn btn-warning btn-sm" title="Generate PDF">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+                                            {% endif %}
+                                            <a href="{% url 'dashboard:edit_student' student.id %}" class="btn btn-primary btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="9" class="text-center py-4">
+                                        No students found. Click "ADD NEW STUDENT" to create one.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if students.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if students.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ students.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.sem %}&sem={{ request.GET.sem }}{% endif %}{% if request.GET.cgpa_range %}&cgpa_range={{ request.GET.cgpa_range }}{% endif %}{% if request.GET.has_pdf %}&has_pdf={{ request.GET.has_pdf }}{% endif %}">Previous</a></li>
+                            {% endif %}
+
+                            {% for num in students.paginator.page_range %}
+                            {% if students.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.sem %}&sem={{ request.GET.sem }}{% endif %}{% if request.GET.cgpa_range %}&cgpa_range={{ request.GET.cgpa_range }}{% endif %}{% if request.GET.has_pdf %}&has_pdf={{ request.GET.has_pdf }}{% endif %}">{{ num }}</a></li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if students.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ students.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}{% if request.GET.sem %}&sem={{ request.GET.sem }}{% endif %}{% if request.GET.cgpa_range %}&cgpa_range={{ request.GET.cgpa_range }}{% endif %}{% if request.GET.has_pdf %}&has_pdf={{ request.GET.has_pdf }}{% endif %}">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    <!-- Bulk Actions -->
+                    <div class="mt-3">
+                        <form id="bulk-action-form" method="POST" action="{% url 'dashboard:bulk_student_actions' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="student_ids" id="selected-student-ids">
+                            <select name="bulk_action" class="form-control d-inline-block w-auto">
+                                <option value="">Bulk Actions</option>
+                                <option value="generate_pdfs">Generate PDFs</option>
+                                <option value="export_csv">Export to CSV</option>
+                                <option value="delete">Delete Selected</option>
+                            </select>
+                            <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<script>
+    // Select all checkbox functionality
+    document.getElementById('select-all')?.addEventListener('change', function(e) {
+        document.querySelectorAll('.student-select').forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
+    });
+
+    // Bulk action form submission
+    document.getElementById('bulk-action-form')?.addEventListener('submit', function(e) {
+        const selected = Array.from(document.querySelectorAll('.student-select:checked')).map(cb => cb.value);
+        if (selected.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one student.');
+            return false;
+        }
+
+        const action = document.querySelector('[name="bulk_action"]').value;
+        if (!action) {
+            e.preventDefault();
+            alert('Please select an action.');
+            return false;
+        }
+
+        if (action === 'delete' && !confirm(`Are you sure you want to delete ${selected.length} student(s)? This action cannot be undone.`)) {
+            e.preventDefault();
+            return false;
+        }
+
+        document.getElementById('selected-student-ids').value = selected.join(',');
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,1501 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Exam Branch
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+        --exam-ink: #17324d;
+        --exam-slate: #335068;
+        --exam-ocean: #0f4c81;
+        --exam-sky: #d8ebff;
+        --exam-mist: #f6fbff;
+        --exam-coral: #f97316;
+        --exam-emerald: #0f9d7a;
+        --exam-surface: rgba(255, 255, 255, 0.92);
+        --exam-shadow: 0 28px 60px rgba(15, 76, 129, 0.12);
+        --exam-border: rgba(82, 121, 154, 0.18);
+    }
+
+    .exam-branch-page {
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        color: var(--exam-ink);
+    }
+
+    .exam-shell {
+        position: relative;
+        overflow: hidden;
+        padding: 0.5rem;
+    }
+
+    .exam-shell::before,
+    .exam-shell::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(18px);
+        z-index: 0;
+        opacity: 0.65;
+    }
+
+    .exam-shell::before {
+        width: 220px;
+        height: 220px;
+        top: 2rem;
+        right: 4rem;
+        background: rgba(249, 115, 22, 0.18);
+    }
+
+    .exam-shell::after {
+        width: 280px;
+        height: 280px;
+        left: -80px;
+        bottom: 2rem;
+        background: rgba(15, 157, 122, 0.14);
+    }
+
+    .exam-shell > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .exam-hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 1.5rem;
+        align-items: stretch;
+        padding: 2rem;
+        border-radius: 28px;
+        color: #fff;
+        background:
+            radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 32%),
+            linear-gradient(135deg, #0f172a 0%, #0f4c81 52%, #f97316 100%);
+        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.26);
+        margin-bottom: 1.75rem;
+    }
+
+    .exam-kicker,
+    .section-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .exam-kicker {
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.16);
+        margin-bottom: 1rem;
+    }
+
+    .exam-hero-title,
+    .section-title,
+    .card-title {
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        letter-spacing: -0.03em;
+    }
+
+    .exam-hero-title {
+        font-size: clamp(2rem, 3vw, 3.1rem);
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .exam-hero-copy {
+        max-width: 680px;
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.75;
+        color: rgba(255, 255, 255, 0.86);
+    }
+
+    .exam-hero-metrics {
+        width: min(360px, 100%);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .exam-metric-card {
+        padding: 1rem 1.1rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(14px);
+    }
+
+    .exam-metric-card span {
+        display: block;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 0.45rem;
+    }
+
+    .exam-metric-card strong {
+        display: block;
+        font-size: 1rem;
+        line-height: 1.4;
+        font-weight: 800;
+    }
+
+    .exam-tab-nav {
+        display: inline-flex;
+        gap: 0.7rem;
+        padding: 0.6rem;
+        margin-bottom: 1.5rem;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 18px 35px rgba(15, 76, 129, 0.1);
+        backdrop-filter: blur(14px);
+    }
+
+    .exam-tab-nav .nav-link {
+        border: 0;
+        border-radius: 999px;
+        padding: 0.88rem 1.35rem;
+        color: var(--exam-slate);
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .exam-tab-nav .nav-link:hover {
+        transform: translateY(-1px);
+        background: rgba(15, 76, 129, 0.08);
+    }
+
+    .exam-tab-nav .nav-link.active {
+        color: #fff;
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+        box-shadow: 0 14px 30px rgba(15, 76, 129, 0.28);
+    }
+
+    .exam-panel {
+        padding: 1.75rem;
+        border-radius: 28px;
+        border: 1px solid var(--exam-border);
+        background: var(--exam-surface);
+        box-shadow: var(--exam-shadow);
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-kicker {
+        color: var(--exam-ocean);
+        margin-bottom: 0.6rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.5rem, 2vw, 2rem);
+        font-weight: 700;
+        margin-bottom: 0.55rem;
+    }
+
+    .section-copy,
+    .card-copy {
+        margin: 0;
+        color: #5d7287;
+        line-height: 1.7;
+    }
+
+    .panel-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.8rem 1rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(15, 76, 129, 0.1), rgba(249, 115, 22, 0.12));
+        color: var(--exam-ink);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .exam-card {
+        height: 100%;
+        padding: 1.35rem;
+        border-radius: 24px;
+        border: 1px solid rgba(134, 164, 191, 0.18);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .card-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .exam-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .exam-mini-block {
+        padding: 1rem;
+        border-radius: 18px;
+        background: #edf6ff;
+        border: 1px solid rgba(15, 76, 129, 0.08);
+    }
+
+    .exam-mini-block label {
+        margin-bottom: 0.45rem;
+        color: var(--exam-slate);
+        font-size: 0.85rem;
+    }
+
+    .exam-form-divider {
+        border-top: 1px dashed rgba(91, 121, 150, 0.24);
+        margin: 1.15rem 0;
+    }
+
+    .exam-branch-page .form-label {
+        color: var(--exam-ink);
+        font-weight: 700;
+    }
+
+    .exam-branch-page .form-control,
+    .exam-branch-page textarea {
+        border-radius: 16px;
+        border: 1px solid #d8e4ef;
+        padding: 0.72rem 0.95rem;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .exam-branch-page .form-control:focus,
+    .exam-branch-page textarea:focus {
+        border-color: rgba(15, 76, 129, 0.7);
+        box-shadow: 0 0 0 0.24rem rgba(15, 76, 129, 0.12);
+    }
+
+    .exam-table-wrap {
+        padding: 1rem;
+        border-radius: 24px;
+        border: 1px solid rgba(82, 121, 154, 0.14);
+        background: #fff;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .exam-table {
+        margin-bottom: 0;
+    }
+
+    .exam-table th,
+    .exam-table td {
+        border-color: #e4edf5;
+        vertical-align: middle;
+    }
+
+    .exam-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        border-bottom: 0;
+        background: #eaf3ff;
+        color: var(--exam-ink);
+        font-size: 0.79rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    #internalMarksTable thead th {
+        background: linear-gradient(135deg, #17324d 0%, #0f4c81 100%);
+        color: #fff;
+    }
+
+    #teachingPlanTable textarea {
+        min-height: 56px;
+        resize: vertical;
+    }
+
+    .exam-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.25rem;
+    }
+
+    .exam-action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.78rem 1rem;
+        border-radius: 999px;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .status-chip[data-tone="success"] {
+        background: #eafaf4;
+        color: #0d8b67;
+    }
+
+    .status-chip[data-tone="warning"] {
+        background: #fff4e9;
+        color: #d26a17;
+    }
+
+    .status-chip[data-tone="muted"] {
+        background: #eef4fb;
+        color: var(--exam-slate);
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .insight-card {
+        padding: 1.1rem;
+        border-radius: 20px;
+        border: 1px solid rgba(15, 76, 129, 0.1);
+        background: linear-gradient(180deg, #ffffff 0%, #f3f9ff 100%);
+    }
+
+    .insight-card span {
+        display: block;
+        color: var(--exam-slate);
+        font-size: 0.82rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 0.4rem;
+    }
+
+    .insight-card strong {
+        display: block;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: 1.55rem;
+        line-height: 1.1;
+    }
+
+    .summary-note {
+        margin-top: 0.9rem;
+        color: #6a7f92;
+        font-size: 0.9rem;
+    }
+
+    .grade {
+        font-weight: 800;
+        text-align: center;
+        border-radius: 12px;
+    }
+
+    .grade[data-grade="O"] {
+        background: #ecfdf5;
+        color: #0f9d7a;
+    }
+
+    .grade[data-grade="A+"] {
+        background: #eef4ff;
+        color: #1f5bca;
+    }
+
+    .grade[data-grade="A"] {
+        background: #f0f9ff;
+        color: #0369a1;
+    }
+
+    .grade[data-grade="B+"] {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .grade[data-grade="B"] {
+        background: #fffbea;
+        color: #a16207;
+    }
+
+    .grade[data-grade="P"] {
+        background: #f5f3ff;
+        color: #6d28d9;
+    }
+
+    .grade[data-grade="F"] {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .grade[data-grade="-"] {
+        background: #f5f7fb;
+        color: #7c8da0;
+    }
+
+    .exam-btn {
+        border: 0;
+        border-radius: 16px;
+        padding: 0.82rem 1.25rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        box-shadow: 0 14px 26px rgba(15, 76, 129, 0.16);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .exam-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 28px rgba(15, 76, 129, 0.18);
+    }
+
+    .exam-btn-primary {
+        color: #fff;
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    }
+
+    .exam-btn-success {
+        color: #fff;
+        background: linear-gradient(135deg, #0f9d7a 0%, #0c7a5e 100%);
+    }
+
+    .exam-btn-danger {
+        color: #fff;
+        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    }
+
+    .exam-total-card {
+        min-width: 220px;
+        max-width: 260px;
+    }
+
+    .exam-total-card .form-control {
+        font-weight: 800;
+        font-size: 1.05rem;
+        text-align: center;
+        background: #f7fbff;
+    }
+
+    @media (max-width: 991.98px) {
+        .exam-hero,
+        .panel-header {
+            flex-direction: column;
+        }
+
+        .exam-hero-metrics,
+        .exam-mini-grid,
+        .summary-grid {
+            width: 100%;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .exam-hero,
+        .exam-panel {
+            padding: 1.25rem;
+        }
+
+        .exam-tab-nav {
+            display: flex;
+            width: 100%;
+            border-radius: 24px;
+            flex-wrap: wrap;
+        }
+
+        .exam-tab-nav .nav-link {
+            width: 100%;
+        }
+
+        .exam-mini-grid,
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .exam-actions {
+            align-items: stretch;
+        }
+
+        .exam-action-buttons,
+        .exam-action-buttons .exam-btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 exam-branch-page">
+    <div class="exam-shell">
+        <section class="exam-hero">
+            <div>
+                <span class="exam-kicker">
+                    <i class="fas fa-sparkles"></i>
+                    Academic Operations Workspace
+                </span>
+                <h1 class="exam-hero-title">Exam Branch Studio</h1>
+                <p class="exam-hero-copy">
+                    A cleaner, sharper place to build lesson plans, capture internal marks, and keep
+                    your class records organized with a more polished workflow.
+                </p>
+            </div>
+            <div class="exam-hero-metrics">
+                <div class="exam-metric-card">
+                    <span>Modules</span>
+                    <strong>Lesson Plan + Evaluation</strong>
+                </div>
+                <div class="exam-metric-card">
+                    <span>Experience</span>
+                    <strong>Modern card layout with cleaner tables</strong>
+                </div>
+                <div class="exam-metric-card">
+                    <span>Storage</span>
+                    <strong>Browser save for quick revisit</strong>
+                </div>
+                <div class="exam-metric-card">
+                    <span>Focus</span>
+                    <strong>Readable, aesthetic, mobile-friendly design</strong>
+                </div>
+            </div>
+        </section>
+
+        <ul class="nav nav-tabs exam-tab-nav" id="examBranchTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="lessonplan-tab" data-bs-toggle="tab" data-bs-target="#lessonplan" type="button" role="tab" aria-controls="lessonplan" aria-selected="true">
+                    <i class="fas fa-book-open me-2"></i>Lesson Plan
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button" role="tab" aria-controls="evaluation" aria-selected="false">
+                    <i class="fas fa-clipboard-check me-2"></i>Evaluation
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="examBranchTabsContent">
+            <div class="tab-pane fade show active" id="lessonplan" role="tabpanel" aria-labelledby="lessonplan-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Teaching Planner</div>
+                            <h2 class="section-title">Build weekly lesson plans beautifully</h2>
+                            <p class="section-copy">
+                                Capture course details, generate rows from a date range, and maintain
+                                a cleaner running log of topics and attendance.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-calendar-week"></i>
+                            Auto-grouped by week
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-xl-4">
+                            <div class="exam-card h-100">
+                                <h3 class="card-title">Course Snapshot</h3>
+                                <p class="card-copy mb-3">
+                                    Start with the academic identity of the class to make the sheet
+                                    feel ready for review and reference.
+                                </p>
+                                <div class="exam-mini-grid">
+                                    <div class="exam-mini-block">
+                                        <label for="lessonBranch" class="form-label">Branch</label>
+                                        <input type="text" id="lessonBranch" class="form-control" placeholder="IT" />
+                                    </div>
+                                    <div class="exam-mini-block">
+                                        <label for="lessonYear" class="form-label">Year</label>
+                                        <input type="text" id="lessonYear" class="form-control" placeholder="3" />
+                                    </div>
+                                    <div class="exam-mini-block">
+                                        <label for="lessonSemester" class="form-label">Semester</label>
+                                        <input type="text" id="lessonSemester" class="form-control" placeholder="2" />
+                                    </div>
+                                </div>
+                                <p class="summary-note mb-0">
+                                    Tip: use save to keep a local copy on this device and download the
+                                    same lesson plan as an Excel file instantly.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-8">
+                            <div class="exam-card">
+                                <h3 class="card-title">Faculty & Subject Details</h3>
+                                <p class="card-copy mb-3">
+                                    Fill the basics once, then build the actual teaching rows beneath.
+                                </p>
+                                <div class="row g-3">
+                                    <div class="col-md-6 col-xl-4">
+                                        <label for="lessonFaculty" class="form-label">Faculty</label>
+                                        <input type="text" id="lessonFaculty" class="form-control" placeholder="Faculty Name" />
+                                    </div>
+                                    <div class="col-md-6 col-xl-4">
+                                        <label for="lessonEmployeeCode" class="form-label">Employee Code</label>
+                                        <input type="text" id="lessonEmployeeCode" class="form-control" placeholder="7001" />
+                                    </div>
+                                    <div class="col-md-6 col-xl-4">
+                                        <label for="lessonSubject" class="form-label">Subject</label>
+                                        <input type="text" id="lessonSubject" class="form-control" placeholder="Subject Name" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="lessonClassName" class="form-label">Class</label>
+                                        <input type="text" id="lessonClassName" class="form-control" placeholder="Class" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="lessonSubjectCode" class="form-label">Subject Code</label>
+                                        <input type="text" id="lessonSubjectCode" class="form-control" placeholder="Subject Code" />
+                                    </div>
+                                </div>
+
+                                <div class="exam-form-divider"></div>
+
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-4">
+                                        <label for="fromDate" class="form-label">From</label>
+                                        <input type="date" id="fromDate" class="form-control" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="toDate" class="form-label">To</label>
+                                        <input type="date" id="toDate" class="form-control" />
+                                    </div>
+                                    <div class="col-md-4 d-grid">
+                                        <button id="addBtn" class="btn exam-btn exam-btn-primary">
+                                            <i class="fas fa-plus-circle me-2"></i>Add Date Range
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="exam-table-wrap">
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table exam-table text-center align-middle" id="teachingPlanTable" style="min-width: 980px;">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Day Of The Week</th>
+                                        <th scope="col">Week No.</th>
+                                        <th scope="col">No. Of Classes Taken</th>
+                                        <th scope="col">Topics To Be Covered</th>
+                                        <th scope="col">Students Present</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teachingPlanBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="exam-actions">
+                        <div class="d-flex align-items-center gap-3 flex-wrap">
+                            <div class="exam-total-card">
+                                <label for="totalClassesTaken" class="form-label">Total Classes Taken</label>
+                                <input id="totalClassesTaken" type="text" class="form-control" value="0" readonly />
+                            </div>
+                            <div id="lessonPlanStatus" class="status-chip" data-tone="muted">
+                                <i class="fas fa-cloud"></i>
+                                Lesson plan not saved yet
+                            </div>
+                        </div>
+                        <div class="exam-action-buttons">
+                            <button id="saveBtn" class="btn exam-btn exam-btn-success">
+                                <i class="fas fa-file-excel me-2"></i>Save & Download Excel
+                            </button>
+                            <button id="deleteBtn" class="btn exam-btn exam-btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>Clear Lesson Plan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="evaluation" role="tabpanel" aria-labelledby="evaluation-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Internal Evaluation</div>
+                            <h2 class="section-title">An attractive score board with save support</h2>
+                            <p class="section-copy">
+                                Generate student rows, enter internal marks, review grade distribution,
+                                and now save the evaluation sheet directly from this tab.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-save"></i>
+                            Save marks locally
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-xl-4">
+                            <div class="exam-card h-100">
+                                <h3 class="card-title">Evaluation Controls</h3>
+                                <p class="card-copy mb-3">
+                                    Create the sheet, work on the marks table, and save it whenever you
+                                    want to revisit the same data later.
+                                </p>
+                                <label for="studentCount" class="form-label">Total Students</label>
+                                <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="50" />
+
+                                <div class="exam-action-buttons mt-3">
+                                    <button id="addStudentsBtn" class="btn exam-btn exam-btn-primary">
+                                        <i class="fas fa-users me-2"></i>Generate Sheet
+                                    </button>
+                                    <button id="evalSaveBtn" class="btn exam-btn exam-btn-success">
+                                        <i class="fas fa-save me-2"></i>Save Evaluation
+                                    </button>
+                                    <button id="evalClearBtn" class="btn exam-btn exam-btn-danger">
+                                        <i class="fas fa-broom me-2"></i>Clear Evaluation
+                                    </button>
+                                </div>
+
+                                <div id="evaluationSaveStatus" class="status-chip mt-3" data-tone="muted">
+                                    <i class="fas fa-cloud"></i>
+                                    Evaluation not saved yet
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-8">
+                            <div class="summary-grid">
+                                <div class="insight-card">
+                                    <span>Generated Rows</span>
+                                    <strong id="evaluationGeneratedCount">0</strong>
+                                </div>
+                                <div class="insight-card">
+                                    <span>Average Internal</span>
+                                    <strong id="evaluationAverageMark">0.0</strong>
+                                </div>
+                                <div class="insight-card">
+                                    <span>Pass Rate</span>
+                                    <strong id="evaluationPassRate">0%</strong>
+                                </div>
+                                <div class="insight-card">
+                                    <span>Top Grade</span>
+                                    <strong id="evaluationTopGrade">-</strong>
+                                </div>
+                            </div>
+                            <p class="summary-note">
+                                Summary cards update automatically while you edit marks. Grade
+                                percentages are calculated from graded rows only.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="exam-table-wrap mb-4">
+                        <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                            <table class="table exam-table table-striped table-sm" id="internalMarksTable" style="min-width: 1180px;">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>MID-1 Obj (10)</th>
+                                        <th>MID-1 Desc (20)</th>
+                                        <th>MID-1 Total</th>
+                                        <th>MID-2 Obj (10)</th>
+                                        <th>MID-2 Desc (20)</th>
+                                        <th>MID-2 Total</th>
+                                        <th>Average MID (30)</th>
+                                        <th>Assignment (5)</th>
+                                        <th>Viva (5)</th>
+                                        <th>Total (40)</th>
+                                        <th>Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="marksBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xl-8">
+                            <div class="exam-card">
+                                <h3 class="card-title">Grade Distribution Summary</h3>
+                                <p class="card-copy mb-3">
+                                    A quick distribution view to understand how the current grading
+                                    profile is shaping up across the class.
+                                </p>
+                                <div class="table-responsive">
+                                    <table class="table exam-table table-striped mb-0" id="gradeSummaryTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Grade</th>
+                                                <th>Student Count</th>
+                                                <th>Percentage</th>
+                                                <th>Required Range</th>
+                                                <th>Roll Numbers</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gradeSummaryBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const lessonStorageKey = 'examBranchTeachingPlan';
+        const evaluationStorageKey = 'examBranchEvaluationData';
+        const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
+        const csrfTokenValue = '{{ csrf_token }}';
+
+        const lessonHeaderFields = {
+            branch: document.getElementById('lessonBranch'),
+            year: document.getElementById('lessonYear'),
+            semester: document.getElementById('lessonSemester'),
+            faculty: document.getElementById('lessonFaculty'),
+            employeeCode: document.getElementById('lessonEmployeeCode'),
+            subject: document.getElementById('lessonSubject'),
+            className: document.getElementById('lessonClassName'),
+            subjectCode: document.getElementById('lessonSubjectCode')
+        };
+
+        const lessonPlanBody = document.getElementById('teachingPlanBody');
+        const lessonPlanStatus = document.getElementById('lessonPlanStatus');
+        const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
+        const marksBody = document.getElementById('marksBody');
+
+        function setStatus(element, message, tone) {
+            if (!element) return;
+            const iconMap = {
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-circle',
+                muted: 'fa-cloud'
+            };
+            element.dataset.tone = tone;
+            element.innerHTML = '<i class="fas ' + (iconMap[tone] || iconMap.muted) + '"></i> ' + message;
+        }
+
+        function formatSavedTime(isoString) {
+            const savedDate = new Date(isoString);
+            if (Number.isNaN(savedDate.getTime())) {
+                return 'just now';
+            }
+            return savedDate.toLocaleString();
+        }
+
+        function getCsrfToken() {
+            if (csrfTokenValue && csrfTokenValue !== 'NOTPROVIDED') {
+                return csrfTokenValue;
+            }
+            const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
+            return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        function submitLessonPlanDownload(payload) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = lessonPlanDownloadUrl;
+            form.style.display = 'none';
+
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = getCsrfToken();
+
+            const payloadInput = document.createElement('input');
+            payloadInput.type = 'hidden';
+            payloadInput.name = 'lesson_plan_payload';
+            payloadInput.value = JSON.stringify(payload);
+
+            form.appendChild(csrfInput);
+            form.appendChild(payloadInput);
+            document.body.appendChild(form);
+            form.submit();
+            form.remove();
+        }
+
+        function markLessonDirty() {
+            setStatus(lessonPlanStatus, 'Lesson plan has unsaved changes', 'warning');
+        }
+
+        function markEvaluationDirty() {
+            setStatus(evaluationSaveStatus, 'Evaluation has unsaved changes', 'warning');
+        }
+
+        function getDayName(date) {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return days[new Date(date).getDay()] || '';
+        }
+
+        function formatDate(date) {
+            const instance = new Date(date);
+            const day = String(instance.getDate()).padStart(2, '0');
+            const month = String(instance.getMonth() + 1).padStart(2, '0');
+            const year = instance.getFullYear();
+            return day + '-' + month + '-' + year;
+        }
+
+        function createDefaultRow() {
+            return {
+                date: '',
+                day: '',
+                weekNum: 1,
+                classesTaken: '',
+                topics: '',
+                studentsPresent: ''
+            };
+        }
+
+        function clearLessonRows() {
+            lessonPlanBody.innerHTML = '';
+        }
+
+        function updateLessonTotals() {
+            let runningTotal = 0;
+            lessonPlanBody.querySelectorAll('.classes-taken-input').forEach(function (input) {
+                const value = Number(input.value || 0);
+                if (!Number.isNaN(value)) {
+                    runningTotal += value;
+                }
+            });
+            document.getElementById('totalClassesTaken').value = runningTotal;
+        }
+
+        function renderLessonRows(rows) {
+            clearLessonRows();
+            const safeRows = rows && rows.length ? rows : [createDefaultRow()];
+
+            const grouped = [];
+            safeRows.forEach(function (entry) {
+                const weekKey = Number(entry.weekNum || 1);
+                const lastGroup = grouped[grouped.length - 1];
+                if (lastGroup && lastGroup.weekNum === weekKey) {
+                    lastGroup.rows.push(entry);
+                } else {
+                    grouped.push({ weekNum: weekKey, rows: [entry] });
+                }
+            });
+
+            grouped.forEach(function (group) {
+                group.rows.forEach(function (entry, index) {
+                    const row = document.createElement('tr');
+                    row.dataset.weekNum = String(group.weekNum);
+
+                    const dateCell = document.createElement('td');
+                    dateCell.innerHTML = '<input type="text" class="form-control" value="' + (entry.date || '') + '" readonly />';
+
+                    const dayCell = document.createElement('td');
+                    dayCell.innerHTML = '<input type="text" class="form-control" value="' + (entry.day || '') + '" readonly />';
+
+                    const classesCell = document.createElement('td');
+                    classesCell.innerHTML = '<input type="number" class="form-control classes-taken-input" value="' + (entry.classesTaken || '') + '" min="0" step="1" />';
+
+                    const topicsCell = document.createElement('td');
+                    topicsCell.innerHTML = '<textarea class="form-control topics-input" rows="2">' + (entry.topics || '') + '</textarea>';
+
+                    const studentsCell = document.createElement('td');
+                    studentsCell.innerHTML = '<input type="number" class="form-control students-input" value="' + (entry.studentsPresent || '') + '" min="0" step="1" />';
+
+                    row.appendChild(dateCell);
+                    row.appendChild(dayCell);
+
+                    if (index === 0) {
+                        const weekCell = document.createElement('td');
+                        weekCell.rowSpan = group.rows.length || 1;
+                        weekCell.style.cssText = 'vertical-align: middle; text-align: center;';
+                        weekCell.innerHTML = '<input type="text" class="form-control text-center" value="' + group.weekNum + '" readonly />';
+                        row.appendChild(weekCell);
+                    }
+
+                    row.appendChild(classesCell);
+                    row.appendChild(topicsCell);
+                    row.appendChild(studentsCell);
+                    lessonPlanBody.appendChild(row);
+                });
+            });
+
+            updateLessonTotals();
+        }
+
+        function getLessonHeaderData() {
+            return {
+                branch: lessonHeaderFields.branch.value,
+                year: lessonHeaderFields.year.value,
+                semester: lessonHeaderFields.semester.value,
+                faculty: lessonHeaderFields.faculty.value,
+                employeeCode: lessonHeaderFields.employeeCode.value,
+                subject: lessonHeaderFields.subject.value,
+                className: lessonHeaderFields.className.value,
+                subjectCode: lessonHeaderFields.subjectCode.value
+            };
+        }
+
+        function setLessonHeaderData(data) {
+            const payload = data || {};
+            lessonHeaderFields.branch.value = payload.branch || '';
+            lessonHeaderFields.year.value = payload.year || '';
+            lessonHeaderFields.semester.value = payload.semester || '';
+            lessonHeaderFields.faculty.value = payload.faculty || '';
+            lessonHeaderFields.employeeCode.value = payload.employeeCode || '';
+            lessonHeaderFields.subject.value = payload.subject || '';
+            lessonHeaderFields.className.value = payload.className || '';
+            lessonHeaderFields.subjectCode.value = payload.subjectCode || '';
+        }
+
+        function getLessonTableRows() {
+            return Array.from(lessonPlanBody.querySelectorAll('tr')).map(function (row) {
+                return {
+                    date: row.querySelector('td:nth-child(1) input') ? row.querySelector('td:nth-child(1) input').value : '',
+                    day: row.querySelector('td:nth-child(2) input') ? row.querySelector('td:nth-child(2) input').value : '',
+                    weekNum: Number(row.dataset.weekNum || 1),
+                    classesTaken: row.querySelector('.classes-taken-input') ? row.querySelector('.classes-taken-input').value : '',
+                    topics: row.querySelector('.topics-input') ? row.querySelector('.topics-input').value : '',
+                    studentsPresent: row.querySelector('.students-input') ? row.querySelector('.students-input').value : ''
+                };
+            });
+        }
+
+        function saveTeachingPlan() {
+            const payload = {
+                header: getLessonHeaderData(),
+                rows: getLessonTableRows(),
+                totalClassesTaken: document.getElementById('totalClassesTaken').value || '0',
+                savedAt: new Date().toISOString()
+            };
+
+            const hasContent = payload.rows.some(function (row) {
+                return row.date || row.day || row.topics || row.classesTaken || row.studentsPresent;
+            });
+
+            if (!hasContent) {
+                setStatus(lessonPlanStatus, 'Add at least one lesson row before downloading Excel', 'warning');
+                return;
+            }
+
+            localStorage.setItem(lessonStorageKey, JSON.stringify(payload));
+            setStatus(
+                lessonPlanStatus,
+                'Lesson plan saved. Excel download is starting for ' + formatSavedTime(payload.savedAt),
+                'success'
+            );
+            submitLessonPlanDownload(payload);
+        }
+
+        function loadTeachingPlan() {
+            const saved = localStorage.getItem(lessonStorageKey);
+            if (!saved) {
+                renderLessonRows([createDefaultRow()]);
+                setStatus(lessonPlanStatus, 'Lesson plan not saved yet', 'muted');
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(saved);
+                setLessonHeaderData(payload.header || {});
+                renderLessonRows(Array.isArray(payload.rows) && payload.rows.length ? payload.rows : [createDefaultRow()]);
+                setStatus(lessonPlanStatus, 'Lesson plan loaded from ' + formatSavedTime(payload.savedAt), 'success');
+            } catch (error) {
+                console.error('Failed to load saved lesson plan', error);
+                renderLessonRows([createDefaultRow()]);
+                setStatus(lessonPlanStatus, 'Could not read saved lesson plan', 'warning');
+            }
+        }
+
+        function addRowsFromRange() {
+            const fromDateStr = document.getElementById('fromDate').value;
+            const toDateStr = document.getElementById('toDate').value;
+
+            if (!fromDateStr || !toDateStr) {
+                alert('Please select both From and To dates.');
+                return;
+            }
+
+            const fromDate = new Date(fromDateStr);
+            const toDate = new Date(toDateStr);
+
+            if (fromDate > toDate) {
+                alert('From date must be before To date.');
+                return;
+            }
+
+            if (getLessonTableRows().some(function (row) {
+                return row.date || row.topics || row.classesTaken || row.studentsPresent;
+            })) {
+                if (!confirm('This will replace the current lesson rows. Continue?')) {
+                    return;
+                }
+            }
+
+            const dates = [];
+            let currentDate = new Date(fromDate);
+            while (currentDate <= toDate) {
+                dates.push(new Date(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            let weekNum = 1;
+            const rows = dates.map(function (date, index) {
+                if (index > 0 && date.getDay() === 1) {
+                    weekNum += 1;
+                }
+                return {
+                    date: formatDate(date),
+                    day: getDayName(date),
+                    weekNum: weekNum,
+                    classesTaken: '',
+                    topics: '',
+                    studentsPresent: ''
+                };
+            });
+
+            renderLessonRows(rows);
+            document.getElementById('fromDate').value = '';
+            document.getElementById('toDate').value = '';
+            markLessonDirty();
+        }
+
+        function deleteTeachingPlan() {
+            if (!confirm('Delete the saved lesson plan and clear all rows?')) {
+                return;
+            }
+            localStorage.removeItem(lessonStorageKey);
+            setLessonHeaderData({});
+            renderLessonRows([createDefaultRow()]);
+            setStatus(lessonPlanStatus, 'Lesson plan cleared', 'muted');
+        }
+
+        function generateStudents(count) {
+            const students = [];
+            for (let index = 1; index <= count; index += 1) {
+                students.push({
+                    rollNo: 'BT' + String(index).padStart(3, '0'),
+                    mid1Obj: '',
+                    mid1Desc: '',
+                    mid2Obj: '',
+                    mid2Desc: '',
+                    assignment: '',
+                    viva: ''
+                });
+            }
+            return students;
+        }
+
+        function setGradeCell(cell, grade) {
+            const label = grade || '-';
+            cell.textContent = label;
+            cell.dataset.grade = label;
+        }
+
+        function parseScore(value) {
+            const parsed = parseInt(value, 10);
+            return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
+        function recalculateEvaluationRow(row) {
+            const mid1ObjRaw = row.querySelector('.mid1-obj').value.trim();
+            const mid1DescRaw = row.querySelector('.mid1-desc').value.trim();
+            const mid2ObjRaw = row.querySelector('.mid2-obj').value.trim();
+            const mid2DescRaw = row.querySelector('.mid2-desc').value.trim();
+            const assignmentRaw = row.querySelector('.assignment').value.trim();
+            const vivaRaw = row.querySelector('.viva').value.trim();
+
+            const hasAnyMarks = [mid1ObjRaw, mid1DescRaw, mid2ObjRaw, mid2DescRaw, assignmentRaw, vivaRaw].some(Boolean);
+
+            if (!hasAnyMarks) {
+                row.querySelector('.mid1-total').textContent = '-';
+                row.querySelector('.mid2-total').textContent = '-';
+                row.querySelector('.mid-avg').textContent = '-';
+                row.querySelector('.total').textContent = '-';
+                setGradeCell(row.querySelector('.grade'), '-');
+                return;
+            }
+
+            const mid1Obj = parseScore(mid1ObjRaw);
+            const mid1Desc = parseScore(mid1DescRaw);
+            const mid2Obj = parseScore(mid2ObjRaw);
+            const mid2Desc = parseScore(mid2DescRaw);
+            const assignment = parseScore(assignmentRaw);
+            const viva = parseScore(vivaRaw);
+
+            const mid1Total = mid1Obj + mid1Desc;
+            const mid2Total = mid2Obj + mid2Desc;
+            const midAvg = Math.round((mid1Total + mid2Total) / 2);
+            const total = Math.min(midAvg + assignment + viva, 40);
+
+            row.querySelector('.mid1-total').textContent = String(mid1Total);
+            row.querySelector('.mid2-total').textContent = String(mid2Total);
+            row.querySelector('.mid-avg').textContent = String(midAvg);
+            row.querySelector('.total').textContent = String(total);
+            setGradeCell(row.querySelector('.grade'), getGrade(total));
+        }
+
+        function renderStudents(students) {
+            marksBody.innerHTML = '';
+
+            students.forEach(function (student) {
+                const row = document.createElement('tr');
+                row.innerHTML = ''
+                    + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
+                    + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '" pattern="[0-9]*"></td>'
+                    + '<td><input type="text" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" pattern="[0-9]*"></td>'
+                    + '<td class="mid1-total">-</td>'
+                    + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '" pattern="[0-9]*"></td>'
+                    + '<td><input type="text" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" pattern="[0-9]*"></td>'
+                    + '<td class="mid2-total">-</td>'
+                    + '<td class="mid-avg">-</td>'
+                    + '<td><input type="text" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '" pattern="[0-9]*"></td>'
+                    + '<td><input type="text" class="form-control form-control-sm viva" value="' + (student.viva || '') + '" pattern="[0-9]*"></td>'
+                    + '<td class="total">-</td>'
+                    + '<td class="grade" data-grade="-">-</td>';
+                marksBody.appendChild(row);
+                recalculateEvaluationRow(row);
+            });
+
+            updateGradeSummary();
+            updateEvaluationMetrics();
+        }
+
+        function getEvaluationRows() {
+            return Array.from(marksBody.querySelectorAll('tr')).map(function (row) {
+                return {
+                    rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
+                    mid1Obj: row.querySelector('.mid1-obj') ? row.querySelector('.mid1-obj').value : '',
+                    mid1Desc: row.querySelector('.mid1-desc') ? row.querySelector('.mid1-desc').value : '',
+                    mid2Obj: row.querySelector('.mid2-obj') ? row.querySelector('.mid2-obj').value : '',
+                    mid2Desc: row.querySelector('.mid2-desc') ? row.querySelector('.mid2-desc').value : '',
+                    assignment: row.querySelector('.assignment') ? row.querySelector('.assignment').value : '',
+                    viva: row.querySelector('.viva') ? row.querySelector('.viva').value : '',
+                    total: row.querySelector('.total') ? row.querySelector('.total').textContent : '-',
+                    grade: row.querySelector('.grade') ? row.querySelector('.grade').textContent : '-'
+                };
+            });
+        }
+
+        function hasEvaluationContent() {
+            return getEvaluationRows().some(function (student) {
+                return student.rollNo.trim()
+                    || student.mid1Obj.trim()
+                    || student.mid1Desc.trim()
+                    || student.mid2Obj.trim()
+                    || student.mid2Desc.trim()
+                    || student.assignment.trim()
+                    || student.viva.trim();
+            });
+        }
+
+        function getGrade(total) {
+            if (total >= 37) return 'O';
+            if (total >= 32) return 'A+';
+            if (total >= 28) return 'A';
+            if (total >= 24) return 'B+';
+            if (total >= 20) return 'B';
+            if (total >= 14) return 'P';
+            return 'F';
+        }
+
+        function calculateGradeDistribution(students) {
+            const grades = {
+                'O': { count: 0, rolls: [] },
+                'A+': { count: 0, rolls: [] },
+                'A': { count: 0, rolls: [] },
+                'B+': { count: 0, rolls: [] },
+                'B': { count: 0, rolls: [] },
+                'P': { count: 0, rolls: [] },
+                'F': { count: 0, rolls: [] }
+            };
+
+            students.forEach(function (student) {
+                if (!student.grade || student.grade === '-' || student.grade === 'ABSENT') {
+                    return;
+                }
+
+                grades[student.grade].count += 1;
+                if ((student.rollNo || '').trim()) {
+                    grades[student.grade].rolls.push(student.rollNo.trim());
+                }
+            });
+
+            return grades;
+        }
+
+        function updateEvaluationMetrics() {
+            const students = getEvaluationRows();
+            const gradedStudents = students.filter(function (student) {
+                return student.grade && student.grade !== '-' && student.grade !== 'ABSENT';
+            });
+            const distribution = calculateGradeDistribution(students);
+            const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
+
+            const averageTotal = gradedStudents.length
+                ? (gradedStudents.reduce(function (sum, student) {
+                    return sum + parseScore(student.total);
+                }, 0) / gradedStudents.length).toFixed(1)
+                : '0.0';
+
+            const passRate = gradedStudents.length
+                ? Math.round((gradedStudents.filter(function (student) { return parseScore(student.total) >= 14; }).length / gradedStudents.length) * 100) + '%'
+                : '0%';
+
+            const highestGrade = gradeOrder.find(function (grade) {
+                return distribution[grade].count > 0;
+            }) || '-';
+
+            document.getElementById('evaluationGeneratedCount').textContent = String(students.length);
+            document.getElementById('evaluationAverageMark').textContent = averageTotal;
+            document.getElementById('evaluationPassRate').textContent = passRate;
+            document.getElementById('evaluationTopGrade').textContent = highestGrade;
+        }
+
+        function updateGradeSummary() {
+            const students = getEvaluationRows();
+            const grades = calculateGradeDistribution(students);
+            const gradedStudents = students.filter(function (student) {
+                return student.grade && student.grade !== '-' && student.grade !== 'ABSENT';
+            });
+            const totalGraded = gradedStudents.length;
+            const tbody = document.getElementById('gradeSummaryBody');
+            const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
+            const ranges = {
+                'O': '10%-15%',
+                'A+': '20%-25%',
+                'A': '20%-25%',
+                'B+': '20%-25%',
+                'B': '10%-15%',
+                'P': '0%',
+                'F': '0%'
+            };
+
+            tbody.innerHTML = '';
+
+            gradeOrder.forEach(function (grade) {
+                const count = grades[grade].count;
+                const percentage = totalGraded ? Math.round((count / totalGraded) * 100) : 0;
+                const row = document.createElement('tr');
+                row.innerHTML = ''
+                    + '<td><strong>' + grade + '</strong></td>'
+                    + '<td>' + count + '</td>'
+                    + '<td>' + percentage + '%</td>'
+                    + '<td>' + ranges[grade] + '</td>'
+                    + '<td style="font-size: 0.82rem;">' + (grades[grade].rolls.join(', ') || '-') + '</td>';
+                tbody.appendChild(row);
+            });
+
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = ''
+                + '<td><strong>Total</strong></td>'
+                + '<td><strong>' + totalGraded + '</strong></td>'
+                + '<td><strong>' + (totalGraded ? '100%' : '0%') + '</strong></td>'
+                + '<td><strong>Graded Rows</strong></td>'
+                + '<td></td>';
+            tbody.appendChild(totalRow);
+        }
+
+        function saveEvaluationData() {
+            const payload = {
+                studentCount: document.getElementById('studentCount').value,
+                rows: getEvaluationRows(),
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem(evaluationStorageKey, JSON.stringify(payload));
+            setStatus(evaluationSaveStatus, 'Evaluation saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function loadEvaluationData() {
+            const saved = localStorage.getItem(evaluationStorageKey);
+            const defaultCount = parseInt(document.getElementById('studentCount').value, 10) || 50;
+
+            if (!saved) {
+                renderStudents(generateStudents(defaultCount));
+                setStatus(evaluationSaveStatus, 'Starter sheet ready. Save after editing.', 'muted');
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(saved);
+                document.getElementById('studentCount').value = payload.studentCount || String(defaultCount);
+                renderStudents(Array.isArray(payload.rows) && payload.rows.length ? payload.rows : generateStudents(defaultCount));
+                setStatus(evaluationSaveStatus, 'Evaluation loaded from ' + formatSavedTime(payload.savedAt), 'success');
+            } catch (error) {
+                console.error('Failed to load evaluation data', error);
+                renderStudents(generateStudents(defaultCount));
+                setStatus(evaluationSaveStatus, 'Could not read saved evaluation', 'warning');
+            }
+        }
+
+        function clearEvaluationData() {
+            if (!confirm('Clear the saved evaluation and reset the marks sheet?')) {
+                return;
+            }
+
+            localStorage.removeItem(evaluationStorageKey);
+            const count = parseInt(document.getElementById('studentCount').value, 10) || 50;
+            renderStudents(generateStudents(count));
+            setStatus(evaluationSaveStatus, 'Evaluation cleared', 'muted');
+        }
+
+        function regenerateStudentSheet() {
+            const count = parseInt(document.getElementById('studentCount').value, 10) || 50;
+
+            if (hasEvaluationContent()) {
+                if (!confirm('This will replace the current marks sheet. Continue?')) {
+                    return;
+                }
+            }
+
+            renderStudents(generateStudents(count));
+            markEvaluationDirty();
+        }
+
+        document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
+        document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
+        document.getElementById('deleteBtn').addEventListener('click', deleteTeachingPlan);
+
+        lessonPlanBody.addEventListener('input', function (event) {
+            if (event.target.classList.contains('classes-taken-input')) {
+                updateLessonTotals();
+            }
+            markLessonDirty();
+        });
+
+        Object.values(lessonHeaderFields).forEach(function (field) {
+            field.addEventListener('input', markLessonDirty);
+        });
+
+        document.getElementById('fromDate').addEventListener('change', markLessonDirty);
+        document.getElementById('toDate').addEventListener('change', markLessonDirty);
+
+        document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
+        document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
+        document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
+
+        marksBody.addEventListener('input', function (event) {
+            if (event.target.closest('tr')) {
+                recalculateEvaluationRow(event.target.closest('tr'));
+                updateGradeSummary();
+                updateEvaluationMetrics();
+                markEvaluationDirty();
+            }
+        });
+
+        document.getElementById('studentCount').addEventListener('input', markEvaluationDirty);
+
+        loadTeachingPlan();
+        loadEvaluationData();
+    })();
+</script>
+{% endblock %}

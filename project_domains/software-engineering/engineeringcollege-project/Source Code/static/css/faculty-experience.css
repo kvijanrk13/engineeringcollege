@@ -1,0 +1,511 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+.faculty-experience-page {
+    --faculty-ink: #163149;
+    --faculty-muted: #667d90;
+    --faculty-ocean: #0f4c81;
+    --faculty-emerald: #0e9f7b;
+    --faculty-coral: #f97316;
+    --faculty-sky: #edf7ff;
+    --faculty-surface: rgba(255, 255, 255, 0.95);
+    --faculty-border: rgba(90, 120, 148, 0.16);
+    --faculty-shadow: 0 24px 56px rgba(15, 76, 129, 0.12);
+    font-family: "Manrope", "Segoe UI", sans-serif;
+    color: var(--faculty-ink);
+}
+
+.faculty-shell {
+    position: relative;
+    padding: 0.5rem;
+    overflow: hidden;
+}
+
+.faculty-shell::before,
+.faculty-shell::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    border-radius: 999px;
+    filter: blur(18px);
+    opacity: 0.7;
+}
+
+.faculty-shell::before {
+    width: 250px;
+    height: 250px;
+    top: 35px;
+    right: -40px;
+    background: rgba(249, 115, 22, 0.16);
+}
+
+.faculty-shell::after {
+    width: 320px;
+    height: 320px;
+    left: -110px;
+    bottom: 40px;
+    background: rgba(14, 159, 123, 0.12);
+}
+
+.faculty-shell > * {
+    position: relative;
+    z-index: 1;
+}
+
+.faculty-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.95fr);
+    gap: 1.5rem;
+    align-items: stretch;
+    padding: 2rem;
+    margin-bottom: 1.65rem;
+    border-radius: 30px;
+    color: #fff;
+    background:
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 34%),
+        linear-gradient(135deg, #071826 0%, #0f4c81 55%, #f97316 100%);
+    box-shadow: 0 30px 60px rgba(7, 24, 38, 0.26);
+}
+
+.faculty-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.95rem;
+    margin-bottom: 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.faculty-hero-title {
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    font-size: clamp(2rem, 3vw, 3.1rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.75rem;
+}
+
+.faculty-hero-copy {
+    max-width: 680px;
+    margin: 0 0 1.25rem;
+    color: rgba(255, 255, 255, 0.88);
+    line-height: 1.75;
+}
+
+.faculty-hero-actions {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.faculty-hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.88rem 1.15rem;
+    border-radius: 16px;
+    text-decoration: none;
+    font-weight: 800;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-hero-btn:hover {
+    transform: translateY(-1px);
+}
+
+.faculty-hero-btn.primary {
+    color: var(--faculty-ink);
+    background: #fff;
+    box-shadow: 0 16px 30px rgba(6, 20, 33, 0.16);
+}
+
+.faculty-hero-btn.secondary {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 16px 30px rgba(6, 20, 33, 0.14);
+}
+
+.faculty-hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.faculty-metric {
+    padding: 1rem 1.1rem;
+    border-radius: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(14px);
+}
+
+.faculty-metric span {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: rgba(255, 255, 255, 0.74);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 800;
+}
+
+.faculty-metric strong {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.45;
+    font-weight: 800;
+}
+
+.faculty-panel-card {
+    border: 1px solid var(--faculty-border);
+    border-radius: 28px !important;
+    overflow: hidden;
+    background: var(--faculty-surface);
+    box-shadow: var(--faculty-shadow) !important;
+}
+
+.faculty-panel-card > .card-header {
+    padding: 1.25rem 1.5rem;
+    border: 0;
+    background:
+        radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent 30%),
+        linear-gradient(135deg, #15324a 0%, #0f4c81 100%) !important;
+}
+
+.faculty-panel-card > .card-body,
+.faculty-panel-card > .card-footer {
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.faculty-panel-card > .card-footer {
+    border-top: 1px solid rgba(111, 143, 169, 0.14);
+}
+
+.faculty-tabs-shell {
+    padding: 0.6rem;
+    margin: 1.2rem 0 1rem;
+    border-radius: 24px;
+    background: rgba(235, 246, 255, 0.85);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    overflow-x: auto;
+}
+
+.faculty-experience-page #facultyTabs {
+    flex-wrap: nowrap;
+    gap: 0.65rem;
+    border-bottom: 0;
+}
+
+.faculty-experience-page #facultyTabs .nav-item {
+    flex: 0 0 auto;
+}
+
+.faculty-experience-page #facultyTabs .nav-link {
+    border: 0;
+    border-radius: 999px;
+    padding: 0.82rem 1.1rem;
+    color: var(--faculty-muted);
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.faculty-experience-page #facultyTabs .nav-link:hover {
+    transform: translateY(-1px);
+    background: rgba(15, 76, 129, 0.08);
+}
+
+.faculty-experience-page #facultyTabs .nav-link.active {
+    color: #fff !important;
+    background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    box-shadow: 0 14px 28px rgba(15, 76, 129, 0.22);
+}
+
+.faculty-experience-page .tab-content {
+    padding: 0.5rem 0 0;
+}
+
+.faculty-experience-page .tab-pane {
+    min-height: 280px;
+}
+
+.faculty-experience-page .form-section,
+.faculty-experience-page .publication-card,
+.faculty-experience-page .fdp-card,
+.faculty-experience-page .project-card,
+.faculty-experience-page .result-card,
+.faculty-experience-page .story-card,
+.faculty-experience-page .action-card,
+.faculty-experience-page .activity-card,
+.faculty-experience-page .upload-card,
+.faculty-experience-page .department-card {
+    border: 1px solid rgba(111, 143, 169, 0.16);
+    border-radius: 24px !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%) !important;
+    box-shadow: 0 16px 32px rgba(15, 76, 129, 0.06);
+}
+
+.faculty-experience-page .form-section {
+    padding: 1.35rem !important;
+}
+
+.faculty-experience-page .form-section h4 {
+    border: 0 !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 1rem !important;
+    color: var(--faculty-ocean) !important;
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.faculty-experience-page .card.border-primary,
+.faculty-experience-page .card.border-info,
+.faculty-experience-page .card.border-secondary {
+    border-radius: 20px !important;
+    overflow: hidden;
+    border-width: 1px !important;
+}
+
+.faculty-experience-page .document-card,
+.faculty-experience-page .document-item,
+.faculty-experience-page .research-proof-item,
+.faculty-experience-page .fdp-cert-item,
+.faculty-experience-page .other-doc-item {
+    border-radius: 18px !important;
+    border: 1px solid rgba(111, 143, 169, 0.14) !important;
+    background: #fff !important;
+}
+
+.faculty-experience-page .form-control,
+.faculty-experience-page .form-select,
+.faculty-experience-page textarea {
+    border-radius: 14px;
+    border: 1px solid #d9e4ee;
+    padding: 0.72rem 0.95rem;
+    background: #fff;
+    box-shadow: none;
+}
+
+.faculty-experience-page .form-control:focus,
+.faculty-experience-page .form-select:focus,
+.faculty-experience-page textarea:focus {
+    border-color: rgba(15, 76, 129, 0.72);
+    box-shadow: 0 0 0 0.22rem rgba(15, 76, 129, 0.12);
+}
+
+.faculty-experience-page .form-label {
+    color: var(--faculty-ink);
+    font-weight: 700;
+}
+
+.faculty-experience-page .help-text {
+    color: var(--faculty-muted);
+}
+
+.faculty-experience-page .btn {
+    border-radius: 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.faculty-experience-page .btn-lg {
+    padding: 0.85rem 1.3rem;
+    border-radius: 16px;
+}
+
+.faculty-experience-page .btn-primary {
+    background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    border-color: transparent;
+}
+
+.faculty-experience-page .btn-success {
+    background: linear-gradient(135deg, #0e9f7b 0%, #0c7b5f 100%);
+    border-color: transparent;
+}
+
+.faculty-experience-page .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    border-color: transparent;
+}
+
+.faculty-experience-page .btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.faculty-experience-page .btn-info {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.faculty-experience-page .table-responsive {
+    border-radius: 20px;
+}
+
+.faculty-experience-page .table {
+    margin-bottom: 0;
+}
+
+.faculty-experience-page .table th,
+.faculty-experience-page .table td {
+    border-color: #e4edf5;
+    vertical-align: middle;
+}
+
+.faculty-experience-page .table thead th {
+    background: #ecf4ff;
+    color: var(--faculty-ink);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.faculty-experience-page .badge,
+.faculty-experience-page .fdp-badge {
+    border-radius: 999px;
+    padding: 0.4rem 0.65rem;
+    font-weight: 800;
+}
+
+.faculty-experience-page .tab-navigation {
+    border-top: 1px dashed rgba(111, 143, 169, 0.24);
+    padding-top: 1rem;
+}
+
+.faculty-directory-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.faculty-grid-two {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 1rem;
+}
+
+.faculty-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.faculty-stat-card {
+    padding: 1.1rem;
+    border-radius: 22px;
+    background: #fff;
+    border: 1px solid rgba(111, 143, 169, 0.15);
+}
+
+.faculty-stat-card span {
+    display: block;
+    margin-bottom: 0.35rem;
+    color: var(--faculty-muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.faculty-stat-card strong {
+    display: block;
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.faculty-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.faculty-gallery-card {
+    padding: 1.1rem;
+    border-radius: 22px;
+    background: #fff;
+    border: 1px solid rgba(111, 143, 169, 0.14);
+}
+
+.faculty-gallery-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 18px;
+    margin-top: 0.85rem;
+    box-shadow: 0 16px 30px rgba(15, 76, 129, 0.1);
+}
+
+.faculty-gallery-actions {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.faculty-status-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.68rem 0.95rem;
+    border-radius: 999px;
+    background: rgba(15, 76, 129, 0.08);
+    color: var(--faculty-ocean);
+    font-weight: 700;
+}
+
+.faculty-section-heading {
+    font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    font-size: 1.08rem;
+    color: var(--faculty-ocean);
+    margin-bottom: 0.65rem;
+}
+
+@media (max-width: 1199.98px) {
+    .faculty-hero,
+    .faculty-grid-two,
+    .faculty-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .faculty-gallery-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .faculty-hero,
+    .faculty-panel-card > .card-body,
+    .faculty-panel-card > .card-footer {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .faculty-hero {
+        padding: 1.3rem;
+    }
+
+    .faculty-hero-actions,
+    .faculty-hero-btn,
+    .faculty-hero-metrics {
+        width: 100%;
+    }
+
+    .faculty-hero-btn {
+        justify-content: center;
+    }
+
+    .faculty-hero-metrics {
+        grid-template-columns: 1fr;
+    }
+}

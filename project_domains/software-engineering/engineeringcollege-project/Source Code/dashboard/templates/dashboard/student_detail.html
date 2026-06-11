@@ -1,0 +1,471 @@
+<!-- dashboard/templates/dashboard/student_detail.html -->
+
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        font-family: 'Courier New', monospace;
+        background: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 30px;
+        background: rgba(0, 20, 0, 0.95);
+        border: 3px solid #0f0;
+        border-radius: 15px;
+        box-shadow: 0 0 30px rgba(0,255,0,.5);
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #0f0;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+
+    .title {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #0f0;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: 2px solid #0f0;
+        color: #0f0;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: 0.3s;
+        margin: 0 5px;
+    }
+
+    .btn:hover {
+        background: #0f0;
+        color: #000;
+    }
+
+    .btn-danger {
+        border-color: #f00;
+        color: #f00;
+    }
+
+    .btn-danger:hover {
+        background: #f00;
+        color: #000;
+    }
+
+    .student-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    .info-section {
+        background: rgba(0, 30, 0, 0.8);
+        border: 1px solid #0f0;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        color: #0f0;
+        border-bottom: 1px solid #0f0;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .info-row {
+        display: flex;
+        margin-bottom: 10px;
+        padding: 5px 0;
+    }
+
+    .info-label {
+        width: 150px;
+        font-weight: bold;
+        color: #0f0;
+        opacity: 0.8;
+    }
+
+    .info-value {
+        flex: 1;
+        color: #0f0;
+    }
+
+    .photo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .student-photo {
+        max-width: 200px;
+        max-height: 200px;
+        border: 3px solid #0f0;
+        border-radius: 10px;
+    }
+
+    .no-photo {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+        background: rgba(0, 30, 0, 0.8);
+        border: 3px solid #0f0;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0f0;
+    }
+
+    .action-buttons {
+        margin-top: 30px;
+        text-align: center;
+    }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="container">
+    <div class="header">
+        <span class="title">STUDENT DETAILS</span>
+        <div>
+            <a href="{% url 'dashboard:students_data' %}" class="btn">BACK TO LIST</a>
+            <a href="{% url 'dashboard:edit_student' student.id %}" class="btn">EDIT</a>
+            {% if student.pdf_url or student.pdf_file %}
+            <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn">VIEW PDF</a>
+            {% else %}
+            <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn">GENERATE PDF</a>
+            {% endif %}
+            <a href="{% url 'dashboard:logout' %}" class="btn btn-danger">LOGOUT</a>
+        </div>
+    </div>
+
+    <div class="student-info">
+        <!-- Photo Section -->
+        <div class="info-section">
+            <div class="section-title">PHOTO</div>
+            <div class="photo-section">
+                {% if student.photo_url or student.photo %}
+                    <img src="{% url 'dashboard:student_photo_redirect' student.id %}" class="student-photo" alt="{{ student.student_name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <div class="no-photo" style="display: none;">Photo Load Error</div>
+                {% else %}
+                    <div class="no-photo">No Photo</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Basic Information -->
+        <div class="info-section">
+            <div class="section-title">BASIC INFORMATION</div>
+            <div class="info-row">
+                <span class="info-label">HT No:</span>
+                <span class="info-value">{{ student.ht_no }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ student.student_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Father's Name:</span>
+                <span class="info-value">{{ student.father_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Mother's Name:</span>
+                <span class="info-value">{{ student.mother_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Gender:</span>
+                <span class="info-value">{{ student.gender }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date of Birth:</span>
+                <span class="info-value">{{ student.dob|date:"d-m-Y" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Age:</span>
+                <span class="info-value">{{ student.age }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Blood Group:</span>
+                <span class="info-value">{{ student.blood_group|default:"-" }}</span>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="info-section">
+            <div class="section-title">CONTACT INFORMATION</div>
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value">{{ student.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Student Phone:</span>
+                <span class="info-value">{{ student.student_phone }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Parent Phone:</span>
+                <span class="info-value">{{ student.parent_phone }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Address:</span>
+                <span class="info-value">{{ student.address }}</span>
+            </div>
+        </div>
+
+        <!-- Academic Information -->
+        <div class="info-section">
+            <div class="section-title">ACADEMIC INFORMATION</div>
+            <div class="info-row">
+                <span class="info-label">Department:</span>
+                <span class="info-value">{{ student.department|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Year:</span>
+                <span class="info-value">{{ student.year }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Semester:</span>
+                <span class="info-value">{{ student.sem }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">SSC Marks:</span>
+                <span class="info-value">{{ student.ssc_marks|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Inter Marks:</span>
+                <span class="info-value">{{ student.inter_marks|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">CGPA:</span>
+                <span class="info-value">{{ student.cgpa|default:"-" }}</span>
+            </div>
+        </div>
+
+        <!-- Identification -->
+        <div class="info-section">
+            <div class="section-title">IDENTIFICATION</div>
+            <div class="info-row">
+                <span class="info-label">Aadhar:</span>
+                <span class="info-value">{{ student.aadhar|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">APAAR ID:</span>
+                <span class="info-value">{{ student.apaar_id|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Category:</span>
+                <span class="info-value">{{ student.category|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Religion:</span>
+                <span class="info-value">{{ student.religion|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Nationality:</span>
+                <span class="info-value">{{ student.nationality|default:"Indian" }}</span>
+            </div>
+        </div>
+
+        <!-- Projects & Training -->
+        <div class="info-section">
+            <div class="section-title">PROJECTS & TRAINING</div>
+            <div class="info-row">
+                <span class="info-label">RTRP Project:</span>
+                <span class="info-value">{{ student.rtrp_project_title|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Internship:</span>
+                <span class="info-value">{{ student.intern_title|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Final Project:</span>
+                <span class="info-value">{{ student.final_project_title|default:"-" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Other Training:</span>
+                <span class="info-value">{{ student.other_training|default:"-" }}</span>
+            </div>
+        </div>
+
+        <!-- Certificates & Documents -->
+        <div class="info-section" style="grid-column: span 2;">
+            <div class="section-title">CERTIFICATES & DOCUMENTS</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px;">
+                {% if student.cert_achieve_url %}
+                <div class="info-row">
+                    <span class="info-label">Achievement:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_achieve_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_achieve %}
+                <div class="info-row">
+                    <span class="info-label">Achievement:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_achieve.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if student.cert_intern_url %}
+                <div class="info-row">
+                    <span class="info-label">Internship:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_intern_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_intern %}
+                <div class="info-row">
+                    <span class="info-label">Internship:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_intern.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if student.cert_courses_url %}
+                <div class="info-row">
+                    <span class="info-label">Courses:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_courses_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_courses %}
+                <div class="info-row">
+                    <span class="info-label">Courses:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_courses.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if student.cert_sdp_url %}
+                <div class="info-row">
+                    <span class="info-label">SDP:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_sdp_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_sdp %}
+                <div class="info-row">
+                    <span class="info-label">SDP:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_sdp.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if student.cert_extra_url %}
+                <div class="info-row">
+                    <span class="info-label">Extracurricular:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_extra_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_extra %}
+                <div class="info-row">
+                    <span class="info-label">Extracurricular:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_extra.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if student.cert_placement_url %}
+                <div class="info-row">
+                    <span class="info-label">Placement:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_placement_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_placement %}
+                <div class="info-row">
+                    <span class="info-label">Placement:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_placement.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if student.cert_national_url %}
+                <div class="info-row">
+                    <span class="info-label">National Exam:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_national_url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% elif student.cert_national %}
+                <div class="info-row">
+                    <span class="info-label">National Exam:</span>
+                    <span class="info-value">
+                        <a href="{{ student.cert_national.url }}" target="_blank" style="color: #0f0;">View Document</a>
+                    </span>
+                </div>
+                {% endif %}
+
+                {% if not student.cert_achieve_url and not student.cert_achieve and not student.cert_intern_url and not student.cert_intern and not student.cert_courses_url and not student.cert_courses and not student.cert_sdp_url and not student.cert_sdp and not student.cert_extra_url and not student.cert_extra and not student.cert_placement_url and not student.cert_placement and not student.cert_national_url and not student.cert_national %}
+                <div class="info-value">No documents uploaded.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        {% if student.pdf_url or student.pdf_file %}
+        <a href="{% url 'dashboard:view_student_pdf' student.id %}" target="_blank" class="btn">DOWNLOAD PDF</a>
+        {% else %}
+        <a href="{% url 'dashboard:generate_student_pdf' student.id %}" class="btn">DOWNLOAD PDF</a>
+        {% endif %}
+        <a href="{% url 'dashboard:merge_student_certificates' student.id %}" class="btn">MERGE CERTIFICATES</a>
+        <a href="{% url 'dashboard:edit_student' student.id %}" class="btn">EDIT STUDENT</a>
+    </div>
+</div>
+
+<script>
+    // Matrix Animation
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '01IT';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+{% endblock %}

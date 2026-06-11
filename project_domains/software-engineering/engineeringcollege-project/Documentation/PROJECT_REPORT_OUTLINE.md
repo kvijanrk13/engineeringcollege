@@ -6,7 +6,7 @@ EngineeringCollege Department Management System
 
 ## Abstract
 
-This software engineering project is a Django-based department management platform. It includes faculty and student profile management, certificate handling, PDF generation, project showcase pages, paid ZIP download workflows, and a car-price data-mining module.
+This software engineering project is a Django-based department management platform. It includes faculty and student profile management, certificate handling, PDF generation, syllabus access, exam-branch utilities, gallery pages, and academic record management.
 
 ## Modules
 
@@ -14,10 +14,9 @@ This software engineering project is a Django-based department management platfo
 - Faculty profile management
 - Student profile management
 - Certificate upload and PDF generation
-- Project domains and paid downloads
-- Car-price data-mining app
+- Syllabus and exam-branch utilities
 - Gallery, dashboard, and event pages
-- Cloudinary and deployment integration
+- Academic record reporting
 
 ## Technology Stack
 
@@ -25,7 +24,6 @@ This software engineering project is a Django-based department management platfo
 - Django
 - PostgreSQL or SQLite for local development
 - HTML, CSS, JavaScript
-- Cloudinary
 - Render deployment
 
 ## Future Scope

@@ -1,0 +1,1203 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard | Engineering College{% endblock %}
+
+{% block extra_css %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+
+    :root {
+        --dash-ink: #15324a;
+        --dash-muted: #61788b;
+        --dash-ocean: #0f4c81;
+        --dash-emerald: #0e9f7b;
+        --dash-coral: #f97316;
+        --dash-gold: #f4b63d;
+        --dash-sky: #eaf5ff;
+        --dash-surface: rgba(255, 255, 255, 0.94);
+        --dash-border: rgba(85, 120, 148, 0.16);
+        --dash-shadow: 0 24px 55px rgba(15, 76, 129, 0.12);
+    }
+
+    .dashboard-showcase {
+        font-family: "Manrope", "Segoe UI", sans-serif;
+        color: var(--dash-ink);
+    }
+
+    .dashboard-shell {
+        position: relative;
+        padding: 0.5rem;
+        overflow: hidden;
+    }
+
+    .dashboard-shell::before,
+    .dashboard-shell::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        border-radius: 999px;
+        filter: blur(16px);
+        opacity: 0.7;
+    }
+
+    .dashboard-shell::before {
+        width: 260px;
+        height: 260px;
+        right: -60px;
+        top: 40px;
+        background: rgba(249, 115, 22, 0.16);
+    }
+
+    .dashboard-shell::after {
+        width: 320px;
+        height: 320px;
+        left: -110px;
+        bottom: 60px;
+        background: rgba(14, 159, 123, 0.12);
+    }
+
+    .dashboard-shell > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .dashboard-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.9fr);
+        gap: 1.5rem;
+        align-items: stretch;
+        padding: 2rem;
+        margin-bottom: 1.75rem;
+        border-radius: 30px;
+        color: #fff;
+        background:
+            radial-gradient(circle at top right, rgba(255, 255, 255, 0.17), transparent 34%),
+            linear-gradient(135deg, #071826 0%, #0f4c81 52%, #f97316 100%);
+        box-shadow: 0 28px 58px rgba(7, 24, 38, 0.25);
+    }
+
+    .dashboard-kicker,
+    .section-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .dashboard-kicker {
+        background: rgba(255, 255, 255, 0.14);
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-title,
+    .section-title,
+    .card-title,
+    .framework-title {
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        letter-spacing: -0.03em;
+    }
+
+    .dashboard-title {
+        font-size: clamp(2rem, 3.2vw, 3.4rem);
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+
+    .dashboard-copy {
+        max-width: 720px;
+        margin-bottom: 1.4rem;
+        line-height: 1.75;
+        color: rgba(255, 255, 255, 0.88);
+    }
+
+    .dashboard-actions {
+        display: flex;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+    }
+
+    .hero-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        border-radius: 16px;
+        padding: 0.9rem 1.2rem;
+        font-weight: 800;
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    }
+
+    .hero-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .hero-btn-primary {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.16);
+        box-shadow: 0 16px 30px rgba(6, 20, 33, 0.18);
+    }
+
+    .hero-btn-secondary {
+        color: var(--dash-ink);
+        background: #fff;
+        box-shadow: 0 16px 30px rgba(6, 20, 33, 0.16);
+    }
+
+    .dashboard-hero-side {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .hero-side-card {
+        padding: 1rem 1.1rem;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        backdrop-filter: blur(14px);
+    }
+
+    .hero-side-card span {
+        display: block;
+        margin-bottom: 0.45rem;
+        color: rgba(255, 255, 255, 0.74);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .hero-side-card strong {
+        display: block;
+        font-size: 1rem;
+        line-height: 1.5;
+        font-weight: 800;
+    }
+
+    .dashboard-tabs {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        padding: 0.6rem;
+        margin-bottom: 1.5rem;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 18px 32px rgba(15, 76, 129, 0.08);
+        backdrop-filter: blur(14px);
+    }
+
+    .dashboard-tabs .nav-link {
+        border: 0;
+        border-radius: 999px;
+        padding: 0.88rem 1.35rem;
+        color: var(--dash-muted);
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-weight: 700;
+    }
+
+    .dashboard-tabs .nav-link.active {
+        color: #fff;
+        background: linear-gradient(135deg, #0f4c81 0%, #15324a 100%);
+        box-shadow: 0 14px 26px rgba(15, 76, 129, 0.22);
+    }
+
+    .dashboard-panel {
+        padding: 1.65rem;
+        border-radius: 28px;
+        border: 1px solid var(--dash-border);
+        background: var(--dash-surface);
+        box-shadow: var(--dash-shadow);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        margin-bottom: 1.4rem;
+    }
+
+    .section-kicker {
+        background: rgba(15, 76, 129, 0.1);
+        color: var(--dash-ocean);
+        margin-bottom: 0.7rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.45rem, 2vw, 2rem);
+        font-weight: 700;
+        margin-bottom: 0.45rem;
+    }
+
+    .section-copy,
+    .card-copy {
+        margin: 0;
+        color: var(--dash-muted);
+        line-height: 1.7;
+    }
+
+    .section-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.75rem 1rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(15, 76, 129, 0.1), rgba(249, 115, 22, 0.12));
+        color: var(--dash-ink);
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+        border-radius: 24px;
+        border: 1px solid rgba(111, 143, 169, 0.16);
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+    }
+
+    .stat-card .stat-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        margin-bottom: 0.9rem;
+        font-size: 1.1rem;
+        color: #fff;
+    }
+
+    .stat-card[data-tone="faculty"] .stat-icon {
+        background: linear-gradient(135deg, #0f4c81 0%, #1e6fba 100%);
+    }
+
+    .stat-card[data-tone="phd"] .stat-icon {
+        background: linear-gradient(135deg, #0e9f7b 0%, #0c7c60 100%);
+    }
+
+    .stat-card[data-tone="active"] .stat-icon {
+        background: linear-gradient(135deg, #f97316 0%, #d65e09 100%);
+    }
+
+    .stat-card[data-tone="cert"] .stat-icon {
+        background: linear-gradient(135deg, #f4b63d 0%, #d49214 100%);
+    }
+
+    .stat-card span {
+        display: block;
+        color: var(--dash-muted);
+        font-size: 0.84rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 0.35rem;
+    }
+
+    .stat-card strong {
+        display: block;
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: 2rem;
+        line-height: 1;
+        margin-bottom: 0.4rem;
+    }
+
+    .stat-card p {
+        margin: 0;
+        color: var(--dash-muted);
+        font-size: 0.93rem;
+    }
+
+    .feature-grid {
+        display: grid;
+        grid-template-columns: 1.25fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card,
+    .action-card,
+    .activity-card,
+    .gallery-card,
+    .framework-card {
+        height: 100%;
+        padding: 1.35rem;
+        border-radius: 24px;
+        border: 1px solid rgba(111, 143, 169, 0.16);
+        background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+
+    .story-points {
+        display: grid;
+        gap: 0.95rem;
+        margin-top: 1rem;
+    }
+
+    .story-point {
+        display: flex;
+        gap: 0.8rem;
+        align-items: flex-start;
+        padding: 0.95rem 1rem;
+        border-radius: 18px;
+        background: var(--dash-sky);
+    }
+
+    .story-point i {
+        color: var(--dash-ocean);
+        margin-top: 0.15rem;
+    }
+
+    .purpose-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .purpose-card {
+        padding: 1.3rem;
+        border-radius: 24px;
+        color: #fff;
+        box-shadow: 0 18px 36px rgba(15, 76, 129, 0.14);
+    }
+
+    .purpose-card h3 {
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: 1.08rem;
+        margin-bottom: 0.7rem;
+    }
+
+    .purpose-card p,
+    .purpose-card li {
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .purpose-card ul {
+        padding-left: 1rem;
+        margin: 0;
+    }
+
+    .purpose-card.vision {
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    }
+
+    .purpose-card.mission {
+        background: linear-gradient(135deg, #0e9f7b 0%, #115e59 100%);
+    }
+
+    .purpose-card.promise {
+        background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+    }
+
+    .action-list,
+    .activity-list {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .action-tile,
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.9rem;
+        padding: 1rem 1.05rem;
+        text-decoration: none;
+        border-radius: 18px;
+        border: 1px solid rgba(111, 143, 169, 0.14);
+        background: #fff;
+        color: var(--dash-ink);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .action-tile:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 28px rgba(15, 76, 129, 0.08);
+        color: var(--dash-ink);
+    }
+
+    .action-copy h4,
+    .activity-copy h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    .action-copy p,
+    .activity-copy p {
+        margin: 0;
+        color: var(--dash-muted);
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+
+    .action-icon,
+    .activity-icon {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+    }
+
+    .action-icon {
+        background: linear-gradient(135deg, #0f4c81 0%, #17324d 100%);
+    }
+
+    .activity-icon {
+        background: linear-gradient(135deg, #f97316 0%, #d65e09 100%);
+    }
+
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.82rem;
+        color: var(--dash-muted);
+        font-weight: 700;
+    }
+
+    .dept-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .dept-card {
+        padding: 1.1rem;
+        border-radius: 22px;
+        border: 1px solid rgba(111, 143, 169, 0.16);
+        background: #fff;
+    }
+
+    .dept-card strong {
+        display: block;
+        font-size: 1.02rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .dept-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.7rem;
+        color: var(--dash-muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .dept-progress {
+        height: 10px;
+        background: #ebf2f8;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .dept-progress span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(135deg, #0f4c81 0%, #0e9f7b 100%);
+    }
+
+    .framework-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .framework-card ol {
+        padding-left: 1.1rem;
+        margin: 0.9rem 0 0;
+    }
+
+    .framework-card li {
+        margin-bottom: 0.8rem;
+        color: var(--dash-muted);
+        line-height: 1.7;
+    }
+
+    .po-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .po-card {
+        padding: 1.2rem;
+        border-radius: 22px;
+        border: 1px solid rgba(111, 143, 169, 0.15);
+        background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    }
+
+    .po-card h4 {
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
+        font-size: 1rem;
+        margin-bottom: 0.55rem;
+    }
+
+    .po-card p {
+        margin: 0;
+        color: var(--dash-muted);
+        line-height: 1.65;
+        font-size: 0.95rem;
+    }
+
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .gallery-card img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 18px;
+        margin-top: 0.95rem;
+        box-shadow: 0 16px 28px rgba(15, 76, 129, 0.12);
+    }
+
+    .gallery-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(15, 76, 129, 0.08);
+        color: var(--dash-ocean);
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .brochure-card {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        border-radius: 24px;
+        background: linear-gradient(135deg, #15324a 0%, #0f4c81 100%);
+        color: #fff;
+    }
+
+    .brochure-card p {
+        margin: 0.45rem 0 0;
+        color: rgba(255, 255, 255, 0.84);
+    }
+
+    .brochure-actions {
+        display: flex;
+        gap: 0.7rem;
+        flex-wrap: wrap;
+    }
+
+    .brochure-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1rem;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    @media (max-width: 1199.98px) {
+        .dashboard-hero,
+        .feature-grid,
+        .purpose-grid,
+        .dept-grid,
+        .gallery-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .framework-grid,
+        .po-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .dashboard-hero,
+        .dashboard-panel {
+            padding: 1.25rem;
+        }
+
+        .dashboard-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-hero-side,
+        .stats-grid,
+        .purpose-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-tabs {
+            display: flex;
+            width: 100%;
+            border-radius: 24px;
+        }
+
+        .dashboard-tabs .nav-link {
+            width: 100%;
+        }
+
+        .brochure-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 dashboard-showcase">
+    <div class="dashboard-shell">
+        <section class="dashboard-hero">
+            <div>
+                <span class="dashboard-kicker">
+                    <i class="fas fa-compass"></i>
+                    Department Command Center
+                </span>
+                <h1 class="dashboard-title">Engineering College</h1>
+                <p class="dashboard-copy">
+                    A more expressive front page for the Information Technology department, bringing
+                    academic vision, operational shortcuts, faculty insights, and event highlights into
+                    one cleaner and more attractive experience.
+                </p>
+                <div class="dashboard-actions">
+                    <a href="{% url 'dashboard:faculty' %}" class="hero-btn hero-btn-secondary">
+                        <i class="fas fa-users"></i>
+                        Open Faculty Management
+                    </a>
+                    <a href="{% url 'dashboard:exam_branch' %}" class="hero-btn hero-btn-primary">
+                        <i class="fas fa-file-signature"></i>
+                        Visit Exam Branch
+                    </a>
+                </div>
+            </div>
+
+            <div class="dashboard-hero-side">
+                <div class="hero-side-card">
+                    <span>Institution</span>
+                    <strong>An Autonomous Institution with an IT-focused academic environment</strong>
+                </div>
+                <div class="hero-side-card">
+                    <span>Intake</span>
+                    <strong>UG program launched in 2022 with an intake of 60 students</strong>
+                </div>
+                <div class="hero-side-card">
+                    <span>Priority</span>
+                    <strong>Quality technical education, research, and professional growth</strong>
+                </div>
+                <div class="hero-side-card">
+                    <span>Tools</span>
+                    <strong>Faculty operations, student management, exam support, and gallery access</strong>
+                </div>
+            </div>
+        </section>
+
+        <ul class="nav nav-tabs dashboard-tabs" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                    <i class="fas fa-solar-panel me-2"></i>Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button" role="tab" aria-controls="academic" aria-selected="false">
+                    <i class="fas fa-graduation-cap me-2"></i>Academic Framework
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab" aria-controls="gallery" aria-selected="false">
+                    <i class="fas fa-images me-2"></i>Gallery
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="dashboardTabContent">
+            <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                <div class="dashboard-panel">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-kicker">Department Overview</div>
+                            <h2 class="section-title">A cleaner overview of academics and operations</h2>
+                            <p class="section-copy">
+                                This space combines department identity, live dashboard numbers, quick access
+                                links, and operational activity in one place.
+                            </p>
+                        </div>
+                        <div class="section-pill">
+                            <i class="fas fa-chart-line"></i>
+                            IT Department Snapshot
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card" data-tone="faculty">
+                            <div class="stat-icon"><i class="fas fa-users"></i></div>
+                            <span>Total Faculty</span>
+                            <strong>{{ total_faculty|default:"0" }}</strong>
+                            <p>Faculty members available in the current department records.</p>
+                        </div>
+                        <div class="stat-card" data-tone="phd">
+                            <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                            <span>With PhD</span>
+                            <strong>{{ with_phd|default:"0" }}</strong>
+                            <p>Faculty with completed doctoral qualification in the system.</p>
+                        </div>
+                        <div class="stat-card" data-tone="active">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <span>Active Faculty</span>
+                            <strong>{{ active_faculty|default:"0" }}</strong>
+                            <p>Currently active faculty records contributing to department operations.</p>
+                        </div>
+                        <div class="stat-card" data-tone="cert">
+                            <div class="stat-icon"><i class="fas fa-certificate"></i></div>
+                            <span>Certificates</span>
+                            <strong>{{ total_certificates|default:"0" }}</strong>
+                            <p>Total certificates tracked across the faculty management workflow.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="info-card">
+                            <h3 class="card-title">Department Profile</h3>
+                            <p class="card-copy">
+                                The Information Technology department was established in 2022 and has
+                                been steadily building a strong academic environment around quality teaching,
+                                competitive learning, and practical technical exposure.
+                            </p>
+                            <div class="story-points">
+                                <div class="story-point">
+                                    <i class="fas fa-seedling"></i>
+                                    <div>
+                                        <strong>Strong foundation</strong>
+                                        <div class="card-copy">
+                                            The department began with an intake of 60 students in the UG programme
+                                            and continues to focus on academic excellence.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="story-point">
+                                    <i class="fas fa-laptop-code"></i>
+                                    <div>
+                                        <strong>Modern learning environment</strong>
+                                        <div class="card-copy">
+                                            State-of-the-art computing facilities, LCD projectors, digital boards,
+                                            and seminar infrastructure support effective teaching.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="story-point">
+                                    <i class="fas fa-people-arrows"></i>
+                                    <div>
+                                        <strong>Faculty development culture</strong>
+                                        <div class="card-copy">
+                                            Staff members regularly participate in workshops, conferences, and
+                                            refresher courses to stay current with the evolving IT field.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-card">
+                            <h3 class="card-title">Welcome Note</h3>
+                            <p class="card-copy">
+                                Welcome to the Faculty Management System for the Department of Information
+                                Technology. This dashboard is designed to support academic tracking,
+                                faculty workflows, student coordination, and exam-related operations.
+                            </p>
+                            <div class="story-points">
+                                <div class="story-point">
+                                    <i class="fas fa-lightbulb"></i>
+                                    <div>
+                                        <strong>Purpose-driven management</strong>
+                                        <div class="card-copy">
+                                            Manage faculty, students, certificates, and records from a
+                                            single administrative experience.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="story-point">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <div>
+                                        <strong>Operational clarity</strong>
+                                        <div class="card-copy">
+                                            Use quick actions and activity feeds to keep daily academic tasks
+                                            easy to access and monitor.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="purpose-grid">
+                        <div class="purpose-card vision">
+                            <h3><i class="fas fa-eye me-2"></i>Vision</h3>
+                            <p>
+                                To impart quality technical education, conduct scientific research of excellence,
+                                and generate world-class professionals who excel in the dynamic realm of
+                                Information Technology and contribute to society.
+                            </p>
+                        </div>
+                        <div class="purpose-card mission">
+                            <h3><i class="fas fa-bullseye me-2"></i>Mission</h3>
+                            <ul>
+                                <li>Achieve excellence in higher education and research through quality technical education.</li>
+                                <li>Build opportunities in IT and sustain long-term academic and industry interaction.</li>
+                                <li>Uphold high professional and ethical standards with national and global relevance.</li>
+                            </ul>
+                        </div>
+                        <div class="purpose-card promise">
+                            <h3><i class="fas fa-star me-2"></i>Academic Promise</h3>
+                            <p>
+                                The department is committed to academic rigor, professional growth, modern
+                                infrastructure, and a learning culture that adapts to emerging technology.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="action-card">
+                            <h3 class="card-title">Quick Actions</h3>
+                            <p class="card-copy mb-3">
+                                Jump directly into the most common administrative workflows.
+                            </p>
+                            <div class="action-list">
+                                <a href="{% url 'dashboard:faculty' %}" class="action-tile">
+                                    <div class="d-flex gap-3">
+                                        <span class="action-icon"><i class="fas fa-users"></i></span>
+                                        <div class="action-copy">
+                                            <h4>Manage Faculty</h4>
+                                            <p>Open faculty records, profiles, and academic details.</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                                <a href="{% url 'dashboard:add_faculty' %}" class="action-tile">
+                                    <div class="d-flex gap-3">
+                                        <span class="action-icon"><i class="fas fa-user-plus"></i></span>
+                                        <div class="action-copy">
+                                            <h4>Add New Faculty</h4>
+                                            <p>Create a new faculty profile and begin department tracking.</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                                <a href="{% url 'dashboard:students' %}" class="action-tile">
+                                    <div class="d-flex gap-3">
+                                        <span class="action-icon"><i class="fas fa-user-graduate"></i></span>
+                                        <div class="action-copy">
+                                            <h4>Manage Students</h4>
+                                            <p>Review student records, academic details, and uploads.</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                                <a href="{% url 'dashboard:syllabus' %}" class="action-tile">
+                                    <div class="d-flex gap-3">
+                                        <span class="action-icon"><i class="fas fa-book"></i></span>
+                                        <div class="action-copy">
+                                            <h4>View Syllabus</h4>
+                                            <p>Access syllabus information for current department courses.</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                                <a href="{% url 'dashboard:exam_branch' %}" class="action-tile">
+                                    <div class="d-flex gap-3">
+                                        <span class="action-icon"><i class="fas fa-file-alt"></i></span>
+                                        <div class="action-copy">
+                                            <h4>Exam Branch</h4>
+                                            <p>Open lesson planning and internal evaluation tools.</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="activity-card">
+                            <h3 class="card-title">Recent Activity</h3>
+                            <p class="card-copy mb-3">
+                                A live glance at the latest recorded actions in the system.
+                            </p>
+                            <div class="activity-list">
+                                {% for log in recent_logs %}
+                                <div class="activity-item">
+                                    <div class="d-flex gap-3">
+                                        <span class="activity-icon"><i class="fas fa-bolt"></i></span>
+                                        <div class="activity-copy">
+                                            <h4>{{ log.action }}</h4>
+                                            <p>{{ log.details }}</p>
+                                            <div class="meta-badge mt-2">
+                                                <i class="fas fa-clock"></i>
+                                                {{ log.created_at|timesince }} ago
+                                            </div>
+                                            <div class="meta-badge mt-1">
+                                                <i class="fas fa-user"></i>
+                                                {{ log.performed_by }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="activity-item">
+                                    <div class="activity-copy">
+                                        <h4>No recent activity</h4>
+                                        <p>The system has not recorded any recent actions yet.</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="section-header mb-3">
+                            <div>
+                                <h3 class="card-title mb-2">Department Distribution</h3>
+                                <p class="card-copy">
+                                    A compact visual view of department-wise faculty distribution.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="dept-grid">
+                            {% for dept in departments %}
+                            <div class="dept-card">
+                                <strong>{{ dept.department|default:"Unspecified Department" }}</strong>
+                                <div class="dept-meta">
+                                    <span>{{ dept.count|default:"0" }} faculty</span>
+                                    <span>{{ dept.percentage|default:0|floatformat:0 }}%</span>
+                                </div>
+                                <div class="dept-progress">
+                                    <span style="width: {{ dept.percentage|default:0|floatformat:0 }}%;"></span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="dept-card">
+                                <strong>No departments found</strong>
+                                <div class="card-copy">Department distribution data is not available right now.</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="academic" role="tabpanel" aria-labelledby="academic-tab">
+                <div class="dashboard-panel">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-kicker">Academic Framework</div>
+                            <h2 class="section-title">Vision, outcomes, and long-term graduate goals</h2>
+                            <p class="section-copy">
+                                This section organizes the department’s PSOs, PEOs, and POs into a more
+                                readable format than the previous stacked layout.
+                            </p>
+                        </div>
+                        <div class="section-pill">
+                            <i class="fas fa-layer-group"></i>
+                            Curriculum Direction
+                        </div>
+                    </div>
+
+                    <div class="framework-grid">
+                        <div class="framework-card">
+                            <h3 class="framework-title">Program Specific Outcomes</h3>
+                            <p class="card-copy">
+                                The department prepares students to grow professionally and learn emerging
+                                computing paradigms with confidence and adaptability.
+                            </p>
+                            <ol>
+                                <li>
+                                    Advance professionally through organized training or self-learning in areas
+                                    related to Information Technology throughout their career.
+                                </li>
+                                <li>
+                                    Learn emerging computing paradigms for research and innovation.
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div class="framework-card">
+                            <h3 class="framework-title">Program Educational Objectives</h3>
+                            <p class="card-copy">
+                                These objectives reflect the broader growth expected from graduates beyond
+                                classroom performance alone.
+                            </p>
+                            <ol>
+                                <li>Take up professional responsibilities and communicate effectively with diversified teams.</li>
+                                <li>Support sustainable societal development while adhering to ethics and values.</li>
+                                <li>Practice lifelong learning and produce innovative solutions for complex problems.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="po-grid">
+                        <div class="po-card">
+                            <h4>PO1: Engineering Knowledge</h4>
+                            <p>Apply mathematics, natural science, computing, engineering fundamentals, and specialization knowledge to solve complex problems.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO2: Problem Analysis</h4>
+                            <p>Identify, formulate, review literature, and analyze complex engineering problems to reach substantiated conclusions.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO3: Design and Development of Solutions</h4>
+                            <p>Design creative solutions and system components or processes that meet specified technical needs.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO4: Investigations of Complex Problems</h4>
+                            <p>Use research-based knowledge including experimentation, modelling, data analysis, and interpretation.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO5: Engineering Tool Usage</h4>
+                            <p>Create, select, and apply suitable resources, methods, and modern IT engineering tools for modelling and prediction.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO6: The Engineer and the World</h4>
+                            <p>Evaluate societal, environmental, legal, health, safety, and sustainability aspects of engineering solutions.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO7: Ethics</h4>
+                            <p>Apply ethical principles, professional responsibility, human values, diversity, inclusion, and legal awareness.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO8: Team Work</h4>
+                            <p>Function effectively as an individual, team member, or leader in multidisciplinary and diverse environments.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO9: Communication</h4>
+                            <p>Communicate effectively and inclusively with professional communities and society through reports, presentations, and dialogue.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO10: Project Management and Finance</h4>
+                            <p>Apply engineering, management, and financial principles for effective decisions in project environments.</p>
+                        </div>
+                        <div class="po-card">
+                            <h4>PO11: Life-Long Learning</h4>
+                            <p>Recognize the need for independent and lifelong learning in response to technological change and future challenges.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
+                <div class="dashboard-panel">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-kicker">Department Highlights</div>
+                            <h2 class="section-title">A brighter gallery section for events and culture</h2>
+                            <p class="section-copy">
+                                Instead of embedding the full gallery page inside this template, this tab now
+                                has its own clean showcase for department events and downloads.
+                            </p>
+                        </div>
+                        <div class="section-pill">
+                            <i class="fas fa-camera-retro"></i>
+                            Visual Showcase
+                        </div>
+                    </div>
+
+                    <div class="gallery-grid">
+                        <div class="gallery-card">
+                            <span class="gallery-pill"><i class="fas fa-code"></i> Hackathon</span>
+                            <h3 class="card-title mt-3">CONNECT HACKATHON 2026</h3>
+                            <p class="card-copy">
+                                A featured snapshot from one of the department’s collaborative and
+                                innovation-focused student events.
+                            </p>
+                        </div>
+
+                        <div class="gallery-card">
+                            <span class="gallery-pill"><i class="fas fa-rocket"></i> Department Activity</span>
+                            <h3 class="card-title mt-3">ITECH Activities</h3>
+                            <p class="card-copy">
+                                Highlights from the launch of ITECH-2K26 on 01-04-2026, reflecting the
+                                department’s event energy and student engagement.
+                            </p>
+                        </div>
+
+                        <div class="gallery-card">
+                            <span class="gallery-pill"><i class="fas fa-images"></i> Explore More</span>
+                            <h3 class="card-title mt-3">Full Gallery Access</h3>
+                            <p class="card-copy">
+                                Visit the dedicated gallery page for a standalone, full-page view of
+                                department images and event material.
+                            </p>
+                            <div class="mt-3">
+                                <a href="{% url 'dashboard:gallery' %}" class="hero-btn hero-btn-secondary">
+                                    <i class="fas fa-arrow-right"></i>
+                                    Open Full Gallery
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="brochure-card">
+                        <div>
+                            <div class="gallery-pill" style="background: rgba(255,255,255,0.14); color: #fff;">
+                                <i class="fas fa-file-pdf"></i>
+                                Event Brochure
+                            </div>
+                            <h3 class="card-title mt-3 text-white">ITECH 2K26 Brochure</h3>
+                            <p>
+                                Keep the event brochure easy to access for previewing and downloads directly
+                                from the dashboard experience.
+                            </p>
+                        </div>
+                        <div class="brochure-actions">
+                            <a href="{% static 'images/ITECH-2K26.pdf' %}" target="_blank" class="brochure-btn">
+                                <i class="fas fa-eye"></i>
+                                Open PDF
+                            </a>
+                            <a href="{% static 'images/ITECH-2K26.pdf' %}" download class="brochure-btn">
+                                <i class="fas fa-download"></i>
+                                Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

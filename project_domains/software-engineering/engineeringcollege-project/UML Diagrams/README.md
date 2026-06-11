@@ -6,6 +6,13 @@ This directory contains PlantUML UML diagrams for the Engineering College projec
 - **STUDENT Module**
 - **FACULTY Module**
 
+Each diagram is stored in two formats:
+
+- `.puml` - editable PlantUML source file for future changes
+- `.png` - generated image used in documentation, PPT, and project reports
+
+When a diagram needs to be modified, edit the matching `.puml` file first and regenerate the `.png` file from it.
+
 ## Diagram List (Ordered by Type)
 
 ### 1. Class Diagrams
@@ -75,12 +82,6 @@ This directory contains PlantUML UML diagrams for the Engineering College projec
 - Populates dashboard
 - Manages Faculty, Students, Subjects
 
-## Excluded Components
-The following components are NOT included in these diagrams:
-- Car Price Prediction
-- Cloudinary (except noted references)
-- PhonePe Payment Gateway
-
 ## How to Generate Diagrams
 ```bash
 # Using PlantUML CLI
@@ -89,3 +90,7 @@ java -jar plantuml.jar *.puml
 # Or with VS Code PlantUML Extension
 # Open .puml files and preview will auto-generate
 ```
+
+## Pair Check
+
+The folder currently contains 24 editable `.puml` files and 24 generated `.png` files. Every `.png` diagram has a matching `.puml` source file with the same base name.

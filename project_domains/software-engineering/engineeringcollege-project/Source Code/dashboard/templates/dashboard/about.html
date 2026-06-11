@@ -1,0 +1,76 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}About - IT Department{% endblock %}
+
+{% block content %}
+<style>
+    .about-section {
+        background: rgba(0, 30, 0, 0.6);
+        padding: 30px;
+        border-radius: 10px;
+        border: 1px solid #00aa00;
+        margin-bottom: 30px;
+    }
+
+    .about-section h2 {
+        color: #00ff00;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #00ff00;
+        padding-bottom: 10px;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+    }
+
+    .feature-card {
+        background: rgba(0, 40, 0, 0.6);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #00aa00;
+    }
+
+    .feature-card h3 {
+        color: #00ff00;
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="about-section">
+    <h2>About IT Department</h2>
+    <p>The Information Technology Department at Engineering College is committed to excellence in education, research, and innovation. Established in 2001, our department has been at the forefront of technological education, producing skilled professionals who contribute significantly to the IT industry.</p>
+
+    <h3 style="color: #00ff00; margin: 25px 0 15px 0;">Our Vision</h3>
+    <p>To be a center of excellence in Information Technology education and research, nurturing innovative professionals who can meet global challenges.</p>
+
+    <h3 style="color: #00ff00; margin: 25px 0 15px 0;">Our Mission</h3>
+    <p>To provide quality education through state-of-the-art infrastructure, industry-relevant curriculum, and research opportunities that prepare students for successful careers in IT and related fields.</p>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card">
+        <h3>🎯 Programs Offered</h3>
+        <p>B.Tech in Information Technology</p>
+        <p>M.Tech in IT</p>
+        <p>PhD in Computer Science & IT</p>
+    </div>
+
+    <div class="feature-card">
+        <h3>🏆 Achievements</h3>
+        <p>NBA Accredited Program</p>
+        <p>Industry Partnerships with leading IT companies</p>
+        <p>100+ Research Publications</p>
+    </div>
+
+    <div class="feature-card">
+        <h3>🔬 Laboratories</h3>
+        <p>Advanced Computing Lab</p>
+        <p>Network Security Lab</p>
+        <p>Data Science Lab</p>
+        <p>IoT & Cloud Computing Lab</p>
+    </div>
+</div>
+{% endblock %}

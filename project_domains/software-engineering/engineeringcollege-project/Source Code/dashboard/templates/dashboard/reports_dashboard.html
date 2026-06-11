@@ -1,0 +1,117 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{{ title }}</h1>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Faculty</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_faculty }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                PDF Compliance</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pdf_compliance_percentage|floatformat:1 }}%</div>
+                            <div class="mt-2 text-xs">
+                                <span class="text-success">{{ faculties_with_pdf }} with PDF</span> |
+                                <span class="text-danger">{{ faculties_without_pdf }} without</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-pdf fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Certificates</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_certificates }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-certificate fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department-wise Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Department-wise PDF Compliance</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Total Faculty</th>
+                                    <th>With PDF</th>
+                                    <th>Without PDF</th>
+                                    <th>Compliance %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dept in dept_stats %}
+                                <tr>
+                                    <td>{{ dept.department }}</td>
+                                    <td>{{ dept.total }}</td>
+                                    <td>{{ dept.with_pdf }}</td>
+                                    <td>{{ dept.without_pdf }}</td>
+                                    <td>
+                                        {% if dept.total > 0 %}
+                                            {{ dept.with_pdf|divisibleby:dept.total|floatformat:1 }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No data available</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

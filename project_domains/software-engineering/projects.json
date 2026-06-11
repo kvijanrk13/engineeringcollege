@@ -3,13 +3,13 @@
     {
       "slug": "engineeringcollege-project",
       "name": "EngineeringCollege Project",
-      "description": "Current executable Django hierarchy with a synchronized Modules folder.",
+      "description": "Executable Django department-management project with source code, documentation, database notes, UML diagrams, test cases, PPT assets, and demo material.",
       "zip": {
-        "enabled": true,
-        "amount_paise": 100000,
-        "source": "repository",
+        "enabled": false,
+        "amount_paise": 0,
+        "source": "project-folder",
         "payment_enabled": false,
-        "receipt_required": true
+        "receipt_required": false
       }
     }
   ]

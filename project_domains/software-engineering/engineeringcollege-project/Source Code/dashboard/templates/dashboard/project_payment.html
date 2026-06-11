@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.name }} Payment</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #F7F9FC;
+            color: #172033;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        main { width: min(100%, 680px); margin: 0 auto; padding: 28px 20px; }
+        .back-link { color: #1456A0; font-weight: 700; text-decoration: none; }
+        .payment-panel {
+            margin-top: 24px;
+            padding: 28px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #FFFFFF;
+            text-align: center;
+        }
+        .phonepe-mark {
+            display: grid;
+            place-items: center;
+            width: 74px;
+            height: 74px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            background: #5F259F;
+            color: #FFFFFF;
+            font-size: 30px;
+            font-weight: 700;
+        }
+        h1 { margin: 0; font-size: 25px; line-height: 1.3; }
+        .amount { margin: 18px 0 6px; font-size: 32px; font-weight: 700; }
+        .status { margin: 20px 0; padding: 12px; border-radius: 6px; background: #EEF3F8; }
+        .message { margin: 16px 0; padding: 12px; border-radius: 6px; background: #FFF4D6; }
+        .qr-code { width: 260px; max-width: 100%; margin: 18px auto 4px; }
+        .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .action {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 20px;
+            border: 0;
+            border-radius: 6px;
+            background: #5F259F;
+            color: #FFFFFF;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        p { color: #526174; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <main>
+        <a class="back-link" href="{% url 'dashboard:project_detail' domain_slug project.slug %}">&larr; {{ project.name }}</a>
+        <section class="payment-panel">
+            <span class="phonepe-mark" aria-hidden="true">P</span>
+            <h1>{{ project.name }} ZIP</h1>
+            <div class="amount">INR {{ amount_rupees }}</div>
+            <p>Payment is authenticated through PhonePe Payment Gateway. The ZIP download unlocks only after the server independently verifies a successful payment.</p>
+            <p>PhonePe will show secure payment options, including its payment QR where available.</p>
+
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+
+            {% if payment.status == 'COMPLETED' %}
+                <div class="status">Payment verified successfully.</div>
+                <a class="action" href="{% url 'dashboard:download_project_zip' domain_slug project.slug %}?order={{ payment.merchant_order_id }}">Download ZIP</a>
+            {% elif payment %}
+                <div class="status">Payment status: {{ payment.get_status_display }}</div>
+                {% if payment_qr_data_uri %}
+                    <p>Scan this QR with PhonePe or another supported UPI app.</p>
+                    <img class="qr-code" src="{{ payment_qr_data_uri }}" alt="PhonePe hosted checkout QR code">
+                    <div class="actions">
+                        <a class="action" href="{{ payment.payment_url }}" rel="noopener noreferrer">Open PhonePe Checkout</a>
+                        <a class="action" href="?order={{ payment.merchant_order_id }}">Check Payment Status</a>
+                    </div>
+                {% else %}
+                <a class="action" href="?order={{ payment.merchant_order_id }}">Check Payment Status</a>
+                {% endif %}
+            {% elif phonepe_configured %}
+                <form method="post" action="{% url 'dashboard:initiate_project_zip_payment' domain_slug project.slug %}">
+                    {% csrf_token %}
+                    <div class="actions">
+                        <button class="action" type="submit" name="checkout_mode" value="redirect">Pay with PhonePe</button>
+                        <button class="action" type="submit" name="checkout_mode" value="qr">Show Payment QR</button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="message">Payment and QR are unavailable until PhonePe merchant credentials are configured on the server.</div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

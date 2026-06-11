@@ -1,27 +1,36 @@
-# Source Code
+# EngineeringCollege Source Code
 
-The executable Software Engineering project source is the main Django repository.
+This folder contains the executable Django source code for the EngineeringCollege Department Management System.
 
-In the downloadable ZIP, open:
+## Important Files
 
-```text
-Project Source/
-```
+- `manage.py`
+- `requirements.txt`
+- `engineeringcollege/settings.py`
+- `engineeringcollege/urls.py`
+- `dashboard/models.py`
+- `dashboard/views.py`
+- `dashboard/forms.py`
+- `dashboard/urls.py`
+- `dashboard/templates/`
+- `templates/`
+- `static/`
 
-Important files:
-
-- `Project Source/manage.py`
-- `Project Source/requirements.txt`
-- `Project Source/engineeringcollege/settings.py`
-- `Project Source/dashboard/`
-- `Project Source/car_price_app/`
-- `Project Source/project_domains/`
-
-Local run command summary:
+## Local Run Command Summary
 
 ```powershell
 python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe manage.py migrate
 .\.venv\Scripts\python.exe manage.py runserver
 ```
+
+Open:
+
+- `http://127.0.0.1:8000/`
+- `http://127.0.0.1:8000/dashboard/`
+- `http://127.0.0.1:8000/faculty/`
+- `http://127.0.0.1:8000/students/`
+- `http://127.0.0.1:8000/syllabus/`
+- `http://127.0.0.1:8000/gallery/`

@@ -1,0 +1,755 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Add New Student - Engineering College{% endblock %}
+
+{% block body_class %}add-student-page{% endblock %}
+
+{% block content %}
+<style>
+    /* Global Matrix Styling */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Courier New', monospace;
+        overflow-x: hidden;
+        background-color: #000;
+        color: #0f0;
+    }
+
+    #matrix-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+
+    /* Department Header */
+    .dept-header {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0f0;
+        margin: 15px 0 30px 0;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs-container {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        background: rgba(0, 20, 0, 0.9);
+        padding: 15px;
+        border: 1px solid #0f0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto 40px auto;
+        border-radius: 8px;
+    }
+
+    .nav-link-tab {
+        padding: 12px 20px;
+        color: #0f0;
+        text-decoration: none;
+        font-weight: bold;
+        text-transform: uppercase;
+        border: 1px solid #0f0;
+        transition: 0.3s;
+        font-size: 0.9rem;
+    }
+
+    .nav-link-tab:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 15px #0f0;
+    }
+
+    .nav-link-tab.active-page {
+        background: rgba(0, 255, 0, 0.2);
+        border-width: 2px;
+    }
+
+    /* Main Container */
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        background: rgba(0, 20, 0, 0.95);
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 255, 0, 0.2);
+        border: 2px solid #0f0;
+    }
+
+    h1.page-title {
+        color: #0f0;
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #0f0;
+        padding-bottom: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+
+    /* Form Sections */
+    .form-section {
+        background: rgba(0, 30, 0, 0.8);
+        border: 1px solid #0f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        color: #0f0;
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #0f0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        color: #0f0;
+        margin-bottom: 5px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+    }
+
+    .form-group label .required {
+        color: #f00;
+        margin-left: 3px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        background: #000;
+        border: 2px solid #0f0;
+        color: #0f0;
+        font-family: 'Courier New', monospace;
+        font-size: 1rem;
+        border-radius: 5px;
+        transition: 0.3s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        box-shadow: 0 0 10px #0f0;
+    }
+
+    .form-control::placeholder {
+        color: rgba(0, 255, 0, 0.3);
+    }
+
+    select.form-control option {
+        background: #000;
+        color: #0f0;
+    }
+
+    /* Age Field (Read-only) */
+    .form-control[readonly] {
+        background: #001900;
+        border-color: #0a0;
+        color: #0f0;
+        cursor: not-allowed;
+    }
+
+    /* File Input */
+    .file-input-wrapper {
+        position: relative;
+    }
+
+    .file-input-wrapper input[type="file"] {
+        padding: 10px;
+        background: #000;
+        border: 2px solid #0f0;
+        color: #0f0;
+        width: 100%;
+        border-radius: 5px;
+    }
+
+    .file-input-wrapper input[type="file"]::-webkit-file-upload-button {
+        background: #0f0;
+        color: #000;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 3px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+
+    /* Photo Preview */
+    .photo-preview {
+        margin-top: 15px;
+        text-align: center;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid #0f0;
+        border-radius: 5px;
+    }
+
+    .photo-preview img {
+        max-width: 150px;
+        max-height: 150px;
+        border: 2px solid #0f0;
+        border-radius: 5px;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .btn {
+        padding: 15px 40px;
+        font-family: 'Courier New', monospace;
+        font-size: 1.1rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        border: 3px solid;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: transparent;
+        color: #0f0;
+        border-color: #0f0;
+    }
+
+    .btn-primary:hover {
+        background: #0f0;
+        color: #000;
+        box-shadow: 0 0 20px #0f0;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: #ff0;
+        border-color: #ff0;
+    }
+
+    .btn-secondary:hover {
+        background: #ff0;
+        color: #000;
+        box-shadow: 0 0 20px #ff0;
+    }
+
+    .btn-danger {
+        background: transparent;
+        color: #f00;
+        border-color: #f00;
+    }
+
+    .btn-danger:hover {
+        background: #f00;
+        color: #000;
+        box-shadow: 0 0 20px #f00;
+    }
+
+    /* Error Messages */
+    .error-message {
+        color: #f00;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+
+    /* Success Message */
+    .success-message {
+        background: rgba(0, 255, 0, 0.1);
+        border: 2px solid #0f0;
+        color: #0f0;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    /* Footer */
+    .footer {
+        text-align: center;
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 255, 0, 0.3);
+        color: #666;
+        font-size: 0.9rem;
+    }
+</style>
+
+<canvas id="matrix-canvas"></canvas>
+
+<!-- DEPARTMENT HEADER AND NAVIGATION TABS -->
+<h2 class="dept-header">INFORMATION TECHNOLOGY DEPARTMENT</h2>
+
+<div class="nav-tabs-container">
+    <a href="{% url 'dashboard:dashboard' %}" class="nav-link-tab">Dashboard</a>
+    <a href="{% url 'dashboard:faculty' %}" class="nav-link-tab">Faculty</a>
+    <a href="{% url 'dashboard:syllabus' %}" class="nav-link-tab">Syllabus</a>
+    <a href="{% url 'dashboard:students' %}" class="nav-link-tab active-page">Students</a>
+    <a href="{% url 'dashboard:gallery' %}" class="nav-link-tab">Gallery</a>
+    <a href="{% url 'dashboard:student_logout' %}" class="nav-link-tab" style="border-color: #f00; color: #f00;">Logout</a>
+</div>
+
+<div class="container">
+    <h1 class="page-title">ADD NEW STUDENT</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="success-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" id="studentForm">
+        {% csrf_token %}
+
+        <!-- BASIC INFORMATION SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">BASIC INFORMATION</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="ht_no">HALL TICKET NUMBER <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="ht_no" name="ht_no" placeholder="e.g., 23C11A1201" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="student_name">STUDENT NAME</label>
+                    <input type="text" class="form-control" id="student_name" name="student_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="father_name">FATHER'S NAME</label>
+                    <input type="text" class="form-control" id="father_name" name="father_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="mother_name">MOTHER'S NAME</label>
+                    <input type="text" class="form-control" id="mother_name" name="mother_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">GENDER</label>
+                    <select class="form-control" id="gender" name="gender" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="dob">DATE OF BIRTH</label>
+                    <input type="date" class="form-control" id="dob" name="dob" required oninput="calculateAge()">
+                </div>
+
+                <div class="form-group">
+                    <label for="age">AGE (Auto-calculated)</label>
+                     <input type="text" class="form-control" id="age" name="age" readonly placeholder="Will be auto-calculated" pattern="[0-9]*">
+                </div>
+
+                <div class="form-group">
+                    <label for="blood_group">BLOOD GROUP</label>
+                    <select class="form-control" id="blood_group" name="blood_group">
+                        <option value="">Select Blood Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTACT INFORMATION SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">CONTACT INFORMATION</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="email">EMAIL</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="student_phone">STUDENT PHONE</label>
+                    <input type="text" class="form-control" id="student_phone" name="student_phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="parent_phone">PARENT PHONE</label>
+                    <input type="text" class="form-control" id="parent_phone" name="parent_phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">ADDRESS</label>
+                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACADEMIC INFORMATION SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">ACADEMIC INFORMATION</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="year">YEAR</label>
+                    <select class="form-control" id="year" name="year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">Year 1</option>
+                        <option value="2">Year 2</option>
+                        <option value="3">Year 3</option>
+                        <option value="4">Year 4</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="sem">SEMESTER</label>
+                    <select class="form-control" id="sem" name="sem" required>
+                        <option value="">Select Semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="ssc_marks">SSC MARKS (%)</label>
+                    <input type="number" step="0.01" class="form-control" id="ssc_marks" name="ssc_marks">
+                </div>
+
+                <div class="form-group">
+                    <label for="inter_marks">INTERMEDIATE MARKS (%)</label>
+                    <input type="number" step="0.01" class="form-control" id="inter_marks" name="inter_marks">
+                </div>
+
+                <div class="form-group">
+                    <label for="cgpa">CGPA</label>
+                    <input type="number" step="0.01" class="form-control" id="cgpa" name="cgpa">
+                </div>
+            </div>
+        </div>
+
+        <!-- IDENTIFICATION SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">IDENTIFICATION</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="aadhar">AADHAR NUMBER</label>
+                    <input type="text" class="form-control" id="aadhar" name="aadhar">
+                </div>
+
+                <div class="form-group">
+                    <label for="apaar_id">APAAR ID</label>
+                    <input type="text" class="form-control" id="apaar_id" name="apaar_id">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">CATEGORY</label>
+                    <select class="form-control" id="category" name="category">
+                        <option value="">Select Category</option>
+                        <option value="General">General</option>
+                        <option value="OBC">OBC</option>
+                        <option value="SC">SC</option>
+                        <option value="ST">ST</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="religion">RELIGION</label>
+                    <input type="text" class="form-control" id="religion" name="religion">
+                </div>
+
+                <div class="form-group">
+                    <label for="nationality">NATIONALITY</label>
+                    <input type="text" class="form-control" id="nationality" name="nationality" value="Indian">
+                </div>
+            </div>
+        </div>
+
+        <!-- PROJECTS & TRAINING SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">PROJECTS & TRAINING</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="rtrp_project_title">RTRP PROJECT TITLE</label>
+                    <input type="text" class="form-control" id="rtrp_project_title" name="rtrp_project_title">
+                </div>
+
+                <div class="form-group">
+                    <label for="intern_title">INTERNSHIP TITLE</label>
+                    <input type="text" class="form-control" id="intern_title" name="intern_title">
+                </div>
+
+                <div class="form-group">
+                    <label for="final_project_title">FINAL PROJECT TITLE</label>
+                    <input type="text" class="form-control" id="final_project_title" name="final_project_title">
+                </div>
+
+                <div class="form-group">
+                    <label for="other_training">OTHER TRAINING</label>
+                    <input type="text" class="form-control" id="other_training" name="other_training">
+                </div>
+            </div>
+        </div>
+
+        <!-- REGISTRATIONS SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">REGISTRATIONS</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="task_registered">TASK REGISTERED</label>
+                    <select class="form-control" id="task_registered" name="task_registered">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="task_username">TASK USERNAME</label>
+                    <input type="text" class="form-control" id="task_username" name="task_username">
+                </div>
+
+                <div class="form-group">
+                    <label for="csi_registered">CSI REGISTERED</label>
+                    <select class="form-control" id="csi_registered" name="csi_registered">
+                        <option value="No">No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="csi_membership_id">CSI MEMBERSHIP ID</label>
+                    <input type="text" class="form-control" id="csi_membership_id" name="csi_membership_id">
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMISSION DETAILS SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">ADMISSION DETAILS</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="admission_type">ADMISSION TYPE</label>
+                    <select class="form-control" id="admission_type" name="admission_type">
+                        <option value="">Select Type</option>
+                        <option value="Management">Management</option>
+                        <option value="Convener">Convener</option>
+                        <option value="Sports">Sports</option>
+                        <option value="NRI">NRI</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eamcet_rank">EAMCET RANK</label>
+                    <input type="number" class="form-control" id="eamcet_rank" name="eamcet_rank">
+                </div>
+
+                <div class="form-group">
+                    <label for="other_admission_details">OTHER ADMISSION DETAILS</label>
+                    <input type="text" class="form-control" id="other_admission_details" name="other_admission_details">
+                </div>
+            </div>
+        </div>
+
+        <!-- DOCUMENTS SECTION -->
+        <div class="form-section">
+            <h3 class="section-title">DOCUMENTS</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="photo">PHOTO</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*" onchange="previewPhoto(this)">
+                    </div>
+                    <div id="photoPreview" class="photo-preview" style="display: none;">
+                        <img id="previewImg" src="#" alt="Photo Preview">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_achieve">ACHIEVEMENT CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_achieve" name="cert_achieve" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_intern">INTERNSHIP CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_intern" name="cert_intern" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_courses">COURSE CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_courses" name="cert_courses" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_sdp">SDP CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_sdp" name="cert_sdp" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_extra">EXTRA CURRICULAR CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_extra" name="cert_extra" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_placement">PLACEMENT CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_placement" name="cert_placement" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cert_national">NATIONAL EXAM CERTIFICATE</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="form-control" id="cert_national" name="cert_national" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+            <button type="submit" class="btn btn-primary">ADD NEW STUDENT</button>
+            <a href="{% url 'dashboard:students_data' %}" class="btn btn-secondary">BACK TO MAIN MENU</a>
+            <a href="{% url 'dashboard:student_logout' %}" class="btn btn-danger">LOG OUT</a>
+        </div>
+    </form>
+
+</div>
+
+<script>
+    // Matrix Animation
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const chars = '01IT';
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+
+    function drawMatrix() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(drawMatrix, 33);
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    // Auto-calculate Age from Date of Birth
+    function calculateAge() {
+        const dobInput = document.getElementById('dob');
+        const ageInput = document.getElementById('age');
+
+        if (dobInput && dobInput.value) {
+            const dob = new Date(dobInput.value);
+            const today = new Date();
+
+            let age = today.getFullYear() - dob.getFullYear();
+            const monthDiff = today.getMonth() - dob.getMonth();
+            const dayDiff = today.getDate() - dob.getDate();
+
+            // Adjust age if birthday hasn't occurred yet this year
+            if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                age--;
+            }
+
+            ageInput.value = age;
+        } else {
+            ageInput.value = '';
+        }
+    }
+
+    // Photo Preview
+    function previewPhoto(input) {
+        const preview = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('previewImg');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+
+    // Form Validation
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+        const requiredFields = ['ht_no', 'student_name', 'father_name', 'mother_name', 'gender', 'dob', 'email', 'student_phone', 'parent_phone', 'address', 'year', 'sem'];
+        let isValid = true;
+
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (!field.value) {
+                field.style.borderColor = '#f00';
+                isValid = false;
+            } else {
+                field.style.borderColor = '#0f0';
+            }
+        });
+
+        if (!isValid) {
+            alert('Please fill in all required fields marked with *');
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

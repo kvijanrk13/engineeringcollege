@@ -1,0 +1,658 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Profile - {{ faculty.staff_name }}</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        :root { --faculty-pdf-font: 'Times New Roman', 'Liberation Serif', Times, serif; }
+        body {
+            font-family: var(--faculty-pdf-font);
+            line-height: 1.5;
+            color: #222;
+            font-size: 11.5px;
+            text-rendering: geometricPrecision;
+        }
+        table, th, td, div, p, span, strong, h1, h2, h3 {
+            font-family: inherit;
+        }
+        .header-table { width: 100%; border-bottom: 3px solid #2c3e50; margin-bottom: 20px; padding-bottom: 10px; }
+        .college-name { font-size: 18px; color: #2c3e50; font-weight: bold; }
+        .dept-name { font-size: 14px; color: #34495e; font-weight: bold; letter-spacing: 0.2px; }
+        .photo-box { width: 120px; height: 140px; border: 2px solid #2c3e50; text-align: center; overflow: hidden; background-color: #f0f0f0; }
+        .faculty-photo { width: 100%; height: 100%; object-fit: contain; }
+        .no-photo { color: #999; font-size: 10px; text-align: center; }
+        .section-title { font-size: 14px; font-weight: bold; background-color: #ecf0f1; padding: 5px 10px; margin: 15px 0 10px 0; border-left: 5px solid #3498db; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .info-table td { padding: 6px 10px; border: 1px solid #ddd; vertical-align: top; }
+        .label { font-weight: bold; background-color: #f9f9f9; width: 35%; color: #2c3e50; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th { background: #34495e; color: white; padding: 6px; border: 1px solid #ddd; text-align: left; font-size: 10.5px; }
+        .data-table td { padding: 6px; border: 1px solid #ddd; font-size: 10.5px; vertical-align: top; }
+        .certificate-item { display: inline-block; background: #e3f2fd; padding: 3px 6px; margin: 2px; border-radius: 3px; }
+        .document-box {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .scm-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            white-space: pre-line;
+        }
+        .research-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        .journal-badge {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .conference-badge {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
+        .patent-badge {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .project-badge {
+            background-color: #e1f5fe;
+            color: #01579b;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        .status-published {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-accepted {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-under_review {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-submitted {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        .status-in_progress {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .academic-year-badge {
+            display: inline-block;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .result-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border-left: 3px solid #3498db;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 9px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        .no-data {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+        }
+        .about-content {
+            white-space: pre-line;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .document-detail {
+            margin-top: 5px;
+            font-size: 9px;
+            color: #666;
+        }
+        .uploaded-pdf {
+            background: #f0f8ff;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .uploaded-pdf-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .uploaded-pdf-link {
+            font-size: 10px;
+            word-break: break-all;
+            color: #3498db;
+        }
+        .data-link {
+            color: #1565c0;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 75%; text-align: center; vertical-align: middle;">
+                <h1 style="margin: 10px 0; color: #3498db; font-size: 20px;">FACULTY PROFILE REPORT</h1>
+            </td>
+            <td style="width: 25%; text-align: right;">
+                <div class="photo-box">
+                    {% if photo_url %}
+                        <img src="{{ photo_url }}" class="faculty-photo" alt="Faculty Photo">
+                    {% else %}
+                        <div class="no-photo">NO PHOTO</div>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- 1. PERSONAL INFORMATION -->
+    <div class="section-title">1. PERSONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Full Name</td><td>{{ faculty.staff_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Employee Code</td><td>{{ faculty.employee_code|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Father's Name</td><td>{{ faculty.father_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mother's Name</td><td>{{ faculty.mother_name|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Date of Birth</td><td>{% if faculty.dob %}{{ faculty.dob|date:"d M Y" }}{% else %}Not Specified{% endif %}</td></tr>
+        <tr><td class="label">Gender</td><td>{{ faculty.gender|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">State</td><td>{{ faculty.state|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Caste</td><td>{{ faculty.caste|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Sub-Caste</td><td>{{ faculty.sub_caste|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Nationality</td><td>{{ faculty.nationality|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Permanent Address</td><td>{{ faculty.address|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 2. PROFESSIONAL INFORMATION -->
+    <div class="section-title">2. PROFESSIONAL INFORMATION</div>
+    <table class="info-table">
+        <tr><td class="label">Department</td><td>{{ faculty.department|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Designation</td><td>{{ faculty.designation|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Email</td><td>{{ faculty.email|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Mobile</td><td>{{ faculty.mobile|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Phone</td><td>{{ faculty.phone|default:"Not Specified" }}</td></tr>
+        <tr>
+            <td class="label">TSTSABAS</td>
+            <td>
+                {% for entry in tstsabas_entries %}
+                    {{ forloop.counter }}. {{ entry }}{% if not forloop.last %}<br>{% endif %}
+                {% empty %}
+                    Not Specified
+                {% endfor %}
+            </td>
+        </tr>
+        <tr><td class="label">Current Status</td><td style="color: green; font-weight: bold;">ACTIVE</td></tr>
+    </table>
+    <table class="data-table">
+        <thead>
+            <tr><th>College Name</th><th>College Address</th><th>From Date</th><th>To Date</th><th>Experience</th></tr>
+        </thead>
+        <tbody>
+            {% for entry in college_experiences %}
+            <tr>
+                <td>{{ entry.college_name }}</td>
+                <td>{{ entry.college_address }}</td>
+                <td>{{ entry.from_date }}</td>
+                <td>{{ entry.to_date }}</td>
+                <td>{{ entry.experience }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="no-data">No college experience specified</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 3. PROFESSIONAL IDs -->
+    <div class="section-title">3. PROFESSIONAL IDs</div>
+    <table class="info-table">
+        <tr><td class="label">JNTUH ID</td><td>{{ faculty.jntuh_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">AICTE ID</td><td>{{ faculty.aicte_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">PAN Number</td><td>{{ faculty.pan|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Aadhar Number</td><td>{{ faculty.aadhar|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">APAAR ID</td><td>{{ faculty.apaar_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">ORCID ID</td><td>{{ faculty.orcid_id|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH -->
+    <div class="section-title">4. EDUCATIONAL QUALIFICATIONS - SSC / 10TH</div>
+    <table class="info-table">
+        <tr><td class="label">Year</td><td>{{ faculty.ssc_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.ssc_percent|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">School</td><td>{{ faculty.ssc_school|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE -->
+    <div class="section-title">5. EDUCATIONAL QUALIFICATIONS - INTERMEDIATE</div>
+    <table class="info-table">
+        <tr><td class="label">Year</td><td>{{ faculty.inter_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.inter_percent|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.inter_college|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 6. EDUCATIONAL QUALIFICATIONS - UG -->
+    <div class="section-title">6. EDUCATIONAL QUALIFICATIONS - UG</div>
+    <table class="info-table">
+        <tr><td class="label">Degree</td><td>{{ faculty.ug_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.ug_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.ug_percentage|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.ug_college|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.ug_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 7. EDUCATIONAL QUALIFICATIONS - PG -->
+    <div class="section-title">7. EDUCATIONAL QUALIFICATIONS - PG</div>
+    <table class="info-table">
+        <tr><td class="label">Degree</td><td>{{ faculty.pg_degree|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Year</td><td>{{ faculty.pg_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Percentage</td><td>{{ faculty.pg_percentage|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">College</td><td>{{ faculty.pg_college|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.pg_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 8. EDUCATIONAL QUALIFICATIONS - PhD -->
+    <div class="section-title">8. EDUCATIONAL QUALIFICATIONS - PhD</div>
+    <table class="info-table">
+        <tr><td class="label">Status</td><td>{{ faculty.phd_degree|default:"Not Specified" }}</td></tr>
+        {% if faculty.phd_degree == 'Completed' or faculty.phd_title %}
+        <tr><td class="label">Ph.D Title</td><td>{{ faculty.phd_title|default:"Not Specified" }}</td></tr>
+        {% endif %}
+        <tr><td class="label">Year</td><td>{{ faculty.phd_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">University</td><td>{{ faculty.phd_university|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Specialization</td><td>{{ faculty.phd_spec|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <!-- 9. SUBJECTS DEALT -->
+    <div class="section-title">9. SUBJECTS DEALT</div>
+    <div style="padding: 10px;">
+        {% if subjects_list %}
+            {% for subject in subjects_list %}
+                <span class="certificate-item">{{ subject }}</span>
+            {% endfor %}
+        {% elif faculty.subjects_dealt %}
+            {% for subject in faculty.subjects_dealt.split %}
+                <span class="certificate-item">{{ subject }}</span>
+            {% endfor %}
+        {% else %}
+            <p class="no-data" style="margin: 0;">No subjects specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 10. SCM (SERVICE/CONSULTANCY/MOU) -->
+    <div class="section-title">10. SCM (SERVICE/CONSULTANCY/MOU)</div>
+    <div class="scm-content">
+        {% if faculty.scm %}
+            {{ faculty.scm|linebreaks }}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">No SCM details specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 11. RESEARCH & PUBLICATIONS (WITH ACADEMIC YEAR) -->
+    <div class="section-title">11. RESEARCH & PUBLICATIONS</div>
+    {% if research_publications %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Title</th>
+                    <th>Academic Year</th>
+                    <th>Year</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pub in research_publications %}
+                <tr>
+                    <td>
+                        <span class="research-type-badge
+                            {% if pub.research_type == 'journal' %}journal-badge{% endif %}
+                            {% if pub.research_type == 'conference' %}conference-badge{% endif %}
+                            {% if pub.research_type == 'patent' %}patent-badge{% endif %}
+                            {% if pub.research_type == 'project' %}project-badge{% endif %}">
+                            {{ pub.get_research_type_display }}
+                        </span>
+                    </td>
+                    <td>{{ pub.title|default:"—" }}</td>
+                    <td>
+                        {% if pub.academic_year %}
+                            <span class="academic-year-badge">{{ pub.academic_year }}</span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ pub.publication_year|default:"—" }}</td>
+                    <td>
+                        {% if pub.status %}
+                        <span class="status-badge status-{{ pub.status }}">
+                            {{ pub.get_status_display }}
+                        </span>
+                        {% else %}—{% endif %}
+                    </td>
+                     <td>
+                         {% if pub.authors %}<strong>Authors:</strong> {{ pub.authors }}<br>{% endif %}
+                         {% if pub.journal_name %}<strong>Journal:</strong> {{ pub.journal_name }}<br>{% endif %}
+                         {% if pub.conference_name %}<strong>Conference:</strong> {{ pub.conference_name }}<br>{% endif %}
+                         {% if pub.issn %}<strong>ISSN:</strong> {{ pub.issn }}<br>{% endif %}
+                         {% if pub.doi %}
+                             <strong>DOI:</strong>
+                             {% if pub.doi|slice:":4" == "http" %}
+                                 <a class="data-link" href="{{ pub.doi }}">{{ pub.doi }}</a><br>
+                             {% else %}
+                                 <a class="data-link" href="https://doi.org/{{ pub.doi }}">{{ pub.doi }}</a><br>
+                             {% endif %}
+                         {% endif %}
+                         {% if pub.url %}
+                             <strong>URL:</strong> <a class="data-link" href="{{ pub.url }}">{{ pub.url }}</a><br>
+                         {% endif %}
+                     </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="no-data">
+            <p style="margin: 0;">No research publications data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 12. RESEARCH PROJECTS -->
+    {% if research_projects %}
+    <div class="section-title">12. RESEARCH PROJECTS</div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Marks</th>
+                <th>Journal/Publisher</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in research_projects %}
+            <tr>
+                <td>{{ project.get_research_type_display }}</td>
+                <td>{{ project.title_of_project }}</td>
+                <td>{{ project.marks_awarded|default:"—" }}</td>
+                <td>
+                    {% if project.journal_name %}{{ project.journal_name }}{% endif %}
+                    {% if project.publisher_name %}{{ project.publisher_name }}{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- 13. FDP / WORKSHOPS ATTENDED (WITH ACADEMIC YEAR) -->
+    <div class="section-title">13. FDP / WORKSHOPS ATTENDED</div>
+    {% if fdps %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Academic Year</th>
+                <th>Duration</th>
+                <th>Organized By</th>
+                <th>Place</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fdp in fdps %}
+            <tr>
+                <td>{{ fdp.get_fdp_type_display }}</td>
+                <td>{{ fdp.title }}</td>
+                <td>
+                    {% if fdp.academic_year %}
+                        <span class="academic-year-badge">{{ fdp.academic_year }}</span>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ fdp.from_date|date:"d M Y" }} to {{ fdp.to_date|date:"d M Y" }} ({{ fdp.duration_days }} days)</td>
+                <td>{{ fdp.organized_by|default:"—" }}</td>
+                <td>{{ fdp.place|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div class="no-data">
+            <p style="margin: 0;">No FDP/Workshop data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 14. B.TECH PROJECTS HANDLED -->
+    <div class="section-title">14. B.TECH PROJECTS HANDLED</div>
+    {% if btech_projects %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>H.T.No.</th>
+                <th>Student Name</th>
+                <th>Batch</th>
+                <th>Project Title</th>
+                <th>Approved</th>
+                <th>Marks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in btech_projects %}
+            <tr>
+                <td>{{ project.ht_no }}</td>
+                <td>{{ project.student_name }}</td>
+                <td>{{ project.batch|default:"—" }}</td>
+                <td>{{ project.project_title }}</td>
+                <td style="color: {% if project.approved %}green{% else %}red{% endif %};">
+                    {% if project.approved %}Yes{% else %}No{% endif %}
+                </td>
+                <td>{{ project.marks|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <div class="no-data">
+            <p style="margin: 0;">No project data available</p>
+        </div>
+    {% endif %}
+
+    <!-- 15. RESULTS / ACADEMIC PERFORMANCE (WITH ACADEMIC YEAR) -->
+    <div class="section-title">15. RESULTS / ACADEMIC PERFORMANCE</div>
+    <div style="padding: 10px; background: #f9f9f9; border: 1px solid #eee;">
+        {% if results_data_list %}
+            <div>
+                {% for result in results_data_list %}
+                <div class="result-item">
+                    <strong>{{ result.subject_name }}</strong>
+                    {% if result.subject_code %}({{ result.subject_code }}){% endif %}
+                    {% if result.academic_year %}
+                        <span class="academic-year-badge">{{ result.academic_year }}</span>
+                    {% endif %}
+                    <br>
+                    Classes Taken: {{ result.classes_taken|default:0 }} |
+                    Students Attempted: {{ result.students_attempted }} |
+                    Passed: {{ result.students_passed }}<br>
+                    <strong>Pass Percentage: {{ result.percentage }}%</strong>
+                </div>
+                {% endfor %}
+            </div>
+        {% elif results_text %}
+            <div style="white-space: pre-line;">{{ results_text }}</div>
+        {% elif faculty.results %}
+            <div style="white-space: pre-line;">{{ faculty.results }}</div>
+        {% else %}
+            <p class="no-data" style="margin: 0;">No results data specified</p>
+        {% endif %}
+    </div>
+
+    <!-- 16. UPLOADED DOCUMENTS -->
+    <div class="section-title">16. UPLOADED DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <div class="document-box"><strong>Aadhar Card:</strong> {% if has_aadhar %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>PAN Card:</strong> {% if has_pan %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>APAAR Document:</strong> {% if has_apaar %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>SCM Document:</strong> {% if has_scm %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>JNTUH Bio-Data:</strong> {% if has_jntuh_biodata %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>SSC Certificate:</strong> {% if has_ssc_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Intermediate Certificate:</strong> {% if has_inter_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>UG Certificate:</strong> {% if has_ug_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>PG Certificate:</strong> {% if has_pg_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>PhD Certificate:</strong> {% if has_phd_cert %}<span style="color: green;">✓ Uploaded</span>{% else %}<span style="color: #999;">✗ Not Uploaded</span>{% endif %}</div>
+        </div>
+    </div>
+
+    <!-- 17. ADDITIONAL DOCUMENTS (WITH ACADEMIC YEAR) - INCLUDING UPLOADED PDF CONTENT -->
+    <div class="section-title">17. ADDITIONAL DOCUMENTS</div>
+    <div style="padding: 10px;">
+        <!-- Status summary row -->
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+            <div class="document-box"><strong>Research Publications Proof:</strong> {% if has_research_proof %}<span style="color: green;">&#10003; {{ research_proof_total_pages }} pages uploaded</span>{% if research_proof_academic_year %} <span class="document-detail">AY: {{ research_proof_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>FDP Proof:</strong> {% if has_fdp_certificate %}<span style="color: green;">&#10003; {{ fdp_certificate_total_pages }} pages uploaded</span>{% if fdp_certificate_academic_year %} <span class="document-detail">AY: {{ fdp_certificate_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Experience Certificates:</strong> {% if has_experience_certificates %}<span style="color: green;">&#10003; Uploaded</span>{% if experience_certificates_academic_year %} <span class="document-detail">AY: {{ experience_certificates_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
+            <div class="document-box"><strong>Other Documents:</strong> {% if has_other_documents %}<span style="color: green;">&#10003; Uploaded</span>{% if other_documents_academic_year %} <span class="document-detail">AY: {{ other_documents_academic_year }}</span>{% endif %}{% else %}<span style="color: #999;">&#10007; Not Uploaded</span>{% endif %}</div>
+        </div>
+
+        <!-- Embedded document previews -->
+        {% if has_research_proof and research_proof_display_url %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Research Publications Proof{% if research_proof_academic_year %} ({{ research_proof_academic_year }}){% endif %}:</div>
+            {% if research_proof_is_image %}
+                <img src="{{ research_proof_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Research Publications Proof">
+            {% else %}
+                <iframe src="{{ research_proof_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if has_fdp_certificate and fdp_certificate_display_url %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">FDP Proof{% if fdp_certificate_academic_year %} ({{ fdp_certificate_academic_year }}){% endif %}:</div>
+            {% if fdp_certificate_is_image %}
+                <img src="{{ fdp_certificate_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="FDP Proof">
+            {% else %}
+                <iframe src="{{ fdp_certificate_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if has_experience_certificates and experience_certificates_display_url %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Experience Certificates{% if experience_certificates_academic_year %} ({{ experience_certificates_academic_year }}){% endif %}:</div>
+            {% if experience_certificates_is_image %}
+                <img src="{{ experience_certificates_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Experience Certificates">
+            {% else %}
+                <iframe src="{{ experience_certificates_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if has_other_documents and other_documents_display_url %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Other Documents{% if other_documents_academic_year %} ({{ other_documents_academic_year }}){% endif %}:</div>
+            {% if other_documents_is_image %}
+                <img src="{{ other_documents_display_url }}" style="width: 100%; max-height: 700px; object-fit: contain; border: 1px solid #ddd; display: block;" alt="Other Documents">
+            {% else %}
+                <iframe src="{{ other_documents_display_url }}" width="100%" height="700" style="border: 1px solid #ddd;"></iframe>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Certificate Records (from Certificate model) -->
+        {% if certificates %}
+        <div style="margin-bottom: 20px; page-break-inside: avoid;">
+            <div class="uploaded-pdf-title" style="font-size: 12px; margin-bottom: 5px;">Additional Certificates:</div>
+            <table class="data-table" style="margin-top: 5px;">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Certificate Type</th>
+                        <th>Issued By</th>
+                        <th>Issue Date</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cert in certificates %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ cert.certificate_type|default:"—" }}</td>
+                        <td>{{ cert.issued_by|default:"—" }}</td>
+                        <td>{% if cert.issue_date %}{{ cert.issue_date|date:"d M Y" }}{% else %}—{% endif %}</td>
+                        <td>{{ cert.description|default:"—"|truncatechars:50 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 18. ABOUT YOURSELF -->
+    <div class="section-title">18. ABOUT YOURSELF</div>
+    <div class="about-content">
+        {% if faculty.about_yourself %}
+            {{ faculty.about_yourself|linebreaks }}
+        {% else %}
+            <p style="text-align: center; color: #888; font-style: italic; margin: 0;">No information provided</p>
+        {% endif %}
+    </div>
+
+    <!-- 19. MEMBERSHIP & RATIFICATION -->
+    <div class="section-title">19. MEMBERSHIP &amp; RATIFICATION</div>
+    <table class="info-table">
+        <tr><td class="label">Academic Year</td><td>{{ faculty.membership_academic_year|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Membership In</td><td>{{ faculty.membership_in|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Membership ID</td><td>{{ faculty.membership_id|default:"Not Specified" }}</td></tr>
+        <tr><td class="label">Membership Proof</td><td>{% if has_membership_proof %}Uploaded{% else %}Not Uploaded{% endif %}</td></tr>
+        <tr><td class="label">Ratified</td><td>{{ ratified_status|default:"Not Specified" }}</td></tr>
+    </table>
+
+    <div class="footer">
+        <p>This is an electronically generated official document of Engineering College.</p>
+    </div>
+</body>
+</html>
