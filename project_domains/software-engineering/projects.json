@@ -9,7 +9,7 @@
         "amount_paise": 200000,
         "source": "project-folder",
         "payment_enabled": false,
-        "receipt_required": false
+        "receipt_required": true
       }
     }
   ]

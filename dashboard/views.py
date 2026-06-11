@@ -4445,13 +4445,8 @@ def _build_project_zip(domain_slug, project):
 
 @require_GET
 def download_project_zip(request, domain_slug, project_slug):
-    """Generate a configured project ZIP after verification, or directly in test mode."""
+    """Generate a configured project ZIP after server-verified payment or receipt approval."""
     project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
-    if not project.get('payment_enabled') and not project.get('receipt_required'):
-        response = HttpResponse(_build_project_zip(domain_slug, project), content_type='application/zip')
-        response['Content-Disposition'] = f'attachment; filename="{project_slug}.zip"'
-        response['Cache-Control'] = 'no-store'
-        return response
     if not request.GET.get('order') and project.get('receipt_required') and not project.get('payment_enabled'):
         messages.info(request, 'Please share your PhonePe receipt through project support. ZIP download unlocks after confirmation.')
         return redirect(_project_detail_url(domain_slug, project))

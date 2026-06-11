@@ -238,11 +238,6 @@
             {% if project_support_download_url %}
                 <a class="action" href="{{ project_support_download_url }}">Download Confirmed ZIP</a>
             {% endif %}
-            {% if project.zip_enabled and not project.payment_enabled and not project.receipt_required %}
-                <a class="action" href="{% url 'dashboard:download_project_zip' domain_slug project.slug %}">
-                    Download Project ZIP
-                </a>
-            {% endif %}
             {% if project.payment_enabled %}
                 <a class="action" href="{% url 'dashboard:project_zip_payment' domain_slug project.slug %}">
                     Pay INR {{ project.amount_rupees }} and Download ZIP
@@ -284,7 +279,7 @@
             {% endif %}
             {% if academic_folders %}
                 <section class="execution" aria-label="Project folder structure">
-                    <h2>Project Folders</h2>
+                    <h2>ZIP Folder Contents</h2>
                     <p>These folders are included in the complete project ZIP.</p>
                     <table>
                         <thead>
