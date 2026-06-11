@@ -102,6 +102,7 @@ INSTALLED_APPS = [
     'django_extensions',
 
     'dashboard',
+    'car_price_app',
 ]
 
 # ================================

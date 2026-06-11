@@ -15,6 +15,7 @@ def health_check(request):
 urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
+    path('car-price/', include('car_price_app.urls')),
     path('', include('dashboard.urls')),
 ]
 

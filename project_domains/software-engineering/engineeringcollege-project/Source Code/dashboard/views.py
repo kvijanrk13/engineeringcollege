@@ -28,6 +28,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.db import DatabaseError
 from django.db.models import Q, Count, F
+from django.db.models.functions import Lower, Trim
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.files import File
 from django.core.files.base import ContentFile
@@ -3087,6 +3088,40 @@ def set_student_session(request, student):
     request.session['student_display_name'] = student.student_name
 
 
+def set_google_student_session(request, email, display_name=''):
+    display_name = (display_name or '').strip() or email
+    request.session['student_logged_in'] = True
+    request.session['student_username'] = email
+    request.session['student_display_name'] = display_name
+    request.session.pop('student_id', None)
+    request.session.pop('student_ht_no', None)
+
+
+def find_record_by_email(model, email):
+    normalized_email = (email or '').strip().lower()
+    if not normalized_email:
+        return None
+    return (
+        model.objects
+        .annotate(normalized_email=Lower(Trim('email')))
+        .filter(normalized_email=normalized_email)
+        .first()
+    )
+
+
+def unique_google_username(email, preferred_username=''):
+    username_base = re.sub(r'[^A-Za-z0-9_@.+-]', '', preferred_username or email.split('@', 1)[0])
+    username_base = username_base[:140] or 'google_user'
+    username = username_base
+    UserModel = get_user_model()
+    counter = 1
+    while UserModel.objects.filter(username=username).exists():
+        counter += 1
+        suffix = str(counter)
+        username = f"{username_base[:150 - len(suffix)]}{suffix}"
+    return username
+
+
 def google_login(request):
     if not google_signin_enabled():
         messages.error(request, 'Google sign-in is not configured.')
@@ -3168,11 +3203,20 @@ def google_callback(request):
             raise ValueError('Google email is not verified')
 
         if state_payload.get('role') == 'student':
-            if state_payload.get('continue'):
-                if not email.endswith('@gmail.com'):
-                    messages.error(request, 'Please sign in with a Gmail address.')
-                    return redirect('dashboard:student_login')
+            student = find_record_by_email(Student, email)
 
+            if state_payload.get('mobile'):
+                token_payload = (
+                    {'student_id': student.id}
+                    if student
+                    else {'email': email, 'name': profile.get('name', '')}
+                )
+                token = signing.dumps(token_payload, salt='google-mobile-complete')
+                response = HttpResponse(status=302)
+                response['Location'] = f"engineeringcollegeprojects://auth?{urlencode({'token': token})}"
+                return response
+
+            if state_payload.get('continue'):
                 request.session['google_oauth_email'] = email
                 request.session['google_oauth_name'] = profile.get('name', '')
                 request.session['car_price_gmail_verified'] = True
@@ -3185,31 +3229,18 @@ def google_callback(request):
                     next_url = '/car-price/maruti-prices/'
                 return redirect(next_url)
 
-            student = Student.objects.filter(email__iexact=email).first()
-            if not student:
-                messages.error(request, 'No student account is linked to this Gmail address.')
-                return redirect('dashboard:student_login')
-
-            if state_payload.get('mobile'):
-                token = signing.dumps({'student_id': student.id}, salt='google-mobile-complete')
-                response = HttpResponse(status=302)
-                response['Location'] = f"engineeringcollegeprojects://auth?{urlencode({'token': token})}"
-                return response
-
-            set_student_session(request, student)
+            if student:
+                set_student_session(request, student)
+            else:
+                set_google_student_session(request, email, profile.get('name', ''))
             return redirect('dashboard:add_student')
 
-        faculty = Faculty.objects.filter(email__iexact=email).first()
+        faculty = find_record_by_email(Faculty, email)
 
         UserModel = get_user_model()
-        username_base = (getattr(faculty, 'employee_code', '') or email.split('@', 1)[0]).strip()
         user = UserModel.objects.filter(email__iexact=email).first()
         if not user:
-            username = username_base
-            counter = 1
-            while UserModel.objects.filter(username=username).exists():
-                counter += 1
-                username = f"{username_base}{counter}"
+            username = unique_google_username(email, getattr(faculty, 'employee_code', '') if faculty else '')
             user = UserModel(username=username, email=email)
 
         display_name = (getattr(faculty, 'staff_name', '') or profile.get('name', '') or email).strip()
@@ -3233,12 +3264,19 @@ def google_mobile_complete(request):
     token = request.GET.get('token', '')
     try:
         payload = signing.loads(token, salt='google-mobile-complete', max_age=10 * 60)
-        student = Student.objects.get(id=payload.get('student_id'))
+        student_id = payload.get('student_id')
+        if student_id:
+            student = Student.objects.get(id=student_id)
+            set_student_session(request, student)
+        else:
+            email = (payload.get('email') or '').strip().lower()
+            if not email:
+                raise ValueError('Missing Google email')
+            set_google_student_session(request, email, payload.get('name', ''))
     except Exception:
         messages.error(request, 'Mobile Google sign-in expired. Please try again.')
         return redirect('dashboard:student_login')
 
-    set_student_session(request, student)
     return redirect('dashboard:add_student')
 
 
@@ -4443,13 +4481,8 @@ def _build_project_zip(domain_slug, project):
 
 @require_GET
 def download_project_zip(request, domain_slug, project_slug):
-    """Generate a configured project ZIP after verification, or directly in test mode."""
+    """Generate a configured project ZIP after server-verified payment or receipt approval."""
     project = _get_domain_project(domain_slug, project_slug, require_paid_zip=True)
-    if not project.get('payment_enabled') and not project.get('receipt_required'):
-        response = HttpResponse(_build_project_zip(domain_slug, project), content_type='application/zip')
-        response['Content-Disposition'] = f'attachment; filename="{project_slug}.zip"'
-        response['Cache-Control'] = 'no-store'
-        return response
     if not request.GET.get('order') and project.get('receipt_required') and not project.get('payment_enabled'):
         messages.info(request, 'Please share your PhonePe receipt through project support. ZIP download unlocks after confirmation.')
         return redirect(_project_detail_url(domain_slug, project))

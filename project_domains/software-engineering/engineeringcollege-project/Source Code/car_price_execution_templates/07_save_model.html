@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 7: Save Model - Used Car Price Prediction Using K-Radius Nearest Neighbors</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fb;
+      color: #162033;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      border-bottom: 2px solid #125c8f;
+      padding-bottom: 10px;
+      color: #125c8f;
+    }
+    .purpose {
+      background-color: #eef3f8;
+      padding: 15px;
+      border-left: 4px solid #125c8f;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border: 1px solid #d7dfeb;
+      border-radius: 6px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .button {
+      display: inline-block;
+      background-color: #125c8f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-right: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .button:hover {
+      background-color: #0d3a52;
+    }
+    .modification-guide {
+      background-color: #fffbea;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 7: Save Model</h1>
+    
+    <div class="purpose">
+      <strong>Purpose:</strong> Save the trained prediction model as model.pkl for later execution.
+    </div>
+
+    <h2>Code</h2>
+    <div class="code-block">
+import pickle
+
+final_model = LinearRegression()
+final_model.fit(X_train, y_train)
+
+with open('model.pkl', 'wb') as file:
+    pickle.dump(final_model, file)
+    </div>
+
+    <div class="modification-guide">
+      <strong>📝 Modification Guide:</strong>
+      <ul>
+        <li>Choose best model: Replace LinearRegression() with the best model from Step 5</li>
+        <li>Use joblib: Replace pickle with joblib for better performance (joblib.dump(model, 'model.pkl'))</li>
+        <li>Save scaler too: Add pickle.dump(scaler, open('scaler.pkl', 'wb')) to save the scaler</li>
+        <li>Add metadata: Create a JSON file with model info, training date, metrics</li>
+        <li>Version control: Add timestamps or version numbers to model names</li>
+        <li>Cloud storage: Upload to AWS S3, Google Cloud Storage, or Cloudinary</li>
+        <li>Model compression: Use model optimization techniques to reduce file size</li>
+      </ul>
+    </div>
+
+    <h2>Expected Output</h2>
+    <ul>
+      <li>model.pkl file saved in the project directory</li>
+      <li>Model ready for production predictions</li>
+      <li>Can be loaded later with: pickle.load(open('model.pkl', 'rb'))</li>
+      <li>File size typically 1-50 MB depending on model complexity</li>
+    </ul>
+
+    <button class="button">Back to Execution Pages</button>
+    <button class="button">Next Step: Prediction Page</button>
+  </div>
+</body>
+</html>

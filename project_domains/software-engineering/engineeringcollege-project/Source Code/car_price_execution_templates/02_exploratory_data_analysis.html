@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 2: Exploratory Data Analysis - Used Car Price Prediction Using K-Radius Nearest Neighbors</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fb;
+      color: #162033;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      border-bottom: 2px solid #125c8f;
+      padding-bottom: 10px;
+      color: #125c8f;
+    }
+    .purpose {
+      background-color: #eef3f8;
+      padding: 15px;
+      border-left: 4px solid #125c8f;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border: 1px solid #d7dfeb;
+      border-radius: 6px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .button {
+      display: inline-block;
+      background-color: #125c8f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-right: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .button:hover {
+      background-color: #0d3a52;
+    }
+    .modification-guide {
+      background-color: #fffbea;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 2: Exploratory Data Analysis</h1>
+    
+    <div class="purpose">
+      <strong>Purpose:</strong> Visualize price patterns by fuel type, seller type, transmission, and correlations.
+    </div>
+
+    <h2>Code</h2>
+    <div class="code-block">
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
+sns.barplot(x='Fuel_Type', y='Selling_Price', data=car_data, ax=axes[0])
+sns.barplot(x='Seller_Type', y='Selling_Price', data=car_data, ax=axes[1])
+sns.barplot(x='Transmission', y='Selling_Price', data=car_data, ax=axes[2])
+
+numeric_columns = car_data.select_dtypes(include=['float64', 'int64']).columns
+sns.heatmap(car_data[numeric_columns].corr(), annot=True)
+plt.title('Correlation between the columns')
+plt.show()
+    </div>
+
+    <div class="modification-guide">
+      <strong>📝 Modification Guide:</strong>
+      <ul>
+        <li>Add subplots: Change figsize or add more subplot categories</li>
+        <li>Customize plots: Modify colors with palette='Set2' or other seaborn palettes</li>
+        <li>Change analysis: Replace barplot with histplot, boxplot, or violinplot</li>
+        <li>Save figures: Add plt.savefig('plot_name.png') before plt.show()</li>
+        <li>Add distributions: Create subplots for univariate distributions</li>
+      </ul>
+    </div>
+
+    <h2>Expected Output</h2>
+    <ul>
+      <li>Bar charts showing average price by Fuel Type, Seller Type, Transmission</li>
+      <li>Correlation heatmap showing relationships between numeric columns</li>
+      <li>Visual patterns in price distribution</li>
+    </ul>
+
+    <button class="button">Back to Execution Pages</button>
+    <button class="button">Next Step: Preprocessing</button>
+  </div>
+</body>
+</html>

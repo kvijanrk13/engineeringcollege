@@ -1,0 +1,1083 @@
+{% extends "car_price_app/base.html" %}
+
+{% block content %}
+  <h1>{{ page_heading|default:title }}</h1>
+  {% if page_subtitle %}
+    <p>{{ page_subtitle }}</p>
+  {% endif %}
+
+  <section>
+    <h2>Project Identity</h2>
+    <p>
+      <strong>{{ title }}</strong>
+      This project is different from normal car selling websites because it combines Khammam/Telangana local price context,
+      registration risk checks, transparent depreciation factors, buyer confidence scoring, and seller improvement advice.
+    </p>
+    <p style="margin-top: 12px;">
+      <a class="button" style="background: #0d3a52;" href="{% url 'research-paper' %}">Research Paper: K-RADIUS+ Algorithm</a>
+      <a class="button" href="{% url 'apriori-execution' %}">Apriori Execution Templates</a>
+    </p>
+  </section>
+
+  <section>
+    <h2>Select Maruti Suzuki Car Details</h2>
+    <p>
+      Choose a Maruti Suzuki model and year to view the available specification fields and
+      approximate on-road price for Khammam District, Telangana. The fields are ready now;
+      exact official year-wise specifications can be updated model-by-model later.
+    </p>
+
+    <div class="form-grid">
+      <div>
+        <label for="car-model">Maruti Suzuki Car Model</label>
+        <select id="car-model">
+          <option value="">Select car model</option>
+          {% for model in maruti_data %}
+            <option value="{{ model.name }}">{{ model.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="car-year">Manufacturing / Price Year</label>
+        <select id="car-year">
+          <option value="">Select year</option>
+          {% for year in years %}
+            <option value="{{ year }}">{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="rto-location">Khammam / Telangana RTO Context</label>
+        <select id="rto-location">
+          <option value="khammam">Khammam District - TG/TS04</option>
+          <option value="nearby_telanga">Nearby Telangana district</option>
+          <option value="other_telanga">Other Telangana district</option>
+          <option value="other_state">Other state registration</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section id="result-panel" style="display: none;">
+    <div style="display: grid; grid-template-columns: minmax(220px, 320px) 1fr; gap: 20px; align-items: start;">
+      <div>
+        <img id="car-image" src="" alt="" style="width: 100%; border-radius: 8px; border: 1px solid #d7dfeb; background: #eef3f8;">
+      </div>
+      <div>
+        <h2 id="selected-title">Selected Car</h2>
+        <div class="metrics">
+          <div class="metric">
+            Segment
+            <strong id="segment-value">-</strong>
+          </div>
+          <div class="metric">
+            Khammam On-Road Price
+            <strong id="price-value">-</strong>
+          </div>
+          <div class="metric">
+            Selected Year
+            <strong id="year-value">-</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="spec-panel" style="display: none;">
+    <h2>Car Specifications</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th>Official Specification Source</th>
+          <td id="source-value">Maruti Suzuki official website / brochure verification pending for selected historical year</td>
+        </tr>
+        <tr>
+          <th>Engine</th>
+          <td id="engine-value">-</td>
+        </tr>
+        <tr>
+          <th>Power</th>
+          <td id="power-value">-</td>
+        </tr>
+        <tr>
+          <th>Mileage</th>
+          <td id="mileage-value">-</td>
+        </tr>
+        <tr>
+          <th>Fuel Type</th>
+          <td id="fuel-value">-</td>
+        </tr>
+        <tr>
+          <th>Transmission</th>
+          <td id="transmission-value">-</td>
+        </tr>
+        <tr>
+          <th>Key Specifications</th>
+          <td id="key-specs-value">-</td>
+        </tr>
+        <tr>
+          <th>Status / Notes</th>
+          <td id="status-value">-</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="questionnaire-panel">
+    <h2>Registered Car Questionnaire</h2>
+    <p>
+      Enter the vehicle details below for the selected model/year. Use the official Telangana / Parivahan links
+      to manually verify traffic challan status for the registration number. Accident or criminal case details are
+      not exposed as a simple public RTA API, so keep those as manually verified project inputs.
+    </p>
+
+    <div class="form-grid">
+      <div>
+        <label for="registration-number">Registration Number</label>
+        <input id="registration-number" name="registration_number" type="text" placeholder="Example: TG04AB1234">
+      </div>
+      <div>
+        <label>Official Verification Links</label>
+        <div class="actions" style="margin-top: 0;">
+          <a class="button" href="https://echallan.tspolice.gov.in/publicview/" target="_blank" rel="noopener">Telangana e-Challan</a>
+          <a class="button" href="https://echallan.parivahan.gov.in/index/accused-challan" target="_blank" rel="noopener">Parivahan Challan</a>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <label>1. Colour</label>
+      <p style="margin-top: 0;">Available colours are loaded from current official Maruti Suzuki/NEXA colour information where available.</p>
+      <div id="color-options" class="form-grid">Select a Maruti Suzuki car model to load colour options.</div>
+    </div>
+
+    <div class="form-grid" style="margin-top: 18px;">
+      <div>
+        <label for="questionnaire-engine">2. Engine Capacity</label>
+        <input id="questionnaire-engine" name="engine_capacity" type="text" readonly>
+      </div>
+      <div>
+        <label for="kilometers-driven">3. Total Kilometers Driven from Registration to Till Date</label>
+        <input id="kilometers-driven" name="kilometers_driven" type="number" min="0" step="1" placeholder="Enter odometer reading as of today">
+      </div>
+    </div>
+
+    <div class="form-grid" style="margin-top: 18px;">
+      <div>
+        <label for="odometer-source">4. Odometer Reading Verification</label>
+        <select id="odometer-source" name="odometer_source">
+          <option value="service_verified">Verified with service records</option>
+          <option value="insurance_verified">Verified with insurance/inspection record</option>
+          <option value="owner_claim">Owner claim only</option>
+          <option value="suspicious">Suspicious / mismatch found</option>
+        </select>
+      </div>
+      <div>
+        <label for="expected-usage-type">Expected Usage Pattern</label>
+        <select id="expected-usage-type" name="expected_usage_type">
+          <option value="normal">Normal personal use</option>
+          <option value="low">Low usage / occasional use</option>
+          <option value="high">High usage / long commute</option>
+          <option value="commercial">Commercial style usage</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <label>5. Any Repairs Done?</label>
+      <div class="actions" style="margin-top: 0;">
+        <label style="font-weight: 400;"><input type="radio" name="repairs_done" value="Yes" style="width: auto;"> Yes</label>
+        <label style="font-weight: 400;"><input type="radio" name="repairs_done" value="No" style="width: auto;"> No</label>
+      </div>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <label for="repair-description">6. If Repairs Done, Describe the Repairs</label>
+      <textarea id="repair-description" name="repair_description" rows="8" placeholder="Describe the repair type, date, workshop, parts replaced, insurance claim, and current condition. Maximum 3000 words." style="width: 100%; padding: 10px; border: 1px solid #b9c5d6; border-radius: 6px; font-size: 15px;"></textarea>
+      <p id="repair-word-count" style="margin: 6px 0 0;">0 / 3000 words</p>
+    </div>
+
+    <div class="form-grid" style="margin-top: 18px;">
+      <div>
+        <label for="owner-count">7. Number of Previous Owners</label>
+        <select id="owner-count" name="owner_count">
+          <option value="1">First owner</option>
+          <option value="2">Second owner</option>
+          <option value="3">Third owner</option>
+          <option value="4">More than three owners</option>
+        </select>
+      </div>
+      <div>
+        <label for="insurance-status">8. Insurance Status</label>
+        <select id="insurance-status" name="insurance_status">
+          <option value="valid_comprehensive">Valid comprehensive insurance</option>
+          <option value="valid_third_party">Valid third-party insurance</option>
+          <option value="expired">Expired insurance</option>
+          <option value="unknown">Not sure</option>
+        </select>
+      </div>
+      <div>
+        <label for="service-history">9. Service History</label>
+        <select id="service-history" name="service_history">
+          <option value="authorized_complete">Complete authorized Maruti service record</option>
+          <option value="partial">Partial service record</option>
+          <option value="local_garage">Mostly local garage service</option>
+          <option value="none">No service record</option>
+        </select>
+      </div>
+      <div>
+        <label for="accident-status">10. Accident History</label>
+        <select id="accident-status" name="accident_status">
+          <option value="none">No accident reported</option>
+          <option value="minor">Minor accident / scratches / dents</option>
+          <option value="major">Major accident / structural repair</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </div>
+      <div>
+        <label for="challan-status">11. Traffic Challan Status</label>
+        <select id="challan-status" name="challan_status">
+          <option value="none">No pending challans verified</option>
+          <option value="minor">Minor pending challans</option>
+          <option value="major">Major pending challans</option>
+          <option value="unknown">Not verified</option>
+        </select>
+      </div>
+      <div>
+        <label for="tyre-condition">12. Tyre Condition</label>
+        <select id="tyre-condition" name="tyre_condition">
+          <option value="new">New / excellent</option>
+          <option value="good">Good</option>
+          <option value="average">Average</option>
+          <option value="poor">Needs replacement</option>
+        </select>
+      </div>
+      <div>
+        <label for="body-condition">13. Body and Interior Condition</label>
+        <select id="body-condition" name="body_condition">
+          <option value="excellent">Excellent</option>
+          <option value="good">Good</option>
+          <option value="average">Average</option>
+          <option value="poor">Poor</option>
+        </select>
+      </div>
+      <div>
+        <label for="ownership-type">14. Vehicle Usage Type</label>
+        <select id="ownership-type" name="ownership_type">
+          <option value="personal">Personal use</option>
+          <option value="company">Company use</option>
+          <option value="taxi">Taxi / commercial use</option>
+          <option value="rental">Rental / fleet use</option>
+        </select>
+      </div>
+      <div>
+        <label for="seller-urgency">15. Seller Urgency</label>
+        <select id="seller-urgency" name="seller_urgency">
+          <option value="normal">Normal sale</option>
+          <option value="urgent">Urgent sale</option>
+          <option value="premium">Expecting premium price</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="predict-price-button" type="button">Predict Used Car Price</button>
+    </div>
+  </section>
+
+  <section id="prediction-panel" style="display: none;">
+    <h2>Predicted Used Car Price</h2>
+    <div class="metrics">
+      <div class="metric">
+        Estimated Current Value
+        <strong id="predicted-price-value">-</strong>
+      </div>
+      <div class="metric">
+        Depreciation
+        <strong id="depreciation-value">-</strong>
+      </div>
+      <div class="metric">
+        Confidence Band
+        <strong id="confidence-value">Approx. +/- 8%</strong>
+      </div>
+      <div class="metric">
+        Buyer Confidence Score
+        <strong id="buyer-score-value">-</strong>
+      </div>
+      <div class="metric">
+        Risk Category
+        <strong id="risk-category-value">-</strong>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 18px;">Unique Project Formula: K-RADIUS</h3>
+    <p>
+      <strong>K-RADIUS</strong> means <strong>Khammam Registered Automobile Depreciation Using Inspection Score</strong>.
+      Unlike common resale websites, this formula openly combines local Khammam/RTO context, registration risk,
+      challan/accident status, ownership trust, service records, usage stress, and seller urgency into one explainable
+      depreciation score.
+    </p>
+    <pre><code>K-RADIUS Predicted Price =
+Selected Year Khammam On-Road Price
+* Standard Depreciation Factors
+* Khammam Locality Factor
+* Registration Risk Factor
+* Documentation Trust Factor
+* Buyer Confidence Booster</code></pre>
+
+    <pre><code>K-RADIUS Index =
+(Buyer Confidence Score / 100)
+* Khammam Locality Factor
+* Registration Risk Factor
+* Documentation Trust Factor
+* Usage Stress Factor</code></pre>
+
+    <h3 style="margin-top: 18px;">Depreciation Formula Used Now</h3>
+    <pre><code>Predicted Price =
+Selected Year Khammam On-Road Price
+× Age Depreciation Factor
+× Kilometer Usage Factor
+× Repair Condition Factor
+× Colour Demand Factor</code></pre>
+
+    <p>
+      The expanded questionnaire also applies ownership, insurance, service history, accident/challan,
+      tyre/body condition, usage type, and seller urgency factors to estimate a realistic resale price.
+    </p>
+
+    <table style="margin-top: 16px;">
+      <tbody>
+        <tr>
+          <th>Selected year on-road price</th>
+          <td id="formula-base-price">-</td>
+        </tr>
+        <tr>
+          <th>Age depreciation factor</th>
+          <td id="formula-age-factor">-</td>
+        </tr>
+        <tr>
+          <th>Kilometer usage factor</th>
+          <td id="formula-km-factor">-</td>
+        </tr>
+        <tr>
+          <th>Expected kilometer range</th>
+          <td id="formula-expected-km">-</td>
+        </tr>
+        <tr>
+          <th>Odometer verification/tampering factor</th>
+          <td id="formula-odometer-factor">-</td>
+        </tr>
+        <tr>
+          <th>Repair condition factor</th>
+          <td id="formula-repair-factor">-</td>
+        </tr>
+        <tr>
+          <th>Colour demand factor</th>
+          <td id="formula-color-factor">-</td>
+        </tr>
+        <tr>
+          <th>Ownership factor</th>
+          <td id="formula-owner-factor">-</td>
+        </tr>
+        <tr>
+          <th>Insurance factor</th>
+          <td id="formula-insurance-factor">-</td>
+        </tr>
+        <tr>
+          <th>Service history factor</th>
+          <td id="formula-service-factor">-</td>
+        </tr>
+        <tr>
+          <th>Accident/challan factor</th>
+          <td id="formula-legal-factor">-</td>
+        </tr>
+        <tr>
+          <th>Tyre/body condition factor</th>
+          <td id="formula-condition-factor">-</td>
+        </tr>
+        <tr>
+          <th>Usage/seller urgency factor</th>
+          <td id="formula-usage-factor">-</td>
+        </tr>
+        <tr>
+          <th>Khammam/Telangana local factor</th>
+          <td id="formula-local-factor">-</td>
+        </tr>
+        <tr>
+          <th>K-RADIUS index</th>
+          <td id="formula-kradius-index">-</td>
+        </tr>
+        <tr>
+          <th>K-RADIUS adjustment</th>
+          <td id="formula-kradius-adjustment">-</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="seller-advice-panel" style="display: none;">
+    <h2>Seller Advice to Improve Resale Value</h2>
+    <ul id="seller-advice-list"></ul>
+  </section>
+
+  <section id="algorithm-panel" style="display: none;">
+    <h2>Suitable Machine Learning Algorithm</h2>
+    <p>
+      Recommended algorithm from this project workflow:
+      <strong>Random Forest Regression</strong>. The GitHub execution templates already compare
+      <code>LinearRegression</code>, <code>Lasso</code>, <code>Ridge</code>,
+      <code>RandomForestRegressor</code>, and <code>GradientBoostingRegressor</code>.
+      Random Forest is suitable here because depreciation is affected by non-linear combinations of age,
+      kilometers driven, repairs, ownership count, insurance, service history, accident/challan status,
+      body condition, usage type, model segment, fuel type, transmission, and colour demand.
+    </p>
+    <pre><code>from sklearn.ensemble import RandomForestRegressor
+
+model = RandomForestRegressor(
+    n_estimators=100,
+    random_state=42,
+)
+model.fit(X_train, y_train)
+predicted_price = model.predict(input_features)[0]</code></pre>
+
+    <h3 style="margin-top: 18px;">Feature Vector for This Page</h3>
+    <table>
+      <tbody>
+        <tr>
+          <th>model_name</th>
+          <td id="feature-model">-</td>
+        </tr>
+        <tr>
+          <th>model_year</th>
+          <td id="feature-year">-</td>
+        </tr>
+        <tr>
+          <th>on_road_price_khammam</th>
+          <td id="feature-on-road-price">-</td>
+        </tr>
+        <tr>
+          <th>vehicle_age</th>
+          <td id="feature-age">-</td>
+        </tr>
+        <tr>
+          <th>kilometers_driven</th>
+          <td id="feature-km">-</td>
+        </tr>
+        <tr>
+          <th>expected_kilometers_till_date</th>
+          <td id="feature-expected-km">-</td>
+        </tr>
+        <tr>
+          <th>odometer_verification</th>
+          <td id="feature-odometer-source">-</td>
+        </tr>
+        <tr>
+          <th>odometer_tampering_risk</th>
+          <td id="feature-odometer-risk">-</td>
+        </tr>
+        <tr>
+          <th>engine_capacity</th>
+          <td id="feature-engine">-</td>
+        </tr>
+        <tr>
+          <th>repairs_done</th>
+          <td id="feature-repairs">-</td>
+        </tr>
+        <tr>
+          <th>colour</th>
+          <td id="feature-color">-</td>
+        </tr>
+        <tr>
+          <th>owner_count</th>
+          <td id="feature-owner-count">-</td>
+        </tr>
+        <tr>
+          <th>insurance_status</th>
+          <td id="feature-insurance">-</td>
+        </tr>
+        <tr>
+          <th>service_history</th>
+          <td id="feature-service">-</td>
+        </tr>
+        <tr>
+          <th>accident_status</th>
+          <td id="feature-accident">-</td>
+        </tr>
+        <tr>
+          <th>challan_status</th>
+          <td id="feature-challan">-</td>
+        </tr>
+        <tr>
+          <th>tyre_condition</th>
+          <td id="feature-tyre">-</td>
+        </tr>
+        <tr>
+          <th>body_condition</th>
+          <td id="feature-body">-</td>
+        </tr>
+        <tr>
+          <th>usage_type</th>
+          <td id="feature-usage">-</td>
+        </tr>
+        <tr>
+          <th>seller_urgency</th>
+          <td id="feature-urgency">-</td>
+        </tr>
+        <tr>
+          <th>rto_location_factor</th>
+          <td id="feature-rto">-</td>
+        </tr>
+        <tr>
+          <th>buyer_confidence_score</th>
+          <td id="feature-confidence-score">-</td>
+        </tr>
+        <tr>
+          <th>risk_category</th>
+          <td id="feature-risk-category">-</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Available Models and Years</h2>
+    <p>
+      This screen currently covers {{ maruti_data|length }} Maruti Suzuki models and years 2015 to 2026.
+      If a model was not available in a selected year, the price/specification area will show it as not on sale.
+    </p>
+  </section>
+
+  {{ maruti_lookup|json_script:"maruti-data" }}
+  <script>
+    const marutiData = JSON.parse(document.getElementById("maruti-data").textContent);
+    const modelSelect = document.getElementById("car-model");
+    const yearSelect = document.getElementById("car-year");
+    const resultPanel = document.getElementById("result-panel");
+    const specPanel = document.getElementById("spec-panel");
+    const questionnairePanel = document.getElementById("questionnaire-panel");
+    const predictionPanel = document.getElementById("prediction-panel");
+    const algorithmPanel = document.getElementById("algorithm-panel");
+    const sellerAdvicePanel = document.getElementById("seller-advice-panel");
+    const sellerAdviceList = document.getElementById("seller-advice-list");
+    const colorOptions = document.getElementById("color-options");
+    const repairDescription = document.getElementById("repair-description");
+    const repairWordCount = document.getElementById("repair-word-count");
+    const predictButton = document.getElementById("predict-price-button");
+    const currentCalendarYear = new Date().getFullYear();
+    let selectedSpec = null;
+    let selectedModel = null;
+
+    function parseRupees(value) {
+      const digits = String(value || "").replace(/[^\d]/g, "");
+      return digits ? Number(digits) : 0;
+    }
+
+    function formatRupees(value) {
+      return `Rs ${Math.round(value).toLocaleString("en-IN")}`;
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value || "-";
+    }
+
+    function updateSelection() {
+      const modelName = modelSelect.value;
+      const year = yearSelect.value;
+      const model = marutiData[modelName];
+
+      if (!model || !year) {
+        resultPanel.style.display = "none";
+        specPanel.style.display = "none";
+        questionnairePanel.style.display = "block";
+        predictionPanel.style.display = "none";
+        algorithmPanel.style.display = "none";
+        sellerAdvicePanel.style.display = "none";
+        document.getElementById("questionnaire-engine").value = "";
+        colorOptions.textContent = "Select a Maruti Suzuki car model to load colour options.";
+        selectedSpec = null;
+        selectedModel = null;
+        return;
+      }
+
+      const spec = model.yearly_specs.find((row) => String(row.year) === String(year));
+      selectedSpec = spec;
+      selectedModel = model;
+      const image = document.getElementById("car-image");
+
+      resultPanel.style.display = "block";
+      specPanel.style.display = "block";
+      questionnairePanel.style.display = "block";
+      predictionPanel.style.display = "none";
+      algorithmPanel.style.display = "block";
+      sellerAdvicePanel.style.display = "none";
+
+      image.src = model.image_url;
+      image.alt = model.name;
+
+      setText("selected-title", model.name);
+      setText("segment-value", model.segment);
+      setText("price-value", spec ? spec.price : "-");
+      setText("year-value", year);
+      setText("engine-value", spec ? spec.engine : "-");
+      setText("power-value", spec ? spec.power : "-");
+      setText("mileage-value", spec ? spec.mileage : "-");
+      setText("fuel-value", spec ? spec.fuel_types : "-");
+      setText("transmission-value", spec ? spec.transmission : "-");
+      setText("key-specs-value", model.key_specs);
+      setText("status-value", spec ? spec.status : "-");
+      document.getElementById("questionnaire-engine").value = spec ? spec.engine : "";
+      updateFeatureVector(null);
+
+      colorOptions.innerHTML = "";
+      if (model.color_options && model.color_options.length) {
+        model.color_options.forEach((color) => {
+          const option = document.createElement("label");
+          option.style.fontWeight = "400";
+          option.style.border = "1px solid #d7dfeb";
+          option.style.borderRadius = "6px";
+          option.style.padding = "10px";
+          option.style.background = "#fff";
+          option.innerHTML = `<input type="radio" name="color" value="${color}" style="width: auto;"> ${color}`;
+          colorOptions.appendChild(option);
+        });
+      } else {
+        colorOptions.textContent = "Colour list not available for this model.";
+      }
+    }
+
+    modelSelect.addEventListener("change", updateSelection);
+    yearSelect.addEventListener("change", updateSelection);
+    repairDescription.addEventListener("input", () => {
+      const words = repairDescription.value.trim().split(/\s+/).filter(Boolean);
+      if (words.length > 3000) {
+        repairDescription.value = words.slice(0, 3000).join(" ");
+      }
+      repairWordCount.textContent = `${Math.min(words.length, 3000)} / 3000 words`;
+    });
+
+    function getSelectedRadioValue(name) {
+      const selected = document.querySelector(`input[name="${name}"]:checked`);
+      return selected ? selected.value : "";
+    }
+
+    function colourDemandFactor(color) {
+      const normalized = String(color || "").toLowerCase();
+      if (["white", "silver", "grey", "gray", "black", "nexa blue"].some((item) => normalized.includes(item))) {
+        return 1.02;
+      }
+      if (["red", "blue", "brown"].some((item) => normalized.includes(item))) {
+        return 1.00;
+      }
+      if (["green", "yellow", "orange", "khaki"].some((item) => normalized.includes(item))) {
+        return 0.98;
+      }
+      return 1.00;
+    }
+
+    function selectFactor(value, factors, fallback = 1.00) {
+      return Object.prototype.hasOwnProperty.call(factors, value) ? factors[value] : fallback;
+    }
+
+    function localMarketFactor(rtoLocation) {
+      return selectFactor(rtoLocation, {
+        khammam: 1.00,
+        nearby_telanga: 0.99,
+        other_telanga: 0.98,
+        other_state: 0.94,
+      });
+    }
+
+    function expectedKilometerRange(age, usageType) {
+      const yearlyUsage = selectFactor(usageType, {
+        low: 6000,
+        normal: 12000,
+        high: 18000,
+        commercial: 28000,
+      }, 12000);
+      const expected = Math.max(age, 1) * yearlyUsage;
+      return {
+        expected,
+        low: Math.round(expected * 0.45),
+        high: Math.round(expected * 1.75),
+      };
+    }
+
+    function odometerRiskLevel(kilometers, range, source) {
+      if (source === "suspicious") return "High";
+      if (kilometers > 0 && kilometers < range.low) return "Medium";
+      if (kilometers > range.high) return "Medium";
+      if (source === "owner_claim") return "Medium";
+      return "Low";
+    }
+
+    function odometerTamperingFactor(risk, source) {
+      if (risk === "High") return 0.82;
+      if (risk === "Medium" && source === "owner_claim") return 0.93;
+      if (risk === "Medium") return 0.90;
+      if (source === "service_verified") return 1.02;
+      if (source === "insurance_verified") return 1.01;
+      return 1.00;
+    }
+
+    function calculateBuyerConfidenceScore(values) {
+      let score = 100;
+      score -= Math.min(values.age * 2, 24);
+      score -= Math.min(Math.floor(values.kilometers / 10000) * 2, 20);
+      if (values.odometerRisk === "Medium") score -= 10;
+      if (values.odometerRisk === "High") score -= 24;
+      if (values.odometerSource === "owner_claim") score -= 6;
+      if (values.repairsDone === "Yes") score -= 10;
+      if (values.ownerCount === "2") score -= 5;
+      if (values.ownerCount === "3") score -= 10;
+      if (values.ownerCount === "4") score -= 16;
+      if (values.insuranceStatus === "expired") score -= 8;
+      if (values.insuranceStatus === "unknown") score -= 5;
+      if (values.serviceHistory === "partial") score -= 4;
+      if (values.serviceHistory === "local_garage") score -= 7;
+      if (values.serviceHistory === "none") score -= 12;
+      if (values.accidentStatus === "minor") score -= 10;
+      if (values.accidentStatus === "major") score -= 25;
+      if (values.accidentStatus === "unknown") score -= 8;
+      if (values.challanStatus === "minor") score -= 4;
+      if (values.challanStatus === "major") score -= 10;
+      if (values.challanStatus === "unknown") score -= 6;
+      if (values.tyreCondition === "average") score -= 4;
+      if (values.tyreCondition === "poor") score -= 8;
+      if (values.bodyCondition === "average") score -= 7;
+      if (values.bodyCondition === "poor") score -= 15;
+      if (values.ownershipType === "company") score -= 5;
+      if (values.ownershipType === "taxi") score -= 16;
+      if (values.ownershipType === "rental") score -= 18;
+      if (values.rtoLocation === "other_state") score -= 8;
+      return Math.max(0, Math.min(100, score));
+    }
+
+    function riskCategory(score, values) {
+      if (values.odometerRisk === "High" || values.accidentStatus === "major" || values.ownershipType === "taxi" || values.ownershipType === "rental") {
+        return "High Risk";
+      }
+      if (score >= 80) return "Low Risk";
+      if (score >= 60) return "Medium Risk";
+      return "High Risk";
+    }
+
+    function buildSellerAdvice(values) {
+      const advice = [];
+      if (values.challanStatus !== "none") {
+        advice.push("Clear pending traffic challans and keep payment receipts before negotiating with buyers.");
+      }
+      if (values.odometerRisk !== "Low") {
+        advice.push("Verify odometer reading with service records, insurance inspection, or repair bills because suspicious readings reduce buyer confidence.");
+      }
+      if (values.insuranceStatus === "expired" || values.insuranceStatus === "unknown") {
+        advice.push("Renew or verify insurance to avoid buyer deductions during documentation.");
+      }
+      if (values.serviceHistory !== "authorized_complete") {
+        advice.push("Collect service records, repair invoices, and Maruti service history where available.");
+      }
+      if (values.tyreCondition === "poor" || values.tyreCondition === "average") {
+        advice.push("Improve tyre condition or disclose replacement cost clearly to improve buyer trust.");
+      }
+      if (values.bodyCondition === "poor" || values.bodyCondition === "average") {
+        advice.push("Fix visible dents, scratches, interior stains, and broken trim before showing the car.");
+      }
+      if (values.repairsDone === "Yes") {
+        advice.push("Describe repairs honestly and upload bills/photos so buyers can distinguish minor repairs from major damage.");
+      }
+      if (values.accidentStatus !== "none") {
+        advice.push("Disclose accident history with repair proof; hidden accident records reduce confidence heavily.");
+      }
+      if (values.rtoLocation === "other_state") {
+        advice.push("Prepare NOC or transfer documents because other-state registration can reduce local Khammam resale value.");
+      }
+      if (!advice.length) {
+        advice.push("The car profile is strong. Keep RC, insurance, PUC, service records, spare key, and clear photos ready.");
+      }
+      return advice;
+    }
+
+    function calculateKRadiusIndex(values) {
+      const confidenceComponent = values.confidenceScore / 100;
+      const registrationRiskFactor = values.rtoLocation === "other_state" ? 0.92 : values.rtoLocation === "other_telanga" ? 0.97 : 1.00;
+      const documentationTrustFactor = (
+        selectFactor(values.insuranceStatus, {
+          valid_comprehensive: 1.04,
+          valid_third_party: 1.00,
+          expired: 0.93,
+          unknown: 0.95,
+        }) *
+        selectFactor(values.serviceHistory, {
+          authorized_complete: 1.05,
+          partial: 1.00,
+          local_garage: 0.96,
+          none: 0.90,
+        })
+      );
+      const legalCleanlinessFactor = (
+        selectFactor(values.accidentStatus, {
+          none: 1.00,
+          minor: 0.92,
+          major: 0.75,
+          unknown: 0.94,
+        }) *
+        selectFactor(values.challanStatus, {
+          none: 1.00,
+          minor: 0.97,
+          major: 0.92,
+          unknown: 0.96,
+        })
+      );
+      const usageStressFactor = selectFactor(values.ownershipType, {
+        personal: 1.00,
+        company: 0.96,
+        taxi: 0.82,
+        rental: 0.80,
+      });
+
+      return Math.max(
+        0.55,
+        Math.min(
+          1.08,
+          confidenceComponent *
+          values.localFactor *
+          registrationRiskFactor *
+          documentationTrustFactor *
+          legalCleanlinessFactor *
+          usageStressFactor
+        )
+      );
+    }
+
+    function kRadiusAdjustment(index) {
+      return Math.max(0.92, Math.min(1.04, 0.96 + (index * 0.08)));
+    }
+
+    function renderSellerAdvice(advice) {
+      sellerAdviceList.innerHTML = "";
+      advice.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        sellerAdviceList.appendChild(li);
+      });
+      sellerAdvicePanel.style.display = "block";
+    }
+
+    function calculatePrediction() {
+      if (!selectedModel || !selectedSpec) {
+        return;
+      }
+
+      const basePrice = parseRupees(selectedSpec.price);
+      if (!basePrice) {
+        alert("This model was not on sale for the selected year. Please select another year.");
+        return;
+      }
+
+      const selectedYear = Number(yearSelect.value);
+      const age = Math.max(currentCalendarYear - selectedYear, 0);
+      const kilometers = Number(document.getElementById("kilometers-driven").value || 0);
+      const odometerSource = document.getElementById("odometer-source").value;
+      const expectedUsageType = document.getElementById("expected-usage-type").value;
+      const repairsDone = getSelectedRadioValue("repairs_done") || "No";
+      const color = getSelectedRadioValue("color") || "Not selected";
+      const ownerCount = document.getElementById("owner-count").value;
+      const insuranceStatus = document.getElementById("insurance-status").value;
+      const serviceHistory = document.getElementById("service-history").value;
+      const accidentStatus = document.getElementById("accident-status").value;
+      const challanStatus = document.getElementById("challan-status").value;
+      const tyreCondition = document.getElementById("tyre-condition").value;
+      const bodyCondition = document.getElementById("body-condition").value;
+      const ownershipType = document.getElementById("ownership-type").value;
+      const sellerUrgency = document.getElementById("seller-urgency").value;
+      const rtoLocation = document.getElementById("rto-location").value;
+
+      const ageFactor = Math.max(0.35, Math.pow(0.88, age));
+      const kmFactor = Math.max(0.70, 1 - Math.min(kilometers, 200000) / 1000000);
+      const expectedRange = expectedKilometerRange(age, expectedUsageType);
+      const odometerRisk = odometerRiskLevel(kilometers, expectedRange, odometerSource);
+      const odometerFactor = odometerTamperingFactor(odometerRisk, odometerSource);
+      const repairFactor = repairsDone === "Yes" ? 0.88 : 1.00;
+      const colorFactor = colourDemandFactor(color);
+      const ownerFactor = selectFactor(ownerCount, {"1": 1.00, "2": 0.94, "3": 0.88, "4": 0.82});
+      const insuranceFactor = selectFactor(insuranceStatus, {
+        valid_comprehensive: 1.03,
+        valid_third_party: 1.00,
+        expired: 0.95,
+        unknown: 0.97,
+      });
+      const serviceFactor = selectFactor(serviceHistory, {
+        authorized_complete: 1.05,
+        partial: 1.00,
+        local_garage: 0.96,
+        none: 0.92,
+      });
+      const accidentFactor = selectFactor(accidentStatus, {
+        none: 1.00,
+        minor: 0.93,
+        major: 0.78,
+        unknown: 0.95,
+      });
+      const challanFactor = selectFactor(challanStatus, {
+        none: 1.00,
+        minor: 0.98,
+        major: 0.94,
+        unknown: 0.97,
+      });
+      const tyreFactor = selectFactor(tyreCondition, {
+        new: 1.03,
+        good: 1.00,
+        average: 0.97,
+        poor: 0.93,
+      });
+      const bodyFactor = selectFactor(bodyCondition, {
+        excellent: 1.04,
+        good: 1.00,
+        average: 0.94,
+        poor: 0.86,
+      });
+      const usageFactor = selectFactor(ownershipType, {
+        personal: 1.00,
+        company: 0.96,
+        taxi: 0.84,
+        rental: 0.82,
+      });
+      const urgencyFactor = selectFactor(sellerUrgency, {
+        normal: 1.00,
+        urgent: 0.96,
+        premium: 1.03,
+      });
+      const legalFactor = accidentFactor * challanFactor;
+      const conditionFactor = tyreFactor * bodyFactor;
+      const usageUrgencyFactor = usageFactor * urgencyFactor;
+      const localFactor = localMarketFactor(rtoLocation);
+      const scoringValues = {
+        age,
+        kilometers,
+        repairsDone,
+        ownerCount,
+        insuranceStatus,
+        serviceHistory,
+        accidentStatus,
+        challanStatus,
+        tyreCondition,
+        bodyCondition,
+        ownershipType,
+        sellerUrgency,
+        rtoLocation,
+        localFactor,
+        odometerSource,
+        expectedUsageType,
+        odometerRisk,
+      };
+      const confidenceScore = calculateBuyerConfidenceScore(scoringValues);
+      const risk = riskCategory(confidenceScore, scoringValues);
+      scoringValues.confidenceScore = confidenceScore;
+      const kRadiusIndex = calculateKRadiusIndex(scoringValues);
+      const kRadiusFactor = kRadiusAdjustment(kRadiusIndex);
+      const predictedPrice = (
+        basePrice *
+        ageFactor *
+        kmFactor *
+        odometerFactor *
+        repairFactor *
+        colorFactor *
+        ownerFactor *
+        insuranceFactor *
+        serviceFactor *
+        legalFactor *
+        conditionFactor *
+        usageUrgencyFactor *
+        localFactor *
+        kRadiusFactor
+      );
+      const depreciation = Math.max(basePrice - predictedPrice, 0);
+
+      setText("predicted-price-value", formatRupees(predictedPrice));
+      setText("depreciation-value", `${formatRupees(depreciation)} (${((depreciation / basePrice) * 100).toFixed(1)}%)`);
+      setText("buyer-score-value", `${confidenceScore} / 100`);
+      setText("risk-category-value", risk);
+      setText("formula-base-price", formatRupees(basePrice));
+      setText("formula-age-factor", `${ageFactor.toFixed(3)} (${age} years old)`);
+      setText("formula-km-factor", `${kmFactor.toFixed(3)} (${kilometers.toLocaleString("en-IN")} km)`);
+      setText(
+        "formula-expected-km",
+        `${expectedRange.low.toLocaleString("en-IN")} - ${expectedRange.high.toLocaleString("en-IN")} km (${expectedUsageType.replaceAll("_", " ")})`
+      );
+      setText("formula-odometer-factor", `${odometerFactor.toFixed(3)} (${odometerRisk} risk, ${odometerSource.replaceAll("_", " ")})`);
+      setText("formula-repair-factor", `${repairFactor.toFixed(3)} (${repairsDone})`);
+      setText("formula-color-factor", `${colorFactor.toFixed(3)} (${color})`);
+      setText("formula-owner-factor", `${ownerFactor.toFixed(3)} (${ownerCount} owner${ownerCount === "1" ? "" : "s"})`);
+      setText("formula-insurance-factor", `${insuranceFactor.toFixed(3)} (${insuranceStatus.replaceAll("_", " ")})`);
+      setText("formula-service-factor", `${serviceFactor.toFixed(3)} (${serviceHistory.replaceAll("_", " ")})`);
+      setText("formula-legal-factor", `${legalFactor.toFixed(3)} (accident: ${accidentStatus}, challan: ${challanStatus})`);
+      setText("formula-condition-factor", `${conditionFactor.toFixed(3)} (tyre: ${tyreCondition}, body: ${bodyCondition})`);
+      setText("formula-usage-factor", `${usageUrgencyFactor.toFixed(3)} (usage: ${ownershipType}, urgency: ${sellerUrgency})`);
+      setText("formula-local-factor", `${localFactor.toFixed(3)} (${rtoLocation.replaceAll("_", " ")})`);
+      setText("formula-kradius-index", kRadiusIndex.toFixed(3));
+      setText("formula-kradius-adjustment", `${kRadiusFactor.toFixed(3)} (${kRadiusFactor >= 1 ? "confidence premium" : "risk deduction"})`);
+
+      predictionPanel.style.display = "block";
+      algorithmPanel.style.display = "block";
+      renderSellerAdvice(buildSellerAdvice(scoringValues));
+      updateFeatureVector({
+        basePrice,
+        age,
+        kilometers,
+        expectedRange,
+        odometerSource,
+        expectedUsageType,
+        odometerRisk,
+        repairsDone,
+        color,
+        ownerCount,
+        insuranceStatus,
+        serviceHistory,
+        accidentStatus,
+        challanStatus,
+        tyreCondition,
+        bodyCondition,
+        ownershipType,
+        sellerUrgency,
+        rtoLocation,
+        confidenceScore,
+        risk,
+      });
+    }
+
+    function updateFeatureVector(values) {
+      const selectedYear = yearSelect.value || "-";
+      const basePrice = selectedSpec ? parseRupees(selectedSpec.price) : 0;
+      const age = selectedYear !== "-" ? Math.max(currentCalendarYear - Number(selectedYear), 0) : "-";
+      setText("feature-model", selectedModel ? selectedModel.name : "-");
+      setText("feature-year", selectedYear);
+      setText("feature-on-road-price", basePrice ? formatRupees(basePrice) : "-");
+      setText("feature-age", age);
+      setText("feature-km", values ? values.kilometers.toLocaleString("en-IN") : "-");
+      setText(
+        "feature-expected-km",
+        values ? `${values.expectedRange.low.toLocaleString("en-IN")} - ${values.expectedRange.high.toLocaleString("en-IN")}` : "-"
+      );
+      setText("feature-odometer-source", values ? values.odometerSource : "-");
+      setText("feature-odometer-risk", values ? values.odometerRisk : "-");
+      setText("feature-engine", selectedSpec ? selectedSpec.engine : "-");
+      setText("feature-repairs", values ? values.repairsDone : "-");
+      setText("feature-color", values ? values.color : "-");
+      setText("feature-owner-count", values ? values.ownerCount : "-");
+      setText("feature-insurance", values ? values.insuranceStatus : "-");
+      setText("feature-service", values ? values.serviceHistory : "-");
+      setText("feature-accident", values ? values.accidentStatus : "-");
+      setText("feature-challan", values ? values.challanStatus : "-");
+      setText("feature-tyre", values ? values.tyreCondition : "-");
+      setText("feature-body", values ? values.bodyCondition : "-");
+      setText("feature-usage", values ? values.ownershipType : "-");
+      setText("feature-urgency", values ? values.sellerUrgency : "-");
+      setText("feature-rto", values ? values.rtoLocation : document.getElementById("rto-location").value);
+      setText("feature-confidence-score", values ? `${values.confidenceScore} / 100` : "-");
+      setText("feature-risk-category", values ? values.risk : "-");
+    }
+
+    predictButton.addEventListener("click", calculatePrediction);
+  </script>
+{% endblock %}

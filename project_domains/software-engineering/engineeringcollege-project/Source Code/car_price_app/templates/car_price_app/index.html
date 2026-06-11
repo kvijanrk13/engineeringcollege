@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #162033;
+      background: #f5f7fb;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 0 0 18px;
+    }
+    section {
+      background: #fff;
+      border: 1px solid #d7dfeb;
+      border-radius: 8px;
+      margin-top: 16px;
+      padding: 18px;
+    }
+    label, input, select, button {
+      font-size: 15px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #b9c5d6;
+      border-radius: 6px;
+      background: #fff;
+    }
+    button {
+      width: auto;
+      background: #125c8f;
+      color: #fff;
+      cursor: pointer;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      border: 1px solid #d7dfeb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-top: 6px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border-bottom: 1px solid #e4e9f1;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f8;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>{{ title }}</h1>
+
+    <section>
+      <form method="get">
+        <label for="dataset">Dataset</label>
+        <select id="dataset" name="dataset">
+          {% for dataset in datasets %}
+            <option value="{{ dataset }}" {% if dataset == dataset_key %}selected{% endif %}>{{ dataset }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Run Apriori</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Estimate Present Car Cost</h2>
+      <form method="post" action="?dataset={{ dataset_key }}">
+        {% csrf_token %}
+        <div class="form-grid">
+          <div>
+            <label for="id_brand">{{ form.brand.label }}</label>
+            {{ form.brand }}
+            {{ form.brand.errors }}
+          </div>
+          <div>
+            <label for="id_model">{{ form.model.label }}</label>
+            {{ form.model }}
+            {{ form.model.errors }}
+          </div>
+          <div>
+            <label for="id_model_year">{{ form.model_year.label }}</label>
+            {{ form.model_year }}
+            {{ form.model_year.errors }}
+          </div>
+          <div>
+            <label for="id_engine_capacity">{{ form.engine_capacity.label }}</label>
+            {{ form.engine_capacity }}
+            {{ form.engine_capacity.errors }}
+          </div>
+          <div>
+            <label for="id_kilometers">{{ form.kilometers.label }}</label>
+            {{ form.kilometers }}
+            {{ form.kilometers.errors }}
+          </div>
+          <div>
+            <label for="id_owners">{{ form.owners.label }}</label>
+            {{ form.owners }}
+            {{ form.owners.errors }}
+          </div>
+          <div>
+            <label for="id_accident">{{ form.accident.label }}</label>
+            {{ form.accident }}
+            {{ form.accident.errors }}
+          </div>
+          <div>
+            <label for="id_repairs">{{ form.repairs.label }}</label>
+            {{ form.repairs }}
+            {{ form.repairs.errors }}
+          </div>
+          <div>
+            <label for="id_color">{{ form.color.label }}</label>
+            {{ form.color }}
+            {{ form.color.errors }}
+          </div>
+          <div>
+            <label for="id_tyres_modified">{{ form.tyres_modified.label }}</label>
+            {{ form.tyres_modified }}
+            {{ form.tyres_modified.errors }}
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit">Estimate Present Cost</button>
+        </div>
+      </form>
+    </section>
+
+    {% if prediction %}
+    <section>
+      <h2>Estimated Present Value</h2>
+      <div class="metrics">
+        <div class="metric">Dataset<strong>{{ prediction.dataset_key }}</strong></div>
+        <div class="metric">Estimated Price<strong>{{ prediction.display_price|floatformat:2 }} {{ prediction.currency }}</strong></div>
+        <div class="metric">Depreciation Adjustment<strong>{{ prediction.depreciation_adjustment }}%</strong></div>
+      </div>
+      <p>{{ prediction.note }}</p>
+    </section>
+    {% endif %}
+
+    {% if spec_records %}
+    <section>
+      <h2>Yearly Specifications</h2>
+      <p>Showing {{ spec_records|length }} matching records from 2015 to 2026.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Year</th>
+            <th>Make</th>
+            <th>Model</th>
+            <th>Fuel</th>
+            <th>Transmission</th>
+            <th>Engine CC</th>
+            <th>Mileage</th>
+            <th>Price</th>
+            <th>Depreciation %</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in spec_records %}
+          <tr>
+            <td>{{ record.year }}</td>
+            <td>{{ record.make }}</td>
+            <td>{{ record.model }}</td>
+            <td>{{ record.fuel_type|default:'-' }}</td>
+            <td>{{ record.transmission|default:'-' }}</td>
+            <td>{{ record.engine_size|default:'-' }}</td>
+            <td>{{ record.mileage|default:'-' }}</td>
+            <td>{{ record.target_price|default:'-' }}</td>
+            <td>{{ record.depreciation_percent|default:'-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+
+    {% if matching_rules %}
+    <section>
+      <h2>Relevant Apriori Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>If</th>
+            <th>Then</th>
+            <th>Support</th>
+            <th>Confidence</th>
+            <th>Lift</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rule in matching_rules %}
+          <tr>
+            <td>{{ rule.if }}</td>
+            <td>{{ rule.then }}</td>
+            <td>{{ rule.support_percent }}%</td>
+            <td>{{ rule.confidence_percent }}%</td>
+            <td>{{ rule.lift }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+
+    <section>
+      <h2>Execution Output</h2>
+      <div class="metrics">
+        <div class="metric">Algorithm<strong>Apriori</strong></div>
+        <div class="metric">Dataset<strong>{{ dataset_key }}</strong></div>
+        <div class="metric">Rows Executed<strong>{{ row_count }}</strong></div>
+        <div class="metric">Transactions<strong>{{ transaction_count }}</strong></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Apriori Association Rules</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>If</th>
+            <th>Then</th>
+            <th>Support</th>
+            <th>Confidence</th>
+            <th>Lift</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for rule in rules %}
+            <tr>
+              <td>{{ rule.if }}</td>
+              <td>{{ rule.then }}</td>
+              <td>{{ rule.support_percent }}%</td>
+              <td>{{ rule.confidence_percent }}%</td>
+              <td>{{ rule.lift }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">No rules found for this dataset with the current support and confidence values.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Recent Local Runs</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Algorithm</th>
+            <th>Dataset</th>
+            <th>Rows</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in latest_runs %}
+            <tr>
+              <td>{{ run.created_at }}</td>
+              <td>{{ run.algorithm }}</td>
+              <td>{{ run.dataset }}</td>
+              <td>{{ run.rows_executed }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">Run the page once after migration to record an execution.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

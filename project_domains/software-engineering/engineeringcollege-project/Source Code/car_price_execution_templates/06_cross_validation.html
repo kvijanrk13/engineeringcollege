@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 6: Cross Validation - Used Car Price Prediction Using K-Radius Nearest Neighbors</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fb;
+      color: #162033;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      border-bottom: 2px solid #125c8f;
+      padding-bottom: 10px;
+      color: #125c8f;
+    }
+    .purpose {
+      background-color: #eef3f8;
+      padding: 15px;
+      border-left: 4px solid #125c8f;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border: 1px solid #d7dfeb;
+      border-radius: 6px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .button {
+      display: inline-block;
+      background-color: #125c8f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-right: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .button:hover {
+      background-color: #0d3a52;
+    }
+    .modification-guide {
+      background-color: #fffbea;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 6: Cross Validation</h1>
+    
+    <div class="purpose">
+      <strong>Purpose:</strong> Validate the model performance across multiple folds to ensure generalization.
+    </div>
+
+    <h2>Code</h2>
+    <div class="code-block">
+from sklearn.model_selection import cross_val_score
+import numpy as np
+
+for name, model in models.items():
+    scores = cross_val_score(model, X, y, cv=5, scoring='r2')
+    print(name, 'Average R2:', np.mean(scores))
+    </div>
+
+    <div class="modification-guide">
+      <strong>📝 Modification Guide:</strong>
+      <ul>
+        <li>Change CV folds: Modify cv=5 to cv=10 or cv=3 for different validation strategies</li>
+        <li>Different scoring metrics: Use scoring='neg_mean_absolute_error' or 'neg_mean_squared_error'</li>
+        <li>Add statistics: Print std, min, max along with mean scores</li>
+        <li>Visualize results: Create box plots of cross-validation scores</li>
+        <li>Use StratifiedKFold: For classification tasks or imbalanced datasets</li>
+        <li>Time series split: Use TimeSeriesSplit for temporal data</li>
+        <li>Add hyperparameter tuning: Combine with GridSearchCV or RandomizedSearchCV</li>
+      </ul>
+    </div>
+
+    <h2>Expected Output</h2>
+    <ul>
+      <li>Average R2 Score for each model across 5 folds</li>
+      <li>Shows consistency of model performance</li>
+      <li>Helps identify overfitting (high train R2, low CV R2)</li>
+      <li>Provides confidence in model selection</li>
+    </ul>
+
+    <button class="button">Back to Execution Pages</button>
+    <button class="button">Next Step: Save Model</button>
+  </div>
+</body>
+</html>

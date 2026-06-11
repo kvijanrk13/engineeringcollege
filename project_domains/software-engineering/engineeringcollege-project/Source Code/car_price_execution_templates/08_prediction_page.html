@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Step 8: Prediction Page - Used Car Price Prediction Using K-Radius Nearest Neighbors</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fb;
+      color: #162033;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      border-bottom: 2px solid #125c8f;
+      padding-bottom: 10px;
+      color: #125c8f;
+    }
+    .purpose {
+      background-color: #eef3f8;
+      padding: 15px;
+      border-left: 4px solid #125c8f;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .code-block {
+      background-color: #f8f9fa;
+      border: 1px solid #d7dfeb;
+      border-radius: 6px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .button {
+      display: inline-block;
+      background-color: #125c8f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin-right: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      border: none;
+      font-size: 14px;
+    }
+    .button:hover {
+      background-color: #0d3a52;
+    }
+    .modification-guide {
+      background-color: #fffbea;
+      border-left: 4px solid #ff9800;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Step 8: Prediction Page (Streamlit)</h1>
+    
+    <div class="purpose">
+      <strong>Purpose:</strong> Collect vehicle details and display the predicted second-hand car price using Streamlit.
+    </div>
+
+    <h2>Code</h2>
+    <div class="code-block">
+import pickle
+import pandas as pd
+import streamlit as st
+
+with open('model.pkl', 'rb') as file:
+    model = pickle.load(file)
+
+st.title('Used Car Price Prediction Using K-Radius Nearest Neighbors')
+present_price = st.number_input('Present Price in lakhs', min_value=0.0)
+kms_driven = st.number_input('Kms Driven', min_value=0)
+fuel_type = st.selectbox('Fuel Type', ['Petrol', 'Diesel', 'CNG'])
+seller_type = st.selectbox('Seller Type', ['Dealer', 'Individual'])
+transmission = st.selectbox('Transmission', ['Manual', 'Automatic'])
+owner = st.selectbox('Owner', [0, 1, 2, 3])
+year = st.number_input('Year', min_value=1900, max_value=2026, step=1)
+
+if st.button('Predict'):
+    input_data = pd.DataFrame({
+        'Present_Price': [present_price],
+        'Kms_Driven': [kms_driven],
+        'Fuel_Type': [0 if fuel_type == 'Petrol' else 1 if fuel_type == 'Diesel' else 2],
+        'Owner': [owner],
+        'Year': [year],
+        'Seller_Type_Individual': [1 if seller_type == 'Individual' else 0],
+        'Transmission_Manual': [1 if transmission == 'Manual' else 0],
+    })
+    prediction = model.predict(input_data)[0]
+    st.success(f'Predicted Selling Price: INR {prediction * 100000:.2f}')
+    </div>
+
+    <div class="modification-guide">
+      <strong>📝 Modification Guide:</strong>
+      <ul>
+        <li>Add validation: Check user inputs and add error messages for invalid data</li>
+        <li>Add confidence interval: Display prediction range instead of single value</li>
+        <li>Show similar cars: Add recommendations based on input features</li>
+        <li>Add explanation: Use SHAP or LIME to explain prediction factors</li>
+        <li>History: Store predictions in database or session state</li>
+        <li>Batch predictions: Allow CSV upload for multiple vehicle predictions</li>
+        <li>Dashboard: Add charts showing price trends and feature importance</li>
+        <li>Model comparison: Let user choose between multiple saved models</li>
+      </ul>
+    </div>
+
+    <h2>Expected Output</h2>
+    <ul>
+      <li>Interactive Streamlit web form with input fields</li>
+      <li>Real-time prediction when "Predict" button is clicked</li>
+      <li>Predicted selling price in INR format</li>
+      <li>User-friendly interface for non-technical users</li>
+    </ul>
+
+    <h2>To Run Streamlit App</h2>
+    <div class="code-block">
+streamlit run prediction_page.py
+    </div>
+
+    <button class="button">Back to Execution Pages</button>
+    <button class="button">View All Templates</button>
+  </div>
+</body>
+</html>
