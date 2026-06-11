@@ -4433,13 +4433,13 @@ def _build_project_zip(domain_slug, project):
                     ):
                         archive.write(path, archive_name)
         for path, relative_path in source_files:
-            content = _sanitized_project_source(path)
             if project['zip_source'] == 'repository':
+                content = _sanitized_project_source(path)
                 archive.writestr(f'{archive_root}/Project Source/{relative_path}', content)
                 module_name = _source_module_for(relative_path)
                 archive.writestr(f'{archive_root}/Modules/{module_name}/{relative_path}', content)
             else:
-                archive.writestr(f'{archive_root}/{relative_path}', content)
+                archive.write(path, f'{archive_root}/{relative_path}')
     return archive_buffer.getvalue()
 
 
