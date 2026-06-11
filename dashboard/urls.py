@@ -36,6 +36,11 @@ urlpatterns = [
         name='phonepe_payment_qr',
     ),
     path(
+        'projects/software-engineering/engineeringcollege-project/demo-video/',
+        views.engineeringcollege_demo_video,
+        name='engineeringcollege_demo_video',
+    ),
+    path(
         'projects/software-engineering/engineeringcollege-project/download/',
         views.download_engineeringcollege_project,
         name='download_engineeringcollege_project',

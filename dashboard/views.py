@@ -3391,6 +3391,54 @@ def phonepe_payment_qr(request):
     return response
 
 
+@require_GET
+def engineeringcollege_demo_video(request):
+    """Stream the EngineeringCollege project demo video for the Live Demo panel."""
+    video_path = (
+        PROJECT_DOMAIN_ROOT
+        / 'software-engineering'
+        / 'engineeringcollege-project'
+        / 'Video'
+        / 'engineeringcollege_project_demo.mp4'
+    )
+    if not video_path.is_file():
+        raise Http404('Demo video not found.')
+
+    video_size = video_path.stat().st_size
+    range_header = request.headers.get('Range', '')
+    range_match = re.match(r'bytes=(\d*)-(\d*)$', range_header)
+    status = 200
+    start = 0
+    end = video_size - 1
+
+    if range_match:
+        start_text, end_text = range_match.groups()
+        if start_text:
+            start = int(start_text)
+            end = int(end_text) if end_text else end
+        elif end_text:
+            suffix_length = int(end_text)
+            start = max(video_size - suffix_length, 0)
+
+        if start >= video_size or start > end:
+            response = HttpResponse(status=416)
+            response['Content-Range'] = f'bytes */{video_size}'
+            return response
+        status = 206
+
+    with video_path.open('rb') as video_file:
+        video_file.seek(start)
+        body = video_file.read(end - start + 1)
+
+    response = HttpResponse(body, status=status, content_type='video/mp4')
+    response['Accept-Ranges'] = 'bytes'
+    response['Content-Length'] = str(len(body))
+    response['Cache-Control'] = 'public, max-age=3600'
+    if status == 206:
+        response['Content-Range'] = f'bytes {start}-{end}/{video_size}'
+    return response
+
+
 PROJECT_DOMAINS = {
     'ai': 'Artificial Intelligence',
     'machine-learning': 'Machine Learning',

@@ -364,16 +364,24 @@
             {% endif %}
             {# GitHub execution templates removed to streamline project page. Source ZIP download remains available. #}
 
-            <!-- Live Demo iframe / link: attempts to load demo from project.demo_url or /car-price/ by default -->
             <section class="execution" aria-label="Live demo" style="margin-top:18px;">
                 <h2>Live Demo</h2>
-                <p>
-                    <a class="action" href="{{ project.demo_url|default:'/car-price/' }}" target="_blank" rel="noopener">Open Demo in New Tab</a>
-                </p>
-                <div style="margin-top:14px;">
-                    <iframe src="{{ project.demo_url|default:'/car-price/' }}" title="Car Price Demo" style="width:100%;height:600px;border:1px solid #D8E0EA;border-radius:8px;"></iframe>
-                </div>
-                <p class="reference-note" style="margin-top:12px;">If the demo does not appear, deploy the `car_price_app` demo or update the project manifest with `demo_url`.</p>
+                {% if is_engineeringcollege_project %}
+                    <video controls preload="metadata" playsinline
+                           style="width:100%;border:1px solid #D8E0EA;border-radius:8px;background:#0F172A;">
+                        <source src="{% url 'dashboard:engineeringcollege_demo_video' %}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p class="reference-note" style="margin-top:12px;">Demo video: EngineeringCollege project overview, modules, UML, test cases, setup, and project download workflow.</p>
+                {% else %}
+                    <p>
+                        <a class="action" href="{{ project.demo_url|default:'/car-price/' }}" target="_blank" rel="noopener">Open Demo in New Tab</a>
+                    </p>
+                    <div style="margin-top:14px;">
+                        <iframe src="{{ project.demo_url|default:'/car-price/' }}" title="Car Price Demo" style="width:100%;height:600px;border:1px solid #D8E0EA;border-radius:8px;"></iframe>
+                    </div>
+                    <p class="reference-note" style="margin-top:12px;">If the demo does not appear, deploy the `car_price_app` demo or update the project manifest with `demo_url`.</p>
+                {% endif %}
             </section>
         </article>
     </main>
