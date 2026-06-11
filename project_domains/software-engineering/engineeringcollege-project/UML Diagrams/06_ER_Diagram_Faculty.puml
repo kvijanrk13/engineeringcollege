@@ -1,0 +1,137 @@
+@startuml 06_ER_Diagram_Faculty
+' Engineering College - ER Diagram for FACULTY Module
+' A4 Page Layout
+
+title Engineering College - FACULTY Module ER Diagram
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+skinparam linetype ortho
+
+' Entities
+entity "Faculty" as faculty {
+    * id [PK]
+    --
+    * employee_code [UK]
+    * staff_name
+    father_name
+    mother_name
+    gender
+    dob
+    * department
+    * designation
+    * email
+    * mobile
+    is_active
+    created_at
+}
+
+entity "Faculty Profile" as faculty_profile {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    experience_other
+    experience_at_anurag
+    batch_number
+}
+
+entity "Faculty Research Project" as f_research_proj {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    research_type
+    * title
+    journal_name
+    year
+    publisher_name
+}
+
+entity "Faculty Research Publication" as f_research_pub {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    research_type
+    * title
+    authors
+    publication_year
+    journal_name
+    doi
+    status
+}
+
+entity "Faculty FDP" as f_fdp {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    fdp_type
+    * title
+    from_date
+    to_date
+    organized_by
+    place
+    mode
+    level
+}
+
+entity "Faculty Certificate" as f_certificate {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    certificate_type
+    issued_by
+    issue_date
+}
+
+entity "Faculty BTech Project" as f_btech {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    * ht_no
+    student_name
+    batch
+    project_title
+    approved
+    marks
+}
+
+entity "Gallery" as gallery {
+    * id [PK]
+    --
+    title
+    description
+    image_path
+    * faculty_id [FK]
+    uploaded_at
+}
+
+entity "Syllabus" as syllabus {
+    * id [PK]
+    --
+    * department
+    * year
+    syllabus_file
+    semester
+}
+
+entity "Exam Branch" as exam_branch {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    * subject
+    lesson_plan
+    attendance_data
+    created_at
+}
+
+' Relationships
+faculty ||--o{ faculty_profile : has
+faculty ||--o{ f_research_proj : conducts
+faculty ||--o{ f_research_pub : publishes
+faculty ||--o{ f_fdp : attends
+faculty ||--o{ f_certificate : uploads
+faculty ||--o{ f_btech : guides
+faculty ||--o{ gallery : uploads
+faculty }|--|| syllabus : views
+faculty ||--o{ exam_branch : manages
+
+@enduml

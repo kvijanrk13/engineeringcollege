@@ -1,0 +1,30 @@
+@startuml 14_Sequence_Diagram_Admin_Login
+' Engineering College - Sequence Diagram for ADMIN Login
+' A4 Page Layout
+
+title Engineering College - Admin Login Sequence
+
+actor Admin
+participant "AdminLoginView" as View
+participant "AdminDashboardView" as Dashboard
+participant "Database" as DB
+
+Admin -> View: accessAdminPortal()
+View -> View: displayLoginForm()
+Admin -> View: submitCredentials(username, password)
+View -> View: validateForm()
+View -> DB: queryAdminUser(username)
+DB --> View: returnAdminData()
+View -> View: authenticate()
+alt Valid Credentials
+    View -> Dashboard: redirectToDashboard()
+    Dashboard -> DB: fetchFacultyStats()
+    DB --> Dashboard: facultyCount
+    Dashboard -> DB: fetchStudentStats()
+    DB --> Dashboard: studentCount
+    Dashboard -> Admin: displayDashboard()
+else Invalid Credentials
+    View -> Admin: displayError()
+end
+
+@enduml

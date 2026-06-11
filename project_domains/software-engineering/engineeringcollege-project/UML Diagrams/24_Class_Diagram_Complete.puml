@@ -1,0 +1,154 @@
+@startuml 24_Class_Diagram_Complete
+' Engineering College - Complete Class Diagram
+' A4 Page Layout - All modules combined
+
+title Engineering College - Complete Class Diagram
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+
+' Abstract base classes and common patterns
+class User {
+    <<abstract>>
+    - id: Integer
+    - username: String
+    - password: String
+    + login()
+    + logout()
+}
+
+class Faculty {
+    - employee_code: String
+    - staff_name: String
+    - department: String
+    - designation: String
+    - email: String
+    - mobile: String
+    - is_active: Boolean
+    + viewDashboard()
+    + editProfile()
+    + uploadDocuments()
+}
+
+class Student {
+    - ht_no: String
+    - student_name: String
+    - department: String
+    - year: Integer
+    - cgpa: String
+    + viewDashboard()
+    + editProfile()
+    - uploadCertificates()
+}
+
+class AdminUser {
+    - username: String
+    - email: String
+    + manageFaculty()
+    + manageStudents()
+    + generateReports()
+}
+
+class FacultyDashboard {
+    + displayProfile()
+    + displayResearch()
+    + displayFDP()
+    + displayProjects()
+}
+
+class StudentDashboard {
+    + displayProfile()
+    + displayCertificates()
+    + displayResearch()
+}
+
+class AdminDashboard {
+    + displayStats()
+    + listFaculty()
+    + listStudents()
+}
+
+class ResearchProject {
+    - title: String
+    - research_type: String
+    - year: Integer
+    + addProject()
+    + editProject()
+}
+
+class ResearchPublication {
+    - title: String
+    - authors: Text
+    - year: Integer
+    + addPublication()
+    + editPublication()
+}
+
+class FDP {
+    - title: String
+    - fdp_type: String
+    - from_date: Date
+    - to_date: Date
+    + addFDP()
+    + editFDP()
+}
+
+class BTechProject {
+    - project_title: String
+    - approved: Boolean
+    + guideProject()
+}
+
+class Certificate {
+    - certificate_type: String
+    - issued_by: String
+    + uploadCertificate()
+}
+
+class Subject {
+    - name: String
+    - code: String
+    - credits: Integer
+}
+
+class Syllabus {
+    - department: String
+    - year: Integer
+    + viewSyllabus()
+}
+
+class Gallery {
+    - title: String
+    - description: Text
+    + viewGallery()
+}
+
+' Inheritance
+User <|-- Faculty
+User <|-- Student
+User <|-- AdminUser
+
+' Associations
+AdminUser --> Faculty : manages
+AdminUser --> Student : manages
+Faculty "1" --> "1" FacultyDashboard : accesses
+Student "1" --> "1" StudentDashboard : accesses
+AdminUser "1" --> "1" AdminDashboard : accesses
+
+Faculty "1" --> "*" ResearchProject : conducts
+Faculty "1" --> "*" ResearchPublication : publishes
+Faculty "1" --> "*" FDP : attends
+Faculty "1" --> "*" BTechProject : guides
+Faculty "1" --> "*" Certificate : uploads
+
+Faculty "1" --> "*" Subject : teaches
+
+Student "1" --> "*" Certificate : has
+Student "1" --> "*" ResearchPublication : publishes
+
+Faculty --> Syllabus : views
+Student --> Syllabus : views
+Faculty --> Gallery : views/uploads
+Student --> Gallery : views
+
+@enduml

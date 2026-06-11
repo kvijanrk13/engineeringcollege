@@ -1,0 +1,25 @@
+@startuml 18_State_Chart_Student
+' Engineering College - State Chart Diagram for STUDENT Module
+' A4 Page Layout
+
+title Engineering College - Student State Chart
+
+[*] --> LoggedOut
+LoggedOut --> LoggingIn: loginRequest(ht_no)
+LoggingIn --> LoggedIn: validHTNumber()
+LoggingIn --> LoginError: invalidHTNumber()
+LoginError --> LoggedOut: retry()
+LoggedIn --> ViewingProfile: viewProfile()
+LoggedIn --> ManagingCertificates: manageCertificates()
+LoggedIn --> ManagingResearch: manageResearch()
+LoggedIn --> ViewingResources: viewResources()
+LoggedIn --> GeneratingPDF: generatePDF()
+ViewingProfile --> LoggedIn: done()
+ManagingCertificates --> LoggedIn: certificatesUpdated()
+ManagingResearch --> LoggedIn: researchUpdated()
+ViewingResources --> LoggedIn: resourcesViewed()
+GeneratingPDF --> LoggedIn: pdfGenerated()
+LoggedIn --> LoggedOut: logout()
+LoggedOut --> [*]
+
+@enduml

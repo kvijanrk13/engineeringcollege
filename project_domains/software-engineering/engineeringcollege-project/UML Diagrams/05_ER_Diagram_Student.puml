@@ -1,0 +1,96 @@
+@startuml 05_ER_Diagram_Student
+' Engineering College - ER Diagram for STUDENT Module
+' A4 Page Layout
+
+title Engineering College - STUDENT Module ER Diagram
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+skinparam linetype ortho
+
+' Entities
+entity "Student" as student {
+    * id [PK]
+    --
+    * ht_no [UK]
+    * student_name
+    father_name
+    mother_name
+    gender
+    dob
+    age
+    * department
+    * year
+    * email
+    * student_phone
+    cgpa
+    created_at
+}
+
+entity "Student Research Publication" as student_pub {
+    * id [PK]
+    --
+    * student_id [FK]
+    research_type
+    title
+    authors
+    publication_year
+    journal_name
+    conference_name
+    doi
+}
+
+entity "Gallery" as gallery {
+    * id [PK]
+    --
+    title
+    description
+    * image_path
+    uploaded_at
+}
+
+entity "Syllabus" as syllabus {
+    * id [PK]
+    --
+    * department
+    * year
+    * syllabus_file
+    semester
+    uploaded_at
+}
+
+entity "Exam Branch" as exam_branch {
+    * id [PK]
+    --
+    * subject
+    * faculty_id [FK]
+    lesson_plan
+    attendance_data
+}
+
+entity "Achievement Certificate" as cert_achieve {
+    * id [PK]
+    --
+    * student_id [FK]
+    * cert_file
+    uploaded_at
+}
+
+entity "Internship Certificate" as cert_intern {
+    * id [PK]
+    --
+    * student_id [FK]
+    * cert_file
+    company_name
+    uploaded_at
+}
+
+' Relationships
+student ||--o{ student_pub : publishes
+student ||--o{ cert_achieve : uploads
+student ||--o{ cert_intern : uploads
+student }|--|| syllabus : views
+student }|--|| exam_branch : tracked_in
+student ||--o{ gallery : views
+
+@enduml

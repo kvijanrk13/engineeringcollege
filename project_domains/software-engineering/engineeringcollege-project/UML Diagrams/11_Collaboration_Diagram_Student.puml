@@ -1,0 +1,32 @@
+@startuml 11_Collaboration_Diagram_Student
+' Engineering College - Collaboration Diagram for STUDENT Module
+' A4 Page Layout
+
+title Engineering College - STUDENT Module Collaboration Diagram
+
+actor Student
+boundary StudentLoginView
+boundary StudentDashboardView
+control StudentProfileController
+control CertificateController
+control ResearchController
+entity Student
+entity StudentForm
+entity Certificate
+entity ResearchPublication
+entity Syllabus
+entity Gallery
+
+Student -> StudentLoginView: login(ht_no)
+StudentLoginView -> StudentDashboardView: authenticate()
+Student -> StudentProfileController: updateProfile()
+StudentProfileController -> Student: save()
+StudentProfileController -> StudentForm: validate()
+Student -> CertificateController: uploadCertificates()
+CertificateController -> Certificate: save()
+Student -> ResearchController: manageResearch()
+ResearchController -> ResearchPublication: CRUD()
+Student -> Syllabus: viewSyllabus()
+Student -> Gallery: viewGallery()
+
+@enduml

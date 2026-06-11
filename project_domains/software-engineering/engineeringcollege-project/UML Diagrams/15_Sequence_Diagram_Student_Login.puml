@@ -1,0 +1,27 @@
+@startuml 15_Sequence_Diagram_Student_Login
+' Engineering College - Sequence Diagram for STUDENT Login
+' A4 Page Layout
+
+title Engineering College - Student Login Sequence
+
+actor Student
+participant "StudentLoginView" as View
+participant "StudentDashboardView" as Dashboard
+participant "Database" as DB
+
+Student -> View: accessStudentPortal()
+View -> View: displayLoginForm()
+Student -> View: submitHTNumber(ht_no)
+View -> View: validateHTNumber()
+View -> DB: queryStudent(ht_no)
+DB --> View: returnStudentData()
+View -> View: createSession()
+View -> Dashboard: redirectToDashboard()
+Dashboard -> DB: fetchStudentProfile(student_id)
+DB --> Dashboard: studentProfile
+Dashboard -> DB: fetchCertificates(student_id)
+DB --> Dashboard: certificatesList
+Dashboard -> Dashboard: buildPDFContext()
+Dashboard -> Student: displayDashboard()
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml 07_Activity_Diagram_Admin
+' Engineering College - Activity Diagram for ADMIN Module
+' A4 Page Layout
+
+title Engineering College - ADMIN Module Activity Diagram
+
+start
+:Access Admin Portal;
+:Admin Login;
+if (Valid Credentials?) then (yes)
+  :Navigate to Dashboard;
+  partition "Faculties Management" {
+    :View Faculty List;
+    :Add New Faculty;
+    :Edit Faculty Details;
+    :Delete Faculty;
+    :Assign Subjects;
+  }
+  partition "Students Management" {
+    :View Student List;
+    :Add New Student;
+    :Edit Student Details;
+    :Delete Student;
+  }
+  partition "Reports & Analytics" {
+    :View Dashboard Statistics;
+    :Generate Faculty Reports;
+    :Generate Student Reports;
+    :Export Data (CSV/Excel);
+  }
+  partition "System Management" {
+    :Configure Settings;
+    :Backup Database;
+    :Clear Logs;
+    :View System Status;
+  }
+else (no)
+  :Show Login Error;
+endif
+:Admin Logout;
+stop
+
+@enduml

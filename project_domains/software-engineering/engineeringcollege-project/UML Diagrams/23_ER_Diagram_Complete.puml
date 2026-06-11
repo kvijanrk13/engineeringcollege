@@ -1,0 +1,164 @@
+@startuml 23_ER_Diagram_Complete
+' Engineering College - Complete ER Diagram
+' A4 Page Layout - Split into multiple views due to complexity
+
+title Engineering College - Complete ER Diagram (Main Entities)
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+skinparam linetype ortho
+
+' Core Entities
+entity "Admin User" as admin {
+    * admin_id [PK]
+    --
+    username
+    password
+    email
+}
+
+entity "Faculty" as faculty {
+    * id [PK]
+    --
+    * employee_code [UK]
+    * staff_name
+    father_name
+    mother_name
+    gender
+    dob
+    nationality
+    * department
+    * designation
+    * email
+    * mobile
+    is_active
+    created_at
+}
+
+entity "Student" as student {
+    * id [PK]
+    --
+    * ht_no [UK]
+    * student_name
+    father_name
+    mother_name
+    gender
+    dob
+    nationality
+    * department
+    * year
+    * email
+    * student_phone
+    is_active
+    created_at
+}
+
+entity "Subject" as subject {
+    * id [PK]
+    --
+    * name
+    code
+    * credits
+}
+
+' Research Entities
+entity "Research Project" as research_proj {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    research_type
+    * title
+    year
+}
+
+entity "Research Publication" as research_pub {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    research_type
+    * title
+    publication_year
+    journal_name
+    doi
+}
+
+entity "Student Research Publication" as stud_research_pub {
+    * id [PK]
+    --
+    * student_id [FK]
+    research_type
+    * title
+    publication_year
+}
+
+' Academic Entities
+entity "FDP" as fdp {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    fdp_type
+    * title
+    from_date
+    to_date
+}
+
+entity "BTech Project" as btech_proj {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    ht_no
+    student_name
+    project_title
+    approved
+}
+
+' Document Entities
+entity "Certificate" as certificate {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    certificate_type
+    issued_by
+    issue_date
+}
+
+entity "Syllabus" as syllabus {
+    * id [PK]
+    --
+    * department
+    * year
+    syllabus_file
+}
+
+entity "Gallery" as gallery {
+    * id [PK]
+    --
+    title
+    image
+    uploaded_at
+}
+
+entity "Exam Branch" as exam_branch {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    subject
+    lesson_plan
+}
+
+' Relationships
+admin ||--o{ faculty : manages >
+admin ||--o{ student : manages >
+faculty ||--o{ research_proj : conducts >
+faculty ||--o{ research_pub : publishes >
+faculty ||--o{ fdp : attends >
+faculty ||--o{ btech_proj : guides >
+faculty ||--o{ certificate : uploads >
+faculty ||--o{ exam_branch : manages >
+faculty }|--o{ subject : teaches >
+student ||--o{ stud_research_pub : publishes >
+student ||--o{ exam_branch : tracked_in >
+faculty ||--o{ gallery : uploads >
+student ||--o{ gallery : views >
+
+@enduml

@@ -1,0 +1,121 @@
+@startuml 02_Class_Diagram_Student
+' Engineering College - Class Diagram for STUDENT Module
+' A4 Page Layout
+
+title Engineering College - STUDENT Module Class Diagram
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+
+' Student Core
+class Student {
+    - ht_no: String
+    - student_name: String
+    - father_name: String
+    - mother_name: String
+    - gender: String
+    - dob: Date
+    - age: Integer
+    - nationality: String
+    - category: String
+    - blood_group: String
+    - aadhar: String
+    - apaar_id: String
+    - address: Text
+    - parent_phone: String
+    - student_phone: String
+    - email: Email
+    - department: String
+    - year: Integer
+    - sem: Integer
+    - cgpa: String
+    - photo: Image
+    ' Education
+    - ssc_year: String
+    - ssc_school_name: String
+    - ssc_marks: String
+    - inter_year: String
+    - inter_college_name: String
+    - inter_marks: String
+    - btech_year: String
+    - ug_college_name: String
+    ' Projects and Training
+    - rtrp_project_title: String
+    - intern_title: String
+    - final_project_title: String
+    - other_training: Text
+    ' Certificates
+    - cert_achieve: File
+    - cert_intern: File
+    - cert_courses: File
+    - cert_sdp: File
+    - cert_extra: File
+    - cert_placement: File
+    - cert_national: File
+    + login()
+    + logout()
+    + viewDashboard()
+    + updateProfile()
+    + uploadCertificates()
+    + downloadProfilePDF()
+}
+
+class StudentDashboard {
+    + viewProfile()
+    + viewCertificates()
+    + viewResearchPublications()
+    + generatePDF()
+    + viewAnalytics()
+}
+
+class StudentResearchPublication {
+    - research_type: String
+    - title: String
+    - authors: Text
+    - academic_year: String
+    - publication_year: Integer
+    - journal_name: String
+    - conference_name: String
+    - issn: String
+    - doi: String
+    - url: URL
+    - status: String
+    + addPublication()
+    + editPublication()
+    + deletePublication()
+}
+
+class Syllabus {
+    - department: String
+    - year: Integer
+    - syllabus_file: File
+    + viewSyllabus()
+    + downloadSyllabus()
+}
+
+class Gallery {
+    - title: String
+    - description: Text
+    - image: Image
+    - uploaded_at: DateTime
+    + viewGallery()
+    + uploadImage()
+}
+
+class ExamBranch {
+    - faculty_id: Integer
+    - subject: String
+    - lesson_plan: File
+    + viewExamData()
+    + downloadLessonPlan()
+    + generateReport()
+}
+
+' Relationships
+Student "1" --> "1" StudentDashboard : accesses
+Student "1" --> "*" StudentResearchPublication : has
+Student "1" --> "1" Syllabus : views
+Student "1" --> "*" Gallery : views
+ExamBranch --> Student : tracks
+
+@enduml

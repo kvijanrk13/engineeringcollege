@@ -1,0 +1,25 @@
+@startuml 17_State_Chart_Admin
+' Engineering College - State Chart Diagram for ADMIN Module
+' A4 Page Layout
+
+title Engineering College - Admin State Chart
+
+[*] --> LoggedOut
+LoggedOut --> LoggingIn: loginRequest()
+LoggingIn --> LoggedIn: validCredentials()
+LoggingIn --> LoginError: invalidCredentials()
+LoginError --> LoggedOut: retry()
+LoggedIn --> ManagingFaculty: manageFaculty()
+LoggedIn --> ManagingStudents: manageStudents()
+LoggedIn --> ViewingDashboard: viewDashboard()
+LoggedIn --> GeneratingReports: generateReports()
+LoggedIn --> SystemConfig: configureSystem()
+ManagingFaculty --> LoggedIn: facultyOperationComplete()
+ManagingStudents --> LoggedIn: studentOperationComplete()
+ViewingDashboard --> LoggedIn: done()
+GeneratingReports --> LoggedIn: reportGenerated()
+SystemConfig --> LoggedIn: configSaved()
+LoggedIn --> LoggedOut: logout()
+LoggedOut --> [*]
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml 10_Collaboration_Diagram_Admin
+' Engineering College - Collaboration Diagram for ADMIN Module
+' A4 Page Layout
+
+title Engineering College - ADMIN Module Collaboration Diagram
+
+actor Admin
+boundary AdminLoginView
+boundary AdminDashboardView
+control FacultyController
+control StudentController
+entity Faculty
+entity Student
+entity FacultyForm
+entity StudentForm
+
+Admin -> AdminLoginView: login()
+AdminLoginView -> AdminDashboardView: authenticate()
+Admin -> FacultyController: manageFaculty()
+FacultyController -> Faculty: create/edit/delete
+Admin -> StudentController: manageStudents()
+StudentController -> Student: create/edit/delete
+FacultyController -> FacultyForm: validate()
+StudentController -> StudentForm: validate()
+Admin -> AdminDashboardView: viewStats()
+
+@enduml

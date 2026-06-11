@@ -1,0 +1,69 @@
+@startuml 09_Activity_Diagram_Faculty
+' Engineering College - Activity Diagram for FACULTY Module
+' A4 Page Layout
+
+title Engineering College - FACULTY Module Activity Diagram
+
+start
+:Access Faculty Portal;
+:Faculty Login;
+if (Valid Employee Code?) then (yes)
+  :Navigate to Faculty Dashboard;
+  partition "Profile Management" {
+    :View Personal Details;
+    :View Professional Information;
+    :View Education Details;
+    :Update Experience;
+    :Upload Photo;
+  }
+  partition "Research Management" {
+    :View Research Projects;
+    :Add Research Project;
+    :Edit Research Project;
+    :Delete Research Project;
+    :View Research Publications;
+    :Add Research Publication;
+    :Edit Research Publication;
+    :Delete Research Publication;
+    :Upload Research Proof;
+  }
+  partition "FDP Management" {
+    :View FDP/Workshops;
+    :Add FDP Entry;
+    :Edit FDP Entry;
+    :Delete FDP Entry;
+    :Upload FDP Certificate;
+  }
+  partition "Project Guidance" {
+    :View BTech Projects;
+    :Add BTech Project;
+    :Edit BTech Project;
+    :Delete BTech Project;
+    :Evaluate Project;
+  }
+  partition "Certificates" {
+    :View My Certificates;
+    :Upload Certificate;
+    :Manage Certificate Types;
+  }
+  partition "Academic Resources" {
+    :View Syllabus;
+    :Download Syllabus;
+    :View Gallery;
+    :Manage Exam Branch;
+    :Update Attendance;
+    :Generate Reports;
+  }
+  partition "Profile Generation" {
+    :Generate Profile PDF;
+    :View PDF Preview;
+    :Download PDF;
+    :Share PDF Link;
+  }
+else (no)
+  :Show Login Error;
+endif
+:Faculty Logout;
+stop
+
+@enduml

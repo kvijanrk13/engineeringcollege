@@ -1,0 +1,176 @@
+@startuml 03_Class_Diagram_Faculty
+' Engineering College - Class Diagram for FACULTY Module
+' A4 Page Layout
+
+title Engineering College - FACULTY Module Class Diagram
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+
+' Faculty Core
+class Faculty {
+    - employee_code: String
+    - staff_name: String
+    - father_name: String
+    - mother_name: String
+    - dob: Date
+    - gender: String
+    - state: String
+    - nationality: String
+    - address: Text
+    - mobile: String
+    - email: String
+    - department: String
+    - designation: String
+    - joining_date: Date
+    - jntuh_id: String
+    - aicte_id: String
+    - pan: String
+    - aadhar: String
+    - phd_degree: String
+    - subjects_dealt: Text
+    - about_yourself: Text
+    - is_active: Boolean
+    ' Education - SSC
+    - ssc_year: Integer
+    - ssc_percent: Float
+    - ssc_school: String
+    ' Education - Intermediate
+    - inter_year: Integer
+    - inter_percent: Float
+    - inter_college: String
+    ' Education - UG
+    - ug_degree: String
+    - ug_year: Integer
+    - ug_percentage: Float
+    - ug_college: String
+    ' Education - PG
+    - pg_degree: String
+    - pg_year: Integer
+    - pg_percentage: Float
+    - pg_college: String
+    ' Experience
+    - exp_anurag: String
+    - exp_other: String
+    + login()
+    + logout()
+    + viewDashboard()
+    + updateProfile()
+    + uploadDocuments()
+    + downloadProfilePDF()
+}
+
+class FacultyDashboard {
+    + viewProfile()
+    + viewStatistics()
+    + viewAnalytics()
+    + manageResearch()
+    + manageFDP()
+    + manageProjects()
+}
+
+class FacultyProfile {
+    - experience_other: String
+    - experience_at_anurag: String
+    - batch_number: String
+    + updateProfileInfo()
+}
+
+class ResearchProject {
+    - research_type: String
+    - title: String
+    - journal_name: String
+    - year: Integer
+    + addProject()
+    + editProject()
+    + deleteProject()
+}
+
+class ResearchPublication {
+    - research_type: String
+    - title: String
+    - authors: Text
+    - publication_year: Integer
+    - status: String
+    - journal_name: String
+    - doi: String
+    + addPublication()
+    + editPublication()
+    + deletePublication()
+}
+
+class FDP {
+    - fdp_type: String
+    - title: String
+    - from_date: Date
+    - to_date: Date
+    - organized_by: String
+    - place: String
+    - mode: String
+    - level: String
+    - role: String
+    + addFDP()
+    + editFDP()
+    + deleteFDP()
+}
+
+class BTechProject {
+    - ht_no: String
+    - student_name: String
+    - batch: String
+    - project_title: String
+    - approved: Boolean
+    - marks: String
+    + guideProject()
+    + evaluateProject()
+}
+
+class Certificate {
+    - certificate_type: String
+    - issued_by: String
+    - issue_date: Date
+    - description: Text
+    + addCertificate()
+    + editCertificate()
+    + deleteCertificate()
+}
+
+class Syllabus {
+    - department: String
+    - year: Integer
+    - syllabus_file: File
+    + viewSyllabus()
+    + downloadSyllabus()
+}
+
+class Gallery {
+    - title: String
+    - description: Text
+    - image: Image
+    + viewGallery()
+    + uploadToGallery()
+}
+
+class ExamBranch {
+    - subject: String
+    - lesson_plan: File
+    - attendance_data: Data
+    + viewExamData()
+    + updateAttendance()
+    + downloadLessonPlan()
+    + generateReport()
+}
+
+' Relationships
+Faculty "1" --> "1" FacultyDashboard : accesses
+Faculty "1" --> "1" FacultyProfile : has
+Faculty "1" --> "*" ResearchProject : conducts
+Faculty "1" --> "*" ResearchPublication : publishes
+Faculty "1" --> "*" FDP : attends
+Faculty "1" --> "*" BTechProject : guides
+Faculty "1" --> "*" Certificate : uploads
+Faculty "1" --> "*" Syllabus : views
+Faculty "1" --> "*" Gallery : views
+Faculty "1" --> "1" ExamBranch : manages
+
+@enduml

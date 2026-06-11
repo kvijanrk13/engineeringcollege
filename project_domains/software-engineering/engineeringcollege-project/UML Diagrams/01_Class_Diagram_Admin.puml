@@ -1,0 +1,90 @@
+@startuml 01_Class_Diagram_Admin
+' Engineering College - Class Diagram for ADMIN Module
+' A4 Page Layout - Landscape orientation
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+skinparam monochrome false
+
+title Engineering College - ADMIN Module Class Diagram
+
+' Admin User
+class Admin {
+    - username: String
+    - password: String
+    - email: String
+    + login()
+    + logout()
+    + manageFaculty()
+    + manageStudents()
+    + viewDashboard()
+    + generateReports()
+    + configureSystem()
+}
+
+' Faculty Management
+class Faculty {
+    - employee_code: String
+    - staff_name: String
+    - department: String
+    - designation: String
+    - email: String
+    - mobile: String
+    - is_active: Boolean
+    + addFaculty()
+    + editFaculty()
+    + deleteFaculty()
+    + viewFacultyProfile()
+}
+
+class FacultyProfile {
+    - experience_other: String
+    - experience_at_anurag: String
+    - batch_number: String
+    + updateProfile()
+}
+
+' Student Management
+class Student {
+    - ht_no: String
+    - student_name: String
+    - department: String
+    - year: Integer
+    - email: String
+    - + addStudent()
+    + editStudent()
+    + deleteStudent()
+    + viewStudentProfile()
+}
+
+' Subject Management
+class Subject {
+    - name: String
+    - code: String
+    - credits: Integer
+    + addSubject()
+    + editSubject()
+    + deleteSubject()
+}
+
+' Dashboard Views
+class DashboardView {
+    + adminDashboard()
+    + facultyList()
+    + studentList()
+    + analytics()
+}
+
+' Relationships
+Admin --> Faculty : manages
+Admin --> Student : manages
+Admin --> Subject : manages
+Faculty "1" --> "1" FacultyProfile : has
+Faculty "1" --> "*" Subject : teaches
+
+' Dashboard Relationships
+DashboardView ..> Admin : uses
+DashboardView ..> Faculty : displays
+DashboardView ..> Student : displays
+
+@enduml

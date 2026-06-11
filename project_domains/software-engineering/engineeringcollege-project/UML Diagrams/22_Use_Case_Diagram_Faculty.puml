@@ -1,0 +1,44 @@
+@startuml 22_Use_Case_Diagram_Faculty
+' Engineering College - Use Case Diagram for FACULTY Module
+' A4 Page Layout
+
+title Engineering College - FACULTY Module Use Case Diagram
+
+left to right direction
+
+actor "Faculty" as Faculty
+
+rectangle "Engineering College System" {
+    usecase "Login to Faculty Portal" as UC1
+    usecase "View Faculty Dashboard" as UC2
+    usecase "Manage Faculty Profile" as UC3
+    usecase "Manage Research Projects" as UC4
+    usecase "Manage Research Publications" as UC5
+    usecase "Manage FDP/Workshops" as UC6
+    usecase "Guide BTech Projects" as UC7
+    usecase "Upload Certificates" as UC8
+    usecase "View Syllabus" as UC9
+    usecase "View Gallery" as UC10
+    usecase "Manage Exam Branch" as UC11
+    usecase "Generate Faculty Profile PDF" as UC12
+    usecase "Update Attendance" as UC13
+    usecase "Generate Reports" as UC14
+    usecase "Logout" as UC15
+    
+    UC3 <.. UC1 : <<include>>
+    UC4 <.. UC1 : <<include>>
+    UC5 <.. UC1 : <<include>>
+    UC6 <.. UC1 : <<include>>
+    UC7 <.. UC1 : <<include>>
+    UC8 <.. UC1 : <<include>>
+    UC9 <.. UC1 : <<include>>
+    UC10 <.. UC1 : <<include>>
+    UC11 <.. UC1 : <<include>>
+    UC13 <.. UC11 : <<include>>
+    UC14 <.. UC11 : <<include>>
+}
+
+Faculty --> UC1
+Faculty --> UC2
+
+@enduml

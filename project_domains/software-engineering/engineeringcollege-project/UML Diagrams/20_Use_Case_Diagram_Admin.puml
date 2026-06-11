@@ -1,0 +1,38 @@
+@startuml 20_Use_Case_Diagram_Admin
+' Engineering College - Use Case Diagram for ADMIN Module
+' A4 Page Layout
+
+title Engineering College - ADMIN Module Use Case Diagram
+
+left to right direction
+
+actor "Administrator" as Admin
+
+rectangle "Engineering College System" {
+    usecase "Login to Admin Portal" as UC1
+    usecase "View Admin Dashboard" as UC2
+    usecase "Manage Faculty Data" as UC3
+    usecase "Manage Student Data" as UC4
+    usecase "Assign Subjects to Faculty" as UC5
+    usecase "Generate Faculty Reports" as UC6
+    usecase "Generate Student Reports" as UC7
+    usecase "Export Data (CSV/Excel)" as UC8
+    usecase "View System Statistics" as UC9
+    usecase "Configure System Settings" as UC10
+    usecase "Backup Database" as UC11
+    usecase "Clear System Logs" as UC12
+    usecase "Logout" as UC13
+    
+    UC3 <.. UC1 : <<include>>
+    UC4 <.. UC1 : <<include>>
+    UC6 <.. UC1 : <<include>>
+    UC7 <.. UC1 : <<include>>
+    UC8 <.. UC4 : <<extend>>
+    UC9 <.. UC2 : <<include>>
+    UC12 <.. UC2 : <<include>>
+}
+
+Admin --> UC1
+Admin --> UC2
+
+@enduml

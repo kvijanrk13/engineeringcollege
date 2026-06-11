@@ -1,0 +1,119 @@
+@startuml 04_ER_Diagram_Admin
+' Engineering College - ER Diagram for ADMIN Module
+' A4 Page Layout
+
+title Engineering College - ADMIN Module ER Diagram
+
+skinparam pageMargin 10
+skinparam pageAlignment center
+skinparam linetype ortho
+
+' Entities
+entity "Admin User" as admin {
+    * admin_id [PK]
+    --
+    * username
+    * password
+    * email
+    created_at
+}
+
+entity "Faculty" as faculty {
+    * id [PK]
+    --
+    * employee_code [UK]
+    * staff_name
+    father_name
+    mother_name
+    gender
+    dob
+    * department
+    * designation
+    * email
+    * mobile
+    is_active
+    created_at
+    updated_at
+}
+
+entity "Student" as student {
+    * id [PK]
+    --
+    * ht_no [UK]
+    * student_name
+    father_name
+    mother_name
+    gender
+    dob
+    * department
+    * year
+    * email
+    * student_phone
+    is_active
+    created_at
+    updated_at
+}
+
+entity "Subject" as subject {
+    * id [PK]
+    --
+    * name
+    code
+    * credits
+}
+
+entity "Certificate" as certificate {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    certificate_type
+    issued_by
+    issue_date
+    description
+}
+
+entity "Research Publication" as research_pub {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    research_type
+    title
+    authors
+    publication_year
+    journal_name
+    doi
+}
+
+entity "FDP" as fdp {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    fdp_type
+    title
+    from_date
+    to_date
+    organized_by
+    place
+}
+
+entity "BTech Project" as btech_proj {
+    * id [PK]
+    --
+    * faculty_id [FK]
+    ht_no
+    student_name
+    batch
+    project_title
+    approved
+}
+
+' Relationships
+admin ||--o{ faculty : manages
+admin ||--o{ student : manages
+faculty }|--|| subject : teaches
+faculty ||--o{ certificate : uploads
+faculty ||--o{ research_pub : publishes
+faculty ||--o{ fdp : attends
+faculty ||--o{ btech_proj : guides
+
+@enduml

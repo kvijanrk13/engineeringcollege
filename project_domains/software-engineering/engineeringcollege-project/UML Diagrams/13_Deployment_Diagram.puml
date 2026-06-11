@@ -1,0 +1,59 @@
+@startuml 13_Deployment_Diagram
+' Engineering College - Deployment Diagram
+' A4 Page Layout
+
+title Engineering College - Deployment Diagram
+
+' Define nodes
+node "Client Browser" as browser {
+    component "Student UI" as student_ui
+    component "Faculty UI" as faculty_ui
+    component "Admin UI" as admin_ui
+}
+
+node "Web Server" as webserver {
+    component "Django Application" as django_app
+    component "WSGI/ASGI Server" as wsgi
+}
+
+node "Application Server" as appserver {
+    database "PostgreSQL/MySQL" as database {
+        folder "Tables" {
+            [Faculty Table]
+            [Student Table]
+            [Research Table]
+            [FDP Table]
+            [Certificate Table]
+        }
+    }
+}
+
+node "File Storage" as filestorage {
+    folder "Media Files" as media {
+        [Faculty Photos]
+        [Student Photos]
+        [Certificates]
+        [Research Proofs]
+    }
+    folder "Generated PDFs" as pdfs {
+        [Faculty PDFs]
+        [Student PDFs]
+    }
+}
+
+node "External Services" as external {
+    cloud "Cloudinary Storage" as cloudinary
+    cloud "Email Service" as email
+}
+
+' Connections
+browser -[#blue]-> webserver : HTTPS Request
+webserver -[#green]-> appserver : Database Queries
+webserver -[#orange]-> filestorage : File Storage
+webserver -[#purple]-> external : API Calls
+
+student_ui ..> django_app
+faculty_ui ..> django_app
+admin_ui ..> django_app
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml 16_Sequence_Diagram_Faculty_Login
+' Engineering College - Sequence Diagram for FACULTY Login
+' A4 Page Layout
+
+title Engineering College - Faculty Login Sequence
+
+actor Faculty
+participant "FacultyLoginView" as View
+participant "FacultyDashboardView" as Dashboard
+participant "Database" as DB
+
+Faculty -> View: accessFacultyPortal()
+View -> View: displayLoginForm()
+Faculty -> View: submitEmployeeCode(employee_code)
+View -> View: validateEmployeeCode()
+View -> DB: queryFaculty(employee_code)
+DB --> View: returnFacultyData()
+View -> View: createSession()
+View -> Dashboard: redirectToDashboard()
+Dashboard -> DB: fetchFacultyProfile(faculty_id)
+DB --> Dashboard: facultyProfile
+Dashboard -> DB: fetchResearchProjects(faculty_id)
+DB --> Dashboard: researchProjects
+Dashboard -> DB: fetchResearchPublications(faculty_id)
+DB --> Dashboard: researchPublications
+Dashboard -> DB: fetchFDPs(faculty_id)
+DB --> Dashboard: fdpList
+Dashboard -> DB: fetchBTechProjects(faculty_id)
+DB --> Dashboard: btechProjects
+Dashboard -> Dashboard: buildPDFContext()
+Dashboard -> Faculty: displayDashboard()
+
+@enduml

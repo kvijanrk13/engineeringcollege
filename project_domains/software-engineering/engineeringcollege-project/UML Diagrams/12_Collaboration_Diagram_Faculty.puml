@@ -1,0 +1,44 @@
+@startuml 12_Collaboration_Diagram_Faculty
+' Engineering College - Collaboration Diagram for FACULTY Module
+' A4 Page Layout
+
+title Engineering College - FACULTY Module Collaboration Diagram
+
+actor Faculty
+boundary FacultyLoginView
+boundary FacultyDashboardView
+control FacultyProfileController
+control ResearchController
+control FDPController
+control ProjectController
+control CertificateController
+entity Faculty
+entity FacultyForm
+entity ResearchProject
+entity ResearchPublication
+entity FDP
+entity BTechProject
+entity Certificate
+entity Syllabus
+entity Gallery
+entity ExamBranch
+
+Faculty -> FacultyLoginView: login(employee_code)
+FacultyLoginView -> FacultyDashboardView: authenticate()
+Faculty -> FacultyProfileController: updateProfile()
+FacultyProfileController -> Faculty: save()
+FacultyProfileController -> FacultyForm: validate()
+Faculty -> ResearchController: manageResearch()
+ResearchController -> ResearchProject: create/edit/delete
+ResearchController -> ResearchPublication: create/edit/delete
+Faculty -> FDPController: manageFDP()
+FDPController -> FDP: CRUD()
+Faculty -> ProjectController: manageProjects()
+ProjectController -> BTechProject: guide/evaluate
+Faculty -> CertificateController: uploadCertificates()
+CertificateController -> Certificate: save()
+Faculty -> Syllabus: viewSyllabus()
+Faculty -> Gallery: viewGallery()
+Faculty -> ExamBranch: manageExamBranch()
+
+@enduml

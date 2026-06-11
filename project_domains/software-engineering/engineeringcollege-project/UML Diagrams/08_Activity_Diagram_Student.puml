@@ -1,0 +1,51 @@
+@startuml 08_Activity_Diagram_Student
+' Engineering College - Activity Diagram for STUDENT Module
+' A4 Page Layout
+
+title Engineering College - STUDENT Module Activity Diagram
+
+start
+:Access Student Portal;
+:Student Login;
+if (Valid HT Number?) then (yes)
+  :Navigate to Student Dashboard;
+  partition "Profile Management" {
+    :View Personal Details;
+    :View Academic Information;
+    :View Department & Year;
+  }
+  partition "Certificates" {
+    :View Certificate List;
+    :Upload Achievement Certificate;
+    :Upload Internship Certificate;
+    :Upload Course Certificate;
+    :Upload SDP Certificate;
+    :Upload Placement Certificate;
+    :Upload National Exam Certificate;
+    :Upload Extra Certificate;
+  }
+  partition "Research Publication" {
+    :View Research Publications;
+    :Add Research Publication;
+    :Edit Research Publication;
+    :Delete Research Publication;
+    :Upload Proof Document;
+  }
+  partition "Academic Resources" {
+    :View Syllabus;
+    :Download Syllabus;
+    :View Gallery;
+    :View Exam Branch Data;
+  }
+  partition "Profile Generation" {
+    :Generate Profile PDF;
+    :View PDF Preview;
+    :Download PDF;
+  }
+else (no)
+  :Show Login Error;
+endif
+:Student Logout;
+stop
+
+@enduml
