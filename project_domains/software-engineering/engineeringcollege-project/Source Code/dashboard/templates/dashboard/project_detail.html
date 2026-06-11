@@ -141,6 +141,67 @@
             border-left: 4px solid #1456A0;
             background: #F7F9FC;
         }
+        .manual-payment {
+            margin-top: 24px;
+            padding: 18px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #FFFFFF;
+        }
+        .manual-payment .amount {
+            margin: 6px 0 14px;
+            color: #172033;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .manual-payment-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+        .manual-payment img {
+            display: block;
+            width: 100%;
+            max-width: 260px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #F8FAFC;
+        }
+        .manual-payment label {
+            display: block;
+            margin-top: 10px;
+            color: #172033;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .manual-payment input,
+        .manual-payment textarea {
+            width: 100%;
+            margin-top: 5px;
+            padding: 9px 10px;
+            border: 1px solid #C9D4E2;
+            border-radius: 6px;
+            font: inherit;
+        }
+        .manual-payment textarea {
+            min-height: 78px;
+            resize: vertical;
+        }
+        .manual-payment button {
+            margin-top: 14px;
+            padding: 11px 16px;
+            border: 0;
+            border-radius: 6px;
+            background: #1456A0;
+            color: #FFFFFF;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        @media (max-width: 680px) {
+            .manual-payment-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -182,10 +243,44 @@
                     Pay INR {{ project.amount_rupees }} and Download ZIP
                 </a>
             {% endif %}
+            {% if project.receipt_required %}
+                <section class="manual-payment" aria-label="Manual PhonePe QR receipt submission">
+                    <h2>Project Folder ZIP Download</h2>
+                    <div class="amount">INR {{ project.amount_rupees }}</div>
+                    <p>
+                        Scan the PhonePe QR code, upload the payment acknowledgement, enter your student email ID,
+                        and click Send. After admin verification, the complete project folder ZIP download is unlocked.
+                    </p>
+                    <div class="manual-payment-grid">
+                        <img src="{% url 'dashboard:phonepe_payment_qr' %}" alt="PhonePe payment QR code">
+                        <form method="post" enctype="multipart/form-data"
+                              action="{% url 'dashboard:submit_project_receipt' domain_slug project.slug %}">
+                            {% csrf_token %}
+                            <label for="manual-student-name">Student name</label>
+                            <input id="manual-student-name" name="student_name" maxlength="160" required>
+
+                            <label for="manual-student-email">Student email</label>
+                            <input id="manual-student-email" name="student_email" type="email" required>
+
+                            <label for="manual-student-phone">Phone number</label>
+                            <input id="manual-student-phone" name="student_phone" maxlength="30">
+
+                            <label for="manual-receipt-file">Upload PhonePe acknowledgement</label>
+                            <input id="manual-receipt-file" name="receipt_file" type="file"
+                                   accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required>
+
+                            <label for="manual-message">Project doubt or note</label>
+                            <textarea id="manual-message" name="receipt_message"></textarea>
+
+                            <button type="submit">Send Receipt for Confirmation</button>
+                        </form>
+                    </div>
+                </section>
+            {% endif %}
             {% if academic_folders %}
                 <section class="execution" aria-label="Project folder structure">
                     <h2>Project Folders</h2>
-                    <p>These are the folders currently prepared for this project.</p>
+                    <p>These folders are included in the complete project ZIP.</p>
                     <table>
                         <thead>
                             <tr>

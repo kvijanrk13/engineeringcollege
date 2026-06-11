@@ -142,9 +142,10 @@
         </p>
 
         {% if project_support_project and project_support_project.receipt_required %}
-            <div class="project-support-command">Command: share your project request and send</div>
+            <div class="project-support-command">Command: share your PhonePe receipt and send</div>
             <p class="project-support-muted">
-                Upload the requested acknowledgement here. The complete project folder link is mailed to your email after admin confirmation.
+                Amount: INR {{ project_support_project.amount_rupees }}. Upload your PhonePe acknowledgement here.
+                The complete project folder ZIP download is unlocked after admin confirmation.
             </p>
 
             {% if project_support_confirmed_order and project_support_download_url %}
@@ -174,7 +175,7 @@
                 <label for="support-message">Project doubt or note</label>
                 <textarea id="support-message" name="receipt_message" placeholder="Describe any issue while executing the project."></textarea>
 
-                <label for="support-receipt-file">Acknowledgement file</label>
+                <label for="support-receipt-file">PhonePe acknowledgement</label>
                 <input id="support-receipt-file" name="receipt_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" required>
 
                 <button class="project-support-submit" type="submit">Send Receipt for Confirmation</button>
