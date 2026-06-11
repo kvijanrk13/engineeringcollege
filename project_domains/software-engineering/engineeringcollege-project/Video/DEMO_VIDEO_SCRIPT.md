@@ -86,6 +86,20 @@ Verify:
 - UML diagrams and test cases are present
 - Project folder ZIP/download workflow is ready
 
-## Scene 10: Conclusion
+## Scene 10: Result Screens
+
+Show:
+
+- Dashboard result screen
+- Syllabus screen
+- Gallery screen
+- Faculty PDF first page
+- Student PDF first page
+
+## Scene 11: ECPRJ Watermark
+
+Show the ECPRJ logo watermark on the demo video and presentation slides.
+
+## Scene 12: Conclusion
 
 Explain modules, database, test cases, UML diagrams, deployment, and complete local execution flow.
