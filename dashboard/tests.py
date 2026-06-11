@@ -141,11 +141,88 @@ class DashboardTests(TestCase):
     )
     @patch('dashboard.views.requests.get')
     @patch('dashboard.views.requests.post')
+    def test_google_student_login_accepts_normalized_non_gmail_email(self, mock_post, mock_get):
+        student = Student.objects.create(
+            ht_no='22IT002',
+            student_name='Workspace Student',
+            email='  Workspace.Student@college.edu  ',
+        )
+        start_response = self.client.get(
+            reverse('dashboard:google_login'),
+            {'role': 'student'},
+        )
+        state = parse_qs(urlparse(start_response['Location']).query)['state'][0]
+
+        mock_post.return_value = Mock(
+            status_code=200,
+            json=lambda: {'access_token': 'access-token'},
+        )
+        mock_get.return_value = Mock(
+            status_code=200,
+            json=lambda: {'email': 'workspace.student@COLLEGE.edu', 'email_verified': True},
+        )
+
+        callback_response = self.client.get(
+            reverse('dashboard:google_callback'),
+            {'code': 'auth-code', 'state': state},
+        )
+
+        self.assertEqual(callback_response.status_code, 302)
+        self.assertEqual(callback_response['Location'], reverse('dashboard:add_student'))
+        self.assertTrue(self.client.session['student_logged_in'])
+        self.assertEqual(self.client.session['student_id'], student.id)
+
+    @override_settings(
+        GOOGLE_OAUTH_CLIENT_ID='test-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-client-secret',
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
+    def test_google_student_login_allows_unlinked_gmail(self, mock_post, mock_get):
+        start_response = self.client.get(
+            reverse('dashboard:google_login'),
+            {'role': 'student'},
+        )
+        state = parse_qs(urlparse(start_response['Location']).query)['state'][0]
+
+        mock_post.return_value = Mock(
+            status_code=200,
+            json=lambda: {'access_token': 'access-token'},
+        )
+        mock_get.return_value = Mock(
+            status_code=200,
+            json=lambda: {
+                'email': 'new.student@gmail.com',
+                'email_verified': True,
+                'name': 'New Student',
+            },
+        )
+
+        callback_response = self.client.get(
+            reverse('dashboard:google_callback'),
+            {'code': 'auth-code', 'state': state},
+        )
+
+        self.assertEqual(callback_response.status_code, 302)
+        self.assertEqual(callback_response['Location'], reverse('dashboard:add_student'))
+        self.assertTrue(self.client.session['student_logged_in'])
+        self.assertEqual(self.client.session['student_username'], 'new.student@gmail.com')
+        self.assertEqual(self.client.session['student_display_name'], 'New Student')
+        self.assertNotIn('student_id', self.client.session)
+
+    @override_settings(
+        GOOGLE_OAUTH_CLIENT_ID='test-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-client-secret',
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
     def test_google_faculty_login_uses_matching_faculty_name(self, mock_post, mock_get):
         faculty = Faculty.objects.create(
             staff_name='Consistent Faculty Name',
             employee_code='GMAILFAC001',
-            email='faculty@example.com',
+            email='  Faculty@Example.com  ',
         )
         start_response = self.client.get(
             reverse('dashboard:google_login'),
@@ -160,7 +237,7 @@ class DashboardTests(TestCase):
         mock_get.return_value = Mock(
             status_code=200,
             json=lambda: {
-                'email': faculty.email,
+                'email': 'faculty@example.com',
                 'email_verified': True,
                 'name': 'Different Gmail Name',
                 'given_name': 'Different',
@@ -175,9 +252,48 @@ class DashboardTests(TestCase):
 
         self.assertEqual(callback_response.status_code, 302)
         self.assertEqual(callback_response['Location'], reverse('dashboard:add_faculty'))
-        user = get_user_model().objects.get(email=faculty.email)
+        user = get_user_model().objects.get(email='faculty@example.com')
         self.assertEqual(user.get_full_name(), faculty.staff_name)
         self.assertTrue(user.is_staff)
+
+    @override_settings(
+        GOOGLE_OAUTH_CLIENT_ID='test-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-client-secret',
+        SECURE_SSL_REDIRECT=False,
+    )
+    @patch('dashboard.views.requests.get')
+    @patch('dashboard.views.requests.post')
+    def test_google_faculty_login_allows_unlinked_gmail(self, mock_post, mock_get):
+        start_response = self.client.get(
+            reverse('dashboard:google_login'),
+            {'role': 'admin'},
+        )
+        state = parse_qs(urlparse(start_response['Location']).query)['state'][0]
+
+        mock_post.return_value = Mock(
+            status_code=200,
+            json=lambda: {'access_token': 'access-token'},
+        )
+        mock_get.return_value = Mock(
+            status_code=200,
+            json=lambda: {
+                'email': 'new.faculty@gmail.com',
+                'email_verified': True,
+                'name': 'New Faculty',
+            },
+        )
+
+        callback_response = self.client.get(
+            reverse('dashboard:google_callback'),
+            {'code': 'auth-code', 'state': state},
+        )
+
+        self.assertEqual(callback_response.status_code, 302)
+        self.assertEqual(callback_response['Location'], reverse('dashboard:add_faculty'))
+        user = get_user_model().objects.get(email='new.faculty@gmail.com')
+        self.assertEqual(user.get_full_name(), 'New Faculty')
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_active)
 
     def test_pdf_generation_uses_dedicated_assets_boundary(self):
         self.assertEqual(STUDENT_PDF_TEMPLATE, 'dashboard/student_pdf.html')

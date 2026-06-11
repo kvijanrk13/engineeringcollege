@@ -3200,12 +3200,9 @@ def google_callback(request):
             return redirect('dashboard:add_student')
 
         faculty = Faculty.objects.filter(email__iexact=email).first()
-        if not faculty:
-            messages.error(request, 'No faculty account is linked to this Gmail address.')
-            return redirect('dashboard:admin_login')
 
         UserModel = get_user_model()
-        username_base = faculty.employee_code or email.split('@', 1)[0]
+        username_base = (getattr(faculty, 'employee_code', '') or email.split('@', 1)[0]).strip()
         user = UserModel.objects.filter(email__iexact=email).first()
         if not user:
             username = username_base
@@ -3215,7 +3212,8 @@ def google_callback(request):
                 username = f"{username_base}{counter}"
             user = UserModel(username=username, email=email)
 
-        name_parts = (faculty.staff_name or '').strip().split(' ', 1)
+        display_name = (getattr(faculty, 'staff_name', '') or profile.get('name', '') or email).strip()
+        name_parts = display_name.split(' ', 1)
         user.first_name = name_parts[0] if name_parts else ''
         user.last_name = name_parts[1] if len(name_parts) > 1 else ''
         user.email = email
