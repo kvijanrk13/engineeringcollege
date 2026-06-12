@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}My Files | KAVACH{% endblock %}
+
+{% block content %}
+<section class="list-header">
+    <div>
+        <h1>My Files</h1>
+        <p class="helper-text">Uploaded Notepad text files are listed here. Sharing is not enabled in Step 3.</p>
+    </div>
+    <a class="button-link" href="{% url 'files:upload' %}">Upload Text File</a>
+</section>
+
+<section class="file-list">
+    {% for file in files %}
+        <article class="file-card">
+            <div>
+                <h2>{{ file.original_name }}</h2>
+                <p>{{ file.file_size }} bytes uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+            </div>
+            <details>
+                <summary>Preview text</summary>
+                <pre class="preview-box">{{ file.preview_text }}</pre>
+            </details>
+        </article>
+    {% empty %}
+        <article class="profile-card">
+            <h2>No files uploaded yet</h2>
+            <p>Upload a Notepad text file to complete Step 3.</p>
+            <a class="button-link" href="{% url 'files:upload' %}">Upload Text File</a>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}

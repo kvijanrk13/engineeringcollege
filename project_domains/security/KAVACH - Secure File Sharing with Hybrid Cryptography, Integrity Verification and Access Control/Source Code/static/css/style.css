@@ -87,6 +87,26 @@ button {
     padding: 11px 16px;
 }
 
+.button-link {
+    background: #155e75;
+    border-radius: 6px;
+    color: #ffffff;
+    display: inline-block;
+    font-weight: 700;
+    padding: 11px 16px;
+}
+
+.button-link.secondary {
+    background: #334155;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+
 .messages {
     margin-bottom: 18px;
 }
@@ -143,9 +163,51 @@ button {
     word-break: break-all;
 }
 
+.list-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.file-list {
+    display: grid;
+    gap: 14px;
+}
+
+.file-card {
+    background: #ffffff;
+    border: 1px solid #dbe3ee;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    padding: 18px;
+}
+
+.file-card h2 {
+    font-size: 18px;
+    margin: 0 0 6px;
+}
+
+.file-card p {
+    color: #526173;
+    margin: 0 0 12px;
+}
+
+.preview-box {
+    background: #f8fafc;
+    border: 1px solid #dbe3ee;
+    border-radius: 6px;
+    color: #1f2937;
+    max-height: 220px;
+    overflow: auto;
+    padding: 12px;
+    white-space: pre-wrap;
+}
+
 @media (max-width: 720px) {
     .site-header,
-    .profile-grid {
+    .profile-grid,
+    .list-header {
         display: block;
     }
 

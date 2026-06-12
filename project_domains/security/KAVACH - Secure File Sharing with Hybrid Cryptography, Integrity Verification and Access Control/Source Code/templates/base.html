@@ -12,6 +12,8 @@
         <nav class="nav-links">
             {% if user.is_authenticated %}
                 <a href="{% url 'accounts:profile' %}">Profile</a>
+                <a href="{% url 'files:my_files' %}">My Files</a>
+                <a href="{% url 'files:upload' %}">Upload</a>
                 <a href="{% url 'accounts:logout' %}">Logout</a>
             {% else %}
                 <a href="{% url 'accounts:login' %}">Login</a>

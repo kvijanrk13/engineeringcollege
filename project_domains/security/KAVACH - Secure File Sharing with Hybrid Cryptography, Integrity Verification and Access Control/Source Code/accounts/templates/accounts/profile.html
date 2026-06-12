@@ -21,6 +21,15 @@
         {% endif %}
     </div>
 
+    <div class="profile-card full-width">
+        <h2>Step 3 File Upload</h2>
+        <p>Upload Notepad text files now. Encryption will be added in the next step.</p>
+        <div class="actions">
+            <a class="button-link" href="{% url 'files:upload' %}">Upload Text File</a>
+            <a class="button-link secondary" href="{% url 'files:my_files' %}">View My Files</a>
+        </div>
+    </div>
+
     {% if key_pair %}
         <div class="profile-card full-width">
             <h2>Your Public Key</h2>

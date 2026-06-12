@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Text File | KAVACH{% endblock %}
+
+{% block content %}
+<section class="auth-panel">
+    <h1>Upload Text File</h1>
+    <p class="helper-text">Step 3 accepts only Notepad text files. The file is stored and prepared for encryption in the next step.</p>
+
+    <form method="post" enctype="multipart/form-data" class="form-card">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Upload File</button>
+    </form>
+
+    <p class="small-link"><a href="{% url 'files:my_files' %}">View My Files</a></p>
+</section>
+{% endblock %}
