@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Login | KAVACH{% endblock %}
+
+{% block content %}
+<section class="auth-panel">
+    <h1>Login</h1>
+    <p class="helper-text">Use your Django username and password to access your secure file sharing account.</p>
+
+    <form method="post" class="form-card">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+
+    <p class="small-link">New user? <a href="{% url 'accounts:register' %}">Create an account</a></p>
+</section>
+{% endblock %}

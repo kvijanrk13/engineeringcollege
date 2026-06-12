@@ -3877,6 +3877,16 @@ def data_mining_legacy_car_project_redirect(request):
     )
 
 
+def kavach_demo(request):
+    """Public KAVACH execution page linked from the security project listing."""
+    return render(request, 'dashboard/kavach_demo.html', {
+        'title': 'KAVACH: Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control',
+        'local_standalone_url': 'http://127.0.0.1:8010/accounts/register/',
+        'render_demo_path': '/projects/kavach/',
+        'project_detail_url': reverse('dashboard:project_detail', args=['security', 'kavach-secure-file-sharing']),
+    })
+
+
 def _project_academic_folders(domain_slug, project):
     project_folder_name = project.get('title_path') or project['slug']
     project_root = PROJECT_DOMAIN_ROOT / domain_slug / project_folder_name

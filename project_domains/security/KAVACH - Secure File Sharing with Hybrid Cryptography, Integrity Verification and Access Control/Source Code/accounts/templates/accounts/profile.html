@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | KAVACH{% endblock %}
+
+{% block content %}
+<section class="profile-grid">
+    <div class="profile-card">
+        <h1>User Profile</h1>
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+    </div>
+
+    <div class="profile-card">
+        <h2>RSA Key Status</h2>
+        {% if key_pair %}
+            <p class="status success">RSA key pair generated successfully.</p>
+            <p><strong>Public key:</strong> Can be shared with others so they can encrypt data for you.</p>
+            <p><strong>Private key:</strong> Stored encrypted with your password and must remain secret.</p>
+        {% else %}
+            <p class="status warning">No RSA key pair found for this account.</p>
+        {% endif %}
+    </div>
+
+    {% if key_pair %}
+        <div class="profile-card full-width">
+            <h2>Your Public Key</h2>
+            <pre class="key-box">{{ key_pair.public_key }}</pre>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Register | KAVACH{% endblock %}
+
+{% block content %}
+<section class="auth-panel">
+    <h1>Create Account</h1>
+    <p class="helper-text">When you register, KAVACH creates an RSA public/private key pair for secure file sharing.</p>
+
+    <form method="post" class="form-card">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Register and Generate Keys</button>
+    </form>
+
+    <p class="small-link">Already have an account? <a href="{% url 'accounts:login' %}">Login</a></p>
+</section>
+{% endblock %}
