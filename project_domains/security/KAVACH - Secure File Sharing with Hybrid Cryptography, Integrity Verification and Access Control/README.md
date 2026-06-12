@@ -11,6 +11,7 @@ To build a secure file sharing system where files are encrypted before storage, 
 - AES encryption for file protection
 - RSA encryption for AES key protection
 - User-specific public/private key management
+- Gmail sign-in for verified Gmail accounts
 - SHA-256 hash-based integrity verification
 - Digital signature verification
 - Access expiry and access revocation
@@ -20,6 +21,7 @@ To build a secure file sharing system where files are encrypted before storage, 
 ## Project Modules
 
 - User registration and login
+- Gmail sign-in registration
 - RSA key generation
 - File upload and AES encryption
 - RSA-based AES key encryption
@@ -38,6 +40,19 @@ To build a secure file sharing system where files are encrypted before storage, 
 - SQLite or PostgreSQL
 - HTML, CSS, Bootstrap, JavaScript
 - Python cryptography library
+- Google OAuth for Gmail sign-in
+
+## Gmail Sign-In Setup
+
+Add these environment variables before running Gmail sign-in:
+
+- GOOGLE_OAUTH_CLIENT_ID
+- GOOGLE_OAUTH_CLIENT_SECRET
+
+Add these callback URLs in Google Cloud OAuth settings:
+
+- http://127.0.0.1:8010/accounts/google/callback/
+- https://your-deployed-domain/accounts/google/callback/
 
 ## Folder Structure
 
@@ -50,4 +65,3 @@ To build a secure file sharing system where files are encrypted before storage, 
 - Test Cases
 - UML Diagrams
 - Video
-

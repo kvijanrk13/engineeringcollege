@@ -25,6 +25,10 @@ def generate_user_key_pair(password):
     }
 
 
+def generate_oauth_user_key_pair(secret_value):
+    return generate_user_key_pair(secret_value)
+
+
 def load_private_key(encrypted_private_key, password):
     return serialization.load_pem_private_key(
         encrypted_private_key.encode("utf-8"),

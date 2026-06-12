@@ -7,6 +7,17 @@
     <h1>Login</h1>
     <p class="helper-text">Use your Django username and password to access your secure file sharing account.</p>
 
+    <a class="gmail-button{% if not google_signin_enabled %} disabled{% endif %}"
+       href="{% if google_signin_enabled %}{% url 'accounts:google_login' %}{% else %}#{% endif %}">
+        <span class="gmail-icon">G</span>
+        <span>Sign in with Gmail</span>
+    </a>
+    {% if not google_signin_enabled %}
+        <p class="config-note">Gmail sign-in needs Google OAuth credentials in environment variables.</p>
+    {% endif %}
+
+    <div class="divider"><span>or login with password</span></div>
+
     <form method="post" class="form-card">
         {% csrf_token %}
         {{ form.as_p }}

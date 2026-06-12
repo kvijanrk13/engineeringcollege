@@ -14,8 +14,9 @@
         <h2>RSA Key Status</h2>
         {% if key_pair %}
             <p class="status success">RSA key pair generated successfully.</p>
+            <p><strong>Registration type:</strong> {{ key_pair.get_key_source_display }}</p>
             <p><strong>Public key:</strong> Can be shared with others so they can encrypt data for you.</p>
-            <p><strong>Private key:</strong> Stored encrypted with your password and must remain secret.</p>
+            <p><strong>Private key:</strong> Stored encrypted and must remain secret.</p>
         {% else %}
             <p class="status warning">No RSA key pair found for this account.</p>
         {% endif %}

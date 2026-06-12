@@ -7,6 +7,17 @@
     <h1>Create Account</h1>
     <p class="helper-text">When you register, KAVACH creates an RSA public/private key pair for secure file sharing.</p>
 
+    <a class="gmail-button{% if not google_signin_enabled %} disabled{% endif %}"
+       href="{% if google_signin_enabled %}{% url 'accounts:google_login' %}{% else %}#{% endif %}">
+        <span class="gmail-icon">G</span>
+        <span>Sign in with Gmail</span>
+    </a>
+    {% if not google_signin_enabled %}
+        <p class="config-note">Gmail sign-in needs Google OAuth credentials in environment variables.</p>
+    {% endif %}
+
+    <div class="divider"><span>or register with password</span></div>
+
     <form method="post" class="form-card">
         {% csrf_token %}
         {{ form.as_p }}
