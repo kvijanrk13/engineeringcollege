@@ -3227,6 +3227,11 @@ def google_callback(request):
                     require_https=request.is_secure(),
                 ):
                     next_url = '/car-price/maruti-prices/'
+                if next_url.startswith('/projects/kavach/'):
+                    if not email.endswith('@gmail.com'):
+                        messages.error(request, 'KAVACH accepts verified Gmail accounts ending with @gmail.com.')
+                        return redirect('dashboard:kavach_demo')
+                    request.session['kavach_gmail_verified'] = True
                 return redirect(next_url)
 
             if student:
@@ -3879,11 +3884,18 @@ def data_mining_legacy_car_project_redirect(request):
 
 def kavach_demo(request):
     """Public KAVACH execution page linked from the security project listing."""
+    gmail_email = (request.session.get('google_oauth_email') or '').strip()
     return render(request, 'dashboard/kavach_demo.html', {
         'title': 'KAVACH: Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control',
         'local_standalone_url': 'http://127.0.0.1:8010/accounts/register/',
         'render_demo_path': '/projects/kavach/',
         'project_detail_url': reverse('dashboard:project_detail', args=['security', 'kavach-secure-file-sharing']),
+        'google_signin_enabled': google_signin_enabled(),
+        'kavach_gmail_verified': request.session.get('kavach_gmail_verified') is True,
+        'kavach_gmail_email': gmail_email,
+        'kavach_google_login_url': (
+            f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
+        ),
     })
 
 

@@ -70,6 +70,42 @@
         .button.secondary {
             background: #334155;
         }
+        .button.gmail {
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            color: #1f2937;
+            display: inline-flex;
+            gap: 10px;
+        }
+        .button.disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+        .google-mark {
+            align-items: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 50%;
+            color: #dc2626;
+            display: inline-flex;
+            font-weight: 800;
+            height: 24px;
+            justify-content: center;
+            width: 24px;
+        }
+        .notice {
+            border-radius: 6px;
+            margin-bottom: 16px;
+            padding: 12px 14px;
+        }
+        .notice.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .notice.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
         .steps {
             margin-top: 16px;
         }
@@ -98,6 +134,12 @@
     </header>
 
     <main class="wrap">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="notice {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
         <section class="grid">
             <article class="card">
                 <h2>Current Execution</h2>
@@ -125,13 +167,36 @@
             </article>
 
             <article class="card">
-                <h2>Render Link</h2>
-                <p>This page works on Render using the same route after deployment.</p>
-                <p><code>https://engineeringcollege.onrender.com{{ render_demo_path }}</code></p>
+                <h2>Gmail Registration</h2>
+                {% if kavach_gmail_verified %}
+                    <p><strong>Signed in:</strong> {{ kavach_gmail_email }}</p>
+                    <p>Your verified Gmail session is ready for the KAVACH execution flow.</p>
+                {% else %}
+                    <p>Sign in with any verified Gmail account to start the KAVACH registration flow on Render.</p>
+                {% endif %}
                 <div class="actions">
-                    <a class="button secondary" href="{{ render_demo_path }}">Open Render Demo Route</a>
+                    {% if google_signin_enabled %}
+                        <a class="button gmail" href="{{ kavach_google_login_url }}">
+                            <span class="google-mark">G</span>
+                            <span>Sign in with Gmail</span>
+                        </a>
+                    {% else %}
+                        <a class="button gmail disabled" href="#">
+                            <span class="google-mark">G</span>
+                            <span>Gmail Sign-in Not Configured</span>
+                        </a>
+                    {% endif %}
                 </div>
             </article>
+        </section>
+
+        <section class="card full">
+            <h2>Render Link</h2>
+            <p>This page works on Render using the same route after deployment.</p>
+            <p><code>https://engineeringcollege.onrender.com{{ render_demo_path }}</code></p>
+            <div class="actions">
+                <a class="button secondary" href="{{ render_demo_path }}">Open Render Demo Route</a>
+            </div>
         </section>
 
         <section class="card full">
