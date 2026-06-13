@@ -369,6 +369,16 @@ class DashboardTests(TestCase):
         self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
         self.assertNotContains(response, 'http://[127.0.0.1]')
 
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_demo_exposes_clean_local_standalone_url(self):
+        response = self.client.get(reverse('dashboard:kavach_demo'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Open Local KAVACH')
+        self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
+        self.assertContains(response, "window.open('http://127.0.0.1:8010/accounts/register/'")
+        self.assertNotContains(response, 'http://[127.0.0.1]')
+
     def test_project_url_normalizer_accepts_markdown_links(self):
         self.assertEqual(
             dashboard_views._normalize_project_url(

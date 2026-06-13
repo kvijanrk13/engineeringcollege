@@ -4005,8 +4005,10 @@ def kavach_demo(request):
             return redirect('dashboard:kavach_demo')
 
     recent_transfers = KavachSecureFile.objects.all()[:8]
+    local_standalone_url = 'http://127.0.0.1:8010/accounts/register/'
     return render(request, 'dashboard/kavach_demo.html', {
         'title': 'KAVACH Secure File Exchange',
+        'local_standalone_url': local_standalone_url,
         'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
         'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
         'uploaded_transfer': uploaded_transfer,
