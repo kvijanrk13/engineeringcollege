@@ -371,6 +371,12 @@ class DashboardTests(TestCase):
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_kavach_demo_exposes_clean_local_standalone_url(self):
+        session = self.client.session
+        session['google_oauth_email'] = 'sender.student@gmail.com'
+        session['google_oauth_name'] = 'Sender Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+
         response = self.client.get(reverse('dashboard:kavach_demo'))
 
         self.assertEqual(response.status_code, 200)
@@ -378,6 +384,17 @@ class DashboardTests(TestCase):
         self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
         self.assertContains(response, "window.open('http://127.0.0.1:8010/accounts/register/'")
         self.assertNotContains(response, 'http://[127.0.0.1]')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_demo_only_shows_registration_until_gmail_verified(self):
+        response = self.client.get(reverse('dashboard:kavach_demo'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'KAVACH Registration')
+        self.assertNotContains(response, 'Open Local KAVACH')
+        self.assertNotContains(response, 'Sender Upload')
+        self.assertNotContains(response, 'Receiver Download')
+        self.assertNotContains(response, 'Recent Encrypted Transfers')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_kavach_sender_must_sign_in_with_gmail(self):
