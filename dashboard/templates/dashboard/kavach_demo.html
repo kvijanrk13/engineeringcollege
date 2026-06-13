@@ -76,6 +76,7 @@
             margin-bottom: 6px;
         }
         input[type="text"],
+        input[type="email"],
         input[type="file"] {
             border: 1px solid #b8c5d6;
             border-radius: 6px;
@@ -222,6 +223,14 @@
                             <label>File</label>
                             <div class="token">{{ uploaded_transfer.filename }}</div>
                         </div>
+                        <div>
+                            <label>SHA-256 Hash</label>
+                            <div class="token">{{ uploaded_transfer.file_sha256_hash }}</div>
+                        </div>
+                        <div>
+                            <label>Digital Signature</label>
+                            <div class="token">{{ uploaded_transfer.signature_algorithm }}</div>
+                        </div>
                     </div>
                 </section>
             {% endif %}
@@ -254,22 +263,15 @@
                         </div>
                         <div>
                             <label for="receiver_email">Receiver Gmail</label>
-                            <select id="receiver_email" name="receiver_email" required {% if not receiver_accounts %}disabled{% endif %}>
-                                <option value="">Select receiver Gmail account</option>
-                                {% for account in receiver_accounts %}
-                                    <option value="{{ account.email }}">{{ account.name }} &lt;{{ account.email }}&gt;</option>
-                                {% endfor %}
-                            </select>
-                            {% if not receiver_accounts %}
-                                <p class="help-text">No receiver Gmail accounts are available yet. Add student, faculty, or user records with Gmail addresses.</p>
-                            {% endif %}
+                            <input type="email" id="receiver_email" name="receiver_email" required placeholder="receiver@gmail.com" autocomplete="off">
+                            <p class="help-text">Enter the receiver Gmail manually. Existing registered Gmail IDs are never listed here.</p>
                         </div>
                         <div>
                             <label for="secure_file">File To Encrypt</label>
-                            <input type="file" id="secure_file" name="secure_file" required {% if not receiver_accounts %}disabled{% endif %}>
+                            <input type="file" id="secure_file" name="secure_file" required>
                             <p class="help-text">AES-GCM is used because AES is fast for large files and GCM also verifies integrity.</p>
                         </div>
-                        <button type="submit" {% if not receiver_accounts %}disabled{% endif %}>Encrypt and Share File</button>
+                        <button type="submit">Encrypt and Share File</button>
                     </form>
                 </article>
 
@@ -298,9 +300,10 @@
                         <li>Sender opens <code>/projects/kavach/</code> and signs in with Gmail.</li>
                         <li>Sender selects the receiver Gmail account and uploads a file.</li>
                         <li>The server generates a random AES key and random nonce/IV.</li>
+                        <li>The server hashes the original file with SHA-256 and signs that hash with the sender private key.</li>
                         <li>The server encrypts the file with AES-GCM and stores only the encrypted <code>.aesgcm</code> file.</li>
                         <li>The page creates a transfer ID and access code for the receiver workflow.</li>
-                        <li>Receiver signs in with the selected Gmail account, enters the transfer ID and access code, and downloads the decrypted file.</li>
+                        <li>Receiver signs in with the selected Gmail account, enters the transfer ID and access code, and KAVACH verifies the sender signature before download.</li>
                     </ol>
                 </article>
 
@@ -311,7 +314,10 @@
                             <div class="transfer-item">
                                 <strong>{{ transfer.transfer_id }}</strong>
                                 <p>{{ transfer.original_filename }}{% if transfer.receiver_email %} for {{ transfer.receiver_email }}{% endif %}</p>
-                                <p class="help-text">{{ transfer.encryption_algorithm }} | {{ transfer.file_size }} bytes | downloads: {{ transfer.download_count }}</p>
+                                <p class="help-text">{{ transfer.encryption_algorithm }} | {{ transfer.signature_algorithm }} | {{ transfer.file_size }} bytes | downloads: {{ transfer.download_count }}</p>
+                                {% if transfer.file_sha256_hash %}
+                                    <p class="help-text">SHA-256: <code>{{ transfer.file_sha256_hash }}</code></p>
+                                {% endif %}
                             </div>
                         {% empty %}
                             <p>No encrypted transfers yet.</p>
@@ -326,6 +332,7 @@
                     <li>Sender and receiver use only <code>/projects/kavach/</code>.</li>
                     <li>Sender and receiver must use verified Gmail sign-in.</li>
                     <li>Sender selects the receiver Gmail account before encryption.</li>
+                    <li>Each upload stores a SHA-256 hash, uploader public key, and digital signature.</li>
                     <li>Original uploaded files are not stored.</li>
                     <li>Encrypted storage and decrypted download both work on localhost and Render through the same route.</li>
                 </ul>

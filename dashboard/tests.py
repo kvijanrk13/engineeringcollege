@@ -422,8 +422,8 @@ class DashboardTests(TestCase):
     def test_kavach_signed_sender_selects_receiver_gmail(self):
         Student.objects.create(
             ht_no='22ITKAV002',
-            student_name='Receiver Student',
-            email='receiver.student@gmail.com',
+            student_name='Hidden Existing Student',
+            email='ramadevinaidu16@gmail.com',
         )
         session = self.client.session
         session['google_oauth_email'] = 'sender.student@gmail.com'
@@ -433,7 +433,8 @@ class DashboardTests(TestCase):
 
         page_response = self.client.get(reverse('dashboard:kavach_demo'))
         self.assertContains(page_response, 'Sender Student &lt;sender.student@gmail.com&gt;')
-        self.assertContains(page_response, '<option value="receiver.student@gmail.com">')
+        self.assertContains(page_response, 'placeholder="receiver@gmail.com"')
+        self.assertNotContains(page_response, 'ramadevinaidu16@gmail.com')
 
         response = self.client.post(
             reverse('dashboard:kavach_demo'),
@@ -448,7 +449,54 @@ class DashboardTests(TestCase):
         secure_file = KavachSecureFile.objects.get()
         self.assertEqual(secure_file.sender_email, 'sender.student@gmail.com')
         self.assertEqual(secure_file.receiver_email, 'receiver.student@gmail.com')
+        self.assertEqual(secure_file.file_sha256_hash, hashlib.sha256(b'secret data').hexdigest())
+        self.assertEqual(secure_file.signature_algorithm, 'Ed25519-SHA256')
+        self.assertTrue(secure_file.digital_signature)
+        self.assertTrue(secure_file.uploader_public_key)
+        self.assertContains(response, hashlib.sha256(b'secret data').hexdigest())
+        self.assertContains(response, 'Ed25519-SHA256')
         self.assertContains(response, 'shared with receiver.student@gmail.com')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_page_only_shows_logged_in_user_transfers(self):
+        KavachSecureFile.objects.create(
+            transfer_id='VISIBLE123',
+            sender_email='sender.student@gmail.com',
+            receiver_email='receiver.student@gmail.com',
+            original_filename='mine.txt',
+            encrypted_file='kavach/encrypted/mine.aesgcm',
+            file_size=10,
+            content_type='text/plain',
+            aes_key='a' * 44,
+            aes_nonce='b' * 16,
+            access_code_hash='c' * 64,
+        )
+        KavachSecureFile.objects.create(
+            transfer_id='HIDDEN123',
+            sender_email='ramadevinaidu16@gmail.com',
+            receiver_email='vijay.kambhampati@gmail.com',
+            original_filename='theirs.txt',
+            encrypted_file='kavach/encrypted/theirs.aesgcm',
+            file_size=10,
+            content_type='text/plain',
+            aes_key='a' * 44,
+            aes_nonce='b' * 16,
+            access_code_hash='d' * 64,
+        )
+        session = self.client.session
+        session['google_oauth_email'] = 'receiver.student@gmail.com'
+        session['google_oauth_name'] = 'Receiver Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+
+        response = self.client.get(reverse('dashboard:kavach_demo'))
+
+        self.assertContains(response, 'VISIBLE123')
+        self.assertContains(response, 'mine.txt')
+        self.assertNotContains(response, 'HIDDEN123')
+        self.assertNotContains(response, 'theirs.txt')
+        self.assertNotContains(response, 'ramadevinaidu16@gmail.com')
+        self.assertNotContains(response, 'vijay.kambhampati@gmail.com')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_kavach_download_requires_selected_receiver_gmail(self):
@@ -505,6 +553,50 @@ class DashboardTests(TestCase):
 
         self.assertEqual(download_response.status_code, 200)
         self.assertEqual(download_response.content, b'secret data')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_download_blocks_invalid_digital_signature(self):
+        Student.objects.create(
+            ht_no='22ITKAV004',
+            student_name='Receiver Student',
+            email='receiver.student@gmail.com',
+        )
+        session = self.client.session
+        session['google_oauth_email'] = 'sender.student@gmail.com'
+        session['google_oauth_name'] = 'Sender Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+        upload_response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'sender_upload',
+                'receiver_email': 'receiver.student@gmail.com',
+                'secure_file': SimpleUploadedFile('secret.txt', b'secret data', content_type='text/plain'),
+            },
+        )
+        uploaded_transfer = upload_response.context['uploaded_transfer']
+        secure_file = KavachSecureFile.objects.get()
+        secure_file.digital_signature = 'tampered-signature'
+        secure_file.save(update_fields=['digital_signature'])
+
+        session = self.client.session
+        session['google_oauth_email'] = 'receiver.student@gmail.com'
+        session['google_oauth_name'] = 'Receiver Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+        response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'receiver_download',
+                'transfer_id': secure_file.transfer_id,
+                'access_code': uploaded_transfer['access_code'],
+            },
+            follow=True,
+        )
+
+        self.assertContains(response, 'Digital signature verification failed')
+        secure_file.refresh_from_db()
+        self.assertEqual(secure_file.download_count, 0)
 
     def test_project_url_normalizer_accepts_markdown_links(self):
         self.assertEqual(

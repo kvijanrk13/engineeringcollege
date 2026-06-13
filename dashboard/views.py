@@ -13,6 +13,7 @@ import re
 import hashlib
 import hmac
 import base64
+import binascii
 import secrets
 from pathlib import Path
 from datetime import datetime, date, timedelta
@@ -52,6 +53,8 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from pypdf import PdfWriter, PdfReader
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 # from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
 from PIL import Image as PILImage
@@ -3900,6 +3903,44 @@ def _kavach_access_code_hash(access_code):
     return hashlib.sha256(access_code.strip().encode('utf-8')).hexdigest()
 
 
+def _kavach_file_hash(file_bytes):
+    return hashlib.sha256(file_bytes).hexdigest()
+
+
+def _kavach_signing_private_key(sender_email):
+    seed = hmac.new(
+        settings.SECRET_KEY.encode('utf-8'),
+        f'kavach-signing:{_normalize_kavach_gmail(sender_email)}'.encode('utf-8'),
+        hashlib.sha256,
+    ).digest()
+    return ed25519.Ed25519PrivateKey.from_private_bytes(seed)
+
+
+def _kavach_sign_hash(file_hash, sender_email):
+    private_key = _kavach_signing_private_key(sender_email)
+    public_key = private_key.public_key()
+    signature = private_key.sign(file_hash.encode('ascii'))
+    public_key_bytes = public_key.public_bytes_raw()
+    return {
+        'digital_signature': base64.b64encode(signature).decode('ascii'),
+        'uploader_public_key': base64.b64encode(public_key_bytes).decode('ascii'),
+    }
+
+
+def _kavach_verify_signature(file_hash, digital_signature, uploader_public_key):
+    if not file_hash or not digital_signature or not uploader_public_key:
+        return False
+    try:
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(uploader_public_key.encode('ascii'))
+        )
+        signature = base64.b64decode(digital_signature.encode('ascii'))
+        public_key.verify(signature, file_hash.encode('ascii'))
+        return True
+    except (InvalidSignature, ValueError, TypeError, binascii.Error):
+        return False
+
+
 def _kavach_new_transfer_id():
     while True:
         transfer_id = secrets.token_urlsafe(9).replace('-', '').replace('_', '')[:12].upper()
@@ -3934,39 +3975,11 @@ def _normalize_kavach_gmail(value):
     return email if email.endswith('@gmail.com') else ''
 
 
-def _kavach_receiver_accounts(sender_email=''):
-    accounts = {}
-
-    def add_account(email, name=''):
-        email = _normalize_kavach_gmail(email)
-        if not email or email == sender_email:
-            return
-        accounts[email] = (name or email).strip()
-
-    for name, email in Student.objects.exclude(email__isnull=True).values_list('student_name', 'email'):
-        add_account(email, name)
-    for name, email in Faculty.objects.exclude(email__isnull=True).values_list('staff_name', 'email'):
-        add_account(email, name)
-    for first_name, last_name, email in get_user_model().objects.exclude(email='').values_list('first_name', 'last_name', 'email'):
-        add_account(email, f'{first_name} {last_name}'.strip())
-    for sender_name, sender_email_value, receiver_name, receiver_email_value in KavachSecureFile.objects.exclude(
-        receiver_email=''
-    ).values_list('sender_name', 'sender_email', 'receiver_name', 'receiver_email')[:200]:
-        add_account(sender_email_value, sender_name)
-        add_account(receiver_email_value, receiver_name)
-
-    return [
-        {'email': email, 'name': name}
-        for email, name in sorted(accounts.items(), key=lambda item: (item[1].lower(), item[0]))
-    ]
-
-
 def kavach_demo(request):
     """One public KAVACH execution page for sender upload and receiver download."""
     uploaded_transfer = None
     gmail_email = _normalize_kavach_gmail(request.session.get('google_oauth_email'))
     gmail_name = (request.session.get('google_oauth_name') or '').strip() or gmail_email
-    receiver_accounts = _kavach_receiver_accounts(gmail_email)
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -3975,9 +3988,11 @@ def kavach_demo(request):
                 messages.error(request, 'Please sign in with a verified Gmail account before sending a KAVACH file.')
                 return redirect('dashboard:kavach_demo')
             receiver_email = _normalize_kavach_gmail(request.POST.get('receiver_email'))
-            valid_receiver_emails = {account['email'] for account in receiver_accounts}
-            if not receiver_email or receiver_email not in valid_receiver_emails:
-                messages.error(request, 'Please select a valid receiver Gmail account.')
+            if not receiver_email:
+                messages.error(request, 'Please enter a valid receiver Gmail account.')
+                return redirect('dashboard:kavach_demo')
+            if receiver_email == gmail_email:
+                messages.error(request, 'Please enter a receiver Gmail account different from the sender Gmail.')
                 return redirect('dashboard:kavach_demo')
             uploaded_file = request.FILES.get('secure_file')
             if not uploaded_file:
@@ -3988,6 +4003,8 @@ def kavach_demo(request):
                 return redirect('dashboard:kavach_demo')
 
             file_bytes = uploaded_file.read()
+            file_hash = _kavach_file_hash(file_bytes)
+            signature_payload = _kavach_sign_hash(file_hash, gmail_email)
             encrypted_payload = _kavach_encrypt_file(file_bytes)
             transfer_id = _kavach_new_transfer_id()
             access_code = secrets.token_urlsafe(8)
@@ -3998,10 +4015,7 @@ def kavach_demo(request):
                 transfer_id=transfer_id,
                 sender_name=gmail_name,
                 sender_email=gmail_email,
-                receiver_name=next(
-                    (account['name'] for account in receiver_accounts if account['email'] == receiver_email),
-                    receiver_email,
-                ),
+                receiver_name=receiver_email,
                 receiver_email=receiver_email,
                 original_filename=original_filename,
                 file_size=uploaded_file.size,
@@ -4009,6 +4023,9 @@ def kavach_demo(request):
                 aes_key=encrypted_payload['aes_key'],
                 aes_nonce=encrypted_payload['aes_nonce'],
                 access_code_hash=_kavach_access_code_hash(access_code),
+                file_sha256_hash=file_hash,
+                uploader_public_key=signature_payload['uploader_public_key'],
+                digital_signature=signature_payload['digital_signature'],
             )
             secure_file.encrypted_file.save(
                 encrypted_name,
@@ -4021,8 +4038,10 @@ def kavach_demo(request):
                 'access_code': access_code,
                 'filename': original_filename,
                 'receiver_email': receiver_email,
+                'file_sha256_hash': file_hash,
+                'signature_algorithm': secure_file.signature_algorithm,
             }
-            messages.success(request, f'File encrypted with AES-GCM and shared with {receiver_email}.')
+            messages.success(request, f'File encrypted, signed by {gmail_email}, and shared with {receiver_email}.')
 
         elif action == 'receiver_download':
             if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
@@ -4046,6 +4065,19 @@ def kavach_demo(request):
             except Exception:
                 logger.exception('KAVACH decryption failed for transfer %s', transfer_id)
                 messages.error(request, 'Decryption failed. The encrypted file or key metadata may be invalid.')
+                return redirect('dashboard:kavach_demo')
+
+            decrypted_hash = _kavach_file_hash(decrypted_bytes)
+            signature_valid = _kavach_verify_signature(
+                decrypted_hash,
+                secure_file.digital_signature,
+                secure_file.uploader_public_key,
+            )
+            if not hmac.compare_digest(secure_file.file_sha256_hash, decrypted_hash) or not signature_valid:
+                messages.error(
+                    request,
+                    'Digital signature verification failed. The file identity or integrity could not be confirmed.',
+                )
                 return redirect('dashboard:kavach_demo')
 
             secure_file.download_count += 1
@@ -4079,7 +4111,6 @@ def kavach_demo(request):
         'kavach_google_login_url': (
             f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
         ),
-        'receiver_accounts': receiver_accounts,
         'local_standalone_url': local_standalone_url,
         'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
         'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
