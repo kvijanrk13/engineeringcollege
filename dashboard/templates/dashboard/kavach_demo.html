@@ -104,6 +104,21 @@
             font-size: 14px;
             margin: 6px 0 0;
         }
+        select {
+            border: 1px solid #b8c5d6;
+            border-radius: 6px;
+            font: inherit;
+            padding: 10px;
+            width: 100%;
+        }
+        .identity {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            color: #1e3a8a;
+            padding: 10px;
+            overflow-wrap: anywhere;
+        }
         .result-box {
             background: #ecfdf5;
             border: 1px solid #86efac;
@@ -156,7 +171,7 @@
 <body>
     <header class="header">
         <h1>{{ title }}</h1>
-        <p>Sender upload and receiver download both happen inside this single KAVACH route. Files are encrypted before storage and decrypted only when the receiver submits the correct transfer details on this page.</p>
+        <p>Sender upload and receiver download both happen inside this single KAVACH route. The sender signs in with Gmail, selects the receiver Gmail account, and files are decrypted only for that receiver account.</p>
     </header>
 
     <main class="wrap">
@@ -171,7 +186,7 @@
         {% if uploaded_transfer %}
             <section class="result-box">
                 <h2>Encrypted Transfer Created</h2>
-                <p>Give the receiver these values inside the KAVACH page workflow. No mail, messaging app, or social media step is used by this system.</p>
+                <p>Give the receiver these values inside the KAVACH page workflow after they sign in with <strong>{{ uploaded_transfer.receiver_email }}</strong>.</p>
                 <div class="result-grid">
                     <div>
                         <label>Transfer ID</label>
@@ -197,7 +212,19 @@
             <p><strong>Standalone KAVACH:</strong> <code>{{ local_standalone_url }}</code></p>
             <p><strong>Localhost:</strong> <code>{{ kavach_url }}</code></p>
             <p><strong>Render:</strong> <code>{{ render_url }}</code></p>
-            <p class="help-text">Use the same page for sender and receiver. The page does not require Gmail, Yahoo, WhatsApp, Facebook, Instagram, or any other external communication channel.</p>
+            <p class="help-text">Use the same page for sender and receiver. Sender and receiver access is tied to verified Gmail sign-in.</p>
+        </section>
+
+        <section class="panel full">
+            <h2>Gmail Access</h2>
+            {% if kavach_gmail_verified %}
+                <p class="identity"><strong>Signed in:</strong> {{ kavach_gmail_name }} &lt;{{ kavach_gmail_email }}&gt;</p>
+            {% elif google_signin_enabled %}
+                <p>Sign in with Gmail before sending or receiving KAVACH files.</p>
+                <a class="button-link" href="{{ kavach_google_login_url }}">Sign in with Gmail</a>
+            {% else %}
+                <p class="notice error">Google sign-in is not configured on this server.</p>
+            {% endif %}
         </section>
 
         <section class="grid full">
@@ -207,19 +234,27 @@
                     {% csrf_token %}
                     <input type="hidden" name="action" value="sender_upload">
                     <div>
-                        <label for="sender_name">Sender Name</label>
-                        <input type="text" id="sender_name" name="sender_name" maxlength="120" placeholder="Sender name">
+                        <label>Sender Gmail</label>
+                        <div class="identity">{{ kavach_gmail_email|default:"Sign in with Gmail first" }}</div>
                     </div>
                     <div>
-                        <label for="receiver_name">Receiver Name</label>
-                        <input type="text" id="receiver_name" name="receiver_name" maxlength="120" placeholder="Receiver name">
+                        <label for="receiver_email">Receiver Gmail</label>
+                        <select id="receiver_email" name="receiver_email" required {% if not kavach_gmail_verified or not receiver_accounts %}disabled{% endif %}>
+                            <option value="">Select receiver Gmail account</option>
+                            {% for account in receiver_accounts %}
+                                <option value="{{ account.email }}">{{ account.name }} &lt;{{ account.email }}&gt;</option>
+                            {% endfor %}
+                        </select>
+                        {% if kavach_gmail_verified and not receiver_accounts %}
+                            <p class="help-text">No receiver Gmail accounts are available yet. Add student, faculty, or user records with Gmail addresses.</p>
+                        {% endif %}
                     </div>
                     <div>
                         <label for="secure_file">File To Encrypt</label>
-                        <input type="file" id="secure_file" name="secure_file" required>
+                        <input type="file" id="secure_file" name="secure_file" required {% if not kavach_gmail_verified or not receiver_accounts %}disabled{% endif %}>
                         <p class="help-text">AES-GCM is used because AES is fast for large files and GCM also verifies integrity.</p>
                     </div>
-                    <button type="submit">Encrypt and Store File</button>
+                    <button type="submit" {% if not kavach_gmail_verified or not receiver_accounts %}disabled{% endif %}>Encrypt and Share File</button>
                 </form>
             </article>
 
@@ -236,7 +271,10 @@
                         <label for="access_code">Access Code</label>
                         <input type="text" id="access_code" name="access_code" required placeholder="Access code from KAVACH">
                     </div>
-                    <button type="submit">Decrypt and Download File</button>
+                    <button type="submit" {% if not kavach_gmail_verified %}disabled{% endif %}>Decrypt and Download File</button>
+                    {% if not kavach_gmail_verified %}
+                        <p class="help-text">Sign in with the receiver Gmail account before downloading.</p>
+                    {% endif %}
                 </form>
             </article>
         </section>
@@ -245,11 +283,12 @@
             <article class="panel">
                 <h2>Internal System Design</h2>
                 <ol class="steps">
-                    <li>Sender opens <code>/projects/kavach/</code> and uploads a file.</li>
+                    <li>Sender opens <code>/projects/kavach/</code> and signs in with Gmail.</li>
+                    <li>Sender selects the receiver Gmail account and uploads a file.</li>
                     <li>The server generates a random AES key and random nonce/IV.</li>
                     <li>The server encrypts the file with AES-GCM and stores only the encrypted <code>.aesgcm</code> file.</li>
                     <li>The page creates a transfer ID and access code for the receiver workflow.</li>
-                    <li>Receiver opens the same link, enters the transfer ID and access code, and downloads the decrypted file.</li>
+                    <li>Receiver signs in with the selected Gmail account, enters the transfer ID and access code, and downloads the decrypted file.</li>
                 </ol>
             </article>
 
@@ -259,7 +298,7 @@
                     {% for transfer in recent_transfers %}
                         <div class="transfer-item">
                             <strong>{{ transfer.transfer_id }}</strong>
-                            <p>{{ transfer.original_filename }}{% if transfer.receiver_name %} for {{ transfer.receiver_name }}{% endif %}</p>
+                            <p>{{ transfer.original_filename }}{% if transfer.receiver_email %} for {{ transfer.receiver_email }}{% endif %}</p>
                             <p class="help-text">{{ transfer.encryption_algorithm }} | {{ transfer.file_size }} bytes | downloads: {{ transfer.download_count }}</p>
                         </div>
                     {% empty %}
@@ -273,7 +312,8 @@
             <h2>Requirement Rules</h2>
             <ul>
                 <li>Sender and receiver use only <code>/projects/kavach/</code>.</li>
-                <li>No email or social media channel is used by this system.</li>
+                <li>Sender and receiver must use verified Gmail sign-in.</li>
+                <li>Sender selects the receiver Gmail account before encryption.</li>
                 <li>Original uploaded files are not stored.</li>
                 <li>Encrypted storage and decrypted download both work on localhost and Render through the same route.</li>
             </ul>

@@ -463,7 +463,9 @@ class ProjectDownloadPayment(models.Model):
 class KavachSecureFile(models.Model):
     transfer_id = models.CharField(max_length=24, unique=True, db_index=True)
     sender_name = models.CharField(max_length=120, blank=True)
+    sender_email = models.EmailField(blank=True, db_index=True)
     receiver_name = models.CharField(max_length=120, blank=True)
+    receiver_email = models.EmailField(blank=True, db_index=True)
     original_filename = models.CharField(max_length=255)
     encrypted_file = models.FileField(upload_to='kavach/encrypted/')
     file_size = models.PositiveIntegerField(default=0)

@@ -106,13 +106,16 @@ class ProjectDownloadPaymentAdmin(admin.ModelAdmin):
 @admin.register(KavachSecureFile)
 class KavachSecureFileAdmin(admin.ModelAdmin):
     list_display = (
-        'transfer_id', 'original_filename', 'sender_name', 'receiver_name',
+        'transfer_id', 'original_filename', 'sender_email', 'receiver_email',
         'encryption_algorithm', 'download_count', 'created_at',
     )
-    search_fields = ('transfer_id', 'original_filename', 'sender_name', 'receiver_name')
+    search_fields = (
+        'transfer_id', 'original_filename', 'sender_name', 'sender_email',
+        'receiver_name', 'receiver_email',
+    )
     list_filter = ('encryption_algorithm', 'created_at', 'last_downloaded_at')
     readonly_fields = (
         'transfer_id', 'original_filename', 'encrypted_file', 'file_size', 'content_type',
-        'aes_key', 'aes_nonce', 'access_code_hash', 'encryption_algorithm',
+        'sender_email', 'receiver_email', 'aes_key', 'aes_nonce', 'access_code_hash', 'encryption_algorithm',
         'download_count', 'created_at', 'last_downloaded_at',
     )

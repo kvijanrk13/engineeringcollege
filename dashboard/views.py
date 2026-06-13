@@ -3230,7 +3230,11 @@ def google_callback(request):
                 ):
                     next_url = '/car-price/maruti-prices/'
                 if next_url.startswith('/projects/kavach/'):
-                    messages.info(request, 'KAVACH sender and receiver actions are handled inside this page only.')
+                    if not email.endswith('@gmail.com'):
+                        messages.error(request, 'KAVACH accepts verified Gmail accounts ending with @gmail.com.')
+                        return redirect('dashboard:kavach_demo')
+                    request.session['kavach_gmail_verified'] = True
+                    messages.info(request, 'Your verified Gmail account is ready for KAVACH file sharing.')
                     return redirect('dashboard:kavach_demo')
                 return redirect(next_url)
 
@@ -3925,13 +3929,56 @@ def _kavach_decrypt_file(secure_file):
     return AESGCM(aes_key).decrypt(aes_nonce, ciphertext, None)
 
 
+def _normalize_kavach_gmail(value):
+    email = (value or '').strip().lower()
+    return email if email.endswith('@gmail.com') else ''
+
+
+def _kavach_receiver_accounts(sender_email=''):
+    accounts = {}
+
+    def add_account(email, name=''):
+        email = _normalize_kavach_gmail(email)
+        if not email or email == sender_email:
+            return
+        accounts[email] = (name or email).strip()
+
+    for name, email in Student.objects.exclude(email__isnull=True).values_list('student_name', 'email'):
+        add_account(email, name)
+    for name, email in Faculty.objects.exclude(email__isnull=True).values_list('staff_name', 'email'):
+        add_account(email, name)
+    for first_name, last_name, email in get_user_model().objects.exclude(email='').values_list('first_name', 'last_name', 'email'):
+        add_account(email, f'{first_name} {last_name}'.strip())
+    for sender_name, sender_email_value, receiver_name, receiver_email_value in KavachSecureFile.objects.exclude(
+        receiver_email=''
+    ).values_list('sender_name', 'sender_email', 'receiver_name', 'receiver_email')[:200]:
+        add_account(sender_email_value, sender_name)
+        add_account(receiver_email_value, receiver_name)
+
+    return [
+        {'email': email, 'name': name}
+        for email, name in sorted(accounts.items(), key=lambda item: (item[1].lower(), item[0]))
+    ]
+
+
 def kavach_demo(request):
     """One public KAVACH execution page for sender upload and receiver download."""
     uploaded_transfer = None
+    gmail_email = _normalize_kavach_gmail(request.session.get('google_oauth_email'))
+    gmail_name = (request.session.get('google_oauth_name') or '').strip() or gmail_email
+    receiver_accounts = _kavach_receiver_accounts(gmail_email)
 
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'sender_upload':
+            if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+                messages.error(request, 'Please sign in with a verified Gmail account before sending a KAVACH file.')
+                return redirect('dashboard:kavach_demo')
+            receiver_email = _normalize_kavach_gmail(request.POST.get('receiver_email'))
+            valid_receiver_emails = {account['email'] for account in receiver_accounts}
+            if not receiver_email or receiver_email not in valid_receiver_emails:
+                messages.error(request, 'Please select a valid receiver Gmail account.')
+                return redirect('dashboard:kavach_demo')
             uploaded_file = request.FILES.get('secure_file')
             if not uploaded_file:
                 messages.error(request, 'Please choose a file to encrypt and upload.')
@@ -3949,8 +3996,13 @@ def kavach_demo(request):
 
             secure_file = KavachSecureFile(
                 transfer_id=transfer_id,
-                sender_name=(request.POST.get('sender_name') or '').strip(),
-                receiver_name=(request.POST.get('receiver_name') or '').strip(),
+                sender_name=gmail_name,
+                sender_email=gmail_email,
+                receiver_name=next(
+                    (account['name'] for account in receiver_accounts if account['email'] == receiver_email),
+                    receiver_email,
+                ),
+                receiver_email=receiver_email,
                 original_filename=original_filename,
                 file_size=uploaded_file.size,
                 content_type=getattr(uploaded_file, 'content_type', '') or 'application/octet-stream',
@@ -3968,10 +4020,14 @@ def kavach_demo(request):
                 'transfer_id': transfer_id,
                 'access_code': access_code,
                 'filename': original_filename,
+                'receiver_email': receiver_email,
             }
-            messages.success(request, 'File encrypted with AES-GCM and stored inside this KAVACH page.')
+            messages.success(request, f'File encrypted with AES-GCM and shared with {receiver_email}.')
 
         elif action == 'receiver_download':
+            if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+                messages.error(request, 'Please sign in with the receiver Gmail account before downloading.')
+                return redirect('dashboard:kavach_demo')
             transfer_id = (request.POST.get('transfer_id') or '').strip().upper()
             access_code = (request.POST.get('access_code') or '').strip()
             secure_file = KavachSecureFile.objects.filter(transfer_id=transfer_id).first()
@@ -3980,6 +4036,9 @@ def kavach_demo(request):
                 _kavach_access_code_hash(access_code),
             ):
                 messages.error(request, 'Invalid transfer ID or access code.')
+                return redirect('dashboard:kavach_demo')
+            if secure_file.receiver_email and secure_file.receiver_email.lower() != gmail_email:
+                messages.error(request, 'This transfer is shared with a different receiver Gmail account.')
                 return redirect('dashboard:kavach_demo')
 
             try:
@@ -4004,10 +4063,23 @@ def kavach_demo(request):
             messages.error(request, 'Unknown KAVACH action.')
             return redirect('dashboard:kavach_demo')
 
-    recent_transfers = KavachSecureFile.objects.all()[:8]
+    if gmail_email:
+        recent_transfers = KavachSecureFile.objects.filter(
+            Q(sender_email=gmail_email) | Q(receiver_email=gmail_email)
+        )[:8]
+    else:
+        recent_transfers = KavachSecureFile.objects.none()
     local_standalone_url = 'http://127.0.0.1:8010/accounts/register/'
     return render(request, 'dashboard/kavach_demo.html', {
         'title': 'KAVACH Secure File Exchange',
+        'google_signin_enabled': google_signin_enabled(),
+        'kavach_gmail_verified': request.session.get('kavach_gmail_verified') is True,
+        'kavach_gmail_email': gmail_email,
+        'kavach_gmail_name': gmail_name,
+        'kavach_google_login_url': (
+            f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
+        ),
+        'receiver_accounts': receiver_accounts,
         'local_standalone_url': local_standalone_url,
         'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
         'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',

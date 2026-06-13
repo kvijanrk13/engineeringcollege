@@ -19,7 +19,7 @@ from django.urls import reverse
 
 from dashboard import views as dashboard_views
 from dashboard.models import (
-    Certificate, CloudinaryUpload, FDP, Faculty, ProjectDownloadPayment,
+    Certificate, CloudinaryUpload, FDP, Faculty, KavachSecureFile, ProjectDownloadPayment,
     ResearchPublication, Student,
 )
 from dashboard.pdf_generation import (
@@ -378,6 +378,116 @@ class DashboardTests(TestCase):
         self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
         self.assertContains(response, "window.open('http://127.0.0.1:8010/accounts/register/'")
         self.assertNotContains(response, 'http://[127.0.0.1]')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_sender_must_sign_in_with_gmail(self):
+        Student.objects.create(
+            ht_no='22ITKAV001',
+            student_name='Receiver Student',
+            email='receiver.student@gmail.com',
+        )
+
+        response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'sender_upload',
+                'receiver_email': 'receiver.student@gmail.com',
+                'secure_file': SimpleUploadedFile('secret.txt', b'secret data', content_type='text/plain'),
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Please sign in with a verified Gmail account')
+        self.assertEqual(KavachSecureFile.objects.count(), 0)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_signed_sender_selects_receiver_gmail(self):
+        Student.objects.create(
+            ht_no='22ITKAV002',
+            student_name='Receiver Student',
+            email='receiver.student@gmail.com',
+        )
+        session = self.client.session
+        session['google_oauth_email'] = 'sender.student@gmail.com'
+        session['google_oauth_name'] = 'Sender Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+
+        page_response = self.client.get(reverse('dashboard:kavach_demo'))
+        self.assertContains(page_response, 'Sender Student &lt;sender.student@gmail.com&gt;')
+        self.assertContains(page_response, '<option value="receiver.student@gmail.com">')
+
+        response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'sender_upload',
+                'receiver_email': 'receiver.student@gmail.com',
+                'secure_file': SimpleUploadedFile('secret.txt', b'secret data', content_type='text/plain'),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        secure_file = KavachSecureFile.objects.get()
+        self.assertEqual(secure_file.sender_email, 'sender.student@gmail.com')
+        self.assertEqual(secure_file.receiver_email, 'receiver.student@gmail.com')
+        self.assertContains(response, 'shared with receiver.student@gmail.com')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_download_requires_selected_receiver_gmail(self):
+        Student.objects.create(
+            ht_no='22ITKAV003',
+            student_name='Receiver Student',
+            email='receiver.student@gmail.com',
+        )
+        session = self.client.session
+        session['google_oauth_email'] = 'sender.student@gmail.com'
+        session['google_oauth_name'] = 'Sender Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+        upload_response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'sender_upload',
+                'receiver_email': 'receiver.student@gmail.com',
+                'secure_file': SimpleUploadedFile('secret.txt', b'secret data', content_type='text/plain'),
+            },
+        )
+        uploaded_transfer = upload_response.context['uploaded_transfer']
+        secure_file = KavachSecureFile.objects.get()
+
+        session = self.client.session
+        session['google_oauth_email'] = 'other.student@gmail.com'
+        session['google_oauth_name'] = 'Other Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+        denied_response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'receiver_download',
+                'transfer_id': secure_file.transfer_id,
+                'access_code': uploaded_transfer['access_code'],
+            },
+            follow=True,
+        )
+        self.assertContains(denied_response, 'different receiver Gmail account')
+
+        session = self.client.session
+        session['google_oauth_email'] = 'receiver.student@gmail.com'
+        session['google_oauth_name'] = 'Receiver Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+        download_response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'receiver_download',
+                'transfer_id': secure_file.transfer_id,
+                'access_code': uploaded_transfer['access_code'],
+            },
+        )
+
+        self.assertEqual(download_response.status_code, 200)
+        self.assertEqual(download_response.content, b'secret data')
 
     def test_project_url_normalizer_accepts_markdown_links(self):
         self.assertEqual(
