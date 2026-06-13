@@ -3785,6 +3785,15 @@ def _source_module_for(relative_path):
     return 'Supporting Code'
 
 
+def _normalize_project_url(value):
+    """Return a usable URL from project manifests, including accidental Markdown links."""
+    url = str(value or '').strip()
+    markdown_match = re.fullmatch(r'\[[^\]]+\]\(([^)]+)\)', url)
+    if markdown_match:
+        url = markdown_match.group(1).strip()
+    return url
+
+
 def _load_domain_projects(domain_slug):
     """Read and validate the projects owned by one domain folder."""
     manifest_path = PROJECT_DOMAIN_ROOT / domain_slug / 'projects.json'
@@ -3819,7 +3828,8 @@ def _load_domain_projects(domain_slug):
             'source_code_path': str(project.get('source_code_path') or '').strip(),
             'datasets_path': str(project.get('datasets_path') or '').strip(),
             'github_reference': str(project.get('github_reference') or '').strip(),
-            'demo_url': str(project.get('demo_url') or '').strip(),
+            'demo_url': _normalize_project_url(project.get('demo_url')),
+            'local_demo_url': _normalize_project_url(project.get('local_demo_url')),
             'zip_enabled': zip_enabled and amount_paise > 0,
             'payment_enabled': (
                 zip_enabled

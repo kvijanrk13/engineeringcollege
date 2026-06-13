@@ -9,6 +9,7 @@
       "datasets_path": "project_domains/security/KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control/datasets/",
       "github_reference": "",
       "demo_url": "/projects/kavach/",
+      "local_demo_url": "http://127.0.0.1:8010/accounts/register/",
       "zip": {
         "enabled": true,
         "amount_paise": 100000,

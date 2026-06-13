@@ -356,6 +356,28 @@ class DashboardTests(TestCase):
         self.assertEqual(root_response.status_code, 404)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_project_exposes_clean_local_demo_url(self):
+        response = self.client.get(
+            reverse(
+                'dashboard:project_detail',
+                args=['security', 'kavach-secure-file-sharing'],
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Open Local KAVACH')
+        self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
+        self.assertNotContains(response, 'http://[127.0.0.1]')
+
+    def test_project_url_normalizer_accepts_markdown_links(self):
+        self.assertEqual(
+            dashboard_views._normalize_project_url(
+                '[127.0.0.1](http://127.0.0.1:8010/accounts/register/)'
+            ),
+            'http://127.0.0.1:8010/accounts/register/',
+        )
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
     def test_students_data_route_renders_directory_actions(self):
         user = get_user_model().objects.create_user(
             username='student-list-admin',
