@@ -6,9 +6,9 @@
 <section class="list-header">
     <div>
         <h1>My Files</h1>
-        <p class="helper-text">Uploaded Notepad text files are listed here. Sharing is not enabled in Step 3.</p>
+        <p class="helper-text">Uploaded Notepad files are stored only as AES-GCM encrypted files. Sharing is not enabled yet.</p>
     </div>
-    <a class="button-link" href="{% url 'files:upload' %}">Upload Text File</a>
+    <a class="button-link" href="{% url 'files:upload' %}">Sender Upload</a>
 </section>
 
 <section class="file-list">
@@ -17,17 +17,15 @@
             <div>
                 <h2>{{ file.original_name }}</h2>
                 <p>{{ file.file_size }} bytes uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p>Stored as encrypted file: {{ file.uploaded_file.name }}</p>
             </div>
-            <details>
-                <summary>Preview text</summary>
-                <pre class="preview-box">{{ file.preview_text }}</pre>
-            </details>
+            <p class="helper-text">Encryption: {{ file.encryption_algorithm }} with random AES key and random nonce/IV.</p>
         </article>
     {% empty %}
         <article class="profile-card">
             <h2>No files uploaded yet</h2>
-            <p>Upload a Notepad text file to complete Step 3.</p>
-            <a class="button-link" href="{% url 'files:upload' %}">Upload Text File</a>
+            <p>Upload a Notepad text file from the sender side to complete Step 4.</p>
+            <a class="button-link" href="{% url 'files:upload' %}">Sender Upload</a>
         </article>
     {% endfor %}
 </section>

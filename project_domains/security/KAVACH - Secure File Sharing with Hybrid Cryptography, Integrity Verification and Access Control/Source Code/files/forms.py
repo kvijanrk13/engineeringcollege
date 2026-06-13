@@ -10,10 +10,10 @@ class PlainTextFileUploadForm(forms.ModelForm):
         model = PlainTextFile
         fields = ("uploaded_file",)
         labels = {
-            "uploaded_file": "Select Notepad text file",
+            "uploaded_file": "Select file to encrypt",
         }
         help_texts = {
-            "uploaded_file": "Only .txt files are accepted in Step 3.",
+            "uploaded_file": "Only .txt files are accepted. AES is used because it is fast for large files.",
         }
 
     def clean_uploaded_file(self):

@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.files.base import ContentFile
 from django.shortcuts import redirect, render
 
+from .crypto import encrypt_file_bytes
 from .forms import PlainTextFileUploadForm
 from .models import PlainTextFile
 
@@ -18,18 +20,25 @@ def upload_file_view(request):
         form = PlainTextFileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             uploaded_file = form.cleaned_data["uploaded_file"]
-            preview_bytes = uploaded_file.read(2000)
-            uploaded_file.seek(0)
-            preview_text = preview_bytes.decode("utf-8", errors="replace")
+            file_bytes = uploaded_file.read()
+            encrypted_payload = encrypt_file_bytes(file_bytes)
 
-            plain_text_file = form.save(commit=False)
-            plain_text_file.owner = request.user
-            plain_text_file.original_name = uploaded_file.name
-            plain_text_file.file_size = uploaded_file.size
-            plain_text_file.preview_text = preview_text
+            encrypted_name = f"{uploaded_file.name}.aesgcm"
+            plain_text_file = PlainTextFile(
+                owner=request.user,
+                original_name=uploaded_file.name,
+                file_size=uploaded_file.size,
+                aes_key=encrypted_payload.aes_key,
+                aes_nonce=encrypted_payload.nonce,
+            )
+            plain_text_file.uploaded_file.save(
+                encrypted_name,
+                ContentFile(encrypted_payload.ciphertext),
+                save=False,
+            )
             plain_text_file.save()
 
-            messages.success(request, "Text file uploaded successfully and prepared for encryption.")
+            messages.success(request, "Text file encrypted with AES-GCM and uploaded successfully.")
             return redirect("files:my_files")
     else:
         form = PlainTextFileUploadForm()

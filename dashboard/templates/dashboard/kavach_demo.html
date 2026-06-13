@@ -153,6 +153,7 @@
                     <li>Profile page added</li>
                     <li>RSA key pair generated during registration</li>
                     <li>Notepad text file upload added</li>
+                    <li>AES-GCM encryption added during sender upload</li>
                     <li>My Files page added</li>
                 </ul>
             </article>
@@ -207,8 +208,9 @@
                 <li>For local execution, start the standalone KAVACH server from its <code>Source Code</code> folder.</li>
                 <li>Open the local registration page and create a user account with password or verified Gmail sign-in.</li>
                 <li>After registration, the profile page confirms that the RSA public/private key pair was generated.</li>
-                <li>Open <strong>Upload Text File</strong> and select a Notepad <code>.txt</code> file.</li>
-                <li>Open <strong>My Files</strong> to see the uploaded text file and preview content.</li>
+                <li>Open <strong>Sender File Upload</strong> and select a Notepad <code>.txt</code> file.</li>
+                <li>Click <strong>Upload and Encrypt File</strong>. A random AES key and random nonce/IV are generated, and AES-GCM encrypts the file before storage.</li>
+                <li>Open <strong>My Files</strong> to confirm only the encrypted <code>.aesgcm</code> file is stored.</li>
                 <li>The public key can be shared with others. The private key is encrypted with the user's password.</li>
             </ol>
             <div class="actions">

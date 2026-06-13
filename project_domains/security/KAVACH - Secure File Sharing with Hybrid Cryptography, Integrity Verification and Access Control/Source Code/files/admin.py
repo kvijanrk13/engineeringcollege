@@ -4,6 +4,6 @@ from .models import PlainTextFile
 
 @admin.register(PlainTextFile)
 class PlainTextFileAdmin(admin.ModelAdmin):
-    list_display = ("original_name", "owner", "file_size", "uploaded_at")
+    list_display = ("original_name", "owner", "file_size", "encryption_algorithm", "uploaded_at")
     search_fields = ("original_name", "owner__username")
-    list_filter = ("uploaded_at",)
+    list_filter = ("encryption_algorithm", "uploaded_at")
