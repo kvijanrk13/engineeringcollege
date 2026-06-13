@@ -8,13 +8,21 @@ from .models import PlainTextFile
 class PlainTextFileUploadForm(forms.ModelForm):
     class Meta:
         model = PlainTextFile
-        fields = ("uploaded_file",)
+        fields = ("receiver_email", "uploaded_file")
         labels = {
+            "receiver_email": "Receiver Gmail ID",
             "uploaded_file": "Select file to encrypt",
         }
         help_texts = {
+            "receiver_email": "Enter the receiver Gmail account. Only this signed-in Gmail account can view and decrypt the file.",
             "uploaded_file": "Only .txt files are accepted. AES is used because it is fast for large files.",
         }
+
+    def clean_receiver_email(self):
+        receiver_email = (self.cleaned_data["receiver_email"] or "").strip().lower()
+        if not receiver_email.endswith("@gmail.com"):
+            raise forms.ValidationError("Please enter a valid Gmail address for the receiver.")
+        return receiver_email
 
     def clean_uploaded_file(self):
         uploaded_file = self.cleaned_data["uploaded_file"]

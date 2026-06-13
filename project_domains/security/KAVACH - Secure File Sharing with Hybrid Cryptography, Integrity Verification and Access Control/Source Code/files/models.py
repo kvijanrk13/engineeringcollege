@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 class PlainTextFile(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="plain_text_files")
+    receiver_email = models.EmailField(blank=True, db_index=True)
     original_name = models.CharField(max_length=255)
     uploaded_file = models.FileField(upload_to="encrypted_files/")
     file_size = models.PositiveIntegerField(default=0)

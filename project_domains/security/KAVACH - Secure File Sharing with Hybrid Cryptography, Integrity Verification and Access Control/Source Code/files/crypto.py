@@ -23,3 +23,9 @@ def encrypt_file_bytes(file_bytes):
         aes_key=base64.b64encode(aes_key).decode("ascii"),
         nonce=base64.b64encode(nonce).decode("ascii"),
     )
+
+
+def decrypt_file_bytes(ciphertext, aes_key, nonce):
+    decoded_key = base64.b64decode(aes_key.encode("ascii"))
+    decoded_nonce = base64.b64decode(nonce.encode("ascii"))
+    return AESGCM(decoded_key).decrypt(decoded_nonce, ciphertext, None)

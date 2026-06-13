@@ -8,13 +8,38 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.core import signing
 from django.urls import reverse
 from django.shortcuts import redirect, render
 
 from crypto_engine.key_manager import generate_oauth_user_key_pair, generate_user_key_pair
+from files.crypto import decrypt_file_bytes, encrypt_file_bytes
+from files.forms import PlainTextFileUploadForm
+from files.models import PlainTextFile
 from .forms import RegisterForm
 from .models import UserKey
+
+
+def _profile_received_files_with_text(user):
+    received_items = []
+    for shared_file in PlainTextFile.objects.filter(receiver_email=(user.email or "").lower()):
+        decrypted_text = ""
+        try:
+            shared_file.uploaded_file.open("rb")
+            try:
+                decrypted_bytes = decrypt_file_bytes(
+                    shared_file.uploaded_file.read(),
+                    shared_file.aes_key,
+                    shared_file.aes_nonce,
+                )
+            finally:
+                shared_file.uploaded_file.close()
+            decrypted_text = decrypted_bytes.decode("utf-8", errors="replace")
+        except Exception:
+            decrypted_text = "Unable to decrypt this file for preview."
+        received_items.append({"file": shared_file, "decrypted_text": decrypted_text})
+    return received_items
 
 
 def _google_signin_enabled():
@@ -195,4 +220,42 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     key_pair = getattr(request.user, "key_pair", None)
-    return render(request, "accounts/profile.html", {"key_pair": key_pair})
+    if request.method == "POST":
+        upload_form = PlainTextFileUploadForm(request.POST, request.FILES)
+        if upload_form.is_valid():
+            uploaded_file = upload_form.cleaned_data["uploaded_file"]
+            encrypted_payload = encrypt_file_bytes(uploaded_file.read())
+            plain_text_file = PlainTextFile(
+                owner=request.user,
+                receiver_email=upload_form.cleaned_data["receiver_email"],
+                original_name=uploaded_file.name,
+                file_size=uploaded_file.size,
+                aes_key=encrypted_payload.aes_key,
+                aes_nonce=encrypted_payload.nonce,
+            )
+            plain_text_file.uploaded_file.save(
+                f"{uploaded_file.name}.aesgcm",
+                ContentFile(encrypted_payload.ciphertext),
+                save=False,
+            )
+            plain_text_file.save()
+            messages.success(
+                request,
+                f"Text file encrypted and shared with {plain_text_file.receiver_email}.",
+            )
+            return redirect("accounts:profile")
+    else:
+        upload_form = PlainTextFileUploadForm()
+
+    sent_files = PlainTextFile.objects.filter(owner=request.user)
+    received_files = _profile_received_files_with_text(request.user)
+    return render(
+        request,
+        "accounts/profile.html",
+        {
+            "key_pair": key_pair,
+            "upload_form": upload_form,
+            "sent_files": sent_files,
+            "received_files": received_files,
+        },
+    )

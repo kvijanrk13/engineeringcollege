@@ -33,5 +33,25 @@
 
         {% block content %}{% endblock %}
     </main>
+    <script>
+        document.querySelectorAll('.kavach-upload-form').forEach((form) => {
+            const emailInput = form.querySelector('input[type="email"]');
+            const fileInput = form.querySelector('input[type="file"]');
+            const fileHint = form.querySelector('[data-file-hint]');
+
+            if (emailInput) {
+                emailInput.addEventListener('blur', () => {
+                    emailInput.value = emailInput.value.trim().toLowerCase();
+                });
+            }
+
+            if (fileInput && fileHint) {
+                fileInput.addEventListener('change', () => {
+                    const file = fileInput.files && fileInput.files[0];
+                    fileHint.textContent = file ? `${file.name} selected` : 'No text file selected';
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -6,26 +6,56 @@
 <section class="list-header">
     <div>
         <h1>My Files</h1>
-        <p class="helper-text">Uploaded Notepad files are stored only as AES-GCM encrypted files. Sharing is not enabled yet.</p>
+        <p class="helper-text">Sent and received Notepad files are stored only as AES-GCM encrypted files.</p>
     </div>
     <a class="button-link" href="{% url 'files:upload' %}">Sender Upload</a>
 </section>
 
 <section class="file-list">
-    {% for file in files %}
+    <h2>Files Sent By You</h2>
+    {% for file in sent_files %}
         <article class="file-card">
             <div>
                 <h2>{{ file.original_name }}</h2>
-                <p>{{ file.file_size }} bytes uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <div class="file-meta">
+                    <span class="pill">To {{ file.receiver_email }}</span>
+                    <span class="pill">{{ file.file_size }} bytes</span>
+                    <span class="pill">{{ file.encryption_algorithm }}</span>
+                </div>
+                <p>Uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
                 <p>Stored as encrypted file: {{ file.uploaded_file.name }}</p>
             </div>
-            <p class="helper-text">Encryption: {{ file.encryption_algorithm }} with random AES key and random nonce/IV.</p>
+            <p class="helper-text">Random AES key and nonce/IV generated for this transfer.</p>
         </article>
     {% empty %}
         <article class="profile-card">
-            <h2>No files uploaded yet</h2>
-            <p>Upload a Notepad text file from the sender side to complete Step 4.</p>
+            <h2>No files sent yet</h2>
+            <p>Upload a Notepad text file from the sender side.</p>
             <a class="button-link" href="{% url 'files:upload' %}">Sender Upload</a>
+        </article>
+    {% endfor %}
+</section>
+
+<section class="file-list">
+    <h2>Files Received For You</h2>
+    {% for file in received_files %}
+        <article class="file-card">
+            <div>
+                <h2>{{ file.original_name }}</h2>
+                <div class="file-meta">
+                    <span class="pill">From {{ file.owner.email|default:file.owner.username }}</span>
+                    <span class="pill">{{ file.file_size }} bytes</span>
+                    <span class="pill">{{ file.encryption_algorithm }}</span>
+                </div>
+                <p>Received on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p>Stored as encrypted file: {{ file.uploaded_file.name }}</p>
+            </div>
+            <a class="button-link" href="{% url 'files:download' file.id %}">Decrypt and Download</a>
+        </article>
+    {% empty %}
+        <article class="profile-card">
+            <h2>No files received yet</h2>
+            <p>Files shared to your Gmail account will appear here.</p>
         </article>
     {% endfor %}
 </section>

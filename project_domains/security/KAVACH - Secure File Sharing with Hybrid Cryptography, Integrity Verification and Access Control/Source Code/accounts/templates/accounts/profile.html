@@ -23,12 +23,65 @@
     </div>
 
     <div class="profile-card full-width">
-        <h2>Step 3 File Upload</h2>
-        <p>Upload Notepad text files now. Encryption will be added in the next step.</p>
-        <div class="actions">
-            <a class="button-link" href="{% url 'files:upload' %}">Upload Text File</a>
-            <a class="button-link secondary" href="{% url 'files:my_files' %}">View My Files</a>
+        <div class="profile-section-title">
+            <h2>Sender Upload and Receiver Selection</h2>
+            <span class="pill">AES-GCM</span>
         </div>
+        <p>Enter the receiver Gmail ID, select a Notepad text file, and KAVACH stores only the encrypted AES-GCM file.</p>
+        <form method="post" enctype="multipart/form-data" class="form-card kavach-upload-form">
+            {% csrf_token %}
+            <div>
+                {{ upload_form.receiver_email.label_tag }}
+                {{ upload_form.receiver_email }}
+                <p class="helper-text">{{ upload_form.receiver_email.help_text }}</p>
+                {{ upload_form.receiver_email.errors }}
+            </div>
+            <div class="drop-zone">
+                {{ upload_form.uploaded_file.label_tag }}
+                {{ upload_form.uploaded_file }}
+                <p class="helper-text">{{ upload_form.uploaded_file.help_text }}</p>
+                <p class="file-hint" data-file-hint>No text file selected</p>
+                {{ upload_form.uploaded_file.errors }}
+            </div>
+            <button type="submit">Encrypt and Send File</button>
+        </form>
+    </div>
+
+    <div class="profile-card full-width">
+        <h2>Files Sent By You</h2>
+        {% for file in sent_files %}
+            <article class="file-card">
+                <h3>{{ file.original_name }}</h3>
+                <div class="file-meta">
+                    <span class="pill">To {{ file.receiver_email }}</span>
+                    <span class="pill">{{ file.file_size }} bytes</span>
+                    <span class="pill">{{ file.encryption_algorithm }}</span>
+                </div>
+                <p>Uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p class="helper-text">Stored as encrypted file: {{ file.uploaded_file.name }}</p>
+            </article>
+        {% empty %}
+            <p class="helper-text">No files sent yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="profile-card full-width">
+        <h2>Files Received For You</h2>
+        {% for item in received_files %}
+            <article class="file-card">
+                <h3>{{ item.file.original_name }}</h3>
+                <div class="file-meta">
+                    <span class="pill">From {{ item.file.owner.email|default:item.file.owner.username }}</span>
+                    <span class="pill">{{ item.file.file_size }} bytes</span>
+                    <span class="pill">{{ item.file.encryption_algorithm }}</span>
+                </div>
+                <p>Received on {{ item.file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <pre class="key-box">{{ item.decrypted_text }}</pre>
+                <a class="button-link" href="{% url 'files:download' item.file.id %}">Decrypt and Download</a>
+            </article>
+        {% empty %}
+            <p class="helper-text">No files have been shared with this Gmail account yet.</p>
+        {% endfor %}
     </div>
 
     {% if key_pair %}

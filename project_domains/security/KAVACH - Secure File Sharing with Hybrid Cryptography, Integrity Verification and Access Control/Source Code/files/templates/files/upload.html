@@ -7,10 +7,22 @@
     <h1>Sender File Upload</h1>
     <p class="helper-text">Step 4 encrypts the Notepad file with AES-GCM before storage. The original file is not saved.</p>
 
-    <form method="post" enctype="multipart/form-data" class="form-card">
+    <form method="post" enctype="multipart/form-data" class="form-card kavach-upload-form">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Upload and Encrypt File</button>
+        <div>
+            {{ form.receiver_email.label_tag }}
+            {{ form.receiver_email }}
+            <p class="helper-text">{{ form.receiver_email.help_text }}</p>
+            {{ form.receiver_email.errors }}
+        </div>
+        <div class="drop-zone">
+            {{ form.uploaded_file.label_tag }}
+            {{ form.uploaded_file }}
+            <p class="helper-text">{{ form.uploaded_file.help_text }}</p>
+            <p class="file-hint" data-file-hint>No text file selected</p>
+            {{ form.uploaded_file.errors }}
+        </div>
+        <button type="submit">Encrypt and Send File</button>
     </form>
 
     <p class="small-link"><a href="{% url 'files:my_files' %}">View My Files</a></p>
