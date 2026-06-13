@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.core.mail import EmailMessage
 from django.utils import timezone
-from .models import ProjectDownloadPayment, Student
+from .models import KavachSecureFile, ProjectDownloadPayment, Student
 
 
 @admin.register(Student)
@@ -101,3 +101,18 @@ class ProjectDownloadPaymentAdmin(admin.ModelAdmin):
             payment.save(update_fields=['delivered_at', 'updated_at'])
             sent += 1
         self.message_user(request, f'{sent} Drive link email(s) sent. {skipped} skipped.')
+
+
+@admin.register(KavachSecureFile)
+class KavachSecureFileAdmin(admin.ModelAdmin):
+    list_display = (
+        'transfer_id', 'original_filename', 'sender_name', 'receiver_name',
+        'encryption_algorithm', 'download_count', 'created_at',
+    )
+    search_fields = ('transfer_id', 'original_filename', 'sender_name', 'receiver_name')
+    list_filter = ('encryption_algorithm', 'created_at', 'last_downloaded_at')
+    readonly_fields = (
+        'transfer_id', 'original_filename', 'encrypted_file', 'file_size', 'content_type',
+        'aes_key', 'aes_nonce', 'access_code_hash', 'encryption_algorithm',
+        'download_count', 'created_at', 'last_downloaded_at',
+    )

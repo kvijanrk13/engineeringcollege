@@ -13,6 +13,7 @@ import re
 import hashlib
 import hmac
 import base64
+import secrets
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
@@ -51,6 +52,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from pypdf import PdfWriter, PdfReader
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 # from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
 from PIL import Image as PILImage
 # Additional imports for PDF to image conversion
@@ -65,7 +67,7 @@ from .models import (
     Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
     ResearchPublication, StudentResearchPublication, FDP, BTechProject,
-    ProjectDownloadPayment,
+    KavachSecureFile, ProjectDownloadPayment,
 )
 from .forms import (
     StudentForm, CertificateForm,
@@ -3228,10 +3230,8 @@ def google_callback(request):
                 ):
                     next_url = '/car-price/maruti-prices/'
                 if next_url.startswith('/projects/kavach/'):
-                    if not email.endswith('@gmail.com'):
-                        messages.error(request, 'KAVACH accepts verified Gmail accounts ending with @gmail.com.')
-                        return redirect('dashboard:kavach_demo')
-                    request.session['kavach_gmail_verified'] = True
+                    messages.info(request, 'KAVACH sender and receiver actions are handled inside this page only.')
+                    return redirect('dashboard:kavach_demo')
                 return redirect(next_url)
 
             if student:
@@ -3882,20 +3882,126 @@ def data_mining_legacy_car_project_redirect(request):
     )
 
 
+def _kavach_access_code_hash(access_code):
+    return hashlib.sha256(access_code.strip().encode('utf-8')).hexdigest()
+
+
+def _kavach_new_transfer_id():
+    while True:
+        transfer_id = secrets.token_urlsafe(9).replace('-', '').replace('_', '')[:12].upper()
+        if not KavachSecureFile.objects.filter(transfer_id=transfer_id).exists():
+            return transfer_id
+
+
+def _kavach_encrypt_file(file_bytes):
+    aes_key = AESGCM.generate_key(bit_length=256)
+    aes_nonce = os.urandom(12)
+    ciphertext = AESGCM(aes_key).encrypt(aes_nonce, file_bytes, None)
+    return {
+        'ciphertext': ciphertext,
+        'aes_key': base64.b64encode(aes_key).decode('ascii'),
+        'aes_nonce': base64.b64encode(aes_nonce).decode('ascii'),
+    }
+
+
+def _kavach_decrypt_file(secure_file):
+    aes_key = base64.b64decode(secure_file.aes_key.encode('ascii'))
+    aes_nonce = base64.b64decode(secure_file.aes_nonce.encode('ascii'))
+    secure_file.encrypted_file.open('rb')
+    try:
+        ciphertext = secure_file.encrypted_file.read()
+    finally:
+        secure_file.encrypted_file.close()
+    return AESGCM(aes_key).decrypt(aes_nonce, ciphertext, None)
+
+
 def kavach_demo(request):
-    """Public KAVACH execution page linked from the security project listing."""
-    gmail_email = (request.session.get('google_oauth_email') or '').strip()
+    """One public KAVACH execution page for sender upload and receiver download."""
+    uploaded_transfer = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'sender_upload':
+            uploaded_file = request.FILES.get('secure_file')
+            if not uploaded_file:
+                messages.error(request, 'Please choose a file to encrypt and upload.')
+                return redirect('dashboard:kavach_demo')
+            if uploaded_file.size > 5 * 1024 * 1024:
+                messages.error(request, 'Please upload a file smaller than 5 MB for this demo.')
+                return redirect('dashboard:kavach_demo')
+
+            file_bytes = uploaded_file.read()
+            encrypted_payload = _kavach_encrypt_file(file_bytes)
+            transfer_id = _kavach_new_transfer_id()
+            access_code = secrets.token_urlsafe(8)
+            original_filename = os.path.basename(uploaded_file.name or 'kavach-file.bin')
+            encrypted_name = f"{transfer_id}_{original_filename}.aesgcm"
+
+            secure_file = KavachSecureFile(
+                transfer_id=transfer_id,
+                sender_name=(request.POST.get('sender_name') or '').strip(),
+                receiver_name=(request.POST.get('receiver_name') or '').strip(),
+                original_filename=original_filename,
+                file_size=uploaded_file.size,
+                content_type=getattr(uploaded_file, 'content_type', '') or 'application/octet-stream',
+                aes_key=encrypted_payload['aes_key'],
+                aes_nonce=encrypted_payload['aes_nonce'],
+                access_code_hash=_kavach_access_code_hash(access_code),
+            )
+            secure_file.encrypted_file.save(
+                encrypted_name,
+                ContentFile(encrypted_payload['ciphertext']),
+                save=False,
+            )
+            secure_file.save()
+            uploaded_transfer = {
+                'transfer_id': transfer_id,
+                'access_code': access_code,
+                'filename': original_filename,
+            }
+            messages.success(request, 'File encrypted with AES-GCM and stored inside this KAVACH page.')
+
+        elif action == 'receiver_download':
+            transfer_id = (request.POST.get('transfer_id') or '').strip().upper()
+            access_code = (request.POST.get('access_code') or '').strip()
+            secure_file = KavachSecureFile.objects.filter(transfer_id=transfer_id).first()
+            if not secure_file or not hmac.compare_digest(
+                secure_file.access_code_hash,
+                _kavach_access_code_hash(access_code),
+            ):
+                messages.error(request, 'Invalid transfer ID or access code.')
+                return redirect('dashboard:kavach_demo')
+
+            try:
+                decrypted_bytes = _kavach_decrypt_file(secure_file)
+            except Exception:
+                logger.exception('KAVACH decryption failed for transfer %s', transfer_id)
+                messages.error(request, 'Decryption failed. The encrypted file or key metadata may be invalid.')
+                return redirect('dashboard:kavach_demo')
+
+            secure_file.download_count += 1
+            secure_file.last_downloaded_at = timezone.now()
+            secure_file.save(update_fields=['download_count', 'last_downloaded_at'])
+
+            response = HttpResponse(
+                decrypted_bytes,
+                content_type=secure_file.content_type or 'application/octet-stream',
+            )
+            response['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(secure_file.original_filename)}"
+            return response
+
+        else:
+            messages.error(request, 'Unknown KAVACH action.')
+            return redirect('dashboard:kavach_demo')
+
+    recent_transfers = KavachSecureFile.objects.all()[:8]
     return render(request, 'dashboard/kavach_demo.html', {
-        'title': 'KAVACH: Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control',
-        'local_standalone_url': 'http://127.0.0.1:8010/accounts/register/',
-        'render_demo_path': '/projects/kavach/',
+        'title': 'KAVACH Secure File Exchange',
+        'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
+        'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
+        'uploaded_transfer': uploaded_transfer,
+        'recent_transfers': recent_transfers,
         'project_detail_url': reverse('dashboard:project_detail', args=['security', 'kavach-secure-file-sharing']),
-        'google_signin_enabled': google_signin_enabled(),
-        'kavach_gmail_verified': request.session.get('kavach_gmail_verified') is True,
-        'kavach_gmail_email': gmail_email,
-        'kavach_google_login_url': (
-            f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
-        ),
     })
 
 

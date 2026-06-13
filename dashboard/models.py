@@ -460,6 +460,29 @@ class ProjectDownloadPayment(models.Model):
         ordering = ['-created_at']
 
 
+class KavachSecureFile(models.Model):
+    transfer_id = models.CharField(max_length=24, unique=True, db_index=True)
+    sender_name = models.CharField(max_length=120, blank=True)
+    receiver_name = models.CharField(max_length=120, blank=True)
+    original_filename = models.CharField(max_length=255)
+    encrypted_file = models.FileField(upload_to='kavach/encrypted/')
+    file_size = models.PositiveIntegerField(default=0)
+    content_type = models.CharField(max_length=120, blank=True)
+    aes_key = models.CharField(max_length=64)
+    aes_nonce = models.CharField(max_length=32)
+    access_code_hash = models.CharField(max_length=64, db_index=True)
+    encryption_algorithm = models.CharField(max_length=20, default='AES-GCM')
+    download_count = models.PositiveIntegerField(default=0)
+    last_downloaded_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.transfer_id} - {self.original_filename}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
 class Student(models.Model):
     ht_no = models.CharField(max_length=50, unique=True)
     student_name = models.CharField(max_length=255)

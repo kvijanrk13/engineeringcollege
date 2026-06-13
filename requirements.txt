@@ -4,6 +4,7 @@ cffi==1.17.1
 chardet<6
 charset-normalizer==3.4.0
 cloudinary==1.41.0
+cryptography==48.0.1
 dj-database-url==2.3.0
 Django==4.2.30
 django-cloudinary-storage==0.3.0
