@@ -480,6 +480,63 @@ class DashboardTests(TestCase):
         self.assertTrue(AuditLog.objects.filter(action='file_shared', file='secret.txt').exists())
 
     @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_kavach_accepts_common_and_unknown_file_formats(self):
+        session = self.client.session
+        session['google_oauth_email'] = 'sender.student@gmail.com'
+        session['google_oauth_name'] = 'Sender Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+
+        samples = [
+            ('photo.jpg', b'\xff\xd8image-bytes', 'image/jpeg', 'Image'),
+            ('notes.docx', b'docx-bytes', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Document'),
+            ('sheet.xlsx', b'xlsx-bytes', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'Spreadsheet'),
+            ('slides.pptx', b'pptx-bytes', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'Presentation'),
+            ('paper.pdf', b'%PDF-1.4', 'application/pdf', 'PDF'),
+            ('sound.mp3', b'audio-bytes', 'audio/mpeg', 'Audio'),
+            ('movie.mp4', b'video-bytes', 'video/mp4', 'Video'),
+            ('custom.anything', b'custom-bytes', 'application/octet-stream', 'Other'),
+        ]
+        uploaded_access_codes = {}
+
+        for filename, payload, content_type, expected_category in samples:
+            response = self.client.post(
+                reverse('dashboard:kavach_demo'),
+                {
+                    'action': 'sender_upload',
+                    'receiver_email': 'receiver.student@gmail.com',
+                    'secure_file': SimpleUploadedFile(filename, payload, content_type=content_type),
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            uploaded_access_codes[filename] = response.context['uploaded_transfer']['access_code']
+            secure_file = KavachSecureFile.objects.get(original_filename=filename)
+            self.assertEqual(secure_file.file_category, expected_category)
+            self.assertEqual(secure_file.content_type, content_type)
+
+        secure_file = KavachSecureFile.objects.get(original_filename='sheet.xlsx')
+        session = self.client.session
+        session['google_oauth_email'] = 'receiver.student@gmail.com'
+        session['google_oauth_name'] = 'Receiver Student'
+        session['kavach_gmail_verified'] = True
+        session.save()
+        download_response = self.client.post(
+            reverse('dashboard:kavach_demo'),
+            {
+                'action': 'receiver_download',
+                'transfer_id': secure_file.transfer_id,
+                'access_code': uploaded_access_codes['sheet.xlsx'],
+            },
+        )
+
+        self.assertEqual(download_response.status_code, 200)
+        self.assertEqual(download_response.content, b'xlsx-bytes')
+        self.assertEqual(
+            download_response['Content-Type'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
     def test_kavach_page_only_shows_logged_in_user_transfers(self):
         KavachSecureFile.objects.create(
             transfer_id='VISIBLE123',

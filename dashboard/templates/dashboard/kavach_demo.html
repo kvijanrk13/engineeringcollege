@@ -356,6 +356,14 @@
                             <div class="token">{{ uploaded_transfer.filename }}</div>
                         </div>
                         <div>
+                            <label>File Type</label>
+                            <div class="token">{{ uploaded_transfer.file_category }}</div>
+                        </div>
+                        <div>
+                            <label>File Size</label>
+                            <div class="token">{{ uploaded_transfer.file_size }}</div>
+                        </div>
+                        <div>
                             <label>SHA-256 Hash</label>
                             <div class="token">{{ uploaded_transfer.file_sha256_hash }}</div>
                         </div>
@@ -406,7 +414,7 @@
                         <div>
                             <label for="secure_file">File To Encrypt</label>
                             <input type="file" id="secure_file" name="secure_file" required>
-                            <p class="help-text">AES-GCM is used because AES is fast for large files and GCM also verifies integrity.</p>
+                            <p class="help-text">Supports {{ kavach_supported_formats }} up to {{ kavach_max_upload_size }}. AES-GCM encrypts the raw bytes, so every file type is protected the same way.</p>
                         </div>
                         <div>
                             <label for="expires_days">Expiry</label>
@@ -428,6 +436,7 @@
                         {% for transfer in shared_with_me %}
                             <div class="transfer-item">
                                 <strong>{{ transfer.original_filename }}</strong>
+                                <p class="help-text">{{ transfer.file_category }} | {{ transfer.display_file_size }}</p>
                                 <p class="help-text">Transfer ID: <code>{{ transfer.transfer_id }}</code></p>
                                 <p class="help-text">
                                     From {{ transfer.sender_email|default:"sender" }} |
@@ -480,7 +489,7 @@
                             <div class="transfer-item">
                                 <strong>{{ transfer.transfer_id }}</strong>
                                 <p>{{ transfer.original_filename }}{% if transfer.receiver_email %} for {{ transfer.receiver_email }}{% endif %}</p>
-                                <p class="help-text">{{ transfer.encryption_algorithm }} | {{ transfer.signature_algorithm }} | {{ transfer.file_size }} bytes | downloads: {{ transfer.download_count }}</p>
+                                <p class="help-text">{{ transfer.file_category }} | {{ transfer.display_file_size }} | {{ transfer.encryption_algorithm }} | {{ transfer.signature_algorithm }} | downloads: {{ transfer.download_count }}</p>
                                 <p class="help-text">
                                     expires {% if transfer.expires_at %}{{ transfer.expires_at }}{% else %}not set{% endif %} |
                                     {% if transfer.is_revoked %}revoked{% else %}active{% endif %}
@@ -510,6 +519,7 @@
                     <li>Sender and receiver use only <code>/projects/kavach/</code>.</li>
                     <li>Sender and receiver must use verified Gmail sign-in.</li>
                     <li>Sender selects the receiver Gmail account before encryption.</li>
+                    <li>Images, PDFs, Word, Excel, PowerPoint, audio, video, ZIP, and unknown file formats are encrypted as bytes and restored exactly during download.</li>
                     <li>Owner can revoke receiver access at any time; revoked records cannot be downloaded or decrypted through the system.</li>
                     <li>Receivers download from Shared With Me after access permission, expiry, and revoked-status checks.</li>
                     <li>AES keys for new transfers are encrypted for the receiver key pair before storage.</li>

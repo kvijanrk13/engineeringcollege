@@ -42,18 +42,20 @@
             <article class="panel full">
                 <h2>My Files</h2>
                 <table>
-                    <thead><tr><th>File</th><th>Transfer</th><th>Owner</th><th>Receiver</th><th>Status</th></tr></thead>
+                    <thead><tr><th>File</th><th>Type</th><th>Size</th><th>Transfer</th><th>Owner</th><th>Receiver</th><th>Status</th></tr></thead>
                     <tbody>
                         {% for file in my_files %}
                             <tr>
                                 <td>{{ file.original_filename }}</td>
+                                <td>{{ file.file_category }}</td>
+                                <td>{{ file.display_file_size }}</td>
                                 <td>{{ file.transfer_id }}</td>
                                 <td>{{ file.sender_email }}</td>
                                 <td>{{ file.receiver_email }}</td>
                                 <td><span class="status {% if file.is_revoked %}revoked{% else %}active{% endif %}">{% if file.is_revoked %}revoked{% else %}active{% endif %}</span></td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="5" class="muted">No files yet.</td></tr>
+                            <tr><td colspan="7" class="muted">No files yet.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -62,16 +64,17 @@
             <article class="panel">
                 <h2>Shared With Me</h2>
                 <table>
-                    <thead><tr><th>File</th><th>Sender</th><th>Status</th></tr></thead>
+                    <thead><tr><th>File</th><th>Type</th><th>Sender</th><th>Status</th></tr></thead>
                     <tbody>
                         {% for file in shared_with_me %}
                             <tr>
                                 <td>{{ file.original_filename }}</td>
+                                <td>{{ file.file_category }}</td>
                                 <td>{{ file.sender_email }}</td>
                                 <td><span class="status {% if file.is_revoked %}revoked{% else %}active{% endif %}">{% if file.is_revoked %}revoked{% else %}active{% endif %}</span></td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="3" class="muted">No received files.</td></tr>
+                            <tr><td colspan="4" class="muted">No received files.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -80,16 +83,17 @@
             <article class="panel">
                 <h2>Files I Shared</h2>
                 <table>
-                    <thead><tr><th>File</th><th>Receiver</th><th>Downloads</th></tr></thead>
+                    <thead><tr><th>File</th><th>Type</th><th>Receiver</th><th>Downloads</th></tr></thead>
                     <tbody>
                         {% for file in files_i_shared %}
                             <tr>
                                 <td>{{ file.original_filename }}</td>
+                                <td>{{ file.file_category }}</td>
                                 <td>{{ file.receiver_email }}</td>
                                 <td>{{ file.download_count }}</td>
                             </tr>
                         {% empty %}
-                            <tr><td colspan="3" class="muted">No shared files.</td></tr>
+                            <tr><td colspan="4" class="muted">No shared files.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

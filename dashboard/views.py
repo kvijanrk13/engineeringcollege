@@ -15,6 +15,7 @@ import hmac
 import base64
 import binascii
 import secrets
+import mimetypes
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
@@ -42,6 +43,7 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.urls import reverse
 from django.core import signing
 from django.utils import timezone
+from django.utils.text import get_valid_filename
 from django_ratelimit.decorators import ratelimit
 import django
 # PDF Generation imports
@@ -88,6 +90,18 @@ DECRYPTION_FAILURE_ALERT_LIMIT = 3
 DECRYPTION_FAILURE_WINDOW = timedelta(minutes=15)
 DOWNLOAD_BURST_ALERT_LIMIT = 5
 DOWNLOAD_BURST_WINDOW = timedelta(minutes=10)
+KAVACH_MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+KAVACH_SUPPORTED_FORMAT_LABELS = [
+    'images',
+    'PDF',
+    'DOC/DOCX',
+    'XLS/XLSX',
+    'PPT/PPTX',
+    'audio',
+    'video',
+    'ZIP',
+    'and any other file format',
+]
 
 
 def _client_ip(request):
@@ -4041,6 +4055,30 @@ def _kavach_file_hash(file_bytes):
     return hashlib.sha256(file_bytes).hexdigest()
 
 
+def _kavach_safe_original_filename(filename):
+    name = os.path.basename((filename or '').replace('\\', '/')) or 'kavach-file.bin'
+    safe_name = get_valid_filename(name) or 'kavach-file.bin'
+    if len(safe_name) <= 180:
+        return safe_name
+    suffix = Path(safe_name).suffix
+    stem = Path(safe_name).stem[: max(1, 180 - len(suffix))]
+    return f'{stem}{suffix}'
+
+
+def _kavach_content_type(filename, uploaded_file):
+    uploaded_content_type = (getattr(uploaded_file, 'content_type', '') or '').strip()
+    guessed_content_type, _ = mimetypes.guess_type(filename)
+    return uploaded_content_type or guessed_content_type or 'application/octet-stream'
+
+
+def _format_file_size(size):
+    size = int(size or 0)
+    for unit in ['bytes', 'KB', 'MB', 'GB']:
+        if size < 1024 or unit == 'GB':
+            return f'{size:.1f} {unit}' if unit != 'bytes' else f'{size} bytes'
+        size /= 1024
+
+
 def _kavach_signing_private_key(sender_email):
     seed = hmac.new(
         settings.SECRET_KEY.encode('utf-8'),
@@ -4216,8 +4254,8 @@ def kavach_demo(request):
             if not uploaded_file:
                 messages.error(request, 'Please choose a file to encrypt and upload.')
                 return redirect('dashboard:kavach_demo')
-            if uploaded_file.size > 5 * 1024 * 1024:
-                messages.error(request, 'Please upload a file smaller than 5 MB for this demo.')
+            if uploaded_file.size > KAVACH_MAX_UPLOAD_SIZE:
+                messages.error(request, f'Please upload a file smaller than {_format_file_size(KAVACH_MAX_UPLOAD_SIZE)}.')
                 return redirect('dashboard:kavach_demo')
 
             file_bytes = uploaded_file.read()
@@ -4226,7 +4264,7 @@ def kavach_demo(request):
             encrypted_payload = _kavach_encrypt_file(file_bytes, receiver_email)
             transfer_id = _kavach_new_transfer_id()
             access_code = secrets.token_urlsafe(8)
-            original_filename = os.path.basename(uploaded_file.name or 'kavach-file.bin')
+            original_filename = _kavach_safe_original_filename(uploaded_file.name)
             encrypted_name = f"{transfer_id}_{original_filename}.aesgcm"
             try:
                 expires_days = int(request.POST.get('expires_days') or 7)
@@ -4242,7 +4280,7 @@ def kavach_demo(request):
                 receiver_email=receiver_email,
                 original_filename=original_filename,
                 file_size=uploaded_file.size,
-                content_type=getattr(uploaded_file, 'content_type', '') or 'application/octet-stream',
+                content_type=_kavach_content_type(original_filename, uploaded_file),
                 aes_key='',
                 aes_nonce=encrypted_payload['aes_nonce'],
                 encrypted_aes_key=encrypted_payload['encrypted_aes_key'],
@@ -4270,6 +4308,8 @@ def kavach_demo(request):
                 'file_sha256_hash': file_hash,
                 'signature_algorithm': secure_file.signature_algorithm,
                 'expires_at': secure_file.expires_at,
+                'file_category': secure_file.file_category,
+                'file_size': secure_file.display_file_size,
             }
             messages.success(request, f'File encrypted, signed by {gmail_email}, and shared with {receiver_email}.')
 
@@ -4403,6 +4443,8 @@ def kavach_demo(request):
         ),
         'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
         'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
+        'kavach_supported_formats': ', '.join(KAVACH_SUPPORTED_FORMAT_LABELS),
+        'kavach_max_upload_size': _format_file_size(KAVACH_MAX_UPLOAD_SIZE),
         'uploaded_transfer': uploaded_transfer,
         'recent_transfers': recent_transfers,
         'shared_with_me': shared_with_me,

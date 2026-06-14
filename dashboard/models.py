@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date
 import os
+from pathlib import Path
 
 
 class Subject(models.Model):
@@ -535,6 +536,40 @@ class KavachSecureFile(models.Model):
 
     def __str__(self):
         return f"{self.transfer_id} - {self.original_filename}"
+
+    @property
+    def file_extension(self):
+        return Path(self.original_filename or '').suffix.lower().lstrip('.') or 'unknown'
+
+    @property
+    def file_category(self):
+        extension = self.file_extension
+        content_type = (self.content_type or '').lower()
+        if extension in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'svg'} or content_type.startswith('image/'):
+            return 'Image'
+        if extension in {'doc', 'docx', 'odt', 'rtf'}:
+            return 'Document'
+        if extension in {'xls', 'xlsx', 'ods', 'csv'}:
+            return 'Spreadsheet'
+        if extension in {'ppt', 'pptx', 'odp'}:
+            return 'Presentation'
+        if extension == 'pdf' or content_type == 'application/pdf':
+            return 'PDF'
+        if extension in {'mp3', 'wav', 'aac', 'ogg', 'm4a', 'flac'} or content_type.startswith('audio/'):
+            return 'Audio'
+        if extension in {'mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'} or content_type.startswith('video/'):
+            return 'Video'
+        if extension in {'zip', 'rar', '7z', 'tar', 'gz'}:
+            return 'Archive'
+        return 'Other'
+
+    @property
+    def display_file_size(self):
+        size = self.file_size or 0
+        for unit in ['bytes', 'KB', 'MB', 'GB']:
+            if size < 1024 or unit == 'GB':
+                return f"{size:.1f} {unit}" if unit != 'bytes' else f"{size} bytes"
+            size /= 1024
 
     class Meta:
         ordering = ['-created_at']
