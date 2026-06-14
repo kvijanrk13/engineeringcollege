@@ -374,9 +374,6 @@
                 {% else %}
                     <p>
                         <a class="action" href="{{ project.demo_url|default:'/car-price/' }}" target="_blank" rel="noopener">Open Demo in New Tab</a>
-                        {% if project.local_demo_url %}
-                            <a class="action" href="{{ project.local_demo_url }}" target="_blank" rel="noopener">Open Local KAVACH</a>
-                        {% endif %}
                     </p>
                     <div style="margin-top:14px;">
                         <iframe src="{{ project.demo_url|default:'/car-price/' }}" title="{{ project.name }} Demo" style="width:100%;height:600px;border:1px solid #D8E0EA;border-radius:8px;"></iframe>

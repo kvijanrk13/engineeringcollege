@@ -4392,7 +4392,6 @@ def kavach_demo(request):
     else:
         recent_transfers = KavachSecureFile.objects.none()
         shared_with_me = KavachSecureFile.objects.none()
-    local_standalone_url = 'http://127.0.0.1:8010/accounts/register/'
     return render(request, 'dashboard/kavach_demo.html', {
         'title': 'KAVACH Secure File Exchange',
         'google_signin_enabled': google_signin_enabled(),
@@ -4402,7 +4401,6 @@ def kavach_demo(request):
         'kavach_google_login_url': (
             f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
         ),
-        'local_standalone_url': local_standalone_url,
         'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
         'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
         'uploaded_transfer': uploaded_transfer,

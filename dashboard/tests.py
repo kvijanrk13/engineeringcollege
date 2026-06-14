@@ -366,8 +366,10 @@ class DashboardTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Open Local KAVACH')
-        self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
+        self.assertContains(response, 'Open Demo in New Tab')
+        self.assertContains(response, 'href="/projects/kavach/"')
+        self.assertNotContains(response, 'Open Local KAVACH')
+        self.assertNotContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
         self.assertNotContains(response, 'http://[127.0.0.1]')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
@@ -381,9 +383,12 @@ class DashboardTests(TestCase):
         response = self.client.get(reverse('dashboard:kavach_demo'))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Open Local KAVACH')
-        self.assertContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
-        self.assertContains(response, "window.open('http://127.0.0.1:8010/accounts/register/'")
+        self.assertContains(response, 'Open KAVACH Exchange')
+        self.assertContains(response, 'Current KAVACH page')
+        self.assertContains(response, 'Hosted Render page')
+        self.assertNotContains(response, 'Open Local KAVACH')
+        self.assertNotContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
+        self.assertNotContains(response, "window.open('http://127.0.0.1:8010/accounts/register/'")
         self.assertNotContains(response, 'http://[127.0.0.1]')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
