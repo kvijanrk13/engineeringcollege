@@ -609,6 +609,33 @@
             </div>
         </section>
 
+        {% if suspicious_alerts %}
+            <section class="section-panel">
+                <div class="section-header">
+                    <div>
+                        <div class="section-kicker">Security Alerts</div>
+                        <h2 class="section-title">Suspicious activity detected</h2>
+                        <p class="section-copy">Open alerts from KAVACH audit monitoring that may need admin review.</p>
+                    </div>
+                    <div class="section-pill">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        {{ suspicious_alerts|length }} open
+                    </div>
+                </div>
+                <div class="row g-3">
+                    {% for alert in suspicious_alerts %}
+                        <div class="col-md-6 col-xl-4">
+                            <div class="hero-metric">
+                                <span>{{ alert.activity_type }}</span>
+                                <strong>{{ alert.user|default:"Unknown user" }}</strong>
+                                <p class="section-copy">{{ alert.file|default:"No file" }} | events: {{ alert.event_count }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
         <section class="section-panel">
             <div class="section-header">
                 <div>

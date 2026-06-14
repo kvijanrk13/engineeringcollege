@@ -2,7 +2,37 @@ from django.conf import settings
 from django.contrib import admin
 from django.core.mail import EmailMessage
 from django.utils import timezone
-from .models import KavachSecureFile, ProjectDownloadPayment, Student
+from .models import AuditLog, KavachSecureFile, ProjectDownloadPayment, Student, SuspiciousActivity
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ('timestamp', 'user', 'action', 'file', 'ip_address', 'status')
+    list_filter = ('action', 'status', 'timestamp')
+    search_fields = ('user', 'action', 'file', 'ip_address')
+    readonly_fields = ('user', 'action', 'file', 'ip_address', 'timestamp', 'status')
+    ordering = ('-timestamp',)
+
+
+@admin.register(SuspiciousActivity)
+class SuspiciousActivityAdmin(admin.ModelAdmin):
+    list_display = (
+        'last_seen_at', 'user', 'activity_type', 'file',
+        'ip_address', 'event_count', 'status',
+    )
+    list_filter = ('activity_type', 'status', 'last_seen_at')
+    search_fields = ('user', 'activity_type', 'file', 'ip_address', 'description')
+    readonly_fields = (
+        'user', 'activity_type', 'file', 'ip_address', 'description',
+        'event_count', 'first_seen_at', 'last_seen_at',
+    )
+    ordering = ('-last_seen_at',)
+    actions = ('mark_reviewed',)
+
+    @admin.action(description='Mark selected alerts as reviewed')
+    def mark_reviewed(self, request, queryset):
+        updated = queryset.update(status=SuspiciousActivity.STATUS_REVIEWED)
+        self.message_user(request, f'{updated} suspicious activity alert(s) marked reviewed.')
 
 
 @admin.register(Student)
@@ -107,16 +137,21 @@ class ProjectDownloadPaymentAdmin(admin.ModelAdmin):
 class KavachSecureFileAdmin(admin.ModelAdmin):
     list_display = (
         'transfer_id', 'original_filename', 'sender_email', 'receiver_email',
-        'encryption_algorithm', 'signature_algorithm', 'download_count', 'created_at',
+        'encryption_algorithm', 'signature_algorithm', 'is_revoked', 'expires_at',
+        'download_count', 'created_at',
     )
     search_fields = (
         'transfer_id', 'original_filename', 'sender_name', 'sender_email',
         'receiver_name', 'receiver_email', 'file_sha256_hash',
     )
-    list_filter = ('encryption_algorithm', 'signature_algorithm', 'created_at', 'last_downloaded_at')
+    list_filter = (
+        'encryption_algorithm', 'signature_algorithm', 'is_revoked',
+        'expires_at', 'created_at', 'last_downloaded_at',
+    )
     readonly_fields = (
         'transfer_id', 'original_filename', 'encrypted_file', 'file_size', 'content_type',
-        'sender_email', 'receiver_email', 'aes_key', 'aes_nonce', 'access_code_hash', 'encryption_algorithm',
+        'sender_email', 'receiver_email', 'aes_key', 'aes_nonce', 'encrypted_aes_key',
+        'receiver_public_key', 'access_code_hash', 'encryption_algorithm',
         'file_sha256_hash', 'uploader_public_key', 'digital_signature', 'signature_algorithm',
         'download_count', 'created_at', 'last_downloaded_at',
     )

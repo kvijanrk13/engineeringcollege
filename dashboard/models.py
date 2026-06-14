@@ -19,6 +19,53 @@ class Subject(models.Model):
         ordering = ['name']
 
 
+class AuditLog(models.Model):
+    STATUS_SUCCESS = 'success'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, 'Success'),
+        (STATUS_FAILED, 'Failed'),
+    ]
+
+    user = models.CharField(max_length=150, blank=True, db_index=True)
+    action = models.CharField(max_length=80, db_index=True)
+    file = models.CharField(max_length=255, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SUCCESS, db_index=True)
+
+    def __str__(self):
+        return f"{self.timestamp:%Y-%m-%d %H:%M:%S} - {self.user or 'anonymous'} - {self.action}"
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
+class SuspiciousActivity(models.Model):
+    STATUS_OPEN = 'open'
+    STATUS_REVIEWED = 'reviewed'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Open'),
+        (STATUS_REVIEWED, 'Reviewed'),
+    ]
+
+    user = models.CharField(max_length=150, blank=True, db_index=True)
+    activity_type = models.CharField(max_length=80, db_index=True)
+    file = models.CharField(max_length=255, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    description = models.TextField(blank=True)
+    event_count = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
+    first_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+    last_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    def __str__(self):
+        return f"{self.activity_type} - {self.user or 'anonymous'} - {self.status}"
+
+    class Meta:
+        ordering = ['-last_seen_at']
+
+
 class Faculty(models.Model):
     # Personal Information
     staff_name = models.CharField(max_length=255, blank=False, null=False, default='')
@@ -470,14 +517,18 @@ class KavachSecureFile(models.Model):
     encrypted_file = models.FileField(upload_to='kavach/encrypted/')
     file_size = models.PositiveIntegerField(default=0)
     content_type = models.CharField(max_length=120, blank=True)
-    aes_key = models.CharField(max_length=64)
+    aes_key = models.CharField(max_length=64, blank=True)
     aes_nonce = models.CharField(max_length=32)
+    encrypted_aes_key = models.TextField(blank=True)
+    receiver_public_key = models.TextField(blank=True)
     access_code_hash = models.CharField(max_length=64, db_index=True)
     file_sha256_hash = models.CharField(max_length=64, blank=True, db_index=True)
     uploader_public_key = models.TextField(blank=True)
     digital_signature = models.TextField(blank=True)
     signature_algorithm = models.CharField(max_length=40, default='Ed25519-SHA256')
     encryption_algorithm = models.CharField(max_length=20, default='AES-GCM')
+    expires_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    is_revoked = models.BooleanField(default=False, db_index=True)
     download_count = models.PositiveIntegerField(default=0)
     last_downloaded_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

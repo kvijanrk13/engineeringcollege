@@ -731,6 +731,33 @@
             </div>
         </section>
 
+        {% if suspicious_alerts %}
+            <section class="dashboard-panel mb-4">
+                <div class="section-header">
+                    <div>
+                        <div class="section-kicker">Security Alerts</div>
+                        <h2 class="section-title">Suspicious activity detected</h2>
+                        <p class="section-copy">Recent open alerts from KAVACH audit monitoring.</p>
+                    </div>
+                    <div class="section-pill">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        {{ suspicious_alerts|length }} open
+                    </div>
+                </div>
+                <div class="row g-3">
+                    {% for alert in suspicious_alerts %}
+                        <div class="col-md-6 col-xl-4">
+                            <div class="hero-side-card">
+                                <span>{{ alert.activity_type }}</span>
+                                <strong>{{ alert.user|default:"Unknown user" }}</strong>
+                                <p class="section-copy">{{ alert.file|default:"No file" }} | events: {{ alert.event_count }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
         <ul class="nav nav-tabs dashboard-tabs" id="dashboardTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">

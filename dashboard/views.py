@@ -54,8 +54,10 @@ from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from pypdf import PdfWriter, PdfReader
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ed25519, x25519
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 # from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
 from PIL import Image as PILImage
 # Additional imports for PDF to image conversion
@@ -67,10 +69,10 @@ import cloudinary.api
 import cloudinary.utils
 # Local imports
 from .models import (
-    Faculty, Certificate, FacultyLog, CloudinaryUpload,
+    AuditLog, Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
     ResearchPublication, StudentResearchPublication, FDP, BTechProject,
-    KavachSecureFile, ProjectDownloadPayment,
+    KavachSecureFile, ProjectDownloadPayment, SuspiciousActivity,
 )
 from .forms import (
     StudentForm, CertificateForm,
@@ -82,6 +84,127 @@ from .utils import (
 )
 
 logger = logging.getLogger(__name__)
+DECRYPTION_FAILURE_ALERT_LIMIT = 3
+DECRYPTION_FAILURE_WINDOW = timedelta(minutes=15)
+DOWNLOAD_BURST_ALERT_LIMIT = 5
+DOWNLOAD_BURST_WINDOW = timedelta(minutes=10)
+
+
+def _client_ip(request):
+    forwarded_for = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',', 1)[0].strip()
+    return forwarded_for or request.META.get('REMOTE_ADDR') or None
+
+
+def _audit_user_label(request, fallback=''):
+    if getattr(request, 'user', None) and request.user.is_authenticated:
+        return request.user.get_username()
+    return (
+        request.session.get('google_oauth_email')
+        or request.session.get('student_ht_no')
+        or request.session.get('student_username')
+        or fallback
+        or ''
+    )
+
+
+def audit_log(request, action, file='', status=AuditLog.STATUS_SUCCESS, user=None):
+    try:
+        entry = AuditLog.objects.create(
+            user=user or _audit_user_label(request),
+            action=action,
+            file=file or '',
+            ip_address=_client_ip(request),
+            status=status,
+        )
+        detect_suspicious_activity(entry)
+    except Exception as exc:
+        logger.warning(f"Audit log write failed for {action}: {exc}", exc_info=True)
+
+
+def record_suspicious_activity(audit_entry, activity_type, description, event_count=1):
+    now = timezone.now()
+    alert, created = SuspiciousActivity.objects.get_or_create(
+        user=audit_entry.user,
+        activity_type=activity_type,
+        file=audit_entry.file or '',
+        status=SuspiciousActivity.STATUS_OPEN,
+        defaults={
+            'ip_address': audit_entry.ip_address,
+            'description': description,
+            'event_count': event_count,
+            'first_seen_at': now,
+            'last_seen_at': now,
+        },
+    )
+    if not created:
+        alert.ip_address = audit_entry.ip_address
+        alert.description = description
+        alert.event_count = max(alert.event_count, event_count)
+        alert.last_seen_at = now
+        alert.save(update_fields=['ip_address', 'description', 'event_count', 'last_seen_at'])
+    return alert
+
+
+def detect_suspicious_activity(audit_entry):
+    if not audit_entry.user:
+        return
+
+    now = timezone.now()
+
+    if audit_entry.action == 'wrong_decryption_attempt' and audit_entry.status == AuditLog.STATUS_FAILED:
+        failures = AuditLog.objects.filter(
+            user=audit_entry.user,
+            action='wrong_decryption_attempt',
+            status=AuditLog.STATUS_FAILED,
+            timestamp__gte=now - DECRYPTION_FAILURE_WINDOW,
+        ).count()
+        if failures >= DECRYPTION_FAILURE_ALERT_LIMIT:
+            record_suspicious_activity(
+                audit_entry,
+                'repeated_decryption_failures',
+                f'{failures} failed decryption/access attempts in 15 minutes.',
+                failures,
+            )
+
+    elif audit_entry.action == 'file_downloaded' and audit_entry.status == AuditLog.STATUS_SUCCESS:
+        downloads = AuditLog.objects.filter(
+            user=audit_entry.user,
+            action='file_downloaded',
+            status=AuditLog.STATUS_SUCCESS,
+            timestamp__gte=now - DOWNLOAD_BURST_WINDOW,
+        ).count()
+        if downloads >= DOWNLOAD_BURST_ALERT_LIMIT:
+            record_suspicious_activity(
+                audit_entry,
+                'excessive_downloads',
+                f'{downloads} file downloads in 10 minutes.',
+                downloads,
+            )
+
+    elif audit_entry.action == 'integrity_check_failed' and audit_entry.status == AuditLog.STATUS_FAILED:
+        record_suspicious_activity(
+            audit_entry,
+            'integrity_check_failed',
+            'File hash or digital signature verification failed.',
+        )
+
+    elif audit_entry.action == 'revoked_access_attempt' and audit_entry.status == AuditLog.STATUS_FAILED:
+        record_suspicious_activity(
+            audit_entry,
+            'revoked_access_attempt',
+            'A receiver tried to access a revoked file transfer.',
+        )
+
+
+def open_suspicious_alerts(limit=5):
+    try:
+        return list(
+            SuspiciousActivity.objects.filter(status=SuspiciousActivity.STATUS_OPEN)
+            .order_by('-last_seen_at')[:limit]
+        )
+    except Exception as exc:
+        logger.warning(f"Could not load suspicious activity alerts: {exc}", exc_info=True)
+        return []
 # ==================== OPTIONAL LIBRARIES ====================
 try:
     import pandas as pd
@@ -3030,10 +3153,12 @@ def admin_login(request):
             user = authenticate(request, username=username, password=password)
             if user is not None and user.is_staff:
                 login(request, user)
+                audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=username)
                 logger.info(f"Login successful for: {username}")
                 return redirect('dashboard:add_faculty')
             else:
                 error = 'Invalid admin credentials'
+                audit_log(request, 'user_logged_in', status=AuditLog.STATUS_FAILED, user=username)
                 logger.warning(f"Login failed for username: {username}")
                 messages.error(request, error)
         
@@ -3237,6 +3362,7 @@ def google_callback(request):
                         messages.error(request, 'KAVACH accepts verified Gmail accounts ending with @gmail.com.')
                         return redirect('dashboard:kavach_demo')
                     request.session['kavach_gmail_verified'] = True
+                    audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
                     messages.info(request, 'Your verified Gmail account is ready for KAVACH file sharing.')
                     return redirect('dashboard:kavach_demo')
                 return redirect(next_url)
@@ -3251,6 +3377,7 @@ def google_callback(request):
 
         UserModel = get_user_model()
         user = UserModel.objects.filter(email__iexact=email).first()
+        created_user = user is None
         if not user:
             username = unique_google_username(email, getattr(faculty, 'employee_code', '') if faculty else '')
             user = UserModel(username=username, email=email)
@@ -3264,7 +3391,10 @@ def google_callback(request):
         user.is_active = True
         user.set_unusable_password()
         user.save()
+        if created_user:
+            audit_log(request, 'user_registered', status=AuditLog.STATUS_SUCCESS, user=email)
         login(request, user)
+        audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
         return redirect('dashboard:add_faculty')
     except Exception as exc:
         logger.error(f"Google sign-in failed: {exc}", exc_info=True)
@@ -3307,6 +3437,7 @@ def student_login(request):
                 request.session['student_username'] = username
                 request.session.pop('student_id', None)
                 request.session.pop('student_ht_no', None)
+                audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=username)
                 return redirect('dashboard:student_dashboard_view')
 
             student = Student.objects.filter(ht_no=username).first()
@@ -3320,8 +3451,10 @@ def student_login(request):
                     request.session['student_username'] = username
                     request.session['student_id'] = student.id
                     request.session['student_ht_no'] = student.ht_no
+                    audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=student.ht_no)
                     return redirect('dashboard:student_dashboard_view')
             error = 'Invalid student credentials'
+            audit_log(request, 'user_logged_in', status=AuditLog.STATUS_FAILED, user=username)
             messages.error(request, error)
         return render(request, 'dashboard/login.html', {
             'title': 'Student Login',
@@ -3389,6 +3522,7 @@ def mobile_dashboard(request):
         'with_phd': with_phd,
         'departments': departments,
         'recent_logs': recent_logs,
+        'suspicious_alerts': open_suspicious_alerts(),
     })
 
 
@@ -3941,6 +4075,76 @@ def _kavach_verify_signature(file_hash, digital_signature, uploader_public_key):
         return False
 
 
+def _kavach_receiver_private_key(receiver_email):
+    seed = hmac.new(
+        settings.SECRET_KEY.encode('utf-8'),
+        f'kavach-receiver-key:{_normalize_kavach_gmail(receiver_email)}'.encode('utf-8'),
+        hashlib.sha256,
+    ).digest()
+    return x25519.X25519PrivateKey.from_private_bytes(seed)
+
+
+def _kavach_receiver_public_key(receiver_email):
+    return base64.b64encode(
+        _kavach_receiver_private_key(receiver_email).public_key().public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+    ).decode('ascii')
+
+
+def _kavach_wrap_aes_key_for_receiver(aes_key, receiver_email):
+    receiver_private_key = _kavach_receiver_private_key(receiver_email)
+    receiver_public_key = receiver_private_key.public_key()
+    ephemeral_private_key = x25519.X25519PrivateKey.generate()
+    shared_secret = ephemeral_private_key.exchange(receiver_public_key)
+    wrapping_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b'kavach-aes-key-wrap-v1',
+    ).derive(shared_secret)
+    nonce = os.urandom(12)
+    aad = _normalize_kavach_gmail(receiver_email).encode('utf-8')
+    encrypted_key = AESGCM(wrapping_key).encrypt(nonce, aes_key, aad)
+    payload = {
+        'version': 1,
+        'ephemeral_public_key': base64.b64encode(
+            ephemeral_private_key.public_key().public_bytes(
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
+            )
+        ).decode('ascii'),
+        'nonce': base64.b64encode(nonce).decode('ascii'),
+        'ciphertext': base64.b64encode(encrypted_key).decode('ascii'),
+    }
+    return signing.dumps(payload, salt='kavach-aes-key-wrap')
+
+
+def _kavach_unwrap_aes_key_for_receiver(secure_file, receiver_email):
+    if not secure_file.encrypted_aes_key:
+        return base64.b64decode(secure_file.aes_key.encode('ascii'))
+
+    payload = signing.loads(secure_file.encrypted_aes_key, salt='kavach-aes-key-wrap')
+    ephemeral_public_key = x25519.X25519PublicKey.from_public_bytes(
+        base64.b64decode(payload['ephemeral_public_key'].encode('ascii'))
+    )
+    receiver_private_key = _kavach_receiver_private_key(receiver_email)
+    shared_secret = receiver_private_key.exchange(ephemeral_public_key)
+    wrapping_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b'kavach-aes-key-wrap-v1',
+    ).derive(shared_secret)
+    aad = _normalize_kavach_gmail(receiver_email).encode('utf-8')
+    return AESGCM(wrapping_key).decrypt(
+        base64.b64decode(payload['nonce'].encode('ascii')),
+        base64.b64decode(payload['ciphertext'].encode('ascii')),
+        aad,
+    )
+
+
 def _kavach_new_transfer_id():
     while True:
         transfer_id = secrets.token_urlsafe(9).replace('-', '').replace('_', '')[:12].upper()
@@ -3948,19 +4152,23 @@ def _kavach_new_transfer_id():
             return transfer_id
 
 
-def _kavach_encrypt_file(file_bytes):
+def _kavach_encrypt_file(file_bytes, receiver_email=None):
     aes_key = AESGCM.generate_key(bit_length=256)
     aes_nonce = os.urandom(12)
     ciphertext = AESGCM(aes_key).encrypt(aes_nonce, file_bytes, None)
-    return {
+    payload = {
         'ciphertext': ciphertext,
         'aes_key': base64.b64encode(aes_key).decode('ascii'),
         'aes_nonce': base64.b64encode(aes_nonce).decode('ascii'),
     }
+    if receiver_email:
+        payload['encrypted_aes_key'] = _kavach_wrap_aes_key_for_receiver(aes_key, receiver_email)
+        payload['receiver_public_key'] = _kavach_receiver_public_key(receiver_email)
+    return payload
 
 
-def _kavach_decrypt_file(secure_file):
-    aes_key = base64.b64decode(secure_file.aes_key.encode('ascii'))
+def _kavach_decrypt_file(secure_file, receiver_email=None):
+    aes_key = _kavach_unwrap_aes_key_for_receiver(secure_file, receiver_email or secure_file.receiver_email)
     aes_nonce = base64.b64decode(secure_file.aes_nonce.encode('ascii'))
     secure_file.encrypted_file.open('rb')
     try:
@@ -3968,6 +4176,16 @@ def _kavach_decrypt_file(secure_file):
     finally:
         secure_file.encrypted_file.close()
     return AESGCM(aes_key).decrypt(aes_nonce, ciphertext, None)
+
+
+def _kavach_transfer_can_download(secure_file, receiver_email):
+    if secure_file.receiver_email and secure_file.receiver_email.lower() != receiver_email:
+        return False, 'This transfer is shared with a different receiver Gmail account.'
+    if secure_file.is_revoked:
+        return False, 'This transfer has been revoked by the sender or administrator.'
+    if secure_file.expires_at and secure_file.expires_at <= timezone.now():
+        return False, 'This transfer has expired and can no longer be downloaded.'
+    return True, ''
 
 
 def _normalize_kavach_gmail(value):
@@ -4005,11 +4223,16 @@ def kavach_demo(request):
             file_bytes = uploaded_file.read()
             file_hash = _kavach_file_hash(file_bytes)
             signature_payload = _kavach_sign_hash(file_hash, gmail_email)
-            encrypted_payload = _kavach_encrypt_file(file_bytes)
+            encrypted_payload = _kavach_encrypt_file(file_bytes, receiver_email)
             transfer_id = _kavach_new_transfer_id()
             access_code = secrets.token_urlsafe(8)
             original_filename = os.path.basename(uploaded_file.name or 'kavach-file.bin')
             encrypted_name = f"{transfer_id}_{original_filename}.aesgcm"
+            try:
+                expires_days = int(request.POST.get('expires_days') or 7)
+            except (TypeError, ValueError):
+                expires_days = 7
+            expires_days = min(max(expires_days, 1), 30)
 
             secure_file = KavachSecureFile(
                 transfer_id=transfer_id,
@@ -4020,12 +4243,15 @@ def kavach_demo(request):
                 original_filename=original_filename,
                 file_size=uploaded_file.size,
                 content_type=getattr(uploaded_file, 'content_type', '') or 'application/octet-stream',
-                aes_key=encrypted_payload['aes_key'],
+                aes_key='',
                 aes_nonce=encrypted_payload['aes_nonce'],
+                encrypted_aes_key=encrypted_payload['encrypted_aes_key'],
+                receiver_public_key=encrypted_payload['receiver_public_key'],
                 access_code_hash=_kavach_access_code_hash(access_code),
                 file_sha256_hash=file_hash,
                 uploader_public_key=signature_payload['uploader_public_key'],
                 digital_signature=signature_payload['digital_signature'],
+                expires_at=timezone.now() + timedelta(days=expires_days),
             )
             secure_file.encrypted_file.save(
                 encrypted_name,
@@ -4033,6 +4259,9 @@ def kavach_demo(request):
                 save=False,
             )
             secure_file.save()
+            audit_log(request, 'file_uploaded', file=secure_file.original_filename)
+            audit_log(request, 'file_encrypted', file=secure_file.original_filename)
+            audit_log(request, 'file_shared', file=secure_file.original_filename)
             uploaded_transfer = {
                 'transfer_id': transfer_id,
                 'access_code': access_code,
@@ -4040,6 +4269,7 @@ def kavach_demo(request):
                 'receiver_email': receiver_email,
                 'file_sha256_hash': file_hash,
                 'signature_algorithm': secure_file.signature_algorithm,
+                'expires_at': secure_file.expires_at,
             }
             messages.success(request, f'File encrypted, signed by {gmail_email}, and shared with {receiver_email}.')
 
@@ -4050,21 +4280,45 @@ def kavach_demo(request):
             transfer_id = (request.POST.get('transfer_id') or '').strip().upper()
             access_code = (request.POST.get('access_code') or '').strip()
             secure_file = KavachSecureFile.objects.filter(transfer_id=transfer_id).first()
-            if not secure_file or not hmac.compare_digest(
+            if not secure_file:
+                audit_log(request, 'wrong_decryption_attempt', file=transfer_id, status=AuditLog.STATUS_FAILED)
+                messages.error(request, 'Invalid transfer ID or access code.')
+                return redirect('dashboard:kavach_demo')
+            can_download, denial_reason = _kavach_transfer_can_download(secure_file, gmail_email)
+            if not can_download:
+                suspicious_action = 'revoked_access_attempt' if secure_file.is_revoked else 'wrong_decryption_attempt'
+                audit_log(
+                    request,
+                    suspicious_action,
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, denial_reason)
+                return redirect('dashboard:kavach_demo')
+            if not hmac.compare_digest(
                 secure_file.access_code_hash,
                 _kavach_access_code_hash(access_code),
             ):
+                audit_log(
+                    request,
+                    'wrong_decryption_attempt',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
                 messages.error(request, 'Invalid transfer ID or access code.')
-                return redirect('dashboard:kavach_demo')
-            if secure_file.receiver_email and secure_file.receiver_email.lower() != gmail_email:
-                messages.error(request, 'This transfer is shared with a different receiver Gmail account.')
                 return redirect('dashboard:kavach_demo')
 
             try:
-                decrypted_bytes = _kavach_decrypt_file(secure_file)
+                decrypted_bytes = _kavach_decrypt_file(secure_file, gmail_email)
             except Exception:
                 logger.exception('KAVACH decryption failed for transfer %s', transfer_id)
-                messages.error(request, 'Decryption failed. The encrypted file or key metadata may be invalid.')
+                audit_log(
+                    request,
+                    'wrong_decryption_attempt',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, 'Receiver private-key decryption failed. The encrypted file or key metadata may be invalid.')
                 return redirect('dashboard:kavach_demo')
 
             decrypted_hash = _kavach_file_hash(decrypted_bytes)
@@ -4074,6 +4328,12 @@ def kavach_demo(request):
                 secure_file.uploader_public_key,
             )
             if not hmac.compare_digest(secure_file.file_sha256_hash, decrypted_hash) or not signature_valid:
+                audit_log(
+                    request,
+                    'integrity_check_failed',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
                 messages.error(
                     request,
                     'Digital signature verification failed. The file identity or integrity could not be confirmed.',
@@ -4083,6 +4343,7 @@ def kavach_demo(request):
             secure_file.download_count += 1
             secure_file.last_downloaded_at = timezone.now()
             secure_file.save(update_fields=['download_count', 'last_downloaded_at'])
+            audit_log(request, 'file_downloaded', file=secure_file.original_filename)
 
             response = HttpResponse(
                 decrypted_bytes,
@@ -4090,6 +4351,34 @@ def kavach_demo(request):
             )
             response['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(secure_file.original_filename)}"
             return response
+
+        elif action == 'revoke_transfer':
+            if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+                messages.error(request, 'Please sign in with the owner Gmail account before revoking access.')
+                return redirect('dashboard:kavach_demo')
+            transfer_id = (request.POST.get('transfer_id') or '').strip().upper()
+            secure_file = KavachSecureFile.objects.filter(transfer_id=transfer_id).first()
+            if not secure_file:
+                messages.error(request, 'Transfer not found.')
+                return redirect('dashboard:kavach_demo')
+            if secure_file.sender_email.lower() != gmail_email:
+                audit_log(
+                    request,
+                    'access_revoked',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, 'Only the owner can revoke receiver access for this transfer.')
+                return redirect('dashboard:kavach_demo')
+            if secure_file.is_revoked:
+                messages.info(request, 'Receiver access is already revoked for this transfer.')
+                return redirect('dashboard:kavach_demo')
+
+            secure_file.is_revoked = True
+            secure_file.save(update_fields=['is_revoked'])
+            audit_log(request, 'access_revoked', file=secure_file.original_filename)
+            messages.success(request, f'Receiver access revoked for transfer {secure_file.transfer_id}.')
+            return redirect('dashboard:kavach_demo')
 
         else:
             messages.error(request, 'Unknown KAVACH action.')
@@ -4099,8 +4388,10 @@ def kavach_demo(request):
         recent_transfers = KavachSecureFile.objects.filter(
             Q(sender_email=gmail_email) | Q(receiver_email=gmail_email)
         )[:8]
+        shared_with_me = KavachSecureFile.objects.filter(receiver_email=gmail_email)[:8]
     else:
         recent_transfers = KavachSecureFile.objects.none()
+        shared_with_me = KavachSecureFile.objects.none()
     local_standalone_url = 'http://127.0.0.1:8010/accounts/register/'
     return render(request, 'dashboard/kavach_demo.html', {
         'title': 'KAVACH Secure File Exchange',
@@ -4116,7 +4407,66 @@ def kavach_demo(request):
         'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
         'uploaded_transfer': uploaded_transfer,
         'recent_transfers': recent_transfers,
+        'shared_with_me': shared_with_me,
         'project_detail_url': reverse('dashboard:project_detail', args=['security', 'kavach-secure-file-sharing']),
+    })
+
+
+def kavach_user_dashboard(request):
+    gmail_email = _normalize_kavach_gmail(request.session.get('google_oauth_email'))
+    gmail_name = (request.session.get('google_oauth_name') or '').strip() or gmail_email
+    if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+        messages.error(request, 'Please sign in with a verified Gmail account to open your KAVACH dashboard.')
+        return redirect('dashboard:kavach_demo')
+
+    my_files = KavachSecureFile.objects.filter(
+        Q(sender_email=gmail_email) | Q(receiver_email=gmail_email)
+    )[:20]
+    shared_with_me = KavachSecureFile.objects.filter(receiver_email=gmail_email)[:20]
+    files_i_shared = KavachSecureFile.objects.filter(sender_email=gmail_email)[:20]
+    recent_activity = AuditLog.objects.filter(user=gmail_email)[:20]
+
+    return render(request, 'dashboard/kavach_user_dashboard.html', {
+        'title': 'KAVACH User Dashboard',
+        'kavach_gmail_email': gmail_email,
+        'kavach_gmail_name': gmail_name,
+        'my_files': my_files,
+        'shared_with_me': shared_with_me,
+        'files_i_shared': files_i_shared,
+        'recent_activity': recent_activity,
+        'kavach_url': reverse('dashboard:kavach_demo'),
+    })
+
+
+@login_required
+def kavach_admin_dashboard(request):
+    if not request.user.is_staff:
+        messages.error(request, 'Only staff users can open the KAVACH admin dashboard.')
+        return redirect('dashboard:kavach_demo')
+
+    failed_attempts = AuditLog.objects.filter(
+        status=AuditLog.STATUS_FAILED,
+    ).filter(
+        Q(action='wrong_decryption_attempt')
+        | Q(action='integrity_check_failed')
+        | Q(action='revoked_access_attempt')
+    )
+
+    total_users = AuditLog.objects.exclude(user='').values('user').distinct().count()
+    total_files = KavachSecureFile.objects.count()
+    total_shared_files = KavachSecureFile.objects.exclude(receiver_email='').count()
+    suspicious_activities = SuspiciousActivity.objects.filter(status=SuspiciousActivity.STATUS_OPEN)[:20]
+    audit_logs = AuditLog.objects.all()[:30]
+
+    return render(request, 'dashboard/kavach_admin_dashboard.html', {
+        'title': 'KAVACH Admin Dashboard',
+        'total_users': total_users,
+        'total_files': total_files,
+        'total_shared_files': total_shared_files,
+        'failed_attempts': failed_attempts.count(),
+        'suspicious_activities': suspicious_activities,
+        'audit_logs': audit_logs,
+        'kavach_url': reverse('dashboard:kavach_demo'),
     })
 
 
@@ -5153,6 +5503,7 @@ def admin_dashboard(request):
                 'user_activity': user_activity,
                 'has_psutil': psutil is not None,
                 'recent_uploads': recent_uploads,
+                'suspicious_alerts': open_suspicious_alerts(),
             })
         except Exception as db_e:
             logger.error(f"Database error: {db_e}")

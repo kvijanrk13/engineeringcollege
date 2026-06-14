@@ -167,6 +167,83 @@
             border-radius: 6px;
             padding: 12px;
         }
+        .learning-flow {
+            display: grid;
+            gap: 14px;
+        }
+        .message-demo {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin: 14px 0;
+        }
+        .message-box {
+            background: #f8fbfe;
+            border: 1px solid #d7e0eb;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .message-box strong {
+            color: #113f67;
+            display: block;
+            margin-bottom: 8px;
+        }
+        .flow-lanes {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .flow-lane {
+            border: 1px solid #d7e0eb;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .flow-lane h3 {
+            color: #113f67;
+            margin: 0 0 10px;
+        }
+        .flow-steps {
+            display: grid;
+            gap: 10px;
+        }
+        .flow-step {
+            align-items: flex-start;
+            background: #ffffff;
+            border: 1px solid #e1e8f0;
+            border-radius: 8px;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 38px minmax(0, 1fr);
+            padding: 12px;
+        }
+        .step-number {
+            align-items: center;
+            background: #0f766e;
+            border-radius: 999px;
+            color: #ffffff;
+            display: inline-flex;
+            font-weight: 700;
+            height: 32px;
+            justify-content: center;
+            width: 32px;
+        }
+        .flow-step strong {
+            color: #26364d;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .flow-step p {
+            margin: 0;
+        }
+        .success-check {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+            color: #166534;
+            font-weight: 700;
+            padding: 14px;
+            text-align: center;
+        }
         code {
             background: #edf2f7;
             border-radius: 4px;
@@ -174,7 +251,9 @@
         }
         @media (max-width: 820px) {
             .grid,
-            .result-grid {
+            .result-grid,
+            .message-demo,
+            .flow-lanes {
                 grid-template-columns: 1fr;
             }
         }
@@ -194,6 +273,59 @@
                 {% endfor %}
             </section>
         {% endif %}
+
+        <section class="panel full learning-flow">
+            <h2>Visual Flow: Step 1 to Step 15</h2>
+            <p class="help-text">This example shows how one input message becomes encrypted data, then returns to the same readable message after receiver decryption and verification.</p>
+
+            <div class="message-demo">
+                <div class="message-box">
+                    <strong>User Input</strong>
+                    <code>Hello Student</code>
+                </div>
+                <div class="message-box">
+                    <strong>Encrypted Message</strong>
+                    <code>X7@91K#PZ...</code>
+                </div>
+                <div class="message-box">
+                    <strong>Received Message</strong>
+                    <code>Hello Student</code>
+                </div>
+            </div>
+
+            <div class="flow-lanes">
+                <div class="flow-lane">
+                    <h3>Sender Side: Encryption and Sharing</h3>
+                    <div class="flow-steps">
+                        <div class="flow-step"><span class="step-number">1</span><p><strong>User registration/login</strong>Sender and receiver identify themselves with verified Gmail.</p></div>
+                        <div class="flow-step"><span class="step-number">2</span><p><strong>User keys</strong>Each user has a public key and private key identity for secure sharing.</p></div>
+                        <div class="flow-step"><span class="step-number">3</span><p><strong>Input selected</strong>Sender chooses a file or message such as <code>Hello Student</code>.</p></div>
+                        <div class="flow-step"><span class="step-number">4</span><p><strong>AES key generated</strong>System creates a random AES key for fast file encryption.</p></div>
+                        <div class="flow-step"><span class="step-number">5</span><p><strong>File encrypted</strong>Original input becomes unreadable ciphertext like <code>X7@91K#PZ...</code>.</p></div>
+                        <div class="flow-step"><span class="step-number">6</span><p><strong>Hash created</strong>System calculates SHA-256 hash of the original file.</p></div>
+                        <div class="flow-step"><span class="step-number">7</span><p><strong>Digital signature</strong>Sender signs the hash to prove file ownership and integrity.</p></div>
+                        <div class="flow-step"><span class="step-number">8</span><p><strong>AES key locked</strong>AES key is encrypted for the receiver public key.</p></div>
+                        <div class="flow-step"><span class="step-number">9</span><p><strong>Sharing record stored</strong>System stores encrypted file, encrypted AES key, hash, signature, receiver, expiry, and revoked status.</p></div>
+                    </div>
+                </div>
+
+                <div class="flow-lane">
+                    <h3>Receiver Side: Decryption and Verification</h3>
+                    <div class="flow-steps">
+                        <div class="flow-step"><span class="step-number">10</span><p><strong>Shared With Me</strong>Receiver selects the shared file and system checks permission, expiry, access code, and revoked status.</p></div>
+                        <div class="flow-step"><span class="step-number">11</span><p><strong>AES key unlocked</strong>Receiver private key decrypts the encrypted AES key.</p></div>
+                        <div class="flow-step"><span class="step-number">12</span><p><strong>File decrypted</strong>AES key converts ciphertext back to readable data.</p></div>
+                        <div class="flow-step"><span class="step-number">13</span><p><strong>Hash and signature verified</strong>System checks that the decrypted file hash and sender signature are valid.</p></div>
+                        <div class="flow-step"><span class="step-number">14</span><p><strong>Audit and dashboard</strong>System records uploads, encryption, sharing, downloads, failed attempts, and suspicious activity.</p></div>
+                        <div class="flow-step"><span class="step-number">15</span><p><strong>Final result</strong>Receiver downloads the same message or file that sender provided.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="success-check">
+                Sent message: Hello Student | Received message: Hello Student | Result: Same message, verified successfully
+            </div>
+        </section>
 
         {% if not kavach_gmail_verified %}
             <section class="panel full registration-panel">
@@ -249,6 +381,12 @@
             <section class="panel full">
                 <h2>Gmail Access</h2>
                 <p class="identity"><strong>Signed in:</strong> {{ kavach_gmail_name }} &lt;{{ kavach_gmail_email }}&gt;</p>
+                <p>
+                    <a class="button-link" href="{% url 'dashboard:kavach_user_dashboard' %}">Open User Dashboard</a>
+                    {% if request.user.is_authenticated and request.user.is_staff %}
+                        <a class="button-link button-secondary" href="{% url 'dashboard:kavach_admin_dashboard' %}">Open Admin Dashboard</a>
+                    {% endif %}
+                </p>
             </section>
 
             <section class="grid full">
@@ -271,12 +409,40 @@
                             <input type="file" id="secure_file" name="secure_file" required>
                             <p class="help-text">AES-GCM is used because AES is fast for large files and GCM also verifies integrity.</p>
                         </div>
+                        <div>
+                            <label for="expires_days">Expiry</label>
+                            <select id="expires_days" name="expires_days">
+                                <option value="7" selected>7 days</option>
+                                <option value="1">1 day</option>
+                                <option value="14">14 days</option>
+                                <option value="30">30 days</option>
+                            </select>
+                        </div>
                         <button type="submit">Encrypt and Share File</button>
                     </form>
                 </article>
 
                 <article class="panel">
                     <h2>Receiver Download</h2>
+                    <div class="transfer-list">
+                        <h3>Shared With Me</h3>
+                        {% for transfer in shared_with_me %}
+                            <div class="transfer-item">
+                                <strong>{{ transfer.original_filename }}</strong>
+                                <p class="help-text">Transfer ID: <code>{{ transfer.transfer_id }}</code></p>
+                                <p class="help-text">
+                                    From {{ transfer.sender_email|default:"sender" }} |
+                                    expires {% if transfer.expires_at %}{{ transfer.expires_at }}{% else %}not set{% endif %} |
+                                    {% if transfer.is_revoked %}revoked{% else %}active{% endif %}
+                                </p>
+                                {% if not transfer.is_revoked %}
+                                    <button type="button" onclick="document.getElementById('transfer_id').value='{{ transfer.transfer_id }}'; document.getElementById('access_code').focus();">Select File</button>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="help-text">No files are currently shared with this Gmail account.</p>
+                        {% endfor %}
+                    </div>
                     <form method="post" class="form-grid">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="receiver_download">
@@ -301,9 +467,10 @@
                         <li>Sender selects the receiver Gmail account and uploads a file.</li>
                         <li>The server generates a random AES key and random nonce/IV.</li>
                         <li>The server hashes the original file with SHA-256 and signs that hash with the sender private key.</li>
+                        <li>The server encrypts the AES key for the selected receiver public key.</li>
                         <li>The server encrypts the file with AES-GCM and stores only the encrypted <code>.aesgcm</code> file.</li>
                         <li>The page creates a transfer ID and access code for the receiver workflow.</li>
-                        <li>Receiver signs in with the selected Gmail account, enters the transfer ID and access code, and KAVACH verifies the sender signature before download.</li>
+                        <li>Receiver opens Shared With Me, selects the file, passes permission, expiry, and revocation checks, decrypts the AES key with the receiver private key, decrypts the file, and KAVACH verifies hash and sender signature before download.</li>
                     </ol>
                 </article>
 
@@ -315,8 +482,20 @@
                                 <strong>{{ transfer.transfer_id }}</strong>
                                 <p>{{ transfer.original_filename }}{% if transfer.receiver_email %} for {{ transfer.receiver_email }}{% endif %}</p>
                                 <p class="help-text">{{ transfer.encryption_algorithm }} | {{ transfer.signature_algorithm }} | {{ transfer.file_size }} bytes | downloads: {{ transfer.download_count }}</p>
+                                <p class="help-text">
+                                    expires {% if transfer.expires_at %}{{ transfer.expires_at }}{% else %}not set{% endif %} |
+                                    {% if transfer.is_revoked %}revoked{% else %}active{% endif %}
+                                </p>
                                 {% if transfer.file_sha256_hash %}
                                     <p class="help-text">SHA-256: <code>{{ transfer.file_sha256_hash }}</code></p>
+                                {% endif %}
+                                {% if transfer.sender_email == kavach_gmail_email and not transfer.is_revoked %}
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="revoke_transfer">
+                                        <input type="hidden" name="transfer_id" value="{{ transfer.transfer_id }}">
+                                        <button type="submit">Revoke Access</button>
+                                    </form>
                                 {% endif %}
                             </div>
                         {% empty %}
@@ -332,6 +511,9 @@
                     <li>Sender and receiver use only <code>/projects/kavach/</code>.</li>
                     <li>Sender and receiver must use verified Gmail sign-in.</li>
                     <li>Sender selects the receiver Gmail account before encryption.</li>
+                    <li>Owner can revoke receiver access at any time; revoked records cannot be downloaded or decrypted through the system.</li>
+                    <li>Receivers download from Shared With Me after access permission, expiry, and revoked-status checks.</li>
+                    <li>AES keys for new transfers are encrypted for the receiver key pair before storage.</li>
                     <li>Each upload stores a SHA-256 hash, uploader public key, and digital signature.</li>
                     <li>Original uploaded files are not stored.</li>
                     <li>Encrypted storage and decrypted download both work on localhost and Render through the same route.</li>
