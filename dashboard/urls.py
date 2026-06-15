@@ -34,6 +34,11 @@ urlpatterns = [
         name='cloudattend_parent_messaging_demo',
     ),
     path(
+        'projects/cloudattend-parent-messaging/pages/<slug:page_slug>/',
+        views.cloudattend_template_demo,
+        name='cloudattend_template_demo',
+    ),
+    path(
         'projects/policies/<slug:policy_slug>/',
         views.project_policy_pdf,
         name='project_policy_pdf',

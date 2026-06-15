@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #F5F8FC; color: #172033; font-family: Arial, Helvetica, sans-serif; }
+        main { max-width: 1080px; margin: 0 auto; padding: 28px 18px; }
+        a { color: #1456A0; }
+        .panel { border: 1px solid #D8E0EA; border-radius: 8px; background: #FFFFFF; padding: 20px; margin-top: 16px; }
+        h1 { margin: 0 0 8px; font-size: 28px; }
+        h2 { margin: 0 0 12px; font-size: 20px; }
+        p { color: #526174; line-height: 1.55; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+        .action { display: inline-block; padding: 10px 14px; border-radius: 6px; background: #1456A0; color: #FFFFFF; font-weight: 700; text-decoration: none; }
+        .action.secondary { background: #0F766E; }
+        .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+        .metric { border: 1px solid #D8E0EA; border-radius: 8px; background: #F7F9FC; padding: 14px; }
+        .metric strong { display: block; font-size: 24px; }
+        table { width: 100%; margin-top: 14px; border-collapse: collapse; background: #FFFFFF; }
+        th, td { padding: 11px; border: 1px solid #D8E0EA; text-align: left; font-size: 14px; }
+        th { background: #EAF1F8; }
+        label { display: block; margin: 12px 0 5px; font-weight: 700; font-size: 13px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #C9D4E2; border-radius: 6px; font: inherit; }
+        textarea { min-height: 82px; resize: vertical; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .badge { display: inline-block; padding: 5px 9px; border-radius: 999px; background: #E0F2FE; color: #075985; font-size: 12px; font-weight: 700; }
+        .template-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        .template-nav a { padding: 9px; border: 1px solid #D8E0EA; border-radius: 6px; background: #FFFFFF; text-decoration: none; font-size: 13px; }
+        code { color: #1456A0; }
+        @media (max-width: 820px) { .metric-grid, .form-grid, .template-nav { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<main>
+    <a href="{{ project_demo_url }}">&larr; CloudAttend Execution Hub</a>
+    <section class="panel">
+        <h1>{{ page.title }}</h1>
+        <p>{{ page.description }}</p>
+        <p><strong>Executed template:</strong> <code>{{ page.path }}</code></p>
+        <div class="actions">
+            <a class="action" href="{{ project_detail_url }}">Open Project Page</a>
+            <a class="action secondary" href="{{ project_demo_url }}">Open Execution Hub</a>
+        </div>
+    </section>
+
+    <section class="panel">
+        {% if 'dashboard' in page.slug %}
+            <h2>Dashboard Execution Preview</h2>
+            <div class="metric-grid">
+                <div class="metric"><strong>126</strong><span>Students</span></div>
+                <div class="metric"><strong>18</strong><span>Subjects</span></div>
+                <div class="metric"><strong>92%</strong><span>Today present</span></div>
+                <div class="metric"><strong>8</strong><span>Absence alerts</span></div>
+            </div>
+        {% elif 'form' in page.slug or 'login' in page.slug or 'acknowledge' in page.slug %}
+            <h2>Form Execution Preview</h2>
+            <form>
+                <div class="form-grid">
+                    <div><label>Name / Username</label><input value="Demo User"></div>
+                    <div><label>Email / Recipient</label><input value="demo@example.com"></div>
+                    <div><label>Department / Channel</label><select><option>Cloud Computing</option><option>Email</option><option>SMS</option></select></div>
+                    <div><label>Date</label><input type="date"></div>
+                </div>
+                <label>Remarks / Message</label>
+                <textarea>Parent absence message or acknowledgement reason appears here.</textarea>
+                <div class="actions"><button class="action" type="button">Save Demo</button></div>
+            </form>
+        {% elif 'notification' in page.slug or 'parents' in page.slug %}
+            <h2>Parent Messaging Execution Preview</h2>
+            <table>
+                <thead><tr><th>Student</th><th>Parent</th><th>Channel</th><th>Recipient</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for item in sample_notifications %}
+                        <tr><td>{{ item.student }}</td><td>{{ item.parent }}</td><td>{{ item.channel }}</td><td>{{ item.recipient }}</td><td><span class="badge">{{ item.status }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% elif 'attendance' in page.slug %}
+            <h2>Attendance Execution Preview</h2>
+            <table>
+                <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for item in sample_attendance %}
+                        <tr><td>{{ item.date }}</td><td>{{ item.student }}</td><td>{{ item.subject }}</td><td><span class="badge">{{ item.status }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <h2>Student / Academic Execution Preview</h2>
+            <table>
+                <thead><tr><th>Roll No</th><th>Name</th><th>Department</th><th>Email</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for item in sample_students %}
+                        <tr><td>{{ item.roll }}</td><td>{{ item.name }}</td><td>{{ item.department }}</td><td>{{ item.email }}</td><td><span class="badge">{{ item.status }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <h2>All CloudAttend HTML Pages</h2>
+        <div class="template-nav">
+            {% for item in template_pages %}
+                <a href="{{ item.url }}">{{ item.title }}</a>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+</body>
+</html>

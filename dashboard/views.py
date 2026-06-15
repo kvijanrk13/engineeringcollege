@@ -3635,6 +3635,45 @@ def engineeringcollege_demo_video(request):
     return response
 
 
+CLOUDATTEND_TEMPLATE_DEMOS = [
+    ('dashboard-admin', 'dashboard/admin.html', 'Admin dashboard', 'KPI cards, weekly chart summary, and recent attendance records.'),
+    ('dashboard-student', 'dashboard/student.html', 'Student dashboard', 'Student attendance percentage, subject-wise status, and recent entries.'),
+    ('registration-login', 'registration/login.html', 'Login page', 'CloudAttend sign-in form for admin, staff, and students.'),
+    ('students-list', 'students/list.html', 'Student list', 'Student directory with roll number, department, email, and action buttons.'),
+    ('students-form', 'students/form.html', 'Student form', 'Student creation and update form.'),
+    ('students-detail', 'students/detail.html', 'Student detail', 'Student profile, enrolled subjects, and attendance summary.'),
+    ('students-confirm-delete', 'students/confirm_delete.html', 'Student delete confirmation', 'Deletion confirmation screen for a student record.'),
+    ('attendance-list', 'attendance/list.html', 'Attendance list', 'Attendance table with date, subject, student, and status filters.'),
+    ('attendance-form', 'attendance/form.html', 'Attendance form', 'Single attendance entry form.'),
+    ('attendance-mark', 'attendance/mark.html', 'Bulk attendance marking', 'Staff page for marking a class in one workflow.'),
+    ('attendance-confirm-delete', 'attendance/confirm_delete.html', 'Attendance delete confirmation', 'Deletion confirmation screen for attendance records.'),
+    ('departments-list', 'departments/list.html', 'Department list', 'Department table with codes and descriptions.'),
+    ('departments-form', 'departments/form.html', 'Department form', 'Department create and update form.'),
+    ('subjects-list', 'subjects/list.html', 'Subject list', 'Subject table with department and credit information.'),
+    ('subjects-form', 'subjects/form.html', 'Subject form', 'Subject create and update form.'),
+    ('reports-index', 'reports/index.html', 'Reports page', 'Attendance analytics and report summary.'),
+    ('parents-list', 'parents/list.html', 'Parent contacts', 'Parent or guardian mapping for each student.'),
+    ('parents-form', 'parents/form.html', 'Parent contact form', 'Parent contact entry with preferred notification channel.'),
+    ('notifications-absent-parents', 'notifications/absent_parents.html', 'Absent parent alerts', 'Find absentees and prepare parent messages.'),
+    ('notifications-logs', 'notifications/logs.html', 'Notification logs', 'Track pending, sent, failed, and acknowledged messages.'),
+    ('notifications-acknowledge', 'notifications/acknowledge.html', 'Parent acknowledgement', 'Parent response form for absence alerts.'),
+    ('notifications-acknowledged', 'notifications/acknowledged.html', 'Acknowledgement success', 'Final confirmation page after parent acknowledgement.'),
+]
+
+
+def _cloudattend_template_links():
+    return [
+        {
+            'slug': slug,
+            'path': path,
+            'title': title,
+            'description': description,
+            'url': reverse('dashboard:cloudattend_template_demo', args=[slug]),
+        }
+        for slug, path, title, description in CLOUDATTEND_TEMPLATE_DEMOS
+    ]
+
+
 def cloudattend_parent_messaging_demo(request):
     """Public execution preview for the CloudAttend parent messaging workflow."""
     demo_date = timezone.localdate()
@@ -3674,12 +3713,56 @@ def cloudattend_parent_messaging_demo(request):
         'title': 'CloudAttend Parent Messaging Demo',
         'demo_date': demo_date,
         'absent_students': absent_students,
+        'template_pages': _cloudattend_template_links(),
         'local_url': 'http://127.0.0.1:8000/projects/cloudattend-parent-messaging/demo/',
         'render_url': 'https://engineeringcollege.onrender.com/projects/cloudattend-parent-messaging/demo/',
         'project_detail_url': reverse(
             'dashboard:project_detail',
             args=['cloud-computing', 'cloudattend-parent-messaging'],
         ),
+    })
+
+
+def cloudattend_template_demo(request, page_slug):
+    page = next(
+        (
+            {
+                'slug': slug,
+                'path': path,
+                'title': title,
+                'description': description,
+            }
+            for slug, path, title, description in CLOUDATTEND_TEMPLATE_DEMOS
+            if slug == page_slug
+        ),
+        None,
+    )
+    if not page:
+        raise Http404("CloudAttend template page not found")
+
+    sample_students = [
+        {'roll': '23CSE041', 'name': 'Ananya Rao', 'department': 'CSE', 'email': 'ananya@student.edu', 'status': 'Active'},
+        {'roll': '23IT118', 'name': 'Rahul Varma', 'department': 'IT', 'email': 'rahul@student.edu', 'status': 'Active'},
+        {'roll': '23AIML026', 'name': 'Meghana Reddy', 'department': 'AIML', 'email': 'meghana@student.edu', 'status': 'Active'},
+    ]
+    sample_attendance = [
+        {'date': timezone.localdate(), 'student': 'Ananya Rao', 'subject': 'Cloud Computing', 'status': 'Present'},
+        {'date': timezone.localdate(), 'student': 'Rahul Varma', 'subject': 'Distributed Systems', 'status': 'Absent'},
+        {'date': timezone.localdate(), 'student': 'Meghana Reddy', 'subject': 'Cloud Services Lab', 'status': 'Absent'},
+    ]
+    sample_notifications = [
+        {'student': 'Rahul Varma', 'parent': 'Suresh Varma', 'channel': 'SMS', 'recipient': '+91 90000 11223', 'status': 'Pending'},
+        {'student': 'Meghana Reddy', 'parent': 'Kavitha Reddy', 'channel': 'WhatsApp', 'recipient': '+91 90000 44556', 'status': 'Acknowledged'},
+    ]
+    return render(request, 'dashboard/cloudattend_template_demo.html', {
+        'title': f"CloudAttend - {page['title']}",
+        'page': page,
+        'template_pages': _cloudattend_template_links(),
+        'sample_students': sample_students,
+        'sample_attendance': sample_attendance,
+        'sample_notifications': sample_notifications,
+        'project_demo_url': reverse('dashboard:cloudattend_parent_messaging_demo'),
+        'project_detail_url': reverse('dashboard:project_detail', args=['cloud-computing', 'cloudattend-parent-messaging']),
     })
 
 
