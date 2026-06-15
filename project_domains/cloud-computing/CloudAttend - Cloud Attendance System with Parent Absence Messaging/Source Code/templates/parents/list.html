@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Parent Contacts</h1>
+    <p class="text-muted mb-0">Map each student to a parent or guardian for absence alerts.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'parent_contact_create' %}">Add Parent Contact</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Parent</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Channel</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for contact in contacts %}
+          <tr>
+            <td>{{ contact.student.full_name }}</td>
+            <td>{{ contact.parent_name }}</td>
+            <td>{{ contact.phone_number|default:"-" }}</td>
+            <td>{{ contact.email|default:"-" }}</td>
+            <td>{{ contact.get_preferred_channel_display }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center text-muted py-4">No parent contacts added yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

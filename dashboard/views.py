@@ -3635,6 +3635,54 @@ def engineeringcollege_demo_video(request):
     return response
 
 
+def cloudattend_parent_messaging_demo(request):
+    """Public execution preview for the CloudAttend parent messaging workflow."""
+    demo_date = timezone.localdate()
+    absent_students = [
+        {
+            'roll_number': '23CSE041',
+            'name': 'Ananya Rao',
+            'department': 'CSE',
+            'subject': 'Cloud Computing',
+            'parent': 'Madhavi Rao',
+            'channel': 'Email',
+            'recipient': 'madhavi.parent@example.com',
+            'status': 'Sent',
+        },
+        {
+            'roll_number': '23IT118',
+            'name': 'Rahul Varma',
+            'department': 'IT',
+            'subject': 'Distributed Systems',
+            'parent': 'Suresh Varma',
+            'channel': 'SMS',
+            'recipient': '+91 90000 11223',
+            'status': 'Pending',
+        },
+        {
+            'roll_number': '23AIML026',
+            'name': 'Meghana Reddy',
+            'department': 'AIML',
+            'subject': 'Cloud Services Lab',
+            'parent': 'Kavitha Reddy',
+            'channel': 'WhatsApp',
+            'recipient': '+91 90000 44556',
+            'status': 'Acknowledged',
+        },
+    ]
+    return render(request, 'dashboard/cloudattend_parent_messaging_demo.html', {
+        'title': 'CloudAttend Parent Messaging Demo',
+        'demo_date': demo_date,
+        'absent_students': absent_students,
+        'local_url': 'http://127.0.0.1:8000/projects/cloudattend-parent-messaging/demo/',
+        'render_url': 'https://engineeringcollege.onrender.com/projects/cloudattend-parent-messaging/demo/',
+        'project_detail_url': reverse(
+            'dashboard:project_detail',
+            args=['cloud-computing', 'cloudattend-parent-messaging'],
+        ),
+    })
+
+
 PROJECT_DOMAINS = {
     'ai': 'Artificial Intelligence',
     'machine-learning': 'Machine Learning',

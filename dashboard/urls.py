@@ -29,6 +29,11 @@ urlpatterns = [
     path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),
     path('projects/kavach/admin-dashboard/', views.kavach_admin_dashboard, name='kavach_admin_dashboard'),
     path(
+        'projects/cloudattend-parent-messaging/demo/',
+        views.cloudattend_parent_messaging_demo,
+        name='cloudattend_parent_messaging_demo',
+    ),
+    path(
         'projects/policies/<slug:policy_slug>/',
         views.project_policy_pdf,
         name='project_policy_pdf',

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Parent Notification Logs</h1>
+    <p class="text-muted mb-0">Track prepared, sent, failed, and acknowledged absence messages.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'parent_absence_notifications' %}">Create Alerts</a>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Parent</th>
+          <th>Channel</th>
+          <th>Recipient</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+          <tr>
+            <td>{{ log.attendance.student.full_name }}</td>
+            <td>{{ log.parent_contact.parent_name }}</td>
+            <td>{{ log.channel }}</td>
+            <td>{{ log.recipient }}</td>
+            <td>{{ log.status }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'parent_notification_send' log.id %}">Send</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'parent_acknowledge' log.id %}">Ack Link</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">No parent notifications prepared yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
