@@ -543,26 +543,32 @@ Exam Branch
     .individual-time-table {
         min-width: 1080px;
         border-collapse: collapse;
+        table-layout: fixed;
     }
 
     .individual-time-table th,
     .individual-time-table td {
-        border: 1px solid #1f2933;
+        border: 1px solid #111;
         vertical-align: middle;
+        padding: 0;
     }
 
     .individual-time-table .individual-top-cell {
         background: #fff;
-        padding: 0.55rem;
+        padding: 0.28rem 0.45rem;
     }
 
     .individual-time-table .individual-top-cell input {
         border: 0;
         border-radius: 0;
         box-shadow: none;
-        font-size: 1.25rem;
+        padding: 0.18rem 0;
+        min-height: 38px;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.45rem;
         font-weight: 800;
         background: transparent;
+        color: #050505;
     }
 
     .individual-time-table .individual-top-cell.hours input {
@@ -570,44 +576,63 @@ Exam Branch
     }
 
     .individual-time-table thead th {
-        background: #a9a9a9;
+        background: #a6a6a6;
         color: #050505;
         text-align: center;
-        font-size: 1.05rem;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.45rem;
         font-weight: 900;
+        line-height: 1.15;
+        height: 74px;
+        padding: 0.35rem 0.2rem;
+    }
+
+    .individual-time-table col.day-column {
+        width: 12.5%;
+    }
+
+    .individual-time-table col.period-column {
+        width: 12.5%;
     }
 
     .individual-time-table .day-cell {
-        width: 92px;
-        background: #a9a9a9;
+        background: #a6a6a6;
         color: #050505;
         text-align: center;
-        font-size: 1.1rem;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.55rem;
         font-weight: 900;
     }
 
     .individual-time-table .individual-break {
-        width: 112px;
         background: #fff;
         color: #050505;
         text-align: center;
-        font-size: 1.12rem;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.45rem;
         font-weight: 900;
         writing-mode: vertical-rl;
         transform: rotate(180deg);
         letter-spacing: 0.08em;
+        line-height: 1;
     }
 
     .individual-time-table textarea {
-        min-height: 52px;
+        min-height: 54px;
         border: 0;
         border-radius: 0;
         resize: vertical;
         text-align: center;
+        vertical-align: middle;
         font-family: Georgia, "Times New Roman", serif;
-        font-size: 1rem;
+        font-size: 1.18rem;
+        line-height: 1.15;
         background: #fff;
         box-shadow: none;
+    }
+
+    .individual-time-table tbody tr {
+        height: 54px;
     }
 
     @media (max-width: 991.98px) {
@@ -1096,21 +1121,31 @@ Exam Branch
                         <h3 class="card-title">Individual Time Table</h3>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
+                                <colgroup>
+                                    <col class="day-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                </colgroup>
                                 <thead>
                                     <tr>
-                                        <th colspan="4" class="individual-top-cell">
-                                            <input type="text" id="individualFacultyName" class="form-control individual-timetable-meta-input" placeholder="Faculty Name" />
+                                        <th colspan="5" class="individual-top-cell">
+                                            <input type="text" id="individualFacultyName" class="form-control individual-timetable-meta-input" placeholder="Faculty Name" aria-label="Faculty Name" />
                                         </th>
-                                        <th colspan="4" class="individual-top-cell hours">
-                                            <input type="text" id="individualTotalHours" class="form-control individual-timetable-meta-input" placeholder="Number of hours:" />
+                                        <th colspan="3" class="individual-top-cell hours">
+                                            <input type="text" id="individualTotalHours" class="form-control individual-timetable-meta-input" placeholder="Number of hours:" aria-label="Number of hours" />
                                         </th>
                                     </tr>
                                     <tr>
                                         <th>DAY</th>
-                                        <th>9:30-10:30</th>
-                                        <th>10:30-11:30</th>
-                                        <th>11:40-12:40</th>
-                                        <th>12:40-1:20</th>
+                                        <th>9:30-<br>10:30</th>
+                                        <th>10:30-<br>11:30</th>
+                                        <th>11:40-<br>12:40</th>
+                                        <th>12:40-<br>1:20</th>
                                         <th>1:20-2:15</th>
                                         <th>2:15-3:10</th>
                                         <th>3:15-4:10</th>
