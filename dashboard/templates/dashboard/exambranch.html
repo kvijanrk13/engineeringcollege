@@ -494,6 +494,52 @@ Exam Branch
         background: #f7fbff;
     }
 
+    .time-table-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .time-table-meta .exam-mini-block {
+        margin: 0;
+    }
+
+    .time-table-grid {
+        min-width: 1120px;
+    }
+
+    .time-table-grid th:first-child,
+    .time-table-grid td:first-child {
+        width: 92px;
+        text-align: center;
+        font-weight: 800;
+        color: var(--exam-ink);
+        background: #f3f9ff;
+    }
+
+    .time-table-grid textarea {
+        min-height: 72px;
+        resize: vertical;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .time-table-grid .break-slot {
+        background: #fff8ee;
+        color: #c96a19;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .time-table-reference {
+        min-width: 760px;
+    }
+
+    .time-table-reference th {
+        white-space: nowrap;
+    }
+
     @media (max-width: 991.98px) {
         .exam-hero,
         .panel-header {
@@ -502,6 +548,7 @@ Exam Branch
 
         .exam-hero-metrics,
         .exam-mini-grid,
+        .time-table-meta,
         .summary-grid {
             width: 100%;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -526,6 +573,7 @@ Exam Branch
         }
 
         .exam-mini-grid,
+        .time-table-meta,
         .summary-grid {
             grid-template-columns: 1fr;
         }
@@ -586,6 +634,11 @@ Exam Branch
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button" role="tab" aria-controls="evaluation" aria-selected="false">
                     <i class="fas fa-clipboard-check me-2"></i>Evaluation
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="timetable-tab" data-bs-toggle="tab" data-bs-target="#timetable" type="button" role="tab" aria-controls="timetable" aria-selected="false">
+                    <i class="fas fa-calendar-alt me-2"></i>Time Table
                 </button>
             </li>
         </ul>
@@ -852,6 +905,186 @@ Exam Branch
                     </div>
                 </div>
             </div>
+
+            <div class="tab-pane fade" id="timetable" role="tabpanel" aria-labelledby="timetable-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Class Schedule</div>
+                            <h2 class="section-title">III-I IT empty timetable</h2>
+                            <p class="section-copy">
+                                Blank weekly timetable layout based on III-I Tentative Time Table IT 2026-27.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-clock"></i>
+                            2026-27 reference
+                        </div>
+                    </div>
+
+                    <div class="time-table-meta">
+                        <div class="exam-mini-block">
+                            <label for="timeTableProgram" class="form-label">Program</label>
+                            <input type="text" id="timeTableProgram" class="form-control timetable-meta-input" value="B.Tech" />
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="timeTableYear" class="form-label">Year</label>
+                            <input type="text" id="timeTableYear" class="form-control timetable-meta-input" value="III" />
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="timeTableSemester" class="form-label">Semester</label>
+                            <input type="text" id="timeTableSemester" class="form-control timetable-meta-input" value="I" />
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="timeTableBranch" class="form-label">Branch</label>
+                            <input type="text" id="timeTableBranch" class="form-control timetable-meta-input" value="IT" />
+                        </div>
+                    </div>
+
+                    <div class="exam-table-wrap mb-4">
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table exam-table time-table-grid align-middle" id="timeTableGrid">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>9:30-10:30</th>
+                                        <th>10:30-11:30</th>
+                                        <th>11:40-12:40</th>
+                                        <th>12:40-1:20</th>
+                                        <th>1:20-2:15</th>
+                                        <th>2:15-3:10</th>
+                                        <th>3:15-4:10</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>MON</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>TUE</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>WED</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>THU</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRI</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>SAT</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="exam-actions mb-4">
+                        <div id="timeTableStatus" class="status-chip" data-tone="muted">
+                            <i class="fas fa-cloud"></i>
+                            Timetable not saved yet
+                        </div>
+                        <div class="exam-action-buttons">
+                            <button id="timeTableSaveBtn" class="btn exam-btn exam-btn-success">
+                                <i class="fas fa-save me-2"></i>Save Timetable
+                            </button>
+                            <button id="timeTableClearBtn" class="btn exam-btn exam-btn-danger">
+                                <i class="fas fa-broom me-2"></i>Clear Timetable
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-xl-8">
+                            <div class="exam-card">
+                                <h3 class="card-title">Course Reference</h3>
+                                <div class="table-responsive">
+                                    <table class="table exam-table time-table-reference mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>S.No</th>
+                                                <th>Course Code</th>
+                                                <th>Course Name</th>
+                                                <th>Faculty Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td>1</td><td>CS501PC</td><td>Design and Analysis of Algorithms</td><td>Mr.MD.Raziuddin</td></tr>
+                                            <tr><td>2</td><td>IT502PC</td><td>Automata and Compiler Design</td><td>Mrs.V. Sujitha</td></tr>
+                                            <tr><td>3</td><td>IT503PC</td><td>Embedded Systems</td><td>Mr.K.Rama Krishna</td></tr>
+                                            <tr><td>4</td><td>IT512PE</td><td>Data Mining</td><td>Mr.K.Vijay Kumar</td></tr>
+                                            <tr><td>5</td><td>CS524PE</td><td>Distributed Databases</td><td>Mrs.V.Priyanka</td></tr>
+                                            <tr><td>6</td><td>IT504PC</td><td>Compiler Design Laboratory</td><td>Mrs.V.Sujitha / Mr.C.Sarath Kumar</td></tr>
+                                            <tr><td>7</td><td>IT505PC</td><td>Embedded Systems Lab</td><td>Mr.K.Rama Krishna / Mr.T.Narsimha Rao</td></tr>
+                                            <tr><td>8</td><td>IT532PE</td><td>Data Mining Laboratory</td><td>Mr.K.Vijay Kumar / Mrs.V.Sujitha</td></tr>
+                                            <tr><td>9</td><td>CS507PC</td><td>Skill Development Course (UI Design Flutter)</td><td>Mr.S.Govinda Raju / Mrs.R.Jayamma</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="exam-card h-100">
+                                <h3 class="card-title">Rooms</h3>
+                                <div class="table-responsive">
+                                    <table class="table exam-table mb-0">
+                                        <tbody>
+                                            <tr><th>Lecture Hall</th><td>E-303</td></tr>
+                                            <tr><th>ML Lab</th><td>E-201</td></tr>
+                                            <tr><th>CN Lab</th><td>E-201</td></tr>
+                                            <tr><th>ES Lab</th><td>A-104</td></tr>
+                                            <tr><th>UI Flutter Lab</th><td>E-201</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -860,6 +1093,7 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
+        const timeTableStorageKey = 'examBranchTimeTableData';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const csrfTokenValue = '{{ csrf_token }}';
 
@@ -877,7 +1111,10 @@ Exam Branch
         const lessonPlanBody = document.getElementById('teachingPlanBody');
         const lessonPlanStatus = document.getElementById('lessonPlanStatus');
         const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
+        const timeTableStatus = document.getElementById('timeTableStatus');
         const marksBody = document.getElementById('marksBody');
+        const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
+        const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -935,6 +1172,10 @@ Exam Branch
 
         function markEvaluationDirty() {
             setStatus(evaluationSaveStatus, 'Evaluation has unsaved changes', 'warning');
+        }
+
+        function markTimeTableDirty() {
+            setStatus(timeTableStatus, 'Timetable has unsaved changes', 'warning');
         }
 
         function getDayName(date) {
@@ -1461,6 +1702,83 @@ Exam Branch
             markEvaluationDirty();
         }
 
+        function getTimeTablePayload() {
+            const meta = {};
+            timeTableMetaFields.forEach(function (field) {
+                meta[field.id] = field.value;
+            });
+
+            const slots = timeTableSlots.map(function (slot) {
+                return {
+                    day: slot.dataset.day || '',
+                    period: slot.dataset.period || '',
+                    value: slot.value
+                };
+            });
+
+            return {
+                meta: meta,
+                slots: slots,
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function setTimeTablePayload(payload) {
+            const data = payload || {};
+            const meta = data.meta || {};
+            timeTableMetaFields.forEach(function (field) {
+                if (Object.prototype.hasOwnProperty.call(meta, field.id)) {
+                    field.value = meta[field.id] || '';
+                }
+            });
+
+            const slots = Array.isArray(data.slots) ? data.slots : [];
+            timeTableSlots.forEach(function (slot) {
+                const match = slots.find(function (entry) {
+                    return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+                });
+                slot.value = match ? (match.value || '') : '';
+            });
+        }
+
+        function hasTimeTableContent() {
+            return timeTableSlots.some(function (slot) {
+                return slot.value.trim();
+            });
+        }
+
+        function saveTimeTableData() {
+            const payload = getTimeTablePayload();
+            localStorage.setItem(timeTableStorageKey, JSON.stringify(payload));
+            setStatus(timeTableStatus, 'Timetable saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function loadTimeTableData() {
+            const saved = localStorage.getItem(timeTableStorageKey);
+            if (!saved) {
+                setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(saved);
+                setTimeTablePayload(payload);
+                setStatus(timeTableStatus, 'Timetable loaded from ' + formatSavedTime(payload.savedAt), 'success');
+            } catch (error) {
+                console.error('Failed to load timetable data', error);
+                setStatus(timeTableStatus, 'Could not read saved timetable', 'warning');
+            }
+        }
+
+        function clearTimeTableData() {
+            if (hasTimeTableContent() && !confirm('Clear the saved timetable and all period entries?')) {
+                return;
+            }
+            localStorage.removeItem(timeTableStorageKey);
+            setTimeTablePayload({ slots: [] });
+            setStatus(timeTableStatus, 'Timetable cleared', 'muted');
+        }
+
         document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
         document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
         document.getElementById('deleteBtn').addEventListener('click', deleteTeachingPlan);
@@ -1482,6 +1800,8 @@ Exam Branch
         document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
+        document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
+        document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
 
         marksBody.addEventListener('input', function (event) {
             if (event.target.closest('tr')) {
@@ -1494,8 +1814,17 @@ Exam Branch
 
         document.getElementById('studentCount').addEventListener('input', markEvaluationDirty);
 
+        timeTableSlots.forEach(function (slot) {
+            slot.addEventListener('input', markTimeTableDirty);
+        });
+
+        timeTableMetaFields.forEach(function (field) {
+            field.addEventListener('input', markTimeTableDirty);
+        });
+
         loadTeachingPlan();
         loadEvaluationData();
+        loadTimeTableData();
     })();
 </script>
 {% endblock %}
