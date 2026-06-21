@@ -505,6 +505,39 @@ Exam Branch
         margin: 0;
     }
 
+    .syllabus-link-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 18px;
+        background: #f3f9ff;
+        border: 1px solid rgba(15, 76, 129, 0.12);
+    }
+
+    .subject-count-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 32px;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: #17324d;
+        color: #fff;
+        font-weight: 800;
+    }
+
+    .syllabus-subject-table td {
+        cursor: pointer;
+    }
+
+    .syllabus-subject-table tbody tr:hover td {
+        background: #f8fbff;
+    }
+
     .time-table-grid {
         min-width: 1120px;
     }
@@ -1024,15 +1057,68 @@ Exam Branch
                         </div>
                         <div class="exam-mini-block">
                             <label for="timeTableYear" class="form-label">Year</label>
-                            <input type="text" id="timeTableYear" class="form-control timetable-meta-input" value="III" />
+                            <select id="timeTableYear" class="form-control timetable-meta-input">
+                                {% for syllabus_year in syllabus_years %}
+                                    <option value="{{ syllabus_year }}" {% if selected_syllabus_year == syllabus_year %}selected{% endif %}>Year {{ syllabus_year }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="exam-mini-block">
                             <label for="timeTableSemester" class="form-label">Semester</label>
-                            <input type="text" id="timeTableSemester" class="form-control timetable-meta-input" value="I" />
+                            <select id="timeTableSemester" class="form-control timetable-meta-input">
+                                {% for syllabus_semester in syllabus_semesters %}
+                                    <option value="{{ syllabus_semester }}" {% if selected_syllabus_semester == syllabus_semester %}selected{% endif %}>Semester {{ syllabus_semester }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="exam-mini-block">
                             <label for="timeTableBranch" class="form-label">Branch</label>
-                            <input type="text" id="timeTableBranch" class="form-control timetable-meta-input" value="IT" />
+                            <select id="timeTableBranch" class="form-control timetable-meta-input">
+                                {% for syllabus_branch in syllabus_branches %}
+                                    <option value="{{ syllabus_branch }}" {% if branch == syllabus_branch %}selected{% endif %}>
+                                        {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% else %}{{ syllabus_branch }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="exam-card mb-4">
+                        <div class="syllabus-link-card">
+                            <div>
+                                <h3 class="card-title mb-1">Subjects From Syllabus</h3>
+                                <p class="card-copy">
+                                    Select year, semester, and branch to load the matching subject list from the syllabus page.
+                                </p>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span id="syllabusSubjectCount" class="subject-count-pill">{{ subjects|length }}</span>
+                                <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
+                                    <i class="fas fa-book me-2"></i>Open Syllabus
+                                </a>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table exam-table syllabus-subject-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 160px;">Subject Code</th>
+                                        <th>Subject Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="syllabusSubjectBody">
+                                    {% for subject in subjects %}
+                                        <tr data-code="{{ subject.code }}" data-name="{{ subject.name }}">
+                                            <td><strong>{{ subject.code }}</strong></td>
+                                            <td>{{ subject.name }}</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-center text-muted py-4">No subjects found for this selection.</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -1285,6 +1371,7 @@ Exam Branch
         const evaluationStorageKey = 'examBranchEvaluationData';
         const timeTableStorageKey = 'examBranchTimeTableData';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
+        const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
         const csrfTokenValue = '{{ csrf_token }}';
 
         const lessonHeaderFields = {
@@ -1307,6 +1394,11 @@ Exam Branch
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
         const individualTimeTableSlots = Array.from(document.querySelectorAll('.individual-timetable-slot'));
         const individualTimeTableMetaFields = Array.from(document.querySelectorAll('.individual-timetable-meta-input'));
+        const syllabusSubjectBody = document.getElementById('syllabusSubjectBody');
+        const syllabusSubjectCount = document.getElementById('syllabusSubjectCount');
+        const timeTableYearField = document.getElementById('timeTableYear');
+        const timeTableSemesterField = document.getElementById('timeTableSemester');
+        const timeTableBranchField = document.getElementById('timeTableBranch');
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -1333,6 +1425,104 @@ Exam Branch
             }
             const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
             return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        function renderSyllabusSubjects(subjects) {
+            if (!syllabusSubjectBody || !syllabusSubjectCount) {
+                return;
+            }
+
+            syllabusSubjectBody.innerHTML = '';
+            syllabusSubjectCount.textContent = String(subjects.length);
+
+            if (!subjects.length) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 2;
+                cell.className = 'text-center text-muted py-4';
+                cell.textContent = 'No subjects found for this selection.';
+                row.appendChild(cell);
+                syllabusSubjectBody.appendChild(row);
+                return;
+            }
+
+            subjects.forEach(function (subject) {
+                const row = document.createElement('tr');
+                row.dataset.code = subject.code || '';
+                row.dataset.name = subject.name || '';
+
+                const codeCell = document.createElement('td');
+                const codeText = document.createElement('strong');
+                codeText.textContent = subject.code || '-';
+                codeCell.appendChild(codeText);
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = subject.name || '-';
+
+                row.appendChild(codeCell);
+                row.appendChild(nameCell);
+                syllabusSubjectBody.appendChild(row);
+            });
+        }
+
+        function loadSyllabusSubjects() {
+            if (!syllabusSubjectsUrl || !timeTableYearField || !timeTableSemesterField || !timeTableBranchField) {
+                return;
+            }
+
+            const romanMap = { I: '1', II: '2', III: '3', IV: '4' };
+            if (romanMap[timeTableYearField.value]) {
+                timeTableYearField.value = romanMap[timeTableYearField.value];
+            }
+            if (romanMap[timeTableSemesterField.value]) {
+                timeTableSemesterField.value = romanMap[timeTableSemesterField.value];
+            }
+            if (!timeTableYearField.value) {
+                timeTableYearField.value = '3';
+            }
+            if (!timeTableSemesterField.value) {
+                timeTableSemesterField.value = '1';
+            }
+            if (!timeTableBranchField.value) {
+                timeTableBranchField.value = 'IT';
+            }
+
+            const params = new URLSearchParams({
+                year: timeTableYearField.value || '3',
+                semester: timeTableSemesterField.value || '1',
+                branch: timeTableBranchField.value || 'IT'
+            });
+
+            fetch(syllabusSubjectsUrl + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Could not load syllabus subjects.');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderSyllabusSubjects(Array.isArray(data.subjects) ? data.subjects : []);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    renderSyllabusSubjects([]);
+                    setStatus(timeTableStatus, 'Could not load subjects from syllabus', 'warning');
+                });
+        }
+
+        function useSubjectInLessonPlan(subject) {
+            if (!subject) {
+                return;
+            }
+            if (lessonHeaderFields.subject) {
+                lessonHeaderFields.subject.value = subject.name || '';
+            }
+            if (lessonHeaderFields.subjectCode) {
+                lessonHeaderFields.subjectCode.value = subject.code || '';
+            }
+            markLessonDirty();
         }
 
         function submitLessonPlanDownload(payload) {
@@ -2048,6 +2238,12 @@ Exam Branch
 
         timeTableMetaFields.forEach(function (field) {
             field.addEventListener('input', markTimeTableDirty);
+            field.addEventListener('change', function () {
+                markTimeTableDirty();
+                if (field === timeTableYearField || field === timeTableSemesterField || field === timeTableBranchField) {
+                    loadSyllabusSubjects();
+                }
+            });
         });
 
         individualTimeTableSlots.forEach(function (slot) {
@@ -2058,9 +2254,24 @@ Exam Branch
             field.addEventListener('input', markTimeTableDirty);
         });
 
+        if (syllabusSubjectBody) {
+            syllabusSubjectBody.addEventListener('click', function (event) {
+                const row = event.target.closest('tr');
+                if (!row || !row.dataset.code) {
+                    return;
+                }
+                useSubjectInLessonPlan({
+                    code: row.dataset.code,
+                    name: row.dataset.name
+                });
+                setStatus(lessonPlanStatus, 'Subject copied from syllabus', 'success');
+            });
+        }
+
         loadTeachingPlan();
         loadEvaluationData();
         loadTimeTableData();
+        loadSyllabusSubjects();
     })();
 </script>
 {% endblock %}

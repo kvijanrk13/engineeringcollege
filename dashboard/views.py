@@ -16,6 +16,7 @@ import base64
 import binascii
 import secrets
 import mimetypes
+from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
@@ -9597,6 +9598,71 @@ def privacy_policy(request):
 
 
 # ==================== EXAM BRANCH VIEWS ====================
+@lru_cache(maxsize=1)
+def get_syllabus_page_subjects():
+    """Extract the syllabus data used by the public syllabus page."""
+    template_path = Path(settings.BASE_DIR) / 'dashboard' / 'templates' / 'dashboard' / 'syllabus.html'
+    try:
+        template_source = template_path.read_text(encoding='utf-8')
+        match = re.search(
+            r'const\s+syllabusData\s*=\s*(\{.*?\n\s*\});\s*\n\s*const\s+semOrder',
+            template_source,
+            re.S,
+        )
+        if not match:
+            return {}
+
+        data_literal = match.group(1)
+        data_literal = re.sub(r'([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:', r'\1"\2":', data_literal)
+        data_literal = re.sub(r',\s*([}\]])', r'\1', data_literal)
+        parsed = json.loads(data_literal)
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception as exc:
+        logger.warning(f"Could not load syllabus page subjects: {exc}", exc_info=True)
+        return {}
+
+
+def get_syllabus_options():
+    syllabus_data = get_syllabus_page_subjects()
+    year_sem_order = ['1-1', '1-2', '2-1', '2-2', '3-1', '3-2', '4-1', '4-2']
+    available_year_sems = [item for item in year_sem_order if item in syllabus_data]
+    branch_set = set()
+    for year_sem in available_year_sems:
+        branch_set.update(syllabus_data.get(year_sem, {}).keys())
+    branch_order = ['IT', 'CSE', 'AIML']
+    branches = [branch for branch in branch_order if branch in branch_set]
+    branches.extend(sorted(branch_set.difference(branches)))
+    years = sorted({item.split('-', 1)[0] for item in available_year_sems}, key=int)
+    semesters = sorted({item.split('-', 1)[1] for item in available_year_sems}, key=int)
+    return syllabus_data, branches, years, semesters
+
+
+@login_required
+@require_GET
+def exam_branch_syllabus_subjects(request):
+    syllabus_data, branches, years, semesters = get_syllabus_options()
+    year = (request.GET.get('year') or '3').strip()
+    semester = (request.GET.get('semester') or '1').strip()
+    branch = (request.GET.get('branch') or 'IT').strip().upper()
+    if branch == 'CSE(AI&ML)':
+        branch = 'AIML'
+
+    year_sem = f'{year}-{semester}'
+    subjects = syllabus_data.get(year_sem, {}).get(branch, [])
+    return JsonResponse({
+        'year': year,
+        'semester': semester,
+        'year_sem': year_sem,
+        'branch': branch,
+        'branches': branches,
+        'years': years,
+        'semesters': semesters,
+        'subjects': subjects,
+        'count': len(subjects),
+        'syllabus_url': reverse('dashboard:syllabus'),
+    })
+
+
 @login_required
 def exam_branch(request):
     from django.core.paginator import Paginator
@@ -9610,7 +9676,7 @@ def exam_branch(request):
 
         # Filters for Attendance
         branch = request.GET.get('branch', 'IT')
-        year_sem = request.GET.get('year_sem', 'IV-I')
+        year_sem = request.GET.get('year_sem', '3-1')
         from_date_str = request.GET.get('from_date', '2025-07-10')
         to_date_str = request.GET.get('to_date', '2025-09-30')
 
@@ -9660,83 +9726,16 @@ def exam_branch(request):
 
         available_departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
 
-        # Syllabus data for subjects by year-sem and branch
-        syllabus_data = {
-            "1-1": {
-                "IT": [
-                    {"code": "MA101BS", "name": "MATRICES AND CALCULUS"},
-                    {"code": "AP102BS", "name": "APPLIED PHYSICS"},
-                    {"code": "CS103ES", "name": "PROGRAMMING FOR PROBLEM SOLVING"},
-                    {"code": "EN104HS", "name": "ENGLISH FOR SKILL ENHANCEMENT"},
-                    {"code": "ME105ES", "name": "ENGINEERING WORKSHOP"},
-                    {"code": "CS106ES", "name": "ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
-                    {"code": "AP107BS", "name": "APPLIED PHYSICS LABORATORY"},
-                    {"code": "EN108HS", "name": "ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
-                    {"code": "CS109ES", "name": "PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
-                    {"code": "ES110MC", "name": "ENVIRONMENTAL SCIENCE"}
-                ],
-                "CSE": [
-                    {"code": "MA101BS", "name": "MATRICES AND CALCULUS"},
-                    {"code": "CH102BS", "name": "ENGINEERING CHEMISTRY"},
-                    {"code": "CS103ES", "name": "PROGRAMMING FOR PROBLEM SOLVING"},
-                    {"code": "EE104ES", "name": "BASIC ELECTRICAL ENGINEERING"},
-                    {"code": "EG105ES", "name": "COMPUTER AIDED ENGINEERING GRAPHICS"},
-                    {"code": "CS106ES", "name": "ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
-                    {"code": "CH107BS", "name": "ENGINEERING CHEMISTRY LABORATORY"},
-                    {"code": "CS109ES", "name": "PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
-                    {"code": "EE108ES", "name": "BASIC ELECTRICAL ENGINEERING LABORATORY"},
-                    {"code": "HS110MC", "name": "CONSTITUTION OF INDIA"}
-                ]
-            },
-            "1-2": {
-                "IT": [
-                    {"code": "MA201BS", "name": "ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
-                    {"code": "CH202BS", "name": "ENGINEERING CHEMISTRY"},
-                    {"code": "EG203ES", "name": "COMPUTER AIDED ENGINEERING GRAPHICS"},
-                    {"code": "EE204ES", "name": "BASIC ELECTRICAL ENGINEERING"},
-                    {"code": "EC205ES", "name": "ELECTRONIC DEVICES AND CIRCUITS"},
-                    {"code": "CH206BS", "name": "ENGINEERING CHEMISTRY LABORATORY"},
-                    {"code": "CS207ES", "name": "PYTHON PROGRAMMING LABORATORY"},
-                    {"code": "EE208ES", "name": "BASIC ELECTRICAL ENGINEERING LABORATORY"},
-                    {"code": "CS209ES", "name": "IT WORKSHOP"},
-                    {"code": "HS210MC", "name": "CONSTITUTION OF INDIA"}
-                ]
-            },
-            "2-1": {
-                "IT": [
-                    {"code": "MA301BS", "name": "COMPLEX VARIABLES AND STATISTICAL METHODS"},
-                    {"code": "CS302PC", "name": "DATA STRUCTURES"},
-                    {"code": "CS303PC", "name": "COMPUTER ORGANIZATION"},
-                    {"code": "IT304PC", "name": "WEB PROGRAMMING"},
-                    {"code": "CS305PC", "name": "OBJECT ORIENTED PROGRAMMING USING C++"},
-                    {"code": "CS306PC", "name": "DATA STRUCTURES LABORATORY"},
-                    {"code": "IT307PC", "name": "WEB PROGRAMMING LABORATORY"},
-                    {"code": "CS308PC", "name": "OBJECT ORIENTED PROGRAMMING USING C++ LABORATORY"},
-                    {"code": "MC309", "name": "GENDER SENSITIZATION LAB"},
-                    {"code": "HS310MC", "name": "BUSINESS VENTURES AND ENTREPRENEURSHIP"}
-                ]
-            },
-            "2-2": {
-                "IT": [
-                    {"code": "MB401HS", "name": "BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
-                    {"code": "CS402PC", "name": "DISCRETE MATHEMATICS"},
-                    {"code": "CS403PC", "name": "OPERATING SYSTEMS"},
-                    {"code": "CS404PC", "name": "DATABASE MANAGEMENT SYSTEMS"},
-                    {"code": "IT405PC", "name": "JAVA PROGRAMMING"},
-                    {"code": "CS406PC", "name": "OPERATING SYSTEMS LABORATORY"},
-                    {"code": "CS407PC", "name": "DATABASE MANAGEMENT SYSTEMS LABORATORY"},
-                    {"code": "IT408PC", "name": "JAVA PROGRAMMING LABORATORY"},
-                    {"code": "IT409PW", "name": "REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
-                    {"code": "IT410PC", "name": "SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},
-                    {"code": "HS411MC", "name": "INTELLECTUAL PROPERTY RIGHTS"}
-                ]
-            }
-        }
-
-        # Get subjects for the selected year_sem and branch
-        subjects = []
-        if year_sem in syllabus_data and branch in syllabus_data[year_sem]:
-            subjects = syllabus_data[year_sem][branch]
+        syllabus_data, syllabus_branches, syllabus_years, syllabus_semesters = get_syllabus_options()
+        normalized_year_sem = year_sem.replace('IV', '4').replace('III', '3').replace('II', '2').replace('I', '1')
+        if '-' in normalized_year_sem:
+            selected_year, selected_semester = normalized_year_sem.split('-', 1)
+        else:
+            selected_year, selected_semester = '3', '1'
+        branch = branch.upper()
+        if branch == 'CSE(AI&ML)':
+            branch = 'AIML'
+        subjects = syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
 
         # Attendance Dashboard Data
         date_list = []
@@ -9793,7 +9792,14 @@ def exam_branch(request):
             'to_date': to_date_str,
             'branch': branch,
             'year_sem': year_sem,
+            'selected_syllabus_year': selected_year,
+            'selected_syllabus_semester': selected_semester,
+            'syllabus_branches': syllabus_branches,
+            'syllabus_years': syllabus_years,
+            'syllabus_semesters': syllabus_semesters,
             'subjects': subjects,
+            'syllabus_url': reverse('dashboard:syllabus'),
+            'syllabus_subjects_url': reverse('dashboard:exam_branch_syllabus_subjects'),
 
             'title': 'Exam Branch - Management',
         }
