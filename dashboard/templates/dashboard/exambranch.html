@@ -530,14 +530,6 @@ Exam Branch
         font-weight: 800;
     }
 
-    .syllabus-subject-table td {
-        cursor: pointer;
-    }
-
-    .syllabus-subject-table tbody tr:hover td {
-        background: #f8fbff;
-    }
-
     .time-table-grid {
         min-width: 1120px;
     }
@@ -1092,42 +1084,18 @@ Exam Branch
                         </div>
                     </div>
 
-                    <div class="exam-card mb-4">
-                        <div class="syllabus-link-card">
-                            <div>
-                                <h3 class="card-title mb-1">Subjects From Syllabus</h3>
-                                <p class="card-copy">
-                                    Select branch, year, semester, and subject for IT, CSE, or CSE(AI&amp;ML) timetable creation.
-                                </p>
-                            </div>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <span id="syllabusSubjectCount" class="subject-count-pill">{{ subjects|length }}</span>
-                                <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
-                                    <i class="fas fa-book me-2"></i>Open Syllabus
-                                </a>
-                            </div>
+                    <div class="syllabus-link-card">
+                        <div>
+                            <h3 class="card-title mb-1">Subject Selection</h3>
+                            <p class="card-copy">
+                                Subjects are loaded only in the dropdown above based on the selected branch, year, and semester.
+                            </p>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table exam-table syllabus-subject-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 160px;">Subject Code</th>
-                                        <th>Subject Name</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="syllabusSubjectBody">
-                                    {% for subject in subjects %}
-                                        <tr data-code="{{ subject.code }}" data-name="{{ subject.name }}">
-                                            <td><strong>{{ subject.code }}</strong></td>
-                                            <td>{{ subject.name }}</td>
-                                        </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="2" class="text-center text-muted py-4">No subjects found for this selection.</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span id="syllabusSubjectCount" class="subject-count-pill">{{ subjects|length }}</span>
+                            <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
+                                <i class="fas fa-book me-2"></i>Open Syllabus
+                            </a>
                         </div>
                     </div>
 
@@ -1403,7 +1371,6 @@ Exam Branch
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
         const individualTimeTableSlots = Array.from(document.querySelectorAll('.individual-timetable-slot'));
         const individualTimeTableMetaFields = Array.from(document.querySelectorAll('.individual-timetable-meta-input'));
-        const syllabusSubjectBody = document.getElementById('syllabusSubjectBody');
         const syllabusSubjectCount = document.getElementById('syllabusSubjectCount');
         const syllabusSubjectSelect = document.getElementById('syllabusSubjectSelect');
         const timeTableYearField = document.getElementById('timeTableYear');
@@ -1438,11 +1405,10 @@ Exam Branch
         }
 
         function renderSyllabusSubjects(subjects) {
-            if (!syllabusSubjectBody || !syllabusSubjectCount || !syllabusSubjectSelect) {
+            if (!syllabusSubjectCount || !syllabusSubjectSelect) {
                 return;
             }
 
-            syllabusSubjectBody.innerHTML = '';
             syllabusSubjectSelect.innerHTML = '';
             syllabusSubjectCount.textContent = String(subjects.length);
 
@@ -1452,13 +1418,6 @@ Exam Branch
             syllabusSubjectSelect.appendChild(defaultOption);
 
             if (!subjects.length) {
-                const row = document.createElement('tr');
-                const cell = document.createElement('td');
-                cell.colSpan = 2;
-                cell.className = 'text-center text-muted py-4';
-                cell.textContent = 'No subjects found for this selection.';
-                row.appendChild(cell);
-                syllabusSubjectBody.appendChild(row);
                 return;
             }
 
@@ -1469,21 +1428,6 @@ Exam Branch
                 option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
                 syllabusSubjectSelect.appendChild(option);
 
-                const row = document.createElement('tr');
-                row.dataset.code = subject.code || '';
-                row.dataset.name = subject.name || '';
-
-                const codeCell = document.createElement('td');
-                const codeText = document.createElement('strong');
-                codeText.textContent = subject.code || '-';
-                codeCell.appendChild(codeText);
-
-                const nameCell = document.createElement('td');
-                nameCell.textContent = subject.name || '-';
-
-                row.appendChild(codeCell);
-                row.appendChild(nameCell);
-                syllabusSubjectBody.appendChild(row);
             });
         }
 
@@ -2275,20 +2219,6 @@ Exam Branch
         individualTimeTableMetaFields.forEach(function (field) {
             field.addEventListener('input', markTimeTableDirty);
         });
-
-        if (syllabusSubjectBody) {
-            syllabusSubjectBody.addEventListener('click', function (event) {
-                const row = event.target.closest('tr');
-                if (!row || !row.dataset.code) {
-                    return;
-                }
-                useSubjectInLessonPlan({
-                    code: row.dataset.code,
-                    name: row.dataset.name
-                });
-                setStatus(lessonPlanStatus, 'Subject copied from syllabus', 'success');
-            });
-        }
 
         if (syllabusSubjectSelect) {
             syllabusSubjectSelect.addEventListener('change', function () {
