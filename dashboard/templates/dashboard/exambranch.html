@@ -540,6 +540,76 @@ Exam Branch
         white-space: nowrap;
     }
 
+    .individual-time-table {
+        min-width: 1080px;
+        border-collapse: collapse;
+    }
+
+    .individual-time-table th,
+    .individual-time-table td {
+        border: 1px solid #1f2933;
+        vertical-align: middle;
+    }
+
+    .individual-time-table .individual-top-cell {
+        background: #fff;
+        padding: 0.55rem;
+    }
+
+    .individual-time-table .individual-top-cell input {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        font-size: 1.25rem;
+        font-weight: 800;
+        background: transparent;
+    }
+
+    .individual-time-table .individual-top-cell.hours input {
+        text-align: center;
+    }
+
+    .individual-time-table thead th {
+        background: #a9a9a9;
+        color: #050505;
+        text-align: center;
+        font-size: 1.05rem;
+        font-weight: 900;
+    }
+
+    .individual-time-table .day-cell {
+        width: 92px;
+        background: #a9a9a9;
+        color: #050505;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 900;
+    }
+
+    .individual-time-table .individual-break {
+        width: 112px;
+        background: #fff;
+        color: #050505;
+        text-align: center;
+        font-size: 1.12rem;
+        font-weight: 900;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        letter-spacing: 0.08em;
+    }
+
+    .individual-time-table textarea {
+        min-height: 52px;
+        border: 0;
+        border-radius: 0;
+        resize: vertical;
+        text-align: center;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1rem;
+        background: #fff;
+        box-shadow: none;
+    }
+
     @media (max-width: 991.98px) {
         .exam-hero,
         .panel-header {
@@ -1022,6 +1092,91 @@ Exam Branch
                         </div>
                     </div>
 
+                    <div class="exam-card mb-4">
+                        <h3 class="card-title">Individual Time Table</h3>
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
+                                <thead>
+                                    <tr>
+                                        <th colspan="4" class="individual-top-cell">
+                                            <input type="text" id="individualFacultyName" class="form-control individual-timetable-meta-input" placeholder="Faculty Name" />
+                                        </th>
+                                        <th colspan="4" class="individual-top-cell hours">
+                                            <input type="text" id="individualTotalHours" class="form-control individual-timetable-meta-input" placeholder="Number of hours:" />
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>DAY</th>
+                                        <th>9:30-10:30</th>
+                                        <th>10:30-11:30</th>
+                                        <th>11:40-12:40</th>
+                                        <th>12:40-1:20</th>
+                                        <th>1:20-2:15</th>
+                                        <th>2:15-3:10</th>
+                                        <th>3:15-4:10</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="day-cell">MON</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="11:40-12:40"></textarea></td>
+                                        <td class="individual-break" rowspan="6">LUNCH BREAK</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">TUE</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">WED</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">THU</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">FRI</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">SAT</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="exam-actions mb-4">
                         <div id="timeTableStatus" class="status-chip" data-tone="muted">
                             <i class="fas fa-cloud"></i>
@@ -1115,6 +1270,8 @@ Exam Branch
         const marksBody = document.getElementById('marksBody');
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
+        const individualTimeTableSlots = Array.from(document.querySelectorAll('.individual-timetable-slot'));
+        const individualTimeTableMetaFields = Array.from(document.querySelectorAll('.individual-timetable-meta-input'));
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -1716,9 +1873,24 @@ Exam Branch
                 };
             });
 
+            const individualMeta = {};
+            individualTimeTableMetaFields.forEach(function (field) {
+                individualMeta[field.id] = field.value;
+            });
+
+            const individualSlots = individualTimeTableSlots.map(function (slot) {
+                return {
+                    day: slot.dataset.day || '',
+                    period: slot.dataset.period || '',
+                    value: slot.value
+                };
+            });
+
             return {
                 meta: meta,
                 slots: slots,
+                individualMeta: individualMeta,
+                individualSlots: individualSlots,
                 savedAt: new Date().toISOString()
             };
         }
@@ -1739,11 +1911,32 @@ Exam Branch
                 });
                 slot.value = match ? (match.value || '') : '';
             });
+
+            const individualMeta = data.individualMeta || {};
+            individualTimeTableMetaFields.forEach(function (field) {
+                if (Object.prototype.hasOwnProperty.call(individualMeta, field.id)) {
+                    field.value = individualMeta[field.id] || '';
+                } else {
+                    field.value = '';
+                }
+            });
+
+            const individualSlots = Array.isArray(data.individualSlots) ? data.individualSlots : [];
+            individualTimeTableSlots.forEach(function (slot) {
+                const match = individualSlots.find(function (entry) {
+                    return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+                });
+                slot.value = match ? (match.value || '') : '';
+            });
         }
 
         function hasTimeTableContent() {
             return timeTableSlots.some(function (slot) {
                 return slot.value.trim();
+            }) || individualTimeTableSlots.some(function (slot) {
+                return slot.value.trim();
+            }) || individualTimeTableMetaFields.some(function (field) {
+                return field.value.trim();
             });
         }
 
@@ -1775,7 +1968,7 @@ Exam Branch
                 return;
             }
             localStorage.removeItem(timeTableStorageKey);
-            setTimeTablePayload({ slots: [] });
+            setTimeTablePayload({ slots: [], individualSlots: [], individualMeta: {} });
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
         }
 
@@ -1819,6 +2012,14 @@ Exam Branch
         });
 
         timeTableMetaFields.forEach(function (field) {
+            field.addEventListener('input', markTimeTableDirty);
+        });
+
+        individualTimeTableSlots.forEach(function (slot) {
+            slot.addEventListener('input', markTimeTableDirty);
+        });
+
+        individualTimeTableMetaFields.forEach(function (field) {
             field.addEventListener('input', markTimeTableDirty);
         });
 
