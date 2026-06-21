@@ -1088,7 +1088,7 @@ Exam Branch
                             <div>
                                 <h3 class="card-title mb-1">Subjects From Syllabus</h3>
                                 <p class="card-copy">
-                                    Select year, semester, and branch to load the matching subject list from the syllabus page.
+                                    Select branch, year, semester, and subject for IT, CSE, or CSE(AI&amp;ML) timetable creation.
                                 </p>
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -1097,6 +1097,15 @@ Exam Branch
                                     <i class="fas fa-book me-2"></i>Open Syllabus
                                 </a>
                             </div>
+                        </div>
+                        <div class="exam-mini-block mb-3">
+                            <label for="syllabusSubjectSelect" class="form-label">Subject</label>
+                            <select id="syllabusSubjectSelect" class="form-control">
+                                <option value="">Select Subject</option>
+                                {% for subject in subjects %}
+                                    <option value="{{ subject.code }}" data-name="{{ subject.name }}">{{ subject.code }} - {{ subject.name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="table-responsive">
                             <table class="table exam-table syllabus-subject-table mb-0">
@@ -1396,6 +1405,7 @@ Exam Branch
         const individualTimeTableMetaFields = Array.from(document.querySelectorAll('.individual-timetable-meta-input'));
         const syllabusSubjectBody = document.getElementById('syllabusSubjectBody');
         const syllabusSubjectCount = document.getElementById('syllabusSubjectCount');
+        const syllabusSubjectSelect = document.getElementById('syllabusSubjectSelect');
         const timeTableYearField = document.getElementById('timeTableYear');
         const timeTableSemesterField = document.getElementById('timeTableSemester');
         const timeTableBranchField = document.getElementById('timeTableBranch');
@@ -1428,12 +1438,18 @@ Exam Branch
         }
 
         function renderSyllabusSubjects(subjects) {
-            if (!syllabusSubjectBody || !syllabusSubjectCount) {
+            if (!syllabusSubjectBody || !syllabusSubjectCount || !syllabusSubjectSelect) {
                 return;
             }
 
             syllabusSubjectBody.innerHTML = '';
+            syllabusSubjectSelect.innerHTML = '';
             syllabusSubjectCount.textContent = String(subjects.length);
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Subject';
+            syllabusSubjectSelect.appendChild(defaultOption);
 
             if (!subjects.length) {
                 const row = document.createElement('tr');
@@ -1447,6 +1463,12 @@ Exam Branch
             }
 
             subjects.forEach(function (subject) {
+                const option = document.createElement('option');
+                option.value = subject.code || '';
+                option.dataset.name = subject.name || '';
+                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                syllabusSubjectSelect.appendChild(option);
+
                 const row = document.createElement('tr');
                 row.dataset.code = subject.code || '';
                 row.dataset.name = subject.name || '';
@@ -2265,6 +2287,20 @@ Exam Branch
                     name: row.dataset.name
                 });
                 setStatus(lessonPlanStatus, 'Subject copied from syllabus', 'success');
+            });
+        }
+
+        if (syllabusSubjectSelect) {
+            syllabusSubjectSelect.addEventListener('change', function () {
+                const selectedOption = syllabusSubjectSelect.options[syllabusSubjectSelect.selectedIndex];
+                if (!selectedOption || !selectedOption.value) {
+                    return;
+                }
+                useSubjectInLessonPlan({
+                    code: selectedOption.value,
+                    name: selectedOption.dataset.name || ''
+                });
+                setStatus(lessonPlanStatus, 'Subject selected from syllabus', 'success');
             });
         }
 
