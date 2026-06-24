@@ -275,6 +275,7 @@ Exam Branch
     }
 
     .exam-branch-page .form-control,
+    .exam-branch-page .form-select,
     .exam-branch-page textarea {
         border-radius: 16px;
         border: 1px solid #d8e4ef;
@@ -284,6 +285,7 @@ Exam Branch
     }
 
     .exam-branch-page .form-control:focus,
+    .exam-branch-page .form-select:focus,
     .exam-branch-page textarea:focus {
         border-color: rgba(15, 76, 129, 0.7);
         box-shadow: 0 0 0 0.24rem rgba(15, 76, 129, 0.12);
@@ -530,6 +532,25 @@ Exam Branch
         font-weight: 800;
     }
 
+    .subject-selection-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .subject-selection-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 1.2rem;
+    }
+
+    .subject-selection-preview {
+        min-width: 940px;
+    }
+
     .time-table-grid {
         min-width: 1120px;
     }
@@ -669,6 +690,7 @@ Exam Branch
         .exam-hero-metrics,
         .exam-mini-grid,
         .time-table-meta,
+        .subject-selection-grid,
         .summary-grid {
             width: 100%;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -694,6 +716,7 @@ Exam Branch
 
         .exam-mini-grid,
         .time-table-meta,
+        .subject-selection-grid,
         .summary-grid {
             grid-template-columns: 1fr;
         }
@@ -754,6 +777,11 @@ Exam Branch
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="evaluation-tab" data-bs-toggle="tab" data-bs-target="#evaluation" type="button" role="tab" aria-controls="evaluation" aria-selected="false">
                     <i class="fas fa-clipboard-check me-2"></i>Evaluation
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="subject-selection-tab" data-bs-toggle="tab" data-bs-target="#subject-selection" type="button" role="tab" aria-controls="subject-selection" aria-selected="false">
+                    <i class="fas fa-user-check me-2"></i>Faculty Subject Selection
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -1021,6 +1049,121 @@ Exam Branch
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="subject-selection" role="tabpanel" aria-labelledby="subject-selection-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Faculty Allocation</div>
+                            <h2 class="section-title">Faculty subject selection form</h2>
+                            <p class="section-copy">
+                                Capture faculty, class, subject, teaching history, and previous result in one clean record.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-layer-group"></i>
+                            Subject-ready form
+                        </div>
+                    </div>
+
+                    <div class="exam-card">
+                        <form id="facultySubjectSelectionForm">
+                            <div class="subject-selection-grid">
+                                <div>
+                                    <label for="subjectFacultyName" class="form-label">NAME OF THE FACULTY</label>
+                                    <input type="text" id="subjectFacultyName" class="form-control subject-selection-input" placeholder="Faculty name" required />
+                                </div>
+                                <div>
+                                    <label for="subjectEmployeeCode" class="form-label">EMPLOYEE CODE</label>
+                                    <input type="text" id="subjectEmployeeCode" class="form-control subject-selection-input" placeholder="Employee code" required />
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionBranch" class="form-label">BRANCH</label>
+                                    <select id="subjectSelectionBranch" class="form-select subject-selection-input">
+                                        {% for syllabus_branch in syllabus_branches %}
+                                            <option value="{{ syllabus_branch }}" {% if branch == syllabus_branch %}selected{% endif %}>
+                                                {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% else %}{{ syllabus_branch }}{% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionYear" class="form-label">YEAR</label>
+                                    <select id="subjectSelectionYear" class="form-select subject-selection-input">
+                                        {% for syllabus_year in syllabus_years %}
+                                            <option value="{{ syllabus_year }}" {% if selected_syllabus_year == syllabus_year %}selected{% endif %}>Year {{ syllabus_year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionSemester" class="form-label">SEM</label>
+                                    <select id="subjectSelectionSemester" class="form-select subject-selection-input">
+                                        {% for syllabus_semester in syllabus_semesters %}
+                                            <option value="{{ syllabus_semester }}" {% if selected_syllabus_semester == syllabus_semester %}selected{% endif %}>Semester {{ syllabus_semester }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionName" class="form-label">NAME OF THE SUBJECT</label>
+                                    <select id="subjectSelectionName" class="form-select subject-selection-input" required>
+                                        <option value="">Select Subject</option>
+                                        {% for subject in subjects %}
+                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}">{{ subject.code }} - {{ subject.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectTimesTaught" class="form-label">NUMBER OF TIMES TAUGHT</label>
+                                    <input type="number" id="subjectTimesTaught" class="form-control subject-selection-input" min="0" step="1" placeholder="0" />
+                                </div>
+                                <div>
+                                    <label for="subjectPreviousResult" class="form-label">PREVIOUS RESULT</label>
+                                    <input type="text" id="subjectPreviousResult" class="form-control subject-selection-input" placeholder="Example: 86%" />
+                                </div>
+                            </div>
+
+                            <div class="subject-selection-actions">
+                                <div id="subjectSelectionStatus" class="status-chip" data-tone="muted">
+                                    <i class="fas fa-cloud"></i>
+                                    Subject selection not saved yet
+                                </div>
+                                <div class="exam-action-buttons">
+                                    <button type="submit" class="btn exam-btn exam-btn-success">
+                                        <i class="fas fa-save me-2"></i>Save Selection
+                                    </button>
+                                    <button type="button" id="subjectSelectionClearBtn" class="btn exam-btn exam-btn-danger">
+                                        <i class="fas fa-broom me-2"></i>Clear Selection
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="exam-table-wrap mt-4">
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table exam-table subject-selection-preview align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Faculty</th>
+                                        <th>Employee Code</th>
+                                        <th>Branch</th>
+                                        <th>Year</th>
+                                        <th>Sem</th>
+                                        <th>Subject</th>
+                                        <th>Times Taught</th>
+                                        <th>Previous Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectSelectionPreviewBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted">No subject selection saved yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -1347,6 +1490,7 @@ Exam Branch
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
         const timeTableStorageKey = 'examBranchTimeTableData';
+        const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
         const csrfTokenValue = '{{ csrf_token }}';
@@ -1376,6 +1520,19 @@ Exam Branch
         const timeTableYearField = document.getElementById('timeTableYear');
         const timeTableSemesterField = document.getElementById('timeTableSemester');
         const timeTableBranchField = document.getElementById('timeTableBranch');
+        const subjectSelectionForm = document.getElementById('facultySubjectSelectionForm');
+        const subjectSelectionStatus = document.getElementById('subjectSelectionStatus');
+        const subjectSelectionPreviewBody = document.getElementById('subjectSelectionPreviewBody');
+        const subjectSelectionFields = {
+            facultyName: document.getElementById('subjectFacultyName'),
+            employeeCode: document.getElementById('subjectEmployeeCode'),
+            branch: document.getElementById('subjectSelectionBranch'),
+            year: document.getElementById('subjectSelectionYear'),
+            semester: document.getElementById('subjectSelectionSemester'),
+            subjectName: document.getElementById('subjectSelectionName'),
+            timesTaught: document.getElementById('subjectTimesTaught'),
+            previousResult: document.getElementById('subjectPreviousResult')
+        };
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -1429,6 +1586,61 @@ Exam Branch
                 syllabusSubjectSelect.appendChild(option);
 
             });
+        }
+
+        function renderSubjectSelectionSubjects(subjects, selectedSubject) {
+            if (!subjectSelectionFields.subjectName) {
+                return;
+            }
+
+            const currentSubject = selectedSubject || subjectSelectionFields.subjectName.value || '';
+            subjectSelectionFields.subjectName.innerHTML = '';
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Subject';
+            subjectSelectionFields.subjectName.appendChild(defaultOption);
+
+            subjects.forEach(function (subject) {
+                const option = document.createElement('option');
+                option.value = subject.name || '';
+                option.dataset.code = subject.code || '';
+                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                if (option.value === currentSubject) {
+                    option.selected = true;
+                }
+                subjectSelectionFields.subjectName.appendChild(option);
+            });
+        }
+
+        function loadSubjectSelectionSubjects(selectedSubject) {
+            if (!syllabusSubjectsUrl || !subjectSelectionFields.year || !subjectSelectionFields.semester || !subjectSelectionFields.branch) {
+                return;
+            }
+
+            const params = new URLSearchParams({
+                year: subjectSelectionFields.year.value || '3',
+                semester: subjectSelectionFields.semester.value || '1',
+                branch: subjectSelectionFields.branch.value || 'IT'
+            });
+
+            fetch(syllabusSubjectsUrl + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Could not load subject selection subjects.');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderSubjectSelectionSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedSubject);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    renderSubjectSelectionSubjects([], '');
+                    setStatus(subjectSelectionStatus, 'Could not load subjects for the selected class', 'warning');
+                });
         }
 
         function loadSyllabusSubjects() {
@@ -1524,6 +1736,10 @@ Exam Branch
 
         function markTimeTableDirty() {
             setStatus(timeTableStatus, 'Timetable has unsaved changes', 'warning');
+        }
+
+        function markSubjectSelectionDirty() {
+            setStatus(subjectSelectionStatus, 'Subject selection has unsaved changes', 'warning');
         }
 
         function getDayName(date) {
@@ -2163,6 +2379,115 @@ Exam Branch
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
         }
 
+        function getSubjectSelectionPayload() {
+            const selectedOption = subjectSelectionFields.subjectName && subjectSelectionFields.subjectName.selectedIndex >= 0
+                ? subjectSelectionFields.subjectName.options[subjectSelectionFields.subjectName.selectedIndex]
+                : null;
+
+            return {
+                facultyName: subjectSelectionFields.facultyName.value.trim(),
+                employeeCode: subjectSelectionFields.employeeCode.value.trim(),
+                branch: subjectSelectionFields.branch.value,
+                year: subjectSelectionFields.year.value,
+                semester: subjectSelectionFields.semester.value,
+                subjectName: subjectSelectionFields.subjectName.value,
+                subjectCode: selectedOption ? (selectedOption.dataset.code || '') : '',
+                timesTaught: subjectSelectionFields.timesTaught.value.trim(),
+                previousResult: subjectSelectionFields.previousResult.value.trim(),
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function setSubjectSelectionFields(payload) {
+            const data = payload || {};
+            subjectSelectionFields.facultyName.value = data.facultyName || '';
+            subjectSelectionFields.employeeCode.value = data.employeeCode || '';
+            subjectSelectionFields.branch.value = data.branch || subjectSelectionFields.branch.value || 'IT';
+            subjectSelectionFields.year.value = data.year || subjectSelectionFields.year.value || '3';
+            subjectSelectionFields.semester.value = data.semester || subjectSelectionFields.semester.value || '1';
+            subjectSelectionFields.timesTaught.value = data.timesTaught || '';
+            subjectSelectionFields.previousResult.value = data.previousResult || '';
+            loadSubjectSelectionSubjects(data.subjectName || '');
+        }
+
+        function renderSubjectSelectionPreview(payload) {
+            subjectSelectionPreviewBody.innerHTML = '';
+
+            if (!payload || !payload.facultyName && !payload.employeeCode && !payload.subjectName) {
+                const emptyRow = document.createElement('tr');
+                const emptyCell = document.createElement('td');
+                emptyCell.colSpan = 8;
+                emptyCell.className = 'text-center text-muted';
+                emptyCell.textContent = 'No subject selection saved yet.';
+                emptyRow.appendChild(emptyCell);
+                subjectSelectionPreviewBody.appendChild(emptyRow);
+                return;
+            }
+
+            const row = document.createElement('tr');
+            [
+                payload.facultyName || '-',
+                payload.employeeCode || '-',
+                payload.branch || '-',
+                payload.year || '-',
+                payload.semester || '-',
+                payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
+                payload.timesTaught || '0',
+                payload.previousResult || '-'
+            ].forEach(function (value) {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+            subjectSelectionPreviewBody.appendChild(row);
+        }
+
+        function saveSubjectSelection(event) {
+            event.preventDefault();
+            const payload = getSubjectSelectionPayload();
+
+            if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
+                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required', 'warning');
+                return;
+            }
+
+            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(payload));
+            renderSubjectSelectionPreview(payload);
+            setStatus(subjectSelectionStatus, 'Subject selection saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function loadSubjectSelection() {
+            const saved = localStorage.getItem(subjectSelectionStorageKey);
+            if (!saved) {
+                loadSubjectSelectionSubjects();
+                renderSubjectSelectionPreview(null);
+                setStatus(subjectSelectionStatus, 'Subject selection not saved yet', 'muted');
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(saved);
+                setSubjectSelectionFields(payload);
+                renderSubjectSelectionPreview(payload);
+                setStatus(subjectSelectionStatus, 'Subject selection loaded from ' + formatSavedTime(payload.savedAt), 'success');
+            } catch (error) {
+                console.error('Failed to load subject selection', error);
+                loadSubjectSelectionSubjects();
+                renderSubjectSelectionPreview(null);
+                setStatus(subjectSelectionStatus, 'Could not read saved subject selection', 'warning');
+            }
+        }
+
+        function clearSubjectSelection() {
+            if (!confirm('Clear the saved faculty subject selection?')) {
+                return;
+            }
+            localStorage.removeItem(subjectSelectionStorageKey);
+            setSubjectSelectionFields({});
+            renderSubjectSelectionPreview(null);
+            setStatus(subjectSelectionStatus, 'Subject selection cleared', 'muted');
+        }
+
         document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
         document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
         document.getElementById('deleteBtn').addEventListener('click', deleteTeachingPlan);
@@ -2186,6 +2511,8 @@ Exam Branch
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
+        subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
+        document.getElementById('subjectSelectionClearBtn').addEventListener('click', clearSubjectSelection);
 
         marksBody.addEventListener('input', function (event) {
             if (event.target.closest('tr')) {
@@ -2220,6 +2547,16 @@ Exam Branch
             field.addEventListener('input', markTimeTableDirty);
         });
 
+        Object.values(subjectSelectionFields).forEach(function (field) {
+            field.addEventListener('input', markSubjectSelectionDirty);
+            field.addEventListener('change', function () {
+                markSubjectSelectionDirty();
+                if (field === subjectSelectionFields.year || field === subjectSelectionFields.semester || field === subjectSelectionFields.branch) {
+                    loadSubjectSelectionSubjects();
+                }
+            });
+        });
+
         if (syllabusSubjectSelect) {
             syllabusSubjectSelect.addEventListener('change', function () {
                 const selectedOption = syllabusSubjectSelect.options[syllabusSubjectSelect.selectedIndex];
@@ -2237,6 +2574,7 @@ Exam Branch
         loadTeachingPlan();
         loadEvaluationData();
         loadTimeTableData();
+        loadSubjectSelection();
         loadSyllabusSubjects();
     })();
 </script>
