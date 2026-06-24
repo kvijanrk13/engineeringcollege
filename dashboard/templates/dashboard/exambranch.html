@@ -2651,20 +2651,40 @@ Exam Branch
             return true;
         }
 
+        function getClassSlot(day, period) {
+            return timeTableSlots.find(function (slot) {
+                return slot.dataset.day === day && slot.dataset.period === period;
+            }) || null;
+        }
+
+        function getVisibleEmptyClassSlots() {
+            return timeTableSlots.filter(function (slot) {
+                const cell = slot.closest('td');
+                return cell && cell.style.display !== 'none' && !slot.value.trim();
+            });
+        }
+
+        function setSlotIfEmpty(slot, value) {
+            if (!slot || slot.value.trim()) {
+                return false;
+            }
+            slot.value = value;
+            return true;
+        }
+
         function applyLaboratoryBlocks(subjectNames) {
             const laboratorySubjects = Array.from(new Set((subjectNames || []).filter(isLaboratorySubject)));
             if (!laboratorySubjects.length) {
                 return 0;
             }
 
-            const preferredStartPeriods = ['9:30-10:30', '1:20-2:15', '10:30-11:30', '2:15-3:10'];
+            const preferredStartPeriods = ['10:30-11:30', '1:20-2:15'];
+            const days = Array.from(new Set(timeTableSlots.map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
             let mergedCount = 0;
 
             laboratorySubjects.forEach(function (subjectName, subjectIndex) {
-                const days = Array.from(new Set(timeTableSlots.map(function (slot) {
-                    return slot.dataset.day || '';
-                }).filter(Boolean)));
-
                 for (let dayOffset = 0; dayOffset < days.length; dayOffset += 1) {
                     const day = days[(subjectIndex + dayOffset) % days.length];
                     for (let periodIndex = 0; periodIndex < preferredStartPeriods.length; periodIndex += 1) {
@@ -2720,44 +2740,54 @@ Exam Branch
 
         function generateClassTimeTableSlots(subjectNames) {
             const subjects = uniqueSubjectNames(subjectNames);
+            const theorySubjects = subjects.filter(function (subjectName) {
+                return !isLaboratorySubject(subjectName);
+            });
             const maxPerSubject = 5;
             const counts = {};
-            let subjectIndex = 0;
 
             timeTableSlots.forEach(function (slot) {
                 slot.value = '';
             });
 
-            if (!subjects.length) {
-                return counts;
-            }
+            const labMergedCount = applyLaboratoryBlocks(subjects);
+            subjects.filter(isLaboratorySubject).forEach(function (subjectName) {
+                if (labMergedCount) {
+                    counts[subjectName] = 2;
+                }
+            });
+
+            const lastHourSlots = timeTableSlots.filter(function (slot) {
+                return slot.dataset.period === '3:15-4:10';
+            });
+            setSlotIfEmpty(lastHourSlots[0], 'LIBRARY');
+            setSlotIfEmpty(lastHourSlots[1], 'SPORTS');
 
             const firstHourSlots = timeTableSlots.filter(function (slot) {
                 return slot.dataset.period === '9:30-10:30';
             });
-            const remainingSlots = timeTableSlots.filter(function (slot) {
-                return slot.dataset.period !== '9:30-10:30';
+
+            theorySubjects.forEach(function (subjectName, index) {
+                placeSubjectWithLimit(firstHourSlots[index], subjectName, counts, maxPerSubject);
             });
 
-            subjects.forEach(function (subjectName, index) {
-                if (firstHourSlots[index]) {
-                    placeSubjectWithLimit(firstHourSlots[index], subjectName, counts, maxPerSubject);
-                }
-            });
-
-            remainingSlots.forEach(function (slot) {
-                let attempts = 0;
-                while (attempts < subjects.length) {
-                    const subjectName = subjects[subjectIndex % subjects.length];
-                    subjectIndex += 1;
-                    attempts += 1;
-                    if (placeSubjectWithLimit(slot, subjectName, counts, maxPerSubject)) {
+            theorySubjects.forEach(function (subjectName) {
+                while ((counts[subjectName] || 0) < maxPerSubject) {
+                    const targetSlot = getVisibleEmptyClassSlots()[0];
+                    if (!targetSlot || !placeSubjectWithLimit(targetSlot, subjectName, counts, maxPerSubject)) {
                         return;
                     }
                 }
             });
 
-            return counts;
+            getVisibleEmptyClassSlots().forEach(function (slot) {
+                slot.value = 'METORING';
+            });
+
+            return {
+                counts: counts,
+                labMergedCount: labMergedCount
+            };
         }
 
         function generateTimeTableFromSubjectSelection() {
@@ -2829,9 +2859,8 @@ Exam Branch
                 const classSubjectNames = syllabusSubjectNames.length
                     ? syllabusSubjectNames
                     : (selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel]);
-                generateClassTimeTableSlots(classSubjectNames);
-
-                const labMergedCount = applyLaboratoryBlocks(classSubjectNames);
+                const classGeneration = generateClassTimeTableSlots(classSubjectNames);
+                const labMergedCount = classGeneration.labMergedCount || 0;
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
