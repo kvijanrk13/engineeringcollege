@@ -1136,7 +1136,7 @@ Exam Branch
                                         <i class="fas fa-save me-2"></i>Save Selection
                                     </button>
                                     <button type="button" id="subjectSelectionAddBtn" class="btn exam-btn exam-btn-primary">
-                                        <i class="fas fa-calendar-plus me-2"></i>Add to Time Table
+                                        <i class="fas fa-calendar-plus me-2"></i>Generate Time Table
                                     </button>
                                     <button type="button" id="subjectSelectionClearBtn" class="btn exam-btn exam-btn-danger">
                                         <i class="fas fa-broom me-2"></i>Clear Selection
@@ -2506,10 +2506,20 @@ Exam Branch
             }
         }
 
-        function addSubjectSelectionToTimeTable() {
+        function generateTimeTableFromSubjectSelection() {
             const payload = getSubjectSelectionPayload();
             if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
-                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required before adding to timetable', 'warning');
+                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required before generating timetable', 'warning');
+                return;
+            }
+
+            const hasExistingTimetable = timeTableSlots.some(function (slot) {
+                return slot.value.trim();
+            }) || individualTimeTableSlots.some(function (slot) {
+                return slot.value.trim();
+            });
+
+            if (hasExistingTimetable && !confirm('Generate timetable from this subject selection and replace existing timetable entries?')) {
                 return;
             }
 
@@ -2525,14 +2535,21 @@ Exam Branch
                 individualFacultyName.value = payload.facultyName;
             }
 
-            const slotLabel = (payload.subjectCode ? payload.subjectCode + ' - ' : '') + payload.subjectName + '\n' + payload.facultyName;
-            const emptySlot = timeTableSlots.find(function (slot) {
-                return !slot.value.trim();
+            const individualTotalHours = document.getElementById('individualTotalHours');
+            if (individualTotalHours) {
+                individualTotalHours.value = String(individualTimeTableSlots.length);
+            }
+
+            const subjectLabel = (payload.subjectCode ? payload.subjectCode + ' - ' : '') + payload.subjectName;
+            const classSlotLabel = subjectLabel + '\n' + payload.facultyName;
+
+            timeTableSlots.forEach(function (slot) {
+                slot.value = classSlotLabel;
             });
 
-            if (emptySlot) {
-                emptySlot.value = slotLabel;
-            }
+            individualTimeTableSlots.forEach(function (slot) {
+                slot.value = subjectLabel;
+            });
 
             loadSyllabusSubjects(payload.subjectCode).then(function () {
                 if (syllabusSubjectSelect && payload.subjectCode) {
@@ -2541,10 +2558,10 @@ Exam Branch
                 markTimeTableDirty();
                 setStatus(
                     timeTableStatus,
-                    emptySlot ? 'Subject selection added to the first empty timetable slot' : 'Subject selection linked; timetable slots are already filled',
-                    emptySlot ? 'success' : 'warning'
+                    'Timetable generated with selected subject and faculty',
+                    'success'
                 );
-                setStatus(subjectSelectionStatus, 'Selection added to Time Table tab', 'success');
+                setStatus(subjectSelectionStatus, 'Time Table generated from selected faculty subject', 'success');
                 switchToTimeTableTab();
             });
         }
@@ -2573,7 +2590,7 @@ Exam Branch
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
         subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
-        document.getElementById('subjectSelectionAddBtn').addEventListener('click', addSubjectSelectionToTimeTable);
+        document.getElementById('subjectSelectionAddBtn').addEventListener('click', generateTimeTableFromSubjectSelection);
         document.getElementById('subjectSelectionClearBtn').addEventListener('click', clearSubjectSelection);
 
         marksBody.addEventListener('input', function (event) {
