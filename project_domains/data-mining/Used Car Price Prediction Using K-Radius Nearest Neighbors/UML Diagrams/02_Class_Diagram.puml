@@ -1,0 +1,71 @@
+@startuml
+class StudentRegistration {
+  +id: int
+  +full_name: str
+  +roll_number: str
+  +email: str
+  +department: str
+  +college: str
+  +created_at: datetime
+}
+
+class Admin {
+  +username: str
+  +manage_dataset()
+  +train_model()
+  +review_metrics()
+}
+
+class Customer {
+  +name: str
+  +email: str
+  +enter_vehicle_details()
+  +request_prediction()
+}
+
+class TelanganaRTA {
+  +registration_number: str
+  +ownership_count: int
+  +registration_year: int
+  +provide_vehicle_context()
+}
+
+class ExecutionLog {
+  +id: int
+  +algorithm: str
+  +dataset: str
+  +rows_executed: int
+  +created_at: datetime
+}
+
+class DatasetLoader {
+  +available_datasets()
+  +normalize_dataset(dataset_key)
+  +clean_feature_text(value)
+}
+
+class TrainingPipeline {
+  +build_pipeline()
+  +train(dataset_key, output_dir)
+}
+
+class Predictor {
+  +predict_price(args)
+}
+
+class AprioriAnalyzer {
+  +make_transactions(data)
+  +apriori_rules(transactions)
+}
+
+DatasetLoader --> TrainingPipeline
+DatasetLoader --> AprioriAnalyzer
+TrainingPipeline --> Predictor
+AprioriAnalyzer --> ExecutionLog
+Admin --> DatasetLoader
+Admin --> TrainingPipeline
+Admin --> ExecutionLog
+Customer --> Predictor
+TelanganaRTA --> Predictor : registration context
+StudentRegistration .. Customer
+@enduml

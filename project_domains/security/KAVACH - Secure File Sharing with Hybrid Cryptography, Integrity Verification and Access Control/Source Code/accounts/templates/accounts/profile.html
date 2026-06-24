@@ -25,9 +25,9 @@
     <div class="profile-card full-width">
         <div class="profile-section-title">
             <h2>Sender Upload and Receiver Selection</h2>
-            <span class="pill">AES-GCM</span>
+            <span class="pill">AES-GCM + SHA-256</span>
         </div>
-        <p>Enter the receiver Gmail ID, select a Notepad text file, and KAVACH stores only the encrypted AES-GCM file.</p>
+        <p>Enter the receiver Gmail ID, select a Notepad text file, and KAVACH stores only the encrypted AES-GCM file plus a SHA-256 fingerprint of the original file.</p>
         <form method="post" enctype="multipart/form-data" class="form-card kavach-upload-form">
             {% csrf_token %}
             <div>
@@ -56,8 +56,10 @@
                     <span class="pill">To {{ file.receiver_email }}</span>
                     <span class="pill">{{ file.file_size }} bytes</span>
                     <span class="pill">{{ file.encryption_algorithm }}</span>
+                    <span class="pill">SHA-256</span>
                 </div>
                 <p>Uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p class="helper-text">Original fingerprint: {{ file.sha256_hash }}</p>
                 <p class="helper-text">Stored as encrypted file: {{ file.uploaded_file.name }}</p>
             </article>
         {% empty %}
@@ -74,10 +76,22 @@
                     <span class="pill">From {{ item.file.owner.email|default:item.file.owner.username }}</span>
                     <span class="pill">{{ item.file.file_size }} bytes</span>
                     <span class="pill">{{ item.file.encryption_algorithm }}</span>
+                    {% if item.integrity_ok %}
+                        <span class="pill">Integrity safe</span>
+                    {% else %}
+                        <span class="pill">Integrity failed</span>
+                    {% endif %}
                 </div>
                 <p>Received on {{ item.file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p class="helper-text">Hash works like a fingerprint of the file. KAVACH compares the stored SHA-256 hash with a fresh hash after decryption.</p>
+                <p class="helper-text">Stored hash: {{ item.file.sha256_hash }}</p>
+                <p class="helper-text">Decrypted hash: {{ item.decrypted_hash|default:"Unavailable" }}</p>
                 <pre class="key-box">{{ item.decrypted_text }}</pre>
-                <a class="button-link" href="{% url 'files:download' item.file.id %}">Decrypt and Download</a>
+                {% if item.integrity_ok %}
+                    <a class="button-link" href="{% url 'files:download' item.file.id %}">Decrypt and Download Safe File</a>
+                {% else %}
+                    <p class="status warning">Download blocked because the file fingerprint did not match.</p>
+                {% endif %}
             </article>
         {% empty %}
             <p class="helper-text">No files have been shared with this Gmail account yet.</p>

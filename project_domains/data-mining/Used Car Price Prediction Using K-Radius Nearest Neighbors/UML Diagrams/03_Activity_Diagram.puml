@@ -1,0 +1,30 @@
+@startuml
+start
+partition Admin {
+  :Load and inspect car dataset;
+  :Clean numeric and categorical fields;
+  :Train regression pipeline;
+  :Save model and metrics;
+}
+partition Customer {
+  :Open prediction page;
+  :Enter vehicle details;
+}
+partition "Telangana RTA" {
+  :Provide registration year and ownership context;
+}
+partition "Prediction System" {
+  :Derive vehicle age and depreciation factors;
+  if (Admin requests mining?) then (yes)
+    :Convert records into transactions;
+    :Generate Apriori rules;
+    :Display association rules;
+  else (customer prediction)
+    :Load trained model artifact;
+    :Predict used car price;
+    :Display price and depreciation advice;
+  endif
+  :Record execution log;
+}
+stop
+@enduml

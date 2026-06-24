@@ -1,0 +1,36 @@
+@startuml
+package "Web Layer" {
+  [Django URLs]
+  [Django Views]
+  [HTML Templates]
+}
+
+package "Actors and External Context" {
+  [Admin Console]
+  [Customer Input]
+  [Telangana RTA Context]
+}
+
+package "Data Mining Layer" {
+  [Dataset Loader]
+  [Training Script]
+  [Prediction Script]
+  [Apriori Analysis]
+}
+
+database "SQLite db.sqlite3" as DB
+folder "datasets" as DS
+folder "artifacts" as ART
+
+[Django URLs] --> [Django Views]
+[Django Views] --> [HTML Templates]
+[Admin Console] --> [Django Views]
+[Customer Input] --> [Django Views]
+[Telangana RTA Context] --> [Django Views]
+[Django Views] --> [Apriori Analysis]
+[Dataset Loader] --> DS
+[Training Script] --> [Dataset Loader]
+[Training Script] --> ART
+[Prediction Script] --> ART
+[Django Views] --> DB
+@enduml

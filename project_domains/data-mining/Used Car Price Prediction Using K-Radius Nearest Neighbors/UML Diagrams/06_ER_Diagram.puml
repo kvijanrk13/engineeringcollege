@@ -1,0 +1,46 @@
+@startuml
+entity StudentRegistration {
+  * id : integer <<PK>>
+  --
+  full_name : varchar
+  roll_number : varchar
+  email : varchar
+  department : varchar
+  college : varchar
+  created_at : datetime
+}
+
+entity ExecutionLog {
+  * id : integer <<PK>>
+  --
+  algorithm : varchar
+  dataset : varchar
+  rows_executed : integer
+  created_at : datetime
+}
+
+entity VehiclePredictionRequest {
+  * request_id : integer <<PK>>
+  --
+  customer_name : varchar
+  fuel_type : varchar
+  transmission : varchar
+  mileage : decimal
+  registration_year : integer
+  ownership_count : integer
+  rta_region : varchar
+  predicted_price : decimal
+}
+
+entity TelanganaRTAReference {
+  * rta_code : varchar <<PK>>
+  --
+  district : varchar
+  state : varchar
+  registration_rule_note : text
+}
+
+StudentRegistration ||..o{ ExecutionLog : creates
+TelanganaRTAReference ||..o{ VehiclePredictionRequest : informs
+VehiclePredictionRequest ||..o{ ExecutionLog : records
+@enduml

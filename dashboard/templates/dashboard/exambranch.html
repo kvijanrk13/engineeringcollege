@@ -2790,6 +2790,60 @@ Exam Branch
             };
         }
 
+        function findSyllabusSubjectByCode(subjects, code) {
+            return (subjects || []).find(function (subject) {
+                return (subject.code || '').toUpperCase() === (code || '').toUpperCase();
+            }) || null;
+        }
+
+        function chooseSubjectFromCodes(subjects, selectedCodes, allowedCodes) {
+            const normalizedAllowed = allowedCodes.map(function (code) {
+                return code.toUpperCase();
+            });
+            const selectedMatch = selectedCodes.find(function (code) {
+                return normalizedAllowed.includes((code || '').toUpperCase());
+            });
+            return findSyllabusSubjectByCode(subjects, selectedMatch) || findSyllabusSubjectByCode(subjects, allowedCodes[0]);
+        }
+
+        function resolveClassSubjectsForTimeTable(syllabusSubjects, selections, fallbackSubjectNames) {
+            const branch = (timeTableBranchField.value || '').toUpperCase();
+            const year = timeTableYearField.value || '';
+            const semester = timeTableSemesterField.value || '';
+            const subjects = Array.isArray(syllabusSubjects) ? syllabusSubjects : [];
+
+            if (branch !== 'IT' || year !== '3' || semester !== '1' || !subjects.length) {
+                return subjects.length
+                    ? uniqueSubjectNames(subjects.map(function (subject) { return subject.name; }))
+                    : uniqueSubjectNames(fallbackSubjectNames);
+            }
+
+            const selectedCodes = (selections || []).map(function (selection) {
+                return selection.subjectCode || '';
+            }).filter(Boolean);
+            const fixedCodes = ['CS501PC', 'IT502PC', 'IT503PC', 'IT504PC', 'IT505PC', 'CS507PC'];
+            const pe1Codes = ['IT511PE', 'IT512PE', 'CS513PE', 'IT514PE', 'IT515PE', 'AM515PE'];
+            const pe1LabCodes = ['IT531PE', 'IT532PE', 'IT533PE', 'IT534PE', 'IT535PE'];
+            const pe2Codes = ['IT522PE', 'IT523PE', 'CS524PE', 'IT525PE'];
+
+            const resolvedSubjects = fixedCodes
+                .map(function (code) {
+                    return findSyllabusSubjectByCode(subjects, code);
+                })
+                .filter(Boolean);
+
+            [pe1Codes, pe1LabCodes, pe2Codes].forEach(function (codeGroup) {
+                const chosenSubject = chooseSubjectFromCodes(subjects, selectedCodes, codeGroup);
+                if (chosenSubject) {
+                    resolvedSubjects.push(chosenSubject);
+                }
+            });
+
+            return uniqueSubjectNames(resolvedSubjects.map(function (subject) {
+                return subject.name;
+            }));
+        }
+
         function generateTimeTableFromSubjectSelection() {
             const currentPayload = getSubjectSelectionPayload();
             let selections = getStoredSubjectSelections();
@@ -2856,9 +2910,11 @@ Exam Branch
                         return (subject.name || '').trim();
                     })
                     .filter(Boolean);
-                const classSubjectNames = syllabusSubjectNames.length
-                    ? syllabusSubjectNames
-                    : (selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel]);
+                const classSubjectNames = resolveClassSubjectsForTimeTable(
+                    syllabusSubjects,
+                    selections,
+                    selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel]
+                );
                 const classGeneration = generateClassTimeTableSlots(classSubjectNames);
                 const labMergedCount = classGeneration.labMergedCount || 0;
 

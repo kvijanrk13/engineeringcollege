@@ -1,0 +1,54 @@
+Watching for file changes with StatReloader
+[13/Jun/2026 20:55:12] "GET /accounts/register/ HTTP/1.1" 200 2679
+[13/Jun/2026 20:55:12,066] - Broken pipe from ('127.0.0.1', 27646)
+[13/Jun/2026 20:55:58] "GET /accounts/register/ HTTP/1.1" 200 2679
+[13/Jun/2026 20:55:59,012] - Broken pipe from ('127.0.0.1', 59860)
+[13/Jun/2026 21:07:29] "GET /accounts/register/ HTTP/1.1" 302 0
+[13/Jun/2026 21:07:29] "GET /accounts/profile/ HTTP/1.1" 200 2378
+[13/Jun/2026 21:07:29] "GET /static/css/style.css HTTP/1.1" 304 0
+Not Found: /favicon.ico
+[13/Jun/2026 21:07:30] "GET /favicon.ico HTTP/1.1" 404 3122
+[13/Jun/2026 21:14:56] "GET /accounts/register/ HTTP/1.1" 302 0
+[13/Jun/2026 21:14:56] "GET /accounts/profile/ HTTP/1.1" 200 2378
+[13/Jun/2026 21:15:07] "GET /files/ HTTP/1.1" 200 1899
+[13/Jun/2026 21:15:10] "GET /files/upload/ HTTP/1.1" 200 1570
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\models.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\forms.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\crypto.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\views.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\urls.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\accounts\views.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\admin.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\models.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\accounts\views.py changed, reloading.
+Watching for file changes with StatReloader
+[13/Jun/2026 21:24:08] "GET /accounts/register/ HTTP/1.1" 302 0
+[13/Jun/2026 21:24:08] "GET /accounts/profile/ HTTP/1.1" 200 4190
+[13/Jun/2026 21:24:46] "POST /accounts/profile/ HTTP/1.1" 302 0
+[13/Jun/2026 21:24:46] "GET /accounts/profile/ HTTP/1.1" 200 4810
+[13/Jun/2026 21:25:49] "GET /accounts/logout/ HTTP/1.1" 302 0
+[13/Jun/2026 21:25:49] "GET /accounts/login/ HTTP/1.1" 200 2022
+[13/Jun/2026 21:25:56] "GET /accounts/register/ HTTP/1.1" 200 2679
+[13/Jun/2026 21:26:29] "POST /accounts/register/ HTTP/1.1" 302 0
+[13/Jun/2026 21:26:29] "GET /accounts/profile/ HTTP/1.1" 200 8045
+[13/Jun/2026 21:26:40] "GET /files/download/4/ HTTP/1.1" 200 4007
+[13/Jun/2026 21:32:56] "GET /accounts/register/ HTTP/1.1" 302 0
+[13/Jun/2026 21:32:57] "GET /accounts/profile/ HTTP/1.1" 200 9144
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\models.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\views.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\accounts\views.py changed, reloading.
+Watching for file changes with StatReloader
+F:\IT DEPT DJANGO PROJECT\engineeringcollege\project_domains\security\KAVACH - Secure File Sharing with Hybrid Cryptography, Integrity Verification and Access Control\Source Code\files\admin.py changed, reloading.
+Watching for file changes with StatReloader
+[13/Jun/2026 21:43:10] "GET /accounts/register/ HTTP/1.1" 302 0
+[13/Jun/2026 21:43:11] "GET /accounts/profile/ HTTP/1.1" 200 9709

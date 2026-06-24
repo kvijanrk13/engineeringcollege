@@ -1,0 +1,29 @@
+@startuml
+actor Admin
+actor Customer
+participant "Telangana RTA" as RTA
+participant "Django View" as View
+participant "Dataset Loader" as Loader
+participant "Training Pipeline" as Trainer
+participant "Predictor" as Predictor
+database "Artifacts" as Artifacts
+
+Admin -> View: Request model training
+View -> Loader: normalize_dataset(dataset_key)
+Loader --> View: normalized dataframe
+View -> Trainer: train(dataset_key, output_dir)
+Trainer -> Loader: load normalized features
+Trainer -> Artifacts: save model and metrics
+Artifacts --> Trainer: saved files
+Trainer --> View: metrics
+View --> Admin: show model metrics
+
+Customer -> View: Submit vehicle details
+View -> RTA: Read registration age and ownership context
+RTA --> View: vehicle context
+View -> Predictor: predict_price(vehicle + RTA context)
+Predictor -> Artifacts: load trained model
+Artifacts --> Predictor: model pipeline
+Predictor --> View: predicted price
+View --> Customer: show predicted price and advice
+@enduml

@@ -1,0 +1,30 @@
+@startuml
+left to right direction
+actor Admin
+actor Customer
+actor "Telangana RTA" as RTA
+
+rectangle "Car Price Prediction System" {
+  usecase "Manage Dataset" as UC1
+  usecase "Train Price Model" as UC2
+  usecase "Review Model Metrics" as UC3
+  usecase "Run Apriori Mining" as UC4
+  usecase "Enter Vehicle Details" as UC5
+  usecase "Predict Used Car Price" as UC6
+  usecase "View Depreciation Advice" as UC7
+  usecase "Provide Vehicle Registration Context" as UC8
+  usecase "Validate Age and Ownership Factors" as UC9
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Customer --> UC5
+Customer --> UC6
+Customer --> UC7
+RTA --> UC8
+RTA --> UC9
+UC6 ..> UC8 : <<uses>>
+UC6 ..> UC9 : <<uses>>
+@enduml

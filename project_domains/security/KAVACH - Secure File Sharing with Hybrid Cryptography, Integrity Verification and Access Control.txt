@@ -1,0 +1,353 @@
+Secure File Sharing Project Execution Plan
+=========================================
+
+Project Title:
+--------------
+A Django-based secure file sharing platform that combines AES-RSA hybrid encryption, user-specific key management, digital signature verification, integrity checking, access revocation, audit logging, and suspicious activity detection.
+
+
+Project Execution Flow
+======================
+
+Step 1: Create The Django Project
+---------------------------------
+
+Create a Django project named:
+
+secure_file_sharing
+
+Create apps:
+
+accounts
+files
+sharing
+crypto_engine
+audit
+dashboard
+notifications
+
+Purpose of each app:
+
+accounts       -> user registration, login, user keys
+files          -> upload, encrypt, store, download
+sharing        -> share files with other users
+crypto_engine  -> AES, RSA, hash, digital signature logic
+audit          -> activity logs
+dashboard      -> admin/user dashboard
+notifications  -> alerts and messages
+
+
+Step 2: User Registration And Login
+-----------------------------------
+
+Begin with normal Django authentication.
+
+Features:
+
+Register user
+Login user
+Logout user
+User profile
+
+When a user registers:
+
+Generate RSA public/private key pair
+Store public key in database
+Store private key securely, encrypted with user password
+
+Beginner explanation:
+
+Public key = can be shared with others
+Private key = secret key owned by user
+
+
+Step 3: File Upload
+-------------------
+
+User uploads a file.
+
+Basic flow:
+
+User selects file
+Django receives file
+System reads file content
+System prepares it for encryption
+
+At this step, do not share yet. Just upload and show the file in "My Files".
+
+Make sure to share presently notepad text files. Later we will update to some more file formats
+
+
+Step 4: Encrypt File Using AES
+------------------------------
+
+When file is uploaded:
+
+Generate random AES key
+Generate random nonce/IV
+Encrypt file using AES-GCM
+Store only encrypted file
+Do not store original file
+
+Beginner explanation:
+
+AES is used because it is fast for large files.
+
+
+Step 5: Encrypt AES Key Using RSA
+---------------------------------
+
+Now protect the AES key.
+
+Flow:
+
+Take uploader's RSA public key
+Encrypt AES key using RSA-OAEP
+Store encrypted AES key in database
+
+Why?
+
+The file is encrypted by AES.
+The AES key is locked using RSA.
+Only the private key can unlock it.
+
+
+Step 6: File Download And Decryption
+------------------------------------
+
+When owner downloads the file:
+
+Fetch encrypted file
+Fetch encrypted AES key
+Decrypt AES key using owner's private key
+Decrypt file using AES key
+Return original file as download
+
+At this stage, the system supports:
+
+Upload
+Encrypt
+Store
+Decrypt
+Download
+
+
+Step 7: Integrity Verification Using SHA-256
+--------------------------------------------
+
+During upload:
+
+Generate SHA-256 hash of original file
+Store hash in database
+
+During download:
+
+Decrypt file
+Generate SHA-256 hash again
+Compare with stored hash
+If same -> file is safe
+If different -> file was modified/corrupted
+
+Beginner explanation:
+
+Hash works like a fingerprint of the file.
+
+
+Step 8: Digital Signature
+-------------------------
+
+During upload:
+
+Generate file hash
+Sign hash using uploader's private key
+Store signature
+
+During download/share verification:
+
+Verify signature using uploader's public key
+
+Purpose:
+
+Confirms who uploaded the file
+Confirms file was not changed
+
+
+Step 9: Share File With Another User
+------------------------------------
+
+Owner selects:
+
+File
+Receiver user
+Expiry date/time
+
+Sharing flow:
+
+Decrypt AES key using owner private key
+Encrypt same AES key using receiver's public key
+Create sharing record
+Store receiver-specific encrypted AES key
+
+Important idea:
+
+File is not encrypted again.
+Only the AES key is encrypted again for the receiver.
+
+
+Step 10: Receiver Downloads Shared File
+---------------------------------------
+
+Receiver login flow:
+
+Open "Shared With Me"
+Select file
+Check access permission
+Check expiry date
+Check revoked status
+Decrypt AES key using receiver private key
+Decrypt file
+Verify hash and signature
+Download file
+
+
+Step 11: Access Revocation
+--------------------------
+
+Owner can remove receiver access.
+
+Flow:
+
+Owner clicks revoke
+System marks sharing record as revoked
+Receiver can no longer download/decrypt from the system
+
+For beginner version, revocation can be database-level:
+
+is_revoked = True
+
+
+Step 12: Audit Logging
+----------------------
+
+Every important action should be logged:
+
+User registered
+User logged in
+File uploaded
+File encrypted
+File downloaded
+File shared
+Access revoked
+Integrity check failed
+Wrong decryption attempt
+
+Audit log fields:
+
+user
+action
+file
+ip_address
+timestamp
+status
+
+This makes the project look professional.
+
+
+Step 13: Suspicious Activity Detection
+--------------------------------------
+
+Start with simple rules:
+
+If user fails decryption 3 times -> mark suspicious
+If user downloads too many files in short time -> alert admin
+If integrity check fails -> alert admin
+If revoked user tries to access file -> alert admin
+
+Beginner implementation:
+
+Create SuspiciousActivity model
+Show alerts in admin/dashboard
+
+
+Step 14: Dashboard
+------------------
+
+Create separate dashboard pages:
+
+User Dashboard:
+- My files
+- Shared with me
+- Files I shared
+- Recent activity
+
+Admin Dashboard:
+- Total users
+- Total files
+- Total shared files
+- Failed attempts
+- Suspicious activities
+- Audit logs
+
+
+Step 15: Final Testing Scenario
+-------------------------------
+
+Use 3 users:
+
+Admin
+Alice
+Bob
+
+Test case:
+
+Alice registers
+Bob registers
+Alice uploads file
+System encrypts file
+Alice downloads file successfully
+Alice shares file with Bob
+Bob downloads and decrypts file
+Alice revokes Bob
+Bob tries again and access is denied
+Admin sees logs and suspicious activity
+
+
+Recommended Implementation Order
+================================
+
+1. Django setup
+2. Accounts app
+3. RSA key generation
+4. File upload
+5. AES encryption/decryption
+6. RSA encryption of AES key
+7. Download/decrypt
+8. SHA-256 hash verification
+9. Digital signature
+10. File sharing
+11. Expiry and revocation
+12. Audit logs
+13. Suspicious activity detection
+14. Dashboard
+15. Final UI polishing
+
+
+Simple Project Explanation
+==========================
+
+The project works like this:
+
+AES locks the file.
+RSA locks the AES key.
+SHA-256 checks whether the file changed.
+Digital signature proves who uploaded the file.
+Access control decides who can download.
+Audit log records everything.
+Suspicious detection finds unusual behavior.
+
+
+Short Summary
+=============
+
+This project is a secure Django file sharing system. It allows users to upload files, encrypt files, share files with selected users, verify file integrity, revoke access, track activity, and detect suspicious behavior.
+

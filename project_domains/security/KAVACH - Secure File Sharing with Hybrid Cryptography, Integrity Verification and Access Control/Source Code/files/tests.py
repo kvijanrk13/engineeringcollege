@@ -1,3 +1,5 @@
+import hashlib
+
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -32,7 +34,8 @@ class PlainTextFileSharingTests(TestCase):
         shared_file = PlainTextFile.objects.get()
         self.assertEqual(shared_file.owner, sender)
         self.assertEqual(shared_file.receiver_email, "receiver@gmail.com")
-        self.assertContains(response, "Text file encrypted and shared with receiver@gmail.com.")
+        self.assertEqual(shared_file.sha256_hash, hashlib.sha256(b"hello receiver").hexdigest())
+        self.assertContains(response, "Text file encrypted and SHA-256 fingerprint stored for receiver@gmail.com.")
 
     def test_receiver_profile_lists_and_decrypts_shared_file(self):
         sender = User.objects.create_user(
@@ -65,6 +68,8 @@ class PlainTextFileSharingTests(TestCase):
         self.assertContains(profile_response, "Files Received For You")
         self.assertContains(profile_response, "note.txt")
         self.assertContains(profile_response, "hello receiver")
+        self.assertContains(profile_response, hashlib.sha256(b"hello receiver").hexdigest())
+        self.assertContains(profile_response, "Integrity safe")
         self.assertContains(profile_response, reverse("files:download", args=[shared_file.id]))
 
         self.client.logout()
@@ -73,10 +78,46 @@ class PlainTextFileSharingTests(TestCase):
         self.assertContains(later_profile_response, "Files Received For You")
         self.assertContains(later_profile_response, "note.txt")
         self.assertContains(later_profile_response, "hello receiver")
+        self.assertContains(later_profile_response, "Integrity safe")
 
         download_response = self.client.get(reverse("files:download", args=[shared_file.id]))
         self.assertEqual(download_response.status_code, 200)
         self.assertEqual(download_response.content, b"hello receiver")
+
+    def test_receiver_download_blocks_failed_sha256_integrity_check(self):
+        sender = User.objects.create_user(
+            username="sender",
+            email="sender@gmail.com",
+            password="pass12345",
+        )
+        receiver = User.objects.create_user(
+            username="receiver",
+            email="receiver@gmail.com",
+            password="pass12345",
+        )
+        self.client.force_login(sender)
+        self.client.post(
+            reverse("accounts:profile"),
+            {
+                "receiver_email": "receiver@gmail.com",
+                "uploaded_file": SimpleUploadedFile(
+                    "note.txt",
+                    b"hello receiver",
+                    content_type="text/plain",
+                ),
+            },
+        )
+        shared_file = PlainTextFile.objects.get()
+        shared_file.sha256_hash = hashlib.sha256(b"modified content").hexdigest()
+        shared_file.save(update_fields=["sha256_hash"])
+
+        self.client.force_login(receiver)
+        profile_response = self.client.get(reverse("accounts:profile"))
+        self.assertContains(profile_response, "Integrity failed")
+        self.assertContains(profile_response, "Download blocked")
+
+        download_response = self.client.get(reverse("files:download", args=[shared_file.id]), follow=True)
+        self.assertContains(download_response, "Integrity verification failed")
 
     def test_non_receiver_cannot_download_shared_file(self):
         sender = User.objects.create_user(

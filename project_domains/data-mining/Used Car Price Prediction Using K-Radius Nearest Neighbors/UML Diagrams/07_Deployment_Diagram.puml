@@ -1,0 +1,30 @@
+@startuml
+node "Student Laptop" {
+  node "Python Virtual Environment" {
+    component "Django App"
+    component "ML Scripts"
+  }
+  database "SQLite"
+  folder "Local Datasets"
+  folder "Local Artifacts"
+}
+
+node "Admin Browser" {
+  component "Training and Metrics Pages"
+}
+
+node "Customer Browser" {
+  component "Prediction Form"
+}
+
+node "Telangana RTA Reference" {
+  component "Registration and Ownership Context"
+}
+
+"Admin Browser" --> "Django App"
+"Customer Browser" --> "Django App"
+"Telangana RTA Reference" --> "Django App"
+"Django App" --> SQLite
+"ML Scripts" --> "Local Datasets"
+"ML Scripts" --> "Local Artifacts"
+@enduml

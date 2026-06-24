@@ -6,7 +6,7 @@
 <section class="list-header">
     <div>
         <h1>My Files</h1>
-        <p class="helper-text">Sent and received Notepad files are stored only as AES-GCM encrypted files.</p>
+        <p class="helper-text">Sent and received Notepad files are stored only as AES-GCM encrypted files. SHA-256 fingerprints verify file integrity after decryption.</p>
     </div>
     <a class="button-link" href="{% url 'files:upload' %}">Sender Upload</a>
 </section>
@@ -21,11 +21,13 @@
                     <span class="pill">To {{ file.receiver_email }}</span>
                     <span class="pill">{{ file.file_size }} bytes</span>
                     <span class="pill">{{ file.encryption_algorithm }}</span>
+                    <span class="pill">SHA-256</span>
                 </div>
                 <p>Uploaded on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p>Original fingerprint: {{ file.sha256_hash }}</p>
                 <p>Stored as encrypted file: {{ file.uploaded_file.name }}</p>
             </div>
-            <p class="helper-text">Random AES key and nonce/IV generated for this transfer.</p>
+            <p class="helper-text">Random AES key and nonce/IV generated for this transfer. Hash works like a fingerprint of the file.</p>
         </article>
     {% empty %}
         <article class="profile-card">
@@ -46,8 +48,10 @@
                     <span class="pill">From {{ file.owner.email|default:file.owner.username }}</span>
                     <span class="pill">{{ file.file_size }} bytes</span>
                     <span class="pill">{{ file.encryption_algorithm }}</span>
+                    <span class="pill">SHA-256 check on download</span>
                 </div>
                 <p>Received on {{ file.uploaded_at|date:"d M Y, h:i A" }}</p>
+                <p>Stored fingerprint: {{ file.sha256_hash }}</p>
                 <p>Stored as encrypted file: {{ file.uploaded_file.name }}</p>
             </div>
             <a class="button-link" href="{% url 'files:download' file.id %}">Decrypt and Download</a>

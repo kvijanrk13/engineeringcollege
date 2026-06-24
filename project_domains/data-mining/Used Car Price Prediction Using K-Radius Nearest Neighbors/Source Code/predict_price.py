@@ -7,6 +7,31 @@ import joblib
 import pandas as pd
 
 
+def predict(model_path: Path, values: dict) -> float:
+    artifact = joblib.load(Path(model_path))
+    current_year = pd.Timestamp.today().year
+    year = float(values.get("year", current_year))
+    row = pd.DataFrame(
+        [
+            {
+                "make": values.get("make", "Unknown"),
+                "model": values.get("model", "Unknown"),
+                "year": year,
+                "vehicle_age": values.get("vehicle_age", max(current_year - year, 0)),
+                "mileage": values.get("mileage", 0),
+                "fuel_type": values.get("fuel_type", values.get("fuel", "Petrol")),
+                "transmission": values.get("transmission", "Manual"),
+                "owner": values.get("owner", "Unknown"),
+                "seller_type": values.get("seller_type", "Unknown"),
+                "condition": values.get("condition", "Unknown"),
+                "engine_size": values.get("engine_size", 1.2),
+                "original_price": values.get("original_price", 0),
+            }
+        ]
+    )
+    return float(artifact["pipeline"].predict(row)[0])
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Predict the price of a second-hand car.")
     parser.add_argument("--model-path", default="artifacts/car_price_model.joblib")
@@ -23,27 +48,22 @@ def main() -> None:
     parser.add_argument("--condition", default="Unknown")
     args = parser.parse_args()
 
-    artifact = joblib.load(Path(args.model_path))
-    current_year = pd.Timestamp.today().year
-    row = pd.DataFrame(
-        [
-            {
-                "make": args.make,
-                "model": args.model,
-                "year": args.year,
-                "vehicle_age": max(current_year - args.year, 0),
-                "mileage": args.mileage,
-                "fuel_type": args.fuel,
-                "transmission": args.transmission,
-                "owner": args.owner,
-                "seller_type": args.seller_type,
-                "condition": args.condition,
-                "engine_size": args.engine_size,
-                "original_price": args.original_price,
-            }
-        ]
+    predicted_price = predict(
+        Path(args.model_path),
+        {
+            "make": args.make,
+            "model": args.model,
+            "year": args.year,
+            "mileage": args.mileage,
+            "fuel_type": args.fuel,
+            "transmission": args.transmission,
+            "owner": args.owner,
+            "seller_type": args.seller_type,
+            "condition": args.condition,
+            "engine_size": args.engine_size,
+            "original_price": args.original_price,
+        },
     )
-    predicted_price = artifact["pipeline"].predict(row)[0]
     print(f"Predicted price: {predicted_price:.2f}")
     if args.original_price > 0:
         depreciation = args.original_price - predicted_price
