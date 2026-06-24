@@ -2683,6 +2683,22 @@ Exam Branch
             return mergedCount;
         }
 
+        function generateIndividualTimeTableSlots(subjectNames, preferredHours) {
+            const subjects = (subjectNames || []).filter(Boolean);
+            const hourLimit = Math.min(Math.max(preferredHours || 16, 14), 16, individualTimeTableSlots.length);
+            const filledHours = subjects.length ? hourLimit : 0;
+
+            individualTimeTableSlots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            for (let index = 0; index < filledHours; index += 1) {
+                individualTimeTableSlots[index].value = subjects[index % subjects.length];
+            }
+
+            return filledHours;
+        }
+
         function generateTimeTableFromSubjectSelection() {
             const currentPayload = getSubjectSelectionPayload();
             let selections = getStoredSubjectSelections();
@@ -2731,17 +2747,16 @@ Exam Branch
             }
 
             const individualTotalHours = document.getElementById('individualTotalHours');
-            if (individualTotalHours) {
-                individualTotalHours.value = String(individualTimeTableSlots.length);
-            }
 
             const fallbackSubjectLabel = selectedSubjectNames[0] || payload.subjectName;
+            const individualFilledHours = generateIndividualTimeTableSlots(
+                selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel],
+                16
+            );
 
-            individualTimeTableSlots.forEach(function (slot, index) {
-                slot.value = selectedSubjectNames.length
-                    ? selectedSubjectNames[index % selectedSubjectNames.length]
-                    : fallbackSubjectLabel;
-            });
+            if (individualTotalHours) {
+                individualTotalHours.value = String(individualFilledHours);
+            }
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
                 const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
@@ -2783,7 +2798,8 @@ Exam Branch
                     (syllabusSubjectNames.length
                         ? 'Timetable generated from available faculties; all syllabus subjects are placed in first-hour slots'
                         : 'Timetable generated from available faculties') +
-                    (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : ''),
+                    (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
+                    '; individual timetable limited to ' + individualFilledHours + ' hours',
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
