@@ -592,6 +592,14 @@ Exam Branch
         text-align: center;
     }
 
+    .time-table-grid .lab-merged-cell textarea {
+        min-height: 92px;
+        background: #ecfdf5;
+        border-color: rgba(15, 157, 122, 0.24);
+        color: #075f49;
+        font-weight: 900;
+    }
+
     .time-table-reference {
         min-width: 760px;
     }
@@ -2339,6 +2347,7 @@ Exam Branch
         }
 
         function setTimeTablePayload(payload) {
+            resetClassTimeTableMerges();
             const data = payload || {};
             const meta = data.meta || {};
             timeTableMetaFields.forEach(function (field) {
@@ -2595,6 +2604,83 @@ Exam Branch
             }
         }
 
+        function isLaboratorySubject(subjectName) {
+            return /\b(lab|laboratory)\b/i.test(subjectName || '');
+        }
+
+        function resetClassTimeTableMerges() {
+            timeTableSlots.forEach(function (slot) {
+                const cell = slot.closest('td');
+                if (!cell) {
+                    return;
+                }
+                cell.colSpan = 1;
+                cell.style.display = '';
+                cell.classList.remove('lab-merged-cell');
+                slot.classList.remove('lab-merged-slot');
+            });
+        }
+
+        function mergeSlotWithNextPeriod(slot, subjectName) {
+            const cell = slot.closest('td');
+            const row = cell ? cell.closest('tr') : null;
+            if (!cell || !row) {
+                return false;
+            }
+
+            const cells = Array.from(row.children);
+            const currentIndex = cells.indexOf(cell);
+            const nextCell = cells[currentIndex + 1];
+            if (!nextCell || nextCell.classList.contains('break-slot') || nextCell.style.display === 'none') {
+                return false;
+            }
+
+            const nextSlot = nextCell.querySelector('.timetable-slot');
+            if (!nextSlot) {
+                return false;
+            }
+
+            slot.value = subjectName;
+            nextSlot.value = '';
+            cell.colSpan = 2;
+            cell.classList.add('lab-merged-cell');
+            slot.classList.add('lab-merged-slot');
+            nextCell.style.display = 'none';
+            return true;
+        }
+
+        function applyLaboratoryBlocks(subjectNames) {
+            const laboratorySubjects = Array.from(new Set((subjectNames || []).filter(isLaboratorySubject)));
+            if (!laboratorySubjects.length) {
+                return 0;
+            }
+
+            const preferredStartPeriods = ['9:30-10:30', '1:20-2:15', '10:30-11:30', '2:15-3:10'];
+            let mergedCount = 0;
+
+            laboratorySubjects.forEach(function (subjectName, subjectIndex) {
+                const days = Array.from(new Set(timeTableSlots.map(function (slot) {
+                    return slot.dataset.day || '';
+                }).filter(Boolean)));
+
+                for (let dayOffset = 0; dayOffset < days.length; dayOffset += 1) {
+                    const day = days[(subjectIndex + dayOffset) % days.length];
+                    for (let periodIndex = 0; periodIndex < preferredStartPeriods.length; periodIndex += 1) {
+                        const slot = timeTableSlots.find(function (candidate) {
+                            return candidate.dataset.day === day && candidate.dataset.period === preferredStartPeriods[periodIndex];
+                        });
+
+                        if (slot && mergeSlotWithNextPeriod(slot, subjectName)) {
+                            mergedCount += 1;
+                            return;
+                        }
+                    }
+                }
+            });
+
+            return mergedCount;
+        }
+
         function generateTimeTableFromSubjectSelection() {
             const currentPayload = getSubjectSelectionPayload();
             let selections = getStoredSubjectSelections();
@@ -2624,6 +2710,7 @@ Exam Branch
 
             storeSubjectSelections(selections);
             renderSubjectSelectionPreview(selections);
+            resetClassTimeTableMerges();
 
             timeTableBranchField.value = payload.branch || timeTableBranchField.value;
             timeTableYearField.value = payload.year || timeTableYearField.value;
@@ -2683,15 +2770,18 @@ Exam Branch
                     });
                 }
 
+                const labMergedCount = applyLaboratoryBlocks(selectedSubjectNames.concat(syllabusSubjectNames));
+
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
                 }
                 markTimeTableDirty();
                 setStatus(
                     timeTableStatus,
-                    syllabusSubjectNames.length
+                    (syllabusSubjectNames.length
                         ? 'Timetable generated from available faculties; all syllabus subjects are placed in first-hour slots'
-                        : 'Timetable generated from available faculties',
+                        : 'Timetable generated from available faculties') +
+                    (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : ''),
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
