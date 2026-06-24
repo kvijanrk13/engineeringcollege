@@ -2699,6 +2699,67 @@ Exam Branch
             return filledHours;
         }
 
+        function uniqueSubjectNames(subjectNames) {
+            return Array.from(new Set((subjectNames || []).map(function (subjectName) {
+                return (subjectName || '').trim();
+            }).filter(Boolean)));
+        }
+
+        function placeSubjectWithLimit(slot, subjectName, counts, maxPerSubject) {
+            if (!slot || !subjectName) {
+                return false;
+            }
+            const currentCount = counts[subjectName] || 0;
+            if (currentCount >= maxPerSubject) {
+                return false;
+            }
+            slot.value = subjectName;
+            counts[subjectName] = currentCount + 1;
+            return true;
+        }
+
+        function generateClassTimeTableSlots(subjectNames) {
+            const subjects = uniqueSubjectNames(subjectNames);
+            const maxPerSubject = 5;
+            const counts = {};
+            let subjectIndex = 0;
+
+            timeTableSlots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            if (!subjects.length) {
+                return counts;
+            }
+
+            const firstHourSlots = timeTableSlots.filter(function (slot) {
+                return slot.dataset.period === '9:30-10:30';
+            });
+            const remainingSlots = timeTableSlots.filter(function (slot) {
+                return slot.dataset.period !== '9:30-10:30';
+            });
+
+            subjects.forEach(function (subjectName, index) {
+                if (firstHourSlots[index]) {
+                    placeSubjectWithLimit(firstHourSlots[index], subjectName, counts, maxPerSubject);
+                }
+            });
+
+            remainingSlots.forEach(function (slot) {
+                let attempts = 0;
+                while (attempts < subjects.length) {
+                    const subjectName = subjects[subjectIndex % subjects.length];
+                    subjectIndex += 1;
+                    attempts += 1;
+                    if (placeSubjectWithLimit(slot, subjectName, counts, maxPerSubject)) {
+                        return;
+                    }
+                }
+            });
+
+            return counts;
+        }
+
         function generateTimeTableFromSubjectSelection() {
             const currentPayload = getSubjectSelectionPayload();
             let selections = getStoredSubjectSelections();
@@ -2765,29 +2826,12 @@ Exam Branch
                         return (subject.name || '').trim();
                     })
                     .filter(Boolean);
-                const firstHourSlots = timeTableSlots.filter(function (slot) {
-                    return slot.dataset.period === '9:30-10:30';
-                });
+                const classSubjectNames = syllabusSubjectNames.length
+                    ? syllabusSubjectNames
+                    : (selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel]);
+                generateClassTimeTableSlots(classSubjectNames);
 
-                timeTableSlots.forEach(function (slot, index) {
-                    slot.value = selectedSubjectNames.length
-                        ? selectedSubjectNames[index % selectedSubjectNames.length]
-                        : fallbackSubjectLabel;
-                });
-
-                if (firstHourSlots.length && syllabusSubjectNames.length) {
-                    firstHourSlots.forEach(function (slot) {
-                        slot.value = '';
-                    });
-                    syllabusSubjectNames.forEach(function (subjectName, index) {
-                        const targetSlot = firstHourSlots[index % firstHourSlots.length];
-                        targetSlot.value = targetSlot.value
-                            ? targetSlot.value + ' / ' + subjectName
-                            : subjectName;
-                    });
-                }
-
-                const labMergedCount = applyLaboratoryBlocks(selectedSubjectNames.concat(syllabusSubjectNames));
+                const labMergedCount = applyLaboratoryBlocks(classSubjectNames);
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
@@ -2795,9 +2839,7 @@ Exam Branch
                 markTimeTableDirty();
                 setStatus(
                     timeTableStatus,
-                    (syllabusSubjectNames.length
-                        ? 'Timetable generated from available faculties; all syllabus subjects are placed in first-hour slots'
-                        : 'Timetable generated from available faculties') +
+                    'Timetable generated with each subject repeated up to 5 times' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                     '; individual timetable limited to ' + individualFilledHours + ' hours',
                     'success'
