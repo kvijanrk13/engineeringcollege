@@ -1135,6 +1135,9 @@ Exam Branch
                                     <button type="submit" class="btn exam-btn exam-btn-success">
                                         <i class="fas fa-save me-2"></i>Save Selection
                                     </button>
+                                    <button type="button" id="subjectSelectionAddBtn" class="btn exam-btn exam-btn-primary">
+                                        <i class="fas fa-calendar-plus me-2"></i>Add to Time Table
+                                    </button>
                                     <button type="button" id="subjectSelectionClearBtn" class="btn exam-btn exam-btn-danger">
                                         <i class="fas fa-broom me-2"></i>Clear Selection
                                     </button>
@@ -1561,7 +1564,7 @@ Exam Branch
             return match ? decodeURIComponent(match[1]) : '';
         }
 
-        function renderSyllabusSubjects(subjects) {
+        function renderSyllabusSubjects(subjects, selectedCode) {
             if (!syllabusSubjectCount || !syllabusSubjectSelect) {
                 return;
             }
@@ -1583,6 +1586,9 @@ Exam Branch
                 option.value = subject.code || '';
                 option.dataset.name = subject.name || '';
                 option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                if (selectedCode && option.value === selectedCode) {
+                    option.selected = true;
+                }
                 syllabusSubjectSelect.appendChild(option);
 
             });
@@ -1643,9 +1649,9 @@ Exam Branch
                 });
         }
 
-        function loadSyllabusSubjects() {
+        function loadSyllabusSubjects(selectedCode) {
             if (!syllabusSubjectsUrl || !timeTableYearField || !timeTableSemesterField || !timeTableBranchField) {
-                return;
+                return Promise.resolve();
             }
 
             const romanMap = { I: '1', II: '2', III: '3', IV: '4' };
@@ -1671,7 +1677,7 @@ Exam Branch
                 branch: timeTableBranchField.value || 'IT'
             });
 
-            fetch(syllabusSubjectsUrl + '?' + params.toString(), {
+            return fetch(syllabusSubjectsUrl + '?' + params.toString(), {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
                 .then(function (response) {
@@ -1681,11 +1687,11 @@ Exam Branch
                     return response.json();
                 })
                 .then(function (data) {
-                    renderSyllabusSubjects(Array.isArray(data.subjects) ? data.subjects : []);
+                    renderSyllabusSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedCode);
                 })
                 .catch(function (error) {
                     console.error(error);
-                    renderSyllabusSubjects([]);
+                    renderSyllabusSubjects([], '');
                     setStatus(timeTableStatus, 'Could not load subjects from syllabus', 'warning');
                 });
         }
@@ -2488,6 +2494,61 @@ Exam Branch
             setStatus(subjectSelectionStatus, 'Subject selection cleared', 'muted');
         }
 
+        function switchToTimeTableTab() {
+            const timeTableTabButton = document.getElementById('timetable-tab');
+            if (!timeTableTabButton) {
+                return;
+            }
+            if (window.bootstrap && window.bootstrap.Tab) {
+                window.bootstrap.Tab.getOrCreateInstance(timeTableTabButton).show();
+            } else {
+                timeTableTabButton.click();
+            }
+        }
+
+        function addSubjectSelectionToTimeTable() {
+            const payload = getSubjectSelectionPayload();
+            if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
+                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required before adding to timetable', 'warning');
+                return;
+            }
+
+            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(payload));
+            renderSubjectSelectionPreview(payload);
+
+            timeTableBranchField.value = payload.branch || timeTableBranchField.value;
+            timeTableYearField.value = payload.year || timeTableYearField.value;
+            timeTableSemesterField.value = payload.semester || timeTableSemesterField.value;
+
+            const individualFacultyName = document.getElementById('individualFacultyName');
+            if (individualFacultyName) {
+                individualFacultyName.value = payload.facultyName;
+            }
+
+            const slotLabel = (payload.subjectCode ? payload.subjectCode + ' - ' : '') + payload.subjectName + '\n' + payload.facultyName;
+            const emptySlot = timeTableSlots.find(function (slot) {
+                return !slot.value.trim();
+            });
+
+            if (emptySlot) {
+                emptySlot.value = slotLabel;
+            }
+
+            loadSyllabusSubjects(payload.subjectCode).then(function () {
+                if (syllabusSubjectSelect && payload.subjectCode) {
+                    syllabusSubjectSelect.value = payload.subjectCode;
+                }
+                markTimeTableDirty();
+                setStatus(
+                    timeTableStatus,
+                    emptySlot ? 'Subject selection added to the first empty timetable slot' : 'Subject selection linked; timetable slots are already filled',
+                    emptySlot ? 'success' : 'warning'
+                );
+                setStatus(subjectSelectionStatus, 'Selection added to Time Table tab', 'success');
+                switchToTimeTableTab();
+            });
+        }
+
         document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
         document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
         document.getElementById('deleteBtn').addEventListener('click', deleteTeachingPlan);
@@ -2512,6 +2573,7 @@ Exam Branch
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
         subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
+        document.getElementById('subjectSelectionAddBtn').addEventListener('click', addSubjectSelectionToTimeTable);
         document.getElementById('subjectSelectionClearBtn').addEventListener('click', clearSubjectSelection);
 
         marksBody.addEventListener('input', function (event) {
