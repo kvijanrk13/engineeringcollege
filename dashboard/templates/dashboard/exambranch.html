@@ -1688,11 +1688,13 @@ Exam Branch
                 })
                 .then(function (data) {
                     renderSyllabusSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedCode);
+                    return data;
                 })
                 .catch(function (error) {
                     console.error(error);
                     renderSyllabusSubjects([], '');
                     setStatus(timeTableStatus, 'Could not load subjects from syllabus', 'warning');
+                    return { subjects: [] };
                 });
         }
 
@@ -2542,22 +2544,46 @@ Exam Branch
 
             const subjectLabel = payload.subjectName;
 
-            timeTableSlots.forEach(function (slot) {
-                slot.value = subjectLabel;
-            });
-
             individualTimeTableSlots.forEach(function (slot) {
                 slot.value = subjectLabel;
             });
 
-            loadSyllabusSubjects(payload.subjectCode).then(function () {
+            loadSyllabusSubjects(payload.subjectCode).then(function (data) {
+                const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
+                const syllabusSubjectNames = syllabusSubjects
+                    .map(function (subject) {
+                        return (subject.name || '').trim();
+                    })
+                    .filter(Boolean);
+                const firstHourSlots = timeTableSlots.filter(function (slot) {
+                    return slot.dataset.period === '9:30-10:30';
+                });
+
+                timeTableSlots.forEach(function (slot) {
+                    slot.value = subjectLabel;
+                });
+
+                if (firstHourSlots.length && syllabusSubjectNames.length) {
+                    firstHourSlots.forEach(function (slot) {
+                        slot.value = '';
+                    });
+                    syllabusSubjectNames.forEach(function (subjectName, index) {
+                        const targetSlot = firstHourSlots[index % firstHourSlots.length];
+                        targetSlot.value = targetSlot.value
+                            ? targetSlot.value + ' / ' + subjectName
+                            : subjectName;
+                    });
+                }
+
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
                 }
                 markTimeTableDirty();
                 setStatus(
                     timeTableStatus,
-                    'Timetable generated with selected subject and faculty',
+                    syllabusSubjectNames.length
+                        ? 'Timetable generated; all syllabus subjects are placed in first-hour slots'
+                        : 'Timetable generated with selected subject',
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from selected faculty subject', 'success');
