@@ -547,6 +547,20 @@ Exam Branch
         margin-top: 1.2rem;
     }
 
+    .subject-primary-action {
+        min-width: 180px;
+        text-transform: uppercase;
+    }
+
+    .available-faculty-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
     .subject-selection-preview {
         min-width: 940px;
     }
@@ -1132,11 +1146,11 @@ Exam Branch
                                     Subject selection not saved yet
                                 </div>
                                 <div class="exam-action-buttons">
+                                    <button type="button" id="subjectSelectionAddFacultyBtn" class="btn exam-btn exam-btn-success subject-primary-action">
+                                        <i class="fas fa-user-plus me-2"></i>ADD FACULTY
+                                    </button>
                                     <button type="submit" class="btn exam-btn exam-btn-success">
                                         <i class="fas fa-save me-2"></i>Save Selection
-                                    </button>
-                                    <button type="button" id="subjectSelectionAddFacultyBtn" class="btn exam-btn exam-btn-primary">
-                                        <i class="fas fa-user-plus me-2"></i>Add Faculty
                                     </button>
                                     <button type="button" id="subjectSelectionAddBtn" class="btn exam-btn exam-btn-primary">
                                         <i class="fas fa-calendar-plus me-2"></i>Generate Time Table
@@ -1150,6 +1164,16 @@ Exam Branch
                     </div>
 
                     <div class="exam-table-wrap mt-4">
+                        <div class="available-faculty-header">
+                            <div>
+                                <h3 class="card-title mb-1">Available Faculties Added</h3>
+                                <p class="card-copy">Use ADD FACULTY to build this list, then Generate Time Table from the available faculties.</p>
+                            </div>
+                            <span class="panel-pill">
+                                <i class="fas fa-users"></i>
+                                Timetable source list
+                            </span>
+                        </div>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table exam-table subject-selection-preview align-middle mb-0">
                                 <thead>
