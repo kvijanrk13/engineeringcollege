@@ -2540,11 +2540,10 @@ Exam Branch
                 individualTotalHours.value = String(individualTimeTableSlots.length);
             }
 
-            const subjectLabel = (payload.subjectCode ? payload.subjectCode + ' - ' : '') + payload.subjectName;
-            const classSlotLabel = subjectLabel + '\n' + payload.facultyName;
+            const subjectLabel = payload.subjectName;
 
             timeTableSlots.forEach(function (slot) {
-                slot.value = classSlotLabel;
+                slot.value = subjectLabel;
             });
 
             individualTimeTableSlots.forEach(function (slot) {
