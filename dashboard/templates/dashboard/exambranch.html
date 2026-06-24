@@ -1186,6 +1186,7 @@ Exam Branch
                             <table class="table exam-table subject-selection-preview align-middle mb-0">
                                 <thead>
                                     <tr>
+                                        <th>S.No</th>
                                         <th>Faculty</th>
                                         <th>Employee Code</th>
                                         <th>Branch</th>
@@ -1198,7 +1199,7 @@ Exam Branch
                                 </thead>
                                 <tbody id="subjectSelectionPreviewBody">
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted">No subject selection saved yet.</td>
+                                        <td colspan="9" class="text-center text-muted">No subject selection saved yet.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2498,7 +2499,7 @@ Exam Branch
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
                 const emptyCell = document.createElement('td');
-                emptyCell.colSpan = 8;
+                emptyCell.colSpan = 9;
                 emptyCell.className = 'text-center text-muted';
                 emptyCell.textContent = 'No subject selection saved yet.';
                 emptyRow.appendChild(emptyCell);
@@ -2506,9 +2507,10 @@ Exam Branch
                 return;
             }
 
-            selections.forEach(function (payload) {
+            selections.forEach(function (payload, index) {
                 const row = document.createElement('tr');
                 [
+                    String(index + 1),
                     payload.facultyName || '-',
                     payload.employeeCode || '-',
                     payload.branch || '-',
@@ -2552,7 +2554,7 @@ Exam Branch
 
             storeSubjectSelections(selections);
             renderSubjectSelectionPreview(selections);
-            setStatus(subjectSelectionStatus, 'Faculty added below existing details', 'success');
+            setStatus(subjectSelectionStatus, 'Faculty added as row ' + selections.length + ' below existing details', 'success');
             setSubjectSelectionFields({
                 branch: payload.branch,
                 year: payload.year,
