@@ -1171,7 +1171,7 @@ Exam Branch
                             </div>
                             <span class="panel-pill">
                                 <i class="fas fa-users"></i>
-                                Timetable source list
+                                Added: <span id="subjectSelectionCount">0</span>
                             </span>
                         </div>
                         <div class="table-responsive" style="overflow-x: auto;">
@@ -1553,6 +1553,7 @@ Exam Branch
         const subjectSelectionForm = document.getElementById('facultySubjectSelectionForm');
         const subjectSelectionStatus = document.getElementById('subjectSelectionStatus');
         const subjectSelectionPreviewBody = document.getElementById('subjectSelectionPreviewBody');
+        const subjectSelectionCount = document.getElementById('subjectSelectionCount');
         const subjectSelectionFields = {
             facultyName: document.getElementById('subjectFacultyName'),
             employeeCode: document.getElementById('subjectEmployeeCode'),
@@ -2474,9 +2475,16 @@ Exam Branch
             localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(normalizeSubjectSelections(selections)));
         }
 
+        function updateSubjectSelectionCount(count) {
+            if (subjectSelectionCount) {
+                subjectSelectionCount.textContent = String(count || 0);
+            }
+        }
+
         function renderSubjectSelectionPreview(payload) {
             const selections = normalizeSubjectSelections(payload);
             subjectSelectionPreviewBody.innerHTML = '';
+            updateSubjectSelectionCount(selections.length);
 
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
