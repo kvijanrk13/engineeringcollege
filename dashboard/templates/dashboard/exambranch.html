@@ -1135,6 +1135,9 @@ Exam Branch
                                     <button type="submit" class="btn exam-btn exam-btn-success">
                                         <i class="fas fa-save me-2"></i>Save Selection
                                     </button>
+                                    <button type="button" id="subjectSelectionAddFacultyBtn" class="btn exam-btn exam-btn-primary">
+                                        <i class="fas fa-user-plus me-2"></i>Add Faculty
+                                    </button>
                                     <button type="button" id="subjectSelectionAddBtn" class="btn exam-btn exam-btn-primary">
                                         <i class="fas fa-calendar-plus me-2"></i>Generate Time Table
                                     </button>
@@ -2418,10 +2421,40 @@ Exam Branch
             loadSubjectSelectionSubjects(data.subjectName || '');
         }
 
+        function normalizeSubjectSelections(payload) {
+            if (Array.isArray(payload)) {
+                return payload.filter(function (entry) {
+                    return entry && (entry.facultyName || entry.employeeCode || entry.subjectName);
+                });
+            }
+            if (payload && (payload.facultyName || payload.employeeCode || payload.subjectName)) {
+                return [payload];
+            }
+            return [];
+        }
+
+        function getStoredSubjectSelections() {
+            const saved = localStorage.getItem(subjectSelectionStorageKey);
+            if (!saved) {
+                return [];
+            }
+            try {
+                return normalizeSubjectSelections(JSON.parse(saved));
+            } catch (error) {
+                console.error('Failed to load saved faculty subject selections', error);
+                return [];
+            }
+        }
+
+        function storeSubjectSelections(selections) {
+            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(normalizeSubjectSelections(selections)));
+        }
+
         function renderSubjectSelectionPreview(payload) {
+            const selections = normalizeSubjectSelections(payload);
             subjectSelectionPreviewBody.innerHTML = '';
 
-            if (!payload || !payload.facultyName && !payload.employeeCode && !payload.subjectName) {
+            if (!selections.length) {
                 const emptyRow = document.createElement('tr');
                 const emptyCell = document.createElement('td');
                 emptyCell.colSpan = 8;
@@ -2432,22 +2465,24 @@ Exam Branch
                 return;
             }
 
-            const row = document.createElement('tr');
-            [
-                payload.facultyName || '-',
-                payload.employeeCode || '-',
-                payload.branch || '-',
-                payload.year || '-',
-                payload.semester || '-',
-                payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
-                payload.timesTaught || '0',
-                payload.previousResult || '-'
-            ].forEach(function (value) {
-                const cell = document.createElement('td');
-                cell.textContent = value;
-                row.appendChild(cell);
+            selections.forEach(function (payload) {
+                const row = document.createElement('tr');
+                [
+                    payload.facultyName || '-',
+                    payload.employeeCode || '-',
+                    payload.branch || '-',
+                    payload.year || '-',
+                    payload.semester || '-',
+                    payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
+                    payload.timesTaught || '0',
+                    payload.previousResult || '-'
+                ].forEach(function (value) {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+                subjectSelectionPreviewBody.appendChild(row);
             });
-            subjectSelectionPreviewBody.appendChild(row);
         }
 
         function saveSubjectSelection(event) {
@@ -2459,9 +2494,37 @@ Exam Branch
                 return;
             }
 
-            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(payload));
-            renderSubjectSelectionPreview(payload);
+            storeSubjectSelections([payload]);
+            renderSubjectSelectionPreview([payload]);
             setStatus(subjectSelectionStatus, 'Subject selection saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function addFacultySubjectSelection() {
+            const payload = getSubjectSelectionPayload();
+            if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
+                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required before adding faculty', 'warning');
+                return;
+            }
+
+            const selections = getStoredSubjectSelections();
+            const duplicateIndex = selections.findIndex(function (entry) {
+                return entry.employeeCode === payload.employeeCode && entry.subjectName === payload.subjectName;
+            });
+
+            if (duplicateIndex >= 0) {
+                selections[duplicateIndex] = payload;
+            } else {
+                selections.push(payload);
+            }
+
+            storeSubjectSelections(selections);
+            renderSubjectSelectionPreview(selections);
+            setStatus(subjectSelectionStatus, 'Faculty added to available list', 'success');
+            setSubjectSelectionFields({
+                branch: payload.branch,
+                year: payload.year,
+                semester: payload.semester
+            });
         }
 
         function loadSubjectSelection() {
@@ -2474,10 +2537,10 @@ Exam Branch
             }
 
             try {
-                const payload = JSON.parse(saved);
-                setSubjectSelectionFields(payload);
-                renderSubjectSelectionPreview(payload);
-                setStatus(subjectSelectionStatus, 'Subject selection loaded from ' + formatSavedTime(payload.savedAt), 'success');
+                const selections = normalizeSubjectSelections(JSON.parse(saved));
+                setSubjectSelectionFields(selections[0] || {});
+                renderSubjectSelectionPreview(selections);
+                setStatus(subjectSelectionStatus, selections.length + ' faculty selection(s) loaded', 'success');
             } catch (error) {
                 console.error('Failed to load subject selection', error);
                 loadSubjectSelectionSubjects();
@@ -2509,11 +2572,21 @@ Exam Branch
         }
 
         function generateTimeTableFromSubjectSelection() {
-            const payload = getSubjectSelectionPayload();
-            if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
-                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required before generating timetable', 'warning');
+            const currentPayload = getSubjectSelectionPayload();
+            let selections = getStoredSubjectSelections();
+
+            if (!selections.length && currentPayload.facultyName && currentPayload.employeeCode && currentPayload.subjectName) {
+                selections = [currentPayload];
+                storeSubjectSelections(selections);
+                renderSubjectSelectionPreview(selections);
+            }
+
+            if (!selections.length) {
+                setStatus(subjectSelectionStatus, 'Add at least one faculty before generating timetable', 'warning');
                 return;
             }
+
+            const payload = selections[0];
 
             const hasExistingTimetable = timeTableSlots.some(function (slot) {
                 return slot.value.trim();
@@ -2525,16 +2598,23 @@ Exam Branch
                 return;
             }
 
-            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(payload));
-            renderSubjectSelectionPreview(payload);
+            storeSubjectSelections(selections);
+            renderSubjectSelectionPreview(selections);
 
             timeTableBranchField.value = payload.branch || timeTableBranchField.value;
             timeTableYearField.value = payload.year || timeTableYearField.value;
             timeTableSemesterField.value = payload.semester || timeTableSemesterField.value;
 
+            const facultyNames = Array.from(new Set(selections.map(function (selection) {
+                return (selection.facultyName || '').trim();
+            }).filter(Boolean)));
+            const selectedSubjectNames = Array.from(new Set(selections.map(function (selection) {
+                return (selection.subjectName || '').trim();
+            }).filter(Boolean)));
+
             const individualFacultyName = document.getElementById('individualFacultyName');
             if (individualFacultyName) {
-                individualFacultyName.value = payload.facultyName;
+                individualFacultyName.value = facultyNames.join(' / ');
             }
 
             const individualTotalHours = document.getElementById('individualTotalHours');
@@ -2542,10 +2622,12 @@ Exam Branch
                 individualTotalHours.value = String(individualTimeTableSlots.length);
             }
 
-            const subjectLabel = payload.subjectName;
+            const fallbackSubjectLabel = selectedSubjectNames[0] || payload.subjectName;
 
-            individualTimeTableSlots.forEach(function (slot) {
-                slot.value = subjectLabel;
+            individualTimeTableSlots.forEach(function (slot, index) {
+                slot.value = selectedSubjectNames.length
+                    ? selectedSubjectNames[index % selectedSubjectNames.length]
+                    : fallbackSubjectLabel;
             });
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
@@ -2559,8 +2641,10 @@ Exam Branch
                     return slot.dataset.period === '9:30-10:30';
                 });
 
-                timeTableSlots.forEach(function (slot) {
-                    slot.value = subjectLabel;
+                timeTableSlots.forEach(function (slot, index) {
+                    slot.value = selectedSubjectNames.length
+                        ? selectedSubjectNames[index % selectedSubjectNames.length]
+                        : fallbackSubjectLabel;
                 });
 
                 if (firstHourSlots.length && syllabusSubjectNames.length) {
@@ -2582,11 +2666,11 @@ Exam Branch
                 setStatus(
                     timeTableStatus,
                     syllabusSubjectNames.length
-                        ? 'Timetable generated; all syllabus subjects are placed in first-hour slots'
-                        : 'Timetable generated with selected subject',
+                        ? 'Timetable generated from available faculties; all syllabus subjects are placed in first-hour slots'
+                        : 'Timetable generated from available faculties',
                     'success'
                 );
-                setStatus(subjectSelectionStatus, 'Time Table generated from selected faculty subject', 'success');
+                setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
                 switchToTimeTableTab();
             });
         }
@@ -2615,6 +2699,7 @@ Exam Branch
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
         subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
+        document.getElementById('subjectSelectionAddFacultyBtn').addEventListener('click', addFacultySubjectSelection);
         document.getElementById('subjectSelectionAddBtn').addEventListener('click', generateTimeTableFromSubjectSelection);
         document.getElementById('subjectSelectionClearBtn').addEventListener('click', clearSubjectSelection);
 
