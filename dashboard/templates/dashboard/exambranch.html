@@ -2531,19 +2531,11 @@ Exam Branch
             }
 
             const selections = getStoredSubjectSelections();
-            const duplicateIndex = selections.findIndex(function (entry) {
-                return entry.employeeCode === payload.employeeCode && entry.subjectName === payload.subjectName;
-            });
-
-            if (duplicateIndex >= 0) {
-                selections[duplicateIndex] = payload;
-            } else {
-                selections.push(payload);
-            }
+            selections.push(payload);
 
             storeSubjectSelections(selections);
             renderSubjectSelectionPreview(selections);
-            setStatus(subjectSelectionStatus, 'Faculty added to available list', 'success');
+            setStatus(subjectSelectionStatus, 'Faculty added below existing details', 'success');
             setSubjectSelectionFields({
                 branch: payload.branch,
                 year: payload.year,
