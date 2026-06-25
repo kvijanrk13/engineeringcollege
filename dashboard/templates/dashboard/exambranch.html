@@ -1364,7 +1364,8 @@ Exam Branch
                         </div>
                     </div>
 
-                    <div class="exam-card mb-4">
+                    <div id="individualTimeTableContainer">
+                        <div class="exam-card mb-4" data-individual-timetable-card>
                         <h3 class="card-title">Individual Time Table</h3>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
@@ -1457,6 +1458,7 @@ Exam Branch
                                 </tbody>
                             </table>
                         </div>
+                        </div>
                     </div>
 
                     <div class="exam-actions mb-4">
@@ -1548,8 +1550,10 @@ Exam Branch
         const marksBody = document.getElementById('marksBody');
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
-        const individualTimeTableSlots = Array.from(document.querySelectorAll('.individual-timetable-slot'));
-        const individualTimeTableMetaFields = Array.from(document.querySelectorAll('.individual-timetable-meta-input'));
+        const individualTimeTableContainer = document.getElementById('individualTimeTableContainer');
+        const individualTimeTableTemplate = individualTimeTableContainer
+            ? individualTimeTableContainer.querySelector('[data-individual-timetable-card]').cloneNode(true)
+            : null;
         const syllabusSubjectCount = document.getElementById('syllabusSubjectCount');
         const syllabusSubjectSelect = document.getElementById('syllabusSubjectSelect');
         const courseReferenceBody = document.getElementById('courseReferenceBody');
@@ -1596,6 +1600,59 @@ Exam Branch
             }
             const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
             return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        function getIndividualTimeTableCards() {
+            if (!individualTimeTableContainer) {
+                return [];
+            }
+            return Array.from(individualTimeTableContainer.querySelectorAll('[data-individual-timetable-card]'));
+        }
+
+        function getIndividualTimeTableSlots(card) {
+            const root = card || individualTimeTableContainer || document;
+            return Array.from(root.querySelectorAll('.individual-timetable-slot'));
+        }
+
+        function getIndividualTimeTableMetaFields(card) {
+            const root = card || individualTimeTableContainer || document;
+            return Array.from(root.querySelectorAll('.individual-timetable-meta-input'));
+        }
+
+        function prepareIndividualTimeTableCard(card, index) {
+            if (!card) {
+                return null;
+            }
+            card.querySelectorAll('[id]').forEach(function (element) {
+                if (index === 0) {
+                    return;
+                }
+                element.removeAttribute('id');
+            });
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                slot.value = '';
+            });
+            getIndividualTimeTableMetaFields(card).forEach(function (field) {
+                field.value = '';
+            });
+            return card;
+        }
+
+        function ensureIndividualTimeTableCardCount(count) {
+            if (!individualTimeTableContainer || !individualTimeTableTemplate) {
+                return [];
+            }
+
+            const requiredCount = Math.max(count || 1, 1);
+            individualTimeTableContainer.innerHTML = '';
+
+            for (let index = 0; index < requiredCount; index += 1) {
+                individualTimeTableContainer.appendChild(
+                    prepareIndividualTimeTableCard(individualTimeTableTemplate.cloneNode(true), index)
+                );
+            }
+
+            return getIndividualTimeTableCards();
         }
 
         function renderSyllabusSubjects(subjects, selectedCode) {
@@ -1709,7 +1766,7 @@ Exam Branch
             }
 
             let changed = false;
-            timeTableSlots.concat(individualTimeTableSlots).forEach(function (slot) {
+            timeTableSlots.concat(getIndividualTimeTableSlots()).forEach(function (slot) {
                 const currentValue = normalizeClassValue(slot.value);
                 if (currentValue && syllabusValues.has(currentValue) && !selectedValues.has(currentValue)) {
                     slot.value = '';
@@ -2397,24 +2454,33 @@ Exam Branch
                 };
             });
 
-            const individualMeta = {};
-            individualTimeTableMetaFields.forEach(function (field) {
-                individualMeta[field.id] = field.value;
-            });
+            const individualTables = getIndividualTimeTableCards().map(function (card) {
+                const individualMeta = {};
+                getIndividualTimeTableMetaFields(card).forEach(function (field, index) {
+                    const key = field.id || field.getAttribute('aria-label') || 'field' + index;
+                    individualMeta[key] = field.value;
+                });
 
-            const individualSlots = individualTimeTableSlots.map(function (slot) {
+                const individualSlots = getIndividualTimeTableSlots(card).map(function (slot) {
+                    return {
+                        day: slot.dataset.day || '',
+                        period: slot.dataset.period || '',
+                        value: slot.value
+                    };
+                });
+
                 return {
-                    day: slot.dataset.day || '',
-                    period: slot.dataset.period || '',
-                    value: slot.value
+                    meta: individualMeta,
+                    slots: individualSlots
                 };
             });
 
             return {
                 meta: meta,
                 slots: slots,
-                individualMeta: individualMeta,
-                individualSlots: individualSlots,
+                individualTables: individualTables,
+                individualMeta: individualTables[0] ? individualTables[0].meta : {},
+                individualSlots: individualTables[0] ? individualTables[0].slots : [],
                 savedAt: new Date().toISOString()
             };
         }
@@ -2437,30 +2503,38 @@ Exam Branch
                 slot.value = match ? (match.value || '') : '';
             });
 
-            const individualMeta = data.individualMeta || {};
-            individualTimeTableMetaFields.forEach(function (field) {
-                if (Object.prototype.hasOwnProperty.call(individualMeta, field.id)) {
-                    field.value = individualMeta[field.id] || '';
-                } else {
-                    field.value = '';
-                }
-            });
+            const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
+                ? data.individualTables
+                : [{ meta: data.individualMeta || {}, slots: Array.isArray(data.individualSlots) ? data.individualSlots : [] }];
 
-            const individualSlots = Array.isArray(data.individualSlots) ? data.individualSlots : [];
-            individualTimeTableSlots.forEach(function (slot) {
-                const match = individualSlots.find(function (entry) {
-                    return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+            ensureIndividualTimeTableCardCount(individualTables.length).forEach(function (card, cardIndex) {
+                const tableData = individualTables[cardIndex] || {};
+                const individualMeta = tableData.meta || {};
+                getIndividualTimeTableMetaFields(card).forEach(function (field, index) {
+                    const key = field.id || field.getAttribute('aria-label') || 'field' + index;
+                    if (Object.prototype.hasOwnProperty.call(individualMeta, key)) {
+                        field.value = individualMeta[key] || '';
+                    } else {
+                        field.value = '';
+                    }
                 });
-                slot.value = match ? (match.value || '') : '';
+
+                const individualSlots = Array.isArray(tableData.slots) ? tableData.slots : [];
+                getIndividualTimeTableSlots(card).forEach(function (slot) {
+                    const match = individualSlots.find(function (entry) {
+                        return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+                    });
+                    slot.value = match ? (match.value || '') : '';
+                });
             });
         }
 
         function hasTimeTableContent() {
             return timeTableSlots.some(function (slot) {
                 return slot.value.trim();
-            }) || individualTimeTableSlots.some(function (slot) {
+            }) || getIndividualTimeTableSlots().some(function (slot) {
                 return slot.value.trim();
-            }) || individualTimeTableMetaFields.some(function (field) {
+            }) || getIndividualTimeTableMetaFields().some(function (field) {
                 return field.value.trim();
             });
         }
@@ -2812,20 +2886,83 @@ Exam Branch
             return mergedCount;
         }
 
-        function generateIndividualTimeTableSlots(subjectNames, preferredHours) {
+        function generateIndividualTimeTableSlots(subjectNames, preferredHours, card) {
             const subjects = (subjectNames || []).filter(Boolean);
-            const hourLimit = Math.min(Math.max(preferredHours || 16, 14), 16, individualTimeTableSlots.length);
+            const slots = getIndividualTimeTableSlots(card);
+            const hourLimit = Math.min(Math.max(preferredHours || 16, 14), 16, slots.length);
             const filledHours = subjects.length ? hourLimit : 0;
 
-            individualTimeTableSlots.forEach(function (slot) {
+            slots.forEach(function (slot) {
                 slot.value = '';
             });
 
             for (let index = 0; index < filledHours; index += 1) {
-                individualTimeTableSlots[index].value = subjects[index % subjects.length];
+                slots[index].value = subjects[index % subjects.length];
             }
 
             return filledHours;
+        }
+
+        function buildIndividualFacultySchedules(selections) {
+            const facultyMap = new Map();
+            normalizeSubjectSelections(selections).forEach(function (selection) {
+                const facultyName = (selection.facultyName || '').trim();
+                const employeeCode = (selection.employeeCode || '').trim();
+                const subjectName = (selection.subjectName || '').trim();
+                const key = employeeCode || facultyName || 'faculty-' + facultyMap.size;
+
+                if (!facultyMap.has(key)) {
+                    facultyMap.set(key, {
+                        facultyName: facultyName,
+                        employeeCode: employeeCode,
+                        subjects: []
+                    });
+                }
+
+                if (subjectName && !facultyMap.get(key).subjects.includes(subjectName)) {
+                    facultyMap.get(key).subjects.push(subjectName);
+                }
+            });
+
+            return Array.from(facultyMap.values()).filter(function (schedule) {
+                return schedule.facultyName || schedule.employeeCode || schedule.subjects.length;
+            });
+        }
+
+        function renderIndividualFacultyTimeTables(selections) {
+            const schedules = buildIndividualFacultySchedules(selections);
+            const cards = ensureIndividualTimeTableCardCount(schedules.length || 1);
+            let totalFilledHours = 0;
+
+            if (!schedules.length) {
+                generateIndividualTimeTableSlots([], 16, cards[0]);
+                getIndividualTimeTableMetaFields(cards[0]).forEach(function (field) {
+                    field.value = '';
+                });
+                return 0;
+            }
+
+            schedules.forEach(function (schedule, index) {
+                const card = cards[index];
+                const metaFields = getIndividualTimeTableMetaFields(card);
+                const facultyField = metaFields.find(function (field) {
+                    return field.id === 'individualFacultyName' || field.getAttribute('aria-label') === 'Faculty Name';
+                });
+                const hoursField = metaFields.find(function (field) {
+                    return field.id === 'individualTotalHours' || field.getAttribute('aria-label') === 'Number of hours';
+                });
+                const filledHours = generateIndividualTimeTableSlots(schedule.subjects, 16, card);
+
+                if (facultyField) {
+                    facultyField.value = [schedule.facultyName, schedule.employeeCode].filter(Boolean).join(' - ');
+                }
+                if (hoursField) {
+                    hoursField.value = String(filledHours);
+                }
+                totalFilledHours += filledHours;
+            });
+
+            return totalFilledHours;
         }
 
         function uniqueSubjectNames(subjectNames) {
@@ -3031,7 +3168,7 @@ Exam Branch
 
             const hasExistingTimetable = timeTableSlots.some(function (slot) {
                 return slot.value.trim();
-            }) || individualTimeTableSlots.some(function (slot) {
+            }) || getIndividualTimeTableSlots().some(function (slot) {
                 return slot.value.trim();
             });
 
@@ -3049,29 +3186,12 @@ Exam Branch
             renderCourseReference(selections);
 
             const timetableSelections = getTimeTableClassSelections(selections);
-            const facultyNames = Array.from(new Set(timetableSelections.map(function (selection) {
-                return (selection.facultyName || '').trim();
-            }).filter(Boolean)));
             const selectedSubjectNames = Array.from(new Set(timetableSelections.map(function (selection) {
                 return (selection.subjectName || '').trim();
             }).filter(Boolean)));
 
-            const individualFacultyName = document.getElementById('individualFacultyName');
-            if (individualFacultyName) {
-                individualFacultyName.value = facultyNames.join(' / ');
-            }
-
-            const individualTotalHours = document.getElementById('individualTotalHours');
-
             const fallbackSubjectLabel = selectedSubjectNames[0] || payload.subjectName;
-            const individualFilledHours = generateIndividualTimeTableSlots(
-                selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel],
-                16
-            );
-
-            if (individualTotalHours) {
-                individualTotalHours.value = String(individualFilledHours);
-            }
+            const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections);
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
                 const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
@@ -3092,7 +3212,7 @@ Exam Branch
                     timeTableStatus,
                     'Timetable generated with ' + classTotalHours + ' class hours; each theory subject repeated up to 5 times' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
-                    '; individual timetable limited to ' + individualFilledHours + ' hours',
+                    '; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
@@ -3153,13 +3273,16 @@ Exam Branch
             });
         });
 
-        individualTimeTableSlots.forEach(function (slot) {
-            slot.addEventListener('input', markTimeTableDirty);
-        });
-
-        individualTimeTableMetaFields.forEach(function (field) {
-            field.addEventListener('input', markTimeTableDirty);
-        });
+        if (individualTimeTableContainer) {
+            individualTimeTableContainer.addEventListener('input', function (event) {
+                if (
+                    event.target.classList.contains('individual-timetable-slot') ||
+                    event.target.classList.contains('individual-timetable-meta-input')
+                ) {
+                    markTimeTableDirty();
+                }
+            });
+        }
 
         Object.values(subjectSelectionFields).forEach(function (field) {
             field.addEventListener('input', markSubjectSelectionDirty);
