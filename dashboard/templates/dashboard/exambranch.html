@@ -1198,11 +1198,12 @@ Exam Branch
                                         <th>Subject</th>
                                         <th>Times Taught</th>
                                         <th>Previous Result</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="subjectSelectionPreviewBody">
                                     <tr>
-                                        <td colspan="9" class="text-center text-muted">No subject selection saved yet.</td>
+                                        <td colspan="10" class="text-center text-muted">No subject selection saved yet.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2661,7 +2662,7 @@ Exam Branch
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
                 const emptyCell = document.createElement('td');
-                emptyCell.colSpan = 9;
+                emptyCell.colSpan = 10;
                 emptyCell.className = 'text-center text-muted';
                 emptyCell.textContent = 'No subject selection saved yet.';
                 emptyRow.appendChild(emptyCell);
@@ -2686,6 +2687,14 @@ Exam Branch
                     cell.textContent = value;
                     row.appendChild(cell);
                 });
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'btn exam-btn exam-btn-danger btn-sm subject-selection-delete-btn';
+                deleteButton.dataset.index = String(index);
+                deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
+                actionCell.appendChild(deleteButton);
+                row.appendChild(actionCell);
                 subjectSelectionPreviewBody.appendChild(row);
             });
         }
@@ -2757,6 +2766,23 @@ Exam Branch
                 year: payload.year,
                 semester: payload.semester
             });
+        }
+
+        function deleteFacultySubjectSelection(index) {
+            const selections = getStoredSubjectSelections();
+            if (index < 0 || index >= selections.length) {
+                return;
+            }
+
+            const removed = selections.splice(index, 1)[0];
+            storeSubjectSelections(selections);
+            renderSubjectSelectionPreview(selections);
+            setStatus(
+                subjectSelectionStatus,
+                'Deleted ' + ((removed && removed.facultyName) || 'faculty') + ' from available faculties',
+                'warning'
+            );
+            markTimeTableDirty();
         }
 
         function loadSubjectSelection() {
@@ -3469,6 +3495,13 @@ Exam Branch
         document.getElementById('subjectSelectionAddFacultyBtn').addEventListener('click', addFacultySubjectSelection);
         document.getElementById('subjectSelectionAddBtn').addEventListener('click', generateTimeTableFromSubjectSelection);
         document.getElementById('subjectSelectionClearBtn').addEventListener('click', clearSubjectSelection);
+        subjectSelectionPreviewBody.addEventListener('click', function (event) {
+            const deleteButton = event.target.closest('.subject-selection-delete-btn');
+            if (!deleteButton) {
+                return;
+            }
+            deleteFacultySubjectSelection(parseInt(deleteButton.dataset.index, 10));
+        });
 
         marksBody.addEventListener('input', function (event) {
             if (event.target.closest('tr')) {
