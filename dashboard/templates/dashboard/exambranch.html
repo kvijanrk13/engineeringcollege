@@ -699,6 +699,12 @@ Exam Branch
         box-shadow: none;
     }
 
+    .individual-time-table .lab-merged-cell textarea {
+        background: #ecfdf5;
+        color: #075f49;
+        font-weight: 900;
+    }
+
     .individual-time-table tbody tr {
         height: 54px;
     }
@@ -2987,11 +2993,53 @@ Exam Branch
             return 0;
         }
 
+        function resetIndividualTimeTableMerges(card) {
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                const cell = slot.closest('td');
+                if (!cell) {
+                    return;
+                }
+                cell.colSpan = 1;
+                cell.style.display = '';
+                cell.classList.remove('lab-merged-cell');
+                slot.classList.remove('lab-merged-slot');
+            });
+        }
+
+        function mergeIndividualSlotWithNextPeriod(slot, subjectName) {
+            const cell = slot.closest('td');
+            const row = cell ? cell.closest('tr') : null;
+            if (!cell || !row) {
+                return false;
+            }
+
+            const cells = Array.from(row.children);
+            const currentIndex = cells.indexOf(cell);
+            const nextCell = cells[currentIndex + 1];
+            if (!nextCell || nextCell.classList.contains('individual-break') || nextCell.style.display === 'none') {
+                return false;
+            }
+
+            const nextSlot = nextCell.querySelector('.individual-timetable-slot');
+            if (!nextSlot) {
+                return false;
+            }
+
+            slot.value = subjectName;
+            nextSlot.value = '';
+            cell.colSpan = 2;
+            cell.classList.add('lab-merged-cell');
+            slot.classList.add('lab-merged-slot');
+            nextCell.style.display = 'none';
+            return true;
+        }
+
         function populateIndividualCardFromClassSchedule(card, schedule) {
             const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
             const normalizedLabels = labels.map(normalizeSubjectNameForSchedule);
             let filledHours = 0;
 
+            resetIndividualTimeTableMerges(card);
             getIndividualTimeTableSlots(card).forEach(function (slot) {
                 slot.value = '';
             });
@@ -3002,20 +3050,26 @@ Exam Branch
                     return;
                 }
 
-                filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
-
                 const classCell = classSlot.closest('td');
                 const row = classCell ? classCell.closest('tr') : null;
-                if (!classCell || !row || classCell.colSpan < 2) {
+                const individualSlot = getIndividualTimeTableSlots(card).find(function (candidate) {
+                    return candidate.dataset.day === classSlot.dataset.day && candidate.dataset.period === classSlot.dataset.period;
+                });
+
+                if (!classCell || !row || classCell.colSpan < 2 || !individualSlot) {
+                    filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
                     return;
                 }
 
                 const rowCells = Array.from(row.children);
                 const nextCell = rowCells[rowCells.indexOf(classCell) + 1];
                 const nextClassSlot = nextCell ? nextCell.querySelector('.timetable-slot') : null;
-                if (nextClassSlot) {
-                    filledHours += setIndividualSlotValue(card, nextClassSlot.dataset.day, nextClassSlot.dataset.period, subjectName);
+                if (nextClassSlot && mergeIndividualSlotWithNextPeriod(individualSlot, subjectName)) {
+                    filledHours += 2;
+                    return;
                 }
+
+                filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
             });
 
             return filledHours;
