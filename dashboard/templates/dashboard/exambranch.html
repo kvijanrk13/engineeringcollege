@@ -1259,9 +1259,6 @@ Exam Branch
                             <label for="syllabusSubjectSelect" class="form-label">Subject</label>
                             <select id="syllabusSubjectSelect" class="form-control">
                                 <option value="">Select Subject</option>
-                                {% for subject in subjects %}
-                                    <option value="{{ subject.code }}" data-name="{{ subject.name }}">{{ subject.code }} - {{ subject.name }}</option>
-                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -1274,7 +1271,7 @@ Exam Branch
                             </p>
                         </div>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span id="syllabusSubjectCount" class="subject-count-pill">{{ subjects|length }}</span>
+                            <span id="syllabusSubjectCount" class="subject-count-pill">0</span>
                             <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
                                 <i class="fas fa-book me-2"></i>Open Syllabus
                             </a>
@@ -1486,16 +1483,10 @@ Exam Branch
                                                 <th>Faculty Name</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <tr><td>1</td><td>CS501PC</td><td>Design and Analysis of Algorithms</td><td>Mr.MD.Raziuddin</td></tr>
-                                            <tr><td>2</td><td>IT502PC</td><td>Automata and Compiler Design</td><td>Mrs.V. Sujitha</td></tr>
-                                            <tr><td>3</td><td>IT503PC</td><td>Embedded Systems</td><td>Mr.K.Rama Krishna</td></tr>
-                                            <tr><td>4</td><td>IT512PE</td><td>Data Mining</td><td>Mr.K.Vijay Kumar</td></tr>
-                                            <tr><td>5</td><td>CS524PE</td><td>Distributed Databases</td><td>Mrs.V.Priyanka</td></tr>
-                                            <tr><td>6</td><td>IT504PC</td><td>Compiler Design Laboratory</td><td>Mrs.V.Sujitha / Mr.C.Sarath Kumar</td></tr>
-                                            <tr><td>7</td><td>IT505PC</td><td>Embedded Systems Lab</td><td>Mr.K.Rama Krishna / Mr.T.Narsimha Rao</td></tr>
-                                            <tr><td>8</td><td>IT532PE</td><td>Data Mining Laboratory</td><td>Mr.K.Vijay Kumar / Mrs.V.Sujitha</td></tr>
-                                            <tr><td>9</td><td>CS507PC</td><td>Skill Development Course (UI Design Flutter)</td><td>Mr.S.Govinda Raju / Mrs.R.Jayamma</td></tr>
+                                        <tbody id="courseReferenceBody">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">Add faculty selections to display subjects here.</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1556,6 +1547,7 @@ Exam Branch
         const individualTimeTableMetaFields = Array.from(document.querySelectorAll('.individual-timetable-meta-input'));
         const syllabusSubjectCount = document.getElementById('syllabusSubjectCount');
         const syllabusSubjectSelect = document.getElementById('syllabusSubjectSelect');
+        const courseReferenceBody = document.getElementById('courseReferenceBody');
         const timeTableYearField = document.getElementById('timeTableYear');
         const timeTableSemesterField = document.getElementById('timeTableSemester');
         const timeTableBranchField = document.getElementById('timeTableBranch');
@@ -1656,6 +1648,75 @@ Exam Branch
             });
         }
 
+        function normalizeClassValue(value) {
+            return String(value || '').trim().toUpperCase().replace('CSE(AI&ML)', 'AIML').replace('CSE (AI&ML)', 'AIML');
+        }
+
+        function getTimeTableClassSelections(selections) {
+            const branch = normalizeClassValue(timeTableBranchField ? timeTableBranchField.value : 'IT');
+            const year = normalizeClassValue(timeTableYearField ? timeTableYearField.value : '3');
+            const semester = normalizeClassValue(timeTableSemesterField ? timeTableSemesterField.value : '1');
+
+            return normalizeSubjectSelections(selections || getStoredSubjectSelections()).filter(function (selection) {
+                return normalizeClassValue(selection.branch) === branch &&
+                    normalizeClassValue(selection.year) === year &&
+                    normalizeClassValue(selection.semester) === semester &&
+                    ((selection.subjectCode || '').trim() || (selection.subjectName || '').trim());
+            });
+        }
+
+        function filterSubjectsByFacultySelections(subjects, selections) {
+            const availableSelections = getTimeTableClassSelections(selections);
+            const selectedCodes = availableSelections.map(function (selection) {
+                return normalizeClassValue(selection.subjectCode);
+            }).filter(Boolean);
+            const selectedNames = availableSelections.map(function (selection) {
+                return normalizeClassValue(selection.subjectName);
+            }).filter(Boolean);
+
+            if (!selectedCodes.length && !selectedNames.length) {
+                return [];
+            }
+
+            return (Array.isArray(subjects) ? subjects : []).filter(function (subject) {
+                const code = normalizeClassValue(subject.code);
+                const name = normalizeClassValue(subject.name);
+                return selectedCodes.includes(code) || selectedNames.includes(name);
+            });
+        }
+
+        function pruneUnselectedTimeTableSubjects(subjects, selections) {
+            const availableSelections = getTimeTableClassSelections(selections);
+            const selectedValues = new Set();
+            availableSelections.forEach(function (selection) {
+                selectedValues.add(normalizeClassValue(selection.subjectCode));
+                selectedValues.add(normalizeClassValue(selection.subjectName));
+            });
+
+            const syllabusValues = new Set();
+            (Array.isArray(subjects) ? subjects : []).forEach(function (subject) {
+                syllabusValues.add(normalizeClassValue(subject.code));
+                syllabusValues.add(normalizeClassValue(subject.name));
+            });
+
+            if (!syllabusValues.size) {
+                return;
+            }
+
+            let changed = false;
+            timeTableSlots.concat(individualTimeTableSlots).forEach(function (slot) {
+                const currentValue = normalizeClassValue(slot.value);
+                if (currentValue && syllabusValues.has(currentValue) && !selectedValues.has(currentValue)) {
+                    slot.value = '';
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                markTimeTableDirty();
+            }
+        }
+
         function loadSubjectSelectionSubjects(selectedSubject) {
             if (!syllabusSubjectsUrl || !subjectSelectionFields.year || !subjectSelectionFields.semester || !subjectSelectionFields.branch) {
                 return;
@@ -1724,12 +1785,18 @@ Exam Branch
                     return response.json();
                 })
                 .then(function (data) {
-                    renderSyllabusSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedCode);
+                    const allSubjects = Array.isArray(data.subjects) ? data.subjects : [];
+                    const filteredSubjects = filterSubjectsByFacultySelections(allSubjects);
+                    renderSyllabusSubjects(filteredSubjects, selectedCode);
+                    renderCourseReference();
+                    pruneUnselectedTimeTableSubjects(allSubjects);
+                    data.subjects = filteredSubjects;
                     return data;
                 })
                 .catch(function (error) {
                     console.error(error);
                     renderSyllabusSubjects([], '');
+                    renderCourseReference();
                     setStatus(timeTableStatus, 'Could not load subjects from syllabus', 'warning');
                     return { subjects: [] };
                 });
@@ -2495,6 +2562,7 @@ Exam Branch
             const selections = normalizeSubjectSelections(payload);
             subjectSelectionPreviewBody.innerHTML = '';
             updateSubjectSelectionCount(selections.length);
+            renderCourseReference(selections);
 
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
@@ -2525,6 +2593,41 @@ Exam Branch
                     row.appendChild(cell);
                 });
                 subjectSelectionPreviewBody.appendChild(row);
+            });
+        }
+
+        function renderCourseReference(payload) {
+            if (!courseReferenceBody) {
+                return;
+            }
+
+            const selections = getTimeTableClassSelections(payload);
+            courseReferenceBody.innerHTML = '';
+
+            if (!selections.length) {
+                const emptyRow = document.createElement('tr');
+                const emptyCell = document.createElement('td');
+                emptyCell.colSpan = 4;
+                emptyCell.className = 'text-center text-muted';
+                emptyCell.textContent = 'Add faculty selections to display subjects here.';
+                emptyRow.appendChild(emptyCell);
+                courseReferenceBody.appendChild(emptyRow);
+                return;
+            }
+
+            selections.forEach(function (selection, index) {
+                const row = document.createElement('tr');
+                [
+                    String(index + 1),
+                    selection.subjectCode || '-',
+                    selection.subjectName || '-',
+                    selection.facultyName || '-'
+                ].forEach(function (value) {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+                courseReferenceBody.appendChild(row);
             });
         }
 
@@ -2807,41 +2910,10 @@ Exam Branch
         }
 
         function resolveClassSubjectsForTimeTable(syllabusSubjects, selections, fallbackSubjectNames) {
-            const branch = (timeTableBranchField.value || '').toUpperCase();
-            const year = timeTableYearField.value || '';
-            const semester = timeTableSemesterField.value || '';
             const subjects = Array.isArray(syllabusSubjects) ? syllabusSubjects : [];
-
-            if (branch !== 'IT' || year !== '3' || semester !== '1' || !subjects.length) {
-                return subjects.length
-                    ? uniqueSubjectNames(subjects.map(function (subject) { return subject.name; }))
-                    : uniqueSubjectNames(fallbackSubjectNames);
-            }
-
-            const selectedCodes = (selections || []).map(function (selection) {
-                return selection.subjectCode || '';
-            }).filter(Boolean);
-            const fixedCodes = ['CS501PC', 'IT502PC', 'IT503PC', 'IT504PC', 'IT505PC', 'CS507PC'];
-            const pe1Codes = ['IT511PE', 'IT512PE', 'CS513PE', 'IT514PE', 'IT515PE', 'AM515PE'];
-            const pe1LabCodes = ['IT531PE', 'IT532PE', 'IT533PE', 'IT534PE', 'IT535PE'];
-            const pe2Codes = ['IT522PE', 'IT523PE', 'CS524PE', 'IT525PE'];
-
-            const resolvedSubjects = fixedCodes
-                .map(function (code) {
-                    return findSyllabusSubjectByCode(subjects, code);
-                })
-                .filter(Boolean);
-
-            [pe1Codes, pe1LabCodes, pe2Codes].forEach(function (codeGroup) {
-                const chosenSubject = chooseSubjectFromCodes(subjects, selectedCodes, codeGroup);
-                if (chosenSubject) {
-                    resolvedSubjects.push(chosenSubject);
-                }
-            });
-
-            return uniqueSubjectNames(resolvedSubjects.map(function (subject) {
-                return subject.name;
-            }));
+            return subjects.length
+                ? uniqueSubjectNames(subjects.map(function (subject) { return subject.name; }))
+                : uniqueSubjectNames(fallbackSubjectNames);
         }
 
         function generateTimeTableFromSubjectSelection() {
@@ -2878,11 +2950,13 @@ Exam Branch
             timeTableBranchField.value = payload.branch || timeTableBranchField.value;
             timeTableYearField.value = payload.year || timeTableYearField.value;
             timeTableSemesterField.value = payload.semester || timeTableSemesterField.value;
+            renderCourseReference(selections);
 
-            const facultyNames = Array.from(new Set(selections.map(function (selection) {
+            const timetableSelections = getTimeTableClassSelections(selections);
+            const facultyNames = Array.from(new Set(timetableSelections.map(function (selection) {
                 return (selection.facultyName || '').trim();
             }).filter(Boolean)));
-            const selectedSubjectNames = Array.from(new Set(selections.map(function (selection) {
+            const selectedSubjectNames = Array.from(new Set(timetableSelections.map(function (selection) {
                 return (selection.subjectName || '').trim();
             }).filter(Boolean)));
 
@@ -2905,11 +2979,6 @@ Exam Branch
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
                 const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
-                const syllabusSubjectNames = syllabusSubjects
-                    .map(function (subject) {
-                        return (subject.name || '').trim();
-                    })
-                    .filter(Boolean);
                 const classSubjectNames = resolveClassSubjectsForTimeTable(
                     syllabusSubjects,
                     selections,
