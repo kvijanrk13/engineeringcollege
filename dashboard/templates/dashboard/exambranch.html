@@ -565,6 +565,20 @@ Exam Branch
         min-width: 940px;
     }
 
+    .subject-selection-result-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .subject-selection-delete-btn {
+        padding: 0.42rem 0.7rem;
+        border-radius: 10px;
+        box-shadow: none;
+    }
+
     .time-table-grid {
         min-width: 1120px;
     }
@@ -1197,13 +1211,12 @@ Exam Branch
                                         <th>Sem</th>
                                         <th>Subject</th>
                                         <th>Times Taught</th>
-                                        <th>Previous Result</th>
-                                        <th>Action</th>
+                                        <th>Previous Result / Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="subjectSelectionPreviewBody">
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted">No subject selection saved yet.</td>
+                                        <td colspan="9" class="text-center text-muted">No subject selection saved yet.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -2662,7 +2675,7 @@ Exam Branch
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
                 const emptyCell = document.createElement('td');
-                emptyCell.colSpan = 10;
+                emptyCell.colSpan = 9;
                 emptyCell.className = 'text-center text-muted';
                 emptyCell.textContent = 'No subject selection saved yet.';
                 emptyRow.appendChild(emptyCell);
@@ -2680,21 +2693,24 @@ Exam Branch
                     payload.year || '-',
                     payload.semester || '-',
                     payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
-                    payload.timesTaught || '0',
-                    payload.previousResult || '-'
+                    payload.timesTaught || '0'
                 ].forEach(function (value) {
                     const cell = document.createElement('td');
                     cell.textContent = value;
                     row.appendChild(cell);
                 });
-                const actionCell = document.createElement('td');
+                const resultActionCell = document.createElement('td');
+                const resultText = document.createElement('span');
                 const deleteButton = document.createElement('button');
+                resultActionCell.className = 'subject-selection-result-action';
+                resultText.textContent = payload.previousResult || '-';
                 deleteButton.type = 'button';
                 deleteButton.className = 'btn exam-btn exam-btn-danger btn-sm subject-selection-delete-btn';
                 deleteButton.dataset.index = String(index);
                 deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
-                actionCell.appendChild(deleteButton);
-                row.appendChild(actionCell);
+                resultActionCell.appendChild(resultText);
+                resultActionCell.appendChild(deleteButton);
+                row.appendChild(resultActionCell);
                 subjectSelectionPreviewBody.appendChild(row);
             });
         }
