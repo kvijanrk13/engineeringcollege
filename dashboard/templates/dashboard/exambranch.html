@@ -2865,12 +2865,14 @@ Exam Branch
                 dataMiningLab: ['DATA MINING LABORATORY', 'DATA MINING LAB'],
                 sdc: ['SKILL DEVELOPMENT COURSE (UI DESIGN FLUTTER)', 'SKILL DEVELOPMENT COURSE', 'UI DESIGN FLUTTER']
             };
-            const availableSubjects = uniqueSubjectNames(subjectNames).map(function (subjectName) {
+            const allSubjectNames = uniqueSubjectNames(subjectNames);
+            const availableSubjects = allSubjectNames.map(function (subjectName) {
                 return {
                     original: subjectName,
                     normalized: normalizeSubjectNameForSchedule(subjectName)
                 };
             });
+            const usedSubjectNames = new Set();
             const lookup = {
                 library: 'LIBRARY',
                 sports: 'SPORTS',
@@ -2885,6 +2887,28 @@ Exam Branch
                 });
                 if (matched) {
                     lookup[key] = standardSubjects[key];
+                    usedSubjectNames.add(matched.original);
+                }
+            });
+
+            const theoryKeys = ['daa', 'acd', 'es', 'dm', 'ddb'];
+            const labKeys = ['compilerLab', 'embeddedLab', 'dataMiningLab', 'sdc'];
+            const remainingTheorySubjects = allSubjectNames.filter(function (subjectName) {
+                return !usedSubjectNames.has(subjectName) && !isLaboratorySubject(subjectName);
+            });
+            const remainingLabSubjects = allSubjectNames.filter(function (subjectName) {
+                return !usedSubjectNames.has(subjectName) && isLaboratorySubject(subjectName);
+            });
+
+            theoryKeys.forEach(function (key) {
+                if (!lookup[key] && remainingTheorySubjects.length) {
+                    lookup[key] = remainingTheorySubjects.shift();
+                }
+            });
+
+            labKeys.forEach(function (key) {
+                if (!lookup[key] && remainingLabSubjects.length) {
+                    lookup[key] = remainingLabSubjects.shift();
                 }
             });
 
@@ -2947,15 +2971,12 @@ Exam Branch
                 });
             });
 
-            getVisibleEmptyClassSlots().forEach(function (slot) {
-                if (!slot.value.trim()) {
-                    slot.value = subjectLookup.mentoring || 'MENTORING';
-                }
-            });
-
             return {
                 counts: counts,
-                labMergedCount: labMergedCount
+                labMergedCount: labMergedCount,
+                totalHours: Object.keys(counts).reduce(function (total, subjectName) {
+                    return total + counts[subjectName];
+                }, 0)
             };
         }
 
@@ -3052,6 +3073,7 @@ Exam Branch
                 );
                 const classGeneration = generateClassTimeTableSlots(classSubjectNames);
                 const labMergedCount = classGeneration.labMergedCount || 0;
+                const classTotalHours = classGeneration.totalHours || 0;
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
@@ -3059,7 +3081,7 @@ Exam Branch
                 markTimeTableDirty();
                 setStatus(
                     timeTableStatus,
-                    'Timetable generated with each subject repeated up to 5 times' +
+                    'Timetable generated with ' + classTotalHours + ' class hours; each theory subject repeated up to 5 times' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                     '; individual timetable limited to ' + individualFilledHours + ' hours',
                     'success'
