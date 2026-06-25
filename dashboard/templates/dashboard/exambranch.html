@@ -2786,7 +2786,7 @@ Exam Branch
                 return 0;
             }
 
-            const preferredStartPeriods = ['10:30-11:30', '1:20-2:15'];
+            const preferredStartPeriods = ['9:30-10:30', '1:20-2:15']; // Merge hours 1+2 and 4+5 only.
             const days = Array.from(new Set(timeTableSlots.map(function (slot) {
                 return slot.dataset.day || '';
             }).filter(Boolean)));
