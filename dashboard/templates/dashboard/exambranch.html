@@ -2919,12 +2919,12 @@ Exam Branch
             const subjectLookup = buildStandardSubjectLookup(subjectNames);
             const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
             const weeklyPlan = {
-                MON: ['daa', 'acd', 'es', 'compilerLab', null, 'dm'],
-                TUE: ['ddb', 'daa', 'acd', 'embeddedLab', null, 'es'],
-                WED: ['dm', 'ddb', 'daa', 'dataMiningLab', null, 'acd'],
-                THU: ['es', 'dm', 'ddb', 'sdc', null, 'daa'],
-                FRI: ['acd', 'es', 'dm', 'ddb', 'daa', 'library'],
-                SAT: ['acd', 'es', 'dm', 'ddb', 'sports', 'mentoring']
+                MON: ['ddb', 'acd', 'daa', 'embeddedLab', null, 'dm'],
+                TUE: ['dataMiningLab', null, 'acd', 'dm', 'daa', 'es'],
+                WED: ['daa', 'es', 'dm', 'acd', 'ddb', 'mentoring'],
+                THU: ['es', 'acd', 'daa', 'sdc', null, 'ddb'],
+                FRI: ['dm', 'es', 'ddb', 'compilerLab', null, 'library'],
+                SAT: ['acd', 'dm', 'es', 'daa', 'ddb', 'sports']
             };
             const counts = {};
             let labMergedCount = 0;
