@@ -2984,23 +2984,34 @@ Exam Branch
                 const employeeCode = (selection.employeeCode || '').trim();
                 const subjectName = (selection.subjectName || '').trim();
                 const subjectLabels = getScheduleLabelsForSelection(selection);
-                const key = employeeCode || facultyName || 'faculty-' + facultyMap.size;
+                const normalizedFacultyKey = normalizeSubjectNameForSchedule(facultyName).replace(/[^A-Z0-9]/g, '');
+                const key = normalizedFacultyKey || employeeCode || 'faculty-' + facultyMap.size;
 
                 if (!facultyMap.has(key)) {
                     facultyMap.set(key, {
                         facultyName: facultyName,
                         employeeCode: employeeCode,
+                        employeeCodes: [],
                         subjects: [],
                         subjectLabels: []
                     });
                 }
 
-                if (subjectName && !facultyMap.get(key).subjects.includes(subjectName)) {
-                    facultyMap.get(key).subjects.push(subjectName);
+                const schedule = facultyMap.get(key);
+                if (facultyName && !schedule.facultyName) {
+                    schedule.facultyName = facultyName;
+                }
+                if (employeeCode && !schedule.employeeCodes.includes(employeeCode)) {
+                    schedule.employeeCodes.push(employeeCode);
+                }
+                schedule.employeeCode = schedule.employeeCodes.join(' / ') || schedule.employeeCode;
+
+                if (subjectName && !schedule.subjects.includes(subjectName)) {
+                    schedule.subjects.push(subjectName);
                 }
                 subjectLabels.forEach(function (label) {
-                    if (label && !facultyMap.get(key).subjectLabels.includes(label)) {
-                        facultyMap.get(key).subjectLabels.push(label);
+                    if (label && !schedule.subjectLabels.includes(label)) {
+                        schedule.subjectLabels.push(label);
                     }
                 });
             });
