@@ -2833,63 +2833,123 @@ Exam Branch
             }).filter(Boolean)));
         }
 
-        function placeSubjectWithLimit(slot, subjectName, counts, maxPerSubject) {
-            if (!slot || !subjectName) {
-                return false;
-            }
-            const currentCount = counts[subjectName] || 0;
-            if (currentCount >= maxPerSubject) {
-                return false;
-            }
-            slot.value = subjectName;
-            counts[subjectName] = currentCount + 1;
-            return true;
+        function normalizeSubjectNameForSchedule(subjectName) {
+            return String(subjectName || '')
+                .trim()
+                .toUpperCase()
+                .replace(/&/g, 'AND')
+                .replace(/\s+/g, ' ');
+        }
+
+        function buildStandardSubjectLookup(subjectNames) {
+            const standardSubjects = {
+                daa: 'Design And Analysis of Algorithms',
+                acd: 'Automata and Compiler Design',
+                es: 'Embedded Systems',
+                dm: 'Data Mining',
+                ddb: 'Distributed Databases',
+                compilerLab: 'Compiler Design Laboratory',
+                embeddedLab: 'Embedded Systems Laboratory',
+                dataMiningLab: 'Data Mining Laboratory',
+                sdc: 'Skill Development Course (UI Design Flutter)'
+            };
+            const aliases = {
+                daa: ['DESIGN AND ANALYSIS OF ALGORITHMS'],
+                acd: ['AUTOMATA AND COMPILER DESIGN'],
+                es: ['EMBEDDED SYSTEMS'],
+                dm: ['DATA MINING'],
+                ddb: ['DISTRIBUTED DATABASES'],
+                compilerLab: ['COMPILER DESIGN LABORATORY', 'COMPILER DESIGN LAB'],
+                embeddedLab: ['EMBEDDED SYSTEMS LABORATORY', 'EMBEDDED SYSTEMS LAB'],
+                dataMiningLab: ['DATA MINING LABORATORY', 'DATA MINING LAB'],
+                sdc: ['SKILL DEVELOPMENT COURSE (UI DESIGN FLUTTER)', 'SKILL DEVELOPMENT COURSE', 'UI DESIGN FLUTTER']
+            };
+            const availableSubjects = uniqueSubjectNames(subjectNames).map(function (subjectName) {
+                return {
+                    original: subjectName,
+                    normalized: normalizeSubjectNameForSchedule(subjectName)
+                };
+            });
+            const lookup = {
+                library: 'LIBRARY',
+                sports: 'SPORTS',
+                mentoring: 'MENTORING'
+            };
+
+            Object.keys(aliases).forEach(function (key) {
+                const matched = availableSubjects.find(function (subject) {
+                    return aliases[key].some(function (alias) {
+                        return subject.normalized === alias || subject.normalized.includes(alias);
+                    });
+                });
+                if (matched) {
+                    lookup[key] = standardSubjects[key];
+                }
+            });
+
+            return lookup;
         }
 
         function generateClassTimeTableSlots(subjectNames) {
-            const subjects = uniqueSubjectNames(subjectNames);
-            const theorySubjects = subjects.filter(function (subjectName) {
-                return !isLaboratorySubject(subjectName);
-            });
-            const maxPerSubject = 5;
+            const subjectLookup = buildStandardSubjectLookup(subjectNames);
+            const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
+            const weeklyPlan = {
+                MON: ['daa', 'acd', 'es', 'compilerLab', null, 'library'],
+                TUE: ['acd', 'dm', 'ddb', 'embeddedLab', null, 'sports'],
+                WED: ['es', 'daa', 'sdc', 'dataMiningLab', null, 'mentoring'],
+                THU: ['dm', 'ddb', 'acd', 'daa', 'es', 'sdc'],
+                FRI: ['ddb', 'sdc', 'dm', 'es', 'acd', 'daa'],
+                SAT: ['sdc', 'es', 'daa', 'acd', 'ddb', 'dm']
+            };
             const counts = {};
+            let labMergedCount = 0;
 
             timeTableSlots.forEach(function (slot) {
                 slot.value = '';
             });
 
-            const labMergedCount = applyLaboratoryBlocks(subjects);
-            subjects.filter(isLaboratorySubject).forEach(function (subjectName) {
-                if (labMergedCount) {
-                    counts[subjectName] = 2;
-                }
-            });
-
-            const lastHourSlots = timeTableSlots.filter(function (slot) {
-                return slot.dataset.period === '3:15-4:10';
-            });
-            setSlotIfEmpty(lastHourSlots[0], 'LIBRARY');
-            setSlotIfEmpty(lastHourSlots[1], 'SPORTS');
-
-            const firstHourSlots = timeTableSlots.filter(function (slot) {
-                return slot.dataset.period === '9:30-10:30';
-            });
-
-            theorySubjects.forEach(function (subjectName, index) {
-                placeSubjectWithLimit(firstHourSlots[index], subjectName, counts, maxPerSubject);
-            });
-
-            theorySubjects.forEach(function (subjectName) {
-                while ((counts[subjectName] || 0) < maxPerSubject) {
-                    const targetSlot = getVisibleEmptyClassSlots()[0];
-                    if (!targetSlot || !placeSubjectWithLimit(targetSlot, subjectName, counts, maxPerSubject)) {
+            Object.keys(weeklyPlan).forEach(function (day) {
+                const dailySubjects = new Set();
+                weeklyPlan[day].forEach(function (subjectKey, periodIndex) {
+                    if (periodIndex === 4) {
                         return;
                     }
-                }
+
+                    const subjectName = subjectLookup[subjectKey];
+                    if (!subjectName) {
+                        return;
+                    }
+
+                    const slot = getClassSlot(day, periodOrder[periodIndex]);
+                    if (!slot) {
+                        return;
+                    }
+
+                    if (isLaboratorySubject(subjectName)) {
+                        if (periodIndex !== 0 && periodIndex !== 3) {
+                            return;
+                        }
+                        if (mergeSlotWithNextPeriod(slot, subjectName)) {
+                            counts[subjectName] = (counts[subjectName] || 0) + 2;
+                            labMergedCount += 1;
+                        }
+                        return;
+                    }
+
+                    if (dailySubjects.has(subjectName)) {
+                        return;
+                    }
+
+                    slot.value = subjectName;
+                    dailySubjects.add(subjectName);
+                    counts[subjectName] = (counts[subjectName] || 0) + 1;
+                });
             });
 
             getVisibleEmptyClassSlots().forEach(function (slot) {
-                slot.value = 'METORING';
+                if (!slot.value.trim()) {
+                    slot.value = subjectLookup.mentoring || 'MENTORING';
+                }
             });
 
             return {
