@@ -2715,7 +2715,8 @@ Exam Branch
         }
 
         function isLaboratorySubject(subjectName) {
-            return /\b(lab|laboratory)\b/i.test(subjectName || '');
+            return /\b(lab|laboratory)\b/i.test(subjectName || '') ||
+                /skill development course|ui design flutter/i.test(subjectName || '');
         }
 
         function resetClassTimeTableMerges() {
@@ -2894,12 +2895,12 @@ Exam Branch
             const subjectLookup = buildStandardSubjectLookup(subjectNames);
             const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
             const weeklyPlan = {
-                MON: ['daa', 'acd', 'es', 'dm', 'ddb', 'library'],
-                TUE: ['acd', 'dm', 'ddb', 'daa', 'es', 'sports'],
-                WED: ['es', 'daa', 'dm', 'ddb', 'acd', 'mentoring'],
-                THU: ['dm', 'ddb', 'acd', 'daa', 'es', 'sdc'],
-                FRI: ['ddb', 'es', 'dm', 'daa', 'acd', 'sdc'],
-                SAT: ['dm', 'daa', 'es', 'acd', 'ddb', 'library']
+                MON: ['daa', 'acd', 'es', 'compilerLab', null, 'dm'],
+                TUE: ['ddb', 'daa', 'acd', 'embeddedLab', null, 'es'],
+                WED: ['dm', 'ddb', 'daa', 'dataMiningLab', null, 'acd'],
+                THU: ['es', 'dm', 'ddb', 'sdc', null, 'daa'],
+                FRI: ['acd', 'es', 'dm', 'ddb', 'daa', 'library'],
+                SAT: ['acd', 'es', 'dm', 'ddb', 'sports', 'mentoring']
             };
             const counts = {};
             let labMergedCount = 0;
@@ -2911,7 +2912,7 @@ Exam Branch
             Object.keys(weeklyPlan).forEach(function (day) {
                 const dailySubjects = new Set();
                 weeklyPlan[day].forEach(function (subjectKey, periodIndex) {
-                    if (periodIndex === 4) {
+                    if (!subjectKey) {
                         return;
                     }
 
