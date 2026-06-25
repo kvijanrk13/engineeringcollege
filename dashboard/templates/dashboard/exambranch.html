@@ -2972,6 +2972,7 @@ Exam Branch
             const labels = getScheduleLabelsForSubjectName(selection.subjectName || '');
             const code = normalizeClassValue(selection.subjectCode || '');
             const facultyName = normalizeSubjectNameForSchedule(selection.facultyName || '');
+            const compactFacultyName = facultyName.replace(/[^A-Z0-9]/g, '');
             const labelsByCode = {
                 CS501PC: ['DAA'],
                 IT502PC: ['ACD'],
@@ -2990,7 +2991,7 @@ Exam Branch
                 }
             });
 
-            if (facultyName.includes('K. RAMAKRISHNA') || facultyName.includes('K RAMAKRISHNA')) {
+            if (compactFacultyName.includes('KRAMAKRISHNA')) {
                 ['ES Lab', 'EMBEDDED SYSTEMS LABORATORY'].forEach(function (label) {
                     if (!labels.includes(label)) {
                         labels.push(label);
@@ -3015,6 +3016,7 @@ Exam Branch
                 labels.push('ES Lab');
             } else if (normalized.includes('EMBEDDED SYSTEM') || normalized.includes('EMBEDDED SYSTEMS')) {
                 labels.push('ES');
+                labels.push('ES Lab');
             }
             if (normalized.includes('DATA MINING LABORATORY') || normalized.includes('DATA MINING LAB')) {
                 labels.push('DM Lab');
