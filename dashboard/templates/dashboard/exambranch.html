@@ -2971,6 +2971,7 @@ Exam Branch
         function getScheduleLabelsForSelection(selection) {
             const labels = getScheduleLabelsForSubjectName(selection.subjectName || '');
             const code = normalizeClassValue(selection.subjectCode || '');
+            const facultyName = normalizeSubjectNameForSchedule(selection.facultyName || '');
             const labelsByCode = {
                 CS501PC: ['DAA'],
                 IT502PC: ['ACD'],
@@ -2988,6 +2989,14 @@ Exam Branch
                     labels.push(label);
                 }
             });
+
+            if (facultyName.includes('K. RAMAKRISHNA') || facultyName.includes('K RAMAKRISHNA')) {
+                ['ES Lab', 'EMBEDDED SYSTEMS LABORATORY'].forEach(function (label) {
+                    if (!labels.includes(label)) {
+                        labels.push(label);
+                    }
+                });
+            }
 
             return labels;
         }
@@ -3095,7 +3104,9 @@ Exam Branch
 
         function populateIndividualCardFromClassSchedule(card, schedule) {
             const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
-            const normalizedLabels = labels.map(normalizeSubjectNameForSchedule);
+            const normalizedLabels = labels.flatMap(function (label) {
+                return getScheduleLabelsForSubjectName(label).map(normalizeSubjectNameForSchedule);
+            });
             let filledHours = 0;
 
             resetIndividualTimeTableMerges(card);
