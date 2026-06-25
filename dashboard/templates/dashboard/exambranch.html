@@ -2508,6 +2508,7 @@ Exam Branch
                 });
                 slot.value = match ? (match.value || '') : '';
             });
+            restoreClassLabMergesFromValues();
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -2515,7 +2516,7 @@ Exam Branch
 
             const storedClassSelections = getTimeTableClassSelections();
             const storedFacultySchedules = buildIndividualFacultySchedules(storedClassSelections);
-            if (!individualTables.length || (storedFacultySchedules.length > 1 && individualTables.length < storedFacultySchedules.length)) {
+            if (storedFacultySchedules.length) {
                 renderIndividualFacultyTimeTables(storedFacultySchedules.length ? storedClassSelections : []);
                 return;
             }
@@ -2539,6 +2540,7 @@ Exam Branch
                     });
                     slot.value = match ? (match.value || '') : '';
                 });
+                restoreIndividualLabMergesFromValues(card);
             });
         }
 
@@ -2847,6 +2849,22 @@ Exam Branch
             return true;
         }
 
+        function restoreClassLabMergesFromValues() {
+            const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
+            timeTableSlots.forEach(function (slot) {
+                const subjectName = (slot.value || '').trim();
+                if (
+                    !subjectName ||
+                    !isLaboratorySubject(subjectName) ||
+                    !labStartPeriods.includes(slot.dataset.period)
+                ) {
+                    return;
+                }
+
+                mergeSlotWithNextPeriod(slot, subjectName);
+            });
+        }
+
         function getClassSlot(day, period) {
             return timeTableSlots.find(function (slot) {
                 return slot.dataset.day === day && slot.dataset.period === period;
@@ -3032,6 +3050,22 @@ Exam Branch
             slot.classList.add('lab-merged-slot');
             nextCell.style.display = 'none';
             return true;
+        }
+
+        function restoreIndividualLabMergesFromValues(card) {
+            const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                const subjectName = (slot.value || '').trim();
+                if (
+                    !subjectName ||
+                    !isLaboratorySubject(subjectName) ||
+                    !labStartPeriods.includes(slot.dataset.period)
+                ) {
+                    return;
+                }
+
+                mergeIndividualSlotWithNextPeriod(slot, subjectName);
+            });
         }
 
         function populateIndividualCardFromClassSchedule(card, schedule) {
