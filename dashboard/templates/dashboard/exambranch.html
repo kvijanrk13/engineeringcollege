@@ -2505,7 +2505,14 @@ Exam Branch
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
-                : [{ meta: data.individualMeta || {}, slots: Array.isArray(data.individualSlots) ? data.individualSlots : [] }];
+                : [];
+
+            const storedClassSelections = getTimeTableClassSelections();
+            const storedFacultySchedules = buildIndividualFacultySchedules(storedClassSelections);
+            if (!individualTables.length || (storedFacultySchedules.length > 1 && individualTables.length < storedFacultySchedules.length)) {
+                renderIndividualFacultyTimeTables(storedFacultySchedules.length ? storedClassSelections : []);
+                return;
+            }
 
             ensureIndividualTimeTableCardCount(individualTables.length).forEach(function (card, cardIndex) {
                 const tableData = individualTables[cardIndex] || {};
@@ -2909,24 +2916,109 @@ Exam Branch
                 const facultyName = (selection.facultyName || '').trim();
                 const employeeCode = (selection.employeeCode || '').trim();
                 const subjectName = (selection.subjectName || '').trim();
+                const subjectLabels = getScheduleLabelsForSubjectName(subjectName);
                 const key = employeeCode || facultyName || 'faculty-' + facultyMap.size;
 
                 if (!facultyMap.has(key)) {
                     facultyMap.set(key, {
                         facultyName: facultyName,
                         employeeCode: employeeCode,
-                        subjects: []
+                        subjects: [],
+                        subjectLabels: []
                     });
                 }
 
                 if (subjectName && !facultyMap.get(key).subjects.includes(subjectName)) {
                     facultyMap.get(key).subjects.push(subjectName);
                 }
+                subjectLabels.forEach(function (label) {
+                    if (label && !facultyMap.get(key).subjectLabels.includes(label)) {
+                        facultyMap.get(key).subjectLabels.push(label);
+                    }
+                });
             });
 
             return Array.from(facultyMap.values()).filter(function (schedule) {
                 return schedule.facultyName || schedule.employeeCode || schedule.subjects.length;
             });
+        }
+
+        function getScheduleLabelsForSubjectName(subjectName) {
+            const normalized = normalizeSubjectNameForSchedule(subjectName);
+            const labels = [subjectName];
+
+            if (normalized.includes('DESIGN AND ANALYSIS OF ALGORITHMS')) {
+                labels.push('DAA');
+            }
+            if (normalized.includes('AUTOMATA AND COMPILER DESIGN')) {
+                labels.push('ACD');
+            }
+            if (normalized.includes('EMBEDDED SYSTEMS LABORATORY') || normalized.includes('EMBEDDED SYSTEMS LAB')) {
+                labels.push('ES Lab');
+            } else if (normalized.includes('EMBEDDED SYSTEM') || normalized.includes('EMBEDDED SYSTEMS')) {
+                labels.push('ES');
+            }
+            if (normalized.includes('DATA MINING LABORATORY') || normalized.includes('DATA MINING LAB')) {
+                labels.push('DM Lab');
+            } else if (normalized.includes('DATA MINING')) {
+                labels.push('DM');
+            }
+            if (normalized.includes('DISTRIBUTED DATABASES')) {
+                labels.push('DDB');
+            }
+            if (normalized.includes('COMPILER DESIGN LABORATORY') || normalized.includes('COMPILER DESIGN LAB')) {
+                labels.push('CD Lab');
+            }
+            if (normalized.includes('SKILL DEVELOPMENT COURSE') || normalized.includes('UI DESIGN FLUTTER')) {
+                labels.push('Flutter Lab');
+            }
+
+            return uniqueSubjectNames(labels);
+        }
+
+        function setIndividualSlotValue(card, day, period, value) {
+            const slot = getIndividualTimeTableSlots(card).find(function (candidate) {
+                return candidate.dataset.day === day && candidate.dataset.period === period;
+            });
+            if (slot) {
+                slot.value = value || '';
+                return 1;
+            }
+            return 0;
+        }
+
+        function populateIndividualCardFromClassSchedule(card, schedule) {
+            const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
+            const normalizedLabels = labels.map(normalizeSubjectNameForSchedule);
+            let filledHours = 0;
+
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                slot.value = '';
+            });
+
+            timeTableSlots.forEach(function (classSlot) {
+                const subjectName = (classSlot.value || '').trim();
+                if (!subjectName || !normalizedLabels.includes(normalizeSubjectNameForSchedule(subjectName))) {
+                    return;
+                }
+
+                filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
+
+                const classCell = classSlot.closest('td');
+                const row = classCell ? classCell.closest('tr') : null;
+                if (!classCell || !row || classCell.colSpan < 2) {
+                    return;
+                }
+
+                const rowCells = Array.from(row.children);
+                const nextCell = rowCells[rowCells.indexOf(classCell) + 1];
+                const nextClassSlot = nextCell ? nextCell.querySelector('.timetable-slot') : null;
+                if (nextClassSlot) {
+                    filledHours += setIndividualSlotValue(card, nextClassSlot.dataset.day, nextClassSlot.dataset.period, subjectName);
+                }
+            });
+
+            return filledHours;
         }
 
         function renderIndividualFacultyTimeTables(selections) {
@@ -2951,13 +3043,17 @@ Exam Branch
                 const hoursField = metaFields.find(function (field) {
                     return field.id === 'individualTotalHours' || field.getAttribute('aria-label') === 'Number of hours';
                 });
-                const filledHours = generateIndividualTimeTableSlots(schedule.subjects, 16, card);
+                const filledHours = populateIndividualCardFromClassSchedule(card, schedule);
+                const title = card.querySelector('.card-title');
 
                 if (facultyField) {
                     facultyField.value = [schedule.facultyName, schedule.employeeCode].filter(Boolean).join(' - ');
                 }
                 if (hoursField) {
                     hoursField.value = String(filledHours);
+                }
+                if (title) {
+                    title.textContent = 'Individual Time Table - ' + (schedule.facultyName || schedule.employeeCode || 'Faculty');
                 }
                 totalFilledHours += filledHours;
             });
@@ -3191,7 +3287,6 @@ Exam Branch
             }).filter(Boolean)));
 
             const fallbackSubjectLabel = selectedSubjectNames[0] || payload.subjectName;
-            const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections);
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
                 const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
@@ -3203,6 +3298,7 @@ Exam Branch
                 const classGeneration = generateClassTimeTableSlots(classSubjectNames);
                 const labMergedCount = classGeneration.labMergedCount || 0;
                 const classTotalHours = classGeneration.totalHours || 0;
+                const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections);
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
