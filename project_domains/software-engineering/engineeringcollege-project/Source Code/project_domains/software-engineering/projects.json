@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "slug": "engineeringcollege-project",
+      "name": "EngineeringCollege Project",
+      "description": "Executable Django department-management project with source code, documentation, database notes, UML diagrams, test cases, PPT assets, and demo material.",
+      "zip": {
+        "enabled": true,
+        "amount_paise": 200000,
+        "source": "project-folder",
+        "payment_enabled": false,
+        "receipt_required": true
+      }
+    }
+  ]
+}

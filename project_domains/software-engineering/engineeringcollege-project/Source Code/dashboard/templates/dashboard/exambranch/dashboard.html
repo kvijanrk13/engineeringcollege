@@ -258,10 +258,10 @@
                     <button class="btn btn-outline-primary no-print" onclick="printPage()">
                         <i class="fas fa-print me-1"></i> Print Report
                     </button>
-                    <a href="{% url 'dashboard:generate_exam_branch_report' %}?format=excel" class="btn btn-success no-print">
+                    <a href="{% url 'dashboard:exam_branch_generate_report' %}?format=excel" class="btn btn-success no-print">
                         <i class="fas fa-file-excel me-1"></i> Export Excel
                     </a>
-                    <a href="{% url 'dashboard:generate_exam_branch_report' %}?format=pdf" class="btn btn-danger no-print">
+                    <a href="{% url 'dashboard:exam_branch_generate_report' %}?format=pdf" class="btn btn-danger no-print">
                         <i class="fas fa-file-pdf me-1"></i> Export PDF
                     </a>
                 </div>

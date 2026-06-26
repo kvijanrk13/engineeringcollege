@@ -1,0 +1,22 @@
+{
+  "projects": [
+    {
+      "slug": "cloudattend-parent-messaging",
+      "name": "CloudAttend: Cloud Attendance System with Parent Absence Messaging",
+      "title_path": "CloudAttend - Cloud Attendance System with Parent Absence Messaging",
+      "description": "Django cloud attendance system based on the CloudAttend GitHub project, extended with parent contact mapping, absent-student detection, parent notification logs, send workflow, and acknowledgement tracking.",
+      "source_code_path": "project_domains/cloud-computing/CloudAttend - Cloud Attendance System with Parent Absence Messaging/Source Code/",
+      "datasets_path": "project_domains/cloud-computing/CloudAttend - Cloud Attendance System with Parent Absence Messaging/datasets/",
+      "github_reference": "https://github.com/kujalk/Cloud_Attendance_System",
+      "demo_url": "/projects/cloudattend-parent-messaging/demo/",
+      "local_demo_url": "http://127.0.0.1:8000/projects/cloudattend-parent-messaging/demo/",
+      "zip": {
+        "enabled": true,
+        "amount_paise": 100000,
+        "source": "project-folder",
+        "payment_enabled": false,
+        "receipt_required": false
+      }
+    }
+  ]
+}

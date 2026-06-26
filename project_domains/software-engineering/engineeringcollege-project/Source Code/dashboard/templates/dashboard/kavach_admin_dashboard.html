@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f4f7fb; color: #172033; font-family: Arial, sans-serif; }
+        .header { background: #113f67; color: #fff; padding: 24px 28px; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .header p { margin: 8px 0 0; color: #d7e6f5; }
+        .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 18px 36px; }
+        .top-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+        .button-link { display: inline-block; border-radius: 6px; background: #113f67; color: #fff; padding: 10px 14px; text-decoration: none; font-weight: 700; }
+        .metrics { display: grid; gap: 14px; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 16px; }
+        .metric, .panel { background: #fff; border: 1px solid #d7e0eb; border-radius: 8px; box-shadow: 0 10px 24px rgba(17, 63, 103, 0.08); padding: 18px; }
+        .metric span { color: #617185; display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+        .metric strong { color: #113f67; display: block; font-size: 28px; }
+        .grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); }
+        .panel h2 { font-size: 19px; margin: 0 0 12px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { border-bottom: 1px solid #e5edf5; padding: 10px 8px; text-align: left; vertical-align: top; }
+        th { color: #26364d; background: #f8fbfe; }
+        .muted { color: #617185; }
+        .status { display: inline-block; border-radius: 999px; padding: 3px 8px; font-size: 12px; font-weight: 700; }
+        .success { background: #dcfce7; color: #166534; }
+        .failed { background: #fee2e2; color: #991b1b; }
+        @media (max-width: 960px) { .metrics, .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>{{ title }}</h1>
+        <p>Secure file sharing metrics, audit trail, and suspicious activity overview.</p>
+    </header>
+
+    <main class="wrap">
+        <div class="top-actions">
+            <a class="button-link" href="{{ kavach_url }}">Open KAVACH Exchange</a>
+        </div>
+
+        <section class="metrics">
+            <div class="metric"><span>Total Users</span><strong>{{ total_users }}</strong></div>
+            <div class="metric"><span>Total Files</span><strong>{{ total_files }}</strong></div>
+            <div class="metric"><span>Total Shared Files</span><strong>{{ total_shared_files }}</strong></div>
+            <div class="metric"><span>Failed Attempts</span><strong>{{ failed_attempts }}</strong></div>
+            <div class="metric"><span>Suspicious Activities</span><strong>{{ suspicious_activities|length }}</strong></div>
+        </section>
+
+        <section class="grid">
+            <article class="panel">
+                <h2>Suspicious Activities</h2>
+                <table>
+                    <thead><tr><th>User</th><th>Type</th><th>File</th><th>Events</th></tr></thead>
+                    <tbody>
+                        {% for alert in suspicious_activities %}
+                            <tr>
+                                <td>{{ alert.user|default:"-" }}</td>
+                                <td>{{ alert.activity_type }}</td>
+                                <td>{{ alert.file|default:"-" }}</td>
+                                <td>{{ alert.event_count }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="muted">No open suspicious activity alerts.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </article>
+
+            <article class="panel">
+                <h2>Audit Logs</h2>
+                <table>
+                    <thead><tr><th>Time</th><th>User</th><th>Action</th><th>File</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for event in audit_logs %}
+                            <tr>
+                                <td>{{ event.timestamp }}</td>
+                                <td>{{ event.user|default:"-" }}</td>
+                                <td>{{ event.action }}</td>
+                                <td>{{ event.file|default:"-" }}</td>
+                                <td><span class="status {{ event.status }}">{{ event.status }}</span></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="muted">No audit log entries yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </article>
+        </section>
+    </main>
+</body>
+</html>

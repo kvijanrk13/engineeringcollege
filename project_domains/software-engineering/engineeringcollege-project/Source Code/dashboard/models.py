@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date
 import os
+from pathlib import Path
 
 
 class Subject(models.Model):
@@ -17,6 +18,53 @@ class Subject(models.Model):
 
     class Meta:
         ordering = ['name']
+
+
+class AuditLog(models.Model):
+    STATUS_SUCCESS = 'success'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, 'Success'),
+        (STATUS_FAILED, 'Failed'),
+    ]
+
+    user = models.CharField(max_length=150, blank=True, db_index=True)
+    action = models.CharField(max_length=80, db_index=True)
+    file = models.CharField(max_length=255, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SUCCESS, db_index=True)
+
+    def __str__(self):
+        return f"{self.timestamp:%Y-%m-%d %H:%M:%S} - {self.user or 'anonymous'} - {self.action}"
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
+class SuspiciousActivity(models.Model):
+    STATUS_OPEN = 'open'
+    STATUS_REVIEWED = 'reviewed'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Open'),
+        (STATUS_REVIEWED, 'Reviewed'),
+    ]
+
+    user = models.CharField(max_length=150, blank=True, db_index=True)
+    activity_type = models.CharField(max_length=80, db_index=True)
+    file = models.CharField(max_length=255, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    description = models.TextField(blank=True)
+    event_count = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
+    first_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+    last_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    def __str__(self):
+        return f"{self.activity_type} - {self.user or 'anonymous'} - {self.status}"
+
+    class Meta:
+        ordering = ['-last_seen_at']
 
 
 class Faculty(models.Model):
@@ -455,6 +503,73 @@ class ProjectDownloadPayment(models.Model):
 
     def __str__(self):
         return f"{self.merchant_order_id} - {self.status}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class KavachSecureFile(models.Model):
+    transfer_id = models.CharField(max_length=24, unique=True, db_index=True)
+    sender_name = models.CharField(max_length=120, blank=True)
+    sender_email = models.EmailField(blank=True, db_index=True)
+    receiver_name = models.CharField(max_length=120, blank=True)
+    receiver_email = models.EmailField(blank=True, db_index=True)
+    original_filename = models.CharField(max_length=255)
+    encrypted_file = models.FileField(upload_to='kavach/encrypted/')
+    file_size = models.PositiveIntegerField(default=0)
+    content_type = models.CharField(max_length=120, blank=True)
+    aes_key = models.CharField(max_length=64, blank=True)
+    aes_nonce = models.CharField(max_length=32)
+    encrypted_aes_key = models.TextField(blank=True)
+    receiver_public_key = models.TextField(blank=True)
+    access_code_hash = models.CharField(max_length=64, db_index=True)
+    file_sha256_hash = models.CharField(max_length=64, blank=True, db_index=True)
+    uploader_public_key = models.TextField(blank=True)
+    digital_signature = models.TextField(blank=True)
+    signature_algorithm = models.CharField(max_length=40, default='Ed25519-SHA256')
+    encryption_algorithm = models.CharField(max_length=20, default='AES-GCM')
+    expires_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    is_revoked = models.BooleanField(default=False, db_index=True)
+    download_count = models.PositiveIntegerField(default=0)
+    last_downloaded_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.transfer_id} - {self.original_filename}"
+
+    @property
+    def file_extension(self):
+        return Path(self.original_filename or '').suffix.lower().lstrip('.') or 'unknown'
+
+    @property
+    def file_category(self):
+        extension = self.file_extension
+        content_type = (self.content_type or '').lower()
+        if extension in {'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'svg'} or content_type.startswith('image/'):
+            return 'Image'
+        if extension in {'doc', 'docx', 'odt', 'rtf'}:
+            return 'Document'
+        if extension in {'xls', 'xlsx', 'ods', 'csv'}:
+            return 'Spreadsheet'
+        if extension in {'ppt', 'pptx', 'odp'}:
+            return 'Presentation'
+        if extension == 'pdf' or content_type == 'application/pdf':
+            return 'PDF'
+        if extension in {'mp3', 'wav', 'aac', 'ogg', 'm4a', 'flac'} or content_type.startswith('audio/'):
+            return 'Audio'
+        if extension in {'mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv'} or content_type.startswith('video/'):
+            return 'Video'
+        if extension in {'zip', 'rar', '7z', 'tar', 'gz'}:
+            return 'Archive'
+        return 'Other'
+
+    @property
+    def display_file_size(self):
+        size = self.file_size or 0
+        for unit in ['bytes', 'KB', 'MB', 'GB']:
+            if size < 1024 or unit == 'GB':
+                return f"{size:.1f} {unit}" if unit != 'bytes' else f"{size} bytes"
+            size /= 1024
 
     class Meta:
         ordering = ['-created_at']

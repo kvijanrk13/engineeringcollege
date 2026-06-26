@@ -13,6 +13,10 @@ import re
 import hashlib
 import hmac
 import base64
+import binascii
+import secrets
+import mimetypes
+from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, date, timedelta
 import requests
@@ -40,6 +44,7 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.urls import reverse
 from django.core import signing
 from django.utils import timezone
+from django.utils.text import get_valid_filename
 from django_ratelimit.decorators import ratelimit
 import django
 # PDF Generation imports
@@ -51,6 +56,11 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from pypdf import PdfWriter, PdfReader
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ed25519, x25519
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 # from PyPDF2 import PdfMerger  # Deprecated, using pypdf instead
 from PIL import Image as PILImage
 # Additional imports for PDF to image conversion
@@ -62,10 +72,10 @@ import cloudinary.api
 import cloudinary.utils
 # Local imports
 from .models import (
-    Faculty, Certificate, FacultyLog, CloudinaryUpload,
+    AuditLog, Faculty, Certificate, FacultyLog, CloudinaryUpload,
     Subject, FacultyProfile, ResearchProject, Student,
     ResearchPublication, StudentResearchPublication, FDP, BTechProject,
-    ProjectDownloadPayment,
+    KavachSecureFile, ProjectDownloadPayment, SuspiciousActivity,
 )
 from .forms import (
     StudentForm, CertificateForm,
@@ -77,6 +87,139 @@ from .utils import (
 )
 
 logger = logging.getLogger(__name__)
+DECRYPTION_FAILURE_ALERT_LIMIT = 3
+DECRYPTION_FAILURE_WINDOW = timedelta(minutes=15)
+DOWNLOAD_BURST_ALERT_LIMIT = 5
+DOWNLOAD_BURST_WINDOW = timedelta(minutes=10)
+KAVACH_MAX_UPLOAD_SIZE = 100 * 1024 * 1024
+KAVACH_SUPPORTED_FORMAT_LABELS = [
+    'images',
+    'PDF',
+    'DOC/DOCX',
+    'XLS/XLSX',
+    'PPT/PPTX',
+    'audio',
+    'video',
+    'ZIP',
+    'and any other file format',
+]
+
+
+def _client_ip(request):
+    forwarded_for = (request.META.get('HTTP_X_FORWARDED_FOR') or '').split(',', 1)[0].strip()
+    return forwarded_for or request.META.get('REMOTE_ADDR') or None
+
+
+def _audit_user_label(request, fallback=''):
+    if getattr(request, 'user', None) and request.user.is_authenticated:
+        return request.user.get_username()
+    return (
+        request.session.get('google_oauth_email')
+        or request.session.get('student_ht_no')
+        or request.session.get('student_username')
+        or fallback
+        or ''
+    )
+
+
+def audit_log(request, action, file='', status=AuditLog.STATUS_SUCCESS, user=None):
+    try:
+        entry = AuditLog.objects.create(
+            user=user or _audit_user_label(request),
+            action=action,
+            file=file or '',
+            ip_address=_client_ip(request),
+            status=status,
+        )
+        detect_suspicious_activity(entry)
+    except Exception as exc:
+        logger.warning(f"Audit log write failed for {action}: {exc}", exc_info=True)
+
+
+def record_suspicious_activity(audit_entry, activity_type, description, event_count=1):
+    now = timezone.now()
+    alert, created = SuspiciousActivity.objects.get_or_create(
+        user=audit_entry.user,
+        activity_type=activity_type,
+        file=audit_entry.file or '',
+        status=SuspiciousActivity.STATUS_OPEN,
+        defaults={
+            'ip_address': audit_entry.ip_address,
+            'description': description,
+            'event_count': event_count,
+            'first_seen_at': now,
+            'last_seen_at': now,
+        },
+    )
+    if not created:
+        alert.ip_address = audit_entry.ip_address
+        alert.description = description
+        alert.event_count = max(alert.event_count, event_count)
+        alert.last_seen_at = now
+        alert.save(update_fields=['ip_address', 'description', 'event_count', 'last_seen_at'])
+    return alert
+
+
+def detect_suspicious_activity(audit_entry):
+    if not audit_entry.user:
+        return
+
+    now = timezone.now()
+
+    if audit_entry.action == 'wrong_decryption_attempt' and audit_entry.status == AuditLog.STATUS_FAILED:
+        failures = AuditLog.objects.filter(
+            user=audit_entry.user,
+            action='wrong_decryption_attempt',
+            status=AuditLog.STATUS_FAILED,
+            timestamp__gte=now - DECRYPTION_FAILURE_WINDOW,
+        ).count()
+        if failures >= DECRYPTION_FAILURE_ALERT_LIMIT:
+            record_suspicious_activity(
+                audit_entry,
+                'repeated_decryption_failures',
+                f'{failures} failed decryption/access attempts in 15 minutes.',
+                failures,
+            )
+
+    elif audit_entry.action == 'file_downloaded' and audit_entry.status == AuditLog.STATUS_SUCCESS:
+        downloads = AuditLog.objects.filter(
+            user=audit_entry.user,
+            action='file_downloaded',
+            status=AuditLog.STATUS_SUCCESS,
+            timestamp__gte=now - DOWNLOAD_BURST_WINDOW,
+        ).count()
+        if downloads >= DOWNLOAD_BURST_ALERT_LIMIT:
+            record_suspicious_activity(
+                audit_entry,
+                'excessive_downloads',
+                f'{downloads} file downloads in 10 minutes.',
+                downloads,
+            )
+
+    elif audit_entry.action == 'integrity_check_failed' and audit_entry.status == AuditLog.STATUS_FAILED:
+        record_suspicious_activity(
+            audit_entry,
+            'integrity_check_failed',
+            'File hash or digital signature verification failed.',
+        )
+
+    elif audit_entry.action == 'revoked_access_attempt' and audit_entry.status == AuditLog.STATUS_FAILED:
+        record_suspicious_activity(
+            audit_entry,
+            'revoked_access_attempt',
+            'A receiver tried to access a revoked file transfer.',
+        )
+
+
+def open_suspicious_alerts(limit=5):
+    try:
+        return list(
+            SuspiciousActivity.objects.filter(status=SuspiciousActivity.STATUS_OPEN)
+            .order_by('-last_seen_at')[:limit]
+        )
+    except Exception as exc:
+        logger.warning(f"Could not load suspicious activity alerts: {exc}", exc_info=True)
+        return []
 # ==================== OPTIONAL LIBRARIES ====================
 try:
     import pandas as pd
@@ -3025,10 +3168,12 @@ def admin_login(request):
             user = authenticate(request, username=username, password=password)
             if user is not None and user.is_staff:
                 login(request, user)
+                audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=username)
                 logger.info(f"Login successful for: {username}")
                 return redirect('dashboard:add_faculty')
             else:
                 error = 'Invalid admin credentials'
+                audit_log(request, 'user_logged_in', status=AuditLog.STATUS_FAILED, user=username)
                 logger.warning(f"Login failed for username: {username}")
                 messages.error(request, error)
         
@@ -3227,6 +3372,14 @@ def google_callback(request):
                     require_https=request.is_secure(),
                 ):
                     next_url = '/car-price/maruti-prices/'
+                if next_url.startswith('/projects/kavach/'):
+                    if not email.endswith('@gmail.com'):
+                        messages.error(request, 'KAVACH accepts verified Gmail accounts ending with @gmail.com.')
+                        return redirect('dashboard:kavach_demo')
+                    request.session['kavach_gmail_verified'] = True
+                    audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
+                    messages.info(request, 'Your verified Gmail account is ready for KAVACH file sharing.')
+                    return redirect('dashboard:kavach_demo')
                 return redirect(next_url)
 
             if student:
@@ -3239,6 +3392,7 @@ def google_callback(request):
 
         UserModel = get_user_model()
         user = UserModel.objects.filter(email__iexact=email).first()
+        created_user = user is None
         if not user:
             username = unique_google_username(email, getattr(faculty, 'employee_code', '') if faculty else '')
             user = UserModel(username=username, email=email)
@@ -3252,7 +3406,10 @@ def google_callback(request):
         user.is_active = True
         user.set_unusable_password()
         user.save()
+        if created_user:
+            audit_log(request, 'user_registered', status=AuditLog.STATUS_SUCCESS, user=email)
         login(request, user)
+        audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
         return redirect('dashboard:add_faculty')
     except Exception as exc:
         logger.error(f"Google sign-in failed: {exc}", exc_info=True)
@@ -3295,6 +3452,7 @@ def student_login(request):
                 request.session['student_username'] = username
                 request.session.pop('student_id', None)
                 request.session.pop('student_ht_no', None)
+                audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=username)
                 return redirect('dashboard:student_dashboard_view')
 
             student = Student.objects.filter(ht_no=username).first()
@@ -3308,8 +3466,10 @@ def student_login(request):
                     request.session['student_username'] = username
                     request.session['student_id'] = student.id
                     request.session['student_ht_no'] = student.ht_no
+                    audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=student.ht_no)
                     return redirect('dashboard:student_dashboard_view')
             error = 'Invalid student credentials'
+            audit_log(request, 'user_logged_in', status=AuditLog.STATUS_FAILED, user=username)
             messages.error(request, error)
         return render(request, 'dashboard/login.html', {
             'title': 'Student Login',
@@ -3377,6 +3537,7 @@ def mobile_dashboard(request):
         'with_phd': with_phd,
         'departments': departments,
         'recent_logs': recent_logs,
+        'suspicious_alerts': open_suspicious_alerts(),
     })
 
 
@@ -3473,6 +3634,137 @@ def engineeringcollege_demo_video(request):
     if status == 206:
         response['Content-Range'] = f'bytes {start}-{end}/{video_size}'
     return response
+
+
+CLOUDATTEND_TEMPLATE_DEMOS = [
+    ('dashboard-admin', 'dashboard/admin.html', 'Admin dashboard', 'KPI cards, weekly chart summary, and recent attendance records.'),
+    ('dashboard-student', 'dashboard/student.html', 'Student dashboard', 'Student attendance percentage, subject-wise status, and recent entries.'),
+    ('registration-login', 'registration/login.html', 'Login page', 'CloudAttend sign-in form for admin, staff, and students.'),
+    ('students-list', 'students/list.html', 'Student list', 'Student directory with roll number, department, email, and action buttons.'),
+    ('students-form', 'students/form.html', 'Student form', 'Student creation and update form.'),
+    ('students-detail', 'students/detail.html', 'Student detail', 'Student profile, enrolled subjects, and attendance summary.'),
+    ('students-confirm-delete', 'students/confirm_delete.html', 'Student delete confirmation', 'Deletion confirmation screen for a student record.'),
+    ('attendance-list', 'attendance/list.html', 'Attendance list', 'Attendance table with date, subject, student, and status filters.'),
+    ('attendance-form', 'attendance/form.html', 'Attendance form', 'Single attendance entry form.'),
+    ('attendance-mark', 'attendance/mark.html', 'Bulk attendance marking', 'Staff page for marking a class in one workflow.'),
+    ('attendance-confirm-delete', 'attendance/confirm_delete.html', 'Attendance delete confirmation', 'Deletion confirmation screen for attendance records.'),
+    ('departments-list', 'departments/list.html', 'Department list', 'Department table with codes and descriptions.'),
+    ('departments-form', 'departments/form.html', 'Department form', 'Department create and update form.'),
+    ('subjects-list', 'subjects/list.html', 'Subject list', 'Subject table with department and credit information.'),
+    ('subjects-form', 'subjects/form.html', 'Subject form', 'Subject create and update form.'),
+    ('reports-index', 'reports/index.html', 'Reports page', 'Attendance analytics and report summary.'),
+    ('parents-list', 'parents/list.html', 'Parent contacts', 'Parent or guardian mapping for each student.'),
+    ('parents-form', 'parents/form.html', 'Parent contact form', 'Parent contact entry with preferred notification channel.'),
+    ('notifications-absent-parents', 'notifications/absent_parents.html', 'Absent parent alerts', 'Find absentees and prepare parent messages.'),
+    ('notifications-logs', 'notifications/logs.html', 'Notification logs', 'Track pending, sent, failed, and acknowledged messages.'),
+    ('notifications-acknowledge', 'notifications/acknowledge.html', 'Parent acknowledgement', 'Parent response form for absence alerts.'),
+    ('notifications-acknowledged', 'notifications/acknowledged.html', 'Acknowledgement success', 'Final confirmation page after parent acknowledgement.'),
+]
+
+
+def _cloudattend_template_links():
+    return [
+        {
+            'slug': slug,
+            'path': path,
+            'title': title,
+            'description': description,
+            'url': reverse('dashboard:cloudattend_template_demo', args=[slug]),
+        }
+        for slug, path, title, description in CLOUDATTEND_TEMPLATE_DEMOS
+    ]
+
+
+def cloudattend_parent_messaging_demo(request):
+    """Public execution preview for the CloudAttend parent messaging workflow."""
+    demo_date = timezone.localdate()
+    absent_students = [
+        {
+            'roll_number': '23CSE041',
+            'name': 'Ananya Rao',
+            'department': 'CSE',
+            'subject': 'Cloud Computing',
+            'parent': 'Madhavi Rao',
+            'channel': 'Email',
+            'recipient': 'madhavi.parent@example.com',
+            'status': 'Sent',
+        },
+        {
+            'roll_number': '23IT118',
+            'name': 'Rahul Varma',
+            'department': 'IT',
+            'subject': 'Distributed Systems',
+            'parent': 'Suresh Varma',
+            'channel': 'SMS',
+            'recipient': '+91 90000 11223',
+            'status': 'Pending',
+        },
+        {
+            'roll_number': '23AIML026',
+            'name': 'Meghana Reddy',
+            'department': 'AIML',
+            'subject': 'Cloud Services Lab',
+            'parent': 'Kavitha Reddy',
+            'channel': 'WhatsApp',
+            'recipient': '+91 90000 44556',
+            'status': 'Acknowledged',
+        },
+    ]
+    return render(request, 'dashboard/cloudattend_parent_messaging_demo.html', {
+        'title': 'CloudAttend Parent Messaging Demo',
+        'demo_date': demo_date,
+        'absent_students': absent_students,
+        'template_pages': _cloudattend_template_links(),
+        'local_url': 'http://127.0.0.1:8000/projects/cloudattend-parent-messaging/demo/',
+        'render_url': 'https://engineeringcollege.onrender.com/projects/cloudattend-parent-messaging/demo/',
+        'project_detail_url': reverse(
+            'dashboard:project_detail',
+            args=['cloud-computing', 'cloudattend-parent-messaging'],
+        ),
+    })
+
+
+def cloudattend_template_demo(request, page_slug):
+    page = next(
+        (
+            {
+                'slug': slug,
+                'path': path,
+                'title': title,
+                'description': description,
+            }
+            for slug, path, title, description in CLOUDATTEND_TEMPLATE_DEMOS
+            if slug == page_slug
+        ),
+        None,
+    )
+    if not page:
+        raise Http404("CloudAttend template page not found")
+
+    sample_students = [
+        {'roll': '23CSE041', 'name': 'Ananya Rao', 'department': 'CSE', 'email': 'ananya@student.edu', 'status': 'Active'},
+        {'roll': '23IT118', 'name': 'Rahul Varma', 'department': 'IT', 'email': 'rahul@student.edu', 'status': 'Active'},
+        {'roll': '23AIML026', 'name': 'Meghana Reddy', 'department': 'AIML', 'email': 'meghana@student.edu', 'status': 'Active'},
+    ]
+    sample_attendance = [
+        {'date': timezone.localdate(), 'student': 'Ananya Rao', 'subject': 'Cloud Computing', 'status': 'Present'},
+        {'date': timezone.localdate(), 'student': 'Rahul Varma', 'subject': 'Distributed Systems', 'status': 'Absent'},
+        {'date': timezone.localdate(), 'student': 'Meghana Reddy', 'subject': 'Cloud Services Lab', 'status': 'Absent'},
+    ]
+    sample_notifications = [
+        {'student': 'Rahul Varma', 'parent': 'Suresh Varma', 'channel': 'SMS', 'recipient': '+91 90000 11223', 'status': 'Pending'},
+        {'student': 'Meghana Reddy', 'parent': 'Kavitha Reddy', 'channel': 'WhatsApp', 'recipient': '+91 90000 44556', 'status': 'Acknowledged'},
+    ]
+    return render(request, 'dashboard/cloudattend_template_demo.html', {
+        'title': f"CloudAttend - {page['title']}",
+        'page': page,
+        'template_pages': _cloudattend_template_links(),
+        'sample_students': sample_students,
+        'sample_attendance': sample_attendance,
+        'sample_notifications': sample_notifications,
+        'project_demo_url': reverse('dashboard:cloudattend_parent_messaging_demo'),
+        'project_detail_url': reverse('dashboard:project_detail', args=['cloud-computing', 'cloudattend-parent-messaging']),
+    })
 
 
 PROJECT_DOMAINS = {
@@ -3780,6 +4072,15 @@ def _source_module_for(relative_path):
     return 'Supporting Code'
 
 
+def _normalize_project_url(value):
+    """Return a usable URL from project manifests, including accidental Markdown links."""
+    url = str(value or '').strip()
+    markdown_match = re.fullmatch(r'\[[^\]]+\]\(([^)]+)\)', url)
+    if markdown_match:
+        url = markdown_match.group(1).strip()
+    return url
+
+
 def _load_domain_projects(domain_slug):
     """Read and validate the projects owned by one domain folder."""
     manifest_path = PROJECT_DOMAIN_ROOT / domain_slug / 'projects.json'
@@ -3814,7 +4115,8 @@ def _load_domain_projects(domain_slug):
             'source_code_path': str(project.get('source_code_path') or '').strip(),
             'datasets_path': str(project.get('datasets_path') or '').strip(),
             'github_reference': str(project.get('github_reference') or '').strip(),
-            'demo_url': str(project.get('demo_url') or '').strip(),
+            'demo_url': _normalize_project_url(project.get('demo_url')),
+            'local_demo_url': _normalize_project_url(project.get('local_demo_url')),
             'zip_enabled': zip_enabled and amount_paise > 0,
             'payment_enabled': (
                 zip_enabled
@@ -3875,6 +4177,469 @@ def data_mining_legacy_car_project_redirect(request):
         'dashboard:data_mining_project_detail_by_title',
         DATA_MINING_PROJECT_TITLE_ALIASES["Predicting Second Hand Cars Price using Machine Learning Algorithms"],
     )
+
+
+def _kavach_access_code_hash(access_code):
+    return hashlib.sha256(access_code.strip().encode('utf-8')).hexdigest()
+
+
+def _kavach_file_hash(file_bytes):
+    return hashlib.sha256(file_bytes).hexdigest()
+
+
+def _kavach_safe_original_filename(filename):
+    name = os.path.basename((filename or '').replace('\\', '/')) or 'kavach-file.bin'
+    safe_name = get_valid_filename(name) or 'kavach-file.bin'
+    if len(safe_name) <= 180:
+        return safe_name
+    suffix = Path(safe_name).suffix
+    stem = Path(safe_name).stem[: max(1, 180 - len(suffix))]
+    return f'{stem}{suffix}'
+
+
+def _kavach_content_type(filename, uploaded_file):
+    uploaded_content_type = (getattr(uploaded_file, 'content_type', '') or '').strip()
+    guessed_content_type, _ = mimetypes.guess_type(filename)
+    return uploaded_content_type or guessed_content_type or 'application/octet-stream'
+
+
+def _format_file_size(size):
+    size = int(size or 0)
+    for unit in ['bytes', 'KB', 'MB', 'GB']:
+        if size < 1024 or unit == 'GB':
+            return f'{size:.1f} {unit}' if unit != 'bytes' else f'{size} bytes'
+        size /= 1024
+
+
+def _kavach_signing_private_key(sender_email):
+    seed = hmac.new(
+        settings.SECRET_KEY.encode('utf-8'),
+        f'kavach-signing:{_normalize_kavach_gmail(sender_email)}'.encode('utf-8'),
+        hashlib.sha256,
+    ).digest()
+    return ed25519.Ed25519PrivateKey.from_private_bytes(seed)
+
+
+def _kavach_sign_hash(file_hash, sender_email):
+    private_key = _kavach_signing_private_key(sender_email)
+    public_key = private_key.public_key()
+    signature = private_key.sign(file_hash.encode('ascii'))
+    public_key_bytes = public_key.public_bytes_raw()
+    return {
+        'digital_signature': base64.b64encode(signature).decode('ascii'),
+        'uploader_public_key': base64.b64encode(public_key_bytes).decode('ascii'),
+    }
+
+
+def _kavach_verify_signature(file_hash, digital_signature, uploader_public_key):
+    if not file_hash or not digital_signature or not uploader_public_key:
+        return False
+    try:
+        public_key = ed25519.Ed25519PublicKey.from_public_bytes(
+            base64.b64decode(uploader_public_key.encode('ascii'))
+        )
+        signature = base64.b64decode(digital_signature.encode('ascii'))
+        public_key.verify(signature, file_hash.encode('ascii'))
+        return True
+    except (InvalidSignature, ValueError, TypeError, binascii.Error):
+        return False
+
+
+def _kavach_receiver_private_key(receiver_email):
+    seed = hmac.new(
+        settings.SECRET_KEY.encode('utf-8'),
+        f'kavach-receiver-key:{_normalize_kavach_gmail(receiver_email)}'.encode('utf-8'),
+        hashlib.sha256,
+    ).digest()
+    return x25519.X25519PrivateKey.from_private_bytes(seed)
+
+
+def _kavach_receiver_public_key(receiver_email):
+    return base64.b64encode(
+        _kavach_receiver_private_key(receiver_email).public_key().public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw,
+        )
+    ).decode('ascii')
+
+
+def _kavach_wrap_aes_key_for_receiver(aes_key, receiver_email):
+    receiver_private_key = _kavach_receiver_private_key(receiver_email)
+    receiver_public_key = receiver_private_key.public_key()
+    ephemeral_private_key = x25519.X25519PrivateKey.generate()
+    shared_secret = ephemeral_private_key.exchange(receiver_public_key)
+    wrapping_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b'kavach-aes-key-wrap-v1',
+    ).derive(shared_secret)
+    nonce = os.urandom(12)
+    aad = _normalize_kavach_gmail(receiver_email).encode('utf-8')
+    encrypted_key = AESGCM(wrapping_key).encrypt(nonce, aes_key, aad)
+    payload = {
+        'version': 1,
+        'ephemeral_public_key': base64.b64encode(
+            ephemeral_private_key.public_key().public_bytes(
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
+            )
+        ).decode('ascii'),
+        'nonce': base64.b64encode(nonce).decode('ascii'),
+        'ciphertext': base64.b64encode(encrypted_key).decode('ascii'),
+    }
+    return signing.dumps(payload, salt='kavach-aes-key-wrap')
+
+
+def _kavach_unwrap_aes_key_for_receiver(secure_file, receiver_email):
+    if not secure_file.encrypted_aes_key:
+        return base64.b64decode(secure_file.aes_key.encode('ascii'))
+
+    payload = signing.loads(secure_file.encrypted_aes_key, salt='kavach-aes-key-wrap')
+    ephemeral_public_key = x25519.X25519PublicKey.from_public_bytes(
+        base64.b64decode(payload['ephemeral_public_key'].encode('ascii'))
+    )
+    receiver_private_key = _kavach_receiver_private_key(receiver_email)
+    shared_secret = receiver_private_key.exchange(ephemeral_public_key)
+    wrapping_key = HKDF(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=None,
+        info=b'kavach-aes-key-wrap-v1',
+    ).derive(shared_secret)
+    aad = _normalize_kavach_gmail(receiver_email).encode('utf-8')
+    return AESGCM(wrapping_key).decrypt(
+        base64.b64decode(payload['nonce'].encode('ascii')),
+        base64.b64decode(payload['ciphertext'].encode('ascii')),
+        aad,
+    )
+
+
+def _kavach_new_transfer_id():
+    while True:
+        transfer_id = secrets.token_urlsafe(9).replace('-', '').replace('_', '')[:12].upper()
+        if not KavachSecureFile.objects.filter(transfer_id=transfer_id).exists():
+            return transfer_id
+
+
+def _kavach_encrypt_file(file_bytes, receiver_email=None):
+    aes_key = AESGCM.generate_key(bit_length=256)
+    aes_nonce = os.urandom(12)
+    ciphertext = AESGCM(aes_key).encrypt(aes_nonce, file_bytes, None)
+    payload = {
+        'ciphertext': ciphertext,
+        'aes_key': base64.b64encode(aes_key).decode('ascii'),
+        'aes_nonce': base64.b64encode(aes_nonce).decode('ascii'),
+    }
+    if receiver_email:
+        payload['encrypted_aes_key'] = _kavach_wrap_aes_key_for_receiver(aes_key, receiver_email)
+        payload['receiver_public_key'] = _kavach_receiver_public_key(receiver_email)
+    return payload
+
+
+def _kavach_decrypt_file(secure_file, receiver_email=None):
+    aes_key = _kavach_unwrap_aes_key_for_receiver(secure_file, receiver_email or secure_file.receiver_email)
+    aes_nonce = base64.b64decode(secure_file.aes_nonce.encode('ascii'))
+    secure_file.encrypted_file.open('rb')
+    try:
+        ciphertext = secure_file.encrypted_file.read()
+    finally:
+        secure_file.encrypted_file.close()
+    return AESGCM(aes_key).decrypt(aes_nonce, ciphertext, None)
+
+
+def _kavach_transfer_can_download(secure_file, receiver_email):
+    if secure_file.receiver_email and secure_file.receiver_email.lower() != receiver_email:
+        return False, 'This transfer is shared with a different receiver Gmail account.'
+    if secure_file.is_revoked:
+        return False, 'This transfer has been revoked by the sender or administrator.'
+    if secure_file.expires_at and secure_file.expires_at <= timezone.now():
+        return False, 'This transfer has expired and can no longer be downloaded.'
+    return True, ''
+
+
+def _normalize_kavach_gmail(value):
+    email = (value or '').strip().lower()
+    return email if email.endswith('@gmail.com') else ''
+
+
+def kavach_demo(request):
+    """One public KAVACH execution page for sender upload and receiver download."""
+    uploaded_transfer = None
+    gmail_email = _normalize_kavach_gmail(request.session.get('google_oauth_email'))
+    gmail_name = (request.session.get('google_oauth_name') or '').strip() or gmail_email
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'sender_upload':
+            if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+                messages.error(request, 'Please sign in with a verified Gmail account before sending a KAVACH file.')
+                return redirect('dashboard:kavach_demo')
+            receiver_email = _normalize_kavach_gmail(request.POST.get('receiver_email'))
+            if not receiver_email:
+                messages.error(request, 'Please enter a valid receiver Gmail account.')
+                return redirect('dashboard:kavach_demo')
+            if receiver_email == gmail_email:
+                messages.error(request, 'Please enter a receiver Gmail account different from the sender Gmail.')
+                return redirect('dashboard:kavach_demo')
+            uploaded_file = request.FILES.get('secure_file')
+            if not uploaded_file:
+                messages.error(request, 'Please choose a file to encrypt and upload.')
+                return redirect('dashboard:kavach_demo')
+            if uploaded_file.size > KAVACH_MAX_UPLOAD_SIZE:
+                messages.error(request, f'Please upload a file smaller than {_format_file_size(KAVACH_MAX_UPLOAD_SIZE)}.')
+                return redirect('dashboard:kavach_demo')
+
+            file_bytes = uploaded_file.read()
+            file_hash = _kavach_file_hash(file_bytes)
+            signature_payload = _kavach_sign_hash(file_hash, gmail_email)
+            encrypted_payload = _kavach_encrypt_file(file_bytes, receiver_email)
+            transfer_id = _kavach_new_transfer_id()
+            access_code = secrets.token_urlsafe(8)
+            original_filename = _kavach_safe_original_filename(uploaded_file.name)
+            encrypted_name = f"{transfer_id}_{original_filename}.aesgcm"
+            try:
+                expires_days = int(request.POST.get('expires_days') or 7)
+            except (TypeError, ValueError):
+                expires_days = 7
+            expires_days = min(max(expires_days, 1), 30)
+
+            secure_file = KavachSecureFile(
+                transfer_id=transfer_id,
+                sender_name=gmail_name,
+                sender_email=gmail_email,
+                receiver_name=receiver_email,
+                receiver_email=receiver_email,
+                original_filename=original_filename,
+                file_size=uploaded_file.size,
+                content_type=_kavach_content_type(original_filename, uploaded_file),
+                aes_key='',
+                aes_nonce=encrypted_payload['aes_nonce'],
+                encrypted_aes_key=encrypted_payload['encrypted_aes_key'],
+                receiver_public_key=encrypted_payload['receiver_public_key'],
+                access_code_hash=_kavach_access_code_hash(access_code),
+                file_sha256_hash=file_hash,
+                uploader_public_key=signature_payload['uploader_public_key'],
+                digital_signature=signature_payload['digital_signature'],
+                expires_at=timezone.now() + timedelta(days=expires_days),
+            )
+            secure_file.encrypted_file.save(
+                encrypted_name,
+                ContentFile(encrypted_payload['ciphertext']),
+                save=False,
+            )
+            secure_file.save()
+            audit_log(request, 'file_uploaded', file=secure_file.original_filename)
+            audit_log(request, 'file_encrypted', file=secure_file.original_filename)
+            audit_log(request, 'file_shared', file=secure_file.original_filename)
+            uploaded_transfer = {
+                'transfer_id': transfer_id,
+                'access_code': access_code,
+                'filename': original_filename,
+                'receiver_email': receiver_email,
+                'file_sha256_hash': file_hash,
+                'signature_algorithm': secure_file.signature_algorithm,
+                'expires_at': secure_file.expires_at,
+                'file_category': secure_file.file_category,
+                'file_size': secure_file.display_file_size,
+            }
+            messages.success(request, f'File encrypted, signed by {gmail_email}, and shared with {receiver_email}.')
+
+        elif action == 'receiver_download':
+            if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+                messages.error(request, 'Please sign in with the receiver Gmail account before downloading.')
+                return redirect('dashboard:kavach_demo')
+            transfer_id = (request.POST.get('transfer_id') or '').strip().upper()
+            access_code = (request.POST.get('access_code') or '').strip()
+            secure_file = KavachSecureFile.objects.filter(transfer_id=transfer_id).first()
+            if not secure_file:
+                audit_log(request, 'wrong_decryption_attempt', file=transfer_id, status=AuditLog.STATUS_FAILED)
+                messages.error(request, 'Invalid transfer ID or access code.')
+                return redirect('dashboard:kavach_demo')
+            can_download, denial_reason = _kavach_transfer_can_download(secure_file, gmail_email)
+            if not can_download:
+                suspicious_action = 'revoked_access_attempt' if secure_file.is_revoked else 'wrong_decryption_attempt'
+                audit_log(
+                    request,
+                    suspicious_action,
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, denial_reason)
+                return redirect('dashboard:kavach_demo')
+            if not hmac.compare_digest(
+                secure_file.access_code_hash,
+                _kavach_access_code_hash(access_code),
+            ):
+                audit_log(
+                    request,
+                    'wrong_decryption_attempt',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, 'Invalid transfer ID or access code.')
+                return redirect('dashboard:kavach_demo')
+
+            try:
+                decrypted_bytes = _kavach_decrypt_file(secure_file, gmail_email)
+            except Exception:
+                logger.exception('KAVACH decryption failed for transfer %s', transfer_id)
+                audit_log(
+                    request,
+                    'wrong_decryption_attempt',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, 'Receiver private-key decryption failed. The encrypted file or key metadata may be invalid.')
+                return redirect('dashboard:kavach_demo')
+
+            decrypted_hash = _kavach_file_hash(decrypted_bytes)
+            signature_valid = _kavach_verify_signature(
+                decrypted_hash,
+                secure_file.digital_signature,
+                secure_file.uploader_public_key,
+            )
+            if not hmac.compare_digest(secure_file.file_sha256_hash, decrypted_hash) or not signature_valid:
+                audit_log(
+                    request,
+                    'integrity_check_failed',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(
+                    request,
+                    'Digital signature verification failed. The file identity or integrity could not be confirmed.',
+                )
+                return redirect('dashboard:kavach_demo')
+
+            secure_file.download_count += 1
+            secure_file.last_downloaded_at = timezone.now()
+            secure_file.save(update_fields=['download_count', 'last_downloaded_at'])
+            audit_log(request, 'file_downloaded', file=secure_file.original_filename)
+
+            response = HttpResponse(
+                decrypted_bytes,
+                content_type=secure_file.content_type or 'application/octet-stream',
+            )
+            response['Content-Disposition'] = f"attachment; filename*=UTF-8''{quote(secure_file.original_filename)}"
+            return response
+
+        elif action == 'revoke_transfer':
+            if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+                messages.error(request, 'Please sign in with the owner Gmail account before revoking access.')
+                return redirect('dashboard:kavach_demo')
+            transfer_id = (request.POST.get('transfer_id') or '').strip().upper()
+            secure_file = KavachSecureFile.objects.filter(transfer_id=transfer_id).first()
+            if not secure_file:
+                messages.error(request, 'Transfer not found.')
+                return redirect('dashboard:kavach_demo')
+            if secure_file.sender_email.lower() != gmail_email:
+                audit_log(
+                    request,
+                    'access_revoked',
+                    file=secure_file.original_filename,
+                    status=AuditLog.STATUS_FAILED,
+                )
+                messages.error(request, 'Only the owner can revoke receiver access for this transfer.')
+                return redirect('dashboard:kavach_demo')
+            if secure_file.is_revoked:
+                messages.info(request, 'Receiver access is already revoked for this transfer.')
+                return redirect('dashboard:kavach_demo')
+
+            secure_file.is_revoked = True
+            secure_file.save(update_fields=['is_revoked'])
+            audit_log(request, 'access_revoked', file=secure_file.original_filename)
+            messages.success(request, f'Receiver access revoked for transfer {secure_file.transfer_id}.')
+            return redirect('dashboard:kavach_demo')
+
+        else:
+            messages.error(request, 'Unknown KAVACH action.')
+            return redirect('dashboard:kavach_demo')
+
+    if gmail_email:
+        recent_transfers = KavachSecureFile.objects.filter(
+            Q(sender_email=gmail_email) | Q(receiver_email=gmail_email)
+        )[:8]
+        shared_with_me = KavachSecureFile.objects.filter(receiver_email=gmail_email)[:8]
+    else:
+        recent_transfers = KavachSecureFile.objects.none()
+        shared_with_me = KavachSecureFile.objects.none()
+    return render(request, 'dashboard/kavach_demo.html', {
+        'title': 'KAVACH Secure File Exchange',
+        'google_signin_enabled': google_signin_enabled(),
+        'kavach_gmail_verified': request.session.get('kavach_gmail_verified') is True,
+        'kavach_gmail_email': gmail_email,
+        'kavach_gmail_name': gmail_name,
+        'kavach_google_login_url': (
+            f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
+        ),
+        'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
+        'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
+        'kavach_supported_formats': ', '.join(KAVACH_SUPPORTED_FORMAT_LABELS),
+        'kavach_max_upload_size': _format_file_size(KAVACH_MAX_UPLOAD_SIZE),
+        'uploaded_transfer': uploaded_transfer,
+        'recent_transfers': recent_transfers,
+        'shared_with_me': shared_with_me,
+        'project_detail_url': reverse('dashboard:project_detail', args=['security', 'kavach-secure-file-sharing']),
+    })
+
+
+def kavach_user_dashboard(request):
+    gmail_email = _normalize_kavach_gmail(request.session.get('google_oauth_email'))
+    gmail_name = (request.session.get('google_oauth_name') or '').strip() or gmail_email
+    if not gmail_email or request.session.get('kavach_gmail_verified') is not True:
+        messages.error(request, 'Please sign in with a verified Gmail account to open your KAVACH dashboard.')
+        return redirect('dashboard:kavach_demo')
+
+    my_files = KavachSecureFile.objects.filter(
+        Q(sender_email=gmail_email) | Q(receiver_email=gmail_email)
+    )[:20]
+    shared_with_me = KavachSecureFile.objects.filter(receiver_email=gmail_email)[:20]
+    files_i_shared = KavachSecureFile.objects.filter(sender_email=gmail_email)[:20]
+    recent_activity = AuditLog.objects.filter(user=gmail_email)[:20]
+
+    return render(request, 'dashboard/kavach_user_dashboard.html', {
+        'title': 'KAVACH User Dashboard',
+        'kavach_gmail_email': gmail_email,
+        'kavach_gmail_name': gmail_name,
+        'my_files': my_files,
+        'shared_with_me': shared_with_me,
+        'files_i_shared': files_i_shared,
+        'recent_activity': recent_activity,
+        'kavach_url': reverse('dashboard:kavach_demo'),
+    })
+
+
+@login_required
+def kavach_admin_dashboard(request):
+    if not request.user.is_staff:
+        messages.error(request, 'Only staff users can open the KAVACH admin dashboard.')
+        return redirect('dashboard:kavach_demo')
+
+    failed_attempts = AuditLog.objects.filter(
+        status=AuditLog.STATUS_FAILED,
+    ).filter(
+        Q(action='wrong_decryption_attempt')
+        | Q(action='integrity_check_failed')
+        | Q(action='revoked_access_attempt')
+    )
+
+    total_users = AuditLog.objects.exclude(user='').values('user').distinct().count()
+    total_files = KavachSecureFile.objects.count()
+    total_shared_files = KavachSecureFile.objects.exclude(receiver_email='').count()
+    suspicious_activities = SuspiciousActivity.objects.filter(status=SuspiciousActivity.STATUS_OPEN)[:20]
+    audit_logs = AuditLog.objects.all()[:30]
+
+    return render(request, 'dashboard/kavach_admin_dashboard.html', {
+        'title': 'KAVACH Admin Dashboard',
+        'total_users': total_users,
+        'total_files': total_files,
+        'total_shared_files': total_shared_files,
+        'failed_attempts': failed_attempts.count(),
+        'suspicious_activities': suspicious_activities,
+        'audit_logs': audit_logs,
+        'kavach_url': reverse('dashboard:kavach_demo'),
+    })
 
 
 def _project_academic_folders(domain_slug, project):
@@ -4910,6 +5675,7 @@ def admin_dashboard(request):
                 'user_activity': user_activity,
                 'has_psutil': psutil is not None,
                 'recent_uploads': recent_uploads,
+                'suspicious_alerts': open_suspicious_alerts(),
             })
         except Exception as db_e:
             logger.error(f"Database error: {db_e}")
@@ -8832,6 +9598,71 @@ def privacy_policy(request):
 
 
 # ==================== EXAM BRANCH VIEWS ====================
+@lru_cache(maxsize=1)
+def get_syllabus_page_subjects():
+    """Extract the syllabus data used by the public syllabus page."""
+    template_path = Path(settings.BASE_DIR) / 'dashboard' / 'templates' / 'dashboard' / 'syllabus.html'
+    try:
+        template_source = template_path.read_text(encoding='utf-8')
+        match = re.search(
+            r'const\s+syllabusData\s*=\s*(\{.*?\n\s*\});\s*\n\s*const\s+semOrder',
+            template_source,
+            re.S,
+        )
+        if not match:
+            return {}
+
+        data_literal = match.group(1)
+        data_literal = re.sub(r'([{,]\s*)([A-Za-z_][A-Za-z0-9_]*)\s*:', r'\1"\2":', data_literal)
+        data_literal = re.sub(r',\s*([}\]])', r'\1', data_literal)
+        parsed = json.loads(data_literal)
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception as exc:
+        logger.warning(f"Could not load syllabus page subjects: {exc}", exc_info=True)
+        return {}
+
+
+def get_syllabus_options():
+    syllabus_data = get_syllabus_page_subjects()
+    year_sem_order = ['1-1', '1-2', '2-1', '2-2', '3-1', '3-2', '4-1', '4-2']
+    available_year_sems = [item for item in year_sem_order if item in syllabus_data]
+    branch_set = set()
+    for year_sem in available_year_sems:
+        branch_set.update(syllabus_data.get(year_sem, {}).keys())
+    branch_order = ['IT', 'CSE', 'AIML']
+    branches = [branch for branch in branch_order if branch in branch_set]
+    branches.extend(sorted(branch_set.difference(branches)))
+    years = sorted({item.split('-', 1)[0] for item in available_year_sems}, key=int)
+    semesters = sorted({item.split('-', 1)[1] for item in available_year_sems}, key=int)
+    return syllabus_data, branches, years, semesters
+
+
+@login_required
+@require_GET
+def exam_branch_syllabus_subjects(request):
+    syllabus_data, branches, years, semesters = get_syllabus_options()
+    year = (request.GET.get('year') or '3').strip()
+    semester = (request.GET.get('semester') or '1').strip()
+    branch = (request.GET.get('branch') or 'IT').strip().upper()
+    if branch == 'CSE(AI&ML)':
+        branch = 'AIML'
+
+    year_sem = f'{year}-{semester}'
+    subjects = syllabus_data.get(year_sem, {}).get(branch, [])
+    return JsonResponse({
+        'year': year,
+        'semester': semester,
+        'year_sem': year_sem,
+        'branch': branch,
+        'branches': branches,
+        'years': years,
+        'semesters': semesters,
+        'subjects': subjects,
+        'count': len(subjects),
+        'syllabus_url': reverse('dashboard:syllabus'),
+    })
+
+
 @login_required
 def exam_branch(request):
     from django.core.paginator import Paginator
@@ -8845,7 +9676,7 @@ def exam_branch(request):
 
         # Filters for Attendance
         branch = request.GET.get('branch', 'IT')
-        year_sem = request.GET.get('year_sem', 'IV-I')
+        year_sem = request.GET.get('year_sem', '3-1')
         from_date_str = request.GET.get('from_date', '2025-07-10')
         to_date_str = request.GET.get('to_date', '2025-09-30')
 
@@ -8895,83 +9726,16 @@ def exam_branch(request):
 
         available_departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
 
-        # Syllabus data for subjects by year-sem and branch
-        syllabus_data = {
-            "1-1": {
-                "IT": [
-                    {"code": "MA101BS", "name": "MATRICES AND CALCULUS"},
-                    {"code": "AP102BS", "name": "APPLIED PHYSICS"},
-                    {"code": "CS103ES", "name": "PROGRAMMING FOR PROBLEM SOLVING"},
-                    {"code": "EN104HS", "name": "ENGLISH FOR SKILL ENHANCEMENT"},
-                    {"code": "ME105ES", "name": "ENGINEERING WORKSHOP"},
-                    {"code": "CS106ES", "name": "ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
-                    {"code": "AP107BS", "name": "APPLIED PHYSICS LABORATORY"},
-                    {"code": "EN108HS", "name": "ENGLISH LANGUAGE AND COMMUNICATION SKILLS LABORATORY"},
-                    {"code": "CS109ES", "name": "PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
-                    {"code": "ES110MC", "name": "ENVIRONMENTAL SCIENCE"}
-                ],
-                "CSE": [
-                    {"code": "MA101BS", "name": "MATRICES AND CALCULUS"},
-                    {"code": "CH102BS", "name": "ENGINEERING CHEMISTRY"},
-                    {"code": "CS103ES", "name": "PROGRAMMING FOR PROBLEM SOLVING"},
-                    {"code": "EE104ES", "name": "BASIC ELECTRICAL ENGINEERING"},
-                    {"code": "EG105ES", "name": "COMPUTER AIDED ENGINEERING GRAPHICS"},
-                    {"code": "CS106ES", "name": "ELEMENTS OF COMPUTER SCIENCE & ENGINEERING"},
-                    {"code": "CH107BS", "name": "ENGINEERING CHEMISTRY LABORATORY"},
-                    {"code": "CS109ES", "name": "PROGRAMMING FOR PROBLEM SOLVING LABORATORY"},
-                    {"code": "EE108ES", "name": "BASIC ELECTRICAL ENGINEERING LABORATORY"},
-                    {"code": "HS110MC", "name": "CONSTITUTION OF INDIA"}
-                ]
-            },
-            "1-2": {
-                "IT": [
-                    {"code": "MA201BS", "name": "ORDINARY DIFFERENTIAL EQUATIONS AND VECTOR CALCULUS"},
-                    {"code": "CH202BS", "name": "ENGINEERING CHEMISTRY"},
-                    {"code": "EG203ES", "name": "COMPUTER AIDED ENGINEERING GRAPHICS"},
-                    {"code": "EE204ES", "name": "BASIC ELECTRICAL ENGINEERING"},
-                    {"code": "EC205ES", "name": "ELECTRONIC DEVICES AND CIRCUITS"},
-                    {"code": "CH206BS", "name": "ENGINEERING CHEMISTRY LABORATORY"},
-                    {"code": "CS207ES", "name": "PYTHON PROGRAMMING LABORATORY"},
-                    {"code": "EE208ES", "name": "BASIC ELECTRICAL ENGINEERING LABORATORY"},
-                    {"code": "CS209ES", "name": "IT WORKSHOP"},
-                    {"code": "HS210MC", "name": "CONSTITUTION OF INDIA"}
-                ]
-            },
-            "2-1": {
-                "IT": [
-                    {"code": "MA301BS", "name": "COMPLEX VARIABLES AND STATISTICAL METHODS"},
-                    {"code": "CS302PC", "name": "DATA STRUCTURES"},
-                    {"code": "CS303PC", "name": "COMPUTER ORGANIZATION"},
-                    {"code": "IT304PC", "name": "WEB PROGRAMMING"},
-                    {"code": "CS305PC", "name": "OBJECT ORIENTED PROGRAMMING USING C++"},
-                    {"code": "CS306PC", "name": "DATA STRUCTURES LABORATORY"},
-                    {"code": "IT307PC", "name": "WEB PROGRAMMING LABORATORY"},
-                    {"code": "CS308PC", "name": "OBJECT ORIENTED PROGRAMMING USING C++ LABORATORY"},
-                    {"code": "MC309", "name": "GENDER SENSITIZATION LAB"},
-                    {"code": "HS310MC", "name": "BUSINESS VENTURES AND ENTREPRENEURSHIP"}
-                ]
-            },
-            "2-2": {
-                "IT": [
-                    {"code": "MB401HS", "name": "BUSINESS ECONOMICS & FINANCIAL ANALYSIS"},
-                    {"code": "CS402PC", "name": "DISCRETE MATHEMATICS"},
-                    {"code": "CS403PC", "name": "OPERATING SYSTEMS"},
-                    {"code": "CS404PC", "name": "DATABASE MANAGEMENT SYSTEMS"},
-                    {"code": "IT405PC", "name": "JAVA PROGRAMMING"},
-                    {"code": "CS406PC", "name": "OPERATING SYSTEMS LABORATORY"},
-                    {"code": "CS407PC", "name": "DATABASE MANAGEMENT SYSTEMS LABORATORY"},
-                    {"code": "IT408PC", "name": "JAVA PROGRAMMING LABORATORY"},
-                    {"code": "IT409PW", "name": "REAL-TIME RESEARCH PROJECT/ SOCIETAL RELATED PROJECT"},
-                    {"code": "IT410PC", "name": "SKILL DEVELOPMENT COURSE (NODE JS/REACTJS/DJANGO)"},
-                    {"code": "HS411MC", "name": "INTELLECTUAL PROPERTY RIGHTS"}
-                ]
-            }
-        }
-
-        # Get subjects for the selected year_sem and branch
-        subjects = []
-        if year_sem in syllabus_data and branch in syllabus_data[year_sem]:
-            subjects = syllabus_data[year_sem][branch]
+        syllabus_data, syllabus_branches, syllabus_years, syllabus_semesters = get_syllabus_options()
+        normalized_year_sem = year_sem.replace('IV', '4').replace('III', '3').replace('II', '2').replace('I', '1')
+        if '-' in normalized_year_sem:
+            selected_year, selected_semester = normalized_year_sem.split('-', 1)
+        else:
+            selected_year, selected_semester = '3', '1'
+        branch = branch.upper()
+        if branch == 'CSE(AI&ML)':
+            branch = 'AIML'
+        subjects = syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
 
         # Attendance Dashboard Data
         date_list = []
@@ -9028,7 +9792,14 @@ def exam_branch(request):
             'to_date': to_date_str,
             'branch': branch,
             'year_sem': year_sem,
+            'selected_syllabus_year': selected_year,
+            'selected_syllabus_semester': selected_semester,
+            'syllabus_branches': syllabus_branches,
+            'syllabus_years': syllabus_years,
+            'syllabus_semesters': syllabus_semesters,
             'subjects': subjects,
+            'syllabus_url': reverse('dashboard:syllabus'),
+            'syllabus_subjects_url': reverse('dashboard:exam_branch_syllabus_subjects'),
 
             'title': 'Exam Branch - Management',
         }

@@ -275,6 +275,7 @@ Exam Branch
     }
 
     .exam-branch-page .form-control,
+    .exam-branch-page .form-select,
     .exam-branch-page textarea {
         border-radius: 16px;
         border: 1px solid #d8e4ef;
@@ -284,6 +285,7 @@ Exam Branch
     }
 
     .exam-branch-page .form-control:focus,
+    .exam-branch-page .form-select:focus,
     .exam-branch-page textarea:focus {
         border-color: rgba(15, 76, 129, 0.7);
         box-shadow: 0 0 0 0.24rem rgba(15, 76, 129, 0.12);
@@ -494,6 +496,233 @@ Exam Branch
         background: #f7fbff;
     }
 
+    .time-table-meta {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .time-table-meta .exam-mini-block {
+        margin: 0;
+    }
+
+    .syllabus-link-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border-radius: 18px;
+        background: #f3f9ff;
+        border: 1px solid rgba(15, 76, 129, 0.12);
+    }
+
+    .subject-count-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 32px;
+        padding: 0.35rem 0.8rem;
+        border-radius: 999px;
+        background: #17324d;
+        color: #fff;
+        font-weight: 800;
+    }
+
+    .subject-selection-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .subject-selection-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 1.2rem;
+    }
+
+    .subject-primary-action {
+        min-width: 180px;
+        text-transform: uppercase;
+    }
+
+    .available-faculty-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .subject-selection-preview {
+        min-width: 940px;
+    }
+
+    .subject-selection-result-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .subject-selection-delete-btn {
+        padding: 0.42rem 0.7rem;
+        border-radius: 10px;
+        box-shadow: none;
+    }
+
+    .time-table-grid {
+        min-width: 1120px;
+    }
+
+    .time-table-grid th:first-child,
+    .time-table-grid td:first-child {
+        width: 92px;
+        text-align: center;
+        font-weight: 800;
+        color: var(--exam-ink);
+        background: #f3f9ff;
+    }
+
+    .time-table-grid textarea {
+        min-height: 72px;
+        resize: vertical;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .time-table-grid .break-slot {
+        background: #fff8ee;
+        color: #c96a19;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .time-table-grid .lab-merged-cell textarea {
+        min-height: 92px;
+        background: #ecfdf5;
+        border-color: rgba(15, 157, 122, 0.24);
+        color: #075f49;
+        font-weight: 900;
+    }
+
+    .time-table-reference {
+        min-width: 760px;
+    }
+
+    .time-table-reference th {
+        white-space: nowrap;
+    }
+
+    .individual-time-table {
+        min-width: 1080px;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    .individual-time-table th,
+    .individual-time-table td {
+        border: 1px solid #111;
+        vertical-align: middle;
+        padding: 0;
+    }
+
+    .individual-time-table .individual-top-cell {
+        background: #fff;
+        padding: 0.28rem 0.45rem;
+    }
+
+    .individual-time-table .individual-top-cell input {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0.18rem 0;
+        min-height: 38px;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.45rem;
+        font-weight: 800;
+        background: transparent;
+        color: #050505;
+    }
+
+    .individual-time-table .individual-top-cell.hours input {
+        text-align: center;
+    }
+
+    .individual-time-table thead th {
+        background: #a6a6a6;
+        color: #050505;
+        text-align: center;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.45rem;
+        font-weight: 900;
+        line-height: 1.15;
+        height: 74px;
+        padding: 0.35rem 0.2rem;
+    }
+
+    .individual-time-table col.day-column {
+        width: 12.5%;
+    }
+
+    .individual-time-table col.period-column {
+        width: 12.5%;
+    }
+
+    .individual-time-table .day-cell {
+        background: #a6a6a6;
+        color: #050505;
+        text-align: center;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.55rem;
+        font-weight: 900;
+    }
+
+    .individual-time-table .individual-break {
+        background: #fff;
+        color: #050505;
+        text-align: center;
+        font-family: Arial, "Segoe UI", sans-serif;
+        font-size: 1.45rem;
+        font-weight: 900;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        letter-spacing: 0.08em;
+        line-height: 1;
+    }
+
+    .individual-time-table textarea {
+        min-height: 54px;
+        border: 0;
+        border-radius: 0;
+        resize: vertical;
+        text-align: center;
+        vertical-align: middle;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 1.18rem;
+        line-height: 1.15;
+        background: #fff;
+        box-shadow: none;
+    }
+
+    .individual-time-table .lab-merged-cell textarea {
+        background: #ecfdf5;
+        color: #075f49;
+        font-weight: 900;
+    }
+
+    .individual-time-table tbody tr {
+        height: 54px;
+    }
+
     @media (max-width: 991.98px) {
         .exam-hero,
         .panel-header {
@@ -502,6 +731,8 @@ Exam Branch
 
         .exam-hero-metrics,
         .exam-mini-grid,
+        .time-table-meta,
+        .subject-selection-grid,
         .summary-grid {
             width: 100%;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -526,6 +757,8 @@ Exam Branch
         }
 
         .exam-mini-grid,
+        .time-table-meta,
+        .subject-selection-grid,
         .summary-grid {
             grid-template-columns: 1fr;
         }
@@ -560,7 +793,7 @@ Exam Branch
             <div class="exam-hero-metrics">
                 <div class="exam-metric-card">
                     <span>Modules</span>
-                    <strong>Lesson Plan + Evaluation</strong>
+                    <strong>Faculty Subject Selection + Lesson Plan</strong>
                 </div>
                 <div class="exam-metric-card">
                     <span>Experience</span>
@@ -579,7 +812,7 @@ Exam Branch
 
         <ul class="nav nav-tabs exam-tab-nav" id="examBranchTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="lessonplan-tab" data-bs-toggle="tab" data-bs-target="#lessonplan" type="button" role="tab" aria-controls="lessonplan" aria-selected="true">
+                <button class="nav-link" id="lessonplan-tab" data-bs-toggle="tab" data-bs-target="#lessonplan" type="button" role="tab" aria-controls="lessonplan" aria-selected="false">
                     <i class="fas fa-book-open me-2"></i>Lesson Plan
                 </button>
             </li>
@@ -588,10 +821,20 @@ Exam Branch
                     <i class="fas fa-clipboard-check me-2"></i>Evaluation
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="subject-selection-tab" data-bs-toggle="tab" data-bs-target="#subject-selection" type="button" role="tab" aria-controls="subject-selection" aria-selected="true">
+                    <i class="fas fa-user-check me-2"></i>Faculty Subject Selection
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="timetable-tab" data-bs-toggle="tab" data-bs-target="#timetable" type="button" role="tab" aria-controls="timetable" aria-selected="false">
+                    <i class="fas fa-calendar-alt me-2"></i>Time Table
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content" id="examBranchTabsContent">
-            <div class="tab-pane fade show active" id="lessonplan" role="tabpanel" aria-labelledby="lessonplan-tab">
+            <div class="tab-pane fade" id="lessonplan" role="tabpanel" aria-labelledby="lessonplan-tab">
                 <div class="exam-panel">
                     <div class="panel-header">
                         <div>
@@ -852,6 +1095,449 @@ Exam Branch
                     </div>
                 </div>
             </div>
+
+            <div class="tab-pane fade show active" id="subject-selection" role="tabpanel" aria-labelledby="subject-selection-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Faculty Allocation</div>
+                            <h2 class="section-title">Faculty subject selection form</h2>
+                            <p class="section-copy">
+                                Capture faculty, class, subject, teaching history, and previous result in one clean record.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-layer-group"></i>
+                            Subject-ready form
+                        </div>
+                    </div>
+
+                    <div class="exam-card">
+                        <form id="facultySubjectSelectionForm">
+                            <div class="subject-selection-grid">
+                                <div>
+                                    <label for="subjectFacultyName" class="form-label">NAME OF THE FACULTY</label>
+                                    <input type="text" id="subjectFacultyName" class="form-control subject-selection-input" placeholder="Faculty name" required />
+                                </div>
+                                <div>
+                                    <label for="subjectEmployeeCode" class="form-label">EMPLOYEE CODE</label>
+                                    <input type="text" id="subjectEmployeeCode" class="form-control subject-selection-input" placeholder="Employee code" required />
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionBranch" class="form-label">BRANCH</label>
+                                    <select id="subjectSelectionBranch" class="form-select subject-selection-input">
+                                        {% for syllabus_branch in syllabus_branches %}
+                                            <option value="{{ syllabus_branch }}" {% if branch == syllabus_branch %}selected{% endif %}>
+                                                {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% else %}{{ syllabus_branch }}{% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionYear" class="form-label">YEAR</label>
+                                    <select id="subjectSelectionYear" class="form-select subject-selection-input">
+                                        {% for syllabus_year in syllabus_years %}
+                                            <option value="{{ syllabus_year }}" {% if selected_syllabus_year == syllabus_year %}selected{% endif %}>Year {{ syllabus_year }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionSemester" class="form-label">SEM</label>
+                                    <select id="subjectSelectionSemester" class="form-select subject-selection-input">
+                                        {% for syllabus_semester in syllabus_semesters %}
+                                            <option value="{{ syllabus_semester }}" {% if selected_syllabus_semester == syllabus_semester %}selected{% endif %}>Semester {{ syllabus_semester }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectSelectionName" class="form-label">NAME OF THE SUBJECT</label>
+                                    <select id="subjectSelectionName" class="form-select subject-selection-input" required>
+                                        <option value="">Select Subject</option>
+                                        {% for subject in subjects %}
+                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}">{{ subject.code }} - {{ subject.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="subjectTimesTaught" class="form-label">NUMBER OF TIMES TAUGHT</label>
+                                    <input type="number" id="subjectTimesTaught" class="form-control subject-selection-input" min="0" step="1" placeholder="0" />
+                                </div>
+                                <div>
+                                    <label for="subjectPreviousResult" class="form-label">PREVIOUS RESULT</label>
+                                    <input type="text" id="subjectPreviousResult" class="form-control subject-selection-input" placeholder="Example: 86%" />
+                                </div>
+                            </div>
+
+                            <div class="subject-selection-actions">
+                                <div id="subjectSelectionStatus" class="status-chip" data-tone="muted">
+                                    <i class="fas fa-cloud"></i>
+                                    Subject selection not saved yet
+                                </div>
+                                <div class="exam-action-buttons">
+                                    <button type="button" id="subjectSelectionAddFacultyBtn" class="btn exam-btn exam-btn-success subject-primary-action">
+                                        <i class="fas fa-user-plus me-2"></i>ADD FACULTY
+                                    </button>
+                                    <button type="submit" class="btn exam-btn exam-btn-success">
+                                        <i class="fas fa-save me-2"></i>Save Selection
+                                    </button>
+                                    <button type="button" id="subjectSelectionClearBtn" class="btn exam-btn exam-btn-danger">
+                                        <i class="fas fa-broom me-2"></i>Clear Selection
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="exam-table-wrap mt-4">
+                        <div class="available-faculty-header">
+                            <div>
+                                <h3 class="card-title mb-1">Available Faculties Added</h3>
+                                <p class="card-copy">Use ADD FACULTY to build this list, then Generate Time Table from the available faculties.</p>
+                            </div>
+                            <span class="panel-pill">
+                                <i class="fas fa-users"></i>
+                                Added: <span id="subjectSelectionCount">0</span>
+                            </span>
+                        </div>
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table exam-table subject-selection-preview align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>S.No</th>
+                                        <th>Faculty</th>
+                                        <th>Employee Code</th>
+                                        <th>Branch</th>
+                                        <th>Year</th>
+                                        <th>Sem</th>
+                                        <th>Subject</th>
+                                        <th>Times Taught</th>
+                                        <th>Previous Result / Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectSelectionPreviewBody">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted">No subject selection saved yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="exam-actions mt-3">
+                            <div class="card-copy mb-0">Generate the Time Table from the available faculties listed above.</div>
+                            <div class="exam-action-buttons">
+                                <button type="button" id="subjectSelectionAddBtn" class="btn exam-btn exam-btn-primary">
+                                    <i class="fas fa-calendar-plus me-2"></i>Generate Time Table
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="timetable" role="tabpanel" aria-labelledby="timetable-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Class Schedule</div>
+                            <h2 class="section-title">III-I IT empty timetable</h2>
+                            <p class="section-copy">
+                                Blank weekly timetable layout based on III-I Tentative Time Table IT 2026-27.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-clock"></i>
+                            2026-27 reference
+                        </div>
+                    </div>
+
+                    <div class="time-table-meta">
+                        <div class="exam-mini-block">
+                            <label for="timeTableProgram" class="form-label">Program</label>
+                            <input type="text" id="timeTableProgram" class="form-control timetable-meta-input" value="B.Tech" />
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="timeTableYear" class="form-label">Year</label>
+                            <select id="timeTableYear" class="form-control timetable-meta-input">
+                                {% for syllabus_year in syllabus_years %}
+                                    <option value="{{ syllabus_year }}" {% if selected_syllabus_year == syllabus_year %}selected{% endif %}>Year {{ syllabus_year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="timeTableSemester" class="form-label">Semester</label>
+                            <select id="timeTableSemester" class="form-control timetable-meta-input">
+                                {% for syllabus_semester in syllabus_semesters %}
+                                    <option value="{{ syllabus_semester }}" {% if selected_syllabus_semester == syllabus_semester %}selected{% endif %}>Semester {{ syllabus_semester }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="timeTableBranch" class="form-label">Branch</label>
+                            <select id="timeTableBranch" class="form-control timetable-meta-input">
+                                {% for syllabus_branch in syllabus_branches %}
+                                    <option value="{{ syllabus_branch }}" {% if branch == syllabus_branch %}selected{% endif %}>
+                                        {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% else %}{{ syllabus_branch }}{% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="exam-mini-block">
+                            <label for="syllabusSubjectSelect" class="form-label">Subject</label>
+                            <select id="syllabusSubjectSelect" class="form-control">
+                                <option value="">Select Subject</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="syllabus-link-card">
+                        <div>
+                            <h3 class="card-title mb-1">Subject Selection</h3>
+                            <p class="card-copy">
+                                Subjects are loaded only in the dropdown above based on the selected branch, year, and semester.
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span id="syllabusSubjectCount" class="subject-count-pill">0</span>
+                            <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
+                                <i class="fas fa-book me-2"></i>Open Syllabus
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="exam-table-wrap mb-4">
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table exam-table time-table-grid align-middle" id="timeTableGrid">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>9:30-10:30</th>
+                                        <th>10:30-11:30</th>
+                                        <th>11:40-12:40</th>
+                                        <th>12:40-1:20</th>
+                                        <th>1:20-2:15</th>
+                                        <th>2:15-3:10</th>
+                                        <th>3:15-4:10</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>MON</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="MON" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>TUE</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="TUE" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>WED</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="WED" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>THU</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="THU" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRI</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="FRI" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td>SAT</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control timetable-slot" data-day="SAT" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="individualTimeTableContainer">
+                        <div class="exam-card mb-4" data-individual-timetable-card>
+                        <h3 class="card-title">Individual Time Table</h3>
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table individual-time-table mb-0" id="individualTimeTableGrid">
+                                <colgroup>
+                                    <col class="day-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                    <col class="period-column">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th colspan="5" class="individual-top-cell">
+                                            <input type="text" id="individualFacultyName" class="form-control individual-timetable-meta-input" placeholder="Faculty Name" aria-label="Faculty Name" />
+                                        </th>
+                                        <th colspan="3" class="individual-top-cell hours">
+                                            <input type="text" id="individualTotalHours" class="form-control individual-timetable-meta-input" placeholder="Number of hours:" aria-label="Number of hours" />
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>DAY</th>
+                                        <th>9:30-<br>10:30</th>
+                                        <th>10:30-<br>11:30</th>
+                                        <th>11:40-<br>12:40</th>
+                                        <th>12:40-<br>1:20</th>
+                                        <th>1:20-2:15</th>
+                                        <th>2:15-3:10</th>
+                                        <th>3:15-4:10</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="day-cell">MON</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="11:40-12:40"></textarea></td>
+                                        <td class="individual-break" rowspan="6">LUNCH BREAK</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="MON" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">TUE</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="TUE" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">WED</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="WED" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">THU</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="THU" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">FRI</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="FRI" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="day-cell">SAT</td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="11:40-12:40"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control individual-timetable-slot" data-day="SAT" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div class="exam-actions mb-4">
+                        <div id="timeTableStatus" class="status-chip" data-tone="muted">
+                            <i class="fas fa-cloud"></i>
+                            Timetable not saved yet
+                        </div>
+                        <div class="exam-action-buttons">
+                            <button id="timeTableSaveBtn" class="btn exam-btn exam-btn-success">
+                                <i class="fas fa-save me-2"></i>Save Timetable
+                            </button>
+                            <button id="timeTableClearBtn" class="btn exam-btn exam-btn-danger">
+                                <i class="fas fa-broom me-2"></i>Clear Timetable
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-xl-8">
+                            <div class="exam-card">
+                                <h3 class="card-title">Course Reference</h3>
+                                <div class="table-responsive">
+                                    <table class="table exam-table time-table-reference mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>S.No</th>
+                                                <th>Course Code</th>
+                                                <th>Course Name</th>
+                                                <th>Faculty Name</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="courseReferenceBody">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted">Add faculty selections to display subjects here.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="exam-card h-100">
+                                <h3 class="card-title">Rooms</h3>
+                                <div class="table-responsive">
+                                    <table class="table exam-table mb-0">
+                                        <tbody>
+                                            <tr><th>Lecture Hall</th><td>E-303</td></tr>
+                                            <tr><th>ML Lab</th><td>E-201</td></tr>
+                                            <tr><th>CN Lab</th><td>E-201</td></tr>
+                                            <tr><th>ES Lab</th><td>A-104</td></tr>
+                                            <tr><th>UI Flutter Lab</th><td>E-201</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -860,7 +1546,10 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
+        const timeTableStorageKey = 'examBranchTimeTableData';
+        const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
+        const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
         const csrfTokenValue = '{{ csrf_token }}';
 
         const lessonHeaderFields = {
@@ -877,7 +1566,34 @@ Exam Branch
         const lessonPlanBody = document.getElementById('teachingPlanBody');
         const lessonPlanStatus = document.getElementById('lessonPlanStatus');
         const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
+        const timeTableStatus = document.getElementById('timeTableStatus');
         const marksBody = document.getElementById('marksBody');
+        const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
+        const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
+        const individualTimeTableContainer = document.getElementById('individualTimeTableContainer');
+        const individualTimeTableTemplate = individualTimeTableContainer
+            ? individualTimeTableContainer.querySelector('[data-individual-timetable-card]').cloneNode(true)
+            : null;
+        const syllabusSubjectCount = document.getElementById('syllabusSubjectCount');
+        const syllabusSubjectSelect = document.getElementById('syllabusSubjectSelect');
+        const courseReferenceBody = document.getElementById('courseReferenceBody');
+        const timeTableYearField = document.getElementById('timeTableYear');
+        const timeTableSemesterField = document.getElementById('timeTableSemester');
+        const timeTableBranchField = document.getElementById('timeTableBranch');
+        const subjectSelectionForm = document.getElementById('facultySubjectSelectionForm');
+        const subjectSelectionStatus = document.getElementById('subjectSelectionStatus');
+        const subjectSelectionPreviewBody = document.getElementById('subjectSelectionPreviewBody');
+        const subjectSelectionCount = document.getElementById('subjectSelectionCount');
+        const subjectSelectionFields = {
+            facultyName: document.getElementById('subjectFacultyName'),
+            employeeCode: document.getElementById('subjectEmployeeCode'),
+            branch: document.getElementById('subjectSelectionBranch'),
+            year: document.getElementById('subjectSelectionYear'),
+            semester: document.getElementById('subjectSelectionSemester'),
+            subjectName: document.getElementById('subjectSelectionName'),
+            timesTaught: document.getElementById('subjectTimesTaught'),
+            previousResult: document.getElementById('subjectPreviousResult')
+        };
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -904,6 +1620,281 @@ Exam Branch
             }
             const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
             return match ? decodeURIComponent(match[1]) : '';
+        }
+
+        function getIndividualTimeTableCards() {
+            if (!individualTimeTableContainer) {
+                return [];
+            }
+            return Array.from(individualTimeTableContainer.querySelectorAll('[data-individual-timetable-card]'));
+        }
+
+        function getIndividualTimeTableSlots(card) {
+            const root = card || individualTimeTableContainer || document;
+            return Array.from(root.querySelectorAll('.individual-timetable-slot'));
+        }
+
+        function getIndividualTimeTableMetaFields(card) {
+            const root = card || individualTimeTableContainer || document;
+            return Array.from(root.querySelectorAll('.individual-timetable-meta-input'));
+        }
+
+        function prepareIndividualTimeTableCard(card, index) {
+            if (!card) {
+                return null;
+            }
+            card.querySelectorAll('[id]').forEach(function (element) {
+                if (index === 0) {
+                    return;
+                }
+                element.removeAttribute('id');
+            });
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                slot.value = '';
+            });
+            getIndividualTimeTableMetaFields(card).forEach(function (field) {
+                field.value = '';
+            });
+            return card;
+        }
+
+        function ensureIndividualTimeTableCardCount(count) {
+            if (!individualTimeTableContainer || !individualTimeTableTemplate) {
+                return [];
+            }
+
+            const requiredCount = Math.max(count || 1, 1);
+            individualTimeTableContainer.innerHTML = '';
+
+            for (let index = 0; index < requiredCount; index += 1) {
+                individualTimeTableContainer.appendChild(
+                    prepareIndividualTimeTableCard(individualTimeTableTemplate.cloneNode(true), index)
+                );
+            }
+
+            return getIndividualTimeTableCards();
+        }
+
+        function renderSyllabusSubjects(subjects, selectedCode) {
+            if (!syllabusSubjectCount || !syllabusSubjectSelect) {
+                return;
+            }
+
+            syllabusSubjectSelect.innerHTML = '';
+            syllabusSubjectCount.textContent = String(subjects.length);
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Subject';
+            syllabusSubjectSelect.appendChild(defaultOption);
+
+            if (!subjects.length) {
+                return;
+            }
+
+            subjects.forEach(function (subject) {
+                const option = document.createElement('option');
+                option.value = subject.code || '';
+                option.dataset.name = subject.name || '';
+                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                if (selectedCode && option.value === selectedCode) {
+                    option.selected = true;
+                }
+                syllabusSubjectSelect.appendChild(option);
+
+            });
+        }
+
+        function renderSubjectSelectionSubjects(subjects, selectedSubject) {
+            if (!subjectSelectionFields.subjectName) {
+                return;
+            }
+
+            const currentSubject = selectedSubject || subjectSelectionFields.subjectName.value || '';
+            subjectSelectionFields.subjectName.innerHTML = '';
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Select Subject';
+            subjectSelectionFields.subjectName.appendChild(defaultOption);
+
+            subjects.forEach(function (subject) {
+                const option = document.createElement('option');
+                option.value = subject.name || '';
+                option.dataset.code = subject.code || '';
+                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                if (option.value === currentSubject) {
+                    option.selected = true;
+                }
+                subjectSelectionFields.subjectName.appendChild(option);
+            });
+        }
+
+        function normalizeClassValue(value) {
+            return String(value || '').trim().toUpperCase().replace('CSE(AI&ML)', 'AIML').replace('CSE (AI&ML)', 'AIML');
+        }
+
+        function getTimeTableClassSelections(selections) {
+            const branch = normalizeClassValue(timeTableBranchField ? timeTableBranchField.value : 'IT');
+            const year = normalizeClassValue(timeTableYearField ? timeTableYearField.value : '3');
+            const semester = normalizeClassValue(timeTableSemesterField ? timeTableSemesterField.value : '1');
+
+            return normalizeSubjectSelections(selections || getStoredSubjectSelections()).filter(function (selection) {
+                return normalizeClassValue(selection.branch) === branch &&
+                    normalizeClassValue(selection.year) === year &&
+                    normalizeClassValue(selection.semester) === semester &&
+                    ((selection.subjectCode || '').trim() || (selection.subjectName || '').trim());
+            });
+        }
+
+        function filterSubjectsByFacultySelections(subjects, selections) {
+            const availableSelections = getTimeTableClassSelections(selections);
+            const selectedCodes = availableSelections.map(function (selection) {
+                return normalizeClassValue(selection.subjectCode);
+            }).filter(Boolean);
+            const selectedNames = availableSelections.map(function (selection) {
+                return normalizeClassValue(selection.subjectName);
+            }).filter(Boolean);
+
+            if (!selectedCodes.length && !selectedNames.length) {
+                return [];
+            }
+
+            return (Array.isArray(subjects) ? subjects : []).filter(function (subject) {
+                const code = normalizeClassValue(subject.code);
+                const name = normalizeClassValue(subject.name);
+                return selectedCodes.includes(code) || selectedNames.includes(name);
+            });
+        }
+
+        function pruneUnselectedTimeTableSubjects(subjects, selections) {
+            const availableSelections = getTimeTableClassSelections(selections);
+            const selectedValues = new Set();
+            availableSelections.forEach(function (selection) {
+                selectedValues.add(normalizeClassValue(selection.subjectCode));
+                selectedValues.add(normalizeClassValue(selection.subjectName));
+            });
+
+            const syllabusValues = new Set();
+            (Array.isArray(subjects) ? subjects : []).forEach(function (subject) {
+                syllabusValues.add(normalizeClassValue(subject.code));
+                syllabusValues.add(normalizeClassValue(subject.name));
+            });
+
+            if (!syllabusValues.size) {
+                return;
+            }
+
+            let changed = false;
+            timeTableSlots.concat(getIndividualTimeTableSlots()).forEach(function (slot) {
+                const currentValue = normalizeClassValue(slot.value);
+                if (currentValue && syllabusValues.has(currentValue) && !selectedValues.has(currentValue)) {
+                    slot.value = '';
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                markTimeTableDirty();
+            }
+        }
+
+        function loadSubjectSelectionSubjects(selectedSubject) {
+            if (!syllabusSubjectsUrl || !subjectSelectionFields.year || !subjectSelectionFields.semester || !subjectSelectionFields.branch) {
+                return;
+            }
+
+            const params = new URLSearchParams({
+                year: subjectSelectionFields.year.value || '3',
+                semester: subjectSelectionFields.semester.value || '1',
+                branch: subjectSelectionFields.branch.value || 'IT'
+            });
+
+            fetch(syllabusSubjectsUrl + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Could not load subject selection subjects.');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderSubjectSelectionSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedSubject);
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    renderSubjectSelectionSubjects([], '');
+                    setStatus(subjectSelectionStatus, 'Could not load subjects for the selected class', 'warning');
+                });
+        }
+
+        function loadSyllabusSubjects(selectedCode) {
+            if (!syllabusSubjectsUrl || !timeTableYearField || !timeTableSemesterField || !timeTableBranchField) {
+                return Promise.resolve();
+            }
+
+            const romanMap = { I: '1', II: '2', III: '3', IV: '4' };
+            if (romanMap[timeTableYearField.value]) {
+                timeTableYearField.value = romanMap[timeTableYearField.value];
+            }
+            if (romanMap[timeTableSemesterField.value]) {
+                timeTableSemesterField.value = romanMap[timeTableSemesterField.value];
+            }
+            if (!timeTableYearField.value) {
+                timeTableYearField.value = '3';
+            }
+            if (!timeTableSemesterField.value) {
+                timeTableSemesterField.value = '1';
+            }
+            if (!timeTableBranchField.value) {
+                timeTableBranchField.value = 'IT';
+            }
+
+            const params = new URLSearchParams({
+                year: timeTableYearField.value || '3',
+                semester: timeTableSemesterField.value || '1',
+                branch: timeTableBranchField.value || 'IT'
+            });
+
+            return fetch(syllabusSubjectsUrl + '?' + params.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Could not load syllabus subjects.');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    const allSubjects = Array.isArray(data.subjects) ? data.subjects : [];
+                    const filteredSubjects = filterSubjectsByFacultySelections(allSubjects);
+                    renderSyllabusSubjects(filteredSubjects, selectedCode);
+                    renderCourseReference();
+                    pruneUnselectedTimeTableSubjects(allSubjects);
+                    data.subjects = filteredSubjects;
+                    return data;
+                })
+                .catch(function (error) {
+                    console.error(error);
+                    renderSyllabusSubjects([], '');
+                    renderCourseReference();
+                    setStatus(timeTableStatus, 'Could not load subjects from syllabus', 'warning');
+                    return { subjects: [] };
+                });
+        }
+
+        function useSubjectInLessonPlan(subject) {
+            if (!subject) {
+                return;
+            }
+            if (lessonHeaderFields.subject) {
+                lessonHeaderFields.subject.value = subject.name || '';
+            }
+            if (lessonHeaderFields.subjectCode) {
+                lessonHeaderFields.subjectCode.value = subject.code || '';
+            }
+            markLessonDirty();
         }
 
         function submitLessonPlanDownload(payload) {
@@ -935,6 +1926,14 @@ Exam Branch
 
         function markEvaluationDirty() {
             setStatus(evaluationSaveStatus, 'Evaluation has unsaved changes', 'warning');
+        }
+
+        function markTimeTableDirty() {
+            setStatus(timeTableStatus, 'Timetable has unsaved changes', 'warning');
+        }
+
+        function markSubjectSelectionDirty() {
+            setStatus(subjectSelectionStatus, 'Subject selection has unsaved changes', 'warning');
         }
 
         function getDayName(date) {
@@ -1461,6 +2460,1041 @@ Exam Branch
             markEvaluationDirty();
         }
 
+        function getTimeTablePayload() {
+            const meta = {};
+            timeTableMetaFields.forEach(function (field) {
+                meta[field.id] = field.value;
+            });
+
+            const slots = timeTableSlots.map(function (slot) {
+                return {
+                    day: slot.dataset.day || '',
+                    period: slot.dataset.period || '',
+                    value: slot.value
+                };
+            });
+
+            const individualTables = getIndividualTimeTableCards().map(function (card) {
+                const individualMeta = {};
+                getIndividualTimeTableMetaFields(card).forEach(function (field, index) {
+                    const key = field.id || field.getAttribute('aria-label') || 'field' + index;
+                    individualMeta[key] = field.value;
+                });
+
+                const individualSlots = getIndividualTimeTableSlots(card).map(function (slot) {
+                    return {
+                        day: slot.dataset.day || '',
+                        period: slot.dataset.period || '',
+                        value: slot.value
+                    };
+                });
+
+                return {
+                    meta: individualMeta,
+                    slots: individualSlots
+                };
+            });
+
+            return {
+                meta: meta,
+                slots: slots,
+                individualTables: individualTables,
+                individualMeta: individualTables[0] ? individualTables[0].meta : {},
+                individualSlots: individualTables[0] ? individualTables[0].slots : [],
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function setTimeTablePayload(payload) {
+            resetClassTimeTableMerges();
+            const data = payload || {};
+            const meta = data.meta || {};
+            timeTableMetaFields.forEach(function (field) {
+                if (Object.prototype.hasOwnProperty.call(meta, field.id)) {
+                    field.value = meta[field.id] || '';
+                }
+            });
+
+            const slots = Array.isArray(data.slots) ? data.slots : [];
+            timeTableSlots.forEach(function (slot) {
+                const match = slots.find(function (entry) {
+                    return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+                });
+                slot.value = match ? (match.value || '') : '';
+            });
+            restoreClassLabMergesFromValues();
+
+            const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
+                ? data.individualTables
+                : [];
+
+            const storedClassSelections = getTimeTableClassSelections();
+            const storedFacultySchedules = buildIndividualFacultySchedules(storedClassSelections);
+            if (storedFacultySchedules.length) {
+                renderIndividualFacultyTimeTables(storedFacultySchedules.length ? storedClassSelections : []);
+                return;
+            }
+
+            ensureIndividualTimeTableCardCount(individualTables.length).forEach(function (card, cardIndex) {
+                const tableData = individualTables[cardIndex] || {};
+                const individualMeta = tableData.meta || {};
+                getIndividualTimeTableMetaFields(card).forEach(function (field, index) {
+                    const key = field.id || field.getAttribute('aria-label') || 'field' + index;
+                    if (Object.prototype.hasOwnProperty.call(individualMeta, key)) {
+                        field.value = individualMeta[key] || '';
+                    } else {
+                        field.value = '';
+                    }
+                });
+
+                const individualSlots = Array.isArray(tableData.slots) ? tableData.slots : [];
+                getIndividualTimeTableSlots(card).forEach(function (slot) {
+                    const match = individualSlots.find(function (entry) {
+                        return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+                    });
+                    slot.value = match ? (match.value || '') : '';
+                });
+                restoreIndividualLabMergesFromValues(card);
+            });
+        }
+
+        function hasTimeTableContent() {
+            return timeTableSlots.some(function (slot) {
+                return slot.value.trim();
+            }) || getIndividualTimeTableSlots().some(function (slot) {
+                return slot.value.trim();
+            }) || getIndividualTimeTableMetaFields().some(function (field) {
+                return field.value.trim();
+            });
+        }
+
+        function saveTimeTableData() {
+            const payload = getTimeTablePayload();
+            localStorage.setItem(timeTableStorageKey, JSON.stringify(payload));
+            setStatus(timeTableStatus, 'Timetable saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function loadTimeTableData() {
+            const saved = localStorage.getItem(timeTableStorageKey);
+            if (!saved) {
+                setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(saved);
+                setTimeTablePayload(payload);
+                setStatus(timeTableStatus, 'Timetable loaded from ' + formatSavedTime(payload.savedAt), 'success');
+            } catch (error) {
+                console.error('Failed to load timetable data', error);
+                setStatus(timeTableStatus, 'Could not read saved timetable', 'warning');
+            }
+        }
+
+        function clearTimeTableData() {
+            if (hasTimeTableContent() && !confirm('Clear the saved timetable and all period entries?')) {
+                return;
+            }
+            localStorage.removeItem(timeTableStorageKey);
+            setTimeTablePayload({ slots: [], individualSlots: [], individualMeta: {} });
+            setStatus(timeTableStatus, 'Timetable cleared', 'muted');
+        }
+
+        function getSubjectSelectionPayload() {
+            const selectedOption = subjectSelectionFields.subjectName && subjectSelectionFields.subjectName.selectedIndex >= 0
+                ? subjectSelectionFields.subjectName.options[subjectSelectionFields.subjectName.selectedIndex]
+                : null;
+
+            return {
+                facultyName: subjectSelectionFields.facultyName.value.trim(),
+                employeeCode: subjectSelectionFields.employeeCode.value.trim(),
+                branch: subjectSelectionFields.branch.value,
+                year: subjectSelectionFields.year.value,
+                semester: subjectSelectionFields.semester.value,
+                subjectName: subjectSelectionFields.subjectName.value,
+                subjectCode: selectedOption ? (selectedOption.dataset.code || '') : '',
+                timesTaught: subjectSelectionFields.timesTaught.value.trim(),
+                previousResult: subjectSelectionFields.previousResult.value.trim(),
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function setSubjectSelectionFields(payload) {
+            const data = payload || {};
+            subjectSelectionFields.facultyName.value = data.facultyName || '';
+            subjectSelectionFields.employeeCode.value = data.employeeCode || '';
+            subjectSelectionFields.branch.value = data.branch || subjectSelectionFields.branch.value || 'IT';
+            subjectSelectionFields.year.value = data.year || subjectSelectionFields.year.value || '3';
+            subjectSelectionFields.semester.value = data.semester || subjectSelectionFields.semester.value || '1';
+            subjectSelectionFields.timesTaught.value = data.timesTaught || '';
+            subjectSelectionFields.previousResult.value = data.previousResult || '';
+            loadSubjectSelectionSubjects(data.subjectName || '');
+        }
+
+        function normalizeSubjectSelections(payload) {
+            if (Array.isArray(payload)) {
+                return payload.filter(function (entry) {
+                    return entry && (entry.facultyName || entry.employeeCode || entry.subjectName);
+                });
+            }
+            if (payload && (payload.facultyName || payload.employeeCode || payload.subjectName)) {
+                return [payload];
+            }
+            return [];
+        }
+
+        function getStoredSubjectSelections() {
+            const saved = localStorage.getItem(subjectSelectionStorageKey);
+            if (!saved) {
+                return [];
+            }
+            try {
+                return normalizeSubjectSelections(JSON.parse(saved));
+            } catch (error) {
+                console.error('Failed to load saved faculty subject selections', error);
+                return [];
+            }
+        }
+
+        function storeSubjectSelections(selections) {
+            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(normalizeSubjectSelections(selections)));
+        }
+
+        function updateSubjectSelectionCount(count) {
+            if (subjectSelectionCount) {
+                subjectSelectionCount.textContent = String(count || 0);
+            }
+        }
+
+        function renderSubjectSelectionPreview(payload) {
+            const selections = normalizeSubjectSelections(payload);
+            subjectSelectionPreviewBody.innerHTML = '';
+            updateSubjectSelectionCount(selections.length);
+            renderCourseReference(selections);
+
+            if (!selections.length) {
+                const emptyRow = document.createElement('tr');
+                const emptyCell = document.createElement('td');
+                emptyCell.colSpan = 9;
+                emptyCell.className = 'text-center text-muted';
+                emptyCell.textContent = 'No subject selection saved yet.';
+                emptyRow.appendChild(emptyCell);
+                subjectSelectionPreviewBody.appendChild(emptyRow);
+                return;
+            }
+
+            selections.forEach(function (payload, index) {
+                const row = document.createElement('tr');
+                [
+                    String(index + 1),
+                    payload.facultyName || '-',
+                    payload.employeeCode || '-',
+                    payload.branch || '-',
+                    payload.year || '-',
+                    payload.semester || '-',
+                    payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
+                    payload.timesTaught || '0'
+                ].forEach(function (value) {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+                const resultActionCell = document.createElement('td');
+                const resultText = document.createElement('span');
+                const deleteButton = document.createElement('button');
+                resultActionCell.className = 'subject-selection-result-action';
+                resultText.textContent = payload.previousResult || '-';
+                deleteButton.type = 'button';
+                deleteButton.className = 'btn exam-btn exam-btn-danger btn-sm subject-selection-delete-btn';
+                deleteButton.dataset.index = String(index);
+                deleteButton.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
+                resultActionCell.appendChild(resultText);
+                resultActionCell.appendChild(deleteButton);
+                row.appendChild(resultActionCell);
+                subjectSelectionPreviewBody.appendChild(row);
+            });
+        }
+
+        function renderCourseReference(payload) {
+            if (!courseReferenceBody) {
+                return;
+            }
+
+            const selections = getTimeTableClassSelections(payload);
+            courseReferenceBody.innerHTML = '';
+
+            if (!selections.length) {
+                const emptyRow = document.createElement('tr');
+                const emptyCell = document.createElement('td');
+                emptyCell.colSpan = 4;
+                emptyCell.className = 'text-center text-muted';
+                emptyCell.textContent = 'Add faculty selections to display subjects here.';
+                emptyRow.appendChild(emptyCell);
+                courseReferenceBody.appendChild(emptyRow);
+                return;
+            }
+
+            selections.forEach(function (selection, index) {
+                const row = document.createElement('tr');
+                [
+                    String(index + 1),
+                    selection.subjectCode || '-',
+                    selection.subjectName || '-',
+                    selection.facultyName || '-'
+                ].forEach(function (value) {
+                    const cell = document.createElement('td');
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+                courseReferenceBody.appendChild(row);
+            });
+        }
+
+        function saveSubjectSelection(event) {
+            event.preventDefault();
+            const payload = getSubjectSelectionPayload();
+
+            if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
+                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required', 'warning');
+                return;
+            }
+
+            storeSubjectSelections([payload]);
+            renderSubjectSelectionPreview([payload]);
+            setStatus(subjectSelectionStatus, 'Subject selection saved at ' + formatSavedTime(payload.savedAt), 'success');
+        }
+
+        function addFacultySubjectSelection() {
+            const payload = getSubjectSelectionPayload();
+            if (!payload.facultyName || !payload.employeeCode || !payload.subjectName) {
+                setStatus(subjectSelectionStatus, 'Faculty name, employee code, and subject are required before adding faculty', 'warning');
+                return;
+            }
+
+            const selections = getStoredSubjectSelections();
+            selections.push(payload);
+
+            storeSubjectSelections(selections);
+            renderSubjectSelectionPreview(selections);
+            setStatus(subjectSelectionStatus, 'Faculty added as row ' + selections.length + ' below existing details', 'success');
+            setSubjectSelectionFields({
+                branch: payload.branch,
+                year: payload.year,
+                semester: payload.semester
+            });
+        }
+
+        function deleteFacultySubjectSelection(index) {
+            const selections = getStoredSubjectSelections();
+            if (index < 0 || index >= selections.length) {
+                return;
+            }
+
+            const removed = selections.splice(index, 1)[0];
+            storeSubjectSelections(selections);
+            renderSubjectSelectionPreview(selections);
+            setStatus(
+                subjectSelectionStatus,
+                'Deleted ' + ((removed && removed.facultyName) || 'faculty') + ' from available faculties',
+                'warning'
+            );
+            markTimeTableDirty();
+        }
+
+        function loadSubjectSelection() {
+            const saved = localStorage.getItem(subjectSelectionStorageKey);
+            if (!saved) {
+                loadSubjectSelectionSubjects();
+                renderSubjectSelectionPreview(null);
+                setStatus(subjectSelectionStatus, 'Subject selection not saved yet', 'muted');
+                return;
+            }
+
+            try {
+                const selections = normalizeSubjectSelections(JSON.parse(saved));
+                setSubjectSelectionFields(selections[0] || {});
+                renderSubjectSelectionPreview(selections);
+                setStatus(subjectSelectionStatus, selections.length + ' faculty selection(s) loaded', 'success');
+            } catch (error) {
+                console.error('Failed to load subject selection', error);
+                loadSubjectSelectionSubjects();
+                renderSubjectSelectionPreview(null);
+                setStatus(subjectSelectionStatus, 'Could not read saved subject selection', 'warning');
+            }
+        }
+
+        function clearSubjectSelection() {
+            if (!confirm('Clear the saved faculty subject selection?')) {
+                return;
+            }
+            localStorage.removeItem(subjectSelectionStorageKey);
+            setSubjectSelectionFields({});
+            renderSubjectSelectionPreview(null);
+            setStatus(subjectSelectionStatus, 'Subject selection cleared', 'muted');
+        }
+
+        function switchToTimeTableTab() {
+            const timeTableTabButton = document.getElementById('timetable-tab');
+            if (!timeTableTabButton) {
+                return;
+            }
+            if (window.bootstrap && window.bootstrap.Tab) {
+                window.bootstrap.Tab.getOrCreateInstance(timeTableTabButton).show();
+            } else {
+                timeTableTabButton.click();
+            }
+        }
+
+        function isLaboratorySubject(subjectName) {
+            return /\b(lab|laboratory)\b/i.test(subjectName || '') ||
+                /\bes\s*lab\b|\bdm\s*lab\b|\bcd\s*lab\b|flutter\s*lab/i.test(subjectName || '') ||
+                /skill development course|ui design flutter/i.test(subjectName || '');
+        }
+
+        function resetClassTimeTableMerges() {
+            timeTableSlots.forEach(function (slot) {
+                const cell = slot.closest('td');
+                if (!cell) {
+                    return;
+                }
+                cell.colSpan = 1;
+                cell.style.display = '';
+                cell.classList.remove('lab-merged-cell');
+                slot.classList.remove('lab-merged-slot');
+            });
+        }
+
+        function mergeSlotWithNextPeriod(slot, subjectName) {
+            const cell = slot.closest('td');
+            const row = cell ? cell.closest('tr') : null;
+            if (!cell || !row) {
+                return false;
+            }
+
+            const cells = Array.from(row.children);
+            const currentIndex = cells.indexOf(cell);
+            const nextCell = cells[currentIndex + 1];
+            if (!nextCell || nextCell.classList.contains('break-slot') || nextCell.style.display === 'none') {
+                return false;
+            }
+
+            const nextSlot = nextCell.querySelector('.timetable-slot');
+            if (!nextSlot) {
+                return false;
+            }
+
+            slot.value = subjectName;
+            nextSlot.value = '';
+            cell.colSpan = 2;
+            cell.classList.add('lab-merged-cell');
+            slot.classList.add('lab-merged-slot');
+            nextCell.style.display = 'none';
+            return true;
+        }
+
+        function restoreClassLabMergesFromValues() {
+            const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
+            timeTableSlots.forEach(function (slot) {
+                const subjectName = (slot.value || '').trim();
+                if (
+                    !subjectName ||
+                    !isLaboratorySubject(subjectName) ||
+                    !labStartPeriods.includes(slot.dataset.period)
+                ) {
+                    return;
+                }
+
+                mergeSlotWithNextPeriod(slot, subjectName);
+            });
+        }
+
+        function getClassSlot(day, period) {
+            return timeTableSlots.find(function (slot) {
+                return slot.dataset.day === day && slot.dataset.period === period;
+            }) || null;
+        }
+
+        function getVisibleEmptyClassSlots() {
+            return timeTableSlots.filter(function (slot) {
+                const cell = slot.closest('td');
+                return cell && cell.style.display !== 'none' && !slot.value.trim();
+            });
+        }
+
+        function setSlotIfEmpty(slot, value) {
+            if (!slot || slot.value.trim()) {
+                return false;
+            }
+            slot.value = value;
+            return true;
+        }
+
+        function applyLaboratoryBlocks(subjectNames) {
+            const laboratorySubjects = Array.from(new Set((subjectNames || []).filter(isLaboratorySubject)));
+            if (!laboratorySubjects.length) {
+                return 0;
+            }
+
+            const preferredStartPeriods = ['9:30-10:30', '1:20-2:15']; // Merge hours 1+2 and 4+5 only.
+            const days = Array.from(new Set(timeTableSlots.map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+            let mergedCount = 0;
+
+            laboratorySubjects.forEach(function (subjectName, subjectIndex) {
+                for (let dayOffset = 0; dayOffset < days.length; dayOffset += 1) {
+                    const day = days[(subjectIndex + dayOffset) % days.length];
+                    for (let periodIndex = 0; periodIndex < preferredStartPeriods.length; periodIndex += 1) {
+                        const slot = timeTableSlots.find(function (candidate) {
+                            return candidate.dataset.day === day && candidate.dataset.period === preferredStartPeriods[periodIndex];
+                        });
+
+                        if (slot && mergeSlotWithNextPeriod(slot, subjectName)) {
+                            mergedCount += 1;
+                            return;
+                        }
+                    }
+                }
+            });
+
+            return mergedCount;
+        }
+
+        function generateIndividualTimeTableSlots(subjectNames, preferredHours, card) {
+            const subjects = (subjectNames || []).filter(Boolean);
+            const slots = getIndividualTimeTableSlots(card);
+            const hourLimit = Math.min(Math.max(preferredHours || 16, 14), 16, slots.length);
+            const filledHours = subjects.length ? hourLimit : 0;
+
+            slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            for (let index = 0; index < filledHours; index += 1) {
+                slots[index].value = subjects[index % subjects.length];
+            }
+
+            return filledHours;
+        }
+
+        function buildIndividualFacultySchedules(selections) {
+            const facultyMap = new Map();
+            normalizeSubjectSelections(selections).forEach(function (selection) {
+                const facultyName = (selection.facultyName || '').trim();
+                const employeeCode = (selection.employeeCode || '').trim();
+                const subjectName = (selection.subjectName || '').trim();
+                const subjectLabels = getScheduleLabelsForSelection(selection);
+                const normalizedFacultyKey = normalizeSubjectNameForSchedule(facultyName).replace(/[^A-Z0-9]/g, '');
+                const key = normalizedFacultyKey || employeeCode || 'faculty-' + facultyMap.size;
+
+                if (!facultyMap.has(key)) {
+                    facultyMap.set(key, {
+                        facultyName: facultyName,
+                        employeeCode: employeeCode,
+                        employeeCodes: [],
+                        subjects: [],
+                        subjectLabels: []
+                    });
+                }
+
+                const schedule = facultyMap.get(key);
+                if (facultyName && !schedule.facultyName) {
+                    schedule.facultyName = facultyName;
+                }
+                if (employeeCode && !schedule.employeeCodes.includes(employeeCode)) {
+                    schedule.employeeCodes.push(employeeCode);
+                }
+                schedule.employeeCode = schedule.employeeCodes.join(' / ') || schedule.employeeCode;
+
+                if (subjectName && !schedule.subjects.includes(subjectName)) {
+                    schedule.subjects.push(subjectName);
+                }
+                subjectLabels.forEach(function (label) {
+                    if (label && !schedule.subjectLabels.includes(label)) {
+                        schedule.subjectLabels.push(label);
+                    }
+                });
+            });
+
+            return Array.from(facultyMap.values()).filter(function (schedule) {
+                return schedule.facultyName || schedule.employeeCode || schedule.subjects.length;
+            });
+        }
+
+        function getScheduleLabelsForSelection(selection) {
+            const labels = getScheduleLabelsForSubjectName(selection.subjectName || '');
+            const code = normalizeClassValue(selection.subjectCode || '');
+            const facultyName = normalizeSubjectNameForSchedule(selection.facultyName || '');
+            const compactFacultyName = facultyName.replace(/[^A-Z0-9]/g, '');
+            const labelsByCode = {
+                CS501PC: ['DAA'],
+                IT502PC: ['ACD'],
+                IT503PC: ['ES'],
+                CS524PE: ['DDB'],
+                IT512PE: ['DM'],
+                IT504PC: ['CD Lab'],
+                IT505PC: ['ES Lab'],
+                IT532PE: ['DM Lab'],
+                CS507PC: ['Flutter Lab']
+            };
+
+            (labelsByCode[code] || []).forEach(function (label) {
+                if (!labels.includes(label)) {
+                    labels.push(label);
+                }
+            });
+
+            if (compactFacultyName.includes('KRAMAKRISHNA')) {
+                ['ES Lab', 'EMBEDDED SYSTEMS LABORATORY'].forEach(function (label) {
+                    if (!labels.includes(label)) {
+                        labels.push(label);
+                    }
+                });
+            }
+
+            return labels;
+        }
+
+        function getScheduleLabelsForSubjectName(subjectName) {
+            const normalized = normalizeSubjectNameForSchedule(subjectName);
+            const labels = [subjectName];
+
+            if (normalized.includes('DESIGN AND ANALYSIS OF ALGORITHMS')) {
+                labels.push('DAA');
+            }
+            if (normalized.includes('AUTOMATA AND COMPILER DESIGN')) {
+                labels.push('ACD');
+            }
+            if (normalized.includes('EMBEDDED SYSTEMS LABORATORY') || normalized.includes('EMBEDDED SYSTEMS LAB')) {
+                labels.push('ES Lab');
+            } else if (normalized.includes('EMBEDDED SYSTEM') || normalized.includes('EMBEDDED SYSTEMS')) {
+                labels.push('ES');
+                labels.push('ES Lab');
+            }
+            if (normalized.includes('DATA MINING LABORATORY') || normalized.includes('DATA MINING LAB')) {
+                labels.push('DM Lab');
+            } else if (normalized.includes('DATA MINING')) {
+                labels.push('DM');
+            }
+            if (normalized.includes('DISTRIBUTED DATABASES')) {
+                labels.push('DDB');
+            }
+            if (normalized.includes('COMPILER DESIGN LABORATORY') || normalized.includes('COMPILER DESIGN LAB')) {
+                labels.push('CD Lab');
+            }
+            if (normalized.includes('SKILL DEVELOPMENT COURSE') || normalized.includes('UI DESIGN FLUTTER')) {
+                labels.push('Flutter Lab');
+            }
+
+            return uniqueSubjectNames(labels);
+        }
+
+        function setIndividualSlotValue(card, day, period, value) {
+            const slot = getIndividualTimeTableSlots(card).find(function (candidate) {
+                return candidate.dataset.day === day && candidate.dataset.period === period;
+            });
+            if (slot) {
+                slot.value = value || '';
+                return 1;
+            }
+            return 0;
+        }
+
+        function resetIndividualTimeTableMerges(card) {
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                const cell = slot.closest('td');
+                if (!cell) {
+                    return;
+                }
+                cell.colSpan = 1;
+                cell.style.display = '';
+                cell.classList.remove('lab-merged-cell');
+                slot.classList.remove('lab-merged-slot');
+            });
+        }
+
+        function mergeIndividualSlotWithNextPeriod(slot, subjectName) {
+            const cell = slot.closest('td');
+            const row = cell ? cell.closest('tr') : null;
+            if (!cell || !row) {
+                return false;
+            }
+
+            const cells = Array.from(row.children);
+            const currentIndex = cells.indexOf(cell);
+            const nextCell = cells[currentIndex + 1];
+            if (!nextCell || nextCell.classList.contains('individual-break') || nextCell.style.display === 'none') {
+                return false;
+            }
+
+            const nextSlot = nextCell.querySelector('.individual-timetable-slot');
+            if (!nextSlot) {
+                return false;
+            }
+
+            slot.value = subjectName;
+            nextSlot.value = '';
+            cell.colSpan = 2;
+            cell.classList.add('lab-merged-cell');
+            slot.classList.add('lab-merged-slot');
+            nextCell.style.display = 'none';
+            return true;
+        }
+
+        function restoreIndividualLabMergesFromValues(card) {
+            const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                const subjectName = (slot.value || '').trim();
+                if (
+                    !subjectName ||
+                    !isLaboratorySubject(subjectName) ||
+                    !labStartPeriods.includes(slot.dataset.period)
+                ) {
+                    return;
+                }
+
+                mergeIndividualSlotWithNextPeriod(slot, subjectName);
+            });
+        }
+
+        function populateIndividualCardFromClassSchedule(card, schedule) {
+            const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
+            const normalizedLabels = labels.flatMap(function (label) {
+                return getScheduleLabelsForSubjectName(label).map(normalizeSubjectNameForSchedule);
+            });
+            let filledHours = 0;
+
+            resetIndividualTimeTableMerges(card);
+            getIndividualTimeTableSlots(card).forEach(function (slot) {
+                slot.value = '';
+            });
+
+            timeTableSlots.forEach(function (classSlot) {
+                const subjectName = (classSlot.value || '').trim();
+                if (!subjectName || !normalizedLabels.includes(normalizeSubjectNameForSchedule(subjectName))) {
+                    return;
+                }
+
+                const classCell = classSlot.closest('td');
+                const row = classCell ? classCell.closest('tr') : null;
+                const individualSlot = getIndividualTimeTableSlots(card).find(function (candidate) {
+                    return candidate.dataset.day === classSlot.dataset.day && candidate.dataset.period === classSlot.dataset.period;
+                });
+
+                if (!classCell || !row || classCell.colSpan < 2 || !individualSlot) {
+                    filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
+                    return;
+                }
+
+                const rowCells = Array.from(row.children);
+                const nextCell = rowCells[rowCells.indexOf(classCell) + 1];
+                const nextClassSlot = nextCell ? nextCell.querySelector('.timetable-slot') : null;
+                if (nextClassSlot && mergeIndividualSlotWithNextPeriod(individualSlot, subjectName)) {
+                    filledHours += 2;
+                    return;
+                }
+
+                filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
+            });
+
+            return filledHours;
+        }
+
+        function renderIndividualFacultyTimeTables(selections) {
+            const schedules = buildIndividualFacultySchedules(selections);
+            const cards = ensureIndividualTimeTableCardCount(schedules.length || 1);
+            let totalFilledHours = 0;
+
+            if (!schedules.length) {
+                generateIndividualTimeTableSlots([], 16, cards[0]);
+                getIndividualTimeTableMetaFields(cards[0]).forEach(function (field) {
+                    field.value = '';
+                });
+                return 0;
+            }
+
+            schedules.forEach(function (schedule, index) {
+                const card = cards[index];
+                const metaFields = getIndividualTimeTableMetaFields(card);
+                const facultyField = metaFields.find(function (field) {
+                    return field.id === 'individualFacultyName' || field.getAttribute('aria-label') === 'Faculty Name';
+                });
+                const hoursField = metaFields.find(function (field) {
+                    return field.id === 'individualTotalHours' || field.getAttribute('aria-label') === 'Number of hours';
+                });
+                const filledHours = populateIndividualCardFromClassSchedule(card, schedule);
+                const title = card.querySelector('.card-title');
+
+                if (facultyField) {
+                    facultyField.value = [schedule.facultyName, schedule.employeeCode].filter(Boolean).join(' - ');
+                }
+                if (hoursField) {
+                    hoursField.value = String(filledHours);
+                }
+                if (title) {
+                    title.textContent = 'Individual Time Table - ' + (schedule.facultyName || schedule.employeeCode || 'Faculty');
+                }
+                totalFilledHours += filledHours;
+            });
+
+            return totalFilledHours;
+        }
+
+        function uniqueSubjectNames(subjectNames) {
+            return Array.from(new Set((subjectNames || []).map(function (subjectName) {
+                return (subjectName || '').trim();
+            }).filter(Boolean)));
+        }
+
+        function normalizeSubjectNameForSchedule(subjectName) {
+            return String(subjectName || '')
+                .trim()
+                .toUpperCase()
+                .replace(/&/g, 'AND')
+                .replace(/\s+/g, ' ');
+        }
+
+        function buildStandardSubjectLookup(subjectNames) {
+            const standardSubjects = {
+                daa: 'DAA',
+                acd: 'ACD',
+                es: 'ES',
+                dm: 'DM',
+                ddb: 'DDB',
+                compilerLab: 'CD Lab',
+                embeddedLab: 'ES Lab',
+                dataMiningLab: 'DM Lab',
+                sdc: 'Flutter Lab'
+            };
+            const aliases = {
+                daa: ['DESIGN AND ANALYSIS OF ALGORITHMS'],
+                acd: ['AUTOMATA AND COMPILER DESIGN'],
+                es: ['EMBEDDED SYSTEMS'],
+                dm: ['DATA MINING'],
+                ddb: ['DISTRIBUTED DATABASES'],
+                compilerLab: ['COMPILER DESIGN LABORATORY', 'COMPILER DESIGN LAB'],
+                embeddedLab: ['EMBEDDED SYSTEMS LABORATORY', 'EMBEDDED SYSTEMS LAB'],
+                dataMiningLab: ['DATA MINING LABORATORY', 'DATA MINING LAB'],
+                sdc: ['SKILL DEVELOPMENT COURSE (UI DESIGN FLUTTER)', 'SKILL DEVELOPMENT COURSE', 'UI DESIGN FLUTTER']
+            };
+            const allSubjectNames = uniqueSubjectNames(subjectNames);
+            const availableSubjects = allSubjectNames.map(function (subjectName) {
+                return {
+                    original: subjectName,
+                    normalized: normalizeSubjectNameForSchedule(subjectName)
+                };
+            });
+            const usedSubjectNames = new Set();
+            const lookup = {
+                daa: standardSubjects.daa,
+                acd: standardSubjects.acd,
+                es: standardSubjects.es,
+                dm: standardSubjects.dm,
+                ddb: standardSubjects.ddb,
+                compilerLab: standardSubjects.compilerLab,
+                embeddedLab: standardSubjects.embeddedLab,
+                dataMiningLab: standardSubjects.dataMiningLab,
+                sdc: standardSubjects.sdc,
+                library: 'LIBRARY',
+                sports: 'SPORTS',
+                mentoring: 'MENTORING'
+            };
+
+            Object.keys(aliases).forEach(function (key) {
+                const matched = availableSubjects.find(function (subject) {
+                    return aliases[key].some(function (alias) {
+                        return subject.normalized === alias || subject.normalized.includes(alias);
+                    });
+                });
+                if (matched) {
+                    lookup[key] = standardSubjects[key];
+                    usedSubjectNames.add(matched.original);
+                }
+            });
+
+            const theoryKeys = ['daa', 'acd', 'es', 'dm', 'ddb'];
+            const labKeys = ['compilerLab', 'embeddedLab', 'dataMiningLab', 'sdc'];
+            const remainingTheorySubjects = allSubjectNames.filter(function (subjectName) {
+                return !usedSubjectNames.has(subjectName) && !isLaboratorySubject(subjectName);
+            });
+            const remainingLabSubjects = allSubjectNames.filter(function (subjectName) {
+                return !usedSubjectNames.has(subjectName) && isLaboratorySubject(subjectName);
+            });
+
+            theoryKeys.forEach(function (key) {
+                if (!lookup[key] && remainingTheorySubjects.length) {
+                    lookup[key] = remainingTheorySubjects.shift();
+                }
+            });
+
+            labKeys.forEach(function (key) {
+                if (!lookup[key] && remainingLabSubjects.length) {
+                    lookup[key] = remainingLabSubjects.shift();
+                }
+            });
+
+            return lookup;
+        }
+
+        function generateClassTimeTableSlots(subjectNames) {
+            const subjectLookup = buildStandardSubjectLookup(subjectNames);
+            const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
+            const weeklyPlan = {
+                MON: ['ddb', 'acd', 'daa', 'embeddedLab', null, 'dm'],
+                TUE: ['dataMiningLab', null, 'acd', 'dm', 'daa', 'es'],
+                WED: ['daa', 'es', 'dm', 'acd', 'ddb', 'mentoring'],
+                THU: ['es', 'acd', 'daa', 'sdc', null, 'ddb'],
+                FRI: ['dm', 'es', 'ddb', 'compilerLab', null, 'library'],
+                SAT: ['acd', 'dm', 'es', 'daa', 'ddb', 'sports']
+            };
+            const counts = {};
+            let labMergedCount = 0;
+
+            timeTableSlots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            Object.keys(weeklyPlan).forEach(function (day) {
+                const dailySubjects = new Set();
+                weeklyPlan[day].forEach(function (subjectKey, periodIndex) {
+                    if (!subjectKey) {
+                        return;
+                    }
+
+                    const subjectName = subjectLookup[subjectKey];
+                    if (!subjectName) {
+                        return;
+                    }
+
+                    const slot = getClassSlot(day, periodOrder[periodIndex]);
+                    if (!slot) {
+                        return;
+                    }
+
+                    if (isLaboratorySubject(subjectName)) {
+                        if (periodIndex !== 0 && periodIndex !== 3) {
+                            return;
+                        }
+                        if (mergeSlotWithNextPeriod(slot, subjectName)) {
+                            counts[subjectName] = (counts[subjectName] || 0) + 2;
+                            labMergedCount += 1;
+                        }
+                        return;
+                    }
+
+                    if (dailySubjects.has(subjectName)) {
+                        return;
+                    }
+
+                    slot.value = subjectName;
+                    dailySubjects.add(subjectName);
+                    counts[subjectName] = (counts[subjectName] || 0) + 1;
+                });
+            });
+
+            return {
+                counts: counts,
+                labMergedCount: labMergedCount,
+                totalHours: Object.keys(counts).reduce(function (total, subjectName) {
+                    return total + counts[subjectName];
+                }, 0)
+            };
+        }
+
+        function findSyllabusSubjectByCode(subjects, code) {
+            return (subjects || []).find(function (subject) {
+                return (subject.code || '').toUpperCase() === (code || '').toUpperCase();
+            }) || null;
+        }
+
+        function chooseSubjectFromCodes(subjects, selectedCodes, allowedCodes) {
+            const normalizedAllowed = allowedCodes.map(function (code) {
+                return code.toUpperCase();
+            });
+            const selectedMatch = selectedCodes.find(function (code) {
+                return normalizedAllowed.includes((code || '').toUpperCase());
+            });
+            return findSyllabusSubjectByCode(subjects, selectedMatch) || findSyllabusSubjectByCode(subjects, allowedCodes[0]);
+        }
+
+        function resolveClassSubjectsForTimeTable(syllabusSubjects, selections, fallbackSubjectNames) {
+            const subjects = Array.isArray(syllabusSubjects) ? syllabusSubjects : [];
+            return subjects.length
+                ? uniqueSubjectNames(subjects.map(function (subject) { return subject.name; }))
+                : uniqueSubjectNames(fallbackSubjectNames);
+        }
+
+        function generateTimeTableFromSubjectSelection() {
+            const currentPayload = getSubjectSelectionPayload();
+            let selections = getStoredSubjectSelections();
+
+            if (!selections.length && currentPayload.facultyName && currentPayload.employeeCode && currentPayload.subjectName) {
+                selections = [currentPayload];
+                storeSubjectSelections(selections);
+                renderSubjectSelectionPreview(selections);
+            }
+
+            if (!selections.length) {
+                setStatus(subjectSelectionStatus, 'Add at least one faculty before generating timetable', 'warning');
+                return;
+            }
+
+            const payload = selections[0];
+
+            const hasExistingTimetable = timeTableSlots.some(function (slot) {
+                return slot.value.trim();
+            }) || getIndividualTimeTableSlots().some(function (slot) {
+                return slot.value.trim();
+            });
+
+            if (hasExistingTimetable && !confirm('Generate timetable from this subject selection and replace existing timetable entries?')) {
+                return;
+            }
+
+            storeSubjectSelections(selections);
+            renderSubjectSelectionPreview(selections);
+            resetClassTimeTableMerges();
+
+            timeTableBranchField.value = payload.branch || timeTableBranchField.value;
+            timeTableYearField.value = payload.year || timeTableYearField.value;
+            timeTableSemesterField.value = payload.semester || timeTableSemesterField.value;
+            renderCourseReference(selections);
+
+            const timetableSelections = getTimeTableClassSelections(selections);
+            const selectedSubjectNames = Array.from(new Set(timetableSelections.map(function (selection) {
+                return (selection.subjectName || '').trim();
+            }).filter(Boolean)));
+
+            const fallbackSubjectLabel = selectedSubjectNames[0] || payload.subjectName;
+
+            loadSyllabusSubjects(payload.subjectCode).then(function (data) {
+                const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
+                const classSubjectNames = resolveClassSubjectsForTimeTable(
+                    syllabusSubjects,
+                    selections,
+                    selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel]
+                );
+                const classGeneration = generateClassTimeTableSlots(classSubjectNames);
+                const labMergedCount = classGeneration.labMergedCount || 0;
+                const classTotalHours = classGeneration.totalHours || 0;
+                const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections);
+
+                if (syllabusSubjectSelect && payload.subjectCode) {
+                    syllabusSubjectSelect.value = payload.subjectCode;
+                }
+                markTimeTableDirty();
+                setStatus(
+                    timeTableStatus,
+                    'Timetable generated with ' + classTotalHours + ' class hours; each theory subject repeated up to 5 times' +
+                    (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
+                    '; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
+                    'success'
+                );
+                setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
+                switchToTimeTableTab();
+            });
+        }
+
         document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
         document.getElementById('saveBtn').addEventListener('click', saveTeachingPlan);
         document.getElementById('deleteBtn').addEventListener('click', deleteTeachingPlan);
@@ -1482,6 +3516,19 @@ Exam Branch
         document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
+        document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
+        document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
+        subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
+        document.getElementById('subjectSelectionAddFacultyBtn').addEventListener('click', addFacultySubjectSelection);
+        document.getElementById('subjectSelectionAddBtn').addEventListener('click', generateTimeTableFromSubjectSelection);
+        document.getElementById('subjectSelectionClearBtn').addEventListener('click', clearSubjectSelection);
+        subjectSelectionPreviewBody.addEventListener('click', function (event) {
+            const deleteButton = event.target.closest('.subject-selection-delete-btn');
+            if (!deleteButton) {
+                return;
+            }
+            deleteFacultySubjectSelection(parseInt(deleteButton.dataset.index, 10));
+        });
 
         marksBody.addEventListener('input', function (event) {
             if (event.target.closest('tr')) {
@@ -1494,8 +3541,60 @@ Exam Branch
 
         document.getElementById('studentCount').addEventListener('input', markEvaluationDirty);
 
+        timeTableSlots.forEach(function (slot) {
+            slot.addEventListener('input', markTimeTableDirty);
+        });
+
+        timeTableMetaFields.forEach(function (field) {
+            field.addEventListener('input', markTimeTableDirty);
+            field.addEventListener('change', function () {
+                markTimeTableDirty();
+                if (field === timeTableYearField || field === timeTableSemesterField || field === timeTableBranchField) {
+                    loadSyllabusSubjects();
+                }
+            });
+        });
+
+        if (individualTimeTableContainer) {
+            individualTimeTableContainer.addEventListener('input', function (event) {
+                if (
+                    event.target.classList.contains('individual-timetable-slot') ||
+                    event.target.classList.contains('individual-timetable-meta-input')
+                ) {
+                    markTimeTableDirty();
+                }
+            });
+        }
+
+        Object.values(subjectSelectionFields).forEach(function (field) {
+            field.addEventListener('input', markSubjectSelectionDirty);
+            field.addEventListener('change', function () {
+                markSubjectSelectionDirty();
+                if (field === subjectSelectionFields.year || field === subjectSelectionFields.semester || field === subjectSelectionFields.branch) {
+                    loadSubjectSelectionSubjects();
+                }
+            });
+        });
+
+        if (syllabusSubjectSelect) {
+            syllabusSubjectSelect.addEventListener('change', function () {
+                const selectedOption = syllabusSubjectSelect.options[syllabusSubjectSelect.selectedIndex];
+                if (!selectedOption || !selectedOption.value) {
+                    return;
+                }
+                useSubjectInLessonPlan({
+                    code: selectedOption.value,
+                    name: selectedOption.dataset.name || ''
+                });
+                setStatus(lessonPlanStatus, 'Subject selected from syllabus', 'success');
+            });
+        }
+
         loadTeachingPlan();
         loadEvaluationData();
+        loadTimeTableData();
+        loadSubjectSelection();
+        loadSyllabusSubjects();
     })();
 </script>
 {% endblock %}

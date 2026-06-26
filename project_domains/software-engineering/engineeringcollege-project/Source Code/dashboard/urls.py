@@ -25,6 +25,19 @@ urlpatterns = [
     path('mobile-dashboard/', views.mobile_dashboard, name='mobile_dashboard'),
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
+    path('projects/kavach/', views.kavach_demo, name='kavach_demo'),
+    path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),
+    path('projects/kavach/admin-dashboard/', views.kavach_admin_dashboard, name='kavach_admin_dashboard'),
+    path(
+        'projects/cloudattend-parent-messaging/demo/',
+        views.cloudattend_parent_messaging_demo,
+        name='cloudattend_parent_messaging_demo',
+    ),
+    path(
+        'projects/cloudattend-parent-messaging/pages/<slug:page_slug>/',
+        views.cloudattend_template_demo,
+        name='cloudattend_template_demo',
+    ),
     path(
         'projects/policies/<slug:policy_slug>/',
         views.project_policy_pdf,
@@ -257,8 +270,10 @@ urlpatterns = [
 
     # Exam
     path('exam-branch/', views.exam_branch, name='exam_branch'),
+    path('exam-branch/syllabus-subjects/', views.exam_branch_syllabus_subjects, name='exam_branch_syllabus_subjects'),
     path('exam-branch/lesson-plan/download/', views.exam_branch_download_lesson_plan, name='exam_branch_download_lesson_plan'),
     path('exam-branch/report/', views.exam_branch_generate_report, name='exam_branch_generate_report'),
+    path('exam-branch/report/', views.exam_branch_generate_report, name='generate_exam_branch_report'),
     path('exam-branch/batch-download/', views.exam_branch_batch_download, name='exam_branch_batch_download'),
     path('exam-branch/update-attendance/', views.update_attendance, name='update_attendance'),
     path('exam-branch/save-attendance/', views.save_attendance, name='save_attendance'),

@@ -1,0 +1,21 @@
+{
+  "projects": [
+    {
+      "slug": "second-hand-car-price-depreciation",
+      "name": "Used Car Price Prediction Using K-Radius Nearest Neighbors",
+      "title_path": "Used Car Price Prediction Using K-Radius Nearest Neighbors",
+      "description": "Machine learning and data mining project workspace for predicting used-car prices and studying depreciation from make, model, year, mileage, fuel type, transmission, engine, seller, ownership, and condition data.",
+      "source_code_path": "project_domains/data-mining/Used Car Price Prediction Using K-Radius Nearest Neighbors/Source Code/",
+      "datasets_path": "project_domains/data-mining/Used Car Price Prediction Using K-Radius Nearest Neighbors/datasets/",
+      "github_reference": "https://github.com/vasugi2003/second-hand-car-price-prediction-using-machine-learning",
+      "demo_url": "/car-price/",
+      "zip": {
+        "enabled": true,
+        "amount_paise": 100000,
+        "source": "project-folder",
+        "payment_enabled": false,
+        "receipt_required": true
+      }
+    }
+  ]
+}

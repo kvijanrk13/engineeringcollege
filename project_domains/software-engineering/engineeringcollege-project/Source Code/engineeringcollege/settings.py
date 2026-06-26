@@ -112,6 +112,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'dashboard.middleware.DatabaseConnectionRetryMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -168,7 +169,8 @@ if not DATABASE_URL:
 DATABASES = {
     'default': dj_database_url.parse(
         DATABASE_URL,
-        conn_max_age=600,
+        conn_max_age=int(os.environ.get('DATABASE_CONN_MAX_AGE', '0')),
+        conn_health_checks=True,
         ssl_require=True
     )
 }
