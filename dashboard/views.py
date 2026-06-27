@@ -9599,7 +9599,7 @@ def privacy_policy(request):
 
 # ==================== EXAM BRANCH VIEWS ====================
 @lru_cache(maxsize=1)
-def get_syllabus_page_subjects():
+def get_syllabus_page_subjects_by_regulation():
     """Extract the syllabus data used by the public syllabus page."""
     template_path = Path(settings.BASE_DIR) / 'dashboard' / 'templates' / 'dashboard' / 'syllabus.html'
 
@@ -9620,42 +9620,34 @@ def get_syllabus_page_subjects():
 
     try:
         template_source = template_path.read_text(encoding='utf-8')
-        syllabus_data = parse_js_object(template_source, 'syllabusData')
+        r22_syllabus_data = parse_js_object(template_source, 'syllabusData')
         r25_it_data = parse_js_object(template_source, 'r25ITSyllabusData')
+        r25_syllabus_data = {}
 
         for year_sem, subjects in r25_it_data.items():
             if not isinstance(subjects, list):
                 continue
-            syllabus_data.setdefault(year_sem, {})
-            existing_subjects = syllabus_data[year_sem].setdefault('IT', [])
-            existing_keys = {
-                (
-                    str(subject.get('code', '')).strip().upper(),
-                    str(subject.get('name', '')).strip().upper(),
-                )
-                for subject in existing_subjects
-                if isinstance(subject, dict)
+            r25_syllabus_data[year_sem] = {
+                'IT': [subject for subject in subjects if isinstance(subject, dict)]
             }
-            for subject in subjects:
-                if not isinstance(subject, dict):
-                    continue
-                subject_key = (
-                    str(subject.get('code', '')).strip().upper(),
-                    str(subject.get('name', '')).strip().upper(),
-                )
-                if subject_key in existing_keys:
-                    continue
-                existing_subjects.append(subject)
-                existing_keys.add(subject_key)
 
-        return syllabus_data
+        return {
+            'R22': r22_syllabus_data,
+            'R25': r25_syllabus_data,
+        }
     except Exception as exc:
         logger.warning(f"Could not load syllabus page subjects: {exc}", exc_info=True)
-        return {}
+        return {'R22': {}, 'R25': {}}
 
 
-def get_syllabus_options():
-    syllabus_data = get_syllabus_page_subjects()
+def get_syllabus_page_subjects(regulation='R22'):
+    syllabus_by_regulation = get_syllabus_page_subjects_by_regulation()
+    normalized_regulation = str(regulation or 'R22').strip().upper()
+    return syllabus_by_regulation.get(normalized_regulation) or syllabus_by_regulation.get('R22', {})
+
+
+def get_syllabus_options(regulation='R22'):
+    syllabus_data = get_syllabus_page_subjects(regulation)
     year_sem_order = ['1-1', '1-2', '2-1', '2-2', '3-1', '3-2', '4-1', '4-2']
     available_year_sems = [item for item in year_sem_order if item in syllabus_data]
     branch_set = set()
@@ -9672,16 +9664,27 @@ def get_syllabus_options():
 @login_required
 @require_GET
 def exam_branch_syllabus_subjects(request):
-    syllabus_data, branches, years, semesters = get_syllabus_options()
+    regulation = (request.GET.get('regulation') or 'R22').strip().upper()
+    if regulation not in {'R22', 'R25'}:
+        regulation = 'R22'
+    syllabus_data, branches, years, semesters = get_syllabus_options(regulation)
     year = (request.GET.get('year') or '3').strip()
     semester = (request.GET.get('semester') or '1').strip()
     branch = (request.GET.get('branch') or 'IT').strip().upper()
     if branch == 'CSE(AI&ML)':
         branch = 'AIML'
 
+    if year not in years and years:
+        year = years[0]
+    if semester not in semesters and semesters:
+        semester = semesters[0]
+    if branch not in branches and branches:
+        branch = branches[0]
+
     year_sem = f'{year}-{semester}'
     subjects = syllabus_data.get(year_sem, {}).get(branch, [])
     return JsonResponse({
+        'regulation': regulation,
         'year': year,
         'semester': semester,
         'year_sem': year_sem,
@@ -9758,7 +9761,10 @@ def exam_branch(request):
 
         available_departments = Faculty.objects.values_list('department', flat=True).distinct().order_by('department')
 
-        syllabus_data, syllabus_branches, syllabus_years, syllabus_semesters = get_syllabus_options()
+        selected_regulation = (request.GET.get('regulation') or 'R22').strip().upper()
+        if selected_regulation not in {'R22', 'R25'}:
+            selected_regulation = 'R22'
+        syllabus_data, syllabus_branches, syllabus_years, syllabus_semesters = get_syllabus_options(selected_regulation)
         normalized_year_sem = year_sem.replace('IV', '4').replace('III', '3').replace('II', '2').replace('I', '1')
         if '-' in normalized_year_sem:
             selected_year, selected_semester = normalized_year_sem.split('-', 1)
@@ -9830,6 +9836,8 @@ def exam_branch(request):
             'to_date': to_date_str,
             'branch': branch,
             'year_sem': year_sem,
+            'selected_regulation': selected_regulation,
+            'syllabus_regulations': ['R22', 'R25'],
             'selected_syllabus_year': selected_year,
             'selected_syllabus_semester': selected_semester,
             'syllabus_branches': syllabus_branches,

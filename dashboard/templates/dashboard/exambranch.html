@@ -1134,6 +1134,14 @@ Exam Branch
                                     </select>
                                 </div>
                                 <div>
+                                    <label for="subjectSelectionRegulation" class="form-label">REGULATION</label>
+                                    <select id="subjectSelectionRegulation" class="form-select subject-selection-input">
+                                        {% for syllabus_regulation in syllabus_regulations %}
+                                            <option value="{{ syllabus_regulation }}" {% if selected_regulation == syllabus_regulation %}selected{% endif %}>{{ syllabus_regulation }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div>
                                     <label for="subjectSelectionYear" class="form-label">YEAR</label>
                                     <select id="subjectSelectionYear" class="form-select subject-selection-input">
                                         {% for syllabus_year in syllabus_years %}
@@ -1207,6 +1215,7 @@ Exam Branch
                                         <th>Faculty</th>
                                         <th>Employee Code</th>
                                         <th>Branch</th>
+                                        <th>Regulation</th>
                                         <th>Year</th>
                                         <th>Sem</th>
                                         <th>Subject</th>
@@ -1216,7 +1225,7 @@ Exam Branch
                                 </thead>
                                 <tbody id="subjectSelectionPreviewBody">
                                     <tr>
-                                        <td colspan="9" class="text-center text-muted">No subject selection saved yet.</td>
+                                        <td colspan="10" class="text-center text-muted">No subject selection saved yet.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1631,6 +1640,7 @@ Exam Branch
             facultyName: document.getElementById('subjectFacultyName'),
             employeeCode: document.getElementById('subjectEmployeeCode'),
             branch: document.getElementById('subjectSelectionBranch'),
+            regulation: document.getElementById('subjectSelectionRegulation'),
             year: document.getElementById('subjectSelectionYear'),
             semester: document.getElementById('subjectSelectionSemester'),
             subjectName: document.getElementById('subjectSelectionName'),
@@ -1774,6 +1784,54 @@ Exam Branch
             });
         }
 
+        function getBranchLabel(branch) {
+            return normalizeClassValue(branch) === 'AIML' ? 'CSE (AI&ML)' : branch;
+        }
+
+        function syncSelectOptions(selectElement, values, selectedValue, labelFormatter) {
+            if (!selectElement || !Array.isArray(values) || !values.length) {
+                return;
+            }
+            const currentValue = selectedValue || selectElement.value || values[0];
+            selectElement.innerHTML = '';
+            values.forEach(function (value) {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = labelFormatter ? labelFormatter(value) : value;
+                if (String(value) === String(currentValue)) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+            if (!values.map(String).includes(String(currentValue))) {
+                selectElement.value = values[0];
+            }
+        }
+
+        function syncSubjectSelectionOptions(data) {
+            if (!data) {
+                return;
+            }
+            syncSelectOptions(
+                subjectSelectionFields.branch,
+                Array.isArray(data.branches) ? data.branches : [],
+                data.branch,
+                getBranchLabel
+            );
+            syncSelectOptions(
+                subjectSelectionFields.year,
+                Array.isArray(data.years) ? data.years : [],
+                data.year,
+                function (year) { return 'Year ' + year; }
+            );
+            syncSelectOptions(
+                subjectSelectionFields.semester,
+                Array.isArray(data.semesters) ? data.semesters : [],
+                data.semester,
+                function (semester) { return 'Semester ' + semester; }
+            );
+        }
+
         function normalizeClassValue(value) {
             return String(value || '').trim().toUpperCase().replace('CSE(AI&ML)', 'AIML').replace('CSE (AI&ML)', 'AIML');
         }
@@ -1782,9 +1840,11 @@ Exam Branch
             const branch = normalizeClassValue(timeTableBranchField ? timeTableBranchField.value : 'IT');
             const year = normalizeClassValue(timeTableYearField ? timeTableYearField.value : '3');
             const semester = normalizeClassValue(timeTableSemesterField ? timeTableSemesterField.value : '1');
+            const regulation = normalizeClassValue(subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R22');
 
             return normalizeSubjectSelections(selections || getStoredSubjectSelections()).filter(function (selection) {
                 return normalizeClassValue(selection.branch) === branch &&
+                    normalizeClassValue(selection.regulation || 'R22') === regulation &&
                     normalizeClassValue(selection.year) === year &&
                     normalizeClassValue(selection.semester) === semester &&
                     ((selection.subjectCode || '').trim() || (selection.subjectName || '').trim());
@@ -1844,11 +1904,12 @@ Exam Branch
         }
 
         function loadSubjectSelectionSubjects(selectedSubject) {
-            if (!syllabusSubjectsUrl || !subjectSelectionFields.year || !subjectSelectionFields.semester || !subjectSelectionFields.branch) {
+            if (!syllabusSubjectsUrl || !subjectSelectionFields.year || !subjectSelectionFields.semester || !subjectSelectionFields.branch || !subjectSelectionFields.regulation) {
                 return;
             }
 
             const params = new URLSearchParams({
+                regulation: subjectSelectionFields.regulation.value || 'R22',
                 year: subjectSelectionFields.year.value || '3',
                 semester: subjectSelectionFields.semester.value || '1',
                 branch: subjectSelectionFields.branch.value || 'IT'
@@ -1864,6 +1925,7 @@ Exam Branch
                     return response.json();
                 })
                 .then(function (data) {
+                    syncSubjectSelectionOptions(data);
                     renderSubjectSelectionSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedSubject);
                 })
                 .catch(function (error) {
@@ -2653,6 +2715,7 @@ Exam Branch
                 facultyName: subjectSelectionFields.facultyName.value.trim(),
                 employeeCode: subjectSelectionFields.employeeCode.value.trim(),
                 branch: subjectSelectionFields.branch.value,
+                regulation: subjectSelectionFields.regulation.value || 'R22',
                 year: subjectSelectionFields.year.value,
                 semester: subjectSelectionFields.semester.value,
                 subjectName: subjectSelectionFields.subjectName.value,
@@ -2668,6 +2731,7 @@ Exam Branch
             subjectSelectionFields.facultyName.value = data.facultyName || '';
             subjectSelectionFields.employeeCode.value = data.employeeCode || '';
             subjectSelectionFields.branch.value = data.branch || subjectSelectionFields.branch.value || 'IT';
+            subjectSelectionFields.regulation.value = data.regulation || subjectSelectionFields.regulation.value || 'R22';
             subjectSelectionFields.year.value = data.year || subjectSelectionFields.year.value || '3';
             subjectSelectionFields.semester.value = data.semester || subjectSelectionFields.semester.value || '1';
             subjectSelectionFields.timesTaught.value = data.timesTaught || '';
@@ -2679,10 +2743,12 @@ Exam Branch
             if (Array.isArray(payload)) {
                 return payload.filter(function (entry) {
                     return entry && (entry.facultyName || entry.employeeCode || entry.subjectName);
+                }).map(function (entry) {
+                    return Object.assign({ regulation: 'R22' }, entry, { regulation: entry.regulation || 'R22' });
                 });
             }
             if (payload && (payload.facultyName || payload.employeeCode || payload.subjectName)) {
-                return [payload];
+                return [Object.assign({ regulation: 'R22' }, payload, { regulation: payload.regulation || 'R22' })];
             }
             return [];
         }
@@ -2719,7 +2785,7 @@ Exam Branch
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
                 const emptyCell = document.createElement('td');
-                emptyCell.colSpan = 9;
+                emptyCell.colSpan = 10;
                 emptyCell.className = 'text-center text-muted';
                 emptyCell.textContent = 'No subject selection saved yet.';
                 emptyRow.appendChild(emptyCell);
@@ -2734,6 +2800,7 @@ Exam Branch
                     payload.facultyName || '-',
                     payload.employeeCode || '-',
                     payload.branch || '-',
+                    payload.regulation || 'R22',
                     payload.year || '-',
                     payload.semester || '-',
                     payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
@@ -3080,6 +3147,13 @@ Exam Branch
             ].join('-');
         }
 
+        function getSelectionContextKey(selection) {
+            return [
+                normalizeClassValue(selection.regulation || 'R22'),
+                getClassContextKey(selection.year, selection.semester, selection.branch)
+            ].join('|');
+        }
+
         function getBranchDisplayLabel(branch) {
             return normalizeClassValue(branch) === 'AIML' ? 'CSE (AI&ML)' : (branch || 'IT');
         }
@@ -3107,6 +3181,7 @@ Exam Branch
 
             addContext({
                 key: getClassContextKey(primaryYear, primarySemester, primaryBranch),
+                selectionKey: normalizeClassValue(subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R22') + '|' + getClassContextKey(primaryYear, primarySemester, primaryBranch),
                 year: normalizeClassValue(primaryYear),
                 semester: normalizeClassValue(primarySemester),
                 branch: normalizeClassValue(primaryBranch),
@@ -3123,6 +3198,7 @@ Exam Branch
                 const branch = card.dataset.branch || 'IT';
                 addContext({
                     key: getClassContextKey(year, semester, branch),
+                    selectionKey: normalizeClassValue(subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R22') + '|' + getClassContextKey(year, semester, branch),
                     year: normalizeClassValue(year),
                     semester: normalizeClassValue(semester),
                     branch: normalizeClassValue(branch),
@@ -3138,17 +3214,17 @@ Exam Branch
 
         function getSelectionsForClassContext(selections, context) {
             return normalizeSubjectSelections(selections).filter(function (selection) {
-                return getClassContextKey(selection.year, selection.semester, selection.branch) === context.key &&
+                return getSelectionContextKey(selection) === context.selectionKey &&
                     ((selection.subjectCode || '').trim() || (selection.subjectName || '').trim());
             });
         }
 
         function getSelectionsForClassContexts(selections, contexts) {
             const keys = new Set((contexts || []).map(function (context) {
-                return context.key;
+                return context.selectionKey;
             }));
             return normalizeSubjectSelections(selections).filter(function (selection) {
-                return keys.has(getClassContextKey(selection.year, selection.semester, selection.branch));
+                return keys.has(getSelectionContextKey(selection));
             });
         }
 
@@ -3855,7 +3931,7 @@ Exam Branch
             field.addEventListener('input', markSubjectSelectionDirty);
             field.addEventListener('change', function () {
                 markSubjectSelectionDirty();
-                if (field === subjectSelectionFields.year || field === subjectSelectionFields.semester || field === subjectSelectionFields.branch) {
+                if (field === subjectSelectionFields.regulation || field === subjectSelectionFields.year || field === subjectSelectionFields.semester || field === subjectSelectionFields.branch) {
                     loadSubjectSelectionSubjects();
                 }
             });
