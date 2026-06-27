@@ -1136,9 +1136,8 @@ Exam Branch
                                 <div>
                                     <label for="subjectSelectionRegulation" class="form-label">REGULATION</label>
                                     <select id="subjectSelectionRegulation" class="form-select subject-selection-input">
-                                        {% for syllabus_regulation in syllabus_regulations %}
-                                            <option value="{{ syllabus_regulation }}" {% if selected_regulation == syllabus_regulation %}selected{% endif %}>{{ syllabus_regulation }}</option>
-                                        {% endfor %}
+                                        <option value="R22" {% if selected_regulation == 'R22' %}selected{% endif %}>R22</option>
+                                        <option value="R25" {% if selected_regulation == 'R25' %}selected{% endif %}>R25</option>
                                     </select>
                                 </div>
                                 <div>
