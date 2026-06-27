@@ -9602,11 +9602,11 @@ def privacy_policy(request):
 def get_syllabus_page_subjects():
     """Extract the syllabus data used by the public syllabus page."""
     template_path = Path(settings.BASE_DIR) / 'dashboard' / 'templates' / 'dashboard' / 'syllabus.html'
-    try:
-        template_source = template_path.read_text(encoding='utf-8')
+
+    def parse_js_object(source, variable_name):
         match = re.search(
-            r'const\s+syllabusData\s*=\s*(\{.*?\n\s*\});\s*\n\s*const\s+semOrder',
-            template_source,
+            rf'const\s+{re.escape(variable_name)}\s*=\s*(\{{.*?\n\s*\}});\s*\n',
+            source,
             re.S,
         )
         if not match:
@@ -9617,6 +9617,38 @@ def get_syllabus_page_subjects():
         data_literal = re.sub(r',\s*([}\]])', r'\1', data_literal)
         parsed = json.loads(data_literal)
         return parsed if isinstance(parsed, dict) else {}
+
+    try:
+        template_source = template_path.read_text(encoding='utf-8')
+        syllabus_data = parse_js_object(template_source, 'syllabusData')
+        r25_it_data = parse_js_object(template_source, 'r25ITSyllabusData')
+
+        for year_sem, subjects in r25_it_data.items():
+            if not isinstance(subjects, list):
+                continue
+            syllabus_data.setdefault(year_sem, {})
+            existing_subjects = syllabus_data[year_sem].setdefault('IT', [])
+            existing_keys = {
+                (
+                    str(subject.get('code', '')).strip().upper(),
+                    str(subject.get('name', '')).strip().upper(),
+                )
+                for subject in existing_subjects
+                if isinstance(subject, dict)
+            }
+            for subject in subjects:
+                if not isinstance(subject, dict):
+                    continue
+                subject_key = (
+                    str(subject.get('code', '')).strip().upper(),
+                    str(subject.get('name', '')).strip().upper(),
+                )
+                if subject_key in existing_keys:
+                    continue
+                existing_subjects.append(subject)
+                existing_keys.add(subject_key)
+
+        return syllabus_data
     except Exception as exc:
         logger.warning(f"Could not load syllabus page subjects: {exc}", exc_info=True)
         return {}
