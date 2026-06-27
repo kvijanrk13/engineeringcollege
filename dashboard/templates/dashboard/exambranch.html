@@ -1384,6 +1384,48 @@ Exam Branch
                         </div>
                     </div>
 
+                    {% for empty_timetable in additional_empty_timetables %}
+                    <div class="exam-card mb-4" data-empty-timetable-card data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}">
+                        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                            <div>
+                                <h3 class="card-title mb-1">{{ empty_timetable.year_label }} {{ empty_timetable.branch_label }} empty timetable</h3>
+                                <p class="card-copy mb-0">Blank weekly timetable layout for {{ empty_timetable.year_label }} {{ empty_timetable.branch_label }}.</p>
+                            </div>
+                            <span class="subject-count-pill">{{ empty_timetable.year_sem }} {{ empty_timetable.branch_label }}</span>
+                        </div>
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <table class="table exam-table time-table-grid align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>9:30-10:30</th>
+                                        <th>10:30-11:30</th>
+                                        <th>11:40-12:40</th>
+                                        <th>12:40-1:20</th>
+                                        <th>1:20-2:15</th>
+                                        <th>2:15-3:10</th>
+                                        <th>3:15-4:10</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for day in timetable_days %}
+                                    <tr>
+                                        <td>{{ day }}</td>
+                                        <td><textarea class="form-control empty-timetable-slot" data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-day="{{ day }}" data-period="9:30-10:30"></textarea></td>
+                                        <td><textarea class="form-control empty-timetable-slot" data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-day="{{ day }}" data-period="10:30-11:30"></textarea></td>
+                                        <td><textarea class="form-control empty-timetable-slot" data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-day="{{ day }}" data-period="11:40-12:40"></textarea></td>
+                                        <td class="break-slot">Break</td>
+                                        <td><textarea class="form-control empty-timetable-slot" data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-day="{{ day }}" data-period="1:20-2:15"></textarea></td>
+                                        <td><textarea class="form-control empty-timetable-slot" data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-day="{{ day }}" data-period="2:15-3:10"></textarea></td>
+                                        <td><textarea class="form-control empty-timetable-slot" data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-day="{{ day }}" data-period="3:15-4:10"></textarea></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+
                     <div id="individualTimeTableContainer">
                         <div class="exam-card mb-4" data-individual-timetable-card>
                         <h3 class="card-title">Individual Time Table</h3>

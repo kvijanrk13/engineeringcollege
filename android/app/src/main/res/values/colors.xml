@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand_blue">#1456A0</color>
-    <color name="brand_gold">#F2B705</color>
-    <color name="ink">#172033</color>
-    <color name="off_white">#F7F9FC</color>
-    <color name="muted_ink">#526070</color>
-    <color name="tile_border">#D8E0EA</color>
+    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimaryDark">#3700B3</color>
+    <color name="colorAccent">#03DAC5</color>
+    <color name="splashBackground">#FFFFFF</color>
+    <color name="off_white">#F5F5F5</color>
+    <color name="ink">#212121</color>
+    <color name="muted_ink">#757575</color>
+    <color name="brand_blue">#3F51B5</color>
+    <color name="brand_gold">#FFC857</color>
     <color name="tile_fill">#FFFFFF</color>
-    <color name="faculty_green">#176B55</color>
-    <color name="student_blue">#1456A0</color>
-    <color name="exam_red">#A53A3A</color>
-    <color name="projects_teal">#0F766E</color>
-    <color name="ai_domain">#0E7490</color>
-    <color name="ml_domain">#2563EB</color>
-    <color name="software_domain">#4338CA</color>
-    <color name="security_domain">#B91C1C</color>
-    <color name="deep_learning_domain">#7C3AED</color>
-    <color name="data_science_domain">#047857</color>
-    <color name="data_mining_domain">#0F766E</color>
-    <color name="cloud_domain">#0369A1</color>
-    <color name="iot_domain">#B45309</color>
+    <color name="tile_border">#D8DEE9</color>
+    <color name="faculty_green">#2E7D32</color>
+    <color name="student_blue">#1976D2</color>
+    <color name="exam_red">#C62828</color>
+    <color name="projects_teal">#00897B</color>
+    <color name="ai_domain">#4A148C</color>
+    <color name="ml_domain">#1565C0</color>
+    <color name="software_domain">#455A64</color>
+    <color name="security_domain">#AD1457</color>
+    <color name="deep_learning_domain">#6A1B9A</color>
+    <color name="data_science_domain">#00796B</color>
+    <color name="data_mining_domain">#5D4037</color>
+    <color name="cloud_domain">#0277BD</color>
+    <color name="iot_domain">#EF6C00</color>
 </resources>

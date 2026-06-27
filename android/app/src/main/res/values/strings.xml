@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ENGINEERINGCOLLEGEPROJECTS</string>
+    <string name="app_name">ECPRJ</string>
     <string name="offline_message">No internet connection. Tap to retry.</string>
     <string name="download_description">Downloading file from ENGINEERINGCOLLEGEPROJECTS</string>
     <string name="download_started">Download started</string>
     <string name="file_picker_error">Unable to open file picker</string>
     <string name="google_signin_error">Unable to complete Gmail sign-in</string>
-    <string name="section_title">Engineering College</string>
+    <string name="section_title">ECPRJ</string>
     <string name="section_subtitle">Open each module directly</string>
     <string name="faculty">Faculty</string>
     <string name="student">Student</string>

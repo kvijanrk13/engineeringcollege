@@ -2,12 +2,38 @@ plugins {
     id "com.android.application"
 }
 
+def keystorePropertiesFile = rootProject.file("app/keystore.properties")
+def keystoreProperties = new Properties()
+def hasReleaseKeystore = false
+
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { stream ->
+        keystoreProperties.load(stream)
+    }
+
+    hasReleaseKeystore = keystoreProperties.storeFile &&
+            keystoreProperties.storePassword &&
+            keystoreProperties.keyAlias &&
+            keystoreProperties.keyPassword
+}
+
 android {
     namespace "com.anrkit.engineeringcollegeprojects"
     compileSdk 35
 
     buildFeatures {
         buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            if (hasReleaseKeystore) {
+                storeFile file(keystoreProperties.storeFile)
+                storePassword keystoreProperties.storePassword
+                keyAlias keystoreProperties.keyAlias
+                keyPassword keystoreProperties.keyPassword
+            }
+        }
     }
 
     defaultConfig {
@@ -24,14 +50,22 @@ android {
         debug {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
+
             buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
         }
 
         release {
             buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
+
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

@@ -49,3 +49,4 @@ android/*.jks
 android/*.keystore
 android/app/*.jks
 android/app/*.keystore
+android/app/keystore.properties

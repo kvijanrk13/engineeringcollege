@@ -9736,6 +9736,12 @@ def exam_branch(request):
         if branch == 'CSE(AI&ML)':
             branch = 'AIML'
         subjects = syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
+        additional_empty_timetables = [
+            {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'IT', 'branch_label': 'IT'},
+            {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)'},
+            {'year_sem': '4-1', 'year_label': 'IV-I', 'branch': 'IT', 'branch_label': 'IT'},
+            {'year_sem': '4-1', 'year_label': 'IV-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)'},
+        ]
 
         # Attendance Dashboard Data
         date_list = []
@@ -9798,6 +9804,8 @@ def exam_branch(request):
             'syllabus_years': syllabus_years,
             'syllabus_semesters': syllabus_semesters,
             'subjects': subjects,
+            'additional_empty_timetables': additional_empty_timetables,
+            'timetable_days': ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
             'syllabus_url': reverse('dashboard:syllabus'),
             'syllabus_subjects_url': reverse('dashboard:exam_branch_syllabus_subjects'),
 

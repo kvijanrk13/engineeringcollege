@@ -18,7 +18,7 @@
 
 ## Play Console
 
-- App name: `ENGINEERINGCOLLEGEPROJECTS`
+- App name: `ECPRJ`
 - Package name: `com.anrkit.engineeringcollegeprojects`
 - Privacy policy: `https://engineeringcollege.onrender.com/privacy-policy/`
 - Category: Education

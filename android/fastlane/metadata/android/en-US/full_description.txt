@@ -1,5 +1,18 @@
-ENGINEERINGCOLLEGEPROJECTS provides Android access to the engineering college department portal.
+Welcome to ECPRJ, the official mobile companion for the Engineering College department portal. This app provides students and faculty with fast, streamlined access to essential academic and administrative resources right from their Android devices.
 
-Students and faculty can open dashboards, view academic resources, manage department information, access reports, and download generated documents from the deployed Django platform.
+Our app connects directly to the live web portal at engineeringcollege.onrender.com, ensuring you always have the most up-to-date information.
 
-The app connects to the live college web portal and requires internet access.
+KEY FEATURES:
+*   **Instant Dashboard Access**: Jump straight to your personalized student or faculty dashboard.
+*   **Academic Resources**: Easily view course materials, schedules, and academic calendars.
+*   **Department Information**: Stay updated with the latest news and announcements from your department.
+*   **Reports and Documents**: Access and download important reports, grade sheets, and other generated documents on the go.
+*   **Full Web Portal Functionality**: Experience the full power of the Django web platform, optimized for your mobile device.
+
+WHO IS THIS APP FOR?
+This app is designed exclusively for the students and faculty of our engineering college, providing a convenient bridge to our online services.
+
+----------------------------------------------------------------
+
+PLEASE NOTE:
+This app is a mobile-friendly interface for our existing web portal. A stable internet connection is required for full functionality. All data is managed securely through our main web service.
