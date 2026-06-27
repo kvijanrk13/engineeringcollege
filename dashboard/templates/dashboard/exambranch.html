@@ -1611,6 +1611,7 @@ Exam Branch
         const timeTableStatus = document.getElementById('timeTableStatus');
         const marksBody = document.getElementById('marksBody');
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
+        const emptyTimeTableCards = Array.from(document.querySelectorAll('[data-empty-timetable-card]'));
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
         const individualTimeTableContainer = document.getElementById('individualTimeTableContainer');
         const individualTimeTableTemplate = individualTimeTableContainer
@@ -1636,6 +1637,7 @@ Exam Branch
             timesTaught: document.getElementById('subjectTimesTaught'),
             previousResult: document.getElementById('subjectPreviousResult')
         };
+        const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -2893,8 +2895,8 @@ Exam Branch
                 /skill development course|ui design flutter/i.test(subjectName || '');
         }
 
-        function resetClassTimeTableMerges() {
-            timeTableSlots.forEach(function (slot) {
+        function resetClassTimeTableMerges(slots) {
+            (slots || timeTableSlots).forEach(function (slot) {
                 const cell = slot.closest('td');
                 if (!cell) {
                     return;
@@ -2906,9 +2908,10 @@ Exam Branch
             });
         }
 
-        function mergeSlotWithNextPeriod(slot, subjectName) {
+        function mergeSlotWithNextPeriod(slot, subjectName, slotSelector) {
             const cell = slot.closest('td');
             const row = cell ? cell.closest('tr') : null;
+            const nextSlotSelector = slotSelector || (slot.classList.contains('empty-timetable-slot') ? '.empty-timetable-slot' : '.timetable-slot');
             if (!cell || !row) {
                 return false;
             }
@@ -2920,7 +2923,7 @@ Exam Branch
                 return false;
             }
 
-            const nextSlot = nextCell.querySelector('.timetable-slot');
+            const nextSlot = nextCell.querySelector(nextSlotSelector);
             if (!nextSlot) {
                 return false;
             }
@@ -2950,8 +2953,8 @@ Exam Branch
             });
         }
 
-        function getClassSlot(day, period) {
-            return timeTableSlots.find(function (slot) {
+        function getClassSlot(day, period, slots) {
+            return (slots || timeTableSlots).find(function (slot) {
                 return slot.dataset.day === day && slot.dataset.period === period;
             }) || null;
         }
@@ -3061,6 +3064,244 @@ Exam Branch
             return Array.from(facultyMap.values()).filter(function (schedule) {
                 return schedule.facultyName || schedule.employeeCode || schedule.subjects.length;
             });
+        }
+
+        function getFacultyScheduleKey(selection) {
+            const employeeCode = normalizeClassValue(selection.employeeCode || '').replace(/[^A-Z0-9]/g, '');
+            const facultyName = normalizeSubjectNameForSchedule(selection.facultyName || '').replace(/[^A-Z0-9]/g, '');
+            return employeeCode || facultyName || '';
+        }
+
+        function getClassContextKey(year, semester, branch) {
+            return [
+                normalizeClassValue(year),
+                normalizeClassValue(semester),
+                normalizeClassValue(branch)
+            ].join('-');
+        }
+
+        function getBranchDisplayLabel(branch) {
+            return normalizeClassValue(branch) === 'AIML' ? 'CSE (AI&ML)' : (branch || 'IT');
+        }
+
+        function getYearSemLabel(year, semester) {
+            const romanYears = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' };
+            const romanSemesters = { 1: 'I', 2: 'II' };
+            return (romanYears[Number(year)] || year || 'III') + '-' + (romanSemesters[Number(semester)] || semester || 'I');
+        }
+
+        function getClassTimeTableContexts() {
+            const contexts = [];
+            const seen = new Set();
+            const primaryYear = timeTableYearField ? (timeTableYearField.value || '3') : '3';
+            const primarySemester = timeTableSemesterField ? (timeTableSemesterField.value || '1') : '1';
+            const primaryBranch = timeTableBranchField ? (timeTableBranchField.value || 'IT') : 'IT';
+
+            function addContext(context) {
+                if (!context.key || seen.has(context.key)) {
+                    return;
+                }
+                seen.add(context.key);
+                contexts.push(context);
+            }
+
+            addContext({
+                key: getClassContextKey(primaryYear, primarySemester, primaryBranch),
+                year: normalizeClassValue(primaryYear),
+                semester: normalizeClassValue(primarySemester),
+                branch: normalizeClassValue(primaryBranch),
+                label: getYearSemLabel(primaryYear, primarySemester) + ' ' + getBranchDisplayLabel(primaryBranch),
+                slots: timeTableSlots,
+                slotSelector: '.timetable-slot',
+                isPrimary: true
+            });
+
+            emptyTimeTableCards.forEach(function (card) {
+                const yearSem = String(card.dataset.yearSem || '').split('-');
+                const year = yearSem[0] || '';
+                const semester = yearSem[1] || '';
+                const branch = card.dataset.branch || 'IT';
+                addContext({
+                    key: getClassContextKey(year, semester, branch),
+                    year: normalizeClassValue(year),
+                    semester: normalizeClassValue(semester),
+                    branch: normalizeClassValue(branch),
+                    label: getYearSemLabel(year, semester) + ' ' + getBranchDisplayLabel(branch),
+                    slots: Array.from(card.querySelectorAll('.empty-timetable-slot')),
+                    slotSelector: '.empty-timetable-slot',
+                    isPrimary: false
+                });
+            });
+
+            return contexts;
+        }
+
+        function getSelectionsForClassContext(selections, context) {
+            return normalizeSubjectSelections(selections).filter(function (selection) {
+                return getClassContextKey(selection.year, selection.semester, selection.branch) === context.key &&
+                    ((selection.subjectCode || '').trim() || (selection.subjectName || '').trim());
+            });
+        }
+
+        function getSelectionsForClassContexts(selections, contexts) {
+            const keys = new Set((contexts || []).map(function (context) {
+                return context.key;
+            }));
+            return normalizeSubjectSelections(selections).filter(function (selection) {
+                return keys.has(getClassContextKey(selection.year, selection.semester, selection.branch));
+            });
+        }
+
+        function createFacultyOccupancyMap() {
+            return new Map();
+        }
+
+        function getFacultyDayOccupancy(occupancyMap, facultyKey, day) {
+            if (!occupancyMap.has(facultyKey)) {
+                occupancyMap.set(facultyKey, new Map());
+            }
+            const facultyDays = occupancyMap.get(facultyKey);
+            if (!facultyDays.has(day)) {
+                facultyDays.set(day, new Set());
+            }
+            return facultyDays.get(day);
+        }
+
+        function canFacultyTeachWithGap(occupancyMap, facultyKey, day, startPeriodIndex, duration) {
+            if (!facultyKey) {
+                return true;
+            }
+            const occupiedPeriods = getFacultyDayOccupancy(occupancyMap, facultyKey, day);
+            for (let offset = 0; offset < duration; offset += 1) {
+                const candidatePeriod = startPeriodIndex + offset;
+                for (const occupiedPeriod of occupiedPeriods) {
+                    if (Math.abs(candidatePeriod - occupiedPeriod) <= 1) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function reserveFacultyPeriods(occupancyMap, facultyKey, day, startPeriodIndex, duration) {
+            if (!facultyKey) {
+                return;
+            }
+            const occupiedPeriods = getFacultyDayOccupancy(occupancyMap, facultyKey, day);
+            for (let offset = 0; offset < duration; offset += 1) {
+                occupiedPeriods.add(startPeriodIndex + offset);
+            }
+        }
+
+        function buildClassAssignments(classSelections) {
+            const assignmentMap = new Map();
+            normalizeSubjectSelections(classSelections).forEach(function (selection) {
+                const subjectName = (selection.subjectName || '').trim();
+                const facultyKey = getFacultyScheduleKey(selection);
+                const key = facultyKey + '|' + normalizeSubjectNameForSchedule(subjectName);
+                if (!subjectName || assignmentMap.has(key)) {
+                    return;
+                }
+                assignmentMap.set(key, {
+                    selection: selection,
+                    subjectName: subjectName,
+                    facultyKey: facultyKey,
+                    isLab: isLaboratorySubject(subjectName),
+                    targetHours: isLaboratorySubject(subjectName) ? 2 : 5,
+                    placedHours: 0
+                });
+            });
+            return Array.from(assignmentMap.values());
+        }
+
+        function canUseClassSlot(context, day, periodIndex, duration, facultyKey, occupancyMap) {
+            const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+            const cell = slot ? slot.closest('td') : null;
+            if (!slot || !cell || cell.style.display === 'none' || slot.value.trim()) {
+                return false;
+            }
+            if (duration > 1) {
+                const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], context.slots);
+                const nextCell = nextSlot ? nextSlot.closest('td') : null;
+                if (!nextSlot || !nextCell || nextCell.classList.contains('break-slot') || nextCell.style.display === 'none' || nextSlot.value.trim()) {
+                    return false;
+                }
+            }
+            return canFacultyTeachWithGap(occupancyMap, facultyKey, day, periodIndex, duration);
+        }
+
+        function placeClassAssignment(context, day, periodIndex, assignment, occupancyMap) {
+            const duration = assignment.isLab ? 2 : 1;
+            const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+            if (!slot || !canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap)) {
+                return 0;
+            }
+            if (duration > 1) {
+                if (!mergeSlotWithNextPeriod(slot, assignment.subjectName, context.slotSelector)) {
+                    return 0;
+                }
+            } else {
+                slot.value = assignment.subjectName;
+            }
+            reserveFacultyPeriods(occupancyMap, assignment.facultyKey, day, periodIndex, duration);
+            assignment.placedHours += duration;
+            return duration;
+        }
+
+        function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap) {
+            const assignments = buildClassAssignments(classSelections);
+            const counts = {};
+            let labMergedCount = 0;
+            let totalHours = 0;
+
+            resetClassTimeTableMerges(context.slots);
+            context.slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            if (!assignments.length) {
+                return { counts: counts, labMergedCount: 0, totalHours: 0 };
+            }
+
+            const days = Array.from(new Set(context.slots.map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+
+            days.forEach(function (day, dayIndex) {
+                const dailySubjects = new Set();
+                periodOrder.forEach(function (period, periodIndex) {
+                    for (let offset = 0; offset < assignments.length; offset += 1) {
+                        const assignment = assignments[(dayIndex + periodIndex + offset) % assignments.length];
+                        const remainingHours = assignment.targetHours - assignment.placedHours;
+                        const duration = assignment.isLab ? 2 : 1;
+                        if (remainingHours < duration || dailySubjects.has(assignment.subjectName)) {
+                            continue;
+                        }
+                        if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                            continue;
+                        }
+                        if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap)) {
+                            continue;
+                        }
+                        const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap);
+                        if (placedHours) {
+                            counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                            totalHours += placedHours;
+                            dailySubjects.add(assignment.subjectName);
+                            if (duration > 1) {
+                                labMergedCount += 1;
+                            }
+                            break;
+                        }
+                    }
+                });
+            });
+
+            return {
+                counts: counts,
+                labMergedCount: labMergedCount,
+                totalHours: totalHours
+            };
         }
 
         function getScheduleLabelsForSelection(selection) {
@@ -3199,7 +3440,7 @@ Exam Branch
             });
         }
 
-        function populateIndividualCardFromClassSchedule(card, schedule) {
+        function populateIndividualCardFromClassSchedule(card, schedule, classContexts) {
             const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
             const normalizedLabels = labels.flatMap(function (label) {
                 return getScheduleLabelsForSubjectName(label).map(normalizeSubjectNameForSchedule);
@@ -3211,38 +3452,41 @@ Exam Branch
                 slot.value = '';
             });
 
-            timeTableSlots.forEach(function (classSlot) {
-                const subjectName = (classSlot.value || '').trim();
-                if (!subjectName || !normalizedLabels.includes(normalizeSubjectNameForSchedule(subjectName))) {
-                    return;
-                }
+            (classContexts || getClassTimeTableContexts()).forEach(function (context) {
+                context.slots.forEach(function (classSlot) {
+                    const subjectName = (classSlot.value || '').trim();
+                    if (!subjectName || !normalizedLabels.includes(normalizeSubjectNameForSchedule(subjectName))) {
+                        return;
+                    }
 
-                const classCell = classSlot.closest('td');
-                const row = classCell ? classCell.closest('tr') : null;
-                const individualSlot = getIndividualTimeTableSlots(card).find(function (candidate) {
-                    return candidate.dataset.day === classSlot.dataset.day && candidate.dataset.period === classSlot.dataset.period;
+                    const classCell = classSlot.closest('td');
+                    const row = classCell ? classCell.closest('tr') : null;
+                    const individualSlot = getIndividualTimeTableSlots(card).find(function (candidate) {
+                        return candidate.dataset.day === classSlot.dataset.day && candidate.dataset.period === classSlot.dataset.period;
+                    });
+                    const displayValue = (context.label ? context.label + ' - ' : '') + subjectName;
+
+                    if (!classCell || !row || classCell.colSpan < 2 || !individualSlot) {
+                        filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, displayValue);
+                        return;
+                    }
+
+                    const rowCells = Array.from(row.children);
+                    const nextCell = rowCells[rowCells.indexOf(classCell) + 1];
+                    const nextClassSlot = nextCell ? nextCell.querySelector(context.slotSelector || '.timetable-slot') : null;
+                    if (nextClassSlot && mergeIndividualSlotWithNextPeriod(individualSlot, displayValue)) {
+                        filledHours += 2;
+                        return;
+                    }
+
+                    filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, displayValue);
                 });
-
-                if (!classCell || !row || classCell.colSpan < 2 || !individualSlot) {
-                    filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
-                    return;
-                }
-
-                const rowCells = Array.from(row.children);
-                const nextCell = rowCells[rowCells.indexOf(classCell) + 1];
-                const nextClassSlot = nextCell ? nextCell.querySelector('.timetable-slot') : null;
-                if (nextClassSlot && mergeIndividualSlotWithNextPeriod(individualSlot, subjectName)) {
-                    filledHours += 2;
-                    return;
-                }
-
-                filledHours += setIndividualSlotValue(card, classSlot.dataset.day, classSlot.dataset.period, subjectName);
             });
 
             return filledHours;
         }
 
-        function renderIndividualFacultyTimeTables(selections) {
+        function renderIndividualFacultyTimeTables(selections, classContexts) {
             const schedules = buildIndividualFacultySchedules(selections);
             const cards = ensureIndividualTimeTableCardCount(schedules.length || 1);
             let totalFilledHours = 0;
@@ -3264,7 +3508,7 @@ Exam Branch
                 const hoursField = metaFields.find(function (field) {
                     return field.id === 'individualTotalHours' || field.getAttribute('aria-label') === 'Number of hours';
                 });
-                const filledHours = populateIndividualCardFromClassSchedule(card, schedule);
+                const filledHours = populateIndividualCardFromClassSchedule(card, schedule, classContexts);
                 const title = card.querySelector('.card-title');
 
                 if (facultyField) {
@@ -3380,7 +3624,6 @@ Exam Branch
 
         function generateClassTimeTableSlots(subjectNames) {
             const subjectLookup = buildStandardSubjectLookup(subjectNames);
-            const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
             const weeklyPlan = {
                 MON: ['ddb', 'acd', 'daa', 'embeddedLab', null, 'dm'],
                 TUE: ['dataMiningLab', null, 'acd', 'dm', 'daa', 'es'],
@@ -3502,24 +3745,24 @@ Exam Branch
             timeTableSemesterField.value = payload.semester || timeTableSemesterField.value;
             renderCourseReference(selections);
 
-            const timetableSelections = getTimeTableClassSelections(selections);
-            const selectedSubjectNames = Array.from(new Set(timetableSelections.map(function (selection) {
-                return (selection.subjectName || '').trim();
-            }).filter(Boolean)));
-
-            const fallbackSubjectLabel = selectedSubjectNames[0] || payload.subjectName;
+            const classContexts = getClassTimeTableContexts();
+            const timetableSelections = getSelectionsForClassContexts(selections, classContexts);
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
-                const syllabusSubjects = Array.isArray(data.subjects) ? data.subjects : [];
-                const classSubjectNames = resolveClassSubjectsForTimeTable(
-                    syllabusSubjects,
-                    selections,
-                    selectedSubjectNames.length ? selectedSubjectNames : [fallbackSubjectLabel]
-                );
-                const classGeneration = generateClassTimeTableSlots(classSubjectNames);
+                const facultyOccupancyMap = createFacultyOccupancyMap();
+                const classGeneration = classContexts.reduce(function (summary, context) {
+                    const generated = generateClassTimeTableSlotsForContext(
+                        context,
+                        getSelectionsForClassContext(selections, context),
+                        facultyOccupancyMap
+                    );
+                    summary.labMergedCount += generated.labMergedCount || 0;
+                    summary.totalHours += generated.totalHours || 0;
+                    return summary;
+                }, { labMergedCount: 0, totalHours: 0 });
                 const labMergedCount = classGeneration.labMergedCount || 0;
                 const classTotalHours = classGeneration.totalHours || 0;
-                const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections);
+                const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections, classContexts);
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
@@ -3529,7 +3772,7 @@ Exam Branch
                     timeTableStatus,
                     'Timetable generated with ' + classTotalHours + ' class hours; each theory subject repeated up to 5 times' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
-                    '; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
+                    '; one-hour faculty gap enforced across 2-1, 3-1, and 4-1; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
