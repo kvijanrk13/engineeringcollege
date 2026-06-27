@@ -3153,6 +3153,10 @@ Exam Branch
             ].join('|');
         }
 
+        function getClassKeyFromSelection(selection) {
+            return getClassContextKey(selection.year, selection.semester, selection.branch);
+        }
+
         function getBranchDisplayLabel(branch) {
             return normalizeClassValue(branch) === 'AIML' ? 'CSE (AI&ML)' : (branch || 'IT');
         }
@@ -3163,30 +3167,61 @@ Exam Branch
             return (romanYears[Number(year)] || year || 'III') + '-' + (romanSemesters[Number(semester)] || semester || 'I');
         }
 
-        function getClassTimeTableContexts() {
+        function choosePrimarySubjectSelection(selections) {
+            const normalizedSelections = normalizeSubjectSelections(selections);
+            return normalizedSelections.find(function (selection) {
+                return normalizeClassValue(selection.year) === '3' &&
+                    normalizeClassValue(selection.semester) === '1';
+            }) || normalizedSelections[0] || null;
+        }
+
+        function findSelectionForClass(selections, year, semester, branch) {
+            const classKey = getClassContextKey(year, semester, branch);
+            return normalizeSubjectSelections(selections).find(function (selection) {
+                return getClassKeyFromSelection(selection) === classKey;
+            }) || null;
+        }
+
+        function getContextRegulation(selection) {
+            return normalizeClassValue(selection && selection.regulation ? selection.regulation : (subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R22'));
+        }
+
+        function updateClassContextTitle(context) {
+            if (!context || !context.titleElement) {
+                return;
+            }
+            context.titleElement.textContent = context.label + ' Time Table';
+        }
+
+        function getClassTimeTableContexts(selections) {
             const contexts = [];
             const seen = new Set();
-            const primaryYear = timeTableYearField ? (timeTableYearField.value || '3') : '3';
-            const primarySemester = timeTableSemesterField ? (timeTableSemesterField.value || '1') : '1';
-            const primaryBranch = timeTableBranchField ? (timeTableBranchField.value || 'IT') : 'IT';
+            const primarySelection = choosePrimarySubjectSelection(selections);
+            const primaryYear = primarySelection ? primarySelection.year : (timeTableYearField ? (timeTableYearField.value || '3') : '3');
+            const primarySemester = primarySelection ? primarySelection.semester : (timeTableSemesterField ? (timeTableSemesterField.value || '1') : '1');
+            const primaryBranch = primarySelection ? primarySelection.branch : (timeTableBranchField ? (timeTableBranchField.value || 'IT') : 'IT');
+            const primaryRegulation = getContextRegulation(primarySelection);
 
             function addContext(context) {
-                if (!context.key || seen.has(context.key)) {
+                if (!context.selectionKey || seen.has(context.selectionKey)) {
                     return;
                 }
-                seen.add(context.key);
+                seen.add(context.selectionKey);
+                updateClassContextTitle(context);
                 contexts.push(context);
             }
 
             addContext({
                 key: getClassContextKey(primaryYear, primarySemester, primaryBranch),
-                selectionKey: normalizeClassValue(subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R22') + '|' + getClassContextKey(primaryYear, primarySemester, primaryBranch),
+                selectionKey: primaryRegulation + '|' + getClassContextKey(primaryYear, primarySemester, primaryBranch),
+                regulation: primaryRegulation,
                 year: normalizeClassValue(primaryYear),
                 semester: normalizeClassValue(primarySemester),
                 branch: normalizeClassValue(primaryBranch),
-                label: getYearSemLabel(primaryYear, primarySemester) + ' ' + getBranchDisplayLabel(primaryBranch),
+                label: primaryRegulation + ' ' + getYearSemLabel(primaryYear, primarySemester) + ' ' + getBranchDisplayLabel(primaryBranch),
                 slots: timeTableSlots,
                 slotSelector: '.timetable-slot',
+                titleElement: document.querySelector('#timetable .section-title'),
                 isPrimary: true
             });
 
@@ -3195,15 +3230,19 @@ Exam Branch
                 const year = yearSem[0] || '';
                 const semester = yearSem[1] || '';
                 const branch = card.dataset.branch || 'IT';
+                const matchingSelection = findSelectionForClass(selections, year, semester, branch);
+                const regulation = getContextRegulation(matchingSelection);
                 addContext({
                     key: getClassContextKey(year, semester, branch),
-                    selectionKey: normalizeClassValue(subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R22') + '|' + getClassContextKey(year, semester, branch),
+                    selectionKey: regulation + '|' + getClassContextKey(year, semester, branch),
+                    regulation: regulation,
                     year: normalizeClassValue(year),
                     semester: normalizeClassValue(semester),
                     branch: normalizeClassValue(branch),
-                    label: getYearSemLabel(year, semester) + ' ' + getBranchDisplayLabel(branch),
+                    label: regulation + ' ' + getYearSemLabel(year, semester) + ' ' + getBranchDisplayLabel(branch),
                     slots: Array.from(card.querySelectorAll('.empty-timetable-slot')),
                     slotSelector: '.empty-timetable-slot',
+                    titleElement: card.querySelector('.card-title'),
                     isPrimary: false
                 });
             });
@@ -3799,7 +3838,7 @@ Exam Branch
                 return;
             }
 
-            const payload = selections[0];
+            const payload = choosePrimarySubjectSelection(selections) || selections[0];
 
             const hasExistingTimetable = timeTableSlots.some(function (slot) {
                 return slot.value.trim();
@@ -3815,12 +3854,15 @@ Exam Branch
             renderSubjectSelectionPreview(selections);
             resetClassTimeTableMerges();
 
+            if (subjectSelectionFields.regulation) {
+                subjectSelectionFields.regulation.value = payload.regulation || subjectSelectionFields.regulation.value || 'R22';
+            }
             timeTableBranchField.value = payload.branch || timeTableBranchField.value;
             timeTableYearField.value = payload.year || timeTableYearField.value;
             timeTableSemesterField.value = payload.semester || timeTableSemesterField.value;
             renderCourseReference(selections);
 
-            const classContexts = getClassTimeTableContexts();
+            const classContexts = getClassTimeTableContexts(selections);
             const timetableSelections = getSelectionsForClassContexts(selections, classContexts);
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
@@ -3847,7 +3889,7 @@ Exam Branch
                     timeTableStatus,
                     'Timetable generated with ' + classTotalHours + ' class hours; each theory subject repeated up to 5 times' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
-                    '; one-hour faculty gap enforced across 2-1, 3-1, and 4-1; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
+                    '; one-hour faculty gap enforced across generated class timetables; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
