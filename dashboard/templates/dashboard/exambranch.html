@@ -3621,6 +3621,15 @@ Exam Branch
 
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap) {
             const assignments = buildClassAssignments(classSelections);
+            const placementAssignments = assignments.slice().sort(function (left, right) {
+                if (left.isLab !== right.isLab) {
+                    return left.isLab ? -1 : 1;
+                }
+                if (left.isActivity !== right.isActivity) {
+                    return left.isActivity ? 1 : -1;
+                }
+                return 0;
+            });
             const counts = {};
             const labDaysUsed = new Set();
             let labMergedCount = 0;
@@ -3642,8 +3651,8 @@ Exam Branch
             days.forEach(function (day, dayIndex) {
                 const dailySubjects = new Set();
                 periodOrder.forEach(function (period, periodIndex) {
-                    for (let offset = 0; offset < assignments.length; offset += 1) {
-                        const assignment = assignments[(dayIndex + periodIndex + offset) % assignments.length];
+                    for (let offset = 0; offset < placementAssignments.length; offset += 1) {
+                        const assignment = placementAssignments[(dayIndex + periodIndex + offset) % placementAssignments.length];
                         const remainingHours = assignment.targetHours - assignment.placedHours;
                         const duration = assignment.isLab ? 2 : 1;
                         if (remainingHours < duration || (!assignment.isActivity && dailySubjects.has(assignment.subjectName))) {
@@ -3675,7 +3684,7 @@ Exam Branch
                 });
             });
 
-            assignments.forEach(function (assignment, assignmentIndex) {
+            placementAssignments.forEach(function (assignment, assignmentIndex) {
                 let guard = 0;
                 while (assignment.placedHours < assignment.targetHours && guard < 100) {
                     guard += 1;
@@ -3712,7 +3721,7 @@ Exam Branch
                 }
             });
 
-            assignments.forEach(function (assignment, assignmentIndex) {
+            placementAssignments.forEach(function (assignment, assignmentIndex) {
                 let guard = 0;
                 while (assignment.placedHours < assignment.targetHours && guard < 100) {
                     guard += 1;
