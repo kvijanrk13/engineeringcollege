@@ -1308,6 +1308,9 @@ Exam Branch
                             <a href="{{ syllabus_url }}" class="btn exam-btn exam-btn-primary">
                                 <i class="fas fa-book me-2"></i>Open Syllabus
                             </a>
+                            <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="III-I IT Time Table" data-table-selector="#timeTableGrid">
+                                <i class="fas fa-file-excel me-2"></i>Download Excel
+                            </button>
                         </div>
                     </div>
 
@@ -1399,7 +1402,12 @@ Exam Branch
                                 <h3 class="card-title mb-1">{{ empty_timetable.year_label }} {{ empty_timetable.branch_label }} empty timetable</h3>
                                 <p class="card-copy mb-0">Blank weekly timetable layout for {{ empty_timetable.year_label }} {{ empty_timetable.branch_label }}.</p>
                             </div>
-                            <span class="subject-count-pill">{{ empty_timetable.year_sem }} {{ empty_timetable.branch_label }}</span>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="subject-count-pill">{{ empty_timetable.year_sem }} {{ empty_timetable.branch_label }}</span>
+                                <button type="button" class="btn exam-btn exam-btn-success main-timetable-download-btn" data-download-main-timetable data-table-title="{{ empty_timetable.year_label }} {{ empty_timetable.branch_label }} Time Table">
+                                    <i class="fas fa-file-excel me-2"></i>Download Excel
+                                </button>
+                            </div>
                         </div>
                         <div class="table-responsive" style="overflow-x: auto;">
                             <table class="table exam-table time-table-grid align-middle mb-0">
@@ -1631,6 +1639,7 @@ Exam Branch
         const timeTableYearField = document.getElementById('timeTableYear');
         const timeTableSemesterField = document.getElementById('timeTableSemester');
         const timeTableBranchField = document.getElementById('timeTableBranch');
+        const mainTimeTableDownloadButtons = Array.from(document.querySelectorAll('[data-download-main-timetable]'));
         const subjectSelectionForm = document.getElementById('facultySubjectSelectionForm');
         const subjectSelectionStatus = document.getElementById('subjectSelectionStatus');
         const subjectSelectionPreviewBody = document.getElementById('subjectSelectionPreviewBody');
@@ -2804,6 +2813,66 @@ Exam Branch
                 console.error('Failed to load timetable data', error);
                 setStatus(timeTableStatus, 'Could not read saved timetable', 'warning');
             }
+        }
+
+        function escapeExcelCell(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function getCellExportValue(cell) {
+            const input = cell.querySelector('textarea, input, select');
+            if (input) {
+                return input.value || '';
+            }
+            return cell.textContent || '';
+        }
+
+        function buildTableExcelHtml(table, title) {
+            let html = '<table border="1">';
+            html += '<tr><th colspan="8">' + escapeExcelCell(title || 'Time Table') + '</th></tr>';
+            Array.from(table.rows).forEach(function (row) {
+                html += '<tr>';
+                Array.from(row.cells).forEach(function (cell) {
+                    if (cell.style.display === 'none') {
+                        return;
+                    }
+                    const tagName = cell.tagName && cell.tagName.toLowerCase() === 'th' ? 'th' : 'td';
+                    const colspan = cell.colSpan && cell.colSpan > 1 ? ' colspan="' + cell.colSpan + '"' : '';
+                    const rowspan = cell.rowSpan && cell.rowSpan > 1 ? ' rowspan="' + cell.rowSpan + '"' : '';
+                    html += '<' + tagName + colspan + rowspan + '>' + escapeExcelCell(getCellExportValue(cell).trim()) + '</' + tagName + '>';
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            return '<html><head><meta charset="utf-8"></head><body>' + html + '</body></html>';
+        }
+
+        function downloadMainTimeTableExcel(button) {
+            const table = button.dataset.tableSelector
+                ? document.querySelector(button.dataset.tableSelector)
+                : (button.closest('[data-empty-timetable-card]') ? button.closest('[data-empty-timetable-card]').querySelector('.time-table-grid') : null);
+            if (!table) {
+                setStatus(timeTableStatus, 'Could not find timetable to download', 'warning');
+                return;
+            }
+
+            const title = button.dataset.tableTitle || 'Time Table';
+            const blob = new Blob([buildTableExcelHtml(table, title)], {
+                type: 'application/vnd.ms-excel;charset=utf-8;'
+            });
+            const link = document.createElement('a');
+            const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'time-table';
+            link.href = URL.createObjectURL(blob);
+            link.download = filename + '.xls';
+            document.body.appendChild(link);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            link.remove();
+            setStatus(timeTableStatus, title + ' Excel download started', 'success');
         }
 
         function clearTimeTableData() {
@@ -4515,6 +4584,12 @@ Exam Branch
             slot.addEventListener('input', markTimeTableDirty);
             slot.addEventListener('change', function () {
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
+            });
+        });
+
+        mainTimeTableDownloadButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                downloadMainTimeTableExcel(button);
             });
         });
 
