@@ -1128,7 +1128,7 @@ Exam Branch
                                     <select id="subjectSelectionBranch" class="form-select subject-selection-input">
                                         {% for syllabus_branch in syllabus_branches %}
                                             <option value="{{ syllabus_branch }}" {% if branch == syllabus_branch %}selected{% endif %}>
-                                                {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% else %}{{ syllabus_branch }}{% endif %}
+                                                {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% elif syllabus_branch == 'H&S' %}H &amp; S{% else %}{{ syllabus_branch }}{% endif %}
                                             </option>
                                         {% endfor %}
                                     </select>
@@ -1283,7 +1283,7 @@ Exam Branch
                             <select id="timeTableBranch" class="form-control timetable-meta-input">
                                 {% for syllabus_branch in syllabus_branches %}
                                     <option value="{{ syllabus_branch }}" {% if branch == syllabus_branch %}selected{% endif %}>
-                                        {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% else %}{{ syllabus_branch }}{% endif %}
+                                        {% if syllabus_branch == 'AIML' %}CSE (AI&amp;ML){% elif syllabus_branch == 'H&S' %}H &amp; S{% else %}{{ syllabus_branch }}{% endif %}
                                     </option>
                                 {% endfor %}
                             </select>
@@ -1789,7 +1789,14 @@ Exam Branch
         }
 
         function getBranchLabel(branch) {
-            return normalizeClassValue(branch) === 'AIML' ? 'CSE (AI&ML)' : branch;
+            const normalizedBranch = normalizeClassValue(branch);
+            if (normalizedBranch === 'AIML') {
+                return 'CSE (AI&ML)';
+            }
+            if (normalizedBranch === 'H&S') {
+                return 'H & S';
+            }
+            return branch;
         }
 
         function syncSelectOptions(selectElement, values, selectedValue, labelFormatter) {
@@ -1837,7 +1844,13 @@ Exam Branch
         }
 
         function normalizeClassValue(value) {
-            return String(value || '').trim().toUpperCase().replace('CSE(AI&ML)', 'AIML').replace('CSE (AI&ML)', 'AIML');
+            return String(value || '')
+                .trim()
+                .toUpperCase()
+                .replace('CSE(AI&ML)', 'AIML')
+                .replace('CSE (AI&ML)', 'AIML')
+                .replace('H & S', 'H&S')
+                .replace('H AND S', 'H&S');
         }
 
         function normalizeTimeTableDisplayValue(value) {
@@ -3289,7 +3302,14 @@ Exam Branch
         }
 
         function getBranchDisplayLabel(branch) {
-            return normalizeClassValue(branch) === 'AIML' ? 'CSE (AI&ML)' : (branch || 'IT');
+            const normalizedBranch = normalizeClassValue(branch);
+            if (normalizedBranch === 'AIML') {
+                return 'CSE (AI&ML)';
+            }
+            if (normalizedBranch === 'H&S') {
+                return 'H & S';
+            }
+            return branch || 'IT';
         }
 
         function getYearSemLabel(year, semester) {
@@ -3518,9 +3538,17 @@ Exam Branch
             return duration;
         }
 
+        function canPlaceLabOnDay(assignment, day, labDaysUsed) {
+            if (!assignment.isLab) {
+                return true;
+            }
+            return normalizeClassValue(day) !== 'SAT' && !labDaysUsed.has(day);
+        }
+
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap) {
             const assignments = buildClassAssignments(classSelections);
             const counts = {};
+            const labDaysUsed = new Set();
             let labMergedCount = 0;
             let totalHours = 0;
 
@@ -3550,6 +3578,9 @@ Exam Branch
                         if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                             continue;
                         }
+                        if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
+                            continue;
+                        }
                         if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true)) {
                             continue;
                         }
@@ -3561,6 +3592,7 @@ Exam Branch
                                 dailySubjects.add(assignment.subjectName);
                             }
                             if (duration > 1) {
+                                labDaysUsed.add(day);
                                 labMergedCount += 1;
                             }
                             break;
@@ -3581,6 +3613,9 @@ Exam Branch
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
+                            if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
+                                continue;
+                            }
                             if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true)) {
                                 continue;
                             }
@@ -3589,6 +3624,7 @@ Exam Branch
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
                                 if (duration > 1) {
+                                    labDaysUsed.add(day);
                                     labMergedCount += 1;
                                 }
                                 placed = true;
@@ -3614,6 +3650,9 @@ Exam Branch
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
+                            if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
+                                continue;
+                            }
                             if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false)) {
                                 continue;
                             }
@@ -3622,6 +3661,7 @@ Exam Branch
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
                                 if (duration > 1) {
+                                    labDaysUsed.add(day);
                                     labMergedCount += 1;
                                 }
                                 placed = true;
@@ -3980,6 +4020,7 @@ Exam Branch
                 SAT: ['acd', 'dm', 'es', 'daa', 'ddb', 'sports']
             };
             const counts = {};
+            const labDaysUsed = new Set();
             let labMergedCount = 0;
 
             timeTableSlots.forEach(function (slot) {
@@ -4004,11 +4045,12 @@ Exam Branch
                     }
 
                     if (isLaboratorySubject(subjectName)) {
-                        if (periodIndex !== 0 && periodIndex !== 3) {
+                        if ((periodIndex !== 0 && periodIndex !== 3) || normalizeClassValue(day) === 'SAT' || labDaysUsed.has(day)) {
                             return;
                         }
                         if (mergeSlotWithNextPeriod(slot, subjectName)) {
                             counts[subjectName] = (counts[subjectName] || 0) + 2;
+                            labDaysUsed.add(day);
                             labMergedCount += 1;
                         }
                         return;

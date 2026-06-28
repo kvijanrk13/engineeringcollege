@@ -9653,7 +9653,8 @@ def get_syllabus_options(regulation='R22'):
     branch_set = set()
     for year_sem in available_year_sems:
         branch_set.update(syllabus_data.get(year_sem, {}).keys())
-    branch_order = ['IT', 'CSE', 'AIML']
+    branch_order = ['CSE', 'AIML', 'IT', 'ECE', 'EEE', 'CE', 'MECH', 'H&S', 'MBA']
+    branch_set.update(branch_order)
     branches = [branch for branch in branch_order if branch in branch_set]
     branches.extend(sorted(branch_set.difference(branches)))
     years = sorted({item.split('-', 1)[0] for item in available_year_sems}, key=int)
@@ -9673,6 +9674,8 @@ def exam_branch_syllabus_subjects(request):
     branch = (request.GET.get('branch') or 'IT').strip().upper()
     if branch == 'CSE(AI&ML)':
         branch = 'AIML'
+    if branch in {'H & S', 'H AND S'}:
+        branch = 'H&S'
 
     if year not in years and years:
         year = years[0]
@@ -9773,6 +9776,8 @@ def exam_branch(request):
         branch = branch.upper()
         if branch == 'CSE(AI&ML)':
             branch = 'AIML'
+        if branch in {'H & S', 'H AND S'}:
+            branch = 'H&S'
         subjects = syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
         additional_empty_timetables = [
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'IT', 'branch_label': 'IT'},
