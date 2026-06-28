@@ -3515,7 +3515,7 @@ Exam Branch
                 const subjectName = (selection.subjectName || '').trim();
                 const displayName = getShortSubjectLabel(subjectName);
                 const facultyKey = getFacultyScheduleKey(selection);
-                const key = facultyKey + '|' + normalizeSubjectNameForSchedule(subjectName);
+                const key = normalizeSubjectNameForSchedule(subjectName);
                 if (!subjectName || assignmentMap.has(key)) {
                     return;
                 }
