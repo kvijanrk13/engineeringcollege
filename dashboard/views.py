@@ -9622,6 +9622,8 @@ def get_syllabus_page_subjects_by_regulation():
         template_source = template_path.read_text(encoding='utf-8')
         r22_syllabus_data = parse_js_object(template_source, 'syllabusData')
         r25_it_data = parse_js_object(template_source, 'r25ITSyllabusData')
+        r25_aiml_data = parse_js_object(template_source, 'r25AIMLSyllabusData')
+        r25_cse_data = parse_js_object(template_source, 'r25CSESyllabusData')
         r25_syllabus_data = {}
 
         for year_sem, subjects in r25_it_data.items():
@@ -9630,6 +9632,16 @@ def get_syllabus_page_subjects_by_regulation():
             r25_syllabus_data[year_sem] = {
                 'IT': [subject for subject in subjects if isinstance(subject, dict)]
             }
+        for year_sem, subjects in r25_aiml_data.items():
+            if not isinstance(subjects, list):
+                continue
+            r25_syllabus_data.setdefault(year_sem, {})
+            r25_syllabus_data[year_sem]['AIML'] = [subject for subject in subjects if isinstance(subject, dict)]
+        for year_sem, subjects in r25_cse_data.items():
+            if not isinstance(subjects, list):
+                continue
+            r25_syllabus_data.setdefault(year_sem, {})
+            r25_syllabus_data[year_sem]['CSE'] = [subject for subject in subjects if isinstance(subject, dict)]
 
         return {
             'R22': r22_syllabus_data,

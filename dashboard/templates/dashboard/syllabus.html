@@ -338,6 +338,18 @@
             </div>
             <div id="r25-it-syllabus-container" class="semester-grid" style="padding: 20px;"></div>
         </div>
+        <div class="sem-card">
+            <div class="sem-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                R25 B.Tech CSE (AI&amp;ML) Course Structure
+            </div>
+            <div id="r25-aiml-syllabus-container" class="semester-grid" style="padding: 20px;"></div>
+        </div>
+        <div class="sem-card">
+            <div class="sem-header" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);">
+                R25 B.Tech Computer Science and Engineering Course Structure
+            </div>
+            <div id="r25-cse-syllabus-container" class="semester-grid" style="padding: 20px;"></div>
+        </div>
     </div>
 </div>
 
@@ -934,6 +946,110 @@
             {code:"2599404", name:"Gender Sensitization / Human Values and Professional Ethics"}
         ]
     };
+    const r25AIMLSyllabusData = {
+        "1-1": [
+            {code:"2599101", name:"Matrices and Calculus"},
+            {code:"2599106", name:"Engineering Physics"},
+            {code:"2503101", name:"Computer Aided Engineering Graphics"},
+            {code:"2502105", name:"Basic Electrical and Electronics Engineering"},
+            {code:"2505101", name:"Programming for Problem Solving"},
+            {code:"2599107", name:"Engineering Physics Laboratory"},
+            {code:"2505102", name:"Programming for Problem Solving Laboratory"},
+            {code:"2505105", name:"IT Workshop"},
+            {code:"2502106", name:"Basic Electrical and Electronics Engineering Laboratory"},
+            {code:"", name:"Induction Program"}
+        ],
+        "1-2": [
+            {code:"2599201", name:"Ordinary Differential Equations and Vector Calculus"},
+            {code:"2599204", name:"Engineering Chemistry"},
+            {code:"2599205", name:"English for Skill Enhancement"},
+            {code:"2505201", name:"Python Programming"},
+            {code:"2505203", name:"Data Structures"},
+            {code:"2599206", name:"Engineering Chemistry Laboratory"},
+            {code:"2505202", name:"Python Programming Laboratory"},
+            {code:"2505204", name:"Data Structures Laboratory"},
+            {code:"2599207", name:"English Language and Communication Skills Laboratory"},
+            {code:"2503202", name:"Engineering Workshop"}
+        ],
+        "2-1": [
+            {code:"2599303", name:"Mathematical and Statistical Foundations"},
+            {code:"2505304", name:"Computer Organization and Architecture"},
+            {code:"2505305", name:"Object Oriented Programming through Java"},
+            {code:"2505306", name:"Software Engineering"},
+            {code:"2505307", name:"Database Management Systems"},
+            {code:"2599302", name:"Computational Mathematics Laboratory"},
+            {code:"2505308", name:"Object Oriented Programming through Java Laboratory"},
+            {code:"2505309", name:"Software Engineering Laboratory"},
+            {code:"2505310", name:"Database Management Systems Laboratory"},
+            {code:"2505311", name:"Skill Development Course-1(Node JS/React JS/Django)"},
+            {code:"2599305", name:"Value Ethics and Gender Sensitization"}
+        ],
+        "2-2": [
+            {code:"2599402", name:"Discrete Mathematics"},
+            {code:"2505401", name:"Operating Systems"},
+            {code:"2505402", name:"Design and Analysis of Algorithms"},
+            {code:"2505403", name:"Computer Networks"},
+            {code:"2505404", name:"Machine Learning"},
+            {code:"2588401", name:"Innovation and Entrepreneurship"},
+            {code:"2505405", name:"Operating Systems Laboratory"},
+            {code:"2505406", name:"Computer Networks Laboratory"},
+            {code:"2505407", name:"Machine Learning Laboratory"},
+            {code:"2505408", name:"Skill Development Course-2 ( Data Visualization- R / Power BI)"},
+            {code:"2599406", name:"Environmental Science / Indian Knowledge System"}
+        ]
+    };
+    const r25CSESyllabusData = {
+        "1-1": [
+            {code:"2599101", name:"Matrices and Calculus"},
+            {code:"2599102", name:"Engineering Chemistry"},
+            {code:"2599103", name:"English for Skill Enhancement"},
+            {code:"2503101", name:"Computer Aided Engineering Graphics"},
+            {code:"2505101", name:"Programming for Problem Solving"},
+            {code:"2599104", name:"English Language and Communication Skills Laboratory"},
+            {code:"2599105", name:"Engineering Chemistry Laboratory"},
+            {code:"2505102", name:"Programming for Problem Solving Laboratory"},
+            {code:"2503102", name:"Engineering Workshop"},
+            {code:"", name:"Induction Program"}
+        ],
+        "1-2": [
+            {code:"2599201", name:"Ordinary Differential Equations and Vector Calculus"},
+            {code:"2599202", name:"Engineering Physics"},
+            {code:"2505201", name:"Python Programming"},
+            {code:"2502201", name:"Basic Electrical and Electronics Engineering"},
+            {code:"2505203", name:"Data Structures"},
+            {code:"2599203", name:"Engineering Physics Laboratory"},
+            {code:"2505202", name:"Python Programming Laboratory"},
+            {code:"2502202", name:"Basic Electrical and Electronics Engineering Laboratory"},
+            {code:"2505204", name:"Data Structures Laboratory"},
+            {code:"2505205", name:"IT Workshop"}
+        ],
+        "2-1": [
+            {code:"2599301", name:"Computer Oriented Statistical Methods"},
+            {code:"2505304", name:"Computer Organization and Architecture"},
+            {code:"2505305", name:"Object Oriented Programming Through Java"},
+            {code:"2505306", name:"Software Engineering"},
+            {code:"2505307", name:"Database Management Systems"},
+            {code:"2588301", name:"Innovation and Entrepreneurship"},
+            {code:"2505308", name:"Object Oriented Programming Through Java Laboratory"},
+            {code:"2505309", name:"Software Engineering Laboratory"},
+            {code:"2505310", name:"Database Management Systems Laboratory"},
+            {code:"2505311", name:"Skill Development Course - 1 (Node.js / ReactJS/ DJango)"},
+            {code:"2599304", name:"Environmental Science / Indian Knowledge System"}
+        ],
+        "2-2": [
+            {code:"2599405", name:"Discrete Mathematics"},
+            {code:"2505401", name:"Operating Systems"},
+            {code:"2505402", name:"Design and Analysis of Algorithms"},
+            {code:"2505403", name:"Computer Networks"},
+            {code:"2505404", name:"Machine Learning"},
+            {code:"2599403", name:"Computational Mathematics Laboratory"},
+            {code:"2505405", name:"Operating Systems Laboratory"},
+            {code:"2505406", name:"Computer Networks Laboratory"},
+            {code:"2505407", name:"Machine Learning Laboratory"},
+            {code:"2505408", name:"Skill Development Course - 2 (Data Visualization - R / Power BI)"},
+            {code:"2599404", name:"Value Ethics And Gender Sensitization"}
+        ]
+    };
 
     /* ============================================
        RENDER FUNCTIONS
@@ -966,13 +1082,13 @@
         container.innerHTML = html;
     }
 
-    function renderR25ITSyllabus() {
-        const container = document.getElementById('r25-it-syllabus-container');
+    function renderR25Syllabus(data, containerId) {
+        const container = document.getElementById(containerId);
         if (!container) return;
 
         let html = '';
         ["1-1", "1-2", "2-1", "2-2"].forEach(sem => {
-            const subjects = r25ITSyllabusData[sem] || [];
+            const subjects = data[sem] || [];
             html += `
                 <div class="sem-card">
                     <div class="sem-header">Semester ${sem} <span style="font-size:0.8rem; opacity:0.8;">(${subjects.length} subjects)</span></div>
@@ -992,6 +1108,12 @@
             html += `</tbody></table></div>`;
         });
         container.innerHTML = html;
+    }
+
+    function renderR25ITSyllabus() {
+        renderR25Syllabus(r25ITSyllabusData, 'r25-it-syllabus-container');
+        renderR25Syllabus(r25AIMLSyllabusData, 'r25-aiml-syllabus-container');
+        renderR25Syllabus(r25CSESyllabusData, 'r25-cse-syllabus-container');
     }
 
     /**
