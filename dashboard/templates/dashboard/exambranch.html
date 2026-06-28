@@ -2862,6 +2862,35 @@ Exam Branch
             return [];
         }
 
+        function normalizeFacultyNameForSort(name) {
+            return normalizeSubjectNameForSchedule(name || '').replace(/[^A-Z0-9]/g, '');
+        }
+
+        function sortSubjectSelectionsByFaculty(selections) {
+            return normalizeSubjectSelections(selections).map(function (selection, index) {
+                return {
+                    selection: selection,
+                    index: index,
+                    facultyKey: normalizeFacultyNameForSort(selection.facultyName),
+                    employeeKey: normalizeClassValue(selection.employeeCode || ''),
+                    branchKey: normalizeClassValue(selection.branch || ''),
+                    yearKey: normalizeClassValue(selection.year || ''),
+                    semesterKey: normalizeClassValue(selection.semester || ''),
+                    subjectKey: normalizeSubjectNameForSchedule(selection.subjectName || '')
+                };
+            }).sort(function (left, right) {
+                return left.facultyKey.localeCompare(right.facultyKey) ||
+                    left.employeeKey.localeCompare(right.employeeKey) ||
+                    left.branchKey.localeCompare(right.branchKey) ||
+                    left.yearKey.localeCompare(right.yearKey) ||
+                    left.semesterKey.localeCompare(right.semesterKey) ||
+                    left.subjectKey.localeCompare(right.subjectKey) ||
+                    left.index - right.index;
+            }).map(function (entry) {
+                return entry.selection;
+            });
+        }
+
         function getStoredSubjectSelections() {
             const saved = localStorage.getItem(subjectSelectionStorageKey);
             if (!saved) {
@@ -2876,7 +2905,7 @@ Exam Branch
         }
 
         function storeSubjectSelections(selections) {
-            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(normalizeSubjectSelections(selections)));
+            localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(sortSubjectSelectionsByFaculty(selections)));
         }
 
         function updateSubjectSelectionCount(count) {
@@ -2886,7 +2915,7 @@ Exam Branch
         }
 
         function renderSubjectSelectionPreview(payload) {
-            const selections = normalizeSubjectSelections(payload);
+            const selections = sortSubjectSelectionsByFaculty(payload);
             subjectSelectionPreviewBody.innerHTML = '';
             updateSubjectSelectionCount(selections.length);
             renderCourseReference(selections);
