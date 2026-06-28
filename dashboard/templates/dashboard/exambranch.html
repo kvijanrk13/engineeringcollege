@@ -1835,6 +1835,21 @@ Exam Branch
             return String(value || '').trim().toUpperCase().replace('CSE(AI&ML)', 'AIML').replace('CSE (AI&ML)', 'AIML');
         }
 
+        function normalizeTimeTableDisplayValue(value) {
+            const rawValue = String(value || '').trim();
+            if (!rawValue) {
+                return '';
+            }
+
+            const parts = rawValue.split(' - ');
+            if (parts.length > 1) {
+                const subjectPart = parts.pop();
+                return parts.concat(getShortSubjectLabel(subjectPart)).join(' - ');
+            }
+
+            return getShortSubjectLabel(rawValue);
+        }
+
         function getTimeTableClassSelections(selections) {
             const branch = normalizeClassValue(timeTableBranchField ? timeTableBranchField.value : 'IT');
             const year = normalizeClassValue(timeTableYearField ? timeTableYearField.value : '3');
@@ -2575,7 +2590,7 @@ Exam Branch
                 return {
                     day: slot.dataset.day || '',
                     period: slot.dataset.period || '',
-                    value: slot.value
+                    value: normalizeTimeTableDisplayValue(slot.value)
                 };
             });
 
@@ -2590,7 +2605,7 @@ Exam Branch
                     return {
                         day: slot.dataset.day || '',
                         period: slot.dataset.period || '',
-                        value: slot.value
+                        value: normalizeTimeTableDisplayValue(slot.value)
                     };
                 });
 
@@ -2625,7 +2640,7 @@ Exam Branch
                 const match = slots.find(function (entry) {
                     return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
                 });
-                slot.value = match ? (match.value || '') : '';
+                slot.value = match ? normalizeTimeTableDisplayValue(match.value) : '';
             });
             restoreClassLabMergesFromValues();
 
@@ -2657,7 +2672,7 @@ Exam Branch
                     const match = individualSlots.find(function (entry) {
                         return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
                     });
-                    slot.value = match ? (match.value || '') : '';
+                    slot.value = match ? normalizeTimeTableDisplayValue(match.value) : '';
                 });
                 restoreIndividualLabMergesFromValues(card);
             });
@@ -2959,6 +2974,62 @@ Exam Branch
             return /\b(lab|laboratory)\b/i.test(subjectName || '') ||
                 /\bes\s*lab\b|\bdm\s*lab\b|\bcd\s*lab\b|flutter\s*lab/i.test(subjectName || '') ||
                 /skill development course|ui design flutter/i.test(subjectName || '');
+        }
+
+        function getShortSubjectLabel(subjectName) {
+            const trimmedName = String(subjectName || '').trim();
+            if (!trimmedName) {
+                return '';
+            }
+            if (/^(SPORTS|LIBRARY|MENTORING)$/i.test(trimmedName)) {
+                return trimmedName.toUpperCase();
+            }
+            const canonicalShortLabels = {
+                'CD LAB': 'CD Lab',
+                'ES LAB': 'ES Lab',
+                'DM LAB': 'DM Lab',
+                'FLUTTER LAB': 'Flutter Lab'
+            };
+            const normalizedTrimmedName = normalizeSubjectNameForSchedule(trimmedName);
+            if (canonicalShortLabels[normalizedTrimmedName]) {
+                return canonicalShortLabels[normalizedTrimmedName];
+            }
+            if (/^[A-Z0-9]{2,6}(?:\s+Lab)?$/.test(trimmedName)) {
+                return trimmedName;
+            }
+
+            const labels = getScheduleLabelsForSubjectName(trimmedName).filter(function (label) {
+                return label && label !== trimmedName;
+            });
+            return labels[0] || buildSubjectAcronym(trimmedName) || trimmedName;
+        }
+
+        function buildSubjectAcronym(subjectName) {
+            const originalName = String(subjectName || '').trim();
+            if (!originalName) {
+                return '';
+            }
+
+            const isLab = isLaboratorySubject(originalName);
+            const cleanedName = normalizeSubjectNameForSchedule(originalName)
+                .replace(/\([^)]*\)/g, ' ')
+                .replace(/\bLABORATORY\b|\bLAB\b/g, ' ')
+                .replace(/[^A-Z0-9 ]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const stopWords = new Set(['AND', 'OF', 'THE', 'FOR', 'TO', 'IN', 'ON', 'WITH']);
+            const words = cleanedName.split(' ').filter(function (word) {
+                return word && !stopWords.has(word);
+            });
+            const acronym = words.map(function (word) {
+                return word.charAt(0);
+            }).join('').slice(0, 6);
+
+            if (!acronym) {
+                return isLab ? 'Lab' : originalName;
+            }
+
+            return isLab ? acronym + ' Lab' : acronym;
         }
 
         function resetClassTimeTableMerges(slots) {
@@ -3311,6 +3382,7 @@ Exam Branch
             const assignmentMap = new Map();
             normalizeSubjectSelections(classSelections).forEach(function (selection) {
                 const subjectName = (selection.subjectName || '').trim();
+                const displayName = getShortSubjectLabel(subjectName);
                 const facultyKey = getFacultyScheduleKey(selection);
                 const key = facultyKey + '|' + normalizeSubjectNameForSchedule(subjectName);
                 if (!subjectName || assignmentMap.has(key)) {
@@ -3319,18 +3391,42 @@ Exam Branch
                 assignmentMap.set(key, {
                     selection: selection,
                     subjectName: subjectName,
+                    displayName: displayName,
                     facultyKey: facultyKey,
                     isLab: isLaboratorySubject(subjectName),
                     targetHours: isLaboratorySubject(subjectName) ? 2 : 5,
                     placedHours: 0
                 });
             });
+            if (!assignmentMap.size) {
+                return [];
+            }
+            [
+                { subjectName: 'SPORTS', displayName: 'SPORTS' },
+                { subjectName: 'LIBRARY', displayName: 'LIBRARY' },
+                { subjectName: 'MENTORING', displayName: 'MENTORING' }
+            ].forEach(function (activity) {
+                if (assignmentMap.has(activity.subjectName)) {
+                    return;
+                }
+                assignmentMap.set(activity.subjectName, {
+                    selection: null,
+                    subjectName: activity.subjectName,
+                    displayName: activity.displayName,
+                    facultyKey: '',
+                    isLab: false,
+                    isActivity: true,
+                    targetHours: 1,
+                    placedHours: 0
+                });
+            });
             return Array.from(assignmentMap.values());
         }
 
-        function canUseClassSlot(context, day, periodIndex, duration, facultyKey, occupancyMap) {
+        function canUseClassSlot(context, day, periodIndex, duration, facultyKey, occupancyMap, enforceFacultyGap) {
             const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
             const cell = slot ? slot.closest('td') : null;
+            const shouldEnforceFacultyGap = enforceFacultyGap !== false;
             if (!slot || !cell || cell.style.display === 'none' || slot.value.trim()) {
                 return false;
             }
@@ -3341,21 +3437,21 @@ Exam Branch
                     return false;
                 }
             }
-            return canFacultyTeachWithGap(occupancyMap, facultyKey, day, periodIndex, duration);
+            return !shouldEnforceFacultyGap || canFacultyTeachWithGap(occupancyMap, facultyKey, day, periodIndex, duration);
         }
 
-        function placeClassAssignment(context, day, periodIndex, assignment, occupancyMap) {
+        function placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, enforceFacultyGap) {
             const duration = assignment.isLab ? 2 : 1;
             const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
-            if (!slot || !canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap)) {
+            if (!slot || !canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, enforceFacultyGap)) {
                 return 0;
             }
             if (duration > 1) {
-                if (!mergeSlotWithNextPeriod(slot, assignment.subjectName, context.slotSelector)) {
+                if (!mergeSlotWithNextPeriod(slot, assignment.displayName, context.slotSelector)) {
                     return 0;
                 }
             } else {
-                slot.value = assignment.subjectName;
+                slot.value = assignment.displayName;
             }
             reserveFacultyPeriods(occupancyMap, assignment.facultyKey, day, periodIndex, duration);
             assignment.placedHours += duration;
@@ -3388,20 +3484,22 @@ Exam Branch
                         const assignment = assignments[(dayIndex + periodIndex + offset) % assignments.length];
                         const remainingHours = assignment.targetHours - assignment.placedHours;
                         const duration = assignment.isLab ? 2 : 1;
-                        if (remainingHours < duration || dailySubjects.has(assignment.subjectName)) {
+                        if (remainingHours < duration || (!assignment.isActivity && dailySubjects.has(assignment.subjectName))) {
                             continue;
                         }
                         if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                             continue;
                         }
-                        if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap)) {
+                        if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true)) {
                             continue;
                         }
-                        const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap);
+                        const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, true);
                         if (placedHours) {
                             counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                             totalHours += placedHours;
-                            dailySubjects.add(assignment.subjectName);
+                            if (!assignment.isActivity) {
+                                dailySubjects.add(assignment.subjectName);
+                            }
                             if (duration > 1) {
                                 labMergedCount += 1;
                             }
@@ -3409,6 +3507,72 @@ Exam Branch
                         }
                     }
                 });
+            });
+
+            assignments.forEach(function (assignment, assignmentIndex) {
+                let guard = 0;
+                while (assignment.placedHours < assignment.targetHours && guard < 100) {
+                    guard += 1;
+                    let placed = false;
+                    for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
+                        const day = days[(assignmentIndex + dayOffset) % days.length];
+                        for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                            const duration = assignment.isLab ? 2 : 1;
+                            if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                                continue;
+                            }
+                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true)) {
+                                continue;
+                            }
+                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, true);
+                            if (placedHours) {
+                                counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                                totalHours += placedHours;
+                                if (duration > 1) {
+                                    labMergedCount += 1;
+                                }
+                                placed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!placed) {
+                        break;
+                    }
+                }
+            });
+
+            assignments.forEach(function (assignment, assignmentIndex) {
+                let guard = 0;
+                while (assignment.placedHours < assignment.targetHours && guard < 100) {
+                    guard += 1;
+                    let placed = false;
+                    for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
+                        const day = days[(assignmentIndex + dayOffset) % days.length];
+                        for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                            const duration = assignment.isLab ? 2 : 1;
+                            if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                                continue;
+                            }
+                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false)) {
+                                continue;
+                            }
+                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, false);
+                            if (placedHours) {
+                                counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                                totalHours += placedHours;
+                                if (duration > 1) {
+                                    labMergedCount += 1;
+                                }
+                                placed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!placed) {
+                        break;
+                    }
+                }
             });
 
             return {
@@ -3481,6 +3645,10 @@ Exam Branch
             }
             if (normalized.includes('SKILL DEVELOPMENT COURSE') || normalized.includes('UI DESIGN FLUTTER')) {
                 labels.push('Flutter Lab');
+            }
+            const fallbackAcronym = buildSubjectAcronym(subjectName);
+            if (fallbackAcronym) {
+                labels.push(fallbackAcronym);
             }
 
             return uniqueSubjectNames(labels);
@@ -3556,8 +3724,13 @@ Exam Branch
 
         function populateIndividualCardFromClassSchedule(card, schedule, classContexts) {
             const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
-            const normalizedLabels = labels.flatMap(function (label) {
-                return getScheduleLabelsForSubjectName(label).map(normalizeSubjectNameForSchedule);
+            const normalizedLabels = new Set();
+            labels.forEach(function (label) {
+                normalizedLabels.add(normalizeSubjectNameForSchedule(label));
+                normalizedLabels.add(normalizeSubjectNameForSchedule(getShortSubjectLabel(label)));
+                getScheduleLabelsForSubjectName(label).forEach(function (alias) {
+                    normalizedLabels.add(normalizeSubjectNameForSchedule(alias));
+                });
             });
             let filledHours = 0;
 
@@ -3569,7 +3742,7 @@ Exam Branch
             (classContexts || getClassTimeTableContexts()).forEach(function (context) {
                 context.slots.forEach(function (classSlot) {
                     const subjectName = (classSlot.value || '').trim();
-                    if (!subjectName || !normalizedLabels.includes(normalizeSubjectNameForSchedule(subjectName))) {
+                    if (!subjectName || !normalizedLabels.has(normalizeSubjectNameForSchedule(subjectName))) {
                         return;
                     }
 
@@ -3723,13 +3896,13 @@ Exam Branch
 
             theoryKeys.forEach(function (key) {
                 if (!lookup[key] && remainingTheorySubjects.length) {
-                    lookup[key] = remainingTheorySubjects.shift();
+                    lookup[key] = getShortSubjectLabel(remainingTheorySubjects.shift());
                 }
             });
 
             labKeys.forEach(function (key) {
                 if (!lookup[key] && remainingLabSubjects.length) {
-                    lookup[key] = remainingLabSubjects.shift();
+                    lookup[key] = getShortSubjectLabel(remainingLabSubjects.shift());
                 }
             });
 
@@ -3823,6 +3996,26 @@ Exam Branch
                 : uniqueSubjectNames(fallbackSubjectNames);
         }
 
+        function getRequiredHourSummary(classSelections) {
+            const assignments = buildClassAssignments(classSelections);
+            const theoryCount = assignments.filter(function (assignment) {
+                return !assignment.isLab && !assignment.isActivity;
+            }).length;
+            const labCount = assignments.filter(function (assignment) {
+                return assignment.isLab;
+            }).length;
+            const activityCount = assignments.filter(function (assignment) {
+                return assignment.isActivity;
+            }).length;
+
+            return {
+                theoryCount: theoryCount,
+                labCount: labCount,
+                activityCount: activityCount,
+                totalHours: (theoryCount * 5) + (labCount * 2) + activityCount
+            };
+        }
+
         function generateTimeTableFromSubjectSelection() {
             const currentPayload = getSubjectSelectionPayload();
             let selections = getStoredSubjectSelections();
@@ -3879,6 +4072,14 @@ Exam Branch
                 }, { labMergedCount: 0, totalHours: 0 });
                 const labMergedCount = classGeneration.labMergedCount || 0;
                 const classTotalHours = classGeneration.totalHours || 0;
+                const requiredSummary = classContexts.reduce(function (summary, context) {
+                    const required = getRequiredHourSummary(getSelectionsForClassContext(selections, context));
+                    summary.theoryCount += required.theoryCount;
+                    summary.labCount += required.labCount;
+                    summary.activityCount += required.activityCount;
+                    summary.totalHours += required.totalHours;
+                    return summary;
+                }, { theoryCount: 0, labCount: 0, activityCount: 0, totalHours: 0 });
                 const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections, classContexts);
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
@@ -3887,9 +4088,11 @@ Exam Branch
                 markTimeTableDirty();
                 setStatus(
                     timeTableStatus,
-                    'Timetable generated with ' + classTotalHours + ' class hours; each theory subject repeated up to 5 times' +
+                    'Timetable generated with ' + classTotalHours + ' class hours; required load is ' +
+                    requiredSummary.theoryCount + ' theory x 5 + ' + requiredSummary.labCount + ' lab x 2 + ' +
+                    requiredSummary.activityCount + ' activity = ' + requiredSummary.totalHours + ' hours' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
-                    '; one-hour faculty gap enforced across generated class timetables; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
+                    '; short subject names are used in main and individual timetables; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
                     'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
