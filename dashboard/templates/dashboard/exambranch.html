@@ -1687,6 +1687,11 @@ Exam Branch
             return Array.from(root.querySelectorAll('.individual-timetable-slot'));
         }
 
+        function getEmptyTimeTableSlots(card) {
+            const root = card || document;
+            return Array.from(root.querySelectorAll('.empty-timetable-slot'));
+        }
+
         function getIndividualTimeTableMetaFields(card) {
             const root = card || individualTimeTableContainer || document;
             return Array.from(root.querySelectorAll('.individual-timetable-meta-input'));
@@ -1848,6 +1853,21 @@ Exam Branch
             }
 
             return getShortSubjectLabel(rawValue);
+        }
+
+        function normalizeTimeTableSlotValues(slots) {
+            (slots || []).forEach(function (slot) {
+                const normalizedValue = normalizeTimeTableDisplayValue(slot.value);
+                if (slot.value !== normalizedValue) {
+                    slot.value = normalizedValue;
+                }
+            });
+        }
+
+        function normalizeAllTimeTableSlotValues() {
+            normalizeTimeTableSlotValues(timeTableSlots);
+            normalizeTimeTableSlotValues(getEmptyTimeTableSlots());
+            normalizeTimeTableSlotValues(getIndividualTimeTableSlots());
         }
 
         function getTimeTableClassSelections(selections) {
@@ -2615,9 +2635,28 @@ Exam Branch
                 };
             });
 
+            const emptyTables = emptyTimeTableCards.map(function (card) {
+                const emptySlots = getEmptyTimeTableSlots(card).map(function (slot) {
+                    return {
+                        yearSem: slot.dataset.yearSem || card.dataset.yearSem || '',
+                        branch: slot.dataset.branch || card.dataset.branch || '',
+                        day: slot.dataset.day || '',
+                        period: slot.dataset.period || '',
+                        value: normalizeTimeTableDisplayValue(slot.value)
+                    };
+                });
+
+                return {
+                    yearSem: card.dataset.yearSem || '',
+                    branch: card.dataset.branch || '',
+                    slots: emptySlots
+                };
+            });
+
             return {
                 meta: meta,
                 slots: slots,
+                emptyTables: emptyTables,
                 individualTables: individualTables,
                 individualMeta: individualTables[0] ? individualTables[0].meta : {},
                 individualSlots: individualTables[0] ? individualTables[0].slots : [],
@@ -2642,7 +2681,27 @@ Exam Branch
                 });
                 slot.value = match ? normalizeTimeTableDisplayValue(match.value) : '';
             });
-            restoreClassLabMergesFromValues();
+            restoreClassLabMergesFromValues(timeTableSlots);
+
+            if (Object.prototype.hasOwnProperty.call(data, 'emptyTables')) {
+                const emptyTables = Array.isArray(data.emptyTables) ? data.emptyTables : [];
+                emptyTimeTableCards.forEach(function (card) {
+                    const cardSlots = getEmptyTimeTableSlots(card);
+                    const tableData = emptyTables.find(function (entry) {
+                        return entry.yearSem === card.dataset.yearSem && entry.branch === card.dataset.branch;
+                    }) || {};
+                    const emptySlots = Array.isArray(tableData.slots) ? tableData.slots : [];
+
+                    resetClassTimeTableMerges(cardSlots);
+                    cardSlots.forEach(function (slot) {
+                        const match = emptySlots.find(function (entry) {
+                            return entry.day === slot.dataset.day && entry.period === slot.dataset.period;
+                        });
+                        slot.value = match ? normalizeTimeTableDisplayValue(match.value) : '';
+                    });
+                    restoreClassLabMergesFromValues(cardSlots);
+                });
+            }
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -2676,6 +2735,7 @@ Exam Branch
                 });
                 restoreIndividualLabMergesFromValues(card);
             });
+            normalizeAllTimeTableSlotValues();
         }
 
         function hasTimeTableContent() {
@@ -2716,7 +2776,7 @@ Exam Branch
                 return;
             }
             localStorage.removeItem(timeTableStorageKey);
-            setTimeTablePayload({ slots: [], individualSlots: [], individualMeta: {} });
+            setTimeTablePayload({ slots: [], emptyTables: [], individualSlots: [], individualMeta: {} });
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
         }
 
@@ -3074,9 +3134,9 @@ Exam Branch
             return true;
         }
 
-        function restoreClassLabMergesFromValues() {
+        function restoreClassLabMergesFromValues(slots) {
             const labStartPeriods = ['9:30-10:30', '1:20-2:15'];
-            timeTableSlots.forEach(function (slot) {
+            (slots || timeTableSlots).forEach(function (slot) {
                 const subjectName = (slot.value || '').trim();
                 if (
                     !subjectName ||
@@ -4081,6 +4141,7 @@ Exam Branch
                     return summary;
                 }, { theoryCount: 0, labCount: 0, activityCount: 0, totalHours: 0 });
                 const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections, classContexts);
+                normalizeAllTimeTableSlotValues();
 
                 if (syllabusSubjectSelect && payload.subjectCode) {
                     syllabusSubjectSelect.value = payload.subjectCode;
@@ -4148,6 +4209,16 @@ Exam Branch
 
         timeTableSlots.forEach(function (slot) {
             slot.addEventListener('input', markTimeTableDirty);
+            slot.addEventListener('change', function () {
+                slot.value = normalizeTimeTableDisplayValue(slot.value);
+            });
+        });
+
+        getEmptyTimeTableSlots().forEach(function (slot) {
+            slot.addEventListener('input', markTimeTableDirty);
+            slot.addEventListener('change', function () {
+                slot.value = normalizeTimeTableDisplayValue(slot.value);
+            });
         });
 
         timeTableMetaFields.forEach(function (field) {
@@ -4167,6 +4238,11 @@ Exam Branch
                     event.target.classList.contains('individual-timetable-meta-input')
                 ) {
                     markTimeTableDirty();
+                }
+            });
+            individualTimeTableContainer.addEventListener('change', function (event) {
+                if (event.target.classList.contains('individual-timetable-slot')) {
+                    event.target.value = normalizeTimeTableDisplayValue(event.target.value);
                 }
             });
         }
