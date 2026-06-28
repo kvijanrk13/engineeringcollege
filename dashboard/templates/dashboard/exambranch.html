@@ -3511,7 +3511,8 @@ Exam Branch
 
         function buildClassAssignments(classSelections) {
             const assignmentMap = new Map();
-            normalizeSubjectSelections(classSelections).forEach(function (selection) {
+            const normalizedClassSelections = normalizeSubjectSelections(classSelections);
+            normalizedClassSelections.forEach(function (selection) {
                 const subjectName = (selection.subjectName || '').trim();
                 const displayName = getShortSubjectLabel(subjectName);
                 const facultyKey = getFacultyScheduleKey(selection);
@@ -3531,6 +3532,28 @@ Exam Branch
             });
             if (!assignmentMap.size) {
                 return [];
+            }
+            const shouldApplyStandardITLabs = normalizedClassSelections.some(function (selection) {
+                return normalizeClassValue(selection.branch) === 'IT' &&
+                    normalizeClassValue(selection.year) === '3' &&
+                    normalizeClassValue(selection.semester) === '1';
+            });
+            if (shouldApplyStandardITLabs) {
+                ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'].forEach(function (labName) {
+                    const key = normalizeSubjectNameForSchedule(labName);
+                    if (assignmentMap.has(key)) {
+                        return;
+                    }
+                    assignmentMap.set(key, {
+                        selection: null,
+                        subjectName: labName,
+                        displayName: labName,
+                        facultyKey: '',
+                        isLab: true,
+                        targetHours: 2,
+                        placedHours: 0
+                    });
+                });
             }
             [
                 { subjectName: 'SPORTS', displayName: 'SPORTS' },
