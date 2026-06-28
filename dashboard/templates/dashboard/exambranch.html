@@ -1647,6 +1647,7 @@ Exam Branch
             previousResult: document.getElementById('subjectPreviousResult')
         };
         const periodOrder = ['9:30-10:30', '10:30-11:30', '11:40-12:40', '1:20-2:15', '2:15-3:10', '3:15-4:10'];
+        const departmentBranches = ['CSE', 'AIML', 'IT', 'ECE', 'EEE', 'CE', 'MECH', 'H&S', 'MBA'];
 
         function setStatus(element, message, tone) {
             if (!element) return;
@@ -1819,14 +1820,35 @@ Exam Branch
             }
         }
 
+        function mergeDepartmentBranches(branches) {
+            const seen = new Set();
+            return departmentBranches.concat(Array.isArray(branches) ? branches : []).filter(function (branch) {
+                const normalizedBranch = normalizeClassValue(branch);
+                if (!normalizedBranch || seen.has(normalizedBranch)) {
+                    return false;
+                }
+                seen.add(normalizedBranch);
+                return true;
+            }).map(function (branch) {
+                return normalizeClassValue(branch);
+            });
+        }
+
         function syncSubjectSelectionOptions(data) {
             if (!data) {
                 return;
             }
+            const mergedBranches = mergeDepartmentBranches(data.branches);
             syncSelectOptions(
                 subjectSelectionFields.branch,
-                Array.isArray(data.branches) ? data.branches : [],
+                mergedBranches,
                 data.branch,
+                getBranchLabel
+            );
+            syncSelectOptions(
+                timeTableBranchField,
+                mergedBranches,
+                timeTableBranchField ? timeTableBranchField.value : data.branch,
                 getBranchLabel
             );
             syncSelectOptions(
