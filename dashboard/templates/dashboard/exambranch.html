@@ -3112,6 +3112,10 @@ Exam Branch
                 'CD LAB': 'CD Lab',
                 'ES LAB': 'ES Lab',
                 'DM LAB': 'DM Lab',
+                'OS LAB': 'OS Lab',
+                'IOT LAB': 'IoT Lab',
+                'JAVA LAB': 'Java Lab',
+                'CM LAB': 'CM Lab',
                 'FLUTTER LAB': 'Flutter Lab'
             };
             const normalizedTrimmedName = normalizeSubjectNameForSchedule(trimmedName);
@@ -3533,13 +3537,19 @@ Exam Branch
             if (!assignmentMap.size) {
                 return [];
             }
-            const shouldApplyStandardITLabs = normalizedClassSelections.some(function (selection) {
-                return normalizeClassValue(selection.branch) === 'IT' &&
-                    normalizeClassValue(selection.year) === '3' &&
-                    normalizeClassValue(selection.semester) === '1';
-            });
-            if (shouldApplyStandardITLabs) {
-                ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'].forEach(function (labName) {
+            const standardLabMap = {
+                'IT|2|1': ['CM Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
+                'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab']
+            };
+            const standardLabKeys = new Set(normalizedClassSelections.map(function (selection) {
+                return [
+                    normalizeClassValue(selection.branch),
+                    normalizeClassValue(selection.year),
+                    normalizeClassValue(selection.semester)
+                ].join('|');
+            }));
+            standardLabKeys.forEach(function (standardLabKey) {
+                (standardLabMap[standardLabKey] || []).forEach(function (labName) {
                     const key = normalizeSubjectNameForSchedule(labName);
                     if (assignmentMap.has(key)) {
                         return;
@@ -3554,7 +3564,7 @@ Exam Branch
                         placedHours: 0
                     });
                 });
-            }
+            });
             [
                 { subjectName: 'SPORTS', displayName: 'SPORTS' },
                 { subjectName: 'LIBRARY', displayName: 'LIBRARY' },
@@ -3779,6 +3789,11 @@ Exam Branch
                 IT504PC: ['CD Lab'],
                 IT505PC: ['ES Lab'],
                 IT532PE: ['DM Lab'],
+                IT503PC: ['ES', 'ES Lab'],
+                '2512302': ['OS Lab'],
+                '2504311': ['IoT Lab'],
+                '2505308': ['Java Lab'],
+                '2599302': ['CM Lab'],
                 CS507PC: ['Flutter Lab']
             };
 
@@ -3825,6 +3840,24 @@ Exam Branch
             }
             if (normalized.includes('COMPILER DESIGN LABORATORY') || normalized.includes('COMPILER DESIGN LAB')) {
                 labels.push('CD Lab');
+            }
+            if (normalized.includes('OPERATING SYSTEMS LABORATORY') || normalized.includes('OPERATING SYSTEMS LAB')) {
+                labels.push('OS Lab');
+            } else if (normalized.includes('OPERATING SYSTEMS')) {
+                labels.push('OS');
+                labels.push('OS Lab');
+            }
+            if (normalized.includes('INTERNET OF THINGS LABORATORY') || normalized.includes('INTERNET OF THINGS LAB') || normalized.includes('IOT LAB')) {
+                labels.push('IoT Lab');
+            }
+            if (normalized.includes('OBJECT ORIENTED PROGRAMMING THROUGH JAVA LABORATORY') || normalized.includes('JAVA LABORATORY') || normalized.includes('JAVA LAB')) {
+                labels.push('Java Lab');
+            } else if (normalized.includes('OBJECT ORIENTED PROGRAMMING THROUGH JAVA')) {
+                labels.push('Java');
+                labels.push('Java Lab');
+            }
+            if (normalized.includes('COMPUTATIONAL MATHEMATICS LABORATORY') || normalized.includes('COMPUTATIONAL MATHEMATICS LAB')) {
+                labels.push('CM Lab');
             }
             if (normalized.includes('SKILL DEVELOPMENT COURSE') || normalized.includes('UI DESIGN FLUTTER')) {
                 labels.push('Flutter Lab');
