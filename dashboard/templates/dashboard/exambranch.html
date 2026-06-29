@@ -1604,8 +1604,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2'];
-        const timeTableStorageKey = 'examBranchTimeTableDataCompleteR22ThreeOneITV3';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3'];
+        const timeTableStorageKey = 'examBranchTimeTableDataCompleteR22ThreeOneITV4';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -4013,13 +4013,22 @@ Exam Branch
             const wantedKeys = new Set(wantedLabels.map(function (entry) {
                 return normalizeSubjectNameForSchedule(entry);
             }));
-            return (assignments || []).find(function (assignment) {
-                const assignmentLabels = getScheduleLabelsForSubjectName(assignment.subjectName || assignment.displayName)
-                    .concat([assignment.displayName, assignment.subjectName]);
+            const labelIsLab = isLaboratorySubject(label);
+            const candidates = (assignments || []).filter(function (assignment) {
+                if (labelIsLab !== Boolean(assignment.isLab)) {
+                    return false;
+                }
+                const assignmentLabels = [assignment.displayName, assignment.subjectName]
+                    .concat(getScheduleLabelsForSubjectName(assignment.subjectName || assignment.displayName));
                 return assignmentLabels.some(function (entry) {
                     return wantedKeys.has(normalizeSubjectNameForSchedule(entry));
                 });
-            }) || null;
+            });
+            const exactLabelKey = normalizeSubjectNameForSchedule(label);
+            return candidates.find(function (assignment) {
+                return normalizeSubjectNameForSchedule(assignment.displayName) === exactLabelKey ||
+                    normalizeSubjectNameForSchedule(assignment.subjectName) === exactLabelKey;
+            }) || candidates[0] || null;
         }
 
         function applyR22ThreeOneITFullPlan(context, assignments, occupancyMap) {
