@@ -2110,9 +2110,45 @@ Exam Branch
             });
         }
 
+        function getR22ThreeOneITClassHourSummary(context) {
+            const summary = {
+                theory: 0,
+                lab: 0,
+                activity: 0,
+                total: 0
+            };
+            const activities = new Set(['SPORTS', 'LIBRARY', 'MENTORING']);
+            (context && context.slots ? context.slots : []).forEach(function (slot) {
+                const cell = getTimeTableSlotCell(slot);
+                if (!cell || cell.style.display === 'none' || !slot.value.trim()) {
+                    return;
+                }
+                const hours = cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1;
+                const value = normalizeSubjectNameForSchedule(slot.value);
+                summary.total += hours;
+                if (activities.has(value)) {
+                    summary.activity += hours;
+                } else if (isLaboratorySubject(slot.value)) {
+                    summary.lab += hours;
+                } else {
+                    summary.theory += hours;
+                }
+            });
+            return summary;
+        }
+
+        function hasCompleteR22ThreeOneITLoad(context) {
+            const summary = getR22ThreeOneITClassHourSummary(context);
+            return summary.theory === 25 &&
+                summary.lab === 8 &&
+                summary.activity === 3 &&
+                summary.total === 36 &&
+                !hasVisibleBlankClassSlot(context);
+        }
+
         function ensureR22ThreeOneITCompletePlan() {
             const context = getClassTimeTableContexts().find(isR22ThreeOneITContext);
-            if (!context || !hasVisibleBlankClassSlot(context)) {
+            if (!context || hasCompleteR22ThreeOneITLoad(context)) {
                 return false;
             }
             return applyR22ThreeOneITDisplayPlan(context);
