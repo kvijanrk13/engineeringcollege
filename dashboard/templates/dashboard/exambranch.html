@@ -1604,7 +1604,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const timeTableStorageKey = 'examBranchTimeTableData';
+        const legacyTimeTableStorageKey = 'examBranchTimeTableData';
+        const timeTableStorageKey = 'examBranchTimeTableDataNoSameHourRepeatsV2';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2953,7 +2954,15 @@ Exam Branch
         }
 
         function loadTimeTableData() {
-            const saved = localStorage.getItem(timeTableStorageKey);
+            const legacySaved = localStorage.getItem(legacyTimeTableStorageKey);
+            let saved = localStorage.getItem(timeTableStorageKey);
+            const migratedLegacyTimetable = !saved && Boolean(legacySaved);
+            if (migratedLegacyTimetable) {
+                saved = legacySaved;
+            }
+            if (legacySaved) {
+                localStorage.removeItem(legacyTimeTableStorageKey);
+            }
             if (!saved) {
                 setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
                 return;
@@ -2965,9 +2974,12 @@ Exam Branch
                 setStatus(
                     timeTableStatus,
                     'Timetable loaded from ' + formatSavedTime(payload.savedAt) +
-                    (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : ''),
+                    (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : ''),
                     'success'
                 );
+                if (repairedSameHourRepeats || migratedLegacyTimetable) {
+                    saveTimeTableData();
+                }
             } catch (error) {
                 console.error('Failed to load timetable data', error);
                 setStatus(timeTableStatus, 'Could not read saved timetable', 'warning');
@@ -4871,6 +4883,13 @@ Exam Branch
         loadTimeTableData();
         loadSubjectSelection();
         loadSyllabusSubjects();
+        window.setTimeout(function () {
+            const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
+            if (repairedSameHourRepeats) {
+                saveTimeTableData();
+                setStatus(timeTableStatus, 'Same-hour repeated subjects were corrected and saved', 'success');
+            }
+        }, 500);
     })();
 </script>
 {% endblock %}
