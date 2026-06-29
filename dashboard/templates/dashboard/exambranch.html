@@ -4573,14 +4573,15 @@ Exam Branch
         }
 
         function populateIndividualCardFromClassSchedule(card, schedule, classContexts) {
-            const labels = uniqueSubjectNames(schedule.subjectLabels || schedule.subjects || []);
+            const labels = uniqueSubjectNames(
+                (schedule.selections || []).map(function (selection) {
+                    return getShortSubjectLabel(selection.subjectName || '');
+                }).concat(schedule.subjects || [])
+            );
             const normalizedLabels = new Set();
             labels.forEach(function (label) {
                 normalizedLabels.add(normalizeSubjectNameForSchedule(label));
                 normalizedLabels.add(normalizeSubjectNameForSchedule(getShortSubjectLabel(label)));
-                getScheduleLabelsForSubjectName(label).forEach(function (alias) {
-                    normalizedLabels.add(normalizeSubjectNameForSchedule(alias));
-                });
             });
             let filledHours = 0;
 
@@ -4620,7 +4621,6 @@ Exam Branch
                 });
             });
 
-            filledHours += topUpIndividualRequiredLoads(card, schedule);
             return filledHours;
         }
 
