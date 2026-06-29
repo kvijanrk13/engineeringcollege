@@ -1604,8 +1604,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5'];
-        const timeTableStorageKey = 'examBranchTimeTableDataR25FullLoadV6';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6'];
+        const timeTableStorageKey = 'examBranchTimeTableDataR25PowerBILoadV7';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2109,7 +2109,7 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['CM Lab', null, 'COA', 'Java', 'OS', 'IoT'],
+                MON: ['Power BI Lab', null, 'COA', 'Java', 'OS', 'IoT'],
                 TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
                 WED: ['Java Lab', null, 'IoT', 'DV', 'COA', 'Java'],
                 THU: ['COA', 'IoT', 'OS', 'IoT Lab', null, 'DV'],
@@ -2199,6 +2199,7 @@ Exam Branch
         function hasCompleteR25TwoOneITLoad(context) {
             const summary = getR22ThreeOneITClassHourSummary(context);
             const requiredTheoryLabels = ['COA', 'Java', 'OS', 'IoT', 'DV'];
+            const requiredLabLabels = ['Power BI Lab', 'OS Lab', 'Java Lab', 'IoT Lab'];
             return summary.theory === 25 &&
                 summary.lab === 8 &&
                 summary.activity === 3 &&
@@ -2206,6 +2207,9 @@ Exam Branch
                 !hasVisibleBlankClassSlot(context) &&
                 requiredTheoryLabels.every(function (label) {
                     return countClassHoursForLabel(context, label) === 5;
+                }) &&
+                requiredLabLabels.every(function (label) {
+                    return countClassHoursForLabel(context, label) === 2;
                 });
         }
 
@@ -2217,7 +2221,7 @@ Exam Branch
             return applyR22ThreeOneITDisplayPlan(context);
         }
 
-        function ensureR25TwoOneITCOAPlan() {
+        function ensureR25TwoOneITCompletePlan() {
             const context = getClassTimeTableContexts().find(isR25TwoOneITContext);
             if (!context || hasCompleteR25TwoOneITLoad(context)) {
                 return false;
@@ -2964,7 +2968,7 @@ Exam Branch
 
         function getTimeTablePayload() {
             ensureR22ThreeOneITCompletePlan();
-            ensureR25TwoOneITCOAPlan();
+            ensureR25TwoOneITCompletePlan();
             repairAllClassTimeTableSameHourRepeats();
             normalizeAllTimeTableSlotValues();
             const meta = {};
@@ -3144,19 +3148,19 @@ Exam Branch
                 const payload = JSON.parse(saved);
                 const repairedSameHourRepeats = setTimeTablePayload(payload);
                 const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
-                const completedR25TwoOneITCOA = ensureR25TwoOneITCOAPlan();
+                const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
                 setStatus(
                     timeTableStatus,
                     'Timetable loaded from ' + formatSavedTime(payload.savedAt) +
                     (completedR22ThreeOneIT ? '; R22 III-I IT empty slots were filled' :
-                        (completedR25TwoOneITCOA ? '; R25 II-I IT COA slots were aligned' :
+                        (completedR25TwoOneIT ? '; R25 II-I IT full load was filled' :
                         (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : ''))),
                     'success'
                 );
-                if (completedR22ThreeOneIT || completedR25TwoOneITCOA) {
+                if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                     refreshIndividualTimeTablesFromCurrentSelections();
                 }
-                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneITCOA) {
+                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneIT) {
                     saveTimeTableData();
                 }
             } catch (error) {
@@ -3203,7 +3207,7 @@ Exam Branch
 
         function downloadMainTimeTableExcel(button) {
             ensureR22ThreeOneITCompletePlan();
-            ensureR25TwoOneITCOAPlan();
+            ensureR25TwoOneITCompletePlan();
             repairAllClassTimeTableSameHourRepeats();
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
@@ -3538,10 +3542,12 @@ Exam Branch
                 'IOT LAB': 'IoT Lab',
                 'JAVA LAB': 'Java Lab',
                 'CM LAB': 'CM Lab',
+                'POWER BI LAB': 'Power BI Lab',
+                'POWERBI LAB': 'Power BI Lab',
                 'FLUTTER LAB': 'Flutter Lab',
                 'COA': 'COA',
                 'DV': 'DV',
-                'DV LAB': 'DV Lab'
+                'DV LAB': 'Power BI Lab'
             };
             const normalizedTrimmedName = normalizeSubjectNameForSchedule(trimmedName);
             if (canonicalShortLabels[normalizedTrimmedName]) {
@@ -4018,7 +4024,7 @@ Exam Branch
                 return [];
             }
             const standardLabMap = {
-                'IT|2|1': ['CM Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
+                'IT|2|1': ['Power BI Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
                 'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab']
             };
             const standardLabKeys = new Set(normalizedClassSelections.map(function (selection) {
@@ -4231,7 +4237,7 @@ Exam Branch
             let labMergedCount = 0;
             let totalHours = 0;
             const assignmentByLabel = {};
-            const requiredLabels = ['COA', 'Java', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'CM Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+            const requiredLabels = ['COA', 'Java', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'Power BI Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
                 assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
@@ -4242,7 +4248,7 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['CM Lab', null, 'COA', 'Java', 'OS', 'IoT'],
+                MON: ['Power BI Lab', null, 'COA', 'Java', 'OS', 'IoT'],
                 TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
                 WED: ['Java Lab', null, 'IoT', 'DV', 'COA', 'Java'],
                 THU: ['COA', 'IoT', 'OS', 'IoT Lab', null, 'DV'],
@@ -4511,7 +4517,7 @@ Exam Branch
                 '2512302': ['OS Lab'],
                 '2504311': ['IoT Lab'],
                 '2505308': ['Java Lab'],
-                '2599302': ['CM Lab'],
+                '2599302': ['Power BI Lab'],
                 CS507PC: ['Flutter Lab']
             };
 
@@ -4559,6 +4565,7 @@ Exam Branch
             }
             if (normalized.includes('DATA VISUALIZATION')) {
                 labels.push('DV');
+                labels.push('Power BI Lab');
             }
             if (normalized.includes('DISTRIBUTED DATABASES')) {
                 labels.push('DDB');
@@ -4587,7 +4594,12 @@ Exam Branch
             if (normalized.includes('COMPUTATIONAL MATHEMATICS LABORATORY') || normalized.includes('COMPUTATIONAL MATHEMATICS LAB')) {
                 labels.push('CM Lab');
             }
-            if (normalized.includes('SKILL DEVELOPMENT COURSE') || normalized.includes('UI DESIGN FLUTTER')) {
+            if (normalized.includes('POWER BI') || normalized.includes('POWERBI') || normalized.includes('TABLEAU') || normalized.includes('GOOGLE CHART')) {
+                labels.push('DV');
+                labels.push('Power BI Lab');
+            }
+            if ((normalized.includes('SKILL DEVELOPMENT COURSE') && !normalized.includes('DATA VISUALIZATION') && !normalized.includes('POWER BI') && !normalized.includes('POWERBI')) ||
+                normalized.includes('UI DESIGN FLUTTER')) {
                 labels.push('Flutter Lab');
             }
             const fallbackAcronym = buildSubjectAcronym(subjectName);
@@ -4881,7 +4893,7 @@ Exam Branch
                 compilerLab: ['COMPILER DESIGN LABORATORY', 'COMPILER DESIGN LAB'],
                 embeddedLab: ['EMBEDDED SYSTEMS LABORATORY', 'EMBEDDED SYSTEMS LAB'],
                 dataMiningLab: ['DATA MINING LABORATORY', 'DATA MINING LAB'],
-                sdc: ['SKILL DEVELOPMENT COURSE (UI DESIGN FLUTTER)', 'SKILL DEVELOPMENT COURSE', 'UI DESIGN FLUTTER']
+                sdc: ['SKILL DEVELOPMENT COURSE (UI DESIGN FLUTTER)', 'UI DESIGN FLUTTER']
             };
             const allSubjectNames = uniqueSubjectNames(subjectNames);
             const availableSubjects = allSubjectNames.map(function (subjectName) {
@@ -5263,19 +5275,19 @@ Exam Branch
         loadSyllabusSubjects();
         window.setTimeout(function () {
             const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
-            const completedR25TwoOneITCOA = ensureR25TwoOneITCOAPlan();
+            const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
-            if (completedR22ThreeOneIT || completedR25TwoOneITCOA) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneITCOA || repairedSameHourRepeats) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
                     completedR22ThreeOneIT
                         ? 'R22 III-I IT empty slots were filled and saved'
-                        : (completedR25TwoOneITCOA
-                            ? 'R25 II-I IT COA main and individual slots were aligned'
+                        : (completedR25TwoOneIT
+                            ? 'R25 II-I IT full load was filled and saved'
                             : 'Same-hour repeated subjects were corrected and saved'),
                     'success'
                 );
