@@ -1604,8 +1604,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKey = 'examBranchTimeTableData';
-        const timeTableStorageKey = 'examBranchTimeTableDataNoSameHourRepeatsV2';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2'];
+        const timeTableStorageKey = 'examBranchTimeTableDataCompleteR22ThreeOneITV3';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2062,6 +2062,60 @@ Exam Branch
             return contexts.reduce(function (total, context) {
                 return total + repairSameHourSubjectRepeats(context.slots, context.slotSelector);
             }, 0);
+        }
+
+        function applyR22ThreeOneITDisplayPlan(context) {
+            if (!isR22ThreeOneITContext(context)) {
+                return false;
+            }
+
+            const plan = {
+                MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
+                TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
+                WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
+                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'DDB'],
+                FRI: ['ES', 'MENTORING', 'ACD', 'DM', 'DDB', 'DAA'],
+                SAT: ['ACD', 'DDB', 'SPORTS', 'ES', 'DM', 'LIBRARY']
+            };
+
+            resetClassTimeTableMerges(context.slots);
+            context.slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            Object.keys(plan).forEach(function (day) {
+                plan[day].forEach(function (label, periodIndex) {
+                    if (!label) {
+                        return;
+                    }
+                    const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+                    if (!slot) {
+                        return;
+                    }
+                    if (isLaboratorySubject(label)) {
+                        mergeSlotWithNextPeriod(slot, label, context.slotSelector);
+                        return;
+                    }
+                    slot.value = label;
+                });
+            });
+
+            return true;
+        }
+
+        function hasVisibleBlankClassSlot(context) {
+            return (context && context.slots ? context.slots : []).some(function (slot) {
+                const cell = getTimeTableSlotCell(slot);
+                return cell && cell.style.display !== 'none' && !slot.value.trim();
+            });
+        }
+
+        function ensureR22ThreeOneITCompletePlan() {
+            const context = getClassTimeTableContexts().find(isR22ThreeOneITContext);
+            if (!context || !hasVisibleBlankClassSlot(context)) {
+                return false;
+            }
+            return applyR22ThreeOneITDisplayPlan(context);
         }
 
         function getTimeTableClassSelections(selections) {
@@ -2795,6 +2849,7 @@ Exam Branch
         }
 
         function getTimeTablePayload() {
+            ensureR22ThreeOneITCompletePlan();
             repairAllClassTimeTableSameHourRepeats();
             normalizeAllTimeTableSlotValues();
             const meta = {};
@@ -2954,15 +3009,17 @@ Exam Branch
         }
 
         function loadTimeTableData() {
-            const legacySaved = localStorage.getItem(legacyTimeTableStorageKey);
+            const legacySaved = legacyTimeTableStorageKeys.map(function (key) {
+                return localStorage.getItem(key);
+            }).find(Boolean);
             let saved = localStorage.getItem(timeTableStorageKey);
             const migratedLegacyTimetable = !saved && Boolean(legacySaved);
             if (migratedLegacyTimetable) {
                 saved = legacySaved;
             }
-            if (legacySaved) {
-                localStorage.removeItem(legacyTimeTableStorageKey);
-            }
+            legacyTimeTableStorageKeys.forEach(function (key) {
+                localStorage.removeItem(key);
+            });
             if (!saved) {
                 setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
                 return;
@@ -2971,13 +3028,15 @@ Exam Branch
             try {
                 const payload = JSON.parse(saved);
                 const repairedSameHourRepeats = setTimeTablePayload(payload);
+                const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
                 setStatus(
                     timeTableStatus,
                     'Timetable loaded from ' + formatSavedTime(payload.savedAt) +
-                    (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : ''),
+                    (completedR22ThreeOneIT ? '; R22 III-I IT empty slots were filled' :
+                        (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : '')),
                     'success'
                 );
-                if (repairedSameHourRepeats || migratedLegacyTimetable) {
+                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT) {
                     saveTimeTableData();
                 }
             } catch (error) {
@@ -3023,6 +3082,7 @@ Exam Branch
         }
 
         function downloadMainTimeTableExcel(button) {
+            ensureR22ThreeOneITCompletePlan();
             repairAllClassTimeTableSameHourRepeats();
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
@@ -4975,10 +5035,17 @@ Exam Branch
         loadSubjectSelection();
         loadSyllabusSubjects();
         window.setTimeout(function () {
+            const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
-            if (repairedSameHourRepeats) {
+            if (completedR22ThreeOneIT || repairedSameHourRepeats) {
                 saveTimeTableData();
-                setStatus(timeTableStatus, 'Same-hour repeated subjects were corrected and saved', 'success');
+                setStatus(
+                    timeTableStatus,
+                    completedR22ThreeOneIT
+                        ? 'R22 III-I IT empty slots were filled and saved'
+                        : 'Same-hour repeated subjects were corrected and saved',
+                    'success'
+                );
             }
         }, 500);
     })();
