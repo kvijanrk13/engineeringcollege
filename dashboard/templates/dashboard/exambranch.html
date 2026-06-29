@@ -1604,8 +1604,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4'];
-        const timeTableStorageKey = 'examBranchTimeTableDataMainIndividualMatchV5';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5'];
+        const timeTableStorageKey = 'examBranchTimeTableDataR25FullLoadV6';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2109,10 +2109,10 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['Java Lab', null, 'COA', 'Java', 'OS', 'IoT'],
+                MON: ['CM Lab', null, 'COA', 'Java', 'OS', 'IoT'],
                 TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
-                WED: ['IoT Lab', null, 'IoT', 'DV', 'COA', 'Java'],
-                THU: ['COA', 'IoT', 'OS', 'DV Lab', null, 'DV'],
+                WED: ['Java Lab', null, 'IoT', 'DV', 'COA', 'Java'],
+                THU: ['COA', 'IoT', 'OS', 'IoT Lab', null, 'DV'],
                 FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
                 SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
             };
@@ -2196,6 +2196,19 @@ Exam Branch
                 !hasVisibleBlankClassSlot(context);
         }
 
+        function hasCompleteR25TwoOneITLoad(context) {
+            const summary = getR22ThreeOneITClassHourSummary(context);
+            const requiredTheoryLabels = ['COA', 'Java', 'OS', 'IoT', 'DV'];
+            return summary.theory === 25 &&
+                summary.lab === 8 &&
+                summary.activity === 3 &&
+                summary.total === 36 &&
+                !hasVisibleBlankClassSlot(context) &&
+                requiredTheoryLabels.every(function (label) {
+                    return countClassHoursForLabel(context, label) === 5;
+                });
+        }
+
         function ensureR22ThreeOneITCompletePlan() {
             const context = getClassTimeTableContexts().find(isR22ThreeOneITContext);
             if (!context || hasCompleteR22ThreeOneITLoad(context)) {
@@ -2206,7 +2219,7 @@ Exam Branch
 
         function ensureR25TwoOneITCOAPlan() {
             const context = getClassTimeTableContexts().find(isR25TwoOneITContext);
-            if (!context || countClassHoursForLabel(context, 'COA') === 5) {
+            if (!context || hasCompleteR25TwoOneITLoad(context)) {
                 return false;
             }
             return applyR25TwoOneITDisplayPlan(context);
@@ -4218,7 +4231,7 @@ Exam Branch
             let labMergedCount = 0;
             let totalHours = 0;
             const assignmentByLabel = {};
-            const requiredLabels = ['COA', 'Java', 'OS', 'IoT', 'OS Lab', 'IoT Lab', 'Java Lab', 'CM Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+            const requiredLabels = ['COA', 'Java', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'CM Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
                 assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
@@ -4230,11 +4243,11 @@ Exam Branch
 
             const plan = {
                 MON: ['CM Lab', null, 'COA', 'Java', 'OS', 'IoT'],
-                TUE: ['OS Lab', null, 'Java', 'OS', 'IoT', 'COA'],
-                WED: ['Java Lab', null, 'OS', 'IoT', 'COA', 'Java'],
-                THU: ['COA', 'IoT', 'MENTORING', 'IoT Lab', null, 'OS'],
-                FRI: ['OS', 'COA', 'IoT', 'LIBRARY', 'Java', 'SPORTS'],
-                SAT: ['IoT', 'Java', 'COA', 'OS', 'Java', 'OS']
+                TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
+                WED: ['Java Lab', null, 'IoT', 'DV', 'COA', 'Java'],
+                THU: ['COA', 'IoT', 'OS', 'IoT Lab', null, 'DV'],
+                FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
+                SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
