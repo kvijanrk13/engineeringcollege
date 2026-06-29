@@ -3940,6 +3940,90 @@ Exam Branch
             }, 0);
         }
 
+        function isR22ThreeOneITContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '3' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'IT';
+        }
+
+        function findClassAssignmentByLabel(assignments, label) {
+            const wantedLabels = getScheduleLabelsForSubjectName(label).concat([label, getShortSubjectLabel(label)]);
+            const wantedKeys = new Set(wantedLabels.map(function (entry) {
+                return normalizeSubjectNameForSchedule(entry);
+            }));
+            return (assignments || []).find(function (assignment) {
+                const assignmentLabels = getScheduleLabelsForSubjectName(assignment.subjectName || assignment.displayName)
+                    .concat([assignment.displayName, assignment.subjectName]);
+                return assignmentLabels.some(function (entry) {
+                    return wantedKeys.has(normalizeSubjectNameForSchedule(entry));
+                });
+            }) || null;
+        }
+
+        function applyR22ThreeOneITFullPlan(context, assignments, occupancyMap) {
+            const subjectPeriodUsageMap = createSubjectPeriodUsageMap();
+            const counts = {};
+            let labMergedCount = 0;
+            let totalHours = 0;
+            const assignmentByLabel = {};
+            const requiredLabels = ['DAA', 'ACD', 'ES', 'DM', 'DDB', 'CD Lab', 'DM Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+
+            requiredLabels.forEach(function (label) {
+                assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
+            });
+
+            if (requiredLabels.some(function (label) { return !assignmentByLabel[label]; })) {
+                return null;
+            }
+
+            const plan = {
+                MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
+                TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
+                WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
+                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'DDB'],
+                FRI: ['ES', 'MENTORING', 'ACD', 'DM', 'DDB', 'DAA'],
+                SAT: ['ACD', 'DDB', 'SPORTS', 'ES', 'DM', 'LIBRARY']
+            };
+
+            resetClassTimeTableMerges(context.slots);
+            context.slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            Object.keys(plan).forEach(function (day) {
+                plan[day].forEach(function (label, periodIndex) {
+                    if (!label) {
+                        return;
+                    }
+                    const assignment = assignmentByLabel[label];
+                    const placedHours = placeClassAssignment(
+                        context,
+                        day,
+                        periodIndex,
+                        assignment,
+                        occupancyMap,
+                        false,
+                        subjectPeriodUsageMap
+                    );
+                    if (placedHours) {
+                        counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                        totalHours += placedHours;
+                        if (assignment.isLab) {
+                            labMergedCount += 1;
+                        }
+                    }
+                });
+            });
+
+            return {
+                counts: counts,
+                labMergedCount: labMergedCount,
+                totalHours: totalHours
+            };
+        }
+
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap) {
             const assignments = buildClassAssignments(classSelections);
             const placementAssignments = assignments.slice().sort(function (left, right) {
@@ -3964,6 +4048,13 @@ Exam Branch
 
             if (!assignments.length) {
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
+            }
+
+            if (isR22ThreeOneITContext(context)) {
+                const standardPlan = applyR22ThreeOneITFullPlan(context, assignments, occupancyMap);
+                if (standardPlan) {
+                    return standardPlan;
+                }
             }
 
             const days = Array.from(new Set(context.slots.map(function (slot) {
