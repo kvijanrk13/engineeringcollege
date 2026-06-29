@@ -1604,8 +1604,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3'];
-        const timeTableStorageKey = 'examBranchTimeTableDataCompleteR22ThreeOneITV4';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4'];
+        const timeTableStorageKey = 'examBranchTimeTableDataMainIndividualMatchV5';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2103,11 +2103,61 @@ Exam Branch
             return true;
         }
 
+        function applyR25TwoOneITDisplayPlan(context) {
+            if (!isR25TwoOneITContext(context)) {
+                return false;
+            }
+
+            const plan = {
+                MON: ['Java Lab', null, 'COA', 'Java', 'OS', 'IoT'],
+                TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
+                WED: ['IoT Lab', null, 'IoT', 'DV', 'COA', 'Java'],
+                THU: ['COA', 'IoT', 'OS', 'DV Lab', null, 'DV'],
+                FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
+                SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
+            };
+
+            resetClassTimeTableMerges(context.slots);
+            context.slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            Object.keys(plan).forEach(function (day) {
+                plan[day].forEach(function (label, periodIndex) {
+                    if (!label) {
+                        return;
+                    }
+                    const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+                    if (!slot) {
+                        return;
+                    }
+                    if (isLaboratorySubject(label)) {
+                        mergeSlotWithNextPeriod(slot, label, context.slotSelector);
+                        return;
+                    }
+                    slot.value = label;
+                });
+            });
+
+            return true;
+        }
+
         function hasVisibleBlankClassSlot(context) {
             return (context && context.slots ? context.slots : []).some(function (slot) {
                 const cell = getTimeTableSlotCell(slot);
                 return cell && cell.style.display !== 'none' && !slot.value.trim();
             });
+        }
+
+        function countClassHoursForLabel(context, label) {
+            const normalizedLabel = normalizeSubjectNameForSchedule(label);
+            return (context && context.slots ? context.slots : []).reduce(function (total, slot) {
+                const cell = getTimeTableSlotCell(slot);
+                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(slot.value) !== normalizedLabel) {
+                    return total;
+                }
+                return total + (cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1);
+            }, 0);
         }
 
         function getR22ThreeOneITClassHourSummary(context) {
@@ -2152,6 +2202,21 @@ Exam Branch
                 return false;
             }
             return applyR22ThreeOneITDisplayPlan(context);
+        }
+
+        function ensureR25TwoOneITCOAPlan() {
+            const context = getClassTimeTableContexts().find(isR25TwoOneITContext);
+            if (!context || countClassHoursForLabel(context, 'COA') === 5) {
+                return false;
+            }
+            return applyR25TwoOneITDisplayPlan(context);
+        }
+
+        function refreshIndividualTimeTablesFromCurrentSelections() {
+            const selections = getStoredSubjectSelections();
+            const contexts = getClassTimeTableContexts(selections);
+            const timetableSelections = getSelectionsForClassContexts(selections, contexts);
+            return renderIndividualFacultyTimeTables(timetableSelections, contexts);
         }
 
         function getTimeTableClassSelections(selections) {
@@ -2886,6 +2951,7 @@ Exam Branch
 
         function getTimeTablePayload() {
             ensureR22ThreeOneITCompletePlan();
+            ensureR25TwoOneITCOAPlan();
             repairAllClassTimeTableSameHourRepeats();
             normalizeAllTimeTableSlotValues();
             const meta = {};
@@ -3065,14 +3131,19 @@ Exam Branch
                 const payload = JSON.parse(saved);
                 const repairedSameHourRepeats = setTimeTablePayload(payload);
                 const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
+                const completedR25TwoOneITCOA = ensureR25TwoOneITCOAPlan();
                 setStatus(
                     timeTableStatus,
                     'Timetable loaded from ' + formatSavedTime(payload.savedAt) +
                     (completedR22ThreeOneIT ? '; R22 III-I IT empty slots were filled' :
-                        (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : '')),
+                        (completedR25TwoOneITCOA ? '; R25 II-I IT COA slots were aligned' :
+                        (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : ''))),
                     'success'
                 );
-                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT) {
+                if (completedR22ThreeOneIT || completedR25TwoOneITCOA) {
+                    refreshIndividualTimeTablesFromCurrentSelections();
+                }
+                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneITCOA) {
                     saveTimeTableData();
                 }
             } catch (error) {
@@ -3119,6 +3190,7 @@ Exam Branch
 
         function downloadMainTimeTableExcel(button) {
             ensureR22ThreeOneITCompletePlan();
+            ensureR25TwoOneITCOAPlan();
             repairAllClassTimeTableSameHourRepeats();
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
@@ -3453,7 +3525,10 @@ Exam Branch
                 'IOT LAB': 'IoT Lab',
                 'JAVA LAB': 'Java Lab',
                 'CM LAB': 'CM Lab',
-                'FLUTTER LAB': 'Flutter Lab'
+                'FLUTTER LAB': 'Flutter Lab',
+                'COA': 'COA',
+                'DV': 'DV',
+                'DV LAB': 'DV Lab'
             };
             const normalizedTrimmedName = normalizeSubjectNameForSchedule(trimmedName);
             if (canonicalShortLabels[normalizedTrimmedName]) {
@@ -4044,6 +4119,14 @@ Exam Branch
                 normalizeClassValue(context.branch) === 'IT';
         }
 
+        function isR25TwoOneITContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R25' &&
+                normalizeAcademicLevelValue(context.year) === '2' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'IT';
+        }
+
         function findClassAssignmentByLabel(assignments, label) {
             const wantedLabels = getScheduleLabelsForSubjectName(label).concat([label, getShortSubjectLabel(label)]);
             const wantedKeys = new Set(wantedLabels.map(function (entry) {
@@ -4129,6 +4212,68 @@ Exam Branch
             };
         }
 
+        function applyR25TwoOneITFullPlan(context, assignments, occupancyMap) {
+            const subjectPeriodUsageMap = createSubjectPeriodUsageMap();
+            const counts = {};
+            let labMergedCount = 0;
+            let totalHours = 0;
+            const assignmentByLabel = {};
+            const requiredLabels = ['COA', 'Java', 'OS', 'IoT', 'OS Lab', 'IoT Lab', 'Java Lab', 'CM Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+
+            requiredLabels.forEach(function (label) {
+                assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
+            });
+
+            if (requiredLabels.some(function (label) { return !assignmentByLabel[label]; })) {
+                return null;
+            }
+
+            const plan = {
+                MON: ['CM Lab', null, 'COA', 'Java', 'OS', 'IoT'],
+                TUE: ['OS Lab', null, 'Java', 'OS', 'IoT', 'COA'],
+                WED: ['Java Lab', null, 'OS', 'IoT', 'COA', 'Java'],
+                THU: ['COA', 'IoT', 'MENTORING', 'IoT Lab', null, 'OS'],
+                FRI: ['OS', 'COA', 'IoT', 'LIBRARY', 'Java', 'SPORTS'],
+                SAT: ['IoT', 'Java', 'COA', 'OS', 'Java', 'OS']
+            };
+
+            resetClassTimeTableMerges(context.slots);
+            context.slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            Object.keys(plan).forEach(function (day) {
+                plan[day].forEach(function (label, periodIndex) {
+                    if (!label) {
+                        return;
+                    }
+                    const assignment = assignmentByLabel[label];
+                    const placedHours = placeClassAssignment(
+                        context,
+                        day,
+                        periodIndex,
+                        assignment,
+                        occupancyMap,
+                        false,
+                        subjectPeriodUsageMap
+                    );
+                    if (placedHours) {
+                        counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                        totalHours += placedHours;
+                        if (assignment.isLab) {
+                            labMergedCount += 1;
+                        }
+                    }
+                });
+            });
+
+            return {
+                counts: counts,
+                labMergedCount: labMergedCount,
+                totalHours: totalHours
+            };
+        }
+
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap) {
             const assignments = buildClassAssignments(classSelections);
             const placementAssignments = assignments.slice().sort(function (left, right) {
@@ -4157,6 +4302,13 @@ Exam Branch
 
             if (isR22ThreeOneITContext(context)) {
                 const standardPlan = applyR22ThreeOneITFullPlan(context, assignments, occupancyMap);
+                if (standardPlan) {
+                    return standardPlan;
+                }
+            }
+
+            if (isR25TwoOneITContext(context)) {
+                const standardPlan = applyR25TwoOneITFullPlan(context, assignments, occupancyMap);
                 if (standardPlan) {
                     return standardPlan;
                 }
@@ -4330,6 +4482,13 @@ Exam Branch
                 CS501PC: ['DAA'],
                 IT502PC: ['ACD'],
                 IT503PC: ['ES'],
+                '2505304': ['COA'],
+                CM304PC: ['COA'],
+                CS304PC: ['COA'],
+                '2505305': ['Java'],
+                '2512301': ['OS'],
+                '2504310': ['IoT'],
+                '2512303': ['DV'],
                 CS524PE: ['DDB'],
                 IT512PE: ['DM'],
                 IT504PC: ['CD Lab'],
@@ -4370,6 +4529,10 @@ Exam Branch
             if (normalized.includes('AUTOMATA AND COMPILER DESIGN')) {
                 labels.push('ACD');
             }
+            if (normalized.includes('COMPUTER ORGANIZATION AND ARCHITECTURE') ||
+                normalized.includes('COMPUTER ORGANIZATION AND MICROPROCESSOR')) {
+                labels.push('COA');
+            }
             if (normalized.includes('EMBEDDED SYSTEMS LABORATORY') || normalized.includes('EMBEDDED SYSTEMS LAB')) {
                 labels.push('ES Lab');
             } else if (normalized.includes('EMBEDDED SYSTEM') || normalized.includes('EMBEDDED SYSTEMS')) {
@@ -4380,6 +4543,9 @@ Exam Branch
                 labels.push('DM Lab');
             } else if (normalized.includes('DATA MINING')) {
                 labels.push('DM');
+            }
+            if (normalized.includes('DATA VISUALIZATION')) {
+                labels.push('DV');
             }
             if (normalized.includes('DISTRIBUTED DATABASES')) {
                 labels.push('DDB');
@@ -4394,6 +4560,9 @@ Exam Branch
                 labels.push('OS Lab');
             }
             if (normalized.includes('INTERNET OF THINGS LABORATORY') || normalized.includes('INTERNET OF THINGS LAB') || normalized.includes('IOT LAB')) {
+                labels.push('IoT Lab');
+            } else if (normalized.includes('INTRODUCTION TO IOT') || normalized.includes('INTERNET OF THINGS') || normalized.includes('IOT')) {
+                labels.push('IoT');
                 labels.push('IoT Lab');
             }
             if (normalized.includes('OBJECT ORIENTED PROGRAMMING THROUGH JAVA LABORATORY') || normalized.includes('JAVA LABORATORY') || normalized.includes('JAVA LAB')) {
@@ -5081,14 +5250,20 @@ Exam Branch
         loadSyllabusSubjects();
         window.setTimeout(function () {
             const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
+            const completedR25TwoOneITCOA = ensureR25TwoOneITCOAPlan();
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
-            if (completedR22ThreeOneIT || repairedSameHourRepeats) {
+            if (completedR22ThreeOneIT || completedR25TwoOneITCOA) {
+                refreshIndividualTimeTablesFromCurrentSelections();
+            }
+            if (completedR22ThreeOneIT || completedR25TwoOneITCOA || repairedSameHourRepeats) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
                     completedR22ThreeOneIT
                         ? 'R22 III-I IT empty slots were filled and saved'
-                        : 'Same-hour repeated subjects were corrected and saved',
+                        : (completedR25TwoOneITCOA
+                            ? 'R25 II-I IT COA main and individual slots were aligned'
+                            : 'Same-hour repeated subjects were corrected and saved'),
                     'success'
                 );
             }
