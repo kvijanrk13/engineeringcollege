@@ -2227,6 +2227,9 @@ Exam Branch
         }
 
         function ensureR22ThreeOneITCompletePlan() {
+            if (hasLabRoomSelections(getStoredSubjectSelections())) {
+                return false;
+            }
             const context = getClassTimeTableContexts().find(isR22ThreeOneITContext);
             if (!context || hasCompleteR22ThreeOneITLoad(context)) {
                 return false;
@@ -2235,6 +2238,9 @@ Exam Branch
         }
 
         function ensureR25TwoOneITCompletePlan() {
+            if (hasLabRoomSelections(getStoredSubjectSelections())) {
+                return false;
+            }
             const context = getClassTimeTableContexts().find(isR25TwoOneITContext);
             if (!context || hasCompleteR25TwoOneITLoad(context)) {
                 return false;
@@ -3931,6 +3937,10 @@ Exam Branch
             return new Map();
         }
 
+        function createLabRoomOccupancyMap() {
+            return new Map();
+        }
+
         function getFacultyDayOccupancy(occupancyMap, facultyKey, day) {
             if (!occupancyMap.has(facultyKey)) {
                 occupancyMap.set(facultyKey, new Map());
@@ -3966,6 +3976,55 @@ Exam Branch
             for (let offset = 0; offset < duration; offset += 1) {
                 occupiedPeriods.add(startPeriodIndex + offset);
             }
+        }
+
+        function getLabRoomKey(labRoomNumber) {
+            return normalizeClassValue(labRoomNumber || '');
+        }
+
+        function getLabRoomDayOccupancy(occupancyMap, labRoomKey, day) {
+            if (!occupancyMap || !labRoomKey) {
+                return null;
+            }
+            if (!occupancyMap.has(labRoomKey)) {
+                occupancyMap.set(labRoomKey, new Map());
+            }
+            const roomDays = occupancyMap.get(labRoomKey);
+            if (!roomDays.has(day)) {
+                roomDays.set(day, new Set());
+            }
+            return roomDays.get(day);
+        }
+
+        function hasLabRoomPeriodConflict(occupancyMap, assignment, day, startPeriodIndex, duration) {
+            const labRoomKey = assignment && assignment.isLab ? getLabRoomKey(assignment.labRoomNumber) : '';
+            if (!labRoomKey) {
+                return false;
+            }
+            const occupiedPeriods = getLabRoomDayOccupancy(occupancyMap, labRoomKey, day);
+            for (let offset = 0; offset < duration; offset += 1) {
+                if (occupiedPeriods && occupiedPeriods.has(startPeriodIndex + offset)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function reserveLabRoomPeriods(occupancyMap, assignment, day, startPeriodIndex, duration) {
+            const labRoomKey = assignment && assignment.isLab ? getLabRoomKey(assignment.labRoomNumber) : '';
+            if (!labRoomKey) {
+                return;
+            }
+            const occupiedPeriods = getLabRoomDayOccupancy(occupancyMap, labRoomKey, day);
+            for (let offset = 0; offset < duration; offset += 1) {
+                occupiedPeriods.add(startPeriodIndex + offset);
+            }
+        }
+
+        function hasLabRoomSelections(selections) {
+            return normalizeSubjectSelections(selections).some(function (selection) {
+                return Boolean(getLabRoomKey(selection.labRoomNumber));
+            });
         }
 
         function createSubjectPeriodUsageMap() {
@@ -4031,6 +4090,7 @@ Exam Branch
                     subjectName: subjectName,
                     displayName: displayName,
                     facultyKey: facultyKey,
+                    labRoomNumber: selection.labRoomNumber || '',
                     isLab: isLaboratorySubject(subjectName),
                     targetHours: isLaboratorySubject(subjectName) ? 2 : 5,
                     placedHours: 0
@@ -4061,6 +4121,7 @@ Exam Branch
                         subjectName: labName,
                         displayName: labName,
                         facultyKey: '',
+                        labRoomNumber: '',
                         isLab: true,
                         targetHours: 2,
                         placedHours: 0
@@ -4080,6 +4141,7 @@ Exam Branch
                     subjectName: activity.subjectName,
                     displayName: activity.displayName,
                     facultyKey: '',
+                    labRoomNumber: '',
                     isLab: false,
                     isActivity: true,
                     targetHours: 1,
@@ -4089,7 +4151,7 @@ Exam Branch
             return Array.from(assignmentMap.values());
         }
 
-        function canUseClassSlot(context, day, periodIndex, duration, facultyKey, occupancyMap, enforceFacultyGap, assignment, subjectPeriodUsageMap) {
+        function canUseClassSlot(context, day, periodIndex, duration, facultyKey, occupancyMap, enforceFacultyGap, assignment, subjectPeriodUsageMap, labRoomOccupancyMap) {
             const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
             const cell = slot ? slot.closest('td') : null;
             const shouldEnforceFacultyGap = enforceFacultyGap !== false;
@@ -4097,6 +4159,9 @@ Exam Branch
                 return false;
             }
             if (hasSubjectPeriodConflict(subjectPeriodUsageMap, assignment, periodIndex, duration)) {
+                return false;
+            }
+            if (hasLabRoomPeriodConflict(labRoomOccupancyMap, assignment, day, periodIndex, duration)) {
                 return false;
             }
             if (duration > 1) {
@@ -4109,10 +4174,10 @@ Exam Branch
             return !shouldEnforceFacultyGap || canFacultyTeachWithGap(occupancyMap, facultyKey, day, periodIndex, duration);
         }
 
-        function placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, enforceFacultyGap, subjectPeriodUsageMap) {
+        function placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, enforceFacultyGap, subjectPeriodUsageMap, labRoomOccupancyMap) {
             const duration = assignment.isLab ? 2 : 1;
             const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
-            if (!slot || !canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, enforceFacultyGap, assignment, subjectPeriodUsageMap)) {
+            if (!slot || !canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, enforceFacultyGap, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
                 return 0;
             }
             if (duration > 1) {
@@ -4124,6 +4189,7 @@ Exam Branch
             }
             reserveFacultyPeriods(occupancyMap, assignment.facultyKey, day, periodIndex, duration);
             reserveSubjectPeriods(subjectPeriodUsageMap, assignment, periodIndex, duration);
+            reserveLabRoomPeriods(labRoomOccupancyMap, assignment, day, periodIndex, duration);
             assignment.placedHours += duration;
             return duration;
         }
@@ -4309,8 +4375,9 @@ Exam Branch
             };
         }
 
-        function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap) {
+        function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap, labRoomOccupancyMap) {
             const assignments = buildClassAssignments(classSelections);
+            const shouldUseFlexibleLabPlacement = hasLabRoomSelections(classSelections);
             const placementAssignments = assignments.slice().sort(function (left, right) {
                 if (left.isLab !== right.isLab) {
                     return left.isLab ? -1 : 1;
@@ -4335,14 +4402,14 @@ Exam Branch
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
             }
 
-            if (isR22ThreeOneITContext(context)) {
+            if (!shouldUseFlexibleLabPlacement && isR22ThreeOneITContext(context)) {
                 const standardPlan = applyR22ThreeOneITFullPlan(context, assignments, occupancyMap);
                 if (standardPlan) {
                     return standardPlan;
                 }
             }
 
-            if (isR25TwoOneITContext(context)) {
+            if (!shouldUseFlexibleLabPlacement && isR25TwoOneITContext(context)) {
                 const standardPlan = applyR25TwoOneITFullPlan(context, assignments, occupancyMap);
                 if (standardPlan) {
                     return standardPlan;
@@ -4369,10 +4436,10 @@ Exam Branch
                         if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
                             continue;
                         }
-                        if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true, assignment, subjectPeriodUsageMap)) {
+                        if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
                             continue;
                         }
-                        const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, true, subjectPeriodUsageMap);
+                        const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, true, subjectPeriodUsageMap, labRoomOccupancyMap);
                         if (placedHours) {
                             counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                             totalHours += placedHours;
@@ -4404,10 +4471,10 @@ Exam Branch
                             if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
                                 continue;
                             }
-                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true, assignment, subjectPeriodUsageMap)) {
+                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, true, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
                                 continue;
                             }
-                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, true, subjectPeriodUsageMap);
+                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, true, subjectPeriodUsageMap, labRoomOccupancyMap);
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
@@ -4441,10 +4508,10 @@ Exam Branch
                             if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
                                 continue;
                             }
-                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false, assignment, subjectPeriodUsageMap)) {
+                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
                                 continue;
                             }
-                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, false, subjectPeriodUsageMap);
+                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, false, subjectPeriodUsageMap, labRoomOccupancyMap);
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
@@ -4479,10 +4546,10 @@ Exam Branch
                             if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
                                 continue;
                             }
-                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false, assignment, subjectPeriodUsageMap)) {
+                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
                                 continue;
                             }
-                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, false, subjectPeriodUsageMap);
+                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, false, subjectPeriodUsageMap, labRoomOccupancyMap);
                             if (placedHours) {
                                 counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
                                 totalHours += placedHours;
@@ -5123,11 +5190,13 @@ Exam Branch
 
             loadSyllabusSubjects(payload.subjectCode).then(function (data) {
                 const facultyOccupancyMap = createFacultyOccupancyMap();
+                const labRoomOccupancyMap = createLabRoomOccupancyMap();
                 const classGeneration = classContexts.reduce(function (summary, context) {
                     const generated = generateClassTimeTableSlotsForContext(
                         context,
                         getSelectionsForClassContext(selections, context),
-                        facultyOccupancyMap
+                        facultyOccupancyMap,
+                        labRoomOccupancyMap
                     );
                     summary.labMergedCount += generated.labMergedCount || 0;
                     summary.totalHours += generated.totalHours || 0;
