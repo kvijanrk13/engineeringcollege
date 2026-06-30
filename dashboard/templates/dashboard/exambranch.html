@@ -4099,6 +4099,10 @@ Exam Branch
             if (!assignmentMap.size) {
                 return [];
             }
+            const standardTheoryMap = {
+                'IT|2|1': ['COA', 'Java', 'OS', 'IoT', 'DV'],
+                'IT|3|1': ['DAA', 'ACD', 'ES', 'DM', 'DDB']
+            };
             const standardLabMap = {
                 'IT|2|1': ['Power BI Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
                 'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab']
@@ -4110,6 +4114,24 @@ Exam Branch
                     normalizeAcademicLevelValue(selection.semester)
                 ].join('|');
             }));
+            standardLabKeys.forEach(function (standardLabKey) {
+                (standardTheoryMap[standardLabKey] || []).forEach(function (subjectName) {
+                    const key = normalizeSubjectNameForSchedule(subjectName);
+                    if (assignmentMap.has(key)) {
+                        return;
+                    }
+                    assignmentMap.set(key, {
+                        selection: null,
+                        subjectName: subjectName,
+                        displayName: subjectName,
+                        facultyKey: '',
+                        labRoomNumber: '',
+                        isLab: false,
+                        targetHours: 5,
+                        placedHours: 0
+                    });
+                });
+            });
             standardLabKeys.forEach(function (standardLabKey) {
                 (standardLabMap[standardLabKey] || []).forEach(function (labName) {
                     const key = normalizeSubjectNameForSchedule(labName);
@@ -4210,6 +4232,38 @@ Exam Branch
                 }
                 return total + (cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1);
             }, 0);
+        }
+
+        function countClassContextHours(context) {
+            return (context && context.slots ? context.slots : []).reduce(function (total, slot) {
+                const cell = slot.closest('td');
+                if (!cell || cell.style.display === 'none' || !slot.value.trim()) {
+                    return total;
+                }
+                return total + (cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1);
+            }, 0);
+        }
+
+        function summarizeClassAssignmentsFromSlots(context, assignments) {
+            const counts = {};
+            let labMergedCount = 0;
+
+            (assignments || []).forEach(function (assignment) {
+                const hours = countClassAssignmentHours(context, assignment);
+                assignment.placedHours = hours;
+                if (hours) {
+                    counts[assignment.subjectName] = hours;
+                    if (assignment.isLab) {
+                        labMergedCount += Math.ceil(hours / 2);
+                    }
+                }
+            });
+
+            return {
+                counts: counts,
+                labMergedCount: labMergedCount,
+                totalHours: countClassContextHours(context)
+            };
         }
 
         function isR22ThreeOneITContext(context) {
@@ -4568,11 +4622,42 @@ Exam Branch
                 }
             });
 
-            return {
-                counts: counts,
-                labMergedCount: labMergedCount,
-                totalHours: totalHours
-            };
+            placementAssignments.forEach(function (assignment, assignmentIndex) {
+                assignment.placedHours = Math.max(assignment.placedHours, countClassAssignmentHours(context, assignment));
+                let guard = 0;
+                while (assignment.placedHours < assignment.targetHours && guard < 100) {
+                    guard += 1;
+                    let placed = false;
+                    for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
+                        const day = days[(assignmentIndex + dayOffset) % days.length];
+                        for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                            const duration = assignment.isLab ? 2 : 1;
+                            if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                                continue;
+                            }
+                            if (!canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, false, assignment, null, labRoomOccupancyMap)) {
+                                continue;
+                            }
+                            const placedHours = placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, false, null, labRoomOccupancyMap);
+                            if (placedHours) {
+                                counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
+                                totalHours += placedHours;
+                                if (duration > 1) {
+                                    labDaysUsed.add(day);
+                                    labMergedCount += 1;
+                                }
+                                placed = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!placed) {
+                        break;
+                    }
+                }
+            });
+
+            return summarizeClassAssignmentsFromSlots(context, assignments);
         }
 
         function getScheduleLabelsForSelection(selection) {
@@ -5192,19 +5277,34 @@ Exam Branch
                 const facultyOccupancyMap = createFacultyOccupancyMap();
                 const labRoomOccupancyMap = createLabRoomOccupancyMap();
                 const classGeneration = classContexts.reduce(function (summary, context) {
+                    const contextSelections = getSelectionsForClassContext(selections, context);
                     const generated = generateClassTimeTableSlotsForContext(
                         context,
-                        getSelectionsForClassContext(selections, context),
+                        contextSelections,
                         facultyOccupancyMap,
                         labRoomOccupancyMap
                     );
+                    const contextHours = countClassContextHours(context);
+                    summary.contexts.push({
+                        label: context.label,
+                        hours: contextHours,
+                        requiredHours: getRequiredHourSummary(contextSelections).totalHours || 36
+                    });
                     summary.labMergedCount += generated.labMergedCount || 0;
-                    summary.totalHours += generated.totalHours || 0;
+                    summary.totalHours += contextHours;
                     return summary;
-                }, { labMergedCount: 0, totalHours: 0 });
-                const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
+                }, { labMergedCount: 0, totalHours: 0, contexts: [] });
+                const repairedSameHourRepeats = hasLabRoomSelections(selections) ? 0 : repairAllClassTimeTableSameHourRepeats(classContexts);
+                classGeneration.contexts.forEach(function (contextSummary, index) {
+                    contextSummary.hours = countClassContextHours(classContexts[index]);
+                });
                 const labMergedCount = classGeneration.labMergedCount || 0;
-                const classTotalHours = classGeneration.totalHours || 0;
+                const classTotalHours = classGeneration.contexts.reduce(function (total, contextSummary) {
+                    return total + (contextSummary.hours || 0);
+                }, 0);
+                const incompleteContexts = classGeneration.contexts.filter(function (contextSummary) {
+                    return contextSummary.hours < Math.min(contextSummary.requiredHours || 36, 36);
+                });
                 const requiredSummary = classContexts.reduce(function (summary, context) {
                     const required = getRequiredHourSummary(getSelectionsForClassContext(selections, context));
                     summary.theoryCount += required.theoryCount;
@@ -5227,8 +5327,13 @@ Exam Branch
                     requiredSummary.activityCount + ' activity = ' + requiredSummary.totalHours + ' hours' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                     (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
+                    (incompleteContexts.length
+                        ? '; warning: incomplete 36-hour load for ' + incompleteContexts.map(function (contextSummary) {
+                            return contextSummary.label + ' (' + contextSummary.hours + ' hours)';
+                        }).join(', ')
+                        : '; every generated class timetable has 36 hours filled') +
                     '; short subject names are used in main and individual timetables; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
-                    'success'
+                    incompleteContexts.length ? 'warning' : 'success'
                 );
                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
                 switchToTimeTableTab();
