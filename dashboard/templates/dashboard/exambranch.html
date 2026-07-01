@@ -1920,6 +1920,19 @@ Exam Branch
                 .replace('H AND S', 'H&S');
         }
 
+        function getLabRoomSuffix(value) {
+            const match = String(value || '').match(/\s*\((?:LAB\s*)?ROOM:\s*([^)]+)\)\s*$/i);
+            return match ? ' (Room: ' + match[1].trim() + ')' : '';
+        }
+
+        function stripLabRoomSuffix(value) {
+            return String(value || '').replace(/\s*\((?:LAB\s*)?ROOM:\s*[^)]+\)\s*$/i, '').trim();
+        }
+
+        function getComparableSubjectValue(value) {
+            return stripLabRoomSuffix(value);
+        }
+
         function normalizeTimeTableDisplayValue(value) {
             const rawValue = String(value || '').trim();
             if (!rawValue) {
@@ -1929,10 +1942,11 @@ Exam Branch
             const parts = rawValue.split(' - ');
             if (parts.length > 1) {
                 const subjectPart = parts.pop();
-                return parts.concat(getShortSubjectLabel(subjectPart)).join(' - ');
+                const roomSuffix = getLabRoomSuffix(subjectPart);
+                return parts.concat(getShortSubjectLabel(stripLabRoomSuffix(subjectPart)) + roomSuffix).join(' - ');
             }
 
-            return getShortSubjectLabel(rawValue);
+            return getShortSubjectLabel(stripLabRoomSuffix(rawValue)) + getLabRoomSuffix(rawValue);
         }
 
         function normalizeTimeTableSlotValues(slots) {
@@ -1964,24 +1978,24 @@ Exam Branch
         }
 
         function hasSubjectAtPeriod(slots, subjectName, periodIndex, ignoredSlots) {
-            const subjectKey = normalizeSubjectNameForSchedule(subjectName);
+            const subjectKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName));
             const ignored = ignoredSlots || new Set();
             return (slots || []).some(function (slot) {
                 return !ignored.has(slot) &&
                     isVisibleFilledClassSlot(slot) &&
                     getSlotPeriodIndex(slot) === periodIndex &&
-                    normalizeSubjectNameForSchedule(slot.value) === subjectKey;
+                    normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === subjectKey;
             });
         }
 
         function hasSubjectOnDay(slots, subjectName, day, ignoredSlots) {
-            const subjectKey = normalizeSubjectNameForSchedule(subjectName);
+            const subjectKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName));
             const ignored = ignoredSlots || new Set();
             return (slots || []).some(function (slot) {
                 return !ignored.has(slot) &&
                     isVisibleFilledClassSlot(slot) &&
                     slot.dataset.day === day &&
-                    normalizeSubjectNameForSchedule(slot.value) === subjectKey;
+                    normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === subjectKey;
             });
         }
 
@@ -2078,7 +2092,7 @@ Exam Branch
                     return;
                 }
 
-                const subjectKey = normalizeSubjectNameForSchedule(slot.value);
+                const subjectKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value));
                 const day = slot.dataset.day || '';
                 const seenKey = day + '|' + subjectKey;
                 if (!subjectKey || !day || !seenSubjectsByDay.has(seenKey)) {
@@ -2126,7 +2140,7 @@ Exam Branch
                         return;
                     }
 
-                    const subjectKey = normalizeSubjectNameForSchedule(slot.value);
+                    const subjectKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value));
                     if (!subjectKey || !seenSubjects.has(subjectKey)) {
                         seenSubjects.set(subjectKey, slot);
                         return;
@@ -2190,7 +2204,7 @@ Exam Branch
                 (context.slots || []).forEach(function (slot) {
                     const cell = getTimeTableSlotCell(slot);
                     const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
-                    const assignment = findClassAssignmentByLabel(assignments, slot.value);
+                    const assignment = findClassAssignmentByLabel(assignments, getComparableSubjectValue(slot.value));
                     const labRoomKey = assignment && assignment.isLab ? getLabRoomKey(assignment.labRoomNumber) : '';
                     const startPeriodIndex = getSlotPeriodIndex(slot);
 
@@ -2381,7 +2395,7 @@ Exam Branch
             const normalizedLabel = normalizeSubjectNameForSchedule(label);
             return (context && context.slots ? context.slots : []).reduce(function (total, slot) {
                 const cell = getTimeTableSlotCell(slot);
-                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(slot.value) !== normalizedLabel) {
+                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) !== normalizedLabel) {
                     return total;
                 }
                 return total + (cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1);
@@ -2402,7 +2416,7 @@ Exam Branch
                     return;
                 }
                 const hours = cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1;
-                const value = normalizeSubjectNameForSchedule(slot.value);
+                const value = normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value));
                 summary.total += hours;
                 if (activities.has(value)) {
                     summary.activity += hours;
@@ -2433,7 +2447,7 @@ Exam Branch
 
         function classSlotHasLabel(context, day, period, label) {
             const slot = getClassSlot(day, period, context && context.slots);
-            return Boolean(slot) && normalizeSubjectNameForSchedule(slot.value) === normalizeSubjectNameForSchedule(label);
+            return Boolean(slot) && normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === normalizeSubjectNameForSchedule(label);
         }
 
         function hasR25TwoOneITLabPlacement(context, placements) {
@@ -4351,6 +4365,15 @@ Exam Branch
             }
         }
 
+        function getAssignmentSlotDisplayName(assignment) {
+            if (!assignment) {
+                return '';
+            }
+            const displayName = assignment.displayName || assignment.subjectName || '';
+            const labRoomNumber = assignment.isLab ? (assignment.labRoomNumber || '').trim() : '';
+            return labRoomNumber ? displayName + ' (Room: ' + labRoomNumber + ')' : displayName;
+        }
+
         function buildClassAssignments(classSelections) {
             const assignmentMap = new Map();
             const normalizedClassSelections = normalizeSubjectSelections(classSelections);
@@ -4480,11 +4503,11 @@ Exam Branch
                 return 0;
             }
             if (duration > 1) {
-                if (!mergeSlotWithNextPeriod(slot, assignment.displayName, context.slotSelector)) {
+                if (!mergeSlotWithNextPeriod(slot, getAssignmentSlotDisplayName(assignment), context.slotSelector)) {
                     return 0;
                 }
             } else {
-                slot.value = assignment.displayName;
+                slot.value = getAssignmentSlotDisplayName(assignment);
             }
             reserveFacultyPeriods(occupancyMap, assignment.facultyKey, day, periodIndex, duration);
             reserveSubjectPeriods(subjectPeriodUsageMap, assignment, periodIndex, duration);
@@ -4508,7 +4531,7 @@ Exam Branch
             return (context && context.slots ? context.slots : []).some(function (slot) {
                 return isVisibleFilledClassSlot(slot) &&
                     slot.dataset.day === day &&
-                    normalizeSubjectNameForSchedule(slot.value) === assignmentKey;
+                    normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === assignmentKey;
             });
         }
 
@@ -4520,7 +4543,7 @@ Exam Branch
             const normalizedDisplayName = normalizeSubjectNameForSchedule(assignment.displayName);
             return (context.slots || []).reduce(function (total, slot) {
                 const cell = slot.closest('td');
-                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(slot.value) !== normalizedDisplayName) {
+                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) !== normalizedDisplayName) {
                     return total;
                 }
                 return total + (cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1);
@@ -4591,7 +4614,7 @@ Exam Branch
                     return wantedKeys.has(normalizeSubjectNameForSchedule(entry));
                 });
             });
-            const exactLabelKey = normalizeSubjectNameForSchedule(label);
+            const exactLabelKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(label));
             return candidates.find(function (assignment) {
                 return normalizeSubjectNameForSchedule(assignment.displayName) === exactLabelKey ||
                     normalizeSubjectNameForSchedule(assignment.subjectName) === exactLabelKey;
@@ -5102,7 +5125,7 @@ Exam Branch
             const normalizedValue = normalizeSubjectNameForSchedule(value);
             return getIndividualTimeTableSlots(card).reduce(function (total, slot) {
                 const cell = slot.closest('td');
-                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(slot.value) !== normalizedValue) {
+                if (!cell || cell.style.display === 'none' || normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) !== normalizedValue) {
                     return total;
                 }
                 return total + (cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1);
@@ -5259,7 +5282,7 @@ Exam Branch
             (classContexts || getClassTimeTableContexts()).forEach(function (context) {
                 context.slots.forEach(function (classSlot) {
                     const subjectName = (classSlot.value || '').trim();
-                    if (!subjectName || !normalizedLabels.has(normalizeSubjectNameForSchedule(subjectName))) {
+                    if (!subjectName || !normalizedLabels.has(normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName)))) {
                         return;
                     }
 
