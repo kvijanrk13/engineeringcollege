@@ -1134,6 +1134,14 @@ Exam Branch
                                     </select>
                                 </div>
                                 <div>
+                                    <label for="subjectSelectionSection" class="form-label">SECTION</label>
+                                    <select id="subjectSelectionSection" class="form-select subject-selection-input">
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                    </select>
+                                </div>
+                                <div>
                                     <label for="subjectSelectionRegulation" class="form-label">REGULATION</label>
                                     <select id="subjectSelectionRegulation" class="form-select subject-selection-input">
                                         <option value="R22" {% if selected_regulation == 'R22' %}selected{% endif %}>R22</option>
@@ -1225,6 +1233,7 @@ Exam Branch
                                         <th>Faculty</th>
                                         <th>Employee Code</th>
                                         <th>Branch</th>
+                                        <th>Section</th>
                                         <th>Regulation</th>
                                         <th>Year</th>
                                         <th>Sem</th>
@@ -1236,7 +1245,7 @@ Exam Branch
                                 </thead>
                                 <tbody id="subjectSelectionPreviewBody">
                                     <tr>
-                                        <td colspan="11" class="text-center text-muted">No subject selection saved yet.</td>
+                                        <td colspan="12" class="text-center text-muted">No subject selection saved yet.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1661,6 +1670,7 @@ Exam Branch
             facultyName: document.getElementById('subjectFacultyName'),
             employeeCode: document.getElementById('subjectEmployeeCode'),
             branch: document.getElementById('subjectSelectionBranch'),
+            section: document.getElementById('subjectSelectionSection'),
             regulation: document.getElementById('subjectSelectionRegulation'),
             year: document.getElementById('subjectSelectionYear'),
             semester: document.getElementById('subjectSelectionSemester'),
@@ -3318,6 +3328,7 @@ Exam Branch
                 facultyName: subjectSelectionFields.facultyName.value.trim(),
                 employeeCode: subjectSelectionFields.employeeCode.value.trim(),
                 branch: subjectSelectionFields.branch.value,
+                section: subjectSelectionFields.section.value || 'A',
                 regulation: subjectSelectionFields.regulation.value || 'R22',
                 year: subjectSelectionFields.year.value,
                 semester: subjectSelectionFields.semester.value,
@@ -3335,6 +3346,7 @@ Exam Branch
             subjectSelectionFields.facultyName.value = data.facultyName || '';
             subjectSelectionFields.employeeCode.value = data.employeeCode || '';
             subjectSelectionFields.branch.value = data.branch || subjectSelectionFields.branch.value || 'IT';
+            subjectSelectionFields.section.value = data.section || subjectSelectionFields.section.value || 'A';
             subjectSelectionFields.regulation.value = data.regulation || subjectSelectionFields.regulation.value || 'R22';
             subjectSelectionFields.year.value = data.year || subjectSelectionFields.year.value || '3';
             subjectSelectionFields.semester.value = data.semester || subjectSelectionFields.semester.value || '1';
@@ -3370,6 +3382,7 @@ Exam Branch
                     facultyKey: normalizeFacultyNameForSort(selection.facultyName),
                     employeeKey: normalizeClassValue(selection.employeeCode || ''),
                     branchKey: normalizeClassValue(selection.branch || ''),
+                    sectionKey: normalizeClassValue(selection.section || 'A'),
                     yearKey: normalizeClassValue(selection.year || ''),
                     semesterKey: normalizeClassValue(selection.semester || ''),
                     subjectKey: normalizeSubjectNameForSchedule(selection.subjectName || '')
@@ -3378,6 +3391,7 @@ Exam Branch
                 return left.facultyKey.localeCompare(right.facultyKey) ||
                     left.employeeKey.localeCompare(right.employeeKey) ||
                     left.branchKey.localeCompare(right.branchKey) ||
+                    left.sectionKey.localeCompare(right.sectionKey) ||
                     left.yearKey.localeCompare(right.yearKey) ||
                     left.semesterKey.localeCompare(right.semesterKey) ||
                     left.subjectKey.localeCompare(right.subjectKey) ||
@@ -3419,7 +3433,7 @@ Exam Branch
             if (!selections.length) {
                 const emptyRow = document.createElement('tr');
                 const emptyCell = document.createElement('td');
-                emptyCell.colSpan = 11;
+                emptyCell.colSpan = 12;
                 emptyCell.className = 'text-center text-muted';
                 emptyCell.textContent = 'No subject selection saved yet.';
                 emptyRow.appendChild(emptyCell);
@@ -3434,6 +3448,7 @@ Exam Branch
                     payload.facultyName || '-',
                     payload.employeeCode || '-',
                     payload.branch || '-',
+                    payload.section || 'A',
                     payload.regulation || 'R22',
                     payload.year || '-',
                     payload.semester || '-',
