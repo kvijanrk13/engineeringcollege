@@ -3783,9 +3783,19 @@ Exam Branch
             ].join('|');
         }
 
+        function shouldCheckSubjectSelectionDuplicate(selection) {
+            return !isLaboratorySubject(selection.subjectName || '');
+        }
+
         function findDuplicateSubjectSelection(payload, selections) {
+            if (!shouldCheckSubjectSelectionDuplicate(payload)) {
+                return null;
+            }
             const payloadKey = getSubjectSelectionDuplicateKey(payload);
             return normalizeSubjectSelections(selections).find(function (selection) {
+                if (!shouldCheckSubjectSelectionDuplicate(selection)) {
+                    return false;
+                }
                 return getSubjectSelectionDuplicateKey(selection) === payloadKey;
             }) || null;
         }
