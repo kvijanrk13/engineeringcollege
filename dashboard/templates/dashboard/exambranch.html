@@ -3396,6 +3396,7 @@ Exam Branch
             repairAllClassTimeTableSameHourRepeats(classContexts);
             repairAllClassLabRoomConflicts(classContexts, savedSelections);
             fillAllClassBlankSlots(classContexts, savedSelections);
+            enforceLibraryLastHour(classContexts);
             annotateClassLabRoomNumbers(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
             const meta = {};
@@ -3505,6 +3506,7 @@ Exam Branch
             repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
             repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
+            repairedSameHourRepeats += enforceLibraryLastHour(classContexts);
             repairedSameHourRepeats += annotateClassLabRoomNumbers(classContexts, savedSelections);
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
@@ -4178,6 +4180,61 @@ Exam Branch
             }) || null;
         }
 
+        function isFirstSemesterTwoToFourContext(context) {
+            const year = normalizeAcademicLevelValue(context && context.year);
+            return ['2', '3', '4'].includes(year) &&
+                normalizeAcademicLevelValue(context && context.semester) === '1';
+        }
+
+        function enforceLibraryLastHourForContext(context) {
+            if (!context || !isFirstSemesterTwoToFourContext(context)) {
+                return 0;
+            }
+
+            const slots = context.slots || [];
+            const lastPeriod = periodOrder[periodOrder.length - 1];
+            const librarySlots = slots.filter(function (slot) {
+                return normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === 'LIBRARY';
+            });
+            if (!librarySlots.length) {
+                return 0;
+            }
+
+            resetClassTimeTableMerges(slots);
+
+            const firstLibrarySlot = librarySlots[0];
+            const targetDay = firstLibrarySlot.dataset.day || 'SAT';
+            const targetSlot = getClassSlot(targetDay, lastPeriod, slots) || getClassSlot('SAT', lastPeriod, slots);
+            if (!targetSlot) {
+                restoreClassLabMergesFromValues(slots);
+                return 0;
+            }
+
+            let changes = 0;
+            if (targetSlot !== firstLibrarySlot) {
+                const targetValue = targetSlot.value;
+                targetSlot.value = 'LIBRARY';
+                firstLibrarySlot.value = targetValue;
+                changes += 1;
+            }
+
+            slots.forEach(function (slot) {
+                if (slot !== targetSlot && normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === 'LIBRARY') {
+                    slot.value = '';
+                    changes += 1;
+                }
+            });
+
+            restoreClassLabMergesFromValues(slots);
+            return changes;
+        }
+
+        function enforceLibraryLastHour(classContexts) {
+            return (classContexts || getClassTimeTableContexts()).reduce(function (total, context) {
+                return total + enforceLibraryLastHourForContext(context);
+            }, 0);
+        }
+
         function getVisibleEmptyClassSlots() {
             return timeTableSlots.filter(function (slot) {
                 const cell = slot.closest('td');
@@ -4623,7 +4680,7 @@ Exam Branch
                 'IT|2|1': ['DV Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
                 'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'],
                 'IT|4|1': ['IS Lab', 'CC Lab', 'Project Lab', 'Seminar Lab'],
-                'AIML|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
+                'AIML|2|1': ['OS Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
                 'AIML|4|1': ['IoT Lab', 'DM Lab', 'Project Lab', 'Seminar Lab'],
                 'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
@@ -5240,6 +5297,7 @@ Exam Branch
                 IT532PE: ['DM Lab'],
                 IT503PC: ['ES', 'ES Lab'],
                 '2512302': ['OS Lab'],
+                '2505405': ['OS Lab'],
                 '2504311': ['IoT Lab'],
                 '2505308': ['Java Lab'],
                 '2599302': ['DV Lab'],
@@ -5854,6 +5912,7 @@ Exam Branch
                 const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
                 const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
                 const filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
+                const movedLibraries = enforceLibraryLastHour(classContexts);
                 const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
@@ -5889,6 +5948,7 @@ Exam Branch
                     (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
                     (repairedLabRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
                     (filledBlankSlots ? '; empty slots were filled where possible' : '') +
+                    (movedLibraries ? '; library was moved to the last hour' : '') +
                     (annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
                     (incompleteContexts.length
                         ? '; warning: incomplete 36-hour load for ' + incompleteContexts.map(function (contextSummary) {
@@ -5963,6 +6023,7 @@ Exam Branch
                 const classContexts = getClassTimeTableContexts(selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
+                enforceLibraryLastHour(classContexts);
                 annotateClassLabRoomNumbers(classContexts, selections);
                 downloadMainTimeTableExcel(button);
             });
@@ -6038,12 +6099,13 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(selections);
             const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
             const filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
+            const movedLibraries = enforceLibraryLastHour(classContexts);
             const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || annotatedLabRooms) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || movedLibraries || annotatedLabRooms) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
@@ -6055,9 +6117,11 @@ Exam Branch
                                 ? 'Same-room lab clashes were corrected and saved'
                                 : (filledBlankSlots
                                     ? 'Empty timetable slots were filled and saved'
-                                    : (annotatedLabRooms
-                                        ? 'Lab room numbers were added and saved'
-                                        : 'Same-hour repeated subjects were corrected and saved')))),
+                                    : (movedLibraries
+                                        ? 'Library was moved to the last hour and saved'
+                                        : (annotatedLabRooms
+                                            ? 'Lab room numbers were added and saved'
+                                            : 'Same-hour repeated subjects were corrected and saved'))))),
                     'success'
                 );
             }
