@@ -2306,6 +2306,116 @@ Exam Branch
             return repairedCount;
         }
 
+        function annotateClassLabRoomNumbers(classContexts, selections) {
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            let annotatedCount = 0;
+
+            (classContexts || getClassTimeTableContexts(normalizedSelections)).forEach(function (context) {
+                const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context));
+                (context.slots || []).forEach(function (slot) {
+                    if (!isVisibleFilledClassSlot(slot) || !isLaboratorySubject(slot.value)) {
+                        return;
+                    }
+                    const assignment = findClassAssignmentByLabel(assignments, getComparableSubjectValue(slot.value));
+                    if (!assignment || !assignment.isLab || !assignment.labRoomNumber) {
+                        return;
+                    }
+                    const nextValue = getAssignmentSlotDisplayName(assignment);
+                    if (slot.value !== nextValue) {
+                        slot.value = nextValue;
+                        annotatedCount += 1;
+                    }
+                });
+            });
+
+            return annotatedCount;
+        }
+
+        function fillClassBlankSlots(context, classSelections) {
+            const assignments = buildClassAssignments(classSelections);
+            const days = Array.from(new Set((context.slots || []).map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+            let filledCount = 0;
+
+            function refreshPlacedHours() {
+                assignments.forEach(function (assignment) {
+                    assignment.placedHours = countClassAssignmentHours(context, assignment);
+                });
+            }
+
+            function findBlankTarget(day, assignment, strictSpacing) {
+                const duration = assignment.isLab ? 2 : 1;
+                return (context.slots || []).find(function (slot) {
+                    const periodIndex = getSlotPeriodIndex(slot);
+                    const cell = getTimeTableSlotCell(slot);
+                    if (!cell || cell.style.display === 'none' || slot.value.trim() || slot.dataset.day !== day) {
+                        return false;
+                    }
+                    if (strictSpacing && !assignment.isActivity && contextHasAssignmentOnDay(context, assignment, day)) {
+                        return false;
+                    }
+                    if (duration > 1) {
+                        const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], context.slots);
+                        const nextCell = getTimeTableSlotCell(nextSlot);
+                        if (![0, 3].includes(periodIndex) || normalizeClassValue(day) === 'SAT') {
+                            return false;
+                        }
+                        return Boolean(nextSlot && nextCell && nextCell.style.display !== 'none' && !nextSlot.value.trim());
+                    }
+                    return true;
+                });
+            }
+
+            function placeAssignmentInSlot(assignment, slot) {
+                const duration = assignment.isLab ? 2 : 1;
+                if (duration > 1) {
+                    if (!mergeSlotWithNextPeriod(slot, getAssignmentSlotDisplayName(assignment), context.slotSelector)) {
+                        return false;
+                    }
+                } else {
+                    slot.value = getAssignmentSlotDisplayName(assignment);
+                }
+                assignment.placedHours += duration;
+                filledCount += duration;
+                return true;
+            }
+
+            [true, false].forEach(function (strictSpacing) {
+                let guard = 0;
+                let placed = true;
+                while (placed && guard < 100) {
+                    guard += 1;
+                    placed = false;
+                    refreshPlacedHours();
+                    assignments.some(function (assignment, assignmentIndex) {
+                        const duration = assignment.isLab ? 2 : 1;
+                        if (assignment.placedHours + duration > assignment.targetHours) {
+                            return false;
+                        }
+                        return days.some(function (day, dayOffset) {
+                            const targetDay = days[(assignmentIndex + dayOffset) % days.length];
+                            const targetSlot = findBlankTarget(targetDay, assignment, strictSpacing);
+                            if (!targetSlot) {
+                                return false;
+                            }
+                            placed = placeAssignmentInSlot(assignment, targetSlot);
+                            return placed;
+                        });
+                    });
+                }
+            });
+
+            return filledCount;
+        }
+
+        function fillAllClassBlankSlots(classContexts, selections) {
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            return (classContexts || getClassTimeTableContexts(normalizedSelections)).reduce(function (total, context) {
+                return total + fillClassBlankSlots(context, getSelectionsForClassContext(normalizedSelections, context));
+            }, 0);
+        }
+
         function applyR22ThreeOneITDisplayPlan(context) {
             if (!isR22ThreeOneITContext(context)) {
                 return false;
@@ -3270,6 +3380,8 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(savedSelections);
             repairAllClassTimeTableSameHourRepeats(classContexts);
             repairAllClassLabRoomConflicts(classContexts, savedSelections);
+            fillAllClassBlankSlots(classContexts, savedSelections);
+            annotateClassLabRoomNumbers(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -3377,6 +3489,8 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(savedSelections);
             repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
             repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
+            repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
+            repairedSameHourRepeats += annotateClassLabRoomNumbers(classContexts, savedSelections);
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -5623,6 +5737,8 @@ Exam Branch
                 }, { labMergedCount: 0, totalHours: 0, contexts: [] });
                 const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
                 const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
+                const filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
+                const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
                 });
@@ -5656,6 +5772,8 @@ Exam Branch
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                     (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
                     (repairedLabRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
+                    (filledBlankSlots ? '; empty slots were filled where possible' : '') +
+                    (annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
                     (incompleteContexts.length
                         ? '; warning: incomplete 36-hour load for ' + incompleteContexts.map(function (contextSummary) {
                             return contextSummary.label + ' (' + contextSummary.hours + ' hours)';
@@ -5728,6 +5846,8 @@ Exam Branch
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                fillAllClassBlankSlots(classContexts, selections);
+                annotateClassLabRoomNumbers(classContexts, selections);
                 downloadMainTimeTableExcel(button);
             });
         });
@@ -5801,11 +5921,13 @@ Exam Branch
             const selections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(selections);
             const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
+            const filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
+            const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || annotatedLabRooms) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
@@ -5815,7 +5937,11 @@ Exam Branch
                             ? 'R25 II-I IT full load was filled and saved'
                             : (repairedLabRoomConflicts
                                 ? 'Same-room lab clashes were corrected and saved'
-                                : 'Same-hour repeated subjects were corrected and saved')),
+                                : (filledBlankSlots
+                                    ? 'Empty timetable slots were filled and saved'
+                                    : (annotatedLabRooms
+                                        ? 'Lab room numbers were added and saved'
+                                        : 'Same-hour repeated subjects were corrected and saved')))),
                     'success'
                 );
             }
