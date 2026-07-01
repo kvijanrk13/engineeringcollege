@@ -1974,6 +1974,17 @@ Exam Branch
             });
         }
 
+        function hasSubjectOnDay(slots, subjectName, day, ignoredSlots) {
+            const subjectKey = normalizeSubjectNameForSchedule(subjectName);
+            const ignored = ignoredSlots || new Set();
+            return (slots || []).some(function (slot) {
+                return !ignored.has(slot) &&
+                    isVisibleFilledClassSlot(slot) &&
+                    slot.dataset.day === day &&
+                    normalizeSubjectNameForSchedule(slot.value) === subjectKey;
+            });
+        }
+
         function getNextClassSlotInRow(slot, slotSelector, includeHidden) {
             const cell = getTimeTableSlotCell(slot);
             const row = cell ? cell.closest('tr') : null;
@@ -1986,6 +1997,11 @@ Exam Branch
                 return null;
             }
             return nextCell.querySelector(slotSelector || (slot.classList.contains('empty-timetable-slot') ? '.empty-timetable-slot' : '.timetable-slot'));
+        }
+
+        function canMoveSubjectToClassSlotWithPreferredSpacing(slots, targetSlot, subjectName, duration, ignoredSlots) {
+            return canMoveSubjectToClassSlot(slots, targetSlot, subjectName, duration, ignoredSlots) &&
+                !hasSubjectOnDay(slots, subjectName, targetSlot.dataset.day, ignoredSlots);
         }
 
         function canMoveSubjectToClassSlot(slots, targetSlot, subjectName, duration, ignoredSlots) {
@@ -2052,6 +2068,53 @@ Exam Branch
             return true;
         }
 
+        function repairSameDaySubjectRepeats(slots, slotSelector) {
+            const classSlots = slots || [];
+            const seenSubjectsByDay = new Map();
+            let repairedCount = 0;
+
+            classSlots.forEach(function (slot) {
+                if (!isVisibleFilledClassSlot(slot)) {
+                    return;
+                }
+
+                const subjectKey = normalizeSubjectNameForSchedule(slot.value);
+                const day = slot.dataset.day || '';
+                const seenKey = day + '|' + subjectKey;
+                if (!subjectKey || !day || !seenSubjectsByDay.has(seenKey)) {
+                    seenSubjectsByDay.set(seenKey, slot);
+                    return;
+                }
+
+                const cell = getTimeTableSlotCell(slot);
+                const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+                const ignoredSlots = new Set([slot]);
+                const nextSlot = duration > 1 ? getNextClassSlotInRow(slot, slotSelector, true) : null;
+                if (nextSlot) {
+                    ignoredSlots.add(nextSlot);
+                }
+                const replacementSlot = classSlots.find(function (candidate) {
+                    return canMoveSubjectToClassSlotWithPreferredSpacing(
+                        classSlots,
+                        candidate,
+                        slot.value,
+                        duration,
+                        ignoredSlots
+                    );
+                });
+
+                if (replacementSlot && moveClassSlotValue(classSlots, slot, replacementSlot, slotSelector)) {
+                    repairedCount += 1;
+                    return;
+                }
+
+                clearClassSlotValue(slot);
+                repairedCount += 1;
+            });
+
+            return repairedCount;
+        }
+
         function repairSameHourSubjectRepeats(slots, slotSelector) {
             const classSlots = slots || [];
             let repairedCount = 0;
@@ -2095,7 +2158,9 @@ Exam Branch
         function repairAllClassTimeTableSameHourRepeats(classContexts) {
             const contexts = classContexts || getClassTimeTableContexts();
             return contexts.reduce(function (total, context) {
-                return total + repairSameHourSubjectRepeats(context.slots, context.slotSelector);
+                return total +
+                    repairSameDaySubjectRepeats(context.slots, context.slotSelector) +
+                    repairSameHourSubjectRepeats(context.slots, context.slotSelector);
             }, 0);
         }
 
@@ -2275,9 +2340,9 @@ Exam Branch
                 MON: ['COA', 'OOPJ', 'OS', 'Power BI Lab', null, 'IoT'],
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
-                THU: ['IoT Lab', null, 'OS', 'COA', 'IoT', 'DV'],
-                FRI: ['OS', 'MENTORING', 'OOPJ', 'IoT', 'DV', 'COA'],
-                SAT: ['OOPJ', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
+                THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
+                FRI: ['OS', 'MENTORING', 'DV', 'IoT', 'OOPJ', 'COA'],
+                SAT: ['OOPJ', 'OS', 'SPORTS', 'DV', 'IoT', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -4435,6 +4500,22 @@ Exam Branch
             return normalizeClassValue(day) !== 'SAT' && !labDaysUsed.has(day);
         }
 
+        function contextHasAssignmentOnDay(context, assignment, day) {
+            if (!assignment || assignment.isActivity) {
+                return false;
+            }
+            const assignmentKey = getAssignmentSubjectKey(assignment);
+            return (context && context.slots ? context.slots : []).some(function (slot) {
+                return isVisibleFilledClassSlot(slot) &&
+                    slot.dataset.day === day &&
+                    normalizeSubjectNameForSchedule(slot.value) === assignmentKey;
+            });
+        }
+
+        function canPlaceWithPreferredSubjectSpacing(context, assignment, day) {
+            return !contextHasAssignmentOnDay(context, assignment, day);
+        }
+
         function countClassAssignmentHours(context, assignment) {
             const normalizedDisplayName = normalizeSubjectNameForSchedule(assignment.displayName);
             return (context.slots || []).reduce(function (total, slot) {
@@ -4600,9 +4681,9 @@ Exam Branch
                 MON: ['COA', 'OOPJ', 'OS', 'Power BI Lab', null, 'IoT'],
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
-                THU: ['IoT Lab', null, 'OS', 'COA', 'IoT', 'DV'],
-                FRI: ['OS', 'MENTORING', 'OOPJ', 'IoT', 'DV', 'COA'],
-                SAT: ['OOPJ', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
+                THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
+                FRI: ['OS', 'MENTORING', 'DV', 'IoT', 'OOPJ', 'COA'],
+                SAT: ['OOPJ', 'OS', 'SPORTS', 'DV', 'IoT', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -4736,6 +4817,9 @@ Exam Branch
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
+                            if (!canPlaceWithPreferredSubjectSpacing(context, assignment, day)) {
+                                continue;
+                            }
                             if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
                                 continue;
                             }
@@ -4771,6 +4855,9 @@ Exam Branch
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
                             const duration = assignment.isLab ? 2 : 1;
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                                continue;
+                            }
+                            if (!canPlaceWithPreferredSubjectSpacing(context, assignment, day)) {
                                 continue;
                             }
                             if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
@@ -4809,6 +4896,9 @@ Exam Branch
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
                             const duration = assignment.isLab ? 2 : 1;
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
+                                continue;
+                            }
+                            if (!canPlaceWithPreferredSubjectSpacing(context, assignment, day)) {
                                 continue;
                             }
                             if (!canPlaceLabOnDay(assignment, day, labDaysUsed)) {
@@ -5508,7 +5598,7 @@ Exam Branch
                     summary.totalHours += contextHours;
                     return summary;
                 }, { labMergedCount: 0, totalHours: 0, contexts: [] });
-                const repairedSameHourRepeats = hasLabRoomSelections(selections) ? 0 : repairAllClassTimeTableSameHourRepeats(classContexts);
+                const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
                 const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
