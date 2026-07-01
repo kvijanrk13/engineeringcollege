@@ -2200,7 +2200,7 @@ Exam Branch
                     return;
                 }
 
-                const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context));
+                const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context), context);
                 (context.slots || []).forEach(function (slot) {
                     const cell = getTimeTableSlotCell(slot);
                     const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
@@ -2311,7 +2311,7 @@ Exam Branch
             let annotatedCount = 0;
 
             (classContexts || getClassTimeTableContexts(normalizedSelections)).forEach(function (context) {
-                const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context));
+                const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context), context);
                 (context.slots || []).forEach(function (slot) {
                     if (!isVisibleFilledClassSlot(slot) || !isLaboratorySubject(slot.value)) {
                         return;
@@ -2332,7 +2332,7 @@ Exam Branch
         }
 
         function fillClassBlankSlots(context, classSelections) {
-            const assignments = buildClassAssignments(classSelections);
+            const assignments = buildClassAssignments(classSelections, context);
             const days = Array.from(new Set((context.slots || []).map(function (slot) {
                 return slot.dataset.day || '';
             }).filter(Boolean)));
@@ -2461,7 +2461,7 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['COA', 'OOPJ', 'OS', 'Power BI Lab', null, 'IoT'],
+                MON: ['COA', 'OOPJ', 'OS', 'DV Lab (Room: D-417)', null, 'IoT'],
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
                 THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
@@ -2569,7 +2569,7 @@ Exam Branch
 
         function hasCurrentR25TwoOneITLabPlacement(context) {
             return hasR25TwoOneITLabPlacement(context, {
-                'Power BI Lab': { day: 'MON', period: '1:20-2:15' },
+                'DV Lab': { day: 'MON', period: '1:20-2:15' },
                 'OS Lab': { day: 'TUE', period: '1:20-2:15' },
                 'Java Lab': { day: 'WED', period: '1:20-2:15' },
                 'IoT Lab': { day: 'THU', period: '9:30-10:30' }
@@ -2578,7 +2578,7 @@ Exam Branch
 
         function hasLegacyR25TwoOneITLabPlacement(context) {
             return hasR25TwoOneITLabPlacement(context, {
-                'Power BI Lab': { day: 'MON', period: '9:30-10:30' },
+                'DV Lab': { day: 'MON', period: '9:30-10:30' },
                 'OS Lab': { day: 'TUE', period: '9:30-10:30' },
                 'Java Lab': { day: 'WED', period: '9:30-10:30' },
                 'IoT Lab': { day: 'THU', period: '1:20-2:15' }
@@ -2595,7 +2595,7 @@ Exam Branch
         function hasCompleteR25TwoOneITLoad(context) {
             const summary = getR22ThreeOneITClassHourSummary(context);
             const requiredTheoryLabels = ['COA', 'OOPJ', 'OS', 'IoT', 'DV'];
-            const requiredLabLabels = ['Power BI Lab', 'OS Lab', 'Java Lab', 'IoT Lab'];
+            const requiredLabLabels = ['DV Lab', 'OS Lab', 'Java Lab', 'IoT Lab'];
             return summary.theory === 25 &&
                 summary.lab === 8 &&
                 summary.activity === 3 &&
@@ -3969,12 +3969,12 @@ Exam Branch
                 'JAVA': 'OOPJ',
                 'OOPJ': 'OOPJ',
                 'CM LAB': 'CM Lab',
-                'POWER BI LAB': 'Power BI Lab',
-                'POWERBI LAB': 'Power BI Lab',
+                'POWER BI LAB': 'DV Lab',
+                'POWERBI LAB': 'DV Lab',
                 'FLUTTER LAB': 'Flutter Lab',
                 'COA': 'COA',
                 'DV': 'DV',
-                'DV LAB': 'Power BI Lab'
+                'DV LAB': 'DV Lab'
             };
             const normalizedTrimmedName = normalizeSubjectNameForSchedule(trimmedName);
             if (canonicalShortLabels[normalizedTrimmedName]) {
@@ -4484,11 +4484,13 @@ Exam Branch
                 return '';
             }
             const displayName = assignment.displayName || assignment.subjectName || '';
-            const labRoomNumber = assignment.isLab ? (assignment.labRoomNumber || '').trim() : '';
+            const normalizedDisplayName = normalizeSubjectNameForSchedule(displayName);
+            const forcedLabRoomNumber = normalizedDisplayName === 'DV LAB' || normalizedDisplayName === 'POWER BI LAB' ? 'D-417' : '';
+            const labRoomNumber = assignment.isLab ? (forcedLabRoomNumber || (assignment.labRoomNumber || '').trim()) : '';
             return labRoomNumber ? displayName + ' (Room: ' + labRoomNumber + ')' : displayName;
         }
 
-        function buildClassAssignments(classSelections) {
+        function buildClassAssignments(classSelections, context) {
             const assignmentMap = new Map();
             const normalizedClassSelections = normalizeSubjectSelections(classSelections);
             normalizedClassSelections.forEach(function (selection) {
@@ -4510,16 +4512,27 @@ Exam Branch
                     placedHours: 0
                 });
             });
-            if (!assignmentMap.size) {
-                return [];
-            }
             const standardTheoryMap = {
                 'IT|2|1': ['COA', 'OOPJ', 'OS', 'IoT', 'DV'],
-                'IT|3|1': ['DAA', 'ACD', 'ES', 'DM', 'DDB']
+                'IT|3|1': ['DAA', 'ACD', 'ES', 'DM', 'DDB'],
+                'IT|4|1': ['IS', 'CC', 'FSD', 'SL', 'OE'],
+                'AIML|2|1': ['COA', 'OOPJ', 'SE', 'DBMS', 'CM'],
+                'AIML|3|1': ['ML', 'CN', 'DL', 'NLP', 'DA'],
+                'AIML|4|1': ['DL', 'NIC', 'IoT', 'DM', 'OE'],
+                'CSE|2|1': ['COA', 'OOPJ', 'SE', 'DBMS', 'CM'],
+                'CSE|3|1': ['ML', 'CN', 'DAA', 'FSD', 'AI'],
+                'CSE|4|1': ['CNS', 'CD', 'DAI', 'CC', 'OE']
             };
             const standardLabMap = {
-                'IT|2|1': ['Power BI Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
-                'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab']
+                'IT|2|1': ['DV Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
+                'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'],
+                'IT|4|1': ['IS Lab', 'CC Lab', 'Project Lab', 'Seminar Lab'],
+                'AIML|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
+                'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
+                'AIML|4|1': ['IoT Lab', 'DM Lab', 'Project Lab', 'Seminar Lab'],
+                'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
+                'CSE|3|1': ['ML Lab', 'CN Lab', 'FSD Lab', 'AI Lab'],
+                'CSE|4|1': ['CNS Lab', 'CD Lab', 'Project Lab', 'Seminar Lab']
             };
             const standardLabKeys = new Set(normalizedClassSelections.map(function (selection) {
                 return [
@@ -4528,6 +4541,13 @@ Exam Branch
                     normalizeAcademicLevelValue(selection.semester)
                 ].join('|');
             }));
+            if (context) {
+                standardLabKeys.add([
+                    normalizeClassValue(context.branch),
+                    normalizeAcademicLevelValue(context.year),
+                    normalizeAcademicLevelValue(context.semester)
+                ].join('|'));
+            }
             standardLabKeys.forEach(function (standardLabKey) {
                 (standardTheoryMap[standardLabKey] || []).forEach(function (subjectName) {
                     const key = normalizeSubjectNameForSchedule(subjectName);
@@ -4804,7 +4824,7 @@ Exam Branch
             let labMergedCount = 0;
             let totalHours = 0;
             const assignmentByLabel = {};
-            const requiredLabels = ['COA', 'OOPJ', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'Power BI Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+            const requiredLabels = ['COA', 'OOPJ', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'DV Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
                 assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
@@ -4815,7 +4835,7 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['COA', 'OOPJ', 'OS', 'Power BI Lab', null, 'IoT'],
+                MON: ['COA', 'OOPJ', 'OS', 'DV Lab', null, 'IoT'],
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
                 THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
@@ -4862,7 +4882,7 @@ Exam Branch
         }
 
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap, labRoomOccupancyMap) {
-            const assignments = buildClassAssignments(classSelections);
+            const assignments = buildClassAssignments(classSelections, context);
             const shouldUseFlexibleLabPlacement = hasLabRoomSelections(classSelections);
             const placementAssignments = assignments.slice().sort(function (left, right) {
                 if (left.isLab !== right.isLab) {
@@ -5126,7 +5146,7 @@ Exam Branch
                 '2512302': ['OS Lab'],
                 '2504311': ['IoT Lab'],
                 '2505308': ['Java Lab'],
-                '2599302': ['Power BI Lab'],
+                '2599302': ['DV Lab'],
                 CS507PC: ['Flutter Lab']
             };
 
@@ -5174,7 +5194,7 @@ Exam Branch
             }
             if (normalized.includes('DATA VISUALIZATION')) {
                 labels.push('DV');
-                labels.push('Power BI Lab');
+                labels.push('DV Lab');
             }
             if (normalized.includes('DISTRIBUTED DATABASES')) {
                 labels.push('DDB');
@@ -5205,7 +5225,7 @@ Exam Branch
             }
             if (normalized.includes('POWER BI') || normalized.includes('POWERBI') || normalized.includes('TABLEAU') || normalized.includes('GOOGLE CHART')) {
                 labels.push('DV');
-                labels.push('Power BI Lab');
+                labels.push('DV Lab');
             }
             if ((normalized.includes('SKILL DEVELOPMENT COURSE') && !normalized.includes('DATA VISUALIZATION') && !normalized.includes('POWER BI') && !normalized.includes('POWERBI')) ||
                 normalized.includes('UI DESIGN FLUTTER')) {
