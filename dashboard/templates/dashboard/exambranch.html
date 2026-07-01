@@ -2122,10 +2122,10 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['Power BI Lab', null, 'COA', 'Java', 'OS', 'IoT'],
-                TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
-                WED: ['Java Lab', null, 'IoT', 'DV', 'COA', 'Java'],
-                THU: ['COA', 'IoT', 'OS', 'IoT Lab', null, 'DV'],
+                MON: ['COA', 'Java', 'OS', 'Power BI Lab', null, 'IoT'],
+                TUE: ['DV', 'COA', 'Java', 'OS Lab', null, 'OS'],
+                WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'Java'],
+                THU: ['IoT Lab', null, 'OS', 'COA', 'IoT', 'DV'],
                 FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
                 SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
             };
@@ -4305,7 +4305,7 @@ Exam Branch
             }) || candidates[0] || null;
         }
 
-        function applyR22ThreeOneITFullPlan(context, assignments, occupancyMap) {
+        function applyR22ThreeOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap) {
             const subjectPeriodUsageMap = createSubjectPeriodUsageMap();
             const counts = {};
             let labMergedCount = 0;
@@ -4348,7 +4348,8 @@ Exam Branch
                         assignment,
                         occupancyMap,
                         false,
-                        subjectPeriodUsageMap
+                        subjectPeriodUsageMap,
+                        labRoomOccupancyMap
                     );
                     if (placedHours) {
                         counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
@@ -4367,7 +4368,7 @@ Exam Branch
             };
         }
 
-        function applyR25TwoOneITFullPlan(context, assignments, occupancyMap) {
+        function applyR25TwoOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap) {
             const subjectPeriodUsageMap = createSubjectPeriodUsageMap();
             const counts = {};
             let labMergedCount = 0;
@@ -4384,10 +4385,10 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['Power BI Lab', null, 'COA', 'Java', 'OS', 'IoT'],
-                TUE: ['OS Lab', null, 'DV', 'COA', 'Java', 'OS'],
-                WED: ['Java Lab', null, 'IoT', 'DV', 'COA', 'Java'],
-                THU: ['COA', 'IoT', 'OS', 'IoT Lab', null, 'DV'],
+                MON: ['COA', 'Java', 'OS', 'Power BI Lab', null, 'IoT'],
+                TUE: ['DV', 'COA', 'Java', 'OS Lab', null, 'OS'],
+                WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'Java'],
+                THU: ['IoT Lab', null, 'OS', 'COA', 'IoT', 'DV'],
                 FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
                 SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
             };
@@ -4410,7 +4411,8 @@ Exam Branch
                         assignment,
                         occupancyMap,
                         false,
-                        subjectPeriodUsageMap
+                        subjectPeriodUsageMap,
+                        labRoomOccupancyMap
                     );
                     if (placedHours) {
                         counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + placedHours;
@@ -4457,14 +4459,14 @@ Exam Branch
             }
 
             if (!shouldUseFlexibleLabPlacement && isR22ThreeOneITContext(context)) {
-                const standardPlan = applyR22ThreeOneITFullPlan(context, assignments, occupancyMap);
+                const standardPlan = applyR22ThreeOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap);
                 if (standardPlan) {
                     return standardPlan;
                 }
             }
 
             if (!shouldUseFlexibleLabPlacement && isR25TwoOneITContext(context)) {
-                const standardPlan = applyR25TwoOneITFullPlan(context, assignments, occupancyMap);
+                const standardPlan = applyR25TwoOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap);
                 if (standardPlan) {
                     return standardPlan;
                 }
