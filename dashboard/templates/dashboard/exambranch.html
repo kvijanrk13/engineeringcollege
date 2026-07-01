@@ -1169,7 +1169,7 @@ Exam Branch
                                     <select id="subjectSelectionName" class="form-select subject-selection-input" required>
                                         <option value="">Select Subject</option>
                                         {% for subject in subjects %}
-                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}">{{ subject.code }} - {{ subject.name }}</option>
+                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}">{{ subject.code }} - {% if subject.code == '2505305' %}OOPJ{% else %}{{ subject.name }}{% endif %}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -1788,7 +1788,7 @@ Exam Branch
                 const option = document.createElement('option');
                 option.value = subject.code || '';
                 option.dataset.name = subject.name || '';
-                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                option.textContent = getSubjectDisplayLabel(subject.code, subject.name);
                 if (selectedCode && option.value === selectedCode) {
                     option.selected = true;
                 }
@@ -1814,12 +1814,24 @@ Exam Branch
                 const option = document.createElement('option');
                 option.value = subject.name || '';
                 option.dataset.code = subject.code || '';
-                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
+                option.textContent = getSubjectDisplayLabel(subject.code, subject.name);
                 if (option.value === currentSubject) {
                     option.selected = true;
                 }
                 subjectSelectionFields.subjectName.appendChild(option);
             });
+        }
+
+        function getSubjectDisplayLabel(subjectCode, subjectName) {
+            const code = subjectCode || '-';
+            return code + ' - ' + getSubjectShortDisplayName(subjectCode, subjectName);
+        }
+
+        function getSubjectShortDisplayName(subjectCode, subjectName) {
+            if (normalizeClassValue(subjectCode || '') === '2505305') {
+                return 'OOPJ';
+            }
+            return getShortSubjectLabel(subjectName || '') || subjectName || '-';
         }
 
         function getBranchLabel(branch) {
@@ -3586,7 +3598,7 @@ Exam Branch
                     payload.regulation || 'R22',
                     payload.year || '-',
                     payload.semester || '-',
-                    payload.subjectCode ? payload.subjectCode + ' - ' + payload.subjectName : (payload.subjectName || '-'),
+                    payload.subjectCode ? getSubjectDisplayLabel(payload.subjectCode, payload.subjectName) : getSubjectShortDisplayName(payload.subjectCode, payload.subjectName),
                     payload.labRoomNumber || '-',
                     payload.timesTaught || '0'
                 ].forEach(function (value) {
@@ -3634,7 +3646,7 @@ Exam Branch
                 [
                     String(index + 1),
                     selection.subjectCode || '-',
-                    selection.subjectName || '-',
+                    getSubjectShortDisplayName(selection.subjectCode, selection.subjectName),
                     selection.facultyName || '-'
                 ].forEach(function (value) {
                     const cell = document.createElement('td');
