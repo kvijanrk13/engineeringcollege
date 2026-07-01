@@ -9698,6 +9698,16 @@ def exam_branch_syllabus_subjects(request):
 
     year_sem = f'{year}-{semester}'
     subjects = syllabus_data.get(year_sem, {}).get(branch, [])
+    subject_selection_subjects = []
+    for subject_branch, branch_subjects in syllabus_data.get(year_sem, {}).items():
+        for subject in branch_subjects:
+            if not isinstance(subject, dict):
+                continue
+            subject_selection_subjects.append({
+                **subject,
+                'branch': subject_branch,
+                'branch_label': 'CSE (AI&ML)' if subject_branch == 'AIML' else ('H & S' if subject_branch == 'H&S' else subject_branch),
+            })
     return JsonResponse({
         'regulation': regulation,
         'year': year,
@@ -9708,6 +9718,7 @@ def exam_branch_syllabus_subjects(request):
         'years': years,
         'semesters': semesters,
         'subjects': subjects,
+        'subject_selection_subjects': subject_selection_subjects,
         'count': len(subjects),
         'syllabus_url': reverse('dashboard:syllabus'),
     })
@@ -9791,6 +9802,16 @@ def exam_branch(request):
         if branch in {'H & S', 'H AND S'}:
             branch = 'H&S'
         subjects = syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
+        subject_selection_subjects = []
+        for subject_branch, branch_subjects in syllabus_data.get(f'{selected_year}-{selected_semester}', {}).items():
+            for subject in branch_subjects:
+                if not isinstance(subject, dict):
+                    continue
+                subject_selection_subjects.append({
+                    **subject,
+                    'branch': subject_branch,
+                    'branch_label': 'CSE (AI&ML)' if subject_branch == 'AIML' else ('H & S' if subject_branch == 'H&S' else subject_branch),
+                })
         additional_empty_timetables = [
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'IT', 'branch_label': 'IT'},
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)'},
@@ -9861,6 +9882,7 @@ def exam_branch(request):
             'syllabus_years': syllabus_years,
             'syllabus_semesters': syllabus_semesters,
             'subjects': subjects,
+            'subject_selection_subjects': subject_selection_subjects,
             'additional_empty_timetables': additional_empty_timetables,
             'timetable_days': ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
             'syllabus_url': reverse('dashboard:syllabus'),

@@ -1168,8 +1168,8 @@ Exam Branch
                                     <label for="subjectSelectionName" class="form-label">NAME OF THE SUBJECT</label>
                                     <select id="subjectSelectionName" class="form-select subject-selection-input" required>
                                         <option value="">Select Subject</option>
-                                        {% for subject in subjects %}
-                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}">{{ subject.code }} - {% if subject.code == '2505305' %}OOPJ{% else %}{{ subject.name }}{% endif %}</option>
+                                        {% for subject in subject_selection_subjects %}
+                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}" data-branch="{{ subject.branch }}">{{ subject.branch_label }} - {{ subject.code }} - {{ subject.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -1814,12 +1814,19 @@ Exam Branch
                 const option = document.createElement('option');
                 option.value = subject.name || '';
                 option.dataset.code = subject.code || '';
-                option.textContent = getSubjectDisplayLabel(subject.code, subject.name);
+                option.dataset.branch = subject.branch || '';
+                option.textContent = getFullSubjectDisplayLabel(subject);
                 if (option.value === currentSubject) {
                     option.selected = true;
                 }
                 subjectSelectionFields.subjectName.appendChild(option);
             });
+        }
+
+        function getFullSubjectDisplayLabel(subject) {
+            const branchLabel = subject.branchLabel || subject.branch_label || subject.branch || '';
+            const branchPrefix = branchLabel ? branchLabel + ' - ' : '';
+            return branchPrefix + (subject.code || '-') + ' - ' + (subject.name || '-');
         }
 
         function getSubjectDisplayLabel(subjectCode, subjectName) {
@@ -2733,7 +2740,10 @@ Exam Branch
                 })
                 .then(function (data) {
                     syncSubjectSelectionOptions(data);
-                    renderSubjectSelectionSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedSubject);
+                    renderSubjectSelectionSubjects(
+                        Array.isArray(data.subject_selection_subjects) ? data.subject_selection_subjects : (Array.isArray(data.subjects) ? data.subjects : []),
+                        selectedSubject
+                    );
                 })
                 .catch(function (error) {
                     console.error(error);
