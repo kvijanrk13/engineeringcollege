@@ -9697,7 +9697,11 @@ def exam_branch_syllabus_subjects(request):
         branch = branches[0]
 
     year_sem = f'{year}-{semester}'
-    subjects = syllabus_data.get(year_sem, {}).get(branch, [])
+    subjects = [
+        {**subject, 'branch': branch}
+        for subject in syllabus_data.get(year_sem, {}).get(branch, [])
+        if isinstance(subject, dict)
+    ]
     return JsonResponse({
         'regulation': regulation,
         'year': year,
@@ -9790,7 +9794,11 @@ def exam_branch(request):
             branch = 'AIML'
         if branch in {'H & S', 'H AND S'}:
             branch = 'H&S'
-        subjects = syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
+        subjects = [
+            {**subject, 'branch': branch}
+            for subject in syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
+            if isinstance(subject, dict)
+        ]
         additional_empty_timetables = [
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'IT', 'branch_label': 'IT'},
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)'},

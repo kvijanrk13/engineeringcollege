@@ -1803,6 +1803,7 @@ Exam Branch
             }
 
             const currentSubject = selectedSubject || subjectSelectionFields.subjectName.value || '';
+            const selectedBranch = normalizeClassValue(subjectSelectionFields.branch ? subjectSelectionFields.branch.value : '');
             subjectSelectionFields.subjectName.innerHTML = '';
 
             const defaultOption = document.createElement('option');
@@ -1811,16 +1812,29 @@ Exam Branch
             subjectSelectionFields.subjectName.appendChild(defaultOption);
 
             subjects.forEach(function (subject) {
+                const subjectBranch = normalizeClassValue(subject.branch || '');
+                if (subjectBranch && selectedBranch && subjectBranch !== selectedBranch) {
+                    return;
+                }
                 const option = document.createElement('option');
                 option.value = subject.name || '';
                 option.dataset.code = subject.code || '';
-                option.dataset.branch = subject.branch || '';
+                option.dataset.branch = subject.branch || selectedBranch;
                 option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
                 if (option.value === currentSubject) {
                     option.selected = true;
                 }
                 subjectSelectionFields.subjectName.appendChild(option);
             });
+
+            if (
+                currentSubject &&
+                !Array.from(subjectSelectionFields.subjectName.options).some(function (option) {
+                    return option.value === currentSubject;
+                })
+            ) {
+                subjectSelectionFields.subjectName.value = '';
+            }
         }
 
         function getSubjectDisplayLabel(subjectCode, subjectName) {
