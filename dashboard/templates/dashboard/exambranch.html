@@ -1168,8 +1168,8 @@ Exam Branch
                                     <label for="subjectSelectionName" class="form-label">NAME OF THE SUBJECT</label>
                                     <select id="subjectSelectionName" class="form-select subject-selection-input" required>
                                         <option value="">Select Subject</option>
-                                        {% for subject in subject_selection_subjects %}
-                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}" data-branch="{{ subject.branch }}">{{ subject.branch_label }} - {{ subject.code }} - {{ subject.name }}</option>
+                                        {% for subject in subjects %}
+                                            <option value="{{ subject.name }}" data-code="{{ subject.code }}" data-branch="{{ branch }}">{{ subject.code }} - {{ subject.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -1815,18 +1815,12 @@ Exam Branch
                 option.value = subject.name || '';
                 option.dataset.code = subject.code || '';
                 option.dataset.branch = subject.branch || '';
-                option.textContent = getFullSubjectDisplayLabel(subject);
+                option.textContent = (subject.code || '-') + ' - ' + (subject.name || '-');
                 if (option.value === currentSubject) {
                     option.selected = true;
                 }
                 subjectSelectionFields.subjectName.appendChild(option);
             });
-        }
-
-        function getFullSubjectDisplayLabel(subject) {
-            const branchLabel = subject.branchLabel || subject.branch_label || subject.branch || '';
-            const branchPrefix = branchLabel ? branchLabel + ' - ' : '';
-            return branchPrefix + (subject.code || '-') + ' - ' + (subject.name || '-');
         }
 
         function getSubjectDisplayLabel(subjectCode, subjectName) {
@@ -2740,10 +2734,7 @@ Exam Branch
                 })
                 .then(function (data) {
                     syncSubjectSelectionOptions(data);
-                    renderSubjectSelectionSubjects(
-                        Array.isArray(data.subject_selection_subjects) ? data.subject_selection_subjects : (Array.isArray(data.subjects) ? data.subjects : []),
-                        selectedSubject
-                    );
+                    renderSubjectSelectionSubjects(Array.isArray(data.subjects) ? data.subjects : [], selectedSubject);
                 })
                 .catch(function (error) {
                     console.error(error);
@@ -3767,6 +3758,41 @@ Exam Branch
             localStorage.setItem(subjectSelectionStorageKey, JSON.stringify(sortSubjectSelectionsByFaculty(selections)));
         }
 
+        function getSubjectSelectionDuplicateKey(selection) {
+            return [
+                normalizeClassValue(selection.regulation || 'R22'),
+                normalizeClassValue(selection.branch || ''),
+                normalizeClassValue(selection.section || 'A'),
+                normalizeAcademicLevelValue(selection.year || ''),
+                normalizeAcademicLevelValue(selection.semester || ''),
+                normalizeClassValue(selection.subjectCode || '') || normalizeSubjectNameForSchedule(selection.subjectName || '')
+            ].join('|');
+        }
+
+        function findDuplicateSubjectSelection(payload, selections) {
+            const payloadKey = getSubjectSelectionDuplicateKey(payload);
+            return normalizeSubjectSelections(selections).find(function (selection) {
+                return getSubjectSelectionDuplicateKey(selection) === payloadKey;
+            }) || null;
+        }
+
+        function alertDuplicateSubjectSelection(payload, duplicateSelection) {
+            const subjectLabel = payload.subjectCode
+                ? payload.subjectCode + ' - ' + payload.subjectName
+                : payload.subjectName;
+            const message = subjectLabel + ' is already chosen for ' +
+                (payload.regulation || 'R22') + ' ' +
+                getYearSemLabel(payload.year, payload.semester) + ' ' +
+                getBranchDisplayLabel(payload.branch) + ' Section ' +
+                (payload.section || 'A') +
+                '. A subject can be assigned only once per section.';
+            window.alert(message);
+            setStatus(subjectSelectionStatus, message, 'warning');
+            if (duplicateSelection && duplicateSelection.facultyName) {
+                console.warn('Duplicate subject selection already assigned to:', duplicateSelection.facultyName);
+            }
+        }
+
         function updateSubjectSelectionCount(count) {
             if (subjectSelectionCount) {
                 subjectSelectionCount.textContent = String(count || 0);
@@ -3869,6 +3895,12 @@ Exam Branch
                 return;
             }
 
+            const duplicateSelection = findDuplicateSubjectSelection(payload, getStoredSubjectSelections());
+            if (duplicateSelection) {
+                alertDuplicateSubjectSelection(payload, duplicateSelection);
+                return;
+            }
+
             storeSubjectSelections([payload]);
             renderSubjectSelectionPreview([payload]);
             setStatus(subjectSelectionStatus, 'Subject selection saved at ' + formatSavedTime(payload.savedAt), 'success');
@@ -3882,6 +3914,11 @@ Exam Branch
             }
 
             const selections = getStoredSubjectSelections();
+            const duplicateSelection = findDuplicateSubjectSelection(payload, selections);
+            if (duplicateSelection) {
+                alertDuplicateSubjectSelection(payload, duplicateSelection);
+                return;
+            }
             selections.push(payload);
 
             storeSubjectSelections(selections);
