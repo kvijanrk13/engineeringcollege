@@ -2087,6 +2087,134 @@ Exam Branch
             }, 0);
         }
 
+        function isFirstSemesterLabRoomContext(context) {
+            const year = normalizeAcademicLevelValue(context && context.year);
+            return Boolean(context) &&
+                ['2', '3', '4'].includes(year) &&
+                normalizeAcademicLevelValue(context.semester) === '1';
+        }
+
+        function periodsOverlap(leftStart, leftDuration, rightStart, rightDuration) {
+            const leftEnd = leftStart + leftDuration - 1;
+            const rightEnd = rightStart + rightDuration - 1;
+            return leftStart <= rightEnd && rightStart <= leftEnd;
+        }
+
+        function getContextLabRoomEntries(contexts, selections) {
+            const entries = [];
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+
+            (contexts || getClassTimeTableContexts(normalizedSelections)).forEach(function (context) {
+                if (!isFirstSemesterLabRoomContext(context)) {
+                    return;
+                }
+
+                const assignments = buildClassAssignments(getSelectionsForClassContext(normalizedSelections, context));
+                (context.slots || []).forEach(function (slot) {
+                    const cell = getTimeTableSlotCell(slot);
+                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+                    const assignment = findClassAssignmentByLabel(assignments, slot.value);
+                    const labRoomKey = assignment && assignment.isLab ? getLabRoomKey(assignment.labRoomNumber) : '';
+                    const startPeriodIndex = getSlotPeriodIndex(slot);
+
+                    if (
+                        !isVisibleFilledClassSlot(slot) ||
+                        !assignment ||
+                        !assignment.isLab ||
+                        !labRoomKey ||
+                        startPeriodIndex < 0
+                    ) {
+                        return;
+                    }
+
+                    entries.push({
+                        context: context,
+                        slot: slot,
+                        subjectName: slot.value.trim(),
+                        labRoomKey: labRoomKey,
+                        day: slot.dataset.day || '',
+                        startPeriodIndex: startPeriodIndex,
+                        duration: duration
+                    });
+                });
+            });
+
+            return entries;
+        }
+
+        function findLabRoomConflict(entries) {
+            const occupied = new Map();
+            for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+                const entry = entries[entryIndex];
+                for (let offset = 0; offset < entry.duration; offset += 1) {
+                    const key = [entry.labRoomKey, entry.day, entry.startPeriodIndex + offset].join('|');
+                    if (occupied.has(key)) {
+                        return {
+                            existing: occupied.get(key),
+                            conflicting: entry
+                        };
+                    }
+                    occupied.set(key, entry);
+                }
+            }
+            return null;
+        }
+
+        function targetHasLabRoomConflict(entries, movingEntry, targetSlot) {
+            const targetDay = targetSlot.dataset.day || '';
+            const targetStartPeriodIndex = getSlotPeriodIndex(targetSlot);
+            return entries.some(function (entry) {
+                if (entry === movingEntry || entry.slot === movingEntry.slot || entry.labRoomKey !== movingEntry.labRoomKey || entry.day !== targetDay) {
+                    return false;
+                }
+                return periodsOverlap(targetStartPeriodIndex, movingEntry.duration, entry.startPeriodIndex, entry.duration);
+            });
+        }
+
+        function moveLabRoomConflict(entries, movingEntry) {
+            const context = movingEntry.context;
+            const ignoredSlots = new Set([movingEntry.slot]);
+            const nextSlot = getNextClassSlotInRow(movingEntry.slot, context.slotSelector, true);
+            if (nextSlot) {
+                ignoredSlots.add(nextSlot);
+            }
+
+            const targetSlot = (context.slots || []).find(function (candidate) {
+                const periodIndex = getSlotPeriodIndex(candidate);
+                return [0, 3].includes(periodIndex) &&
+                    normalizeClassValue(candidate.dataset.day) !== 'SAT' &&
+                    canMoveSubjectToClassSlot(context.slots, candidate, movingEntry.subjectName, movingEntry.duration, ignoredSlots) &&
+                    !targetHasLabRoomConflict(entries, movingEntry, candidate);
+            });
+
+            return Boolean(targetSlot && moveClassSlotValue(context.slots, movingEntry.slot, targetSlot, context.slotSelector));
+        }
+
+        function repairAllClassLabRoomConflicts(classContexts, selections) {
+            if (!hasLabRoomSelections(selections || getStoredSubjectSelections())) {
+                return 0;
+            }
+
+            const contexts = classContexts || getClassTimeTableContexts(selections);
+            let repairedCount = 0;
+            let guard = 0;
+
+            while (guard < 100) {
+                guard += 1;
+                const entries = getContextLabRoomEntries(contexts, selections);
+                const conflict = findLabRoomConflict(entries);
+                if (!conflict) {
+                    break;
+                }
+                if (!moveLabRoomConflict(entries, conflict.conflicting)) {
+                    break;
+                }
+                repairedCount += 1;
+            }
+
+            return repairedCount;
+        }
+
         function applyR22ThreeOneITDisplayPlan(context) {
             if (!isR22ThreeOneITContext(context)) {
                 return false;
@@ -3047,7 +3175,10 @@ Exam Branch
         function getTimeTablePayload() {
             ensureR22ThreeOneITCompletePlan();
             ensureR25TwoOneITCompletePlan();
-            repairAllClassTimeTableSameHourRepeats();
+            const savedSelections = getStoredSubjectSelections();
+            const classContexts = getClassTimeTableContexts(savedSelections);
+            repairAllClassTimeTableSameHourRepeats(classContexts);
+            repairAllClassLabRoomConflicts(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -3151,7 +3282,10 @@ Exam Branch
                     restoreClassLabMergesFromValues(cardSlots);
                 });
             }
-            repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
+            const savedSelections = getStoredSubjectSelections();
+            const classContexts = getClassTimeTableContexts(savedSelections);
+            repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
+            repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -3232,7 +3366,7 @@ Exam Branch
                     'Timetable loaded from ' + formatSavedTime(payload.savedAt) +
                     (completedR22ThreeOneIT ? '; R22 III-I IT empty slots were filled' :
                         (completedR25TwoOneIT ? '; R25 II-I IT full load was filled' :
-                        (repairedSameHourRepeats || migratedLegacyTimetable ? '; same-hour repeated subjects were corrected' : ''))),
+                        (repairedSameHourRepeats || migratedLegacyTimetable ? '; timetable clashes were corrected' : ''))),
                     'success'
                 );
                 if (completedR22ThreeOneIT || completedR25TwoOneIT) {
@@ -5361,6 +5495,7 @@ Exam Branch
                     return summary;
                 }, { labMergedCount: 0, totalHours: 0, contexts: [] });
                 const repairedSameHourRepeats = hasLabRoomSelections(selections) ? 0 : repairAllClassTimeTableSameHourRepeats(classContexts);
+                const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
                 });
@@ -5393,6 +5528,7 @@ Exam Branch
                     requiredSummary.activityCount + ' activity = ' + requiredSummary.totalHours + ' hours' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                     (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
+                    (repairedLabRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
                     (incompleteContexts.length
                         ? '; warning: incomplete 36-hour load for ' + incompleteContexts.map(function (contextSummary) {
                             return contextSummary.label + ' (' + contextSummary.hours + ' hours)';
@@ -5462,6 +5598,9 @@ Exam Branch
 
         mainTimeTableDownloadButtons.forEach(function (button) {
             button.addEventListener('click', function () {
+                const selections = getStoredSubjectSelections();
+                const classContexts = getClassTimeTableContexts(selections);
+                repairAllClassLabRoomConflicts(classContexts, selections);
                 downloadMainTimeTableExcel(button);
             });
         });
@@ -5532,11 +5671,14 @@ Exam Branch
         window.setTimeout(function () {
             const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
             const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
+            const selections = getStoredSubjectSelections();
+            const classContexts = getClassTimeTableContexts(selections);
+            const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
@@ -5544,7 +5686,9 @@ Exam Branch
                         ? 'R22 III-I IT empty slots were filled and saved'
                         : (completedR25TwoOneIT
                             ? 'R25 II-I IT full load was filled and saved'
-                            : 'Same-hour repeated subjects were corrected and saved'),
+                            : (repairedLabRoomConflicts
+                                ? 'Same-room lab clashes were corrected and saved'
+                                : 'Same-hour repeated subjects were corrected and saved')),
                     'success'
                 );
             }
