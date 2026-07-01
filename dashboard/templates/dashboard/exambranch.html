@@ -2209,6 +2209,50 @@ Exam Branch
                 !hasVisibleBlankClassSlot(context);
         }
 
+        function isTwoOneITContext(context) {
+            return Boolean(context) &&
+                normalizeAcademicLevelValue(context.year) === '2' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'IT';
+        }
+
+        function classSlotHasLabel(context, day, period, label) {
+            const slot = getClassSlot(day, period, context && context.slots);
+            return Boolean(slot) && normalizeSubjectNameForSchedule(slot.value) === normalizeSubjectNameForSchedule(label);
+        }
+
+        function hasR25TwoOneITLabPlacement(context, placements) {
+            return Object.keys(placements).every(function (label) {
+                const placement = placements[label];
+                return classSlotHasLabel(context, placement.day, placement.period, label);
+            });
+        }
+
+        function hasCurrentR25TwoOneITLabPlacement(context) {
+            return hasR25TwoOneITLabPlacement(context, {
+                'Power BI Lab': { day: 'MON', period: '1:20-2:15' },
+                'OS Lab': { day: 'TUE', period: '1:20-2:15' },
+                'Java Lab': { day: 'WED', period: '1:20-2:15' },
+                'IoT Lab': { day: 'THU', period: '9:30-10:30' }
+            });
+        }
+
+        function hasLegacyR25TwoOneITLabPlacement(context) {
+            return hasR25TwoOneITLabPlacement(context, {
+                'Power BI Lab': { day: 'MON', period: '9:30-10:30' },
+                'OS Lab': { day: 'TUE', period: '9:30-10:30' },
+                'Java Lab': { day: 'WED', period: '9:30-10:30' },
+                'IoT Lab': { day: 'THU', period: '1:20-2:15' }
+            });
+        }
+
+        function migrateLegacyR25TwoOneITLabHours(context) {
+            if (!isTwoOneITContext(context) || !hasLegacyR25TwoOneITLabPlacement(context)) {
+                return false;
+            }
+            return applyR25TwoOneITDisplayPlan(context);
+        }
+
         function hasCompleteR25TwoOneITLoad(context) {
             const summary = getR22ThreeOneITClassHourSummary(context);
             const requiredTheoryLabels = ['COA', 'Java', 'OS', 'IoT', 'DV'];
@@ -2223,7 +2267,8 @@ Exam Branch
                 }) &&
                 requiredLabLabels.every(function (label) {
                     return countClassHoursForLabel(context, label) === 2;
-                });
+                }) &&
+                hasCurrentR25TwoOneITLabPlacement(context);
         }
 
         function ensureR22ThreeOneITCompletePlan() {
@@ -2238,10 +2283,14 @@ Exam Branch
         }
 
         function ensureR25TwoOneITCompletePlan() {
+            const classContexts = getClassTimeTableContexts();
+            const context = classContexts.find(isR25TwoOneITContext) || classContexts.find(isTwoOneITContext);
+            if (context && migrateLegacyR25TwoOneITLabHours(context)) {
+                return true;
+            }
             if (hasLabRoomSelections(getStoredSubjectSelections())) {
                 return false;
             }
-            const context = getClassTimeTableContexts().find(isR25TwoOneITContext);
             if (!context || hasCompleteR25TwoOneITLoad(context)) {
                 return false;
             }
