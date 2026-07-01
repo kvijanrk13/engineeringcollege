@@ -3783,8 +3783,30 @@ Exam Branch
             ].join('|');
         }
 
+        function isLabSubjectSelection(selection) {
+            const subjectName = selection.subjectName || '';
+            const subjectCode = normalizeClassValue(selection.subjectCode || '');
+            const labSubjectCodes = new Set([
+                'IT504PC',
+                'IT505PC',
+                'IT532PE',
+                '2512302',
+                '2504311',
+                '2505308',
+                '2599302',
+                'CS507PC'
+            ]);
+
+            return isLaboratorySubject(subjectName) ||
+                isLaboratorySubject(getShortSubjectLabel(subjectName)) ||
+                labSubjectCodes.has(subjectCode) ||
+                getScheduleLabelsForSelection(selection).some(function (label) {
+                    return isLaboratorySubject(label);
+                });
+        }
+
         function shouldCheckSubjectSelectionDuplicate(selection) {
-            return !isLaboratorySubject(selection.subjectName || '');
+            return !isLabSubjectSelection(selection);
         }
 
         function findDuplicateSubjectSelection(payload, selections) {
@@ -3801,6 +3823,9 @@ Exam Branch
         }
 
         function alertDuplicateSubjectSelection(payload, duplicateSelection) {
+            if (!shouldCheckSubjectSelectionDuplicate(payload)) {
+                return;
+            }
             const subjectLabel = payload.subjectCode
                 ? payload.subjectCode + ' - ' + payload.subjectName
                 : payload.subjectName;
