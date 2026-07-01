@@ -2260,12 +2260,12 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['COA', 'Java', 'OS', 'Power BI Lab', null, 'IoT'],
-                TUE: ['DV', 'COA', 'Java', 'OS Lab', null, 'OS'],
-                WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'Java'],
+                MON: ['COA', 'OOPJ', 'OS', 'Power BI Lab', null, 'IoT'],
+                TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
+                WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
                 THU: ['IoT Lab', null, 'OS', 'COA', 'IoT', 'DV'],
-                FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
-                SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
+                FRI: ['OS', 'MENTORING', 'OOPJ', 'IoT', 'DV', 'COA'],
+                SAT: ['OOPJ', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -2393,7 +2393,7 @@ Exam Branch
 
         function hasCompleteR25TwoOneITLoad(context) {
             const summary = getR22ThreeOneITClassHourSummary(context);
-            const requiredTheoryLabels = ['COA', 'Java', 'OS', 'IoT', 'DV'];
+            const requiredTheoryLabels = ['COA', 'OOPJ', 'OS', 'IoT', 'DV'];
             const requiredLabLabels = ['Power BI Lab', 'OS Lab', 'Java Lab', 'IoT Lab'];
             return summary.theory === 25 &&
                 summary.lab === 8 &&
@@ -3761,6 +3761,8 @@ Exam Branch
                 'OS LAB': 'OS Lab',
                 'IOT LAB': 'IoT Lab',
                 'JAVA LAB': 'Java Lab',
+                'JAVA': 'OOPJ',
+                'OOPJ': 'OOPJ',
                 'CM LAB': 'CM Lab',
                 'POWER BI LAB': 'Power BI Lab',
                 'POWERBI LAB': 'Power BI Lab',
@@ -4298,7 +4300,7 @@ Exam Branch
                 return [];
             }
             const standardTheoryMap = {
-                'IT|2|1': ['COA', 'Java', 'OS', 'IoT', 'DV'],
+                'IT|2|1': ['COA', 'OOPJ', 'OS', 'IoT', 'DV'],
                 'IT|3|1': ['DAA', 'ACD', 'ES', 'DM', 'DDB']
             };
             const standardLabMap = {
@@ -4572,7 +4574,7 @@ Exam Branch
             let labMergedCount = 0;
             let totalHours = 0;
             const assignmentByLabel = {};
-            const requiredLabels = ['COA', 'Java', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'Power BI Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+            const requiredLabels = ['COA', 'OOPJ', 'OS', 'IoT', 'DV', 'OS Lab', 'IoT Lab', 'Java Lab', 'Power BI Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
                 assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
@@ -4583,12 +4585,12 @@ Exam Branch
             }
 
             const plan = {
-                MON: ['COA', 'Java', 'OS', 'Power BI Lab', null, 'IoT'],
-                TUE: ['DV', 'COA', 'Java', 'OS Lab', null, 'OS'],
-                WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'Java'],
+                MON: ['COA', 'OOPJ', 'OS', 'Power BI Lab', null, 'IoT'],
+                TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
+                WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
                 THU: ['IoT Lab', null, 'OS', 'COA', 'IoT', 'DV'],
-                FRI: ['OS', 'MENTORING', 'Java', 'IoT', 'DV', 'COA'],
-                SAT: ['Java', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
+                FRI: ['OS', 'MENTORING', 'OOPJ', 'IoT', 'DV', 'COA'],
+                SAT: ['OOPJ', 'DV', 'SPORTS', 'OS', 'IoT', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -4872,7 +4874,7 @@ Exam Branch
                 '2505304': ['COA'],
                 CM304PC: ['COA'],
                 CS304PC: ['COA'],
-                '2505305': ['Java'],
+                '2505305': ['OOPJ'],
                 '2512301': ['OS'],
                 '2504310': ['IoT'],
                 '2512303': ['DV'],
@@ -4956,7 +4958,7 @@ Exam Branch
             if (normalized.includes('OBJECT ORIENTED PROGRAMMING THROUGH JAVA LABORATORY') || normalized.includes('JAVA LABORATORY') || normalized.includes('JAVA LAB')) {
                 labels.push('Java Lab');
             } else if (normalized.includes('OBJECT ORIENTED PROGRAMMING THROUGH JAVA')) {
-                labels.push('Java');
+                labels.push('OOPJ');
                 labels.push('Java Lab');
             }
             if (normalized.includes('COMPUTATIONAL MATHEMATICS LABORATORY') || normalized.includes('COMPUTATIONAL MATHEMATICS LAB')) {
