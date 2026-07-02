@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11'];
-        const timeTableStorageKey = 'examBranchTimeTableDataNoFourthYearProjectsV12';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12'];
+        const timeTableStorageKey = 'examBranchTimeTableDataAllowedContextsV13';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -3543,10 +3543,10 @@ Exam Branch
                 ? data.individualTables
                 : [];
 
-            const storedClassSelections = getTimeTableClassSelections();
+            const storedClassSelections = getSelectionsForClassContexts(savedSelections, classContexts);
             const storedFacultySchedules = buildIndividualFacultySchedules(storedClassSelections);
             if (storedFacultySchedules.length) {
-                renderIndividualFacultyTimeTables(storedFacultySchedules.length ? storedClassSelections : []);
+                renderIndividualFacultyTimeTables(storedFacultySchedules.length ? storedClassSelections : [], classContexts);
                 return repairedSameHourRepeats;
             }
 
@@ -4576,6 +4576,39 @@ Exam Branch
             return shouldUseSectionContext(branch) ? normalizeClassValue(section || 'A') : '';
         }
 
+        const allowedGeneratedClassContexts = [
+            { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'A' },
+            { regulation: 'R25', year: '2', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'A' },
+            { regulation: 'R22', year: '4', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R22', year: '4', semester: '1', branch: 'AIML', section: 'A' }
+        ];
+
+        function getAllowedGeneratedClassContextSpec(regulation, year, semester, branch, section) {
+            const normalizedRegulation = normalizeClassValue(regulation || 'R22');
+            const normalizedYear = normalizeAcademicLevelValue(year);
+            const normalizedSemester = normalizeAcademicLevelValue(semester);
+            const normalizedBranch = normalizeClassValue(branch);
+            const normalizedSection = getSectionContextValue(section, normalizedBranch);
+            return allowedGeneratedClassContexts.find(function (spec) {
+                return spec.regulation === normalizedRegulation &&
+                    spec.year === normalizedYear &&
+                    spec.semester === normalizedSemester &&
+                    spec.branch === normalizedBranch &&
+                    spec.section === normalizedSection;
+            }) || null;
+        }
+
+        function isAllowedGeneratedClassContext(context) {
+            return Boolean(context && getAllowedGeneratedClassContextSpec(
+                context.regulation,
+                context.year,
+                context.semester,
+                context.branch,
+                context.section
+            ));
+        }
+
         function getSelectionContextKey(selection) {
             const branch = selection.branch;
             return [
@@ -4626,16 +4659,35 @@ Exam Branch
 
         function choosePrimarySubjectSelection(selections) {
             const normalizedSelections = normalizeSubjectSelections(selections);
+            const preferredSelection = normalizedSelections.find(function (selection) {
+                return Boolean(getAllowedGeneratedClassContextSpec(
+                    selection.regulation,
+                    selection.year,
+                    selection.semester,
+                    selection.branch,
+                    selection.section
+                ));
+            });
+            if (preferredSelection) {
+                return preferredSelection;
+            }
             return normalizedSelections.find(function (selection) {
                 return normalizeClassValue(selection.year) === '3' &&
                     normalizeClassValue(selection.semester) === '1';
             }) || normalizedSelections[0] || null;
         }
 
-        function findSelectionForClass(selections, year, semester, branch) {
+        function findSelectionForClass(selections, year, semester, branch, regulation, section) {
             const classKey = getClassContextKey(year, semester, branch);
+            const normalizedRegulation = regulation ? normalizeClassValue(regulation) : '';
+            const normalizedSection = getSectionContextValue(section, branch);
             return normalizeSubjectSelections(selections).find(function (selection) {
-                return getClassKeyFromSelection(selection) === classKey;
+                return getClassKeyFromSelection(selection) === classKey &&
+                    (!normalizedRegulation || normalizeClassValue(selection.regulation || 'R22') === normalizedRegulation) &&
+                    getSectionContextValue(selection.section, selection.branch) === normalizedSection;
+            }) || normalizeSubjectSelections(selections).find(function (selection) {
+                return getClassKeyFromSelection(selection) === classKey &&
+                    (!normalizedRegulation || normalizeClassValue(selection.regulation || 'R22') === normalizedRegulation);
             }) || null;
         }
 
@@ -4659,14 +4711,24 @@ Exam Branch
             const contexts = [];
             const seen = new Set();
             const primarySelection = choosePrimarySubjectSelection(selections);
-            const primaryYear = primarySelection ? primarySelection.year : (timeTableYearField ? (timeTableYearField.value || '3') : '3');
-            const primarySemester = primarySelection ? primarySelection.semester : (timeTableSemesterField ? (timeTableSemesterField.value || '1') : '1');
-            const primaryBranch = primarySelection ? primarySelection.branch : (timeTableBranchField ? (timeTableBranchField.value || 'IT') : 'IT');
-            const primaryRegulation = getContextRegulation(primarySelection);
-            const primarySection = primarySelection ? (primarySelection.section || 'A') : (subjectSelectionFields.section ? (subjectSelectionFields.section.value || 'A') : 'A');
+            const primarySpec = primarySelection
+                ? getAllowedGeneratedClassContextSpec(
+                    primarySelection.regulation,
+                    primarySelection.year,
+                    primarySelection.semester,
+                    primarySelection.branch,
+                    primarySelection.section
+                )
+                : null;
+            const fallbackPrimarySpec = primarySpec || allowedGeneratedClassContexts[0];
+            const primaryYear = primarySpec ? primarySpec.year : fallbackPrimarySpec.year;
+            const primarySemester = primarySpec ? primarySpec.semester : fallbackPrimarySpec.semester;
+            const primaryBranch = primarySpec ? primarySpec.branch : fallbackPrimarySpec.branch;
+            const primaryRegulation = primarySpec ? primarySpec.regulation : fallbackPrimarySpec.regulation;
+            const primarySection = primarySpec ? primarySpec.section : fallbackPrimarySpec.section;
 
             function addContext(context) {
-                if (!context.selectionKey || seen.has(context.selectionKey)) {
+                if (!context.selectionKey || seen.has(context.selectionKey) || !isAllowedGeneratedClassContext(context)) {
                     return false;
                 }
                 seen.add(context.selectionKey);
@@ -4701,9 +4763,18 @@ Exam Branch
                 const year = yearSem[0] || '';
                 const semester = yearSem[1] || '';
                 const branch = card.dataset.branch || 'IT';
-                const matchingSelection = findSelectionForClass(selections, year, semester, branch);
-                const regulation = getContextRegulation(matchingSelection);
-                const section = matchingSelection ? (matchingSelection.section || 'A') : '';
+                const allowedSpec = allowedGeneratedClassContexts.find(function (spec) {
+                    return spec.year === normalizeAcademicLevelValue(year) &&
+                        spec.semester === normalizeAcademicLevelValue(semester) &&
+                        spec.branch === normalizeClassValue(branch);
+                }) || null;
+                if (!allowedSpec) {
+                    card.style.display = 'none';
+                    return;
+                }
+                const matchingSelection = findSelectionForClass(selections, year, semester, branch, allowedSpec.regulation, allowedSpec.section);
+                const regulation = allowedSpec.regulation;
+                const section = allowedSpec.section || (matchingSelection ? (matchingSelection.section || 'A') : '');
                 const added = addContext({
                     key: getClassContextKey(year, semester, branch),
                     selectionKey: [
