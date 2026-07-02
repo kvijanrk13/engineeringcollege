@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8'];
-        const timeTableStorageKey = 'examBranchTimeTableDataActivitiesLastHourV9';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9'];
+        const timeTableStorageKey = 'examBranchTimeTableDataActivitiesLastHourV10';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -3397,8 +3397,8 @@ Exam Branch
             repairAllClassLabRoomConflicts(classContexts, savedSelections);
             fillAllClassBlankSlots(classContexts, savedSelections);
             ensureR25TwoOneAIMLOSLabel(classContexts);
-            enforceActivitiesLastHours(classContexts);
             fillAllClassBlankSlots(classContexts, savedSelections);
+            enforceActivitiesLastHours(classContexts);
             annotateClassLabRoomNumbers(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
             const meta = {};
@@ -3509,8 +3509,8 @@ Exam Branch
             repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
             repairedSameHourRepeats += ensureR25TwoOneAIMLOSLabel(classContexts);
-            repairedSameHourRepeats += enforceActivitiesLastHours(classContexts);
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
+            repairedSameHourRepeats += enforceActivitiesLastHours(classContexts);
             repairedSameHourRepeats += annotateClassLabRoomNumbers(classContexts, savedSelections);
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
@@ -6113,8 +6113,8 @@ Exam Branch
                 const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
                 let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
                 const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
-                const movedActivities = enforceActivitiesLastHours(classContexts);
                 filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
+                const movedActivities = enforceActivitiesLastHours(classContexts);
                 const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
@@ -6217,6 +6217,7 @@ Exam Branch
             slot.addEventListener('change', function () {
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 repairAllClassTimeTableSameHourRepeats();
+                enforceActivitiesLastHours(getClassTimeTableContexts(getStoredSubjectSelections()));
             });
         });
 
@@ -6227,8 +6228,8 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
                 ensureR25TwoOneAIMLOSLabel(classContexts);
-                enforceActivitiesLastHours(classContexts);
                 fillAllClassBlankSlots(classContexts, selections);
+                enforceActivitiesLastHours(classContexts);
                 annotateClassLabRoomNumbers(classContexts, selections);
                 downloadMainTimeTableExcel(button);
             });
@@ -6239,6 +6240,7 @@ Exam Branch
             slot.addEventListener('change', function () {
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 repairAllClassTimeTableSameHourRepeats();
+                enforceActivitiesLastHours(getClassTimeTableContexts(getStoredSubjectSelections()));
             });
         });
 
@@ -6305,8 +6307,8 @@ Exam Branch
             const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
             let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
             const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
-            const movedActivities = enforceActivitiesLastHours(classContexts);
             filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
+            const movedActivities = enforceActivitiesLastHours(classContexts);
             const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
