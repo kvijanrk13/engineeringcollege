@@ -2757,7 +2757,8 @@ Exam Branch
                 regulation: subjectSelectionFields.regulation.value || 'R22',
                 year: subjectSelectionFields.year.value || '3',
                 semester: subjectSelectionFields.semester.value || '1',
-                branch: subjectSelectionFields.branch.value || 'IT'
+                branch: subjectSelectionFields.branch.value || 'IT',
+                section: subjectSelectionFields.section ? (subjectSelectionFields.section.value || 'A') : 'A'
             });
 
             fetch(syllabusSubjectsUrl + '?' + params.toString(), {

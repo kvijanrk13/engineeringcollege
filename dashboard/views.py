@@ -9674,6 +9674,20 @@ def get_syllabus_options(regulation='R22'):
     return syllabus_data, branches, years, semesters
 
 
+def add_exam_branch_extra_subjects(subjects, year, semester, branch, section='A'):
+    normalized_branch = str(branch or '').strip().upper()
+    normalized_section = str(section or 'A').strip().upper()
+    if (
+        normalized_branch == 'AIML' and
+        str(year or '').strip() == '3' and
+        str(semester or '').strip() == '1' and
+        normalized_section in {'A', 'B'} and
+        not any(str(subject.get('name', '')).strip().upper() == 'INTERNSHIP' for subject in subjects if isinstance(subject, dict))
+    ):
+        subjects.append({'code': '', 'name': 'INTERNSHIP', 'branch': 'AIML'})
+    return subjects
+
+
 @login_required
 @require_GET
 def exam_branch_syllabus_subjects(request):
@@ -9684,6 +9698,7 @@ def exam_branch_syllabus_subjects(request):
     year = (request.GET.get('year') or '3').strip()
     semester = (request.GET.get('semester') or '1').strip()
     branch = (request.GET.get('branch') or 'IT').strip().upper()
+    section = (request.GET.get('section') or 'A').strip().upper()
     if branch == 'CSE(AI&ML)':
         branch = 'AIML'
     if branch in {'H & S', 'H AND S'}:
@@ -9702,12 +9717,14 @@ def exam_branch_syllabus_subjects(request):
         for subject in syllabus_data.get(year_sem, {}).get(branch, [])
         if isinstance(subject, dict)
     ]
+    add_exam_branch_extra_subjects(subjects, year, semester, branch, section)
     return JsonResponse({
         'regulation': regulation,
         'year': year,
         'semester': semester,
         'year_sem': year_sem,
         'branch': branch,
+        'section': section,
         'branches': branches,
         'years': years,
         'semesters': semesters,
@@ -9799,6 +9816,7 @@ def exam_branch(request):
             for subject in syllabus_data.get(f'{selected_year}-{selected_semester}', {}).get(branch, [])
             if isinstance(subject, dict)
         ]
+        add_exam_branch_extra_subjects(subjects, selected_year, selected_semester, branch, request.GET.get('section', 'A'))
         additional_empty_timetables = [
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'IT', 'branch_label': 'IT'},
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)'},
