@@ -2332,11 +2332,11 @@ Exam Branch
                         return;
                     }
                     const assignment = findClassAssignmentByLabel(assignments, getComparableSubjectValue(slot.value));
-                    if (!assignment || !assignment.isLab || !assignment.labRoomNumber) {
+                    if (!assignment || !assignment.isLab) {
                         return;
                     }
                     const nextValue = getAssignmentSlotDisplayName(assignment);
-                    if (slot.value !== nextValue) {
+                    if (nextValue && slot.value !== nextValue) {
                         slot.value = nextValue;
                         annotatedCount += 1;
                     }
@@ -2441,8 +2441,8 @@ Exam Branch
                 TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
                 WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
                 THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'DDB'],
-                FRI: ['ES', 'MENTORING', 'ACD', 'DM', 'DDB', 'DAA'],
-                SAT: ['ACD', 'DDB', 'SPORTS', 'ES', 'DM', 'LIBRARY']
+                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'MENTORING'],
+                SAT: ['ACD', 'DDB', 'DM', 'ES', 'SPORTS', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -2480,8 +2480,8 @@ Exam Branch
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
                 THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
-                FRI: ['OS', 'MENTORING', 'DV', 'IoT', 'OOPJ', 'COA'],
-                SAT: ['OOPJ', 'OS', 'SPORTS', 'DV', 'IoT', 'LIBRARY']
+                FRI: ['OS', 'COA', 'DV', 'IoT', 'OOPJ', 'MENTORING'],
+                SAT: ['OOPJ', 'OS', 'IoT', 'DV', 'SPORTS', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -3397,7 +3397,7 @@ Exam Branch
             repairAllClassLabRoomConflicts(classContexts, savedSelections);
             fillAllClassBlankSlots(classContexts, savedSelections);
             ensureR25TwoOneAIMLOSLabel(classContexts);
-            enforceLibraryLastHour(classContexts);
+            enforceActivitiesLastHours(classContexts);
             fillAllClassBlankSlots(classContexts, savedSelections);
             annotateClassLabRoomNumbers(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
@@ -3509,7 +3509,7 @@ Exam Branch
             repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
             repairedSameHourRepeats += ensureR25TwoOneAIMLOSLabel(classContexts);
-            repairedSameHourRepeats += enforceLibraryLastHour(classContexts);
+            repairedSameHourRepeats += enforceActivitiesLastHours(classContexts);
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
             repairedSameHourRepeats += annotateClassLabRoomNumbers(classContexts, savedSelections);
 
@@ -4211,6 +4211,15 @@ Exam Branch
                 return 0;
             }
 
+            const selections = getSelectionsForClassContext(getStoredSubjectSelections(), context);
+            const assignments = buildClassAssignments(selections, context);
+            const osLabAssignment = findClassAssignmentByLabel(assignments, 'OS Lab') || {
+                displayName: 'OS Lab',
+                subjectName: 'OS Lab',
+                labRoomNumber: getStandardLabRoomNumber('OS Lab'),
+                isLab: true
+            };
+            const osLabDisplayName = getAssignmentSlotDisplayName(osLabAssignment) || 'OS Lab';
             const preferredReplacementLabs = new Set(['CM LAB', 'DV LAB', 'SE LAB', 'DBMS LAB', 'JAVA LAB']);
             resetClassTimeTableMerges(context.slots);
 
@@ -4246,8 +4255,8 @@ Exam Branch
                 return 0;
             }
 
-            if (!mergeSlotWithNextPeriod(targetSlot, 'OS Lab', context.slotSelector)) {
-                targetSlot.value = 'OS Lab';
+            if (!mergeSlotWithNextPeriod(targetSlot, osLabDisplayName, context.slotSelector)) {
+                targetSlot.value = osLabDisplayName;
                 restoreClassLabMergesFromValues(context.slots);
             }
             return 1;
@@ -4259,51 +4268,92 @@ Exam Branch
             }, 0);
         }
 
-        function enforceLibraryLastHourForContext(context) {
+        const timetableActivityLabels = ['MENTORING', 'SPORTS', 'LIBRARY'];
+        const timetableActivityOrder = new Map(timetableActivityLabels.map(function (label, index) {
+            return [label, index];
+        }));
+
+        function getTimetableActivityKey(value) {
+            const key = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
+            return timetableActivityOrder.has(key) ? key : '';
+        }
+
+        function enforceActivitiesLastHoursForContext(context) {
             if (!context || !isFirstSemesterTwoToFourContext(context)) {
                 return 0;
             }
 
             const slots = context.slots || [];
-            const lastPeriod = periodOrder[periodOrder.length - 1];
-            const librarySlots = slots.filter(function (slot) {
-                return normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === 'LIBRARY';
-            });
+            const days = Array.from(new Set(slots.map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+            let changes = 0;
+
             resetClassTimeTableMerges(slots);
 
-            const firstLibrarySlot = librarySlots[0] || null;
-            const targetDay = firstLibrarySlot ? (firstLibrarySlot.dataset.day || 'SAT') : 'SAT';
-            const targetSlot = getClassSlot(targetDay, lastPeriod, slots) || getClassSlot('SAT', lastPeriod, slots);
-            if (!targetSlot) {
-                restoreClassLabMergesFromValues(slots);
-                return 0;
-            }
+            days.forEach(function (day) {
+                const daySlots = periodOrder.map(function (period) {
+                    return getClassSlot(day, period, slots);
+                }).filter(function (slot) {
+                    const cell = getTimeTableSlotCell(slot);
+                    return slot && cell && cell.style.display !== 'none';
+                });
+                const activitySlots = daySlots.filter(function (slot) {
+                    return Boolean(getTimetableActivityKey(slot.value));
+                }).sort(function (left, right) {
+                    const leftOrder = timetableActivityOrder.get(getTimetableActivityKey(left.value));
+                    const rightOrder = timetableActivityOrder.get(getTimetableActivityKey(right.value));
+                    return leftOrder - rightOrder;
+                });
 
-            let changes = 0;
-            if (!firstLibrarySlot) {
-                targetSlot.value = 'LIBRARY';
-                changes += 1;
-            } else if (targetSlot !== firstLibrarySlot) {
-                const targetValue = targetSlot.value;
-                targetSlot.value = 'LIBRARY';
-                firstLibrarySlot.value = targetValue;
-                changes += 1;
-            }
-
-            slots.forEach(function (slot) {
-                if (slot !== targetSlot && normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === 'LIBRARY') {
-                    slot.value = '';
-                    changes += 1;
+                if (!activitySlots.length) {
+                    return;
                 }
+
+                const targetSlots = daySlots.slice(-activitySlots.length);
+                const targetSet = new Set(targetSlots);
+                const sourceSet = new Set(activitySlots);
+                const displacedValues = targetSlots.filter(function (slot) {
+                    return !sourceSet.has(slot) && slot.value.trim();
+                }).map(function (slot) {
+                    return slot.value;
+                });
+                const sourceValues = activitySlots.map(function (slot) {
+                    return normalizeTimeTableDisplayValue(getTimetableActivityKey(slot.value));
+                });
+
+                targetSlots.forEach(function (slot, index) {
+                    if (slot.value !== sourceValues[index]) {
+                        slot.value = sourceValues[index];
+                        changes += 1;
+                    }
+                });
+
+                activitySlots.filter(function (slot) {
+                    return !targetSet.has(slot);
+                }).forEach(function (slot, index) {
+                    const replacement = displacedValues[index] || '';
+                    if (slot.value !== replacement) {
+                        slot.value = replacement;
+                        changes += 1;
+                    }
+                });
+
+                daySlots.forEach(function (slot) {
+                    if (!targetSet.has(slot) && getTimetableActivityKey(slot.value) && !sourceSet.has(slot)) {
+                        slot.value = '';
+                        changes += 1;
+                    }
+                });
             });
 
             restoreClassLabMergesFromValues(slots);
             return changes;
         }
 
-        function enforceLibraryLastHour(classContexts) {
+        function enforceActivitiesLastHours(classContexts) {
             return (classContexts || getClassTimeTableContexts()).reduce(function (total, context) {
-                return total + enforceLibraryLastHourForContext(context);
+                return total + enforceActivitiesLastHoursForContext(context);
             }, 0);
         }
 
@@ -4711,8 +4761,33 @@ Exam Branch
             const displayName = assignment.displayName || assignment.subjectName || '';
             const normalizedDisplayName = normalizeSubjectNameForSchedule(displayName);
             const forcedLabRoomNumber = normalizedDisplayName === 'DV LAB' || normalizedDisplayName === 'POWER BI LAB' ? 'D-417' : '';
-            const labRoomNumber = assignment.isLab ? (forcedLabRoomNumber || (assignment.labRoomNumber || '').trim()) : '';
+            const labRoomNumber = assignment.isLab ? (forcedLabRoomNumber || (assignment.labRoomNumber || '').trim() || getStandardLabRoomNumber(displayName)) : '';
             return labRoomNumber ? displayName + ' (Room: ' + labRoomNumber + ')' : displayName;
+        }
+
+        function getStandardLabRoomNumber(labName) {
+            const labKey = normalizeSubjectNameForSchedule(labName);
+            const standardLabRooms = {
+                'OS LAB': 'E-201',
+                'JAVA LAB': 'E-201',
+                'IOT LAB': 'E-201',
+                'CM LAB': 'D-417',
+                'SE LAB': 'E-201',
+                'DBMS LAB': 'E-201',
+                'ML LAB': 'E-201',
+                'CN LAB': 'E-201',
+                'NLP LAB': 'E-201',
+                'DA LAB': 'E-201',
+                'DM LAB': 'E-201',
+                'CD LAB': 'E-201',
+                'ES LAB': 'A-104',
+                'FLUTTER LAB': 'E-201',
+                'IS LAB': 'E-201',
+                'CC LAB': 'E-201',
+                'PROJECT LAB': 'E-201',
+                'SEMINAR LAB': 'E-201'
+            };
+            return standardLabRooms[labKey] || '';
         }
 
         function buildClassAssignments(classSelections, context) {
@@ -4802,7 +4877,7 @@ Exam Branch
                         subjectName: labName,
                         displayName: labName,
                         facultyKey: '',
-                        labRoomNumber: '',
+                        labRoomNumber: getStandardLabRoomNumber(labName),
                         isLab: true,
                         targetHours: 2,
                         placedHours: 0
@@ -5001,8 +5076,8 @@ Exam Branch
                 TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
                 WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
                 THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'DDB'],
-                FRI: ['ES', 'MENTORING', 'ACD', 'DM', 'DDB', 'DAA'],
-                SAT: ['ACD', 'DDB', 'SPORTS', 'ES', 'DM', 'LIBRARY']
+                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'MENTORING'],
+                SAT: ['ACD', 'DDB', 'DM', 'ES', 'SPORTS', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -5064,8 +5139,8 @@ Exam Branch
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
                 THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
-                FRI: ['OS', 'MENTORING', 'DV', 'IoT', 'OOPJ', 'COA'],
-                SAT: ['OOPJ', 'OS', 'SPORTS', 'DV', 'IoT', 'LIBRARY']
+                FRI: ['OS', 'COA', 'DV', 'IoT', 'OOPJ', 'MENTORING'],
+                SAT: ['OOPJ', 'OS', 'IoT', 'DV', 'SPORTS', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -5985,7 +6060,7 @@ Exam Branch
                 const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
                 let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
                 const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
-                const movedLibraries = enforceLibraryLastHour(classContexts);
+                const movedActivities = enforceActivitiesLastHours(classContexts);
                 filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
                 const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
@@ -6023,7 +6098,7 @@ Exam Branch
                     (repairedLabRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
                     (addedAIMLOSLab ? '; R25 II-I CSE (AI&ML) OS Lab was added' : '') +
                     (filledBlankSlots ? '; empty slots were filled where possible' : '') +
-                    (movedLibraries ? '; library was moved to the last hour' : '') +
+                    (movedActivities ? '; activity hours were moved to the last hours' : '') +
                     (annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
                     (incompleteContexts.length
                         ? '; warning: incomplete 36-hour load for ' + incompleteContexts.map(function (contextSummary) {
@@ -6099,7 +6174,7 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 fillAllClassBlankSlots(classContexts, selections);
                 ensureR25TwoOneAIMLOSLabel(classContexts);
-                enforceLibraryLastHour(classContexts);
+                enforceActivitiesLastHours(classContexts);
                 fillAllClassBlankSlots(classContexts, selections);
                 annotateClassLabRoomNumbers(classContexts, selections);
                 downloadMainTimeTableExcel(button);
@@ -6177,14 +6252,14 @@ Exam Branch
             const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
             let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
             const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
-            const movedLibraries = enforceLibraryLastHour(classContexts);
+            const movedActivities = enforceActivitiesLastHours(classContexts);
             filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
             const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || addedAIMLOSLab || movedLibraries || annotatedLabRooms) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || addedAIMLOSLab || movedActivities || annotatedLabRooms) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
@@ -6198,8 +6273,8 @@ Exam Branch
                                     ? 'R25 II-I CSE (AI&ML) OS Lab was added and saved'
                                     : (filledBlankSlots
                                         ? 'Empty timetable slots were filled and saved'
-                                        : (movedLibraries
-                                            ? 'Library was moved to the last hour and saved'
+                                        : (movedActivities
+                                            ? 'Activity hours were moved to the last hours and saved'
                                             : (annotatedLabRooms
                                                 ? 'Lab room numbers were added and saved'
                                                 : 'Same-hour repeated subjects were corrected and saved')))))),
