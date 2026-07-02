@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10'];
-        const timeTableStorageKey = 'examBranchTimeTableDataSectionsProjectV11';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11'];
+        const timeTableStorageKey = 'examBranchTimeTableDataNoFourthYearProjectsV12';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -3422,6 +3422,7 @@ Exam Branch
             fillAllClassBlankSlots(classContexts, savedSelections);
             ensureR25TwoOneAIMLOSLabel(classContexts);
             fillAllClassBlankSlots(classContexts, savedSelections);
+            removeFourthYearProjectLabsFromMainTimeTables(classContexts);
             enforceActivitiesLastHours(classContexts);
             annotateClassLabRoomNumbers(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
@@ -3534,6 +3535,7 @@ Exam Branch
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
             repairedSameHourRepeats += ensureR25TwoOneAIMLOSLabel(classContexts);
             repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
+            repairedSameHourRepeats += removeFourthYearProjectLabsFromMainTimeTables(classContexts);
             repairedSameHourRepeats += enforceActivitiesLastHours(classContexts);
             repairedSameHourRepeats += annotateClassLabRoomNumbers(classContexts, savedSelections);
 
@@ -4944,6 +4946,36 @@ Exam Branch
                 ['IT', 'AIML'].includes(branch);
         }
 
+        function isProjectLabValue(value) {
+            const normalized = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
+            return normalized.includes('PROJECT');
+        }
+
+        function removeFourthYearProjectLabsFromMainTimeTables(classContexts) {
+            return (classContexts || getClassTimeTableContexts()).reduce(function (total, context) {
+                const branch = normalizeClassValue(context && context.branch);
+                if (
+                    !context ||
+                    normalizeAcademicLevelValue(context.year) !== '4' ||
+                    normalizeAcademicLevelValue(context.semester) !== '1' ||
+                    !['IT', 'AIML'].includes(branch)
+                ) {
+                    return total;
+                }
+
+                let removedCount = 0;
+                resetClassTimeTableMerges(context.slots);
+                (context.slots || []).forEach(function (slot) {
+                    if (slot.value && isProjectLabValue(slot.value)) {
+                        slot.value = '';
+                        removedCount += 1;
+                    }
+                });
+                restoreClassLabMergesFromValues(context.slots);
+                return total + removedCount;
+            }, 0);
+        }
+
         function buildClassAssignments(classSelections, context) {
             const assignmentMap = new Map();
             const normalizedClassSelections = normalizeSubjectSelections(classSelections);
@@ -6223,6 +6255,7 @@ Exam Branch
                 let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
                 const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
                 filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
+                const removedFourthYearProjectLabs = removeFourthYearProjectLabsFromMainTimeTables(classContexts);
                 const movedActivities = enforceActivitiesLastHours(classContexts);
                 const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
@@ -6259,6 +6292,7 @@ Exam Branch
                     (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
                     (repairedLabRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
                     (addedAIMLOSLab ? '; R25 II-I CSE (AI&ML) OS Lab was added' : '') +
+                    (removedFourthYearProjectLabs ? '; IV-I project labs were removed from main timetables' : '') +
                     (filledBlankSlots ? '; empty slots were filled where possible' : '') +
                     (movedActivities ? '; activity hours were moved to the last hours' : '') +
                     (annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
@@ -6338,6 +6372,7 @@ Exam Branch
                 fillAllClassBlankSlots(classContexts, selections);
                 ensureR25TwoOneAIMLOSLabel(classContexts);
                 fillAllClassBlankSlots(classContexts, selections);
+                removeFourthYearProjectLabsFromMainTimeTables(classContexts);
                 enforceActivitiesLastHours(classContexts);
                 annotateClassLabRoomNumbers(classContexts, selections);
                 downloadMainTimeTableExcel(button);
@@ -6417,13 +6452,14 @@ Exam Branch
             let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
             const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
             filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
+            const removedFourthYearProjectLabs = removeFourthYearProjectLabsFromMainTimeTables(classContexts);
             const movedActivities = enforceActivitiesLastHours(classContexts);
             const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
             const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || addedAIMLOSLab || movedActivities || annotatedLabRooms) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || filledBlankSlots || addedAIMLOSLab || removedFourthYearProjectLabs || movedActivities || annotatedLabRooms) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
@@ -6435,13 +6471,15 @@ Exam Branch
                                 ? 'Same-room lab clashes were corrected and saved'
                                 : (addedAIMLOSLab
                                     ? 'R25 II-I CSE (AI&ML) OS Lab was added and saved'
-                                    : (filledBlankSlots
-                                        ? 'Empty timetable slots were filled and saved'
-                                        : (movedActivities
-                                            ? 'Activity hours were moved to the last hours and saved'
-                                            : (annotatedLabRooms
-                                                ? 'Lab room numbers were added and saved'
-                                                : 'Same-hour repeated subjects were corrected and saved')))))),
+                                    : (removedFourthYearProjectLabs
+                                        ? 'IV-I project labs were removed from main timetables and saved'
+                                        : (filledBlankSlots
+                                            ? 'Empty timetable slots were filled and saved'
+                                            : (movedActivities
+                                                ? 'Activity hours were moved to the last hours and saved'
+                                                : (annotatedLabRooms
+                                                    ? 'Lab room numbers were added and saved'
+                                                    : 'Same-hour repeated subjects were corrected and saved'))))))),
                     'success'
                 );
             }
