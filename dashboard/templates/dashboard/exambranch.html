@@ -4915,6 +4915,10 @@ Exam Branch
                 'FLUTTER LAB': 'E-201',
                 'IS LAB': 'E-201',
                 'CC LAB': 'E-201',
+                'FSD LAB': 'E-201',
+                'SL LAB': 'E-201',
+                'DL LAB': 'E-201',
+                'NIC LAB': 'E-201',
                 'PROJECT LAB': 'E-201',
                 'PROJECT STAGE-1 LAB': 'E-201',
                 'PROJECT STAGE 1 LAB': 'E-201',
@@ -4924,11 +4928,30 @@ Exam Branch
             return standardLabRooms[labKey] || '';
         }
 
+        function isProjectStageOneSubject(subjectName) {
+            const normalized = normalizeSubjectNameForSchedule(subjectName);
+            return normalized.includes('PROJECT STAGE') &&
+                (normalized.includes(' I') || normalized.includes(' 1') || normalized.includes('-I') || normalized.includes('-1'));
+        }
+
+        function shouldExcludeFromMainClassTimeTable(subjectName, context) {
+            if (!context || !isProjectStageOneSubject(subjectName)) {
+                return false;
+            }
+            const branch = normalizeClassValue(context.branch);
+            return normalizeAcademicLevelValue(context.year) === '4' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                ['IT', 'AIML'].includes(branch);
+        }
+
         function buildClassAssignments(classSelections, context) {
             const assignmentMap = new Map();
             const normalizedClassSelections = normalizeSubjectSelections(classSelections);
             normalizedClassSelections.forEach(function (selection) {
                 const subjectName = (selection.subjectName || '').trim();
+                if (shouldExcludeFromMainClassTimeTable(subjectName, context)) {
+                    return;
+                }
                 const displayName = getShortSubjectLabel(subjectName);
                 const facultyKey = getFacultyScheduleKey(selection);
                 const key = normalizeSubjectNameForSchedule(displayName);
@@ -4960,10 +4983,10 @@ Exam Branch
             const standardLabMap = {
                 'IT|2|1': ['DV Lab', 'Java Lab', 'OS Lab', 'IoT Lab'],
                 'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'],
-                'IT|4|1': ['IS Lab', 'CC Lab', 'Project Lab', 'Seminar Lab'],
+                'IT|4|1': ['IS Lab', 'CC Lab', 'FSD Lab', 'SL Lab'],
                 'AIML|2|1': ['OS Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
-                'AIML|4|1': ['IoT Lab', 'DM Lab', 'Project Stage-1 Lab', 'Seminar Lab'],
+                'AIML|4|1': ['IoT Lab', 'DM Lab', 'DL Lab', 'NIC Lab'],
                 'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'CSE|3|1': ['ML Lab', 'CN Lab', 'FSD Lab', 'AI Lab'],
                 'CSE|4|1': ['CNS Lab', 'CD Lab', 'Project Lab', 'Seminar Lab']
