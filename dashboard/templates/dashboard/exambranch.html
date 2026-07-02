@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9'];
-        const timeTableStorageKey = 'examBranchTimeTableDataActivitiesLastHourV10';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10'];
+        const timeTableStorageKey = 'examBranchTimeTableDataSectionsProjectV11';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -3800,7 +3800,9 @@ Exam Branch
                 '2504311',
                 '2505308',
                 '2599302',
-                'CS507PC'
+                'CS507PC',
+                'IT705PC',
+                'AM705PC'
             ]);
 
             return isLaboratorySubject(subjectName) ||
@@ -4050,7 +4052,7 @@ Exam Branch
         function isLaboratorySubject(subjectName) {
             return /\b(lab|laboratory)\b/i.test(subjectName || '') ||
                 /\bes\s*lab\b|\bdm\s*lab\b|\bcd\s*lab\b|flutter\s*lab/i.test(subjectName || '') ||
-                /skill development course|ui design flutter/i.test(subjectName || '');
+                /skill development course|ui design flutter|project\s*stage\s*[-–]?\s*i\b|project\s*stage\s*1\b/i.test(subjectName || '');
         }
 
         function getShortSubjectLabel(subjectName) {
@@ -4074,6 +4076,12 @@ Exam Branch
                 'POWER BI LAB': 'DV Lab',
                 'POWERBI LAB': 'DV Lab',
                 'FLUTTER LAB': 'Flutter Lab',
+                'PROJECT STAGE I': 'Project Stage-1 Lab',
+                'PROJECT STAGE - I': 'Project Stage-1 Lab',
+                'PROJECT STAGE – I': 'Project Stage-1 Lab',
+                'PROJECT STAGE 1': 'Project Stage-1 Lab',
+                'PROJECT STAGE-1 LAB': 'Project Stage-1 Lab',
+                'PROJECT STAGE 1 LAB': 'Project Stage-1 Lab',
                 'COA': 'COA',
                 'DV': 'DV',
                 'DV LAB': 'DV Lab'
@@ -4533,11 +4541,24 @@ Exam Branch
             ].join('-');
         }
 
+        function shouldUseSectionContext(branch) {
+            const normalizedBranch = normalizeClassValue(branch);
+            return normalizedBranch === 'AIML' || normalizedBranch === 'CSE(AI&ML)';
+        }
+
+        function getSectionContextValue(section, branch) {
+            return shouldUseSectionContext(branch) ? normalizeClassValue(section || 'A') : '';
+        }
+
         function getSelectionContextKey(selection) {
+            const branch = selection.branch;
             return [
                 normalizeClassValue(selection.regulation || 'R22'),
-                getClassContextKey(selection.year, selection.semester, selection.branch)
-            ].join('|');
+                getClassContextKey(selection.year, selection.semester, branch),
+                getSectionContextValue(selection.section, branch)
+            ].filter(function (entry) {
+                return entry !== '';
+            }).join('|');
         }
 
         function normalizeAcademicLevelValue(value) {
@@ -4567,6 +4588,16 @@ Exam Branch
             return (romanYears[Number(year)] || year || 'III') + '-' + (romanSemesters[Number(semester)] || semester || 'I');
         }
 
+        function getClassContextLabel(regulation, year, semester, branch, section) {
+            const sectionLabel = getSectionContextValue(section, branch);
+            return [
+                regulation || 'R22',
+                getYearSemLabel(year, semester),
+                getBranchDisplayLabel(branch),
+                sectionLabel ? 'Section ' + sectionLabel : ''
+            ].filter(Boolean).join(' ');
+        }
+
         function choosePrimarySubjectSelection(selections) {
             const normalizedSelections = normalizeSubjectSelections(selections);
             return normalizedSelections.find(function (selection) {
@@ -4591,6 +4622,11 @@ Exam Branch
                 return;
             }
             context.titleElement.textContent = context.label + ' Time Table';
+            const container = context.titleElement.closest('[data-empty-timetable-card]') || document.getElementById('timetable');
+            const downloadButton = container ? container.querySelector('[data-download-main-timetable]') : null;
+            if (downloadButton) {
+                downloadButton.dataset.tableTitle = context.label + ' Time Table';
+            }
         }
 
         function getClassTimeTableContexts(selections) {
@@ -4601,24 +4637,33 @@ Exam Branch
             const primarySemester = primarySelection ? primarySelection.semester : (timeTableSemesterField ? (timeTableSemesterField.value || '1') : '1');
             const primaryBranch = primarySelection ? primarySelection.branch : (timeTableBranchField ? (timeTableBranchField.value || 'IT') : 'IT');
             const primaryRegulation = getContextRegulation(primarySelection);
+            const primarySection = primarySelection ? (primarySelection.section || 'A') : (subjectSelectionFields.section ? (subjectSelectionFields.section.value || 'A') : 'A');
 
             function addContext(context) {
                 if (!context.selectionKey || seen.has(context.selectionKey)) {
-                    return;
+                    return false;
                 }
                 seen.add(context.selectionKey);
                 updateClassContextTitle(context);
                 contexts.push(context);
+                return true;
             }
 
             addContext({
                 key: getClassContextKey(primaryYear, primarySemester, primaryBranch),
-                selectionKey: primaryRegulation + '|' + getClassContextKey(primaryYear, primarySemester, primaryBranch),
+                selectionKey: [
+                    primaryRegulation,
+                    getClassContextKey(primaryYear, primarySemester, primaryBranch),
+                    getSectionContextValue(primarySection, primaryBranch)
+                ].filter(function (entry) {
+                    return entry !== '';
+                }).join('|'),
                 regulation: primaryRegulation,
                 year: normalizeClassValue(primaryYear),
                 semester: normalizeClassValue(primarySemester),
                 branch: normalizeClassValue(primaryBranch),
-                label: primaryRegulation + ' ' + getYearSemLabel(primaryYear, primarySemester) + ' ' + getBranchDisplayLabel(primaryBranch),
+                section: getSectionContextValue(primarySection, primaryBranch),
+                label: getClassContextLabel(primaryRegulation, primaryYear, primarySemester, primaryBranch, primarySection),
                 slots: timeTableSlots,
                 slotSelector: '.timetable-slot',
                 titleElement: document.querySelector('#timetable .section-title'),
@@ -4632,19 +4677,28 @@ Exam Branch
                 const branch = card.dataset.branch || 'IT';
                 const matchingSelection = findSelectionForClass(selections, year, semester, branch);
                 const regulation = getContextRegulation(matchingSelection);
-                addContext({
+                const section = matchingSelection ? (matchingSelection.section || 'A') : '';
+                const added = addContext({
                     key: getClassContextKey(year, semester, branch),
-                    selectionKey: regulation + '|' + getClassContextKey(year, semester, branch),
+                    selectionKey: [
+                        regulation,
+                        getClassContextKey(year, semester, branch),
+                        getSectionContextValue(section, branch)
+                    ].filter(function (entry) {
+                        return entry !== '';
+                    }).join('|'),
                     regulation: regulation,
                     year: normalizeClassValue(year),
                     semester: normalizeClassValue(semester),
                     branch: normalizeClassValue(branch),
-                    label: regulation + ' ' + getYearSemLabel(year, semester) + ' ' + getBranchDisplayLabel(branch),
+                    section: getSectionContextValue(section, branch),
+                    label: getClassContextLabel(regulation, year, semester, branch, section),
                     slots: Array.from(card.querySelectorAll('.empty-timetable-slot')),
                     slotSelector: '.empty-timetable-slot',
                     titleElement: card.querySelector('.card-title'),
                     isPrimary: false
                 });
+                card.style.display = added ? '' : 'none';
             });
 
             return contexts;
@@ -4838,6 +4892,9 @@ Exam Branch
                 'IS LAB': 'E-201',
                 'CC LAB': 'E-201',
                 'PROJECT LAB': 'E-201',
+                'PROJECT STAGE-1 LAB': 'E-201',
+                'PROJECT STAGE 1 LAB': 'E-201',
+                'PROJECT STAGE I LAB': 'E-201',
                 'SEMINAR LAB': 'E-201'
             };
             return standardLabRooms[labKey] || '';
@@ -4882,7 +4939,7 @@ Exam Branch
                 'IT|4|1': ['IS Lab', 'CC Lab', 'Project Lab', 'Seminar Lab'],
                 'AIML|2|1': ['OS Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
-                'AIML|4|1': ['IoT Lab', 'DM Lab', 'Project Lab', 'Seminar Lab'],
+                'AIML|4|1': ['IoT Lab', 'DM Lab', 'Project Stage-1 Lab', 'Seminar Lab'],
                 'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'CSE|3|1': ['ML Lab', 'CN Lab', 'FSD Lab', 'AI Lab'],
                 'CSE|4|1': ['CNS Lab', 'CD Lab', 'Project Lab', 'Seminar Lab']
@@ -5492,6 +5549,8 @@ Exam Branch
                 '2512303': ['DV'],
                 CS524PE: ['DDB'],
                 IT512PE: ['DM'],
+                IT705PC: ['Project Stage-1 Lab'],
+                AM705PC: ['Project Stage-1 Lab'],
                 IT504PC: ['CD Lab'],
                 IT505PC: ['ES Lab'],
                 IT532PE: ['DM Lab'],
@@ -5584,6 +5643,9 @@ Exam Branch
             if ((normalized.includes('SKILL DEVELOPMENT COURSE') && !normalized.includes('DATA VISUALIZATION') && !normalized.includes('POWER BI') && !normalized.includes('POWERBI')) ||
                 normalized.includes('UI DESIGN FLUTTER')) {
                 labels.push('Flutter Lab');
+            }
+            if (normalized.includes('PROJECT STAGE') && (normalized.includes(' I') || normalized.includes(' 1') || normalized.includes('-I') || normalized.includes('-1'))) {
+                labels.push('Project Stage-1 Lab');
             }
             const fallbackAcronym = buildSubjectAcronym(subjectName);
             if (fallbackAcronym) {
@@ -6026,8 +6088,8 @@ Exam Branch
                 : uniqueSubjectNames(fallbackSubjectNames);
         }
 
-        function getRequiredHourSummary(classSelections) {
-            const assignments = buildClassAssignments(classSelections);
+        function getRequiredHourSummary(classSelections, context) {
+            const assignments = buildClassAssignments(classSelections, context);
             const theoryCount = assignments.filter(function (assignment) {
                 return !assignment.isLab && !assignment.isActivity;
             }).length;
@@ -6103,7 +6165,7 @@ Exam Branch
                     summary.contexts.push({
                         label: context.label,
                         hours: contextHours,
-                        requiredHours: getRequiredHourSummary(contextSelections).totalHours || 36
+                        requiredHours: getRequiredHourSummary(contextSelections, context).totalHours || 36
                     });
                     summary.labMergedCount += generated.labMergedCount || 0;
                     summary.totalHours += contextHours;
@@ -6127,7 +6189,7 @@ Exam Branch
                     return contextSummary.hours < Math.min(contextSummary.requiredHours || 36, 36);
                 });
                 const requiredSummary = classContexts.reduce(function (summary, context) {
-                    const required = getRequiredHourSummary(getSelectionsForClassContext(selections, context));
+                    const required = getRequiredHourSummary(getSelectionsForClassContext(selections, context), context);
                     summary.theoryCount += required.theoryCount;
                     summary.labCount += required.labCount;
                     summary.activityCount += required.activityCount;
