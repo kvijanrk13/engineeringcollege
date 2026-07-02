@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12'];
-        const timeTableStorageKey = 'examBranchTimeTableDataAllowedContextsV13';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13'];
+        const timeTableStorageKey = 'examBranchTimeTableDataActivityPlacementV14';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -4354,14 +4354,6 @@ Exam Branch
                 });
             });
 
-            const activityEntries = timetableActivityLabels.map(function (label) {
-                return activityEntriesByKey.get(label);
-            }).filter(Boolean);
-            if (!activityEntries.length) {
-                restoreClassLabMergesFromValues(slots);
-                return 0;
-            }
-
             const lastSlotsByDay = new Map();
             days.forEach(function (day) {
                 const slot = getClassSlot(day, lastPeriod, slots);
@@ -4371,11 +4363,24 @@ Exam Branch
                 }
             });
 
+            const activityEntries = timetableActivityLabels.map(function (label) {
+                return activityEntriesByKey.get(label) || {
+                    key: label,
+                    slot: null,
+                    value: normalizeTimeTableDisplayValue(label),
+                    missing: true
+                };
+            });
+            if (!activityEntries.length || !lastSlotsByDay.size) {
+                restoreClassLabMergesFromValues(slots);
+                return 0;
+            }
+
             const usedTargetSlots = new Set();
             const assignments = activityEntries.map(function (entry) {
                 const preferredDay = preferredActivityDays[entry.key];
                 let targetSlot = preferredDay ? lastSlotsByDay.get(preferredDay) : null;
-                if (!targetSlot || usedTargetSlots.has(targetSlot)) {
+                if ((!targetSlot || usedTargetSlots.has(targetSlot)) && entry.slot) {
                     targetSlot = lastSlotsByDay.get(entry.slot.dataset.day || '');
                 }
                 if (!targetSlot || usedTargetSlots.has(targetSlot)) {
@@ -4398,28 +4403,52 @@ Exam Branch
 
             const sourceSlots = new Set(activityEntries.map(function (entry) {
                 return entry.slot;
-            }).concat(duplicateActivitySlots));
+            }).filter(Boolean).concat(duplicateActivitySlots));
             const targetSlots = new Set(assignments.map(function (assignment) {
                 return assignment.targetSlot;
             }));
-            const displacedValues = assignments.filter(function (assignment) {
-                return !sourceSlots.has(assignment.targetSlot) && assignment.targetSlot.value.trim();
-            }).map(function (assignment) {
-                return assignment.targetSlot.value;
+            const nonTargetSourceSlots = activityEntries.map(function (entry) {
+                return entry.slot;
+            }).filter(function (slot) {
+                return slot && !targetSlots.has(slot);
+            });
+            const relocationSlots = visibleSlots.filter(function (slot) {
+                return !sourceSlots.has(slot) && !targetSlots.has(slot) && !slot.value.trim();
             });
 
+            const displacedValues = [];
             assignments.forEach(function (assignment) {
+                if (sourceSlots.has(assignment.targetSlot) || !assignment.targetSlot.value.trim()) {
+                    return;
+                }
+                if (assignment.entry.slot) {
+                    displacedValues.push(assignment.targetSlot.value);
+                    return;
+                }
+                const relocationSlot = relocationSlots.shift();
+                if (relocationSlot) {
+                    relocationSlot.value = assignment.targetSlot.value;
+                    changes += 1;
+                    return;
+                }
+                assignment.skip = true;
+            });
+
+            const activeAssignments = assignments.filter(function (assignment) {
+                return !assignment.skip;
+            });
+            const activeTargetSlots = new Set(activeAssignments.map(function (assignment) {
+                return assignment.targetSlot;
+            }));
+
+            activeAssignments.forEach(function (assignment) {
                 if (assignment.targetSlot.value !== assignment.entry.value) {
                     assignment.targetSlot.value = assignment.entry.value;
                     changes += 1;
                 }
             });
 
-            activityEntries.map(function (entry) {
-                return entry.slot;
-            }).filter(function (slot) {
-                return !targetSlots.has(slot);
-            }).forEach(function (slot, index) {
+            nonTargetSourceSlots.forEach(function (slot, index) {
                 const replacement = displacedValues[index] || '';
                 if (slot.value !== replacement) {
                     slot.value = replacement;
@@ -4428,7 +4457,7 @@ Exam Branch
             });
 
             duplicateActivitySlots.forEach(function (slot) {
-                if (!targetSlots.has(slot) && slot.value) {
+                if (!activeTargetSlots.has(slot) && slot.value) {
                     slot.value = '';
                     changes += 1;
                 }
