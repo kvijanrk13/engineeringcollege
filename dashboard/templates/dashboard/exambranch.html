@@ -4090,6 +4090,7 @@ Exam Branch
                 return trimmedName.toUpperCase();
             }
             const canonicalShortLabels = {
+                'INTERNSHIP': 'INT',
                 'CD LAB': 'CD Lab',
                 'ES LAB': 'ES Lab',
                 'DM LAB': 'DM Lab',
@@ -4139,9 +4140,8 @@ Exam Branch
                 .replace(/[^A-Z0-9 ]/g, ' ')
                 .replace(/\s+/g, ' ')
                 .trim();
-            const stopWords = new Set(['AND', 'OF', 'THE', 'FOR', 'TO', 'IN', 'ON', 'WITH']);
             const words = cleanedName.split(' ').filter(function (word) {
-                return word && !stopWords.has(word);
+                return Boolean(word);
             });
             const acronym = words.map(function (word) {
                 return word.charAt(0);
