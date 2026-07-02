@@ -1804,6 +1804,9 @@ Exam Branch
 
             const currentSubject = selectedSubject || subjectSelectionFields.subjectName.value || '';
             const selectedBranch = normalizeClassValue(subjectSelectionFields.branch ? subjectSelectionFields.branch.value : '');
+            const selectedSection = normalizeClassValue(subjectSelectionFields.section ? subjectSelectionFields.section.value : 'A');
+            const selectedYear = normalizeAcademicLevelValue(subjectSelectionFields.year ? subjectSelectionFields.year.value : '');
+            const selectedSemester = normalizeAcademicLevelValue(subjectSelectionFields.semester ? subjectSelectionFields.semester.value : '');
             subjectSelectionFields.subjectName.innerHTML = '';
 
             const defaultOption = document.createElement('option');
@@ -1826,6 +1829,26 @@ Exam Branch
                 }
                 subjectSelectionFields.subjectName.appendChild(option);
             });
+
+            if (
+                selectedBranch === 'AIML' &&
+                selectedYear === '3' &&
+                selectedSemester === '1' &&
+                ['A', 'B'].includes(selectedSection) &&
+                !Array.from(subjectSelectionFields.subjectName.options).some(function (option) {
+                    return normalizeSubjectNameForSchedule(option.value) === 'INTERNSHIP';
+                })
+            ) {
+                const internshipOption = document.createElement('option');
+                internshipOption.value = 'INTERNSHIP';
+                internshipOption.dataset.code = '';
+                internshipOption.dataset.branch = selectedBranch;
+                internshipOption.textContent = 'INTERNSHIP';
+                if (internshipOption.value === currentSubject) {
+                    internshipOption.selected = true;
+                }
+                subjectSelectionFields.subjectName.appendChild(internshipOption);
+            }
 
             if (
                 currentSubject &&
@@ -6336,7 +6359,7 @@ Exam Branch
             field.addEventListener('input', markSubjectSelectionDirty);
             field.addEventListener('change', function () {
                 markSubjectSelectionDirty();
-                if (field === subjectSelectionFields.regulation || field === subjectSelectionFields.year || field === subjectSelectionFields.semester || field === subjectSelectionFields.branch) {
+                if (field === subjectSelectionFields.regulation || field === subjectSelectionFields.year || field === subjectSelectionFields.semester || field === subjectSelectionFields.branch || field === subjectSelectionFields.section) {
                     loadSubjectSelectionSubjects();
                 }
             });
