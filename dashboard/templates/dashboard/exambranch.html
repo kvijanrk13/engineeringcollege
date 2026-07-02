@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14'];
-        const timeTableStorageKey = 'examBranchTimeTableDataNoLabClashesV15';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15'];
+        const timeTableStorageKey = 'examBranchTimeTableDataRequirementRepairV16';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2363,6 +2363,41 @@ Exam Branch
             });
 
             return annotatedCount;
+        }
+
+        function applyTimeTableRequirementRepairs(classContexts, selections) {
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
+            const summary = {
+                sameHourRepeats: 0,
+                labRoomConflicts: 0,
+                filledBlankSlots: 0,
+                addedAIMLOSLab: 0,
+                removedFourthYearProjectLabs: 0,
+                movedActivities: 0,
+                annotatedLabRooms: 0,
+                total: 0
+            };
+
+            summary.sameHourRepeats += repairAllClassTimeTableSameHourRepeats(contexts);
+            summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
+            summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections);
+            summary.addedAIMLOSLab += ensureR25TwoOneAIMLOSLabel(contexts);
+            summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections);
+            summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
+            summary.removedFourthYearProjectLabs += removeFourthYearProjectLabsFromMainTimeTables(contexts);
+            summary.movedActivities += enforceActivitiesLastHours(contexts);
+            summary.annotatedLabRooms += annotateClassLabRoomNumbers(contexts, normalizedSelections);
+            summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
+            summary.total = summary.sameHourRepeats +
+                summary.labRoomConflicts +
+                summary.filledBlankSlots +
+                summary.addedAIMLOSLab +
+                summary.removedFourthYearProjectLabs +
+                summary.movedActivities +
+                summary.annotatedLabRooms;
+
+            return summary;
         }
 
         function fillClassBlankSlots(context, classSelections) {
@@ -3413,15 +3448,7 @@ Exam Branch
             ensureR25TwoOneITCompletePlan();
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
-            repairAllClassTimeTableSameHourRepeats(classContexts);
-            repairAllClassLabRoomConflicts(classContexts, savedSelections);
-            fillAllClassBlankSlots(classContexts, savedSelections);
-            ensureR25TwoOneAIMLOSLabel(classContexts);
-            fillAllClassBlankSlots(classContexts, savedSelections);
-            repairAllClassLabRoomConflicts(classContexts, savedSelections);
-            removeFourthYearProjectLabsFromMainTimeTables(classContexts);
-            enforceActivitiesLastHours(classContexts);
-            annotateClassLabRoomNumbers(classContexts, savedSelections);
+            applyTimeTableRequirementRepairs(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -3527,15 +3554,7 @@ Exam Branch
             }
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
-            repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
-            repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
-            repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
-            repairedSameHourRepeats += ensureR25TwoOneAIMLOSLabel(classContexts);
-            repairedSameHourRepeats += fillAllClassBlankSlots(classContexts, savedSelections);
-            repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
-            repairedSameHourRepeats += removeFourthYearProjectLabsFromMainTimeTables(classContexts);
-            repairedSameHourRepeats += enforceActivitiesLastHours(classContexts);
-            repairedSameHourRepeats += annotateClassLabRoomNumbers(classContexts, savedSelections);
+            repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -3590,7 +3609,7 @@ Exam Branch
         }
 
         function loadTimeTableData() {
-            const legacySaved = legacyTimeTableStorageKeys.map(function (key) {
+            const legacySaved = legacyTimeTableStorageKeys.slice().reverse().map(function (key) {
                 return localStorage.getItem(key);
             }).find(Boolean);
             let saved = localStorage.getItem(timeTableStorageKey);
@@ -3670,7 +3689,6 @@ Exam Branch
         function downloadMainTimeTableExcel(button) {
             ensureR22ThreeOneITCompletePlan();
             ensureR25TwoOneITCompletePlan();
-            repairAllClassTimeTableSameHourRepeats();
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
                 : (button.closest('[data-empty-timetable-card]') ? button.closest('[data-empty-timetable-card]').querySelector('.time-table-grid') : null);
@@ -6348,15 +6366,7 @@ Exam Branch
                     summary.totalHours += contextHours;
                     return summary;
                 }, { labMergedCount: 0, totalHours: 0, contexts: [] });
-                const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats(classContexts);
-                const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
-                let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
-                const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
-                filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
-                const repairedPostFillLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
-                const removedFourthYearProjectLabs = removeFourthYearProjectLabsFromMainTimeTables(classContexts);
-                const movedActivities = enforceActivitiesLastHours(classContexts);
-                const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
+                const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
                 });
@@ -6388,13 +6398,13 @@ Exam Branch
                     requiredSummary.theoryCount + ' theory x 5 + ' + requiredSummary.labCount + ' lab x 2 + ' +
                     requiredSummary.activityCount + ' activity = ' + requiredSummary.totalHours + ' hours' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
-                    (repairedSameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
-                    (repairedLabRoomConflicts || repairedPostFillLabRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
-                    (addedAIMLOSLab ? '; R25 II-I CSE (AI&ML) OS Lab was added' : '') +
-                    (removedFourthYearProjectLabs ? '; IV-I project labs were removed from main timetables' : '') +
-                    (filledBlankSlots ? '; empty slots were filled where possible' : '') +
-                    (movedActivities ? '; activity hours were moved to the last hours' : '') +
-                    (annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
+                    (repairSummary.sameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
+                    (repairSummary.labRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
+                    (repairSummary.addedAIMLOSLab ? '; R25 II-I CSE (AI&ML) OS Lab was added' : '') +
+                    (repairSummary.removedFourthYearProjectLabs ? '; IV-I project labs were removed from main timetables' : '') +
+                    (repairSummary.filledBlankSlots ? '; empty slots were filled where possible' : '') +
+                    (repairSummary.movedActivities ? '; activity hours were moved to the last hours' : '') +
+                    (repairSummary.annotatedLabRooms ? '; lab room numbers were added to lab slots' : '') +
                     (incompleteContexts.length
                         ? '; warning: incomplete 36-hour load for ' + incompleteContexts.map(function (contextSummary) {
                             return contextSummary.label + ' (' + contextSummary.hours + ' hours)';
@@ -6470,14 +6480,7 @@ Exam Branch
             button.addEventListener('click', function () {
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
-                repairAllClassLabRoomConflicts(classContexts, selections);
-                fillAllClassBlankSlots(classContexts, selections);
-                ensureR25TwoOneAIMLOSLabel(classContexts);
-                fillAllClassBlankSlots(classContexts, selections);
-                repairAllClassLabRoomConflicts(classContexts, selections);
-                removeFourthYearProjectLabsFromMainTimeTables(classContexts);
-                enforceActivitiesLastHours(classContexts);
-                annotateClassLabRoomNumbers(classContexts, selections);
+                applyTimeTableRequirementRepairs(classContexts, selections);
                 downloadMainTimeTableExcel(button);
             });
         });
@@ -6554,19 +6557,11 @@ Exam Branch
             const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
             const selections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(selections);
-            const repairedLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
-            let filledBlankSlots = fillAllClassBlankSlots(classContexts, selections);
-            const addedAIMLOSLab = ensureR25TwoOneAIMLOSLabel(classContexts);
-            filledBlankSlots += fillAllClassBlankSlots(classContexts, selections);
-            const repairedPostFillLabRoomConflicts = repairAllClassLabRoomConflicts(classContexts, selections);
-            const removedFourthYearProjectLabs = removeFourthYearProjectLabsFromMainTimeTables(classContexts);
-            const movedActivities = enforceActivitiesLastHours(classContexts);
-            const annotatedLabRooms = annotateClassLabRoomNumbers(classContexts, selections);
-            const repairedSameHourRepeats = repairAllClassTimeTableSameHourRepeats();
+            const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
             if (completedR22ThreeOneIT || completedR25TwoOneIT) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairedSameHourRepeats || repairedLabRoomConflicts || repairedPostFillLabRoomConflicts || filledBlankSlots || addedAIMLOSLab || removedFourthYearProjectLabs || movedActivities || annotatedLabRooms) {
+            if (completedR22ThreeOneIT || completedR25TwoOneIT || repairSummary.total) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
@@ -6574,17 +6569,17 @@ Exam Branch
                         ? 'R22 III-I IT empty slots were filled and saved'
                         : (completedR25TwoOneIT
                             ? 'R25 II-I IT full load was filled and saved'
-                            : (repairedLabRoomConflicts || repairedPostFillLabRoomConflicts
+                            : (repairSummary.labRoomConflicts
                                 ? 'Same-room lab clashes were corrected and saved'
-                                : (addedAIMLOSLab
+                                : (repairSummary.addedAIMLOSLab
                                     ? 'R25 II-I CSE (AI&ML) OS Lab was added and saved'
-                                    : (removedFourthYearProjectLabs
+                                    : (repairSummary.removedFourthYearProjectLabs
                                         ? 'IV-I project labs were removed from main timetables and saved'
-                                        : (filledBlankSlots
+                                        : (repairSummary.filledBlankSlots
                                             ? 'Empty timetable slots were filled and saved'
-                                            : (movedActivities
+                                            : (repairSummary.movedActivities
                                                 ? 'Activity hours were moved to the last hours and saved'
-                                                : (annotatedLabRooms
+                                                : (repairSummary.annotatedLabRooms
                                                     ? 'Lab room numbers were added and saved'
                                                     : 'Same-hour repeated subjects were corrected and saved'))))))),
                     'success'
