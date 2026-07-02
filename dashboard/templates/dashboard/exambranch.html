@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7'];
-        const timeTableStorageKey = 'examBranchTimeTableDataAIMLOSLibraryV8';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8'];
+        const timeTableStorageKey = 'examBranchTimeTableDataActivitiesLastHourV9';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2440,9 +2440,9 @@ Exam Branch
                 MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
                 TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
                 WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
-                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'DDB'],
-                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'MENTORING'],
-                SAT: ['ACD', 'DDB', 'DM', 'ES', 'SPORTS', 'LIBRARY']
+                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'MENTORING'],
+                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
+                SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -2479,9 +2479,9 @@ Exam Branch
                 MON: ['COA', 'OOPJ', 'OS', 'DV Lab (Room: D-417)', null, 'IoT'],
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
-                THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
-                FRI: ['OS', 'COA', 'DV', 'IoT', 'OOPJ', 'MENTORING'],
-                SAT: ['OOPJ', 'OS', 'IoT', 'DV', 'SPORTS', 'LIBRARY']
+                THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'MENTORING'],
+                FRI: ['OS', 'COA', 'DV', 'IoT', 'OOPJ', 'SPORTS'],
+                SAT: ['OOPJ', 'OS', 'IoT', 'DV', 'DV', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -4287,64 +4287,117 @@ Exam Branch
             const days = Array.from(new Set(slots.map(function (slot) {
                 return slot.dataset.day || '';
             }).filter(Boolean)));
+            const lastPeriod = periodOrder[periodOrder.length - 1];
+            const preferredActivityDays = {
+                MENTORING: 'THU',
+                SPORTS: 'FRI',
+                LIBRARY: 'SAT'
+            };
+            const preferredDayOrder = ['THU', 'FRI', 'SAT', 'MON', 'TUE', 'WED'];
             let changes = 0;
 
             resetClassTimeTableMerges(slots);
 
-            days.forEach(function (day) {
-                const daySlots = periodOrder.map(function (period) {
-                    return getClassSlot(day, period, slots);
-                }).filter(function (slot) {
-                    const cell = getTimeTableSlotCell(slot);
-                    return slot && cell && cell.style.display !== 'none';
-                });
-                const activitySlots = daySlots.filter(function (slot) {
-                    return Boolean(getTimetableActivityKey(slot.value));
-                }).sort(function (left, right) {
-                    const leftOrder = timetableActivityOrder.get(getTimetableActivityKey(left.value));
-                    const rightOrder = timetableActivityOrder.get(getTimetableActivityKey(right.value));
-                    return leftOrder - rightOrder;
-                });
-
-                if (!activitySlots.length) {
+            const visibleSlots = slots.filter(function (slot) {
+                const cell = getTimeTableSlotCell(slot);
+                return slot && cell && cell.style.display !== 'none';
+            });
+            const activityEntriesByKey = new Map();
+            const duplicateActivitySlots = [];
+            visibleSlots.forEach(function (slot) {
+                const activityKey = getTimetableActivityKey(slot.value);
+                if (!activityKey) {
                     return;
                 }
+                if (activityEntriesByKey.has(activityKey)) {
+                    duplicateActivitySlots.push(slot);
+                    return;
+                }
+                activityEntriesByKey.set(activityKey, {
+                    key: activityKey,
+                    slot: slot,
+                    value: normalizeTimeTableDisplayValue(activityKey)
+                });
+            });
 
-                const targetSlots = daySlots.slice(-activitySlots.length);
-                const targetSet = new Set(targetSlots);
-                const sourceSet = new Set(activitySlots);
-                const displacedValues = targetSlots.filter(function (slot) {
-                    return !sourceSet.has(slot) && slot.value.trim();
-                }).map(function (slot) {
-                    return slot.value;
-                });
-                const sourceValues = activitySlots.map(function (slot) {
-                    return normalizeTimeTableDisplayValue(getTimetableActivityKey(slot.value));
-                });
+            const activityEntries = timetableActivityLabels.map(function (label) {
+                return activityEntriesByKey.get(label);
+            }).filter(Boolean);
+            if (!activityEntries.length) {
+                restoreClassLabMergesFromValues(slots);
+                return 0;
+            }
 
-                targetSlots.forEach(function (slot, index) {
-                    if (slot.value !== sourceValues[index]) {
-                        slot.value = sourceValues[index];
-                        changes += 1;
-                    }
-                });
+            const lastSlotsByDay = new Map();
+            days.forEach(function (day) {
+                const slot = getClassSlot(day, lastPeriod, slots);
+                const cell = getTimeTableSlotCell(slot);
+                if (slot && cell && cell.style.display !== 'none') {
+                    lastSlotsByDay.set(day, slot);
+                }
+            });
 
-                activitySlots.filter(function (slot) {
-                    return !targetSet.has(slot);
-                }).forEach(function (slot, index) {
-                    const replacement = displacedValues[index] || '';
-                    if (slot.value !== replacement) {
-                        slot.value = replacement;
-                        changes += 1;
-                    }
-                });
+            const usedTargetSlots = new Set();
+            const assignments = activityEntries.map(function (entry) {
+                const preferredDay = preferredActivityDays[entry.key];
+                let targetSlot = preferredDay ? lastSlotsByDay.get(preferredDay) : null;
+                if (!targetSlot || usedTargetSlots.has(targetSlot)) {
+                    targetSlot = lastSlotsByDay.get(entry.slot.dataset.day || '');
+                }
+                if (!targetSlot || usedTargetSlots.has(targetSlot)) {
+                    targetSlot = preferredDayOrder.map(function (day) {
+                        return lastSlotsByDay.get(day);
+                    }).concat(Array.from(lastSlotsByDay.values())).find(function (candidate) {
+                        return candidate && !usedTargetSlots.has(candidate);
+                    }) || null;
+                }
+                if (targetSlot) {
+                    usedTargetSlots.add(targetSlot);
+                }
+                return {
+                    entry: entry,
+                    targetSlot: targetSlot
+                };
+            }).filter(function (assignment) {
+                return Boolean(assignment.targetSlot);
+            });
 
-                daySlots.forEach(function (slot) {
-                    if (!targetSet.has(slot) && getTimetableActivityKey(slot.value) && !sourceSet.has(slot)) {
-                        slot.value = '';
-                        changes += 1;
-                    }
-                });
+            const sourceSlots = new Set(activityEntries.map(function (entry) {
+                return entry.slot;
+            }).concat(duplicateActivitySlots));
+            const targetSlots = new Set(assignments.map(function (assignment) {
+                return assignment.targetSlot;
+            }));
+            const displacedValues = assignments.filter(function (assignment) {
+                return !sourceSlots.has(assignment.targetSlot) && assignment.targetSlot.value.trim();
+            }).map(function (assignment) {
+                return assignment.targetSlot.value;
+            });
+
+            assignments.forEach(function (assignment) {
+                if (assignment.targetSlot.value !== assignment.entry.value) {
+                    assignment.targetSlot.value = assignment.entry.value;
+                    changes += 1;
+                }
+            });
+
+            activityEntries.map(function (entry) {
+                return entry.slot;
+            }).filter(function (slot) {
+                return !targetSlots.has(slot);
+            }).forEach(function (slot, index) {
+                const replacement = displacedValues[index] || '';
+                if (slot.value !== replacement) {
+                    slot.value = replacement;
+                    changes += 1;
+                }
+            });
+
+            duplicateActivitySlots.forEach(function (slot) {
+                if (!targetSlots.has(slot) && slot.value) {
+                    slot.value = '';
+                    changes += 1;
+                }
             });
 
             restoreClassLabMergesFromValues(slots);
@@ -5075,9 +5128,9 @@ Exam Branch
                 MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
                 TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
                 WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
-                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'DDB'],
-                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'MENTORING'],
-                SAT: ['ACD', 'DDB', 'DM', 'ES', 'SPORTS', 'LIBRARY']
+                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'MENTORING'],
+                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
+                SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -5138,9 +5191,9 @@ Exam Branch
                 MON: ['COA', 'OOPJ', 'OS', 'DV Lab', null, 'IoT'],
                 TUE: ['DV', 'COA', 'OOPJ', 'OS Lab', null, 'OS'],
                 WED: ['IoT', 'DV', 'COA', 'Java Lab', null, 'OOPJ'],
-                THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'DV'],
-                FRI: ['OS', 'COA', 'DV', 'IoT', 'OOPJ', 'MENTORING'],
-                SAT: ['OOPJ', 'OS', 'IoT', 'DV', 'SPORTS', 'LIBRARY']
+                THU: ['IoT Lab', null, 'IoT', 'COA', 'OS', 'MENTORING'],
+                FRI: ['OS', 'COA', 'DV', 'IoT', 'OOPJ', 'SPORTS'],
+                SAT: ['OOPJ', 'OS', 'IoT', 'DV', 'DV', 'LIBRARY']
             };
 
             resetClassTimeTableMerges(context.slots);
