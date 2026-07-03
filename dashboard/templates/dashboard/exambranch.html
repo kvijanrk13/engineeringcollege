@@ -2518,6 +2518,129 @@ Exam Branch
             return true;
         }
 
+        function applyFixedPlanToSlots(slots, slotSelector, plan) {
+            const context = {
+                slots: slots || [],
+                slotSelector: slotSelector || '.empty-timetable-slot'
+            };
+            return applyFixedDisplayPlan(context, plan);
+        }
+
+        function getRequiredFixedPlanForSpec(regulation, year, semester, branch, section) {
+            const key = [
+                normalizeClassValue(regulation || 'R22'),
+                normalizeAcademicLevelValue(year),
+                normalizeAcademicLevelValue(semester),
+                normalizeClassValue(branch),
+                getSectionContextValue(section, branch)
+            ].join('|');
+            const plans = {
+                'R25|2|1|AIML|A': {
+                    MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
+                    TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
+                    WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
+                    THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
+                    FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
+                    SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                },
+                'R25|2|1|AIML|B': {
+                    MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
+                    TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
+                    WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
+                    THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
+                    FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
+                    SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                },
+                'R25|2|1|IT|': {
+                    MON: ['CM Lab', null, 'COA', 'OOPJ', 'OS', 'IoT'],
+                    TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'OS'],
+                    WED: ['OS Lab', null, 'IoT', 'MSF', 'COA', 'OOPJ'],
+                    THU: ['IoT Lab', null, 'OS', 'IoT', 'MSF', 'EVS/IKS'],
+                    FRI: ['DV Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
+                    SAT: ['OS', 'IoT', 'EVS/IKS', 'MSF', 'LIBRARY', 'MENTORING']
+                },
+                'R22|3|1|AIML|A': {
+                    MON: ['ML Lab', null, 'ML', 'CN', 'DL', 'NLP'],
+                    TUE: ['CN Lab', null, 'DA', 'ML', 'CN', 'DL'],
+                    WED: ['NLP Lab', null, 'NLP', 'DA', 'ML', 'CN'],
+                    THU: ['DA Lab', null, 'DL', 'NLP', 'DA', 'MENTORING'],
+                    FRI: ['ML', 'CN', 'DL', 'NLP', 'DA', 'SPORTS'],
+                    SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
+                },
+                'R22|3|1|AIML|B': {
+                    MON: ['ML Lab', null, 'ML', 'CN', 'DL', 'NLP'],
+                    TUE: ['CN Lab', null, 'DA', 'ML', 'CN', 'DL'],
+                    WED: ['NLP Lab', null, 'NLP', 'DA', 'ML', 'CN'],
+                    THU: ['DA Lab', null, 'DL', 'NLP', 'DA', 'MENTORING'],
+                    FRI: ['ML', 'CN', 'DL', 'NLP', 'DA', 'SPORTS'],
+                    SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
+                },
+                'R22|3|1|IT|': {
+                    MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
+                    TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
+                    WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
+                    THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'MENTORING'],
+                    FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
+                    SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
+                },
+                'R22|4|1|AIML|A': {
+                    MON: ['IoT Lab', null, 'DL', 'NIC', 'IoT', 'DM'],
+                    TUE: ['DM Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
+                    WED: ['DL Lab', null, 'DM', 'OE', 'DL', 'NIC'],
+                    THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
+                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'SPORTS'],
+                    SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
+                },
+                'R22|4|1|AIML|B': {
+                    MON: ['IoT Lab', null, 'DL', 'NIC', 'IoT', 'DM'],
+                    TUE: ['DM Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
+                    WED: ['DL Lab', null, 'DM', 'OE', 'DL', 'NIC'],
+                    THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
+                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'SPORTS'],
+                    SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
+                },
+                'R22|4|1|IT|': {
+                    MON: ['IS Lab', null, 'IS', 'CC', 'FSD', 'SL'],
+                    TUE: ['CC Lab', null, 'OE', 'IS', 'CC', 'FSD'],
+                    WED: ['FSD Lab', null, 'SL', 'OE', 'IS', 'CC'],
+                    THU: ['Project Stage-1 Lab', null, 'FSD', 'SL', 'OE', 'MENTORING'],
+                    FRI: ['IS', 'CC', 'FSD', 'SL', 'OE', 'SPORTS'],
+                    SAT: ['IS', 'CC', 'FSD', 'SL', 'OE', 'LIBRARY']
+                }
+            };
+            return plans[key] || null;
+        }
+
+        function applyRequiredFixedLayoutsToVisibleTables() {
+            let appliedCount = 0;
+            const primaryPlan = getRequiredFixedPlanForSpec(
+                subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R25',
+                timeTableYearField ? timeTableYearField.value : '2',
+                timeTableSemesterField ? timeTableSemesterField.value : '1',
+                timeTableBranchField ? timeTableBranchField.value : 'AIML',
+                subjectSelectionFields.section ? subjectSelectionFields.section.value : 'A'
+            );
+            if (primaryPlan && applyFixedPlanToSlots(timeTableSlots, '.timetable-slot', primaryPlan)) {
+                appliedCount += 1;
+            }
+
+            emptyTimeTableCards.forEach(function (card) {
+                const yearSem = String(card.dataset.yearSem || '').split('-');
+                const plan = getRequiredFixedPlanForSpec(
+                    getAllowedGeneratedClassContextSpec('R25', yearSem[0], yearSem[1], card.dataset.branch, card.dataset.section) ? 'R25' : 'R22',
+                    yearSem[0],
+                    yearSem[1],
+                    card.dataset.branch || '',
+                    card.dataset.section || ''
+                );
+                if (plan && applyFixedPlanToSlots(getEmptyTimeTableSlots(card), '.empty-timetable-slot', plan)) {
+                    card.style.display = '';
+                    appliedCount += 1;
+                }
+            });
+            return appliedCount;
+        }
+
         function applyR22ThreeOneITDisplayPlan(context) {
             if (!isR22ThreeOneITContext(context)) {
                 return false;
@@ -3656,6 +3779,7 @@ Exam Branch
         function getTimeTablePayload() {
             ensureR22ThreeOneITCompletePlan();
             ensureR25TwoOneITCompletePlan();
+            applyRequiredFixedLayoutsToVisibleTables();
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
@@ -3842,6 +3966,7 @@ Exam Branch
             try {
                 const payload = JSON.parse(saved);
                 const repairedSameHourRepeats = setTimeTablePayload(payload);
+                const appliedFixedLayouts = applyRequiredFixedLayoutsToVisibleTables();
                 const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
                 const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
                 const completedR25TwoOneAIML = ensureR25TwoOneAIMLCompletePlans();
@@ -3854,10 +3979,10 @@ Exam Branch
                         (repairedSameHourRepeats || migratedLegacyTimetable ? '; timetable clashes were corrected' : '')))),
                     'success'
                 );
-                if (completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairedSameHourRepeats || migratedLegacyTimetable) {
+                if (completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairedSameHourRepeats || migratedLegacyTimetable || appliedFixedLayouts) {
                     refreshIndividualTimeTablesFromCurrentSelections();
                 }
-                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML) {
+                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || appliedFixedLayouts) {
                     saveTimeTableData();
                 }
             } catch (error) {
@@ -7014,16 +7139,17 @@ Exam Branch
         loadSubjectSelection();
         loadSyllabusSubjects();
         window.setTimeout(function () {
+            const appliedFixedLayouts = applyRequiredFixedLayoutsToVisibleTables();
             const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
             const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
             const completedR25TwoOneAIML = ensureR25TwoOneAIMLCompletePlans();
             const selections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(selections);
             const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
+            if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
-            if (completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
+            if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
