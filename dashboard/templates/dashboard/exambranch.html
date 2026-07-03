@@ -1649,8 +1649,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18'];
-        const timeTableStorageKey = 'examBranchTimeTableDataLoadSummaryV19';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19'];
+        const timeTableStorageKey = 'examBranchTimeTableDataPinnedFixedLayoutsV20';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -1675,6 +1675,13 @@ Exam Branch
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
         const emptyTimeTableCards = Array.from(document.querySelectorAll('[data-empty-timetable-card]'));
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
+        const primaryFixedTimeTableSpec = {
+            regulation: 'R22',
+            year: '3',
+            semester: '1',
+            branch: 'IT',
+            section: ''
+        };
         const individualTimeTableContainer = document.getElementById('individualTimeTableContainer');
         const individualTimeTableTemplate = individualTimeTableContainer
             ? individualTimeTableContainer.querySelector('[data-individual-timetable-card]').cloneNode(true)
@@ -2680,9 +2687,9 @@ Exam Branch
                     MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
                     TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
                     WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                    THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
+                    THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VALUE ETHICS AND GENDER SENSITIZATION'],
                     FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                    SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                    SAT: ['SE', 'DBMS', 'VALUE ETHICS AND GENDER SENSITIZATION', 'MSF', 'LIBRARY', 'MENTORING']
                 },
                 'R25|2|1|AIML|B': {
                     MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
@@ -2729,7 +2736,7 @@ Exam Branch
                     TUE: ['DM Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
                     WED: ['DL Lab', null, 'DM', 'OE', 'DL', 'NIC'],
                     THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
-                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'SPORTS'],
+                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'SPORTS', null],
                     SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
                 },
                 'R22|4|1|AIML|B': {
@@ -2737,7 +2744,7 @@ Exam Branch
                     TUE: ['DM Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
                     WED: ['DL Lab', null, 'DM', 'OE', 'DL', 'NIC'],
                     THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
-                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'SPORTS'],
+                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'SPORTS', null],
                     SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
                 },
                 'R22|4|1|IT|': {
@@ -2755,11 +2762,11 @@ Exam Branch
         function applyRequiredFixedLayoutsToVisibleTables() {
             let appliedCount = 0;
             const primaryPlan = getRequiredFixedPlanForSpec(
-                subjectSelectionFields.regulation ? subjectSelectionFields.regulation.value : 'R25',
-                timeTableYearField ? timeTableYearField.value : '2',
-                timeTableSemesterField ? timeTableSemesterField.value : '1',
-                timeTableBranchField ? timeTableBranchField.value : 'AIML',
-                subjectSelectionFields.section ? subjectSelectionFields.section.value : 'A'
+                primaryFixedTimeTableSpec.regulation,
+                primaryFixedTimeTableSpec.year,
+                primaryFixedTimeTableSpec.semester,
+                primaryFixedTimeTableSpec.branch,
+                primaryFixedTimeTableSpec.section
             );
             if (primaryPlan && applyFixedPlanToSlots(timeTableSlots, '.timetable-slot', primaryPlan)) {
                 appliedCount += 1;
@@ -2872,9 +2879,9 @@ Exam Branch
                 MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
                 TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
                 WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
+                THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VALUE ETHICS AND GENDER SENSITIZATION'],
                 FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                SAT: ['SE', 'DBMS', 'VALUE ETHICS AND GENDER SENSITIZATION', 'MSF', 'LIBRARY', 'MENTORING']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -2942,7 +2949,7 @@ Exam Branch
                 TUE: ['DM Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
                 WED: ['DL Lab', null, 'DM', 'OE', 'DL', 'NIC'],
                 THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
-                FRI: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'SPORTS'],
+                FRI: ['DL', 'NIC', 'IoT', 'DM', 'SPORTS', null],
                 SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
             });
         }
@@ -3103,7 +3110,7 @@ Exam Branch
                 requiredLabLabels.every(function (label) {
                     return countClassHoursForLabel(context, label) === 2;
                 }) &&
-                countClassHoursForLabel(context, 'VEGS') === 2 &&
+                (countClassHoursForLabel(context, 'VEGS') === 2 || countClassHoursForLabel(context, 'VALUE ETHICS AND GENDER SENSITIZATION') === 2) &&
                 countClassHoursForLabel(context, 'SPORTS') === 2 &&
                 countClassHoursForLabel(context, 'LIBRARY') === 1 &&
                 countClassHoursForLabel(context, 'MENTORING') === 1 &&
@@ -3928,6 +3935,7 @@ Exam Branch
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
+            applyRequiredFixedLayoutsToVisibleTables();
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -4038,6 +4046,7 @@ Exam Branch
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
             repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
+            applyRequiredFixedLayoutsToVisibleTables();
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -5339,22 +5348,12 @@ Exam Branch
         function getClassTimeTableContexts(selections) {
             const contexts = [];
             const seen = new Set();
-            const primarySelection = choosePrimarySubjectSelection(selections);
-            const primarySpec = primarySelection
-                ? getAllowedGeneratedClassContextSpec(
-                    primarySelection.regulation,
-                    primarySelection.year,
-                    primarySelection.semester,
-                    primarySelection.branch,
-                    primarySelection.section
-                )
-                : null;
-            const fallbackPrimarySpec = primarySpec || allowedGeneratedClassContexts[0];
-            const primaryYear = primarySpec ? primarySpec.year : fallbackPrimarySpec.year;
-            const primarySemester = primarySpec ? primarySpec.semester : fallbackPrimarySpec.semester;
-            const primaryBranch = primarySpec ? primarySpec.branch : fallbackPrimarySpec.branch;
-            const primaryRegulation = primarySpec ? primarySpec.regulation : fallbackPrimarySpec.regulation;
-            const primarySection = primarySpec ? primarySpec.section : fallbackPrimarySpec.section;
+            const primarySpec = primaryFixedTimeTableSpec;
+            const primaryYear = primarySpec.year;
+            const primarySemester = primarySpec.semester;
+            const primaryBranch = primarySpec.branch;
+            const primaryRegulation = primarySpec.regulation;
+            const primarySection = primarySpec.section;
 
             function addContext(context) {
                 if (!context.selectionKey || seen.has(context.selectionKey) || !isAllowedGeneratedClassContext(context)) {
@@ -6089,7 +6088,7 @@ Exam Branch
             let labMergedCount = 0;
             let totalHours = 0;
             const assignmentByLabel = {};
-            const requiredLabels = ['MSF', 'COA', 'OOPJ', 'SE', 'DBMS', 'CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab', 'NODE JS Lab', 'VEGS', 'SPORTS', 'LIBRARY', 'MENTORING'];
+            const requiredLabels = ['MSF', 'COA', 'OOPJ', 'SE', 'DBMS', 'CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab', 'NODE JS Lab', 'VALUE ETHICS AND GENDER SENSITIZATION', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
                 assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
@@ -6103,9 +6102,9 @@ Exam Branch
                 MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
                 TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
                 WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
+                THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VALUE ETHICS AND GENDER SENSITIZATION'],
                 FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                SAT: ['SE', 'DBMS', 'VALUE ETHICS AND GENDER SENSITIZATION', 'MSF', 'LIBRARY', 'MENTORING']
             };
 
             resetClassTimeTableMerges(context.slots);
@@ -7095,6 +7094,7 @@ Exam Branch
                     return summary;
                 }, { labMergedCount: 0, totalHours: 0, contexts: [] });
                 const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
+                applyRequiredFixedLayoutsToVisibleTables();
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
                 });
@@ -7206,6 +7206,7 @@ Exam Branch
                 repairAllClassTimeTableSameHourRepeats(classContexts);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
+                applyRequiredFixedLayoutsToVisibleTables();
                 normalizeAllTimeTableSlotValues();
             });
         });
@@ -7215,6 +7216,8 @@ Exam Branch
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
                 applyTimeTableRequirementRepairs(classContexts, selections);
+                applyRequiredFixedLayoutsToVisibleTables();
+                normalizeAllTimeTableSlotValues();
                 downloadMainTimeTableExcel(button);
             });
         });
@@ -7228,6 +7231,7 @@ Exam Branch
                 repairAllClassTimeTableSameHourRepeats(classContexts);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
+                applyRequiredFixedLayoutsToVisibleTables();
                 normalizeAllTimeTableSlotValues();
             });
         });
@@ -7296,6 +7300,7 @@ Exam Branch
             const selections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(selections);
             const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
+            applyRequiredFixedLayoutsToVisibleTables();
             if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
