@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16'];
-        const timeTableStorageKey = 'examBranchTimeTableDataRequiredLabsV17';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17'];
+        const timeTableStorageKey = 'examBranchTimeTableDataFixedLayoutsV18';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2320,7 +2320,9 @@ Exam Branch
         }
 
         function repairAllClassLabRoomConflicts(classContexts, selections) {
-            const contexts = classContexts || getClassTimeTableContexts(selections);
+            const contexts = (classContexts || getClassTimeTableContexts(selections)).filter(function (context) {
+                return !isFixedRequiredLayoutContext(context);
+            });
             let repairedCount = 0;
             let guard = 0;
 
@@ -2373,6 +2375,7 @@ Exam Branch
                 labRoomConflicts: 0,
                 filledBlankSlots: 0,
                 addedAIMLOSLab: 0,
+                fixedLayouts: 0,
                 projectStageLabs: 0,
                 movedActivities: 0,
                 annotatedLabRooms: 0,
@@ -2381,6 +2384,7 @@ Exam Branch
 
             summary.sameHourRepeats += repairAllClassTimeTableSameHourRepeats(contexts);
             summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
+            summary.fixedLayouts += ensureFixedRequiredLayouts(contexts);
             summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections);
             summary.addedAIMLOSLab += ensureR25TwoOneAIMLCompletePlans() || ensureR25TwoOneAIMLOSLabel(contexts);
             summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections);
@@ -2393,6 +2397,7 @@ Exam Branch
                 summary.labRoomConflicts +
                 summary.filledBlankSlots +
                 summary.addedAIMLOSLab +
+                summary.fixedLayouts +
                 summary.projectStageLabs +
                 summary.movedActivities +
                 summary.annotatedLabRooms;
@@ -2483,6 +2488,34 @@ Exam Branch
             return (classContexts || getClassTimeTableContexts(normalizedSelections)).reduce(function (total, context) {
                 return total + fillClassBlankSlots(context, getSelectionsForClassContext(normalizedSelections, context));
             }, 0);
+        }
+
+        function applyFixedDisplayPlan(context, plan) {
+            resetClassTimeTableMerges(context.slots);
+            context.slots.forEach(function (slot) {
+                slot.value = '';
+            });
+
+            Object.keys(plan).forEach(function (day) {
+                plan[day].forEach(function (label, periodIndex) {
+                    if (!label) {
+                        return;
+                    }
+                    const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+                    if (!slot) {
+                        return;
+                    }
+                    if (isLaboratorySubject(label) || normalizeSubjectNameForSchedule(label) === 'SPORTS') {
+                        if (!mergeSlotWithNextPeriod(slot, label, context.slotSelector)) {
+                            slot.value = label;
+                        }
+                        return;
+                    }
+                    slot.value = label;
+                });
+            });
+
+            return true;
         }
 
         function applyR22ThreeOneITDisplayPlan(context) {
@@ -2600,6 +2633,51 @@ Exam Branch
             });
 
             return true;
+        }
+
+        function applyR22ThreeOneAIMLDisplayPlan(context) {
+            if (!isR22ThreeOneAIMLContext(context)) {
+                return false;
+            }
+
+            return applyFixedDisplayPlan(context, {
+                MON: ['ML Lab', null, 'ML', 'CN', 'DL', 'NLP'],
+                TUE: ['CN Lab', null, 'DA', 'ML', 'CN', 'DL'],
+                WED: ['NLP Lab', null, 'NLP', 'DA', 'ML', 'CN'],
+                THU: ['DA Lab', null, 'DL', 'NLP', 'DA', 'MENTORING'],
+                FRI: ['ML', 'CN', 'DL', 'NLP', 'DA', 'SPORTS'],
+                SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
+            });
+        }
+
+        function applyR22FourOneITDisplayPlan(context) {
+            if (!isR22FourOneITContext(context)) {
+                return false;
+            }
+
+            return applyFixedDisplayPlan(context, {
+                MON: ['IS Lab', null, 'IS', 'CC', 'FSD', 'SL'],
+                TUE: ['CC Lab', null, 'OE', 'IS', 'CC', 'FSD'],
+                WED: ['FSD Lab', null, 'SL', 'OE', 'IS', 'CC'],
+                THU: ['Project Stage-1 Lab', null, 'FSD', 'SL', 'OE', 'MENTORING'],
+                FRI: ['IS', 'CC', 'FSD', 'SL', 'OE', 'SPORTS'],
+                SAT: ['IS', 'CC', 'FSD', 'SL', 'OE', 'LIBRARY']
+            });
+        }
+
+        function applyR22FourOneAIMLDisplayPlan(context) {
+            if (!isR22FourOneAIMLContext(context)) {
+                return false;
+            }
+
+            return applyFixedDisplayPlan(context, {
+                MON: ['IoT Lab', null, 'DL', 'NIC', 'IoT', 'DM'],
+                TUE: ['DM Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
+                WED: ['DL Lab', null, 'DM', 'OE', 'DL', 'NIC'],
+                THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
+                FRI: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'SPORTS'],
+                SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
+            });
         }
 
         function hasVisibleBlankClassSlot(context) {
@@ -2775,10 +2853,49 @@ Exam Branch
             }, 0);
         }
 
+        function contextHasRequiredLabels(context, labels) {
+            return (labels || []).every(function (label) {
+                return countClassHoursForLabel(context, label) > 0;
+            });
+        }
+
+        function shouldApplyFixedLayout(context, labels) {
+            return hasVisibleBlankClassSlot(context) ||
+                countClassContextHours(context) !== 36 ||
+                !contextHasRequiredLabels(context, labels);
+        }
+
+        function isFixedRequiredLayoutContext(context) {
+            return isR25TwoOneITContext(context) ||
+                isR25TwoOneAIMLContext(context) ||
+                isR22ThreeOneITContext(context) ||
+                isR22ThreeOneAIMLContext(context) ||
+                isR22FourOneITContext(context) ||
+                isR22FourOneAIMLContext(context);
+        }
+
+        function ensureFixedRequiredLayouts(classContexts) {
+            return (classContexts || getClassTimeTableContexts()).reduce(function (total, context) {
+                if (isR25TwoOneAIMLContext(context) && shouldApplyFixedLayout(context, ['CM Lab', 'DBMS Lab', 'NODE JS Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
+                    return total + (applyR25TwoOneAIMLDisplayPlan(context) ? 1 : 0);
+                }
+                if (isR25TwoOneITContext(context) && shouldApplyFixedLayout(context, ['CM Lab', 'DV Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
+                    return total + (applyR25TwoOneITDisplayPlan(context) ? 1 : 0);
+                }
+                if (isR22ThreeOneAIMLContext(context) && shouldApplyFixedLayout(context, ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
+                    return total + (applyR22ThreeOneAIMLDisplayPlan(context) ? 1 : 0);
+                }
+                if (isR22FourOneITContext(context) && shouldApplyFixedLayout(context, ['IS Lab', 'Project Stage-1 Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
+                    return total + (applyR22FourOneITDisplayPlan(context) ? 1 : 0);
+                }
+                if (isR22FourOneAIMLContext(context) && shouldApplyFixedLayout(context, ['Project Stage-1 Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
+                    return total + (applyR22FourOneAIMLDisplayPlan(context) ? 1 : 0);
+                }
+                return total;
+            }, 0);
+        }
+
         function ensureR22ThreeOneITCompletePlan() {
-            if (hasLabRoomSelections(getStoredSubjectSelections())) {
-                return false;
-            }
             const context = getClassTimeTableContexts().find(isR22ThreeOneITContext);
             if (!context || hasCompleteR22ThreeOneITLoad(context)) {
                 return false;
@@ -2791,9 +2908,6 @@ Exam Branch
             const context = classContexts.find(isR25TwoOneITContext) || classContexts.find(isTwoOneITContext);
             if (context && migrateLegacyR25TwoOneITLabHours(context)) {
                 return true;
-            }
-            if (hasLabRoomSelections(getStoredSubjectSelections())) {
-                return false;
             }
             if (!context || hasCompleteR25TwoOneITLoad(context)) {
                 return false;
@@ -4816,15 +4930,15 @@ Exam Branch
         }
 
         const allowedGeneratedClassContexts = [
-            { regulation: 'R22', year: '3', semester: '1', branch: 'IT', section: '' },
-            { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'A' },
-            { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'B' },
-            { regulation: 'R25', year: '2', semester: '1', branch: 'IT', section: '' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'A' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'B' },
-            { regulation: 'R22', year: '4', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R25', year: '2', semester: '1', branch: 'IT', section: '' },
+            { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'A' },
+            { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'B' },
+            { regulation: 'R22', year: '3', semester: '1', branch: 'IT', section: '' },
             { regulation: 'R22', year: '4', semester: '1', branch: 'AIML', section: 'A' },
-            { regulation: 'R22', year: '4', semester: '1', branch: 'AIML', section: 'B' }
+            { regulation: 'R22', year: '4', semester: '1', branch: 'AIML', section: 'B' },
+            { regulation: 'R22', year: '4', semester: '1', branch: 'IT', section: '' }
         ];
 
         function getAllowedGeneratedClassContextSpec(regulation, year, semester, branch, section) {
@@ -5516,6 +5630,30 @@ Exam Branch
                 normalizeClassValue(context.branch) === 'IT';
         }
 
+        function isR22ThreeOneAIMLContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '3' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'AIML';
+        }
+
+        function isR22FourOneITContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '4' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'IT';
+        }
+
+        function isR22FourOneAIMLContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '4' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'AIML';
+        }
+
         function isR25TwoOneITContext(context) {
             return context &&
                 normalizeClassValue(context.regulation || 'R22') === 'R25' &&
@@ -5782,6 +5920,26 @@ Exam Branch
                 if (standardPlan) {
                     return standardPlan;
                 }
+            }
+
+            if (isR25TwoOneITContext(context) && applyR25TwoOneITDisplayPlan(context)) {
+                return summarizeClassAssignmentsFromSlots(context, assignments);
+            }
+
+            if (isR25TwoOneAIMLContext(context) && applyR25TwoOneAIMLDisplayPlan(context)) {
+                return summarizeClassAssignmentsFromSlots(context, assignments);
+            }
+
+            if (isR22ThreeOneAIMLContext(context) && applyR22ThreeOneAIMLDisplayPlan(context)) {
+                return summarizeClassAssignmentsFromSlots(context, assignments);
+            }
+
+            if (isR22FourOneITContext(context) && applyR22FourOneITDisplayPlan(context)) {
+                return summarizeClassAssignmentsFromSlots(context, assignments);
+            }
+
+            if (isR22FourOneAIMLContext(context) && applyR22FourOneAIMLDisplayPlan(context)) {
+                return summarizeClassAssignmentsFromSlots(context, assignments);
             }
 
             const days = Array.from(new Set(context.slots.map(function (slot) {
