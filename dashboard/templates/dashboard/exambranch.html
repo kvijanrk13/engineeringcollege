@@ -1625,8 +1625,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15'];
-        const timeTableStorageKey = 'examBranchTimeTableDataRequirementRepairV16';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16'];
+        const timeTableStorageKey = 'examBranchTimeTableDataRequiredLabsV17';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -4818,6 +4818,7 @@ Exam Branch
         const allowedGeneratedClassContexts = [
             { regulation: 'R22', year: '3', semester: '1', branch: 'IT', section: '' },
             { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'A' },
+            { regulation: 'R22', year: '3', semester: '1', branch: 'AIML', section: 'B' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'IT', section: '' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'A' },
             { regulation: 'R25', year: '2', semester: '1', branch: 'AIML', section: 'B' },
@@ -5296,10 +5297,10 @@ Exam Branch
             const standardLabMap = {
                 'IT|2|1': ['CM Lab', 'Java Lab', 'OS Lab', 'IoT Lab', 'DV Lab'],
                 'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'],
-                'IT|4|1': ['IS Lab', 'CC Lab', 'FSD Lab', 'SL Lab', 'Project Stage-1 Lab'],
+                'IT|4|1': ['IS Lab', 'CC Lab', 'FSD Lab', 'Project Stage-1 Lab'],
                 'AIML|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab', 'NODE JS Lab'],
                 'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
-                'AIML|4|1': ['IoT Lab', 'DM Lab', 'DL Lab', 'NIC Lab', 'Project Stage-1 Lab'],
+                'AIML|4|1': ['IoT Lab', 'DM Lab', 'DL Lab', 'Project Stage-1 Lab'],
                 'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'CSE|3|1': ['ML Lab', 'CN Lab', 'FSD Lab', 'AI Lab'],
                 'CSE|4|1': ['CNS Lab', 'CD Lab', 'Project Lab', 'Seminar Lab']

@@ -9823,6 +9823,7 @@ def exam_branch(request):
             {'year_sem': '2-1', 'year_label': 'II-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
             {'year_sem': '3-1', 'year_label': 'III-I', 'branch': 'IT', 'branch_label': 'IT'},
             {'year_sem': '3-1', 'year_label': 'III-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
+            {'year_sem': '3-1', 'year_label': 'III-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
             {'year_sem': '4-1', 'year_label': 'IV-I', 'branch': 'IT', 'branch_label': 'IT'},
             {'year_sem': '4-1', 'year_label': 'IV-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'A'},
             {'year_sem': '4-1', 'year_label': 'IV-I', 'branch': 'AIML', 'branch_label': 'CSE (AI&ML)', 'section': 'B'},
