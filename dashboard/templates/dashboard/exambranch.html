@@ -1415,6 +1415,18 @@ Exam Branch
                             </table>
                         </div>
                     </div>
+                    <div class="exam-table-wrap mb-4 timetable-load-summary-wrap">
+                        <table class="table exam-table time-table-load-summary align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Subject / Activity</th>
+                                    <th>Hours Filled</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mainTimeTableLoadSummary"></tbody>
+                        </table>
+                    </div>
 
                     {% for empty_timetable in additional_empty_timetables %}
                     <div class="exam-card mb-4" data-empty-timetable-card data-year-sem="{{ empty_timetable.year_sem }}" data-branch="{{ empty_timetable.branch }}" data-section="{{ empty_timetable.section|default:'' }}">
@@ -1458,6 +1470,18 @@ Exam Branch
                                     </tr>
                                     {% endfor %}
                                 </tbody>
+                            </table>
+                        </div>
+                        <div class="exam-table-wrap mt-3 timetable-load-summary-wrap">
+                            <table class="table exam-table time-table-load-summary align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Subject / Activity</th>
+                                        <th>Hours Filled</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="empty-timetable-load-summary"></tbody>
                             </table>
                         </div>
                     </div>
@@ -1625,8 +1649,8 @@ Exam Branch
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKey = 'examBranchEvaluationData';
-        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17'];
-        const timeTableStorageKey = 'examBranchTimeTableDataFixedLayoutsV18';
+        const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18'];
+        const timeTableStorageKey = 'examBranchTimeTableDataLoadSummaryV19';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
@@ -2000,6 +2024,7 @@ Exam Branch
             normalizeTimeTableSlotValues(timeTableSlots);
             normalizeTimeTableSlotValues(getEmptyTimeTableSlots());
             normalizeTimeTableSlotValues(getIndividualTimeTableSlots());
+            renderAllTimeTableLoadSummaries();
         }
 
         function getTimeTableSlotCell(slot) {
@@ -2009,6 +2034,122 @@ Exam Branch
         function isVisibleFilledClassSlot(slot) {
             const cell = getTimeTableSlotCell(slot);
             return Boolean(slot && cell && cell.style.display !== 'none' && slot.value.trim());
+        }
+
+        function getLoadSummaryType(label) {
+            const key = normalizeSubjectNameForSchedule(label);
+            if (key === 'SPORTS') {
+                return 'Sports';
+            }
+            if (key === 'LIBRARY') {
+                return 'Library';
+            }
+            if (key === 'MENTORING') {
+                return 'Mentoring';
+            }
+            if (key === 'INTERNSHIP' || key === 'INT' || key.indexOf('INTERNSHIP') !== -1) {
+                return 'Internship';
+            }
+            if (isLaboratorySubject(label)) {
+                return 'Lab';
+            }
+            return 'Subject';
+        }
+
+        function buildTimeTableLoadSummary(slots) {
+            const summary = new Map();
+            (slots || []).forEach(function (slot) {
+                if (!isVisibleFilledClassSlot(slot)) {
+                    return;
+                }
+                const label = normalizeTimeTableDisplayValue(getComparableSubjectValue(slot.value));
+                if (!label) {
+                    return;
+                }
+                const type = getLoadSummaryType(label);
+                const key = type + '|' + normalizeSubjectNameForSchedule(label);
+                const cell = getTimeTableSlotCell(slot);
+                const hours = cell && cell.colSpan && cell.colSpan > 1 ? cell.colSpan : 1;
+                if (!summary.has(key)) {
+                    summary.set(key, {
+                        type: type,
+                        label: label,
+                        hours: 0
+                    });
+                }
+                summary.get(key).hours += hours;
+            });
+
+            const typeOrder = {
+                Subject: 1,
+                Lab: 2,
+                Sports: 3,
+                Library: 4,
+                Mentoring: 5,
+                Internship: 6
+            };
+            return Array.from(summary.values()).sort(function (first, second) {
+                const firstType = typeOrder[first.type] || 99;
+                const secondType = typeOrder[second.type] || 99;
+                if (firstType !== secondType) {
+                    return firstType - secondType;
+                }
+                return first.label.localeCompare(second.label);
+            });
+        }
+
+        function renderTimeTableLoadSummary(slots, summaryBody) {
+            if (!summaryBody) {
+                return;
+            }
+            const rows = buildTimeTableLoadSummary(slots);
+            const totalHours = rows.reduce(function (sum, row) {
+                return sum + row.hours;
+            }, 0);
+            summaryBody.innerHTML = '';
+            if (!rows.length) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = '<td colspan="3" class="text-muted text-center">No timetable hours filled yet.</td>';
+                summaryBody.appendChild(emptyRow);
+                return;
+            }
+
+            rows.forEach(function (row) {
+                const tr = document.createElement('tr');
+                const typeCell = document.createElement('td');
+                const labelCell = document.createElement('td');
+                const hoursCell = document.createElement('td');
+                typeCell.textContent = row.type;
+                labelCell.textContent = row.label;
+                hoursCell.textContent = row.hours;
+                tr.appendChild(typeCell);
+                tr.appendChild(labelCell);
+                tr.appendChild(hoursCell);
+                summaryBody.appendChild(tr);
+            });
+
+            const totalRow = document.createElement('tr');
+            totalRow.className = totalHours === 36 ? 'table-success' : 'table-warning';
+            const totalLabelCell = document.createElement('th');
+            const totalStatusCell = document.createElement('th');
+            const totalHoursCell = document.createElement('th');
+            totalLabelCell.textContent = 'Total';
+            totalStatusCell.textContent = totalHours + ' / 36 hours filled';
+            totalHoursCell.textContent = totalHours;
+            totalRow.appendChild(totalLabelCell);
+            totalRow.appendChild(totalStatusCell);
+            totalRow.appendChild(totalHoursCell);
+            summaryBody.appendChild(totalRow);
+        }
+
+        function renderAllTimeTableLoadSummaries() {
+            renderTimeTableLoadSummary(timeTableSlots, document.getElementById('mainTimeTableLoadSummary'));
+            emptyTimeTableCards.forEach(function (card) {
+                renderTimeTableLoadSummary(
+                    getEmptyTimeTableSlots(card),
+                    card.querySelector('.empty-timetable-load-summary')
+                );
+            });
         }
 
         function getSlotPeriodIndex(slot) {
@@ -2638,6 +2779,9 @@ Exam Branch
                     appliedCount += 1;
                 }
             });
+            if (appliedCount) {
+                renderAllTimeTableLoadSummaries();
+            }
             return appliedCount;
         }
 
@@ -3245,6 +3389,7 @@ Exam Branch
         }
 
         function markTimeTableDirty() {
+            renderAllTimeTableLoadSummaries();
             setStatus(timeTableStatus, 'Timetable has unsaved changes', 'warning');
         }
 
@@ -3902,6 +4047,7 @@ Exam Branch
             const storedFacultySchedules = buildIndividualFacultySchedules(storedClassSelections);
             if (storedFacultySchedules.length) {
                 renderIndividualFacultyTimeTables(storedFacultySchedules.length ? storedClassSelections : [], classContexts);
+                normalizeAllTimeTableSlotValues();
                 return repairedSameHourRepeats;
             }
 
@@ -3959,6 +4105,7 @@ Exam Branch
                 localStorage.removeItem(key);
             });
             if (!saved) {
+                renderAllTimeTableLoadSummaries();
                 setStatus(timeTableStatus, 'Blank timetable ready', 'muted');
                 return;
             }
@@ -7059,6 +7206,7 @@ Exam Branch
                 repairAllClassTimeTableSameHourRepeats(classContexts);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
+                normalizeAllTimeTableSlotValues();
             });
         });
 
@@ -7080,6 +7228,7 @@ Exam Branch
                 repairAllClassTimeTableSameHourRepeats(classContexts);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
+                normalizeAllTimeTableSlotValues();
             });
         });
 
@@ -7138,6 +7287,7 @@ Exam Branch
         loadTimeTableData();
         loadSubjectSelection();
         loadSyllabusSubjects();
+        renderAllTimeTableLoadSummaries();
         window.setTimeout(function () {
             const appliedFixedLayouts = applyRequiredFixedLayoutsToVisibleTables();
             const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
@@ -7173,6 +7323,7 @@ Exam Branch
                     'success'
                 );
             }
+            renderAllTimeTableLoadSummaries();
         }, 500);
     })();
 </script>
