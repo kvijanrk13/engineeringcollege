@@ -2468,9 +2468,7 @@ Exam Branch
         }
 
         function repairAllClassLabRoomConflicts(classContexts, selections) {
-            const contexts = (classContexts || getClassTimeTableContexts(selections)).filter(function (context) {
-                return !isFixedRequiredLayoutContext(context);
-            });
+            const contexts = classContexts || getClassTimeTableContexts(selections);
             let repairedCount = 0;
             let guard = 0;
 
@@ -2684,19 +2682,19 @@ Exam Branch
             ].join('|');
             const plans = {
                 'R25|2|1|AIML|A': {
-                    MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
-                    TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
+                    MON: ['COA', 'OOPJ', 'SE', 'CM Lab', null, 'DBMS'],
+                    TUE: ['MSF', 'COA', 'OOPJ', 'Java Lab', null, 'SE'],
                     WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
                     THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VALUE ETHICS AND GENDER SENSITIZATION'],
                     FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
                     SAT: ['SE', 'DBMS', 'VALUE ETHICS AND GENDER SENSITIZATION', 'MSF', 'LIBRARY', 'MENTORING']
                 },
                 'R25|2|1|AIML|B': {
-                    MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
-                    TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
-                    WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                    THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
-                    FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
+                    MON: ['COA', 'OOPJ', 'SE', 'Java Lab', null, 'DBMS'],
+                    TUE: ['CM Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
+                    WED: ['DBMS', 'MSF', 'COA', 'SE Lab', null, 'OOPJ'],
+                    THU: ['SE', 'DBMS', 'MSF', 'DBMS Lab', null, 'VEGS'],
+                    FRI: ['SPORTS', null, 'COA', 'NODE JS Lab', null, 'OOPJ'],
                     SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
                 },
                 'R25|2|1|IT|': {
@@ -2716,10 +2714,10 @@ Exam Branch
                     SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
                 },
                 'R22|3|1|AIML|B': {
-                    MON: ['ML Lab', null, 'ML', 'CN', 'DL', 'NLP'],
-                    TUE: ['CN Lab', null, 'DA', 'ML', 'CN', 'DL'],
-                    WED: ['NLP Lab', null, 'NLP', 'DA', 'ML', 'CN'],
-                    THU: ['DA Lab', null, 'DL', 'NLP', 'DA', 'MENTORING'],
+                    MON: ['ML', 'CN', 'DL', 'ML Lab', null, 'NLP'],
+                    TUE: ['DA', 'ML', 'CN', 'CN Lab', null, 'DL'],
+                    WED: ['NLP', 'DA', 'ML', 'NLP Lab', null, 'CN'],
+                    THU: ['DL', 'NLP', 'DA', 'DA Lab', null, 'MENTORING'],
                     FRI: ['ML', 'CN', 'DL', 'NLP', 'DA', 'SPORTS'],
                     SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
                 },
@@ -2740,19 +2738,19 @@ Exam Branch
                     SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
                 },
                 'R22|4|1|AIML|B': {
-                    MON: ['CC Lab', null, 'DL', 'NIC', 'MC', 'DM'],
-                    TUE: ['Project Stage-1 Lab', null, 'PPLE', 'DL', 'NIC', 'MC'],
-                    WED: ['Project Stage-1 Lab', null, 'DM', 'PPLE', 'DL', 'NIC'],
-                    THU: ['Project Stage-1 Lab', null, 'MC', 'DM', 'PPLE', 'MENTORING'],
+                    MON: ['DL', 'NIC', 'MC', 'CC Lab', null, 'DM'],
+                    TUE: ['PPLE', 'DL', 'NIC', 'Project Stage-1 Lab', null, 'MC'],
+                    WED: ['DM', 'PPLE', 'DL', 'Project Stage-1 Lab', null, 'NIC'],
+                    THU: ['MC', 'DM', 'PPLE', 'Project Stage-1 Lab', null, 'MENTORING'],
                     FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
                     SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
                 },
                 'R22|4|1|IT|': {
-                    MON: ['IS Lab', null, 'IS', 'CC', 'FSD', 'SL'],
+                    MON: ['IS Lab', null, 'IS', 'Project Stage-1 Lab', null, 'SL'],
                     TUE: ['CC Lab', null, 'OE', 'IS', 'CC', 'FSD'],
                     WED: ['FSD Lab', null, 'SL', 'OE', 'IS', 'CC'],
-                    THU: ['Project Stage-1 Lab', null, 'FSD', 'SL', 'OE', 'MENTORING'],
-                    FRI: ['IS', 'CC', 'FSD', 'SL', 'OE', 'SPORTS'],
+                    THU: ['FSD', 'SL', 'OE', 'IS', 'CC', 'MENTORING'],
+                    FRI: ['SPORTS', null, 'FSD', 'SL', 'OE', 'IS'],
                     SAT: ['IS', 'CC', 'FSD', 'SL', 'OE', 'LIBRARY']
                 }
             };
@@ -2797,38 +2795,7 @@ Exam Branch
                 return false;
             }
 
-            const plan = {
-                MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
-                TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
-                WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
-                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'MENTORING'],
-                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
-                SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
-            };
-
-            resetClassTimeTableMerges(context.slots);
-            context.slots.forEach(function (slot) {
-                slot.value = '';
-            });
-
-            Object.keys(plan).forEach(function (day) {
-                plan[day].forEach(function (label, periodIndex) {
-                    if (!label) {
-                        return;
-                    }
-                    const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
-                    if (!slot) {
-                        return;
-                    }
-                    if (isLaboratorySubject(label)) {
-                        mergeSlotWithNextPeriod(slot, label, context.slotSelector);
-                        return;
-                    }
-                    slot.value = label;
-                });
-            });
-
-            return true;
+            return applyFixedDisplayPlan(context, getRequiredFixedPlanForSpec('R22', '3', '1', 'IT', ''));
         }
 
         function applyR25TwoOneITDisplayPlan(context) {
@@ -2836,38 +2803,7 @@ Exam Branch
                 return false;
             }
 
-            const plan = {
-                MON: ['CM Lab', null, 'COA', 'OOPJ', 'OS', 'IoT'],
-                TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'OS'],
-                WED: ['OS Lab', null, 'IoT', 'MSF', 'COA', 'OOPJ'],
-                THU: ['IoT Lab', null, 'OS', 'IoT', 'MSF', 'EVS/IKS'],
-                FRI: ['DV Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                SAT: ['OS', 'IoT', 'EVS/IKS', 'MSF', 'LIBRARY', 'MENTORING']
-            };
-
-            resetClassTimeTableMerges(context.slots);
-            context.slots.forEach(function (slot) {
-                slot.value = '';
-            });
-
-            Object.keys(plan).forEach(function (day) {
-                plan[day].forEach(function (label, periodIndex) {
-                    if (!label) {
-                        return;
-                    }
-                    const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
-                    if (!slot) {
-                        return;
-                    }
-                    if (isLaboratorySubject(label) || normalizeSubjectNameForSchedule(label) === 'SPORTS') {
-                        mergeSlotWithNextPeriod(slot, label, context.slotSelector);
-                        return;
-                    }
-                    slot.value = label;
-                });
-            });
-
-            return true;
+            return applyFixedDisplayPlan(context, getRequiredFixedPlanForSpec('R25', '2', '1', 'IT', ''));
         }
 
         function applyR25TwoOneAIMLDisplayPlan(context) {
@@ -2875,38 +2811,10 @@ Exam Branch
                 return false;
             }
 
-            const plan = {
-                MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
-                TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
-                WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VALUE ETHICS AND GENDER SENSITIZATION'],
-                FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                SAT: ['SE', 'DBMS', 'VALUE ETHICS AND GENDER SENSITIZATION', 'MSF', 'LIBRARY', 'MENTORING']
-            };
-
-            resetClassTimeTableMerges(context.slots);
-            context.slots.forEach(function (slot) {
-                slot.value = '';
-            });
-
-            Object.keys(plan).forEach(function (day) {
-                plan[day].forEach(function (label, periodIndex) {
-                    if (!label) {
-                        return;
-                    }
-                    const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
-                    if (!slot) {
-                        return;
-                    }
-                    if (isLaboratorySubject(label) || normalizeSubjectNameForSchedule(label) === 'SPORTS') {
-                        mergeSlotWithNextPeriod(slot, label, context.slotSelector);
-                        return;
-                    }
-                    slot.value = label;
-                });
-            });
-
-            return true;
+            return applyFixedDisplayPlan(
+                context,
+                getRequiredFixedPlanForSpec('R25', '2', '1', 'AIML', context.section || 'A')
+            );
         }
 
         function applyR22ThreeOneAIMLDisplayPlan(context) {
@@ -2914,14 +2822,10 @@ Exam Branch
                 return false;
             }
 
-            return applyFixedDisplayPlan(context, {
-                MON: ['ML Lab', null, 'ML', 'CN', 'DL', 'NLP'],
-                TUE: ['CN Lab', null, 'DA', 'ML', 'CN', 'DL'],
-                WED: ['NLP Lab', null, 'NLP', 'DA', 'ML', 'CN'],
-                THU: ['DA Lab', null, 'DL', 'NLP', 'DA', 'MENTORING'],
-                FRI: ['ML', 'CN', 'DL', 'NLP', 'DA', 'SPORTS'],
-                SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
-            });
+            return applyFixedDisplayPlan(
+                context,
+                getRequiredFixedPlanForSpec('R22', '3', '1', 'AIML', context.section || 'A')
+            );
         }
 
         function applyR22FourOneITDisplayPlan(context) {
@@ -2929,14 +2833,7 @@ Exam Branch
                 return false;
             }
 
-            return applyFixedDisplayPlan(context, {
-                MON: ['IS Lab', null, 'IS', 'CC', 'FSD', 'SL'],
-                TUE: ['CC Lab', null, 'OE', 'IS', 'CC', 'FSD'],
-                WED: ['FSD Lab', null, 'SL', 'OE', 'IS', 'CC'],
-                THU: ['Project Stage-1 Lab', null, 'FSD', 'SL', 'OE', 'MENTORING'],
-                FRI: ['IS', 'CC', 'FSD', 'SL', 'OE', 'SPORTS'],
-                SAT: ['IS', 'CC', 'FSD', 'SL', 'OE', 'LIBRARY']
-            });
+            return applyFixedDisplayPlan(context, getRequiredFixedPlanForSpec('R22', '4', '1', 'IT', ''));
         }
 
         function applyR22FourOneAIMLDisplayPlan(context) {
@@ -2944,14 +2841,10 @@ Exam Branch
                 return false;
             }
 
-            return applyFixedDisplayPlan(context, {
-                MON: ['CC Lab', null, 'DL', 'NIC', 'MC', 'DM'],
-                TUE: ['Project Stage-1 Lab', null, 'PPLE', 'DL', 'NIC', 'MC'],
-                WED: ['Project Stage-1 Lab', null, 'DM', 'PPLE', 'DL', 'NIC'],
-                THU: ['Project Stage-1 Lab', null, 'MC', 'DM', 'PPLE', 'MENTORING'],
-                FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
-                SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
-            });
+            return applyFixedDisplayPlan(
+                context,
+                getRequiredFixedPlanForSpec('R22', '4', '1', 'AIML', context.section || 'A')
+            );
         }
 
         function hasVisibleBlankClassSlot(context) {
@@ -3936,6 +3829,7 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(savedSelections);
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
             applyRequiredFixedLayoutsToVisibleTables();
+            repairAllClassLabRoomConflicts(classContexts, savedSelections);
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -4047,6 +3941,7 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(savedSelections);
             repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
             applyRequiredFixedLayoutsToVisibleTables();
+            repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -5610,31 +5505,31 @@ Exam Branch
             const standardLabRooms = {
                 'OS LAB': 'E-201',
                 'JAVA LAB': 'E-201',
-                'IOT LAB': 'E-201',
+                'IOT LAB': 'E-203',
                 'CM LAB': 'D-417',
-                'SE LAB': 'E-201',
-                'DBMS LAB': 'E-201',
-                'NODE JS LAB': 'E-201',
-                'NODEJS LAB': 'E-201',
-                'ML LAB': 'E-201',
-                'CN LAB': 'E-201',
-                'NLP LAB': 'E-201',
-                'DA LAB': 'E-201',
-                'DM LAB': 'E-201',
-                'CD LAB': 'E-201',
+                'SE LAB': 'E-204',
+                'DBMS LAB': 'E-205',
+                'NODE JS LAB': 'E-206',
+                'NODEJS LAB': 'E-206',
+                'ML LAB': 'E-208',
+                'CN LAB': 'E-209',
+                'NLP LAB': 'E-210',
+                'DA LAB': 'E-211',
+                'DM LAB': 'E-212',
+                'CD LAB': 'E-213',
                 'ES LAB': 'A-104',
-                'FLUTTER LAB': 'E-201',
-                'IS LAB': 'E-201',
-                'CC LAB': 'E-201',
-                'FSD LAB': 'E-201',
-                'SL LAB': 'E-201',
-                'DL LAB': 'E-201',
-                'NIC LAB': 'E-201',
-                'PROJECT LAB': 'E-201',
-                'PROJECT STAGE-1 LAB': 'E-201',
-                'PROJECT STAGE 1 LAB': 'E-201',
-                'PROJECT STAGE I LAB': 'E-201',
-                'SEMINAR LAB': 'E-201'
+                'FLUTTER LAB': 'E-214',
+                'IS LAB': 'E-215',
+                'CC LAB': 'E-216',
+                'FSD LAB': 'E-217',
+                'SL LAB': 'E-220',
+                'DL LAB': 'E-218',
+                'NIC LAB': 'E-219',
+                'PROJECT LAB': 'D-418',
+                'PROJECT STAGE-1 LAB': 'D-418',
+                'PROJECT STAGE 1 LAB': 'D-418',
+                'PROJECT STAGE I LAB': 'D-418',
+                'SEMINAR LAB': 'D-419'
             };
             return standardLabRooms[labKey] || '';
         }
@@ -5978,14 +5873,7 @@ Exam Branch
                 return null;
             }
 
-            const plan = {
-                MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
-                TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
-                WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
-                THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'MENTORING'],
-                FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
-                SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
-            };
+            const plan = getRequiredFixedPlanForSpec('R22', '3', '1', 'IT', '');
 
             resetClassTimeTableMerges(context.slots);
             context.slots.forEach(function (slot) {
@@ -6041,14 +5929,7 @@ Exam Branch
                 return null;
             }
 
-            const plan = {
-                MON: ['CM Lab', null, 'COA', 'OOPJ', 'OS', 'IoT'],
-                TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'OS'],
-                WED: ['OS Lab', null, 'IoT', 'MSF', 'COA', 'OOPJ'],
-                THU: ['IoT Lab', null, 'OS', 'IoT', 'MSF', 'EVS/IKS'],
-                FRI: ['DV Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                SAT: ['OS', 'IoT', 'EVS/IKS', 'MSF', 'LIBRARY', 'MENTORING']
-            };
+            const plan = getRequiredFixedPlanForSpec('R25', '2', '1', 'IT', '');
 
             resetClassTimeTableMerges(context.slots);
             context.slots.forEach(function (slot) {
@@ -6104,14 +5985,7 @@ Exam Branch
                 return null;
             }
 
-            const plan = {
-                MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
-                TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'SE'],
-                WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VALUE ETHICS AND GENDER SENSITIZATION'],
-                FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                SAT: ['SE', 'DBMS', 'VALUE ETHICS AND GENDER SENSITIZATION', 'MSF', 'LIBRARY', 'MENTORING']
-            };
+            const plan = getRequiredFixedPlanForSpec('R25', '2', '1', 'AIML', context.section || 'A');
 
             resetClassTimeTableMerges(context.slots);
             context.slots.forEach(function (slot) {
@@ -7101,6 +6975,9 @@ Exam Branch
                 }, { labMergedCount: 0, totalHours: 0, contexts: [] });
                 const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
                 applyRequiredFixedLayoutsToVisibleTables();
+                const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, selections);
+                repairSummary.labRoomConflicts += finalLabRoomRepairs;
+                repairSummary.total += finalLabRoomRepairs;
                 classGeneration.contexts.forEach(function (contextSummary, index) {
                     contextSummary.hours = countClassContextHours(classContexts[index]);
                 });
@@ -7213,6 +7090,7 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
                 applyRequiredFixedLayoutsToVisibleTables();
+                repairAllClassLabRoomConflicts(classContexts, selections);
                 normalizeAllTimeTableSlotValues();
             });
         });
@@ -7223,6 +7101,7 @@ Exam Branch
                 const classContexts = getClassTimeTableContexts(selections);
                 applyTimeTableRequirementRepairs(classContexts, selections);
                 applyRequiredFixedLayoutsToVisibleTables();
+                repairAllClassLabRoomConflicts(classContexts, selections);
                 normalizeAllTimeTableSlotValues();
                 downloadMainTimeTableExcel(button);
             });
@@ -7238,6 +7117,7 @@ Exam Branch
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
                 applyRequiredFixedLayoutsToVisibleTables();
+                repairAllClassLabRoomConflicts(classContexts, selections);
                 normalizeAllTimeTableSlotValues();
             });
         });
@@ -7307,6 +7187,9 @@ Exam Branch
             const classContexts = getClassTimeTableContexts(selections);
             const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
             applyRequiredFixedLayoutsToVisibleTables();
+            const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, selections);
+            repairSummary.labRoomConflicts += finalLabRoomRepairs;
+            repairSummary.total += finalLabRoomRepairs;
             if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
                 refreshIndividualTimeTablesFromCurrentSelections();
             }
