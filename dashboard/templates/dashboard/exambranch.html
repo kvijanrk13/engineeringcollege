@@ -2732,20 +2732,20 @@ Exam Branch
                     SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
                 },
                 'R22|4|1|AIML|A': {
-                    MON: ['CC Lab', null, 'DL', 'NIC', 'IoT', 'DM'],
-                    TUE: ['Project Stage-1 Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
-                    WED: ['Project Stage-1 Lab', null, 'DM', 'OE', 'DL', 'NIC'],
-                    THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
-                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'SPORTS', null],
-                    SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
+                    MON: ['CC Lab', null, 'DL', 'NIC', 'MC', 'DM'],
+                    TUE: ['Project Stage-1 Lab', null, 'PPLE', 'DL', 'NIC', 'MC'],
+                    WED: ['Project Stage-1 Lab', null, 'DM', 'PPLE', 'DL', 'NIC'],
+                    THU: ['Project Stage-1 Lab', null, 'MC', 'DM', 'PPLE', 'MENTORING'],
+                    FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
+                    SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
                 },
                 'R22|4|1|AIML|B': {
-                    MON: ['CC Lab', null, 'DL', 'NIC', 'IoT', 'DM'],
-                    TUE: ['Project Stage-1 Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
-                    WED: ['Project Stage-1 Lab', null, 'DM', 'OE', 'DL', 'NIC'],
-                    THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
-                    FRI: ['DL', 'NIC', 'IoT', 'DM', 'SPORTS', null],
-                    SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
+                    MON: ['CC Lab', null, 'DL', 'NIC', 'MC', 'DM'],
+                    TUE: ['Project Stage-1 Lab', null, 'PPLE', 'DL', 'NIC', 'MC'],
+                    WED: ['Project Stage-1 Lab', null, 'DM', 'PPLE', 'DL', 'NIC'],
+                    THU: ['Project Stage-1 Lab', null, 'MC', 'DM', 'PPLE', 'MENTORING'],
+                    FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
+                    SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
                 },
                 'R22|4|1|IT|': {
                     MON: ['IS Lab', null, 'IS', 'CC', 'FSD', 'SL'],
@@ -2945,12 +2945,12 @@ Exam Branch
             }
 
             return applyFixedDisplayPlan(context, {
-                MON: ['CC Lab', null, 'DL', 'NIC', 'IoT', 'DM'],
-                TUE: ['Project Stage-1 Lab', null, 'OE', 'DL', 'NIC', 'IoT'],
-                WED: ['Project Stage-1 Lab', null, 'DM', 'OE', 'DL', 'NIC'],
-                THU: ['Project Stage-1 Lab', null, 'IoT', 'DM', 'OE', 'MENTORING'],
-                FRI: ['DL', 'NIC', 'IoT', 'DM', 'SPORTS', null],
-                SAT: ['DL', 'NIC', 'IoT', 'DM', 'OE', 'LIBRARY']
+                MON: ['CC Lab', null, 'DL', 'NIC', 'MC', 'DM'],
+                TUE: ['Project Stage-1 Lab', null, 'PPLE', 'DL', 'NIC', 'MC'],
+                WED: ['Project Stage-1 Lab', null, 'DM', 'PPLE', 'DL', 'NIC'],
+                THU: ['Project Stage-1 Lab', null, 'MC', 'DM', 'PPLE', 'MENTORING'],
+                FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
+                SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
             });
         }
 
@@ -4638,7 +4638,13 @@ Exam Branch
                 'PROJECT STAGE 1 LAB': 'Project Stage-1 Lab',
                 'COA': 'COA',
                 'DV': 'DV',
-                'DV LAB': 'DV Lab'
+                'DV LAB': 'DV Lab',
+                'MOBILE COMPUTING': 'MC',
+                'NATURE INSPIRED COMPUTING': 'NIC',
+                'PROFESSIONAL PRACTICE, LAW & ETHICS': 'PPLE',
+                'PROFESSIONAL PRACTICE LAW & ETHICS': 'PPLE',
+                'PROFESSIONAL PRACTICE, LAW AND ETHICS': 'PPLE',
+                'PROFESSIONAL PRACTICE LAW AND ETHICS': 'PPLE'
             };
             const normalizedTrimmedName = normalizeSubjectNameForSchedule(trimmedName);
             if (canonicalShortLabels[normalizedTrimmedName]) {
@@ -5674,7 +5680,7 @@ Exam Branch
                 'IT|4|1': ['IS', 'CC', 'FSD', 'SL', 'OE'],
                 'AIML|2|1': ['MSF', 'COA', 'OOPJ', 'SE', 'DBMS'],
                 'AIML|3|1': ['ML', 'CN', 'DL', 'NLP', 'DA'],
-                'AIML|4|1': ['DL', 'NIC', 'IoT', 'DM', 'OE'],
+                'AIML|4|1': ['DL', 'NIC', 'MC', 'DM', 'PPLE'],
                 'CSE|2|1': ['COA', 'OOPJ', 'SE', 'DBMS', 'CM'],
                 'CSE|3|1': ['ML', 'CN', 'DAA', 'FSD', 'AI'],
                 'CSE|4|1': ['CNS', 'CD', 'DAI', 'CC', 'OE']
@@ -5685,7 +5691,7 @@ Exam Branch
                 'IT|4|1': ['IS Lab', 'CC Lab', 'FSD Lab', 'Project Stage-1 Lab'],
                 'AIML|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab', 'NODE JS Lab'],
                 'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
-                'AIML|4|1': ['IoT Lab', 'DM Lab', 'DL Lab', 'Project Stage-1 Lab'],
+                'AIML|4|1': ['CC Lab', 'DM Lab', 'DL Lab', 'Project Stage-1 Lab'],
                 'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'CSE|3|1': ['ML Lab', 'CN Lab', 'FSD Lab', 'AI Lab'],
                 'CSE|4|1': ['CNS Lab', 'CD Lab', 'Project Lab', 'Seminar Lab']
