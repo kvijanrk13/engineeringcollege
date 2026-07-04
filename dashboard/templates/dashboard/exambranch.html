@@ -3089,6 +3089,15 @@ Exam Branch
             return renderIndividualFacultyTimeTables(timetableSelections, contexts);
         }
 
+        function syncIndividualTimeTablesWithMainTables(selections, classContexts) {
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
+            const timetableSelections = getSelectionsForClassContexts(normalizedSelections, contexts);
+            const filledHours = renderIndividualFacultyTimeTables(timetableSelections, contexts);
+            normalizeAllTimeTableSlotValues();
+            return filledHours;
+        }
+
         function getTimeTableClassSelections(selections) {
             const branch = normalizeClassValue(timeTableBranchField ? timeTableBranchField.value : 'IT');
             const year = normalizeClassValue(timeTableYearField ? timeTableYearField.value : '3');
@@ -3830,6 +3839,7 @@ Exam Branch
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
             applyRequiredFixedLayoutsToVisibleTables();
             repairAllClassLabRoomConflicts(classContexts, savedSelections);
+            syncIndividualTimeTablesWithMainTables(savedSelections, classContexts);
             normalizeAllTimeTableSlotValues();
             const meta = {};
             timeTableMetaFields.forEach(function (field) {
@@ -4031,7 +4041,7 @@ Exam Branch
                     'success'
                 );
                 if (completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairedSameHourRepeats || migratedLegacyTimetable || appliedFixedLayouts) {
-                    refreshIndividualTimeTablesFromCurrentSelections();
+                    syncIndividualTimeTablesWithMainTables(getStoredSubjectSelections(), getClassTimeTableContexts(getStoredSubjectSelections()));
                 }
                 if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || appliedFixedLayouts) {
                     saveTimeTableData();
@@ -6605,17 +6615,28 @@ Exam Branch
             });
         }
 
-        function populateIndividualCardFromClassSchedule(card, schedule, classContexts) {
-            const labels = uniqueSubjectNames(
-                (schedule.selections || []).map(function (selection) {
-                    return getShortSubjectLabel(selection.subjectName || '');
-                }).concat(schedule.subjects || [])
-            );
-            const normalizedLabels = new Set();
-            labels.forEach(function (label) {
-                normalizedLabels.add(normalizeSubjectNameForSchedule(label));
-                normalizedLabels.add(normalizeSubjectNameForSchedule(getShortSubjectLabel(label)));
+        function getIndividualScheduleLabelsForContext(schedule, context) {
+            const labels = [];
+            normalizeSubjectSelections(schedule.selections || []).forEach(function (selection) {
+                if (getSelectionContextKey(selection) !== context.selectionKey) {
+                    return;
+                }
+                const subjectName = (selection.subjectName || '').trim();
+                getScheduleLabelsForSelection(selection).concat([
+                    subjectName,
+                    getShortSubjectLabel(subjectName)
+                ]).forEach(function (label) {
+                    if (label) {
+                        labels.push(label);
+                    }
+                });
             });
+            return new Set(uniqueSubjectNames(labels).map(function (label) {
+                return normalizeSubjectNameForSchedule(label);
+            }));
+        }
+
+        function populateIndividualCardFromClassSchedule(card, schedule, classContexts) {
             let filledHours = 0;
 
             resetIndividualTimeTableMerges(card);
@@ -6624,6 +6645,11 @@ Exam Branch
             });
 
             (classContexts || getClassTimeTableContexts()).forEach(function (context) {
+                const normalizedLabels = getIndividualScheduleLabelsForContext(schedule, context);
+                if (!normalizedLabels.size) {
+                    return;
+                }
+
                 context.slots.forEach(function (classSlot) {
                     const subjectName = (classSlot.value || '').trim();
                     if (!subjectName || !normalizedLabels.has(normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName)))) {
@@ -7091,6 +7117,7 @@ Exam Branch
                 enforceActivitiesLastHours(classContexts);
                 applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
             });
         });
@@ -7102,6 +7129,7 @@ Exam Branch
                 applyTimeTableRequirementRepairs(classContexts, selections);
                 applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 downloadMainTimeTableExcel(button);
             });
@@ -7118,6 +7146,7 @@ Exam Branch
                 enforceActivitiesLastHours(classContexts);
                 applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
             });
         });
@@ -7191,7 +7220,7 @@ Exam Branch
             repairSummary.labRoomConflicts += finalLabRoomRepairs;
             repairSummary.total += finalLabRoomRepairs;
             if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
-                refreshIndividualTimeTablesFromCurrentSelections();
+                syncIndividualTimeTablesWithMainTables(selections, classContexts);
             }
             if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
                 saveTimeTableData();
