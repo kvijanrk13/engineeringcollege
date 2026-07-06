@@ -1,74 +1,63 @@
-# dashboard/models.py
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date
 import os
 from pathlib import Path
+from django.core.exceptions import ValidationError
+from django.db.models import Q, F
 
 
-class Subject(models.Model):
-    name = models.CharField(max_length=200)
-    code = models.CharField(max_length=50, blank=True, null=True)
-    credits = models.IntegerField(default=3)
-
+class TimeTable(models.Model):
+    class Semester(models.TextChoices):
+        SEM_2_1 = '2-1', '2-1'
+        SEM_3_1 = '3-1', '3-1'
+        SEM_4_1 = '4-1', '4-1'
+    
+    semester = models.CharField(max_length=10, choices=Semester.choices)
+    year = models.IntegerField()
+    generated_at = models.DateTimeField(auto_now_add=True)
+    generated_by = models.CharField(max_length=255, blank=True, null=True)
+    
     def __str__(self):
-        return self.name
-
+        return f"Time Table - {self.get_semester_display()} {self.year}"
+    
     class Meta:
-        ordering = ['name']
+        unique_together = ['semester', 'year']
+        ordering = ['semester', 'year']
 
 
-class AuditLog(models.Model):
-    STATUS_SUCCESS = 'success'
-    STATUS_FAILED = 'failed'
-    STATUS_CHOICES = [
-        (STATUS_SUCCESS, 'Success'),
-        (STATUS_FAILED, 'Failed'),
+class Period(models.Model):
+    TIME_SLOTS = [
+        ('9:00-10:00', '9:00 AM - 10:00 AM'),
+        ('10:00-11:00', '10:00 AM - 11:00 AM'),
+        ('11:00-12:00', '11:00 AM - 12:00 PM'),
+        ('12:00-1:00', '12:00 PM - 1:00 PM'),
+        ('2:00-3:00', '2:00 PM - 3:00 PM'),
+        ('3:00-4:00', '3:00 PM - 4:00 PM'),
+        ('4:00-5:00', '4:00 PM - 5:00 PM'),
     ]
-
-    user = models.CharField(max_length=150, blank=True, db_index=True)
-    action = models.CharField(max_length=80, db_index=True)
-    file = models.CharField(max_length=255, blank=True, db_index=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SUCCESS, db_index=True)
-
+    
+    time_slot = models.CharField(max_length=20, choices=TIME_SLOTS)
+    period_order = models.IntegerField()
+    
     def __str__(self):
-        return f"{self.timestamp:%Y-%m-%d %H:%M:%S} - {self.user or 'anonymous'} - {self.action}"
-
+        return f"{self.get_time_slot_display()} (Period {self.period_order})"
+    
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['period_order']
 
 
-class SuspiciousActivity(models.Model):
-    STATUS_OPEN = 'open'
-    STATUS_REVIEWED = 'reviewed'
-    STATUS_CHOICES = [
-        (STATUS_OPEN, 'Open'),
-        (STATUS_REVIEWED, 'Reviewed'),
-    ]
-
-    user = models.CharField(max_length=150, blank=True, db_index=True)
-    activity_type = models.CharField(max_length=80, db_index=True)
-    file = models.CharField(max_length=255, blank=True, db_index=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    description = models.TextField(blank=True)
-    event_count = models.PositiveIntegerField(default=1)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
-    first_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
-    last_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
-
-    def __str__(self):
-        return f"{self.activity_type} - {self.user or 'anonymous'} - {self.status}"
-
-    class Meta:
-        ordering = ['-last_seen_at']
+class DayOfWeek(models.TextChoices):
+    MONDAY = 'MON', 'Monday'
+    TUESDAY = 'TUE', 'Tuesday'
+    WEDNESDAY = 'WED', 'Wednesday'
+    THURSDAY = 'THU', 'Thursday'
+    FRIDAY = 'FRI', 'Friday'
+    SATURDAY = 'SAT', 'Saturday'
 
 
 class Faculty(models.Model):
-    # Personal Information
     staff_name = models.CharField(max_length=255, blank=False, null=False, default='')
     employee_code = models.CharField(max_length=50, unique=True, blank=False, null=False, default='')
     father_name = models.CharField(max_length=255, blank=True, null=True)
@@ -81,12 +70,10 @@ class Faculty(models.Model):
     nationality = models.CharField(max_length=100, default='Indian')
     address = models.TextField(blank=True, null=True)
 
-    # Contact Information
     mobile = models.CharField(max_length=15, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
 
-    # Professional Information
     department = models.CharField(max_length=100, blank=True, null=True)
     designation = models.CharField(max_length=100, blank=True, null=True)
     joining_date = models.DateField(blank=True, null=True)
@@ -107,31 +94,26 @@ class Faculty(models.Model):
     apaar_id = models.CharField(max_length=50, blank=True, null=True)
     orcid_id = models.CharField(max_length=50, blank=True, null=True)
 
-    # Education - SSC / 10TH
     ssc_year = models.IntegerField(blank=True, null=True)
     ssc_percent = models.FloatField(blank=True, null=True)
     ssc_school = models.CharField(max_length=255, blank=True, null=True)
 
-    # Education - Intermediate
     inter_year = models.IntegerField(blank=True, null=True)
     inter_percent = models.FloatField(blank=True, null=True)
     inter_college = models.CharField(max_length=255, blank=True, null=True)
 
-    # Education - UG
     ug_degree = models.CharField(max_length=100, blank=True, null=True)
     ug_year = models.IntegerField(blank=True, null=True)
     ug_percentage = models.FloatField(blank=True, null=True)
     ug_college = models.CharField(max_length=255, blank=True, null=True)
     ug_spec = models.CharField(max_length=100, blank=True, null=True)
 
-    # Education - PG
     pg_degree = models.CharField(max_length=100, blank=True, null=True)
     pg_year = models.IntegerField(blank=True, null=True)
     pg_percentage = models.FloatField(blank=True, null=True)
     pg_college = models.CharField(max_length=255, blank=True, null=True)
     pg_spec = models.CharField(max_length=100, blank=True, null=True)
 
-    # Education - PhD
     phd_degree = models.CharField(max_length=50, blank=True, null=True, choices=[
         ('Completed', 'Completed'),
         ('Pursuing', 'Pursuing'),
@@ -143,7 +125,6 @@ class Faculty(models.Model):
     phd_university = models.CharField(max_length=255, blank=True, null=True)
     phd_spec = models.CharField(max_length=100, blank=True, null=True)
 
-    # Additional Information
     subjects_dealt = models.TextField(blank=True, null=True, help_text="List of subjects handled, separated by commas")
     scm = models.TextField(blank=True, null=True, help_text="Service Cum Merit details")
     about_yourself = models.TextField(blank=True, null=True)
@@ -156,54 +137,42 @@ class Faculty(models.Model):
     pdf_password = models.CharField(max_length=128, blank=True, null=True)
     results = models.TextField(blank=True, null=True, help_text="Student results or academic performance")
 
-    # Experience
     exp_anurag = models.CharField(max_length=50, blank=True, null=True,
                                   help_text="Experience at Engineering College")
     exp_other = models.CharField(max_length=50, blank=True, null=True, help_text="Experience at other institutions")
 
-    # Photo
     photo = models.ImageField(upload_to='faculty_photos/', blank=True, null=True)
 
-    # ==================== NEW FIELDS ====================
-    # Classes Taken
     classes_taken = models.IntegerField(blank=True, null=True, help_text="Number of classes taken by the faculty")
 
-    # Research Publications Proof
     research_proof = models.FileField(upload_to='faculty_docs/research_proofs/', blank=True, null=True)
     research_proof_url = models.URLField(blank=True, null=True, max_length=500)
     research_proof_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for research proof document")
 
-    # FDP Certificate
     fdp_certificate = models.FileField(upload_to='faculty_docs/fdp_certificates/', blank=True, null=True)
     fdp_certificate_url = models.URLField(blank=True, null=True, max_length=500)
     fdp_certificate_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for FDP certificate")
 
-    # Experience Certificates
     experience_certificates = models.FileField(upload_to='faculty_docs/experience_certs/', blank=True, null=True)
     experience_certificates_url = models.URLField(blank=True, null=True, max_length=500)
     experience_certificates_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for experience certificates")
 
-    # Other Documents
     other_documents = models.FileField(upload_to='faculty_docs/other_docs/', blank=True, null=True)
     other_documents_url = models.URLField(blank=True, null=True, max_length=500)
     other_documents_academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year for other documents")
-    # ==================== END NEW FIELDS ====================
 
-    # Document Files - Local Storage
     aadhar_file = models.FileField(upload_to='faculty_docs/aadhar/', blank=True, null=True)
     pan_file = models.FileField(upload_to='faculty_docs/pan/', blank=True, null=True)
     apaar_file = models.FileField(upload_to='faculty_docs/apaar/', blank=True, null=True)
     scm_file = models.FileField(upload_to='faculty_docs/scm/', blank=True, null=True)
     jntuh_biodata = models.FileField(upload_to='faculty_docs/biodata/', blank=True, null=True)
 
-    # Education Certificates
     ssc_certificate = models.FileField(upload_to='faculty_docs/ssc/', blank=True, null=True)
     inter_certificate = models.FileField(upload_to='faculty_docs/inter/', blank=True, null=True)
     ug_certificate = models.FileField(upload_to='faculty_docs/ug/', blank=True, null=True)
     pg_certificate = models.FileField(upload_to='faculty_docs/pg/', blank=True, null=True)
     phd_certificate = models.FileField(upload_to='faculty_docs/phd/', blank=True, null=True)
 
-    # Cloudinary URLs for existing documents
     aadhar_url = models.URLField(blank=True, null=True, max_length=500)
     pan_url = models.URLField(blank=True, null=True, max_length=500)
     apaar_url = models.URLField(blank=True, null=True, max_length=500)
@@ -224,7 +193,7 @@ class Faculty(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    subjects = models.ManyToManyField(Subject, blank=True)
+    subjects = models.ManyToManyField('Subject', blank=True)
 
     def __str__(self):
         return f"{self.staff_name} ({self.employee_code})"
@@ -334,7 +303,7 @@ class ResearchPublication(models.Model):
     authors = models.TextField(blank=True, null=True)
     department = models.CharField(max_length=100, blank=True, null=True)
     publication_year = models.IntegerField(blank=True, null=True)
-    academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year (e.g., 2023-24)")   # ADDED
+    academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year (e.g., 2023-24)")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, blank=True, null=True)
     doi = models.CharField(max_length=100, blank=True, null=True)
     url = models.URLField(blank=True, null=True)
@@ -422,7 +391,7 @@ class FDP(models.Model):
     title = models.CharField(max_length=300)
     from_date = models.DateField()
     to_date = models.DateField()
-    academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year (e.g., 2023-24)")   # ADDED
+    academic_year = models.CharField(max_length=20, blank=True, null=True, help_text="Academic year (e.g., 2023-24)")
     organized_by = models.CharField(max_length=200, blank=True, null=True)
     place = models.CharField(max_length=200, blank=True, null=True)
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, blank=True, null=True)
@@ -659,3 +628,235 @@ class Student(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+class Subject(models.Model):
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=50, blank=True, null=True)
+    credits = models.IntegerField(default=3)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+
+class AuditLog(models.Model):
+    STATUS_SUCCESS = 'success'
+    STATUS_FAILED = 'failed'
+    STATUS_CHOICES = [
+        (STATUS_SUCCESS, 'Success'),
+        (STATUS_FAILED, 'Failed'),
+    ]
+
+    user = models.CharField(max_length=150, blank=True, db_index=True)
+    action = models.CharField(max_length=80, db_index=True)
+    file = models.CharField(max_length=255, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SUCCESS, db_index=True)
+
+    def __str__(self):
+        return f"{self.timestamp:%Y-%m-%d %H:%M:%S} - {self.user or 'anonymous'} - {self.action}"
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
+class SuspiciousActivity(models.Model):
+    STATUS_OPEN = 'open'
+    STATUS_REVIEWED = 'reviewed'
+    STATUS_CHOICES = [
+        (STATUS_OPEN, 'Open'),
+        (STATUS_REVIEWED, 'Reviewed'),
+    ]
+
+    user = models.CharField(max_length=150, blank=True, db_index=True)
+    activity_type = models.CharField(max_length=80, db_index=True)
+    file = models.CharField(max_length=255, blank=True, db_index=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    description = models.TextField(blank=True)
+    event_count = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_OPEN, db_index=True)
+    first_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+    last_seen_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    def __str__(self):
+        return f"{self.activity_type} - {self.user or 'anonymous'} - {self.status}"
+
+    class Meta:
+        ordering = ['-last_seen_at']
+
+
+class ClassSchedule(models.Model):
+    TIME_TYPES = [
+        ('CLASS', 'Class'),
+        ('LAB', 'Lab'),
+    ]
+    
+    timetable = models.ForeignKey(TimeTable, on_delete=models.CASCADE, related_name='class_schedules')
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='class_schedules')
+    day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
+    subject_code = models.CharField(max_length=50)
+    subject_name = models.CharField(max_length=200)
+    time_type = models.CharField(max_length=10, choices=TIME_TYPES, default='CLASS')
+    room_number = models.CharField(max_length=20, blank=True, null=True)
+    lab_room_number = models.CharField(max_length=20, blank=True, null=True)
+    faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True, related_name='class_schedules')
+    students = models.ManyToManyField(Student, related_name='class_schedules', blank=True)
+    semester = models.CharField(max_length=10, blank=True, null=True)
+    
+    def clean(self):
+        self._validate_time_conflict()
+    
+    def _validate_time_conflict(self):
+        conflicts = ClassSchedule.objects.filter(
+            Q(day_of_week=self.day_of_week, period=self.period) |
+            (Q(day_of_week=self.day_of_week, period=self.period) & 
+             Q(lab_room_number=self.lab_room_number) & 
+             Q(time_type='LAB') & 
+             Q(studios__isnull=False) & 
+             Q(pk__isnull=False) &
+             ~Q(pk=self.pk)
+        ))
+        if conflicts.exists():
+            conflict = conflicts.first()
+            if conflict.time_type == 'LAB' and self.time_type == 'LAB':
+                raise ValidationError(
+                    f"Lab {self.subject_name} conflicts with {conflict.subject_name} in room {conflict.room_number or conflict.lab_room_number}"
+                )
+            elif conflict.subject_code == self.subject_code:
+                raise ValidationError(
+                    f"Subject {self.subject_name} already scheduled for {self.day_of_week} at {self.get_period_time()}"
+                )
+    
+    def __str__(self):
+        room = self.lab_room_number or self.room_number
+        return f"{self.day_of_week}-{self.get_time_slot_display()} {self.subject_name} ({room})"
+    
+    class Meta:
+        unique_together = ['timetable', 'day_of_week', 'period']
+        ordering = ['day_of_week', 'period']
+    
+    @property
+    def get_period_time(self):
+        return self.time_slot
+    
+    @property
+    def is_lab(self):
+        return self.time_type == 'LAB'
+
+
+class LabSchedule(models.Model):
+    timetable = models.ForeignKey(TimeTable, on_delete=models.CASCADE, related_name='lab_schedules')
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='lab_schedules')
+    day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
+    lab_code = models.CharField(max_length=50)
+    lab_name = models.CharField(max_length=200)
+    lab_room = models.CharField(max_length=20, blank=True, null=True)
+    faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True, related_name='lab_schedules')
+    students = models.ManyToManyField(Student, related_name='lab_schedules', blank=True)
+    semester = models.CharField(max_length=10, blank=True, null=True)
+    
+    def clean(self):
+        self._validate_time_conflict()
+    
+    def _validate_time_conflict(self):
+        conflicts = LabSchedule.objects.filter(
+            Q(day_of_week=self.day_of_week, period=self.period) |
+            (Q(day_of_week=self.day_of_week, period=self.period) & 
+             Q(lab_room=self.lab_room) & 
+             Q(pk__isnull=False) &
+             ~Q(pk=self.pk)
+        ))
+        if conflicts.exists():
+            raise ValidationError(
+                f"Lab {self.lab_name} conflicts with another lab in room {self.lab_room}"
+            )
+    
+    def __str__(self):
+        return f"{self.day_of_week}-{self.get_time_slot_display()} {self.lab_name} ({self.lab_room})"
+    
+    class Meta:
+        unique_together = ['timetable', 'day_of_week', 'period', 'lab_room']
+        ordering = ['day_of_week', 'period']
+    
+    @property
+    def get_time_slot_display(self):
+        return dict(Period.TIME_SLOTS)[self.period.time_slot]
+
+
+class FacultySchedule(models.Model):
+    timetable = models.ForeignKey(TimeTable, on_delete=models.CASCADE, related_name='faculty_schedules')
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='faculty_schedules')
+    day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='faculty_schedules')
+    subject_code = models.CharField(max_length=50)
+    subject_name = models.CharField(max_length=200)
+    time_type = models.CharField(max_length=10, choices=[('CLASS', 'Class'), ('LAB', 'Lab')], default='CLASS')
+    
+    def clean(self):
+        self._validate_time_conflict()
+    
+    def _validate_time_conflict(self):
+        conflicts = FacultySchedule.objects.filter(
+            Q(day_of_week=self.day_of_week, period=self.period) &
+            Q(faculty=self.faculty) &
+            Q(pk__isnull=False) &
+            ~Q(pk=self.pk)
+        )
+        if conflicts.exists():
+            raise ValidationError(
+                f"Faculty {self.faculty.staff_name} already scheduled for {self.day_of_week} at this time"
+            )
+    
+    def __str__(self):
+        return f"{self.day_of_week}-{self.get_time_slot_display()} {self.faculty.staff_name} ({self.subject_name})"
+    
+    class Meta:
+        unique_together = ['timetable', 'day_of_week', 'period', 'faculty']
+        ordering = ['day_of_week', 'period']
+    
+    @property
+    def get_time_slot_display(self):
+        return dict(Period.TIME_SLOTS)[self.period.time_slot]
+
+
+class StudentAttendance(models.Model):
+    class STATUS_CHOICES(models.TextChoices):
+        PRESENT = 'P', 'Present'
+        ABSENT = 'A', 'Absent'
+        EXCUSED = 'E', 'Excused'
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='attendance_records')
+    date = models.DateField()
+    day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
+    period = models.ForeignKey(Period, on_delete=models.CASCADE, related_name='attendance_records')
+    subject_code = models.CharField(max_length=50)
+    subject_name = models.CharField(max_length=200)
+    class_schedule = models.ForeignKey(ClassSchedule, on_delete=models.CASCADE, related_name='attendance_records', blank=True, null=True)
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES.choices)
+    
+    def __str__(self):
+        return f"{self.student.student_name} - {self.day_of_week}-{self.period.time_slot} {self.subject_name} ({self.get_status_display()})"
+    
+    class Meta:
+        unique_together = ['student', 'date', 'period']
+        ordering = ['-date', 'day_of_week', 'period']
+
+    @property
+    def is_present(self):
+        return self.status == self.STATUS_CHOICES.PRESENT
+
+
+class LabEnrollment(models.Model):
+    lab_schedule = models.ForeignKey(LabSchedule, on_delete=models.CASCADE, related_name='enrollments')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='lab_enrollments')
+    enrollment_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.student.student_name} - {self.lab_schedule.lab_name}"
+    
+    class Meta:
+        unique_together = ['lab_schedule', 'student']
+        ordering = ['lab_schedule', 'student__student_name']
