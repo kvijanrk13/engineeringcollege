@@ -2489,6 +2489,158 @@ Exam Branch
             return repairedCount;
         }
 
+        function getContextFacultyEntries(classContexts, selections) {
+            const entries = [];
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            const allSelections = getSelectionsForClassContexts(normalizedSelections, classContexts);
+            const assignments = buildClassAssignments(allSelections, {});
+
+            (classContexts || getClassTimeTableContexts()).forEach(function (context) {
+                (context.slots || []).forEach(function (slot) {
+                    if (!isVisibleFilledClassSlot(slot)) {
+                        return;
+                    }
+                    const value = (slot.value || '').trim();
+                    const comparableValue = getComparableSubjectValue(value);
+                    const assignment = findClassAssignmentByLabel(assignments, comparableValue);
+                    if (!assignment || !assignment.facultyKey) {
+                        return;
+                    }
+                    const day = slot.dataset.day || '';
+                    const periodIndex = getSlotPeriodIndex(slot);
+                    const cell = getTimeTableSlotCell(slot);
+                    const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+
+                    if (day && periodIndex >= 0) {
+                        entries.push({
+                            slot: slot,
+                            context: context,
+                            facultyKey: assignment.facultyKey,
+                            comparableValue: comparableValue,
+                            day: day,
+                            periodIndex: periodIndex,
+                            duration: duration
+                        });
+                    }
+                });
+            });
+
+            return entries;
+        }
+
+        function findFacultyConflict(entries) {
+            const byFaculty = new Map();
+            for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+                const entry = entries[entryIndex];
+                if (!byFaculty.has(entry.facultyKey)) {
+                    byFaculty.set(entry.facultyKey, []);
+                }
+                byFaculty.get(entry.facultyKey).push(entry);
+            }
+
+            for (const [facultyKey, facultyEntries] of byFaculty) {
+                for (let i = 0; i < facultyEntries.length; i += 1) {
+                    for (let j = i + 1; j < facultyEntries.length; j += 1) {
+                        const a = facultyEntries[i];
+                        const b = facultyEntries[j];
+                        if (a.day !== b.day) {
+                            continue;
+                        }
+                        const aStart = a.periodIndex;
+                        const aEnd = a.periodIndex + a.duration - 1;
+                        const bStart = b.periodIndex;
+                        const bEnd = b.periodIndex + b.duration - 1;
+                        if (aStart <= bEnd + 1 && bStart <= aEnd + 1) {
+                            return { first: a, second: b };
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function repairAllFacultyConflicts(classContexts, selections) {
+            const contexts = classContexts || getClassTimeTableContexts();
+            let repairedCount = 0;
+            let guard = 0;
+
+            while (guard < 100) {
+                guard += 1;
+                const entries = getContextFacultyEntries(contexts, selections);
+                const conflict = findFacultyConflict(entries);
+                if (!conflict) {
+                    break;
+                }
+
+                const conflictingEntry = conflict.second;
+                const context = conflictingEntry.context;
+                const slotSelector = context.slotSelector || '.timetable-slot';
+
+                const ignoredSlots = new Set([conflictingEntry.slot]);
+                if (conflictingEntry.duration > 1) {
+                    const nextSlot = getClassSlot(conflictingEntry.day, periodOrder[conflictingEntry.periodIndex + 1], context.slots);
+                    if (nextSlot) {
+                        ignoredSlots.add(nextSlot);
+                    }
+                }
+
+                const targetSlot = (context.slots || []).find(function (candidate) {
+                    const cell = getTimeTableSlotCell(candidate);
+                    if (!cell || cell.style.display === 'none' || candidate.value.trim() || ignoredSlots.has(candidate)) {
+                        return false;
+                    }
+                    const targetPeriod = getSlotPeriodIndex(candidate);
+                    const targetDay = candidate.dataset.day || '';
+                    const duration = conflictingEntry.duration;
+                    if (targetPeriod < 0 || targetPeriod + duration > periodOrder.length) {
+                        return false;
+                    }
+                    if (duration > 1) {
+                        if (![0, 3].includes(targetPeriod)) {
+                            return false;
+                        }
+                        const nextSlot = getClassSlot(targetDay, periodOrder[targetPeriod + 1], context.slots);
+                        const nextCell = nextSlot ? getTimeTableSlotCell(nextSlot) : null;
+                        if (!nextSlot || !nextCell || nextCell.style.display === 'none' || nextSlot.value.trim()) {
+                            return false;
+                        }
+                    }
+                    if (normalizeClassValue(targetDay) === 'SAT' && duration > 1) {
+                        return false;
+                    }
+
+                    const otherEntries = entries.filter(function (e) {
+                        return e.facultyKey === conflictingEntry.facultyKey && e !== conflictingEntry;
+                    });
+                    const occupiedPeriods = new Set();
+                    otherEntries.forEach(function (e) {
+                        if (e.day !== targetDay) {
+                            return;
+                        }
+                        for (let offset = 0; offset < e.duration; offset += 1) {
+                            occupiedPeriods.add(e.periodIndex + offset);
+                        }
+                    });
+                    for (let offset = 0; offset < duration; offset += 1) {
+                        if (occupiedPeriods.has(targetPeriod + offset)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+
+                if (targetSlot) {
+                    moveClassSlotValue(context.slots, conflictingEntry.slot, targetSlot, slotSelector);
+                } else {
+                    clearClassSlotValue(conflictingEntry.slot);
+                }
+                repairedCount += 1;
+            }
+
+            return repairedCount;
+        }
+
         function annotateClassLabRoomNumbers(classContexts, selections) {
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
             let annotatedCount = 0;
@@ -2523,6 +2675,7 @@ Exam Branch
              const summary = {
                  sameHourRepeats: 0,
                  labRoomConflicts: 0,
+                 facultyConflicts: 0,
                  filledBlankSlots: 0,
                  addedAIMLOSLab: 0,
                  fixedLayouts: 0,
@@ -2533,18 +2686,22 @@ Exam Branch
              };
 
              summary.sameHourRepeats += repairAllClassTimeTableSameHourRepeats(contexts);
+             summary.facultyConflicts += repairAllFacultyConflicts(contexts, normalizedSelections);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
              summary.fixedLayouts += ensureFixedRequiredLayouts(contexts);
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, facultyOccupancyMap, labRoomOccupancyMap);
              summary.addedAIMLOSLab += ensureR25TwoOneAIMLCompletePlans() || ensureR25TwoOneAIMLOSLabel(contexts);
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, facultyOccupancyMap, labRoomOccupancyMap);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
+             summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
              summary.projectStageLabs += ensureFourthYearProjectStageLabs(contexts);
              summary.movedActivities += enforceActivitiesLastHours(contexts);
              summary.annotatedLabRooms += annotateClassLabRoomNumbers(contexts, normalizedSelections);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(classContexts, normalizedSelections);
+             summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
              summary.total = summary.sameHourRepeats +
                  summary.labRoomConflicts +
+                 summary.facultyConflicts +
                  summary.filledBlankSlots +
                  summary.addedAIMLOSLab +
                  summary.fixedLayouts +
@@ -6900,8 +7057,11 @@ Exam Branch
                 const hoursField = metaFields.find(function (field) {
                     return field.id === 'individualTotalHours' || field.getAttribute('aria-label') === 'Number of hours';
                 });
-                const filledHours = populateIndividualCardFromClassSchedule(card, schedule, classContexts);
+                let filledHours = populateIndividualCardFromClassSchedule(card, schedule, classContexts);
+                const topUpHours = topUpIndividualRequiredLoads(card, schedule);
                 const title = card.querySelector('.card-title');
+
+                filledHours += topUpHours;
 
                 if (facultyField) {
                     facultyField.value = [schedule.facultyName, schedule.employeeCode].filter(Boolean).join(' - ');
@@ -7237,6 +7397,7 @@ Exam Branch
                     requiredSummary.totalHours + ' hours' +
                     (labMergedCount ? '; laboratory subjects are merged into two-hour blocks' : '') +
                     (repairSummary.sameHourRepeats ? '; same-hour repeated subjects were corrected' : '') +
+                    (repairSummary.facultyConflicts ? '; faculty double-bookings were resolved' : '') +
                     (repairSummary.labRoomConflicts ? '; same-room lab clashes were corrected across II-I, III-I, and IV-I' : '') +
                     (repairSummary.addedAIMLOSLab ? '; R25 II-I CSE (AI&ML) full load was filled' : '') +
                     (repairSummary.projectStageLabs ? '; IV-I Project Stage-1 Lab was added' : '') +
@@ -7309,10 +7470,12 @@ Exam Branch
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
                 repairAllClassTimeTableSameHourRepeats(classContexts);
+                repairAllFacultyConflicts(classContexts, selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
                 applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                repairAllFacultyConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
             });
@@ -7325,6 +7488,7 @@ Exam Branch
                 applyTimeTableRequirementRepairs(classContexts, selections);
                 applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                repairAllFacultyConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
                 downloadMainTimeTableExcel(button);
@@ -7338,10 +7502,12 @@ Exam Branch
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
                 repairAllClassTimeTableSameHourRepeats(classContexts);
+                repairAllFacultyConflicts(classContexts, selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
                 enforceActivitiesLastHours(classContexts);
                 applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassLabRoomConflicts(classContexts, selections);
+                repairAllFacultyConflicts(classContexts, selections);
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
                 normalizeAllTimeTableSlotValues();
             });
@@ -7372,10 +7538,12 @@ Exam Branch
                     const selections = getStoredSubjectSelections();
                     const classContexts = getClassTimeTableContexts(selections);
                     repairAllClassTimeTableSameHourRepeats(classContexts);
+                    repairAllFacultyConflicts(classContexts, selections);
                     repairAllClassLabRoomConflicts(classContexts, selections);
                     enforceActivitiesLastHours(classContexts);
                     applyRequiredFixedLayoutsToVisibleTables();
                     repairAllClassLabRoomConflicts(classContexts, selections);
+                    repairAllFacultyConflicts(classContexts, selections);
                     syncIndividualTimeTablesWithMainTables(selections, classContexts);
                     normalizeAllTimeTableSlotValues();
                 }
@@ -7424,6 +7592,9 @@ Exam Branch
             const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, selections);
             repairSummary.labRoomConflicts += finalLabRoomRepairs;
             repairSummary.total += finalLabRoomRepairs;
+            const finalFacultyRepairs = repairAllFacultyConflicts(classContexts, selections);
+            repairSummary.facultyConflicts += finalFacultyRepairs;
+            repairSummary.total += finalFacultyRepairs;
             if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
                 syncIndividualTimeTablesWithMainTables(selections, classContexts);
             }
@@ -7437,17 +7608,19 @@ Exam Branch
                             ? 'R25 II-I IT full load was filled and saved'
                             : (completedR25TwoOneAIML || repairSummary.addedAIMLOSLab
                                 ? 'R25 II-I CSE (AI&ML) full load was filled and saved'
-                                : (repairSummary.labRoomConflicts
-                                ? 'Same-room lab clashes were corrected and saved'
-                                    : (repairSummary.projectStageLabs
-                                        ? 'IV-I Project Stage-1 Lab was added and saved'
-                                        : (repairSummary.filledBlankSlots
-                                            ? 'Empty timetable slots were filled and saved'
-                                            : (repairSummary.movedActivities
-                                                ? 'Activity hours were moved to the last hours and saved'
-                                                : (repairSummary.annotatedLabRooms
-                                                    ? 'Lab room numbers were added and saved'
-                                                    : 'Same-hour repeated subjects were corrected and saved'))))))),
+                                : (repairSummary.facultyConflicts
+                                ? 'Faculty double-bookings were resolved and saved'
+                                    : (repairSummary.labRoomConflicts
+                                    ? 'Same-room lab clashes were corrected and saved'
+                                        : (repairSummary.projectStageLabs
+                                            ? 'IV-I Project Stage-1 Lab was added and saved'
+                                            : (repairSummary.filledBlankSlots
+                                                ? 'Empty timetable slots were filled and saved'
+                                                : (repairSummary.movedActivities
+                                                    ? 'Activity hours were moved to the last hours and saved'
+                                                    : (repairSummary.annotatedLabRooms
+                                                        ? 'Lab room numbers were added and saved'
+                                                        : 'Same-hour repeated subjects were corrected and saved')))))))),
                     'success'
                 );
             }
