@@ -2890,15 +2890,31 @@ Exam Branch
                 normalizeClassValue(branch),
                 getSectionContextValue(section, branch)
             ].join('|');
-            const plans = {
-                'R25|2|1|AIML|A': {
-                    MON: ['COA', 'OOPJ', 'SE', 'CM Lab', null, 'DBMS'],
-                    TUE: ['MSF', 'COA', 'OOPJ', 'Java Lab', null, 'SE'],
-                    WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
-                    THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
-                    FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
-                    SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
-                },
+             const plans = {
+                 'R25|2|1|AIML|A': {
+                     MON: ['COA', 'OOPJ', 'SE', 'CM Lab', null, 'DBMS'],
+                     TUE: ['MSF', 'COA', 'OOPJ', 'Java Lab', null, 'SE'],
+                     WED: ['SE Lab', null, 'DBMS', 'MSF', 'COA', 'OOPJ'],
+                     THU: ['DBMS Lab', null, 'SE', 'DBMS', 'MSF', 'VEGS'],
+                     FRI: ['NODE JS Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
+                     SAT: ['SE', 'DBMS', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                 },
+                 'R25|2|1|AIML|B': {
+                     MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
+                     TUE: ['Java Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
+                     WED: ['SE Lab', null, 'COA', 'OOPJ', 'SE', 'MSF'],
+                     THU: ['DBMS Lab', null, 'COA', 'OOPJ', 'SE', 'VEGS'],
+                     FRI: ['NODE JS Lab', null, 'DBMS', 'MSF', 'SPORTS', null],
+                     SAT: ['DBMS', 'MSF', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                 },
+                 'R25|2|1|IT|': {
+                     MON: ['CM Lab', null, 'IoT', 'OOPJ', 'OS', 'COA'],
+                     TUE: ['Java Lab', null, 'MSF', 'COA', 'OOPJ', 'OS'],
+                     WED: ['OS Lab', null, 'IoT', 'MSF', 'COA', 'OOPJ'],
+                     THU: ['IoT Lab', null, 'OS', 'IoT', 'MSF', 'EVS/IKS'],
+                     FRI: ['DV Lab', null, 'COA', 'OOPJ', 'SPORTS', null],
+                     SAT: ['MSF', 'EVS/IKS', 'MENTORING', 'LIBRARY', 'OS', 'IoT']
+                 },
                 'R25|2|1|AIML|B': {
                     MON: ['CM Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
                     TUE: ['Java Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
@@ -4059,6 +4075,8 @@ Exam Branch
         function getTimeTablePayload() {
             ensureR22ThreeOneITCompletePlan();
             ensureR25TwoOneITCompletePlan();
+            ensureR25TwoOneAIMLCompletePlans();
+            applyRequiredFixedLayoutsToVisibleTables();
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
@@ -4177,6 +4195,10 @@ Exam Branch
              const classContexts = getClassTimeTableContexts(savedSelections);
              repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
              repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
+             applyRequiredFixedLayoutsToVisibleTables();
+             ensureR22ThreeOneITCompletePlan();
+             ensureR25TwoOneITCompletePlan();
+             ensureR25TwoOneAIMLCompletePlans();
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -4316,6 +4338,7 @@ Exam Branch
             ensureR22ThreeOneITCompletePlan();
             ensureR25TwoOneITCompletePlan();
             ensureR25TwoOneAIMLCompletePlans();
+            applyRequiredFixedLayoutsToVisibleTables();
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
                 : (button.closest('[data-empty-timetable-card]') ? button.closest('[data-empty-timetable-card]').querySelector('.time-table-grid') : null);
@@ -7385,6 +7408,10 @@ Exam Branch
                      return summary;
                  }, { labMergedCount: 0, totalHours: 0, contexts: [] });
                   const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
+                  applyRequiredFixedLayoutsToVisibleTables();
+                  const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
+                  const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
+                  const completedR25TwoOneAIML = ensureR25TwoOneAIMLCompletePlans();
                   const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, selections);
                   repairSummary.labRoomConflicts += finalLabRoomRepairs;
                   repairSummary.total += finalLabRoomRepairs;
@@ -7443,13 +7470,17 @@ Exam Branch
                      '; short subject names are used in main and individual timetables; individual timetables generated for ' + Math.max(buildIndividualFacultySchedules(timetableSelections).length, 1) + ' faculty (' + individualFilledHours + ' total hours)',
                      incompleteContexts.length ? 'warning' : 'success'
                  );
-                 setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
-                 switchToTimeTableTab();
-             }).catch(function (error) {
-                 console.error(error);
-                 setStatus(timeTableStatus, 'Error generating timetable: ' + (error.message || error), 'warning');
-                 switchToTimeTableTab();
-             });
+                  setStatus(subjectSelectionStatus, 'Time Table generated from ' + selections.length + ' available faculty selection(s)', 'success');
+                  setTimeout(function () {
+                      switchToTimeTableTab();
+                  }, 50);
+              }).catch(function (error) {
+                  console.error(error);
+                  setStatus(timeTableStatus, 'Error generating timetable: ' + (error.message || error), 'warning');
+                  setTimeout(function () {
+                      switchToTimeTableTab();
+                  }, 50);
+              });
         }
 
         document.getElementById('addBtn').addEventListener('click', addRowsFromRange);
