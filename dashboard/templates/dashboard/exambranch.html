@@ -4706,10 +4706,34 @@ Exam Branch
             if (!timeTableTabButton) {
                 return;
             }
-            if (window.bootstrap && window.bootstrap.Tab) {
-                window.bootstrap.Tab.getOrCreateInstance(timeTableTabButton).show();
-            } else {
-                timeTableTabButton.click();
+
+            try {
+                if (window.bootstrap && window.bootstrap.Tab) {
+                    new window.bootstrap.Tab(timeTableTabButton).show();
+                } else {
+                    timeTableTabButton.click();
+                }
+            } catch (e) {
+                document.querySelectorAll('.nav-link').forEach(function(btn) {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                });
+                document.querySelectorAll('.tab-pane').forEach(function(pane) {
+                    pane.classList.remove('active', 'show', 'fade');
+                });
+                timeTableTabButton.classList.add('active');
+                timeTableTabButton.setAttribute('aria-selected', 'true');
+                const pane = document.getElementById('timetable');
+                if (pane) {
+                    pane.classList.add('active', 'show', 'fade');
+                }
+            }
+
+            const timetablePane = document.getElementById('timetable');
+            if (timetablePane) {
+                setTimeout(function() {
+                    timetablePane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
             }
         }
 
