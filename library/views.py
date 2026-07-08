@@ -187,8 +187,9 @@ def deletefine(request,fineID):
     fine.delete()
     return redirect('/aeclibrary/all-fines/')
 
-import razorpay
-razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+def get_razorpay_client():
+    import razorpay
+    return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 @login_required(login_url='/aeclibrary/student/login/')
 @user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/login/')
@@ -199,7 +200,7 @@ def payfine(request,fineID):
     order_receipt = fine.order_id
     
     
-    razorpay_order=razorpay_client.order.create(dict(amount=order_amount, currency=order_currency, receipt=order_receipt, ))
+    razorpay_order = get_razorpay_client().order.create(dict(amount=order_amount, currency=order_currency, receipt=order_receipt, ))
     print(razorpay_order)
     
     
@@ -222,7 +223,7 @@ def pay_status(request,fineID):
             'razorpay_signature':request.POST['razorpay_signature'],
         }
         try:
-            status=razorpay_client.utility.verify_payment_signature(params_dict)
+            status=get_razorpay_client().utility.verify_payment_signature(params_dict)
             if status is None:
                 fine=Fine.objects.get(id=fineID)
                 fine.paid=True
