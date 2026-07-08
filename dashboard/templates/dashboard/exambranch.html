@@ -831,6 +831,11 @@ Exam Branch
                     <i class="fas fa-calendar-alt me-2"></i>Time Table
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="lab-timetable-tab" data-bs-toggle="tab" data-bs-target="#lab-timetable" type="button" role="tab" aria-controls="lab-timetable" aria-selected="false">
+                    <i class="fas fa-flask me-2"></i>Lab Time Table
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content" id="examBranchTabsContent">
@@ -1638,6 +1643,119 @@ Exam Branch
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="lab-timetable" role="tabpanel" aria-labelledby="lab-timetable-tab">
+                <div class="exam-panel">
+                    <div class="panel-header">
+                        <div>
+                            <div class="section-kicker">Lab Schedule</div>
+                            <h2 class="section-title">Lab Time Table</h2>
+                            <p class="section-copy">
+                                Consolidated view of all laboratory sessions with room numbers across all sections.
+                            </p>
+                        </div>
+                        <div class="panel-pill">
+                            <i class="fas fa-flask"></i>
+                            Lab hours only
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="overflow-x: auto;">
+                        <table class="table exam-table lab-time-table-grid align-middle mb-0" id="labTimeTableGrid">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>9:30-10:30</th>
+                                    <th>10:30-11:30</th>
+                                    <th>11:40-12:40</th>
+                                    <th>12:40-1:20</th>
+                                    <th>1:20-2:15</th>
+                                    <th>2:15-3:10</th>
+                                    <th>3:15-4:10</th>
+                                </tr>
+                            </thead>
+                            <tbody id="labTimeTableBody">
+                                <tr>
+                                    <td>MON</td>
+                                    <td class="lab-slot-cell" data-day="MON" data-period="9:30-10:30"></td>
+                                    <td class="lab-slot-cell" data-day="MON" data-period="10:30-11:30"></td>
+                                    <td class="lab-slot-cell" data-day="MON" data-period="11:40-12:40"></td>
+                                    <td class="break-slot">Break</td>
+                                    <td class="lab-slot-cell" data-day="MON" data-period="1:20-2:15"></td>
+                                    <td class="lab-slot-cell" data-day="MON" data-period="2:15-3:10"></td>
+                                    <td class="lab-slot-cell" data-day="MON" data-period="3:15-4:10"></td>
+                                </tr>
+                                <tr>
+                                    <td>TUE</td>
+                                    <td class="lab-slot-cell" data-day="TUE" data-period="9:30-10:30"></td>
+                                    <td class="lab-slot-cell" data-day="TUE" data-period="10:30-11:30"></td>
+                                    <td class="lab-slot-cell" data-day="TUE" data-period="11:40-12:40"></td>
+                                    <td class="break-slot">Break</td>
+                                    <td class="lab-slot-cell" data-day="TUE" data-period="1:20-2:15"></td>
+                                    <td class="lab-slot-cell" data-day="TUE" data-period="2:15-3:10"></td>
+                                    <td class="lab-slot-cell" data-day="TUE" data-period="3:15-4:10"></td>
+                                </tr>
+                                <tr>
+                                    <td>WED</td>
+                                    <td class="lab-slot-cell" data-day="WED" data-period="9:30-10:30"></td>
+                                    <td class="lab-slot-cell" data-day="WED" data-period="10:30-11:30"></td>
+                                    <td class="lab-slot-cell" data-day="WED" data-period="11:40-12:40"></td>
+                                    <td class="break-slot">Break</td>
+                                    <td class="lab-slot-cell" data-day="WED" data-period="1:20-2:15"></td>
+                                    <td class="lab-slot-cell" data-day="WED" data-period="2:15-3:10"></td>
+                                    <td class="lab-slot-cell" data-day="WED" data-period="3:15-4:10"></td>
+                                </tr>
+                                <tr>
+                                    <td>THU</td>
+                                    <td class="lab-slot-cell" data-day="THU" data-period="9:30-10:30"></td>
+                                    <td class="lab-slot-cell" data-day="THU" data-period="10:30-11:30"></td>
+                                    <td class="lab-slot-cell" data-day="THU" data-period="11:40-12:40"></td>
+                                    <td class="break-slot">Break</td>
+                                    <td class="lab-slot-cell" data-day="THU" data-period="1:20-2:15"></td>
+                                    <td class="lab-slot-cell" data-day="THU" data-period="2:15-3:10"></td>
+                                    <td class="lab-slot-cell" data-day="THU" data-period="3:15-4:10"></td>
+                                </tr>
+                                <tr>
+                                    <td>FRI</td>
+                                    <td class="lab-slot-cell" data-day="FRI" data-period="9:30-10:30"></td>
+                                    <td class="lab-slot-cell" data-day="FRI" data-period="10:30-11:30"></td>
+                                    <td class="lab-slot-cell" data-day="FRI" data-period="11:40-12:40"></td>
+                                    <td class="break-slot">Break</td>
+                                    <td class="lab-slot-cell" data-day="FRI" data-period="1:20-2:15"></td>
+                                    <td class="lab-slot-cell" data-day="FRI" data-period="2:15-3:10"></td>
+                                    <td class="lab-slot-cell" data-day="FRI" data-period="3:15-4:10"></td>
+                                </tr>
+                                <tr>
+                                    <td>SAT</td>
+                                    <td class="lab-slot-cell" data-day="SAT" data-period="9:30-10:30"></td>
+                                    <td class="lab-slot-cell" data-day="SAT" data-period="10:30-11:30"></td>
+                                    <td class="lab-slot-cell" data-day="SAT" data-period="11:40-12:40"></td>
+                                    <td class="break-slot">Break</td>
+                                    <td class="lab-slot-cell" data-day="SAT" data-period="1:20-2:15"></td>
+                                    <td class="lab-slot-cell" data-day="SAT" data-period="2:15-3:10"></td>
+                                    <td class="lab-slot-cell" data-day="SAT" data-period="3:15-4:10"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="exam-table-wrap mt-3">
+                        <table class="table exam-table lab-time-table-legend align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Lab Room</th>
+                                    <th>Faculty</th>
+                                </tr>
+                            </thead>
+                            <tbody id="labTimeTableLegendBody">
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -2904,8 +3022,8 @@ Exam Branch
                      TUE: ['Java Lab', null, 'COA', 'OOPJ', 'SE', 'DBMS'],
                      WED: ['SE Lab', null, 'COA', 'OOPJ', 'SE', 'MSF'],
                      THU: ['DBMS Lab', null, 'COA', 'OOPJ', 'SE', 'VEGS'],
-                     FRI: ['NODE JS Lab', null, 'DBMS', 'MSF', 'SPORTS', null],
-                     SAT: ['DBMS', 'MSF', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
+                     FRI: ['NODE JS Lab', null, 'DBMS', 'MSF', 'SPORTS', 'SE'],
+                     SAT: ['COA', 'MSF', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
                  },
                  'R25|2|1|IT|': {
                      MON: ['CM Lab', null, 'IoT', 'OOPJ', 'OS', 'COA'],
@@ -2924,18 +3042,18 @@ Exam Branch
                      SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
                  },
                  'R22|3|1|AIML|B': {
-                     MON: ['ML', 'CN', 'DL', 'ML Lab', null, 'NLP'],
-                     TUE: ['DA', 'ML', 'CN', 'CN Lab', null, 'DL'],
-                     WED: ['NLP', 'DA', 'ML', 'NLP Lab', null, 'CN'],
-                     THU: ['DL', 'NLP', 'DA', 'DA Lab', null, 'MENTORING'],
+                     MON: ['ML', 'CN', 'DL', 'ML Lab', 'DA', 'NLP'],
+                     TUE: ['DA', 'ML', 'CN', 'CN Lab', 'ML', 'DL'],
+                     WED: ['NLP', 'DA', 'ML', 'NLP Lab', 'NLP', 'CN'],
+                     THU: ['DL', 'NLP', 'DA', 'DA Lab', 'DL', 'MENTORING'],
                      FRI: ['ML', 'CN', 'DL', 'NLP', 'DA', 'SPORTS'],
                      SAT: ['ML', 'CN', 'DL', 'NLP', 'DA', 'LIBRARY']
                  },
                  'R22|3|1|IT|': {
-                     MON: ['CD Lab', null, 'DAA', 'ACD', 'ES', 'DM'],
-                     TUE: ['DM Lab', null, 'DDB', 'DAA', 'ACD', 'ES'],
-                     WED: ['ES Lab', null, 'DM', 'DDB', 'DAA', 'ACD'],
-                     THU: ['DAA', 'DM', 'ES', 'Flutter Lab', null, 'MENTORING'],
+                     MON: ['CD Lab', 'DDB', 'DAA', 'ACD', 'ES', 'DM'],
+                     TUE: ['DM Lab', 'DAA', 'DDB', 'DAA', 'ACD', 'ES'],
+                     WED: ['ES Lab', 'ACD', 'DM', 'DDB', 'DAA', 'ACD'],
+                     THU: ['DAA', 'DM', 'ES', 'Flutter Lab', 'DM', 'MENTORING'],
                      FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
                      SAT: ['ACD', 'DDB', 'DM', 'ES', 'DDB', 'LIBRARY']
                  },
@@ -2944,7 +3062,7 @@ Exam Branch
                      TUE: ['Project Stage-1 Lab', null, 'PPLE', 'DL', 'NIC', 'MC'],
                      WED: ['Project Stage-1 Lab', null, 'DM', 'PPLE', 'DL', 'NIC'],
                      THU: ['Project Stage-1 Lab', null, 'MC', 'DM', 'PPLE', 'MENTORING'],
-                     FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
+                     FRI: ['SPORTS', null, 'DL', 'NIC', 'MC', 'DM'],
                      SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
                  },
                  'R22|4|1|AIML|B': {
@@ -2952,7 +3070,7 @@ Exam Branch
                      TUE: ['PPLE', 'DL', 'NIC', 'Project Stage-1 Lab', null, 'MC'],
                      WED: ['DM', 'PPLE', 'DL', 'Project Stage-1 Lab', null, 'NIC'],
                      THU: ['MC', 'DM', 'PPLE', 'Project Stage-1 Lab', null, 'MENTORING'],
-                     FRI: ['DL', 'NIC', 'MC', 'DM', 'SPORTS', null],
+                     FRI: ['SPORTS', null, 'DL', 'NIC', 'MC', 'DM'],
                      SAT: ['DL', 'NIC', 'MC', 'DM', 'PPLE', 'LIBRARY']
                  },
                  'R22|4|1|IT|': {
@@ -3308,7 +3426,76 @@ Exam Branch
             const timetableSelections = getSelectionsForClassContexts(normalizedSelections, contexts);
             const filledHours = renderIndividualFacultyTimeTables(timetableSelections, contexts);
             normalizeAllTimeTableSlotValues();
+            updateLabTimeTable(normalizedSelections, contexts);
             return filledHours;
+        }
+
+        function extractLabRoomNumber(slotValue) {
+            const match = (slotValue || '').match(/\(LAB\s*ROOM:\s*([^)]+)\)/i);
+            return match ? match[1].trim() : '';
+        }
+
+        function updateLabTimeTable(selections, classContexts) {
+            const labCells = Array.from(document.querySelectorAll('.lab-slot-cell'));
+            const legendBody = document.getElementById('labTimeTableLegendBody');
+            const labEntries = [];
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
+
+            labCells.forEach(function (cell) {
+                cell.textContent = '';
+                cell.classList.remove('lab-occupied');
+            });
+
+            contexts.forEach(function (context) {
+                const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
+                const assignments = buildClassAssignments(contextSelections, context);
+                (context.slots || []).forEach(function (slot) {
+                    const subjectName = (slot.value || '').trim();
+                    if (!subjectName || !isLaboratorySubject(subjectName)) {
+                        return;
+                    }
+                    const day = slot.dataset.day || '';
+                    const period = slot.dataset.period || '';
+                    const cell = labCells.find(function (candidate) {
+                        return candidate.dataset.day === day && candidate.dataset.period === period;
+                    });
+                    if (!cell) {
+                        return;
+                    }
+                    const labRoom = extractLabRoomNumber(subjectName) || getStandardLabRoomNumber(getComparableSubjectValue(subjectName)) || '';
+                    const display = labRoom ? subjectName + ' (' + labRoom + ')' : subjectName;
+                    cell.textContent = display;
+                    cell.classList.add('lab-occupied');
+                    labEntries.push({
+                        day: day,
+                        period: period,
+                        subject: subjectName,
+                        labRoom: labRoom,
+                        class: context.label || '',
+                        faculty: (assignments.find(function (a) {
+                            return normalizeSubjectNameForSchedule(a.displayName || a.subjectName) === normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName));
+                        }) || {}).facultyKey || ''
+                    });
+                });
+            });
+
+            if (legendBody) {
+                if (labEntries.length) {
+                    legendBody.innerHTML = labEntries.map(function (entry) {
+                        return '<tr>' +
+                            '<td>' + escapeHtml(entry.class) + '</td>' +
+                            '<td>' + escapeHtml(entry.subject) + '</td>' +
+                            '<td>' + escapeHtml(entry.labRoom) + '</td>' +
+                            '<td>' + escapeHtml(entry.faculty) + '</td>' +
+                            '</tr>';
+                    }).join('');
+                } else {
+                    legendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No lab sessions found.</td></tr>';
+                }
+            }
+
+            return labEntries.length;
         }
 
         function getTimeTableClassSelections(selections) {
@@ -5852,37 +6039,39 @@ Exam Branch
         }
 
         function getStandardLabRoomNumber(labName) {
-            const labKey = normalizeSubjectNameForSchedule(labName);
-            const standardLabRooms = {
-                'OS LAB': 'E-201',
-                'JAVA LAB': 'E-201',
-                'IOT LAB': 'E-203',
-                'CM LAB': 'D-417',
-                'SE LAB': 'E-204',
-                'DBMS LAB': 'E-205',
-                'NODE JS LAB': 'E-206',
-                'NODEJS LAB': 'E-206',
+            const key = normalizeSubjectNameForSchedule(labName || '');
+            const roomMap = {
+                'FLUTTER LAB': 'E-201',
+                'SDC LAB': 'E-201',
+                'EMBEDDED SYSTEMS LAB': 'A-104',
+                'ES LAB': 'A-104',
                 'ML LAB': 'E-201',
                 'CN LAB': 'E-201',
-                'NLP LAB': 'E-210',
-                'DA LAB': 'E-211',
-                'DM LAB': 'E-212',
-                'CD LAB': 'E-213',
-                'ES LAB': 'A-104',
-                'FLUTTER LAB': 'E-201',
-                'IS LAB': 'E-215',
-                'CC LAB': 'E-216',
-                'FSD LAB': 'E-217',
-                'SL LAB': 'E-220',
-                'DL LAB': 'E-218',
-                'NIC LAB': 'E-219',
-                'PROJECT LAB': 'D-418',
-                'PROJECT STAGE-1 LAB': 'D-418',
-                'PROJECT STAGE 1 LAB': 'D-418',
-                'PROJECT STAGE I LAB': 'D-418',
-                'SEMINAR LAB': 'D-419'
+                'NLP LAB': 'E-201',
+                'DA LAB': 'E-201',
+                'CC LAB': 'E-201',
+                'PROJECT STAGE-1 LAB': 'E-201',
+                'IS LAB': 'E-201',
+                'FSD LAB': 'E-201',
+                'CD LAB': 'E-201',
+                'DM LAB': 'E-201',
+                'DAA LAB': 'E-201',
+                'OS LAB': 'E-201',
+                'IOT LAB': 'E-201',
+                'DV LAB': 'E-201',
+                'CM LAB': 'E-201',
+                'JAVA LAB': 'E-201',
+                'SE LAB': 'E-201',
+                'DBMS LAB': 'E-201',
+                'NODE JS LAB': 'E-201'
             };
-            return standardLabRooms[labKey] || '';
+            return roomMap[key] || '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function shouldExcludeFromMainClassTimeTable(subjectName, context) {
