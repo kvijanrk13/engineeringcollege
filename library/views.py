@@ -14,6 +14,7 @@ from django.conf import settings
 
 
 # Book
+@login_required(login_url='/aeclibrary/student/signup/')
 def allbooks(request):
     requestedbooks,issuedbooks=getmybooks(request.user)
     allbooks=Book.objects.all()
