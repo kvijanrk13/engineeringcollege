@@ -4885,7 +4885,7 @@ Exam Branch
                     !subjectName ||
                     !(
                         (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period)) ||
-                        (subjectKey === 'SPORTS' && slot.dataset.period === '2:15-3:10')
+                        (subjectKey === 'SPORTS' && labStartPeriods.includes(slot.dataset.period))
                     )
                 ) {
                     return;
@@ -5350,7 +5350,7 @@ Exam Branch
             return [
                 normalizeClassValue(year),
                 normalizeClassValue(semester),
-                normalizeClassValue(branch)
+                normalizeBranchValue(branch)
             ].join('-');
         }
 
@@ -5379,7 +5379,7 @@ Exam Branch
             const normalizedRegulation = normalizeClassValue(regulation || 'R22');
             const normalizedYear = normalizeAcademicLevelValue(year);
             const normalizedSemester = normalizeAcademicLevelValue(semester);
-            const normalizedBranch = normalizeClassValue(branch);
+            const normalizedBranch = normalizeBranchValue(branch);
             const normalizedSection = getSectionContextValue(section, normalizedBranch);
             return allowedGeneratedClassContexts.find(function (spec) {
                 return spec.regulation === normalizedRegulation &&
@@ -5401,7 +5401,7 @@ Exam Branch
         }
 
         function getSelectionContextKey(selection) {
-            const branch = selection.branch;
+            const branch = normalizeBranchValue(selection.branch);
             return [
                 normalizeClassValue(selection.regulation || 'R22'),
                 getClassContextKey(selection.year, selection.semester, branch),
@@ -5417,8 +5417,16 @@ Exam Branch
             return romanMap[normalizedValue] || normalizedValue;
         }
 
+        function normalizeBranchValue(value) {
+            const normalized = normalizeClassValue(value || '');
+            if (normalized === 'CSE(AI&ML)' || normalized === 'CSE(AI/ML)') {
+                return 'AIML';
+            }
+            return normalized;
+        }
+
         function getClassKeyFromSelection(selection) {
-            return getClassContextKey(selection.year, selection.semester, selection.branch);
+            return getClassContextKey(selection.year, selection.semester, normalizeBranchValue(selection.branch));
         }
 
         function getBranchDisplayLabel(branch) {
@@ -5469,13 +5477,13 @@ Exam Branch
         }
 
         function findSelectionForClass(selections, year, semester, branch, regulation, section) {
-            const classKey = getClassContextKey(year, semester, branch);
+            const classKey = getClassContextKey(year, semester, normalizeBranchValue(branch));
             const normalizedRegulation = regulation ? normalizeClassValue(regulation) : '';
-            const normalizedSection = getSectionContextValue(section, branch);
+            const normalizedSection = getSectionContextValue(section, normalizeBranchValue(branch));
             return normalizeSubjectSelections(selections).find(function (selection) {
                 return getClassKeyFromSelection(selection) === classKey &&
                     (!normalizedRegulation || normalizeClassValue(selection.regulation || 'R22') === normalizedRegulation) &&
-                    getSectionContextValue(selection.section, selection.branch) === normalizedSection;
+                    getSectionContextValue(selection.section, normalizeBranchValue(selection.branch)) === normalizedSection;
             }) || normalizeSubjectSelections(selections).find(function (selection) {
                 return getClassKeyFromSelection(selection) === classKey &&
                     (!normalizedRegulation || normalizeClassValue(selection.regulation || 'R22') === normalizedRegulation);
@@ -6941,8 +6949,10 @@ Exam Branch
                 const subjectName = (slot.value || '').trim();
                 if (
                     !subjectName ||
-                    !isLaboratorySubject(subjectName) ||
-                    !labStartPeriods.includes(slot.dataset.period)
+                    !(
+                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period)) ||
+                        (normalizeSubjectNameForSchedule(subjectName) === 'SPORTS' && labStartPeriods.includes(slot.dataset.period))
+                    )
                 ) {
                     return;
                 }
