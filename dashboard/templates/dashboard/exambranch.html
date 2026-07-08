@@ -3229,13 +3229,36 @@ Exam Branch
             return summary;
         }
 
+        function hasR22ThreeOneITActivitiesInLastHours(context) {
+            const slots = context && context.slots ? context.slots : [];
+            const lastPeriod = periodOrder[periodOrder.length - 1];
+            const sportsSlot = getClassSlot('FRI', lastPeriod, slots);
+            const librarySlot = getClassSlot('SAT', lastPeriod, slots);
+            const mentoringSlot = getClassSlot('THU', lastPeriod, slots);
+            return Boolean(sportsSlot) && normalizeSubjectNameForSchedule(getComparableSubjectValue(sportsSlot.value)) === 'SPORTS' &&
+                Boolean(librarySlot) && normalizeSubjectNameForSchedule(getComparableSubjectValue(librarySlot.value)) === 'LIBRARY' &&
+                Boolean(mentoringSlot) && normalizeSubjectNameForSchedule(getComparableSubjectValue(mentoringSlot.value)) === 'MENTORING';
+        }
+
         function hasCompleteR22ThreeOneITLoad(context) {
             const summary = getR22ThreeOneITClassHourSummary(context);
+            const requiredTheoryLabels = ['DAA', 'ACD', 'ES', 'DM', 'DDB'];
+            const requiredLabLabels = ['CD Lab', 'DM Lab', 'ES Lab', 'Flutter Lab'];
             return summary.theory === 25 &&
                 summary.lab === 8 &&
                 summary.activity === 3 &&
                 summary.total === 36 &&
-                !hasVisibleBlankClassSlot(context);
+                !hasVisibleBlankClassSlot(context) &&
+                requiredTheoryLabels.every(function (label) {
+                    return countClassHoursForLabel(context, label) > 0;
+                }) &&
+                requiredLabLabels.every(function (label) {
+                    return countClassHoursForLabel(context, label) === 2;
+                }) &&
+                countClassHoursForLabel(context, 'SPORTS') === 1 &&
+                countClassHoursForLabel(context, 'LIBRARY') === 1 &&
+                countClassHoursForLabel(context, 'MENTORING') === 1 &&
+                hasR22ThreeOneITActivitiesInLastHours(context);
         }
 
         function isTwoOneITContext(context) {
@@ -4529,12 +4552,36 @@ Exam Branch
             setStatus(timeTableStatus, title + ' Excel download started', 'success');
         }
 
+        function clearAllTimeTableSlotValues() {
+            const slotGroups = [
+                timeTableSlots,
+                getIndividualTimeTableSlots(),
+                getEmptyTimeTableSlots()
+            ];
+            slotGroups.forEach(function (slots) {
+                resetClassTimeTableMerges(slots);
+                (slots || []).forEach(function (slot) {
+                    slot.value = '';
+                });
+            });
+            resetClassTimeTableMerges(getIndividualTimeTableSlots());
+            resetClassTimeTableMerges(getEmptyTimeTableSlots());
+            document.querySelectorAll('.lab-slot-cell').forEach(function (cell) {
+                cell.textContent = '';
+                cell.classList.remove('lab-occupied');
+            });
+            getIndividualTimeTableMetaFields().forEach(function (field) {
+                field.value = '';
+            });
+        }
+
         function clearTimeTableData() {
             if (hasTimeTableContent() && !confirm('Clear the saved timetable and all period entries?')) {
                 return;
             }
             localStorage.removeItem(timeTableStorageKey);
-            setTimeTablePayload({ slots: [], emptyTables: [], individualTables: [], individualMeta: {} });
+            clearAllTimeTableSlotValues();
+            renderAllTimeTableLoadSummaries();
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
         }
 
@@ -4847,6 +4894,25 @@ Exam Branch
             });
         }
 
+        function regenerateTimeTableFromStoredSelections() {
+            const selections = getStoredSubjectSelections();
+            const classContexts = getClassTimeTableContexts(selections);
+            const facultyOccupancyMap = createFacultyOccupancyMap();
+            const labRoomOccupancyMap = createLabRoomOccupancyMap();
+            prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
+            applyTimeTableRequirementRepairs(classContexts, selections);
+            applyRequiredFixedLayoutsToVisibleTables();
+            ensureR22ThreeOneITCompletePlan();
+            ensureR25TwoOneITCompletePlan();
+            ensureR25TwoOneAIMLCompletePlans();
+            repairAllClassLabRoomConflicts(classContexts, selections);
+            repairAllFacultyConflicts(classContexts, selections);
+            fillAllClassBlankSlots(classContexts, selections);
+            syncIndividualTimeTablesWithMainTables(selections, classContexts);
+            normalizeAllTimeTableSlotValues();
+            markTimeTableDirty();
+        }
+
         function deleteFacultySubjectSelection(index) {
             const selections = getStoredSubjectSelections();
             if (index < 0 || index >= selections.length) {
@@ -4861,7 +4927,12 @@ Exam Branch
                 'Deleted ' + ((removed && removed.facultyName) || 'faculty') + ' from available faculties',
                 'warning'
             );
-            markTimeTableDirty();
+            regenerateTimeTableFromStoredSelections();
+            setStatus(
+                timeTableStatus,
+                'Time Table entries for the deleted faculty were also removed',
+                'success'
+            );
         }
 
         function loadSubjectSelection() {
@@ -6409,6 +6480,22 @@ Exam Branch
             }) || candidates[0] || null;
         }
 
+        function createFallbackAssignmentForLabel(label) {
+            const normalizedKey = normalizeSubjectNameForSchedule(label);
+            const isLab = isLaboratorySubject(label);
+            const isActivity = timetableActivityOrder.has(normalizedKey);
+            return {
+                subjectName: label,
+                displayName: label,
+                facultyKey: '',
+                labRoomNumber: isLab ? getStandardLabRoomNumber(label) : '',
+                isLab: isLab,
+                isActivity: isActivity,
+                targetHours: isLab ? 2 : (isActivity ? 1 : 5),
+                placedHours: 0
+            };
+        }
+
         function applyR22ThreeOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap) {
             const subjectPeriodUsageMap = createSubjectPeriodUsageMap();
             const counts = {};
@@ -6418,14 +6505,13 @@ Exam Branch
             const requiredLabels = ['DAA', 'ACD', 'ES', 'DM', 'DDB', 'CD Lab', 'DM Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
-                assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label);
+                assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label) || createFallbackAssignmentForLabel(label);
             });
 
-            if (requiredLabels.some(function (label) { return !assignmentByLabel[label]; })) {
+            const plan = getRequiredFixedPlanForSpec('R22', '3', '1', 'IT', '');
+            if (!plan) {
                 return null;
             }
-
-            const plan = getRequiredFixedPlanForSpec('R22', '3', '1', 'IT', '');
 
             resetClassTimeTableMerges(context.slots);
             context.slots.forEach(function (slot) {
