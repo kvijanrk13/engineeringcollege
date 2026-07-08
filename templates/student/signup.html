@@ -14,4 +14,31 @@
   <span class="font-semibold">Sign up with Gmail</span>
 </a>
 
+<div class="flex items-center justify-center w-full max-w-xs mx-auto my-2">
+  <span class="text-gray-400 text-sm tracking-[0.3em]">OR</span>
+</div>
+
+<form class="w-full max-w-xs flex flex-col mx-auto" action="/aeclibrary/student/login/" method="POST">
+  {% csrf_token %}
+  <label class="text-sm text-gray-300 mb-1" for="username">Username</label>
+  <input
+    id="username"
+    name="username"
+    type="password"
+    value="anrkstudent"
+    class="px-2 py-1 bg-transparent border-white border-2 rounded text-white mb-3"
+  />
+
+  <label class="text-sm text-gray-300 mb-1" for="password">Password</label>
+  <input
+    id="password"
+    name="password"
+    type="password"
+    value="7001"
+    class="px-2 py-1 bg-transparent border-white border-2 rounded text-white mb-3"
+  />
+
+  <button type="submit" class="text-white rounded bg-green-500 px-4 py-2 mt-2 hover:shadow-md">Login</button>
+</form>
+
 {% endblock content %}
