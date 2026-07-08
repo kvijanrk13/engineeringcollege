@@ -47,8 +47,8 @@ def search(request):
 
 
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: u.is_superuser,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: u.is_superuser,login_url='/aeclibrary/student/signup/')
 def addbook(request):
     authors=Author.objects.all()
     if request.method=="POST":
@@ -68,8 +68,8 @@ def addbook(request):
 
 
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: u.is_superuser,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: u.is_superuser,login_url='/aeclibrary/student/signup/')
 def deletebook(request,bookID):
     book=Book.objects.get(id=bookID)
     messages.success(request,'Book - {} Deleted succesfully '.format(book.name))
@@ -80,8 +80,8 @@ def deletebook(request,bookID):
 
 #  ISSUES
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: not u.is_superuser,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: not u.is_superuser,login_url='/aeclibrary/student/signup/')
 def issuerequest(request,bookID):
     student=Student.objects.filter(student_id=request.user)
     if student:
@@ -93,8 +93,8 @@ def issuerequest(request,bookID):
     messages.error(request,'You are Not a Student !')
     return redirect('/aeclibrary/')
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def myissues(request):
     if Student.objects.filter(student_id=request.user):
         student=Student.objects.filter(student_id=request.user)[0]
@@ -136,7 +136,7 @@ def requestedissues(request):
 
 
 @login_required(login_url='/admin/')
-@user_passes_test(lambda u:  u.is_superuser ,login_url='/aeclibrary/student/login/')
+@user_passes_test(lambda u:  u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def issue_book(request,issueID):
     issue=Issue.objects.get(id=issueID)
     issue.return_date=timezone.now() + datetime.timedelta(days=15)
@@ -146,7 +146,7 @@ def issue_book(request,issueID):
     return redirect('/aeclibrary/all-issues/')
 
 
-@login_required(login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
 def return_book(request,issueID):
     issue=Issue.objects.get(id=issueID)
@@ -158,8 +158,8 @@ def return_book(request,issueID):
 
 #  FINES
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def myfines(request):
     if Student.objects.filter(student_id=request.user):
         student=Student.objects.filter(student_id=request.user)[0]
@@ -172,7 +172,7 @@ def myfines(request):
     return redirect('/aeclibrary/')
 
 
-@login_required(login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
 def allfines(request):
     issues=Issue.objects.all()
@@ -180,7 +180,7 @@ def allfines(request):
         calcFine(issue)
     return redirect('/admin/library/fine/')
 
-@login_required(login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
 def deletefine(request,fineID):
     fine=Fine.objects.get(id=fineID)
@@ -191,8 +191,8 @@ def get_razorpay_client():
     import razorpay
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def payfine(request,fineID):
     fine=Fine.objects.get(id=fineID)
     order_amount = int(fine.amount)*100
@@ -213,8 +213,8 @@ def payfine(request,fineID):
     })
 
 
-@login_required(login_url='/aeclibrary/student/login/')
-@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/login/')
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def pay_status(request,fineID):
     if request.method == 'POST':
         params_dict={

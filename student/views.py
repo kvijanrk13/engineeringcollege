@@ -25,24 +25,7 @@ def logout(request):
 
 
 def login(request):
-    if request.method == 'POST':
-        user = auth.authenticate(request,
-                                 username=request.POST['studentID'], 
-                                 password=request.POST['password'])
-        print(user)                        
-        if user is None:
-            messages.error(request,'Invalid CREDENTIALS')
-            return redirect('/aeclibrary/student/login/')
-        else:
-            auth.login(request, user)
-            messages.success(request,'Login successful')
-            if 'next' in request.POST:
-                return redirect(request.POST['next'])
-            return redirect('library_home')
-    else:
-        return render(request, 'student/login.html', {
-            'google_signin_enabled': google_signin_enabled(),
-        })
+    return redirect('/aeclibrary/student/signup/')
 
 
 def signup(request):

@@ -27,8 +27,7 @@
     class="w-full pr-2 lg:pr-4 xl:pr-0 lg:w-2/3 justify-end items-end sm:items-center flex flex-col sm:flex-row space-x-4"
   >
     {% if user.is_anonymous %}
-    <li><a class="hover:underline" href="/aeclibrary/student/login">Login</a></li>
-    <li><a class="hover:underline" href="/aeclibrary/student/signup">Signup</a></li>
+    <li><a class="hover:underline" href="/aeclibrary/student/signup">Sign up with Gmail</a></li>
     <li><a class="hover:underline" href="/admin/">Admin Dashboard</a></li>
     {% elif user.is_superuser %}
     <!-- <li><a class="hover:underline" href="/addbook/">Add Book</a></li> -->
