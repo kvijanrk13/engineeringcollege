@@ -11,6 +11,10 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib import auth
 from django.conf import settings
+from django.http import JsonResponse
+import requests
+import re
+from .models import BookRecommendation
 
 
 # Book
@@ -18,8 +22,9 @@ from django.conf import settings
 def allbooks(request):
     requestedbooks,issuedbooks=getmybooks(request.user)
     allbooks=Book.objects.all()
+    recommendations=BookRecommendation.objects.all().order_by('id')
     
-    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks})
+    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations})
 
 
 def sort(request):
@@ -238,3 +243,103 @@ def pay_status(request,fineID):
         except:
             messages.error(request,'Payment Failure')
     return redirect('/aeclibrary/my-fines/')
+
+
+# ==============================
+# BOOKS RECOMMENDATION FORMAT
+# ==============================
+
+RECOMMENDATION_FIELDS = [
+    'title', 'author', 'book_type', 'isbn', 'publisher',
+    'edition_year', 'book_format', 'copies_recommended', 'existing', 'cost',
+]
+
+
+def _ocr_book_image(image_bytes):
+    """Best-effort text extraction from an uploaded textbook image.
+
+    Activates only when OCR_API_URL and OCR_API_KEY are configured in the
+    environment. Returns raw extracted text (str) or None when unavailable.
+    """
+    api_url = getattr(settings, 'OCR_API_URL', '')
+    api_key = getattr(settings, 'OCR_API_KEY', '')
+    if not (api_url and api_key):
+        return None
+    try:
+        resp = requests.post(
+            api_url,
+            headers={'Authorization': f'Bearer {api_key}'},
+            files={'file': ('book.jpg', image_bytes, 'image/jpeg')},
+            timeout=30,
+        )
+        if resp.status_code != 200:
+            return None
+        data = resp.json()
+        if isinstance(data, dict):
+            return data.get('text') or data.get('extracted_text') or ''
+        return str(data)
+    except Exception:
+        return None
+
+
+def _parse_book_fields(text):
+    """Naive heuristic parsing of OCR text into recommendation fields."""
+    fields = {k: '' for k in RECOMMENDATION_FIELDS}
+    if not text:
+        return fields
+    isbn_match = re.search(r'(?:ISBN[^\d]{0,5})?(\d[\d\-\s]{8,}\d)', text, re.IGNORECASE)
+    if isbn_match:
+        fields['isbn'] = isbn_match.group(1).replace(' ', '').replace('-', '')
+    if re.search(r'\be-?book\b', text, re.IGNORECASE):
+        fields['book_format'] = 'E-book'
+    elif re.search(r'\bhard\s?copy\b|\bhardcover\b', text, re.IGNORECASE):
+        fields['book_format'] = 'Hard'
+    if re.search(r'reference', text, re.IGNORECASE):
+        fields['book_type'] = 'Reference Book'
+    elif re.search(r'text\s?book', text, re.IGNORECASE):
+        fields['book_type'] = 'Textbook'
+    year_match = re.search(r'\b(19|20)\d{2}\b', text)
+    if year_match:
+        fields['edition_year'] = year_match.group(0)
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if lines:
+        fields['title'] = lines[0][:350]
+        for ln in lines[1:]:
+            if ln and ln != fields['title']:
+                fields['author'] = ln[:350]
+                break
+    return fields
+
+
+@login_required(login_url='/aeclibrary/student/signup/')
+def add_recommendation(request):
+    if request.method == 'POST':
+        rec = BookRecommendation()
+        if request.FILES.get('image'):
+            rec.image = request.FILES['image']
+        for field in RECOMMENDATION_FIELDS:
+            value = request.POST.get(field, '').strip()
+            if field in ('book_type', 'book_format'):
+                if value in dict(BookRecommendation._meta.get_field(field).choices):
+                    setattr(rec, field, value)
+            else:
+                setattr(rec, field, value[:350])
+        rec.save()
+        messages.success(request, 'Book recommendation added.')
+        return redirect('library_home')
+    return redirect('library_home')
+
+
+@login_required(login_url='/aeclibrary/student/signup/')
+def scan_book(request):
+    if request.method != 'POST' or not request.FILES.get('image'):
+        return JsonResponse({'ok': False, 'error': 'No image uploaded.'}, status=400)
+    image_bytes = request.FILES['image'].read()
+    text = _ocr_book_image(image_bytes)
+    if text is None:
+        return JsonResponse(
+            {'ok': False, 'configured': False,
+             'message': 'Auto-extract not configured. Please enter details manually.'},
+            status=200,
+        )
+    return JsonResponse({'ok': True, 'configured': True, 'fields': _parse_book_fields(text)})

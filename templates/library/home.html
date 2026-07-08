@@ -198,12 +198,146 @@
   {% endfor %}
 </ul>
 {% endif %}
+<!-- ============================= -->
+<!-- BOOKS RECOMMENDATION FORMAT   -->
+<!-- ============================= -->
+<section class="mt-16">
+  <h2 class="text-2xl font-bold text-pink-400 mb-4">BOOKS RECOMMENDATION FORMAT</h2>
+
+  <form id="recommendation-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 p-4 border border-gray-600 rounded"
+        action="/aeclibrary/add-recommendation/" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="sm:col-span-2 flex flex-col">
+      <label class="text-sm mb-1" for="id_image">Passport-size Image of Textbook</label>
+      <input id="id_image" name="image" type="file" accept="image/*" class="text-gray-200" />
+      <button type="button" id="scan-btn" class="mt-2 self-start text-white rounded bg-blue-600 px-3 py-1 text-sm hover:shadow-md">Auto-fill from image</button>
+      <p id="scan-msg" class="text-xs text-yellow-300 mt-1"></p>
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_title">Title</label>
+      <input id="id_title" name="title" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_author">Author</label>
+      <input id="id_author" name="author" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_book_type">TEXTBOOK / REFERENCE BOOK</label>
+      <select id="id_book_type" name="book_type" class="rounded border border-gray-300 py-1 px-2 text-gray-900">
+        <option value="">Select</option>
+        <option value="Textbook">Textbook</option>
+        <option value="Reference Book">Reference Book</option>
+      </select>
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_isbn">ISBN</label>
+      <input id="id_isbn" name="isbn" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_publisher">Publisher</label>
+      <input id="id_publisher" name="publisher" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_edition_year">Edition/Year</label>
+      <input id="id_edition_year" name="edition_year" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_book_format">Hard/E-book</label>
+      <select id="id_book_format" name="book_format" class="rounded border border-gray-300 py-1 px-2 text-gray-900">
+        <option value="">Select</option>
+        <option value="Hard">Hard</option>
+        <option value="E-book">E-book</option>
+      </select>
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_copies_recommended">No of copies Recommended</label>
+      <input id="id_copies_recommended" name="copies_recommended" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_existing">EXISTING</label>
+      <input id="id_existing" name="existing" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="flex flex-col">
+      <label class="text-sm mb-1" for="id_cost">Cost</label>
+      <input id="id_cost" name="cost" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
+    </div>
+    <div class="sm:col-span-2">
+      <button type="submit" class="text-white rounded bg-green-500 px-4 py-2 hover:shadow-md">Add Recommendation</button>
+    </div>
+  </form>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm border border-gray-600">
+      <thead class="bg-gray-800 text-pink-300">
+        <tr>
+          <th class="px-2 py-1 border border-gray-600">S.No</th>
+          <th class="px-2 py-1 border border-gray-600">IMAGE</th>
+          <th class="px-2 py-1 border border-gray-600">Title</th>
+          <th class="px-2 py-1 border border-gray-600">Author</th>
+          <th class="px-2 py-1 border border-gray-600">TEXTBOOK / REFERENCE BOOK</th>
+          <th class="px-2 py-1 border border-gray-600">ISBN</th>
+          <th class="px-2 py-1 border border-gray-600">Publisher</th>
+          <th class="px-2 py-1 border border-gray-600">Edition/Year</th>
+          <th class="px-2 py-1 border border-gray-600">Hard/E-book</th>
+          <th class="px-2 py-1 border border-gray-600">No of copies Recommended</th>
+          <th class="px-2 py-1 border border-gray-600">EXISTING</th>
+          <th class="px-2 py-1 border border-gray-600">Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in recommendations %}
+        <tr class="border border-gray-700">
+          <td class="px-2 py-1 border border-gray-700">{{ forloop.counter }}</td>
+          <td class="px-2 py-1 border border-gray-700">
+            {% if rec.image %}<img src="{{ rec.image.url }}" alt="textbook" class="h-16 w-12 object-cover" />{% else %}-{% endif %}
+          </td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.title|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.author|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.book_type|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.isbn|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.publisher|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.edition_year|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.book_format|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.copies_recommended|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.existing|default:"-" }}</td>
+          <td class="px-2 py-1 border border-gray-700">{{ rec.cost|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="12" class="px-2 py-3 text-center text-gray-400">No recommendations yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 <script>
-  const options = document.querySelectorAll("#sort_type option");
-  options.forEach((option) => {
-    if (option.textContent === "{{selected | escapejs}}") {
-      option.selected = true;
+  const scanBtn = document.getElementById('scan-btn');
+  const scanMsg = document.getElementById('scan-msg');
+  const imageInput = document.getElementById('id_image');
+  scanBtn.addEventListener('click', () => {
+    if (!imageInput.files.length) {
+      scanMsg.textContent = 'Please choose a textbook image first.';
+      return;
     }
+    scanMsg.textContent = 'Scanning...';
+    const fd = new FormData();
+    fd.append('image', imageInput.files[0]);
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fd.append('csrfmiddlewaretoken', csrf);
+    fetch('/aeclibrary/scan-book/', { method: 'POST', body: fd })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok && data.fields) {
+          const f = data.fields;
+          for (const key in f) {
+            const el = document.getElementById('id_' + key);
+            if (el && f[key]) el.value = f[key];
+          }
+          scanMsg.textContent = 'Auto-filled from image.';
+        } else {
+          scanMsg.textContent = data.message || 'Auto-extract unavailable; enter manually.';
+        }
+      })
+      .catch(() => { scanMsg.textContent = 'Scan failed; please enter manually.'; });
   });
 </script>
 {% endblock content %}
