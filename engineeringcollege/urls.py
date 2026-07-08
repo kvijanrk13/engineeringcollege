@@ -16,6 +16,8 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('admin/', admin.site.urls),
     path('car-price/', include('car_price_app.urls')),
+    path('aeclibrary/student/', include('student.urls')),
+    path('aeclibrary/', include('library.urls')),
     path('', include('dashboard.urls')),
 ]
 

@@ -103,6 +103,9 @@ INSTALLED_APPS = [
 
     'dashboard',
     'car_price_app',
+
+    'library',
+    'student',
 ]
 
 # ================================
@@ -308,3 +311,9 @@ LOGGING = {
         },
     },
 }
+
+# ================================
+# AEC LIBRARY (django-library-management integrated at /aeclibrary/)
+# ================================
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")

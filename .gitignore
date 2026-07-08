@@ -50,3 +50,6 @@ android/*.keystore
 android/app/*.jks
 android/app/*.keystore
 android/app/keystore.properties
+
+# AEC Library standalone project (separate repo under project_domains)
+project_domains/software-engineering/aeclibrary/
