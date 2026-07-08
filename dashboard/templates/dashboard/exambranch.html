@@ -2876,8 +2876,11 @@ Exam Branch
                  });
              }
 
-             function findBlankTarget(day, assignment, strictSpacing) {
-                 const duration = assignment.isLab ? 2 : 1;
+              function findBlankTarget(day, assignment, strictSpacing) {
+                  if (!assignment) {
+                      return null;
+                  }
+                  const duration = assignment.isLab ? 2 : 1;
                  return (context.slots || []).find(function (slot) {
                      const periodIndex = getSlotPeriodIndex(slot);
                      const cell = getTimeTableSlotCell(slot);
@@ -2907,8 +2910,11 @@ Exam Branch
                  });
              }
 
-             function placeAssignmentInSlot(assignment, slot) {
-                 const duration = assignment.isLab ? 2 : 1;
+              function placeAssignmentInSlot(assignment, slot) {
+                  if (!assignment || !slot) {
+                      return false;
+                  }
+                  const duration = assignment.isLab ? 2 : 1;
                  if (duration > 1) {
                      if (!mergeSlotWithNextPeriod(slot, getAssignmentSlotDisplayName(assignment), context.slotSelector)) {
                          return false;
@@ -2936,11 +2942,14 @@ Exam Branch
                      guard += 1;
                      placed = false;
                      refreshPlacedHours();
-                     assignments.some(function (assignment, assignmentIndex) {
-                         const duration = assignment.isLab ? 2 : 1;
-                         if (assignment.placedHours + duration > assignment.targetHours) {
-                             return false;
-                         }
+                      assignments.some(function (assignment, assignmentIndex) {
+                          if (!assignment) {
+                              return false;
+                          }
+                          const duration = assignment.isLab ? 2 : 1;
+                          if (assignment.placedHours + duration > assignment.targetHours) {
+                              return false;
+                          }
                          return days.some(function (day, dayOffset) {
                              const targetDay = days[(assignmentIndex + dayOffset) % days.length];
                              const targetSlot = findBlankTarget(targetDay, assignment, strictSpacing);
@@ -6384,7 +6393,7 @@ Exam Branch
             }));
             const labelIsLab = isLaboratorySubject(label);
             const candidates = (assignments || []).filter(function (assignment) {
-                if (labelIsLab !== Boolean(assignment.isLab)) {
+                if (labelIsLab !== Boolean(assignment && assignment.isLab)) {
                     return false;
                 }
                 const assignmentLabels = [assignment.displayName, assignment.subjectName]
