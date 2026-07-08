@@ -3267,6 +3267,37 @@ def unique_google_username(email, preferred_username=''):
     return username
 
 
+def _get_or_create_aeclibrary_user(email, display_name=''):
+    UserModel = get_user_model()
+    email = (email or '').strip().lower()
+    user = UserModel.objects.filter(email__iexact=email).first()
+    if user is None:
+        username = unique_google_username(email, display_name)
+        user = UserModel(username=username, email=email)
+    name_parts = (display_name or email).split(' ', 1)
+    user.first_name = name_parts[0] if name_parts else ''
+    user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+    user.email = email
+    user.is_active = True
+    user.set_unusable_password()
+    user.save()
+    return user
+
+
+def _ensure_aeclibrary_student(user, display_name=''):
+    from student.models import Student, Department
+    if Student.objects.filter(student_id=user).exists():
+        return
+    department, _ = Department.objects.get_or_create(name='Library')
+    name_parts = (display_name or user.email).split(' ', 1)
+    Student.objects.create(
+        first_name=name_parts[0] if name_parts else (user.email or 'Student'),
+        last_name=name_parts[1] if len(name_parts) > 1 else '',
+        department=department,
+        student_id=user,
+    )
+
+
 def google_login(request):
     if not google_signin_enabled():
         messages.error(request, 'Google sign-in is not configured.')
@@ -3276,11 +3307,19 @@ def google_login(request):
     if role not in {'admin', 'student'}:
         role = 'admin'
 
+    target = request.GET.get('target', '')
+    if target not in {'aeclibrary'}:
+        target = ''
+
+    if target == 'aeclibrary':
+        role = 'student'
+
     state_payload = {
         'role': role,
         'mobile': request.GET.get('mobile') == '1',
         'continue': request.GET.get('continue') == '1',
         'next': request.GET.get('next', ''),
+        'target': target,
         'ts': timezone.now().isoformat(),
     }
     state = signing.dumps(state_payload, salt='google-oauth-state')
@@ -3346,6 +3385,25 @@ def google_callback(request):
         email = (profile.get('email') or '').strip().lower()
         if not email or profile.get('email_verified') is False:
             raise ValueError('Google email is not verified')
+
+        if state_payload.get('target') == 'aeclibrary':
+            allowed_domains = getattr(
+                settings, 'AECLIBRARY_GOOGLE_DOMAINS', ['anurag.ac.in', 'gmail.com']
+            )
+            if not any(email.endswith(f'@{domain}') for domain in allowed_domains):
+                messages.error(
+                    request,
+                    'Only @anurag.ac.in or @gmail.com accounts can sign in to the AEC Library.',
+                )
+                return redirect('/aeclibrary/student/login/')
+
+            user = _get_or_create_aeclibrary_user(email, profile.get('name', ''))
+            _ensure_aeclibrary_student(user, profile.get('name', ''))
+            login(request, user)
+            audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
+            request.session['aeclibrary_gmail_login'] = True
+            messages.success(request, f'Welcome to the AEC Library, {user.first_name or email}.')
+            return redirect('/aeclibrary/')
 
         if state_payload.get('role') == 'student':
             student = find_record_by_email(Student, email)

@@ -1,6 +1,12 @@
 {% extends 'aeclibrary/base.html' %} {% block heading %} Books List {% endblock heading %}
 <!--  -->
 {% block content %}
+{% if request.session.aeclibrary_gmail_login %}
+<header class="text-center my-6">
+  <h1 class="text-3xl sm:text-4xl font-extrabold text-pink-400 tracking-wide">SOFTWARE ENGINEERING LAB</h1>
+  <h2 class="text-xl sm:text-2xl font-bold text-blue-300 mt-2">BOOK BANK - LIBRARY MANAGEMENT SYSTEM</h2>
+</header>
+{% endif %}
 <!-- searchbar -->
 <form class="flex sm:flex-row flex-col" action="/aeclibrary/search/">
   <div

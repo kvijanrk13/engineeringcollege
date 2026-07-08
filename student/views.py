@@ -4,6 +4,14 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
+from django.conf import settings
+
+
+def google_signin_enabled():
+    return bool(
+        getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', '')
+        and getattr(settings, 'GOOGLE_OAUTH_CLIENT_SECRET', '')
+    )
 
 
 
@@ -32,7 +40,9 @@ def login(request):
                 return redirect(request.POST['next'])
             return redirect('library_home')
     else:
-        return render(request, 'student/login.html')
+        return render(request, 'student/login.html', {
+            'google_signin_enabled': google_signin_enabled(),
+        })
 
 
 def signup(request):
@@ -60,6 +70,7 @@ def signup(request):
     else:
         return render(request,'student/signup.html',{
             "departments":Department.objects.all(),
-            "users":list(User.objects.values_list('username',flat=True))
+            "users":list(User.objects.values_list('username',flat=True)),
+            "google_signin_enabled": google_signin_enabled(),
         })
 
