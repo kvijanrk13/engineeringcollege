@@ -4,7 +4,6 @@
 
 
 {% block content %}
-{% if google_signin_enabled %}
 <a class="flex items-center justify-center gap-3 w-full max-w-xs mx-auto mt-2 mb-6 px-4 py-2 bg-white text-gray-800 rounded border border-white hover:bg-gray-100"
    href="{% url 'dashboard:google_login' %}?role=student&target=aeclibrary">
   <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true" focusable="false">
@@ -15,7 +14,6 @@
   </svg>
   <span class="font-semibold">Sign in with Gmail</span>
 </a>
-{% endif %}
 <form class="w-2xl sm:w-1/2 max-w-xs flex flex-col mx-auto " action="/aeclibrary/student/login/" method="POST">
   {% csrf_token %}
   <div class="w-1/2  max-w-xs flex flex-col sm:flex-row mt-4  sm:items-center"></div>
