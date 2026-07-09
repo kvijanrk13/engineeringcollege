@@ -221,13 +221,9 @@
       <label class="text-sm mb-1" for="id_author">Author</label>
       <input id="id_author" name="author" type="text" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white" />
     </div>
-    <div class="flex flex-col">
+    <div class="flex flex-col sm:col-span-2">
       <label class="text-sm mb-1" for="id_book_type">TEXTBOOK / REFERENCE BOOK</label>
-      <select id="id_book_type" name="book_type" class="rounded border border-gray-300 py-1 px-2 text-gray-900">
-        <option value="">Select</option>
-        <option value="Textbook">Textbook</option>
-        <option value="Reference Book">Reference Book</option>
-      </select>
+      <textarea id="id_book_type" name="book_type" rows="3" class="px-2 py-1 bg-transparent border-white border-2 rounded text-white"></textarea>
     </div>
     <div class="flex flex-col">
       <label class="text-sm mb-1" for="id_isbn">ISBN</label>

@@ -71,11 +71,7 @@ class BookRecommendation(models.Model):
     image = models.ImageField(upload_to='recommendations/', blank=True, null=True)
     title = models.CharField(max_length=350, blank=True)
     author = models.CharField(max_length=350, blank=True)
-    book_type = models.CharField(
-        max_length=20,
-        choices=[('Textbook', 'Textbook'), ('Reference Book', 'Reference Book')],
-        blank=True,
-    )
+    book_type = models.TextField(blank=True)
     isbn = models.CharField(max_length=50, blank=True)
     publisher = models.CharField(max_length=200, blank=True)
     edition_year = models.CharField(max_length=50, blank=True)

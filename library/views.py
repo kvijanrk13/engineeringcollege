@@ -319,11 +319,9 @@ def add_recommendation(request):
             rec.image = request.FILES['image']
         for field in RECOMMENDATION_FIELDS:
             value = request.POST.get(field, '').strip()
-            if field in ('book_type', 'book_format'):
-                if value in dict(BookRecommendation._meta.get_field(field).choices):
-                    setattr(rec, field, value)
-            else:
-                setattr(rec, field, value[:350])
+            if field == 'book_format':
+                value = 'E-book' if 'e-book' in value.lower() or 'ebook' in value.lower() else ('Hard' if value else '')
+            setattr(rec, field, value[:2000] if field == 'book_type' else value[:350])
         rec.save()
         messages.success(request, 'Book recommendation added.')
         return redirect('library_home')
