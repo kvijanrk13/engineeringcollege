@@ -262,8 +262,18 @@
     </div>
   </form>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full text-sm border border-gray-600">
+  <div class="relative mb-4 max-w-md">
+    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+      </svg>
+    </span>
+    <input id="reco-search" type="text" placeholder="SEARCH recommendations (Title, Author, ISBN, Publisher...)"
+           class="w-full pl-10 pr-3 py-2 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+  </div>
+
+  <div class="overflow-x-auto reco-scroll">
+    <table class="min-w-[1200px] text-sm border border-gray-600">
       <thead class="bg-gray-800 text-pink-300">
         <tr>
           <th class="px-2 py-1 border border-gray-600">S.No</th>
@@ -305,7 +315,27 @@
     </table>
   </div>
 </section>
+<style>
+  .reco-scroll { scrollbar-width: thin; scrollbar-color: #ec4899 #374151; }
+  .reco-scroll::-webkit-scrollbar { height: 14px; }
+  .reco-scroll::-webkit-scrollbar-track { background: #374151; border-radius: 7px; }
+  .reco-scroll::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 7px; }
+  .reco-scroll::-webkit-scrollbar-thumb:hover { background: #f472b6; }
+</style>
 <script>
+  // ---- SEARCH: filter recommendation rows client-side ----
+  const recoSearch = document.getElementById('reco-search');
+  if (recoSearch) {
+    recoSearch.addEventListener('input', () => {
+      const q = recoSearch.value.trim().toLowerCase();
+      const rows = document.querySelectorAll('.reco-scroll tbody tr');
+      rows.forEach(row => {
+        if (row.querySelector('td[colspan="12"]')) return; // skip empty-state row
+        row.style.display = (!q || row.textContent.toLowerCase().includes(q)) ? '' : 'none';
+      });
+    });
+  }
+
   const scanBtn = document.getElementById('scan-btn');
   const scanMsg = document.getElementById('scan-msg');
   const imageInput = document.getElementById('id_image');
