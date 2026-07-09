@@ -65,3 +65,25 @@ class Fine(models.Model):
 
     def __str__(self):
         return "{} fine->{}".format(self.issue,self.amount)
+
+
+class BookRecommendation(models.Model):
+    image = models.ImageField(upload_to='recommendations/', blank=True, null=True)
+    title = models.CharField(max_length=350, blank=True)
+    author = models.CharField(max_length=350, blank=True)
+    book_type = models.TextField(blank=True)
+    isbn = models.CharField(max_length=50, blank=True)
+    publisher = models.CharField(max_length=200, blank=True)
+    edition_year = models.CharField(max_length=50, blank=True)
+    book_format = models.CharField(
+        max_length=10,
+        choices=[('Hard', 'Hard'), ('E-book', 'E-book')],
+        blank=True,
+    )
+    copies_recommended = models.CharField(max_length=20, blank=True)
+    existing = models.CharField(max_length=20, blank=True)
+    cost = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title or 'Book Recommendation'

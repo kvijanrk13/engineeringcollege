@@ -19,8 +19,9 @@ import re
 def allbooks(request):
     requestedbooks,issuedbooks=getmybooks(request.user)
     allbooks=Book.objects.all()
+    recommendations=BookRecommendation.objects.all().order_by('id')
     
-    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks})
+    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations})
 
 
 def sort(request):
