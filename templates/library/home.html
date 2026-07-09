@@ -285,7 +285,7 @@
         <tr class="border border-gray-700">
           <td class="px-2 py-1 border border-gray-700">{{ forloop.counter }}</td>
           <td class="px-2 py-1 border border-gray-700">
-            {% if rec.image %}<img src="{{ rec.image.url }}" alt="textbook" class="h-16 w-12 object-cover" />{% else %}-{% endif %}
+            {% if rec.image %}<img src="{{ rec.image.url }}" alt="textbook" class="h-16 w-12 object-cover" />{% else %}NO PHOTO{% endif %}
           </td>
           <td class="px-2 py-1 border border-gray-700">{{ rec.title|default:"-" }}</td>
           <td class="px-2 py-1 border border-gray-700">{{ rec.author|default:"-" }}</td>
