@@ -3060,7 +3060,7 @@ Exam Branch
                  },
                  'R22|3|1|IT|': {
                      MON: ['CD Lab', 'DDB', 'DAA', 'ACD', 'ES', 'DM'],
-                     TUE: ['DM Lab', 'DAA', 'DDB', 'DAA', 'ACD', 'ES'],
+                      TUE: ['Data Mining Lab', 'DAA', 'DDB', 'DAA', 'ACD', 'ES'],
                      WED: ['ES Lab', 'ACD', 'DM', 'DDB', 'DAA', 'ACD'],
                      THU: ['DAA', 'DM', 'ES', 'Flutter Lab', 'DM', 'MENTORING'],
                      FRI: ['ES', 'DAA', 'ACD', 'DM', 'DDB', 'SPORTS'],
@@ -3243,7 +3243,7 @@ Exam Branch
         function hasCompleteR22ThreeOneITLoad(context) {
             const summary = getR22ThreeOneITClassHourSummary(context);
             const requiredTheoryLabels = ['DAA', 'ACD', 'ES', 'DM', 'DDB'];
-            const requiredLabLabels = ['CD Lab', 'DM Lab', 'ES Lab', 'Flutter Lab'];
+            const requiredLabLabels = ['CD Lab', 'Data Mining Lab', 'ES Lab', 'Flutter Lab'];
             return summary.theory === 25 &&
                 summary.lab === 8 &&
                 summary.activity === 3 &&
@@ -3409,7 +3409,7 @@ Exam Branch
                 if (isR25TwoOneITContext(context) && shouldApplyFixedLayout(context, ['CM Lab', 'DV Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
                     return total + (applyR25TwoOneITDisplayPlan(context) ? 1 : 0);
                 }
-                if (isR22ThreeOneITContext(context) && shouldApplyFixedLayout(context, ['CD Lab', 'DM Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
+                if (isR22ThreeOneITContext(context) && shouldApplyFixedLayout(context, ['CD Lab', 'Data Mining Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
                     return total + (applyR22ThreeOneITDisplayPlan(context) ? 1 : 0);
                 }
                 if (isR22ThreeOneAIMLContext(context) && shouldApplyFixedLayout(context, ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
@@ -5045,7 +5045,7 @@ Exam Branch
                 'INTERNSHIP': 'INT',
                 'CD LAB': 'CD Lab',
                 'ES LAB': 'ES Lab',
-                'DM LAB': 'DM Lab',
+                'DATA MINING LAB': 'Data Mining Lab',
                 'OS LAB': 'OS Lab',
                 'IOT LAB': 'IoT Lab',
                 'JAVA LAB': 'Java Lab',
@@ -6216,11 +6216,11 @@ Exam Branch
             };
             const standardLabMap = {
                 'IT|2|1': ['CM Lab', 'Java Lab', 'OS Lab', 'IoT Lab', 'DV Lab'],
-                'IT|3|1': ['CD Lab', 'ES Lab', 'DM Lab', 'Flutter Lab'],
+                'IT|3|1': ['CD Lab', 'ES Lab', 'Data Mining Lab', 'Flutter Lab'],
                 'IT|4|1': ['IS Lab', 'CC Lab', 'FSD Lab', 'Project Stage-1 Lab'],
                 'AIML|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab', 'NODE JS Lab'],
                 'AIML|3|1': ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab'],
-                'AIML|4|1': ['CC Lab', 'DM Lab', 'DL Lab', 'Project Stage-1 Lab'],
+                'AIML|4|1': ['CC Lab', 'Data Mining Lab', 'DL Lab', 'Project Stage-1 Lab'],
                 'CSE|2|1': ['CM Lab', 'Java Lab', 'SE Lab', 'DBMS Lab'],
                 'CSE|3|1': ['ML Lab', 'CN Lab', 'FSD Lab', 'AI Lab'],
                 'CSE|4|1': ['CNS Lab', 'CD Lab', 'Project Lab', 'Seminar Lab']
@@ -6516,7 +6516,7 @@ Exam Branch
             let labMergedCount = 0;
             let totalHours = 0;
             const assignmentByLabel = {};
-            const requiredLabels = ['DAA', 'ACD', 'ES', 'DM', 'DDB', 'CD Lab', 'DM Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
+            const requiredLabels = ['DAA', 'ACD', 'ES', 'DM', 'DDB', 'CD Lab',                 'Data Mining Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'];
 
             requiredLabels.forEach(function (label) {
                 assignmentByLabel[label] = findClassAssignmentByLabel(assignments, label) || createFallbackAssignmentForLabel(label);
@@ -6974,7 +6974,7 @@ Exam Branch
                 AM705PC: ['Project Stage-1 Lab'],
                 IT504PC: ['CD Lab'],
                 IT505PC: ['ES Lab'],
-                IT532PE: ['DM Lab'],
+                IT532PE: ['Data Mining Lab'],
                 IT503PC: ['ES', 'ES Lab'],
                 '2512302': ['OS Lab'],
                 '2505405': ['OS Lab'],
@@ -7043,7 +7043,7 @@ Exam Branch
                 labels.push('ES Lab');
             }
             if (normalized.includes('DATA MINING LABORATORY') || normalized.includes('DATA MINING LAB')) {
-                labels.push('DM Lab');
+                labels.push('Data Mining Lab');
             } else if (normalized.includes('DATA MINING')) {
                 labels.push('DM');
             }
@@ -7429,7 +7429,7 @@ Exam Branch
                 ddb: 'DDB',
                 compilerLab: 'CD Lab',
                 embeddedLab: 'ES Lab',
-                dataMiningLab: 'DM Lab',
+                dataMiningLab: 'Data Mining Lab',
                 sdc: 'Flutter Lab'
             };
             const aliases = {
