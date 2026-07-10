@@ -7928,10 +7928,6 @@ Exam Branch
         window.setTimeout(function () {
             const hasSavedTimeTable = Boolean(localStorage.getItem(timeTableStorageKey));
             const hasSelections = getStoredSubjectSelections().length > 0;
-            if (!hasSavedTimeTable && !hasSelections) {
-                renderAllTimeTableLoadSummaries();
-                return;
-            }
             const appliedFixedLayouts = applyRequiredFixedLayoutsToVisibleTables();
             const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
             const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
