@@ -7715,13 +7715,15 @@ Exam Branch
                      summary.totalHours += required.totalHours;
                      return summary;
                  }, { theoryCount: 0, labCount: 0, activityCount: 0, theoryHours: 0, labHours: 0, activityHours: 0, totalHours: 0 });
-                 const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections, classContexts);
-                 normalizeAllTimeTableSlotValues();
+                  const individualFilledHours = renderIndividualFacultyTimeTables(timetableSelections, classContexts);
+                  normalizeAllTimeTableSlotValues();
+                  syncIndividualTimeTablesWithMainTables(selections, classContexts);
+                  saveTimeTableData();
 
-                 if (syllabusSubjectSelect && payload.subjectCode) {
-                     syllabusSubjectSelect.value = payload.subjectCode;
-                 }
-                 markTimeTableDirty();
+                  if (syllabusSubjectSelect && payload.subjectCode) {
+                      syllabusSubjectSelect.value = payload.subjectCode;
+                  }
+                  markTimeTableDirty();
                  setStatus(
                      timeTableStatus,
                      'Timetable generated with ' + classTotalHours + ' class hours; required load is ' +
@@ -7905,6 +7907,64 @@ Exam Branch
             });
         });
 
+        var syncingMetaFields = false;
+
+        function syncMetaAcrossTabs(sourceId) {
+            if (syncingMetaFields) return;
+            syncingMetaFields = true;
+
+            var sourceField = document.getElementById(sourceId);
+            if (!sourceField || !sourceField.value) {
+                syncingMetaFields = false;
+                return;
+            }
+
+            var value = sourceField.value;
+            var targets = [];
+            if (sourceId === 'subjectSelectionBranch') {
+                targets = ['timeTableBranch', 'lessonBranch'];
+            } else if (sourceId === 'subjectSelectionYear') {
+                targets = ['timeTableYear', 'lessonYear'];
+            } else if (sourceId === 'subjectSelectionSemester') {
+                targets = ['timeTableSemester', 'lessonSemester'];
+            } else if (sourceId === 'timeTableBranch') {
+                targets = ['subjectSelectionBranch', 'lessonBranch'];
+            } else if (sourceId === 'timeTableYear') {
+                targets = ['subjectSelectionYear', 'lessonYear'];
+            } else if (sourceId === 'timeTableSemester') {
+                targets = ['subjectSelectionSemester', 'lessonSemester'];
+            } else if (sourceId === 'lessonBranch') {
+                targets = ['subjectSelectionBranch', 'timeTableBranch'];
+            } else if (sourceId === 'lessonYear') {
+                targets = ['subjectSelectionYear', 'timeTableYear'];
+            } else if (sourceId === 'lessonSemester') {
+                targets = ['subjectSelectionSemester', 'timeTableSemester'];
+            }
+
+            targets.forEach(function(targetId) {
+                var targetField = document.getElementById(targetId);
+                if (targetField && targetField.value !== value) {
+                    targetField.value = value;
+                }
+            });
+
+            if (sourceId.startsWith('timeTable') || sourceId.startsWith('subjectSelection')) {
+                loadSyllabusSubjects();
+                loadSubjectSelectionSubjects();
+            }
+
+            syncingMetaFields = false;
+        }
+
+        ['subjectSelectionBranch', 'subjectSelectionYear', 'subjectSelectionSemester', 'timeTableBranch', 'timeTableYear', 'timeTableSemester', 'lessonBranch', 'lessonYear', 'lessonSemester'].forEach(function(fieldId) {
+            var field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', function() {
+                    syncMetaAcrossTabs(fieldId);
+                });
+            }
+        });
+
         if (syllabusSubjectSelect) {
             syllabusSubjectSelect.addEventListener('change', function () {
                 const selectedOption = syllabusSubjectSelect.options[syllabusSubjectSelect.selectedIndex];
@@ -7923,6 +7983,16 @@ Exam Branch
         loadEvaluationData();
         loadTimeTableData();
         loadSubjectSelection();
+
+        var savedSelections = getStoredSubjectSelections();
+        if (savedSelections.length > 0) {
+            var firstSelection = savedSelections[0];
+            if (timeTableBranchField && firstSelection.branch) timeTableBranchField.value = firstSelection.branch;
+            if (timeTableYearField && firstSelection.year) timeTableYearField.value = firstSelection.year;
+            if (timeTableSemesterField && firstSelection.semester) timeTableSemesterField.value = firstSelection.semester;
+            if (syllabusSubjectSelect && firstSelection.subjectCode) syllabusSubjectSelect.value = firstSelection.subjectCode;
+        }
+
         loadSyllabusSubjects();
         renderAllTimeTableLoadSummaries();
         window.setTimeout(function () {
