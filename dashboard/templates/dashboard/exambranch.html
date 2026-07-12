@@ -929,9 +929,20 @@ Exam Branch
                                         <button id="addBtn" class="btn exam-btn exam-btn-primary">
                                             <i class="fas fa-plus-circle me-2"></i>Add Date Range
                                         </button>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="exam-actions">
+                        <div id="labTimeTableStatus" class="status-chip" data-tone="muted">
+                            <i class="fas fa-cloud"></i>
+                            Lab timetable not saved yet
+                        </div>
+                        <div class="exam-action-buttons">
+                            <button type="button" id="labTimeTableClearBtn" class="btn exam-btn exam-btn-danger">
+                                <i class="fas fa-broom me-2"></i>Clear Lab Time Table
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
                         </div>
                     </div>
 
@@ -4570,6 +4581,10 @@ Exam Branch
                 cell.textContent = '';
                 cell.classList.remove('lab-occupied');
             });
+            const labLegendBody = document.getElementById('labTimeTableLegendBody');
+            if (labLegendBody) {
+                labLegendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
+            }
             getIndividualTimeTableMetaFields().forEach(function (field) {
                 field.value = '';
             });
@@ -4582,6 +4597,10 @@ Exam Branch
             localStorage.removeItem(timeTableStorageKey);
             clearAllTimeTableSlotValues();
             renderAllTimeTableLoadSummaries();
+            const labLegendBody = document.getElementById('labTimeTableLegendBody');
+            if (labLegendBody) {
+                labLegendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
+            }
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
         }
 
@@ -7792,6 +7811,7 @@ Exam Branch
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
+        document.getElementById('labTimeTableClearBtn').addEventListener('click', clearTimeTableData);
         subjectSelectionForm.addEventListener('submit', saveSubjectSelection);
         document.getElementById('subjectSelectionAddFacultyBtn').addEventListener('click', addFacultySubjectSelection);
         document.getElementById('subjectSelectionAddBtn').addEventListener('click', generateTimeTableFromSubjectSelection);
