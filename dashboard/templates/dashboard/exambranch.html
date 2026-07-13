@@ -6625,6 +6625,34 @@ Exam Branch
             return covered;
         }
 
+        function applyTwoOnePlanForSelectedSubjects(context, assignments, plan) {
+            if (!plan) {
+                return false;
+            }
+            const selectedKeys = new Set((assignments || []).map(function (assignment) {
+                return normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName);
+            }));
+            const filteredPlan = {};
+            let hasSelected = false;
+            Object.keys(plan).forEach(function (day) {
+                const kept = (plan[day] || []).filter(function (label) {
+                    if (!label) {
+                        return false;
+                    }
+                    const isSelected = selectedKeys.has(normalizeSubjectNameForSchedule(label));
+                    if (isSelected) {
+                        hasSelected = true;
+                    }
+                    return isSelected;
+                });
+                filteredPlan[day] = kept;
+            });
+            if (!hasSelected) {
+                return false;
+            }
+            return applyFixedDisplayPlan(context, filteredPlan);
+        }
+
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap, labRoomOccupancyMap) {
             const assignments = buildClassAssignments(classSelections, context);
             const shouldUseFlexibleLabPlacement = hasLabRoomSelections(classSelections);
@@ -6652,11 +6680,12 @@ Exam Branch
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
             }
 
-            // For 2-1 timetables, use the fixed 4-hours-per-subject layout (with SPORTS
-            // merged into a 2-hour block) when every subject in that layout is present in
-            // the user's faculty subject selection. This keeps generation limited to the
-            // user's selected subjects while guaranteeing the required 4h / 2h-SPORTS load.
-            if (isR25TwoOneITContext(context) || isR22TwoOneITContext(context)) {
+            // For 2-1 timetables, place the user's selected subjects using the fixed
+            // 2-1 layout filtered to only those selections. The layout guarantees each
+            // subject appears at most once per day (one hour per day, no same-day
+            // repeats) and that SPORTS is merged into a single 2-hour block. Subjects
+            // not chosen by the user are never injected.
+            if (isR25TwoOneITContext(context) || isR22TwoOneITContext(context) || isR25TwoOneAIMLContext(context)) {
                 const twoOnePlan = getRequiredFixedPlanForSpec(
                     context.regulation,
                     context.year,
@@ -6664,7 +6693,7 @@ Exam Branch
                     context.branch,
                     context.section
                 );
-                if (planIsFullySelected(context, assignments, twoOnePlan) && applyFixedDisplayPlan(context, twoOnePlan)) {
+                if (applyTwoOnePlanForSelectedSubjects(context, assignments, twoOnePlan)) {
                     return summarizeClassAssignmentsFromSlots(context, assignments);
                 }
             }
