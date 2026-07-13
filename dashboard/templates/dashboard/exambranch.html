@@ -7758,15 +7758,19 @@ Exam Branch
                  const facultyOccupancyMap = createFacultyOccupancyMap();
                  const labRoomOccupancyMap = createLabRoomOccupancyMap();
                  prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
-                 const classGeneration = classContexts.reduce(function (summary, context) {
-                     const contextSelections = getSelectionsForClassContext(selections, context);
-                     const generated = generateClassTimeTableSlotsForContext(
-                         context,
-                         contextSelections,
-                         facultyOccupancyMap,
-                         labRoomOccupancyMap
-                     );
-                     const contextHours = countClassContextHours(context);
+                  const classGeneration = classContexts.reduce(function (summary, context) {
+                      const contextSelections = getSelectionsForClassContext(selections, context);
+                      const generated = generateClassTimeTableSlotsForContext(
+                          context,
+                          contextSelections,
+                          facultyOccupancyMap,
+                          labRoomOccupancyMap
+                      );
+                      // Reserve this context's placed faculty/room periods into the shared
+                      // occupancy maps so subsequent contexts (e.g. 2-1 vs 3-1) cannot
+                      // double-book the same faculty member or lab room at the same slot.
+                      prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
+                      const contextHours = countClassContextHours(context);
                      summary.contexts.push({
                          label: context.label,
                          hours: contextHours,
