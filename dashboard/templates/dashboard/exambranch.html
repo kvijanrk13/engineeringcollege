@@ -3065,6 +3065,14 @@ Exam Branch
                       FRI: ['DV Lab', 'COA', 'OS', 'IoT', 'SPORTS', 'OOPJ'],
                       SAT: ['MSF', 'EVS/IKS', 'MENTORING', 'LIBRARY', 'COA', 'OS']
                   },
+                  'R22|2|1|AIML|A': {
+                      MON: ['ML Lab', 'OOPJ', 'OS', 'OOPJ', 'IoT', 'COA'],
+                      TUE: ['Java Lab', 'COA', 'MSF', 'OOPJ', 'OS', 'IoT'],
+                      WED: ['OS Lab', 'IoT', 'COA', 'MSF', 'OOPJ', 'OS'],
+                      THU: ['IoT Lab', 'MSF', 'OOPJ', 'IoT', 'MSF', 'VEGS'],
+                      FRI: ['DA Lab', 'COA', 'OS', 'IoT', 'SPORTS', 'OOPJ'],
+                      SAT: ['MSF', 'VEGS', 'MENTORING', 'LIBRARY', 'COA', 'OS']
+                  },
                  'R22|3|1|AIML|A': {
                      MON: ['ML Lab', 'ML', 'ML', 'CN', 'DL', 'NLP'],
                      TUE: ['CN Lab', 'DA', 'ML', 'CN', 'DL', 'NLP'],
@@ -6625,6 +6633,117 @@ Exam Branch
             return covered;
         }
 
+        // Universal, selection-agnostic enforcement applied to every generated class
+        // timetable (main, individual, 2-1/3-1/4-1). Ensures:
+        //  - each subject appears at most once per day (one hour per day, no same-day
+        //    repeats) by dropping extra same-day occurrences;
+        //  - every laboratory subject is a single 2-hour merged block;
+        //  - SPORTS is a single 2-hour merged block.
+        // Only the subjects already present in the slots are touched; nothing new is added.
+        function enforceClassTimeTableSpacingAndMerges(context) {
+            if (!context || !context.slots) {
+                return;
+            }
+            const slots = context.slots;
+            const days = Array.from(new Set(slots.map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+
+            // 1. Remove same-day duplicate subject occurrences (keep the first).
+            days.forEach(function (day) {
+                const seen = new Set();
+                slots.forEach(function (slot) {
+                    const cell = getTimeTableSlotCell(slot);
+                    if (!cell || cell.style.display === 'none' || !slot.value.trim() || slot.dataset.day !== day) {
+                        return;
+                    }
+                    const value = getComparableSubjectValue(slot.value);
+                    const key = normalizeSubjectNameForSchedule(value);
+                    if (isLaboratorySubject(value) || normalizeSubjectNameForSchedule(value) === 'SPORTS') {
+                        return;
+                    }
+                    if (seen.has(key)) {
+                        slot.value = '';
+                        if (cell.colSpan && cell.colSpan > 1) {
+                            restoreClassLabMergesFromValues(slots);
+                        }
+                        return;
+                    }
+                    seen.add(key);
+                });
+            });
+
+            // 2. Ensure each lab is a single 2-hour merged block.
+            slots.forEach(function (slot) {
+                const cell = getTimeTableSlotCell(slot);
+                if (!cell || cell.style.display === 'none' || !slot.value.trim()) {
+                    return;
+                }
+                const value = getComparableSubjectValue(slot.value);
+                if (!isLaboratorySubject(value)) {
+                    return;
+                }
+                if (!(cell.colSpan && cell.colSpan > 1)) {
+                    mergeSlotWithNextPeriod(slot, getAssignmentSlotDisplayName({
+                        displayName: value,
+                        subjectName: value,
+                        isLab: true,
+                        labRoomNumber: extractLabRoomNumber(slot.value)
+                    }), context.slotSelector);
+                }
+            });
+
+            // 3. Ensure SPORTS is a single 2-hour merged block (one per day).
+            days.forEach(function (day) {
+                let sportsCount = 0;
+                slots.forEach(function (slot) {
+                    const cell = getTimeTableSlotCell(slot);
+                    if (!cell || cell.style.display === 'none' || !slot.value.trim() || slot.dataset.day !== day) {
+                        return;
+                    }
+                    const value = getComparableSubjectValue(slot.value);
+                    if (normalizeSubjectNameForSchedule(value) === 'SPORTS') {
+                        sportsCount += (cell.colSpan && cell.colSpan > 1) ? 2 : 1;
+                    }
+                });
+                if (sportsCount > 2) {
+                    let removed = 0;
+                    const target = sportsCount - 2;
+                    slots.forEach(function (slot) {
+                        if (removed >= target) {
+                            return;
+                        }
+                        const cell = getTimeTableSlotCell(slot);
+                        if (!cell || cell.style.display === 'none' || !slot.value.trim() || slot.dataset.day !== day) {
+                            return;
+                        }
+                        const value = getComparableSubjectValue(slot.value);
+                        if (normalizeSubjectNameForSchedule(value) === 'SPORTS') {
+                            slot.value = '';
+                            if (cell.colSpan && cell.colSpan > 1) {
+                                restoreClassLabMergesFromValues(slots);
+                            }
+                            removed += 1;
+                        }
+                    });
+                }
+                if (sportsCount === 1) {
+                    for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                        const slot = getClassSlot(day, periodOrder[periodIndex], slots);
+                        const cell = slot ? getTimeTableSlotCell(slot) : null;
+                        if (!slot || !cell || cell.style.display === 'none' || slot.value.trim()) {
+                            continue;
+                        }
+                        const nextSlot = getClassSlot(day, periodOrder[periodIndex + 1], slots);
+                        const nextCell = nextSlot ? getTimeTableSlotCell(nextSlot) : null;
+                        if (nextSlot && nextCell && nextCell.style.display !== 'none' && !nextSlot.value.trim()) {
+                            mergeSlotWithNextPeriod(slot, 'SPORTS', context.slotSelector);
+                            break;
+                        }
+                    }
+                }
+            });
+        }
         function applyTwoOnePlanForSelectedSubjects(context, assignments, plan) {
             if (!plan) {
                 return false;
@@ -6680,20 +6799,23 @@ Exam Branch
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
             }
 
-            // For 2-1 timetables, place the user's selected subjects using the fixed
-            // 2-1 layout filtered to only those selections. The layout guarantees each
-            // subject appears at most once per day (one hour per day, no same-day
-            // repeats) and that SPORTS is merged into a single 2-hour block. Subjects
-            // not chosen by the user are never injected.
-            if (isR25TwoOneITContext(context) || isR22TwoOneITContext(context) || isR25TwoOneAIMLContext(context)) {
-                const twoOnePlan = getRequiredFixedPlanForSpec(
+            // For 2-1, 3-1 and 4-1 timetables, place the user's selected subjects using
+            // the fixed layout for that class, filtered to only those selections. The
+            // layout guarantees each subject appears at most once per day (one hour per
+            // day, no same-day repeats) and that labs and SPORTS are merged into 2-hour
+            // blocks. Subjects not chosen by the user are never injected.
+            if (isR25TwoOneITContext(context) || isR22TwoOneITContext(context) ||
+                isR25TwoOneAIMLContext(context) || isR22ThreeOneITContext(context) ||
+                isR22ThreeOneAIMLContext(context) || isR22FourOneITContext(context) ||
+                isR22FourOneAIMLContext(context)) {
+                const fixedPlan = getRequiredFixedPlanForSpec(
                     context.regulation,
                     context.year,
                     context.semester,
                     context.branch,
                     context.section
                 );
-                if (applyTwoOnePlanForSelectedSubjects(context, assignments, twoOnePlan)) {
+                if (applyTwoOnePlanForSelectedSubjects(context, assignments, fixedPlan)) {
                     return summarizeClassAssignmentsFromSlots(context, assignments);
                 }
             }
@@ -6914,6 +7036,7 @@ Exam Branch
                 }
             });
 
+            enforceClassTimeTableSpacingAndMerges(context);
             return summarizeClassAssignmentsFromSlots(context, assignments);
         }
 
