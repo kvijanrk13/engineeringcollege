@@ -2830,7 +2830,6 @@ Exam Branch
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
              summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
-             summary.projectStageLabs += ensureFourthYearProjectStageLabs(contexts);
              summary.movedActivities += enforceActivitiesLastHours(contexts);
              summary.annotatedLabRooms += annotateClassLabRoomNumbers(contexts, normalizedSelections);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(classContexts, normalizedSelections);
@@ -5370,9 +5369,7 @@ Exam Branch
         }
 
         function ensureFourthYearProjectStageLabs(classContexts) {
-            return (classContexts || getClassTimeTableContexts()).reduce(function (total, context) {
-                return total + ensureFourthYearProjectStageLab(context);
-            }, 0);
+            return 0;
         }
 
         const timetableActivityLabels = ['MENTORING', 'SPORTS', 'LIBRARY', 'EVS/IKS', 'VEGS'];
