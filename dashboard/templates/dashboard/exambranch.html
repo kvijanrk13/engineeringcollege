@@ -614,6 +614,71 @@ Exam Branch
         font-weight: 900;
     }
 
+    .lab-time-table-rooms {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+    }
+
+    .lab-room-timetable {
+        border: 1px solid rgba(15, 157, 122, 0.24);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .lab-room-timetable-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        background: #ecfdf5;
+        color: #075f49;
+        font-weight: 900;
+        font-size: 1.02rem;
+        letter-spacing: 0.02em;
+        border-bottom: 1px solid rgba(15, 157, 122, 0.24);
+    }
+
+    .lab-time-table-grid td.lab-slot-cell {
+        text-align: center;
+        vertical-align: middle;
+        min-width: 96px;
+    }
+
+    .lab-time-table-grid td.lab-occupied {
+        background: #ecfdf5;
+    }
+
+    .lab-slot-entry {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 2px 0;
+    }
+
+    .lab-slot-entry + .lab-slot-entry {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px dashed rgba(15, 157, 122, 0.35);
+    }
+
+    .lab-slot-subject {
+        font-weight: 800;
+        color: #075f49;
+    }
+
+    .lab-slot-class {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #0f766e;
+    }
+
+    .lab-slot-faculty {
+        font-size: 0.74rem;
+        color: #4b5563;
+    }
+
     .time-table-reference {
         min-width: 760px;
     }
@@ -1673,83 +1738,10 @@ Exam Branch
                             Lab hours only
                         </div>
                     </div>
-                    <div class="table-responsive" style="overflow-x: auto;">
-                        <table class="table exam-table lab-time-table-grid align-middle mb-0" id="labTimeTableGrid">
-                            <thead>
-                                <tr>
-                                    <th>Day</th>
-                                    <th>9:30-10:30</th>
-                                    <th>10:30-11:30</th>
-                                    <th>11:40-12:40</th>
-                                    <th>12:40-1:20</th>
-                                    <th>1:20-2:15</th>
-                                    <th>2:15-3:10</th>
-                                    <th>3:15-4:10</th>
-                                </tr>
-                            </thead>
-                            <tbody id="labTimeTableBody">
-                                <tr>
-                                    <td>MON</td>
-                                    <td class="lab-slot-cell" data-day="MON" data-period="9:30-10:30"></td>
-                                    <td class="lab-slot-cell" data-day="MON" data-period="10:30-11:30"></td>
-                                    <td class="lab-slot-cell" data-day="MON" data-period="11:40-12:40"></td>
-                                    <td class="break-slot">Break</td>
-                                    <td class="lab-slot-cell" data-day="MON" data-period="1:20-2:15"></td>
-                                    <td class="lab-slot-cell" data-day="MON" data-period="2:15-3:10"></td>
-                                    <td class="lab-slot-cell" data-day="MON" data-period="3:15-4:10"></td>
-                                </tr>
-                                <tr>
-                                    <td>TUE</td>
-                                    <td class="lab-slot-cell" data-day="TUE" data-period="9:30-10:30"></td>
-                                    <td class="lab-slot-cell" data-day="TUE" data-period="10:30-11:30"></td>
-                                    <td class="lab-slot-cell" data-day="TUE" data-period="11:40-12:40"></td>
-                                    <td class="break-slot">Break</td>
-                                    <td class="lab-slot-cell" data-day="TUE" data-period="1:20-2:15"></td>
-                                    <td class="lab-slot-cell" data-day="TUE" data-period="2:15-3:10"></td>
-                                    <td class="lab-slot-cell" data-day="TUE" data-period="3:15-4:10"></td>
-                                </tr>
-                                <tr>
-                                    <td>WED</td>
-                                    <td class="lab-slot-cell" data-day="WED" data-period="9:30-10:30"></td>
-                                    <td class="lab-slot-cell" data-day="WED" data-period="10:30-11:30"></td>
-                                    <td class="lab-slot-cell" data-day="WED" data-period="11:40-12:40"></td>
-                                    <td class="break-slot">Break</td>
-                                    <td class="lab-slot-cell" data-day="WED" data-period="1:20-2:15"></td>
-                                    <td class="lab-slot-cell" data-day="WED" data-period="2:15-3:10"></td>
-                                    <td class="lab-slot-cell" data-day="WED" data-period="3:15-4:10"></td>
-                                </tr>
-                                <tr>
-                                    <td>THU</td>
-                                    <td class="lab-slot-cell" data-day="THU" data-period="9:30-10:30"></td>
-                                    <td class="lab-slot-cell" data-day="THU" data-period="10:30-11:30"></td>
-                                    <td class="lab-slot-cell" data-day="THU" data-period="11:40-12:40"></td>
-                                    <td class="break-slot">Break</td>
-                                    <td class="lab-slot-cell" data-day="THU" data-period="1:20-2:15"></td>
-                                    <td class="lab-slot-cell" data-day="THU" data-period="2:15-3:10"></td>
-                                    <td class="lab-slot-cell" data-day="THU" data-period="3:15-4:10"></td>
-                                </tr>
-                                <tr>
-                                    <td>FRI</td>
-                                    <td class="lab-slot-cell" data-day="FRI" data-period="9:30-10:30"></td>
-                                    <td class="lab-slot-cell" data-day="FRI" data-period="10:30-11:30"></td>
-                                    <td class="lab-slot-cell" data-day="FRI" data-period="11:40-12:40"></td>
-                                    <td class="break-slot">Break</td>
-                                    <td class="lab-slot-cell" data-day="FRI" data-period="1:20-2:15"></td>
-                                    <td class="lab-slot-cell" data-day="FRI" data-period="2:15-3:10"></td>
-                                    <td class="lab-slot-cell" data-day="FRI" data-period="3:15-4:10"></td>
-                                </tr>
-                                <tr>
-                                    <td>SAT</td>
-                                    <td class="lab-slot-cell" data-day="SAT" data-period="9:30-10:30"></td>
-                                    <td class="lab-slot-cell" data-day="SAT" data-period="10:30-11:30"></td>
-                                    <td class="lab-slot-cell" data-day="SAT" data-period="11:40-12:40"></td>
-                                    <td class="break-slot">Break</td>
-                                    <td class="lab-slot-cell" data-day="SAT" data-period="1:20-2:15"></td>
-                                    <td class="lab-slot-cell" data-day="SAT" data-period="2:15-3:10"></td>
-                                    <td class="lab-slot-cell" data-day="SAT" data-period="3:15-4:10"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div id="labTimeTableRooms" class="lab-time-table-rooms">
+                        <p id="labTimeTableEmpty" class="text-center text-muted mb-0">
+                            Generate or load a timetable to view lab sessions.
+                        </p>
                     </div>
                     <div class="exam-table-wrap mt-3">
                         <table class="table exam-table lab-time-table-legend align-middle mb-0">
@@ -1781,6 +1773,18 @@ Exam Branch
         const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19', 'examBranchTimeTableDataPinnedFixedLayoutsV20'];
         const timeTableStorageKey = 'examBranchTimeTableDataR22DataMiningLabV22';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
+        const labTimeTablePurgeFlag = 'examBranchLabTimeTablePurgeV1';
+
+        // One-time purge of any previously generated/stored timetable values so the
+        // Lab Time Table (and main/individual tables) start empty and are only generated
+        // from user-given faculty subject selections.
+        if (!localStorage.getItem(labTimeTablePurgeFlag)) {
+            localStorage.removeItem(timeTableStorageKey);
+            legacyTimeTableStorageKeys.forEach(function (key) {
+                localStorage.removeItem(key);
+            });
+            localStorage.setItem(labTimeTablePurgeFlag, '1');
+        }
         const lessonPlanDownloadUrl = "{% url 'dashboard:exam_branch_download_lesson_plan' %}";
         const syllabusSubjectsUrl = "{{ syllabus_subjects_url }}";
         const csrfTokenValue = '{{ csrf_token }}';
@@ -2822,7 +2826,7 @@ Exam Branch
              const freshLabRoomOccupancyMap = createLabRoomOccupancyMap();
              prePopulateOccupancyMapsFromExistingData(freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
-             summary.addedAIMLOSLab += ensureR25TwoOneAIMLCompletePlans() || ensureR25TwoOneAIMLOSLabel(contexts);
+              summary.addedAIMLOSLab += ensureR25TwoOneAIMLCompletePlans();
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
              summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
@@ -3106,36 +3110,7 @@ Exam Branch
         }
 
         function applyRequiredFixedLayoutsToVisibleTables() {
-            let appliedCount = 0;
-            const primaryPlan = getRequiredFixedPlanForSpec(
-                primaryFixedTimeTableSpec.regulation,
-                primaryFixedTimeTableSpec.year,
-                primaryFixedTimeTableSpec.semester,
-                primaryFixedTimeTableSpec.branch,
-                primaryFixedTimeTableSpec.section
-            );
-            if (primaryPlan && applyFixedPlanToSlots(timeTableSlots, '.timetable-slot', primaryPlan)) {
-                appliedCount += 1;
-            }
-
-            emptyTimeTableCards.forEach(function (card) {
-                const yearSem = String(card.dataset.yearSem || '').split('-');
-                const plan = getRequiredFixedPlanForSpec(
-                    getAllowedGeneratedClassContextSpec('R25', yearSem[0], yearSem[1], card.dataset.branch, card.dataset.section) ? 'R25' : 'R22',
-                    yearSem[0],
-                    yearSem[1],
-                    card.dataset.branch || '',
-                    card.dataset.section || ''
-                );
-                if (plan && applyFixedPlanToSlots(getEmptyTimeTableSlots(card), '.empty-timetable-slot', plan)) {
-                    card.style.display = '';
-                    appliedCount += 1;
-                }
-            });
-            if (appliedCount) {
-                renderAllTimeTableLoadSummaries();
-            }
-            return appliedCount;
+            return 0;
         }
 
         function applyR22ThreeOneITDisplayPlan(context) {
@@ -3383,12 +3358,7 @@ Exam Branch
         }
 
         function ensureR25TwoOneAIMLCompletePlans() {
-            return getClassTimeTableContexts().reduce(function (total, context) {
-                if (!isR25TwoOneAIMLContext(context) || hasCompleteR25TwoOneAIMLLoad(context)) {
-                    return total;
-                }
-                return total + (applyR25TwoOneAIMLDisplayPlan(context) ? 1 : 0);
-            }, 0);
+            return 0;
         }
 
         function contextHasRequiredLabels(context, labels) {
@@ -3413,47 +3383,15 @@ Exam Branch
         }
 
         function ensureFixedRequiredLayouts(classContexts) {
-            return (classContexts || getClassTimeTableContexts()).reduce(function (total, context) {
-                if (isR25TwoOneAIMLContext(context) && shouldApplyFixedLayout(context, ['CM Lab', 'DBMS Lab', 'NODE JS Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
-                    return total + (applyR25TwoOneAIMLDisplayPlan(context) ? 1 : 0);
-                }
-                if (isR25TwoOneITContext(context) && shouldApplyFixedLayout(context, ['CM Lab', 'DV Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
-                    return total + (applyR25TwoOneITDisplayPlan(context) ? 1 : 0);
-                }
-                if (isR22ThreeOneITContext(context) && shouldApplyFixedLayout(context, ['CD Lab', 'Data Mining Lab', 'ES Lab', 'Flutter Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
-                    return total + (applyR22ThreeOneITDisplayPlan(context) ? 1 : 0);
-                }
-                if (isR22ThreeOneAIMLContext(context) && shouldApplyFixedLayout(context, ['ML Lab', 'CN Lab', 'NLP Lab', 'DA Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
-                    return total + (applyR22ThreeOneAIMLDisplayPlan(context) ? 1 : 0);
-                }
-                if (isR22FourOneITContext(context) && shouldApplyFixedLayout(context, ['IS Lab', 'Project Stage-1 Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
-                    return total + (applyR22FourOneITDisplayPlan(context) ? 1 : 0);
-                }
-                if (isR22FourOneAIMLContext(context) && shouldApplyFixedLayout(context, ['NIC', 'MC', 'PPLE', 'Project Stage-1 Lab', 'SPORTS', 'LIBRARY', 'MENTORING'])) {
-                    return total + (applyR22FourOneAIMLDisplayPlan(context) ? 1 : 0);
-                }
-                return total;
-            }, 0);
+            return 0;
         }
 
         function ensureR22ThreeOneITCompletePlan() {
-            const context = getClassTimeTableContexts().find(isR22ThreeOneITContext);
-            if (!context || hasCompleteR22ThreeOneITLoad(context)) {
-                return false;
-            }
-            return applyR22ThreeOneITDisplayPlan(context);
+            return false;
         }
 
         function ensureR25TwoOneITCompletePlan() {
-            const classContexts = getClassTimeTableContexts();
-            const context = classContexts.find(isR25TwoOneITContext) || classContexts.find(isTwoOneITContext);
-            if (context && migrateLegacyR25TwoOneITLabHours(context)) {
-                return true;
-            }
-            if (!context || hasCompleteR25TwoOneITLoad(context)) {
-                return false;
-            }
-            return applyR25TwoOneITDisplayPlan(context);
+            return false;
         }
 
         function refreshIndividualTimeTablesFromCurrentSelections() {
@@ -3474,54 +3412,148 @@ Exam Branch
         }
 
         function extractLabRoomNumber(slotValue) {
-            const match = (slotValue || '').match(/\(LAB\s*ROOM:\s*([^)]+)\)/i);
+            const match = String(slotValue || '').match(/\((?:LAB\s*)?ROOM:\s*([^)]+)\)/i);
             return match ? match[1].trim() : '';
         }
 
+        const LAB_TIME_TABLE_DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const LAB_TIME_TABLE_COLUMNS = [
+            { type: 'slot', period: '9:30-10:30' },
+            { type: 'slot', period: '10:30-11:30' },
+            { type: 'slot', period: '11:40-12:40' },
+            { type: 'break', label: 'Break' },
+            { type: 'slot', period: '1:20-2:15' },
+            { type: 'slot', period: '2:15-3:10' },
+            { type: 'slot', period: '3:15-4:10' }
+        ];
+
+        function resetLabTimeTable() {
+            const roomsContainer = document.getElementById('labTimeTableRooms');
+            if (roomsContainer) {
+                roomsContainer.innerHTML = '<p id="labTimeTableEmpty" class="text-center text-muted mb-0">Generate or load a timetable to view lab sessions.</p>';
+            }
+            const legendBody = document.getElementById('labTimeTableLegendBody');
+            if (legendBody) {
+                legendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
+            }
+        }
+
+        function renderLabRoomTimeTableCard(roomData) {
+            const headerCells = LAB_TIME_TABLE_COLUMNS.map(function (column) {
+                return '<th>' + (column.type === 'break' ? 'Break' : escapeHtml(column.period)) + '</th>';
+            }).join('');
+
+            const bodyRows = LAB_TIME_TABLE_DAYS.map(function (day) {
+                const cells = LAB_TIME_TABLE_COLUMNS.map(function (column) {
+                    if (column.type === 'break') {
+                        return '<td class="break-slot">Break</td>';
+                    }
+                    const entries = roomData.cells.get(day + '|' + column.period) || [];
+                    if (!entries.length) {
+                        return '<td class="lab-slot-cell"></td>';
+                    }
+                    const content = entries.map(function (entry) {
+                        const classText = entry.class
+                            ? '<span class="lab-slot-class">' + escapeHtml(entry.class) + '</span>'
+                            : '';
+                        const facultyText = entry.faculty
+                            ? '<span class="lab-slot-faculty">' + escapeHtml(entry.faculty) + '</span>'
+                            : '';
+                        return '<div class="lab-slot-entry">' +
+                            '<span class="lab-slot-subject">' + escapeHtml(entry.subject) + '</span>' +
+                            classText +
+                            facultyText +
+                            '</div>';
+                    }).join('');
+                    return '<td class="lab-slot-cell lab-occupied">' + content + '</td>';
+                }).join('');
+                return '<tr><td>' + day + '</td>' + cells + '</tr>';
+            }).join('');
+
+            return '<div class="lab-room-timetable">' +
+                '<div class="lab-room-timetable-header"><i class="fas fa-door-open"></i>Lab Room ' + escapeHtml(roomData.room) + '</div>' +
+                '<div class="table-responsive" style="overflow-x: auto;">' +
+                '<table class="table exam-table time-table-grid lab-time-table-grid align-middle mb-0">' +
+                '<thead><tr><th>Day</th>' + headerCells + '</tr></thead>' +
+                '<tbody>' + bodyRows + '</tbody>' +
+                '</table>' +
+                '</div>' +
+                '</div>';
+        }
+
         function updateLabTimeTable(selections, classContexts) {
-            const labCells = Array.from(document.querySelectorAll('.lab-slot-cell'));
+            const roomsContainer = document.getElementById('labTimeTableRooms');
             const legendBody = document.getElementById('labTimeTableLegendBody');
             const labEntries = [];
             const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
             const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
 
-            labCells.forEach(function (cell) {
-                cell.textContent = '';
-                cell.classList.remove('lab-occupied');
-            });
+            // Group all lab sessions from the main and individual time tables by lab room number.
+            const rooms = new Map();
 
             contexts.forEach(function (context) {
                 const contextSelections = getSelectionsForClassContext(normalizedSelections, context);
                 const assignments = buildClassAssignments(contextSelections, context);
                 (context.slots || []).forEach(function (slot) {
-                    const subjectName = (slot.value || '').trim();
-                    if (!subjectName || !isLaboratorySubject(subjectName)) {
+                    const rawValue = (slot.value || '').trim();
+                    if (!rawValue || !isLaboratorySubject(rawValue)) {
                         return;
                     }
                     const day = slot.dataset.day || '';
                     const period = slot.dataset.period || '';
-                    const cell = labCells.find(function (candidate) {
-                        return candidate.dataset.day === day && candidate.dataset.period === period;
-                    });
-                    if (!cell) {
+                    if (!day || !period) {
                         return;
                     }
-                    const labRoom = extractLabRoomNumber(subjectName) || getStandardLabRoomNumber(getComparableSubjectValue(subjectName)) || '';
-                    const display = labRoom ? subjectName + ' (' + labRoom + ')' : subjectName;
-                    cell.textContent = display;
-                    cell.classList.add('lab-occupied');
+                    const comparableValue = getComparableSubjectValue(rawValue);
+                    const labRoom = extractLabRoomNumber(rawValue) || getStandardLabRoomNumber(comparableValue) || 'Unassigned';
+                    const roomKey = getLabRoomKey(labRoom) || 'UNASSIGNED';
+                    const subjectDisplay = getShortSubjectLabel(comparableValue) || comparableValue || rawValue;
+                    const faculty = (assignments.find(function (a) {
+                        return normalizeSubjectNameForSchedule(a.displayName || a.subjectName) === normalizeSubjectNameForSchedule(comparableValue);
+                    }) || {}).facultyKey || '';
+
+                    if (!rooms.has(roomKey)) {
+                        rooms.set(roomKey, { room: labRoom, cells: new Map() });
+                    }
+                    const roomData = rooms.get(roomKey);
+                    const cellKey = day + '|' + period;
+                    if (!roomData.cells.has(cellKey)) {
+                        roomData.cells.set(cellKey, []);
+                    }
+                    const cellEntries = roomData.cells.get(cellKey);
+                    const duplicate = cellEntries.some(function (existing) {
+                        return existing.class === (context.label || '') &&
+                            normalizeSubjectNameForSchedule(existing.subject) === normalizeSubjectNameForSchedule(subjectDisplay);
+                    });
+                    if (!duplicate) {
+                        cellEntries.push({
+                            subject: subjectDisplay,
+                            class: context.label || '',
+                            faculty: faculty
+                        });
+                    }
+
                     labEntries.push({
                         day: day,
                         period: period,
-                        subject: subjectName,
+                        subject: subjectDisplay,
                         labRoom: labRoom,
                         class: context.label || '',
-                        faculty: (assignments.find(function (a) {
-                            return normalizeSubjectNameForSchedule(a.displayName || a.subjectName) === normalizeSubjectNameForSchedule(getComparableSubjectValue(subjectName));
-                        }) || {}).facultyKey || ''
+                        faculty: faculty
                     });
                 });
             });
+
+            if (roomsContainer) {
+                if (rooms.size) {
+                    const sortedRooms = Array.from(rooms.values()).sort(function (a, b) {
+                        return String(a.room).localeCompare(String(b.room), undefined, { numeric: true, sensitivity: 'base' });
+                    });
+                    roomsContainer.innerHTML = sortedRooms.map(renderLabRoomTimeTableCard).join('');
+                } else {
+                    roomsContainer.innerHTML = '<p id="labTimeTableEmpty" class="text-center text-muted mb-0">No lab sessions found.</p>';
+                }
+            }
 
             if (legendBody) {
                 if (labEntries.length) {
@@ -4274,10 +4306,6 @@ Exam Branch
         }
 
         function getTimeTablePayload() {
-            ensureR22ThreeOneITCompletePlan();
-            ensureR25TwoOneITCompletePlan();
-            ensureR25TwoOneAIMLCompletePlans();
-            applyRequiredFixedLayoutsToVisibleTables();
             const savedSelections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(savedSelections);
             applyTimeTableRequirementRepairs(classContexts, savedSelections);
@@ -4396,10 +4424,6 @@ Exam Branch
              const classContexts = getClassTimeTableContexts(savedSelections);
              repairedSameHourRepeats = applyTimeTableRequirementRepairs(classContexts, savedSelections).total;
              repairedSameHourRepeats += repairAllClassLabRoomConflicts(classContexts, savedSelections);
-             applyRequiredFixedLayoutsToVisibleTables();
-             ensureR22ThreeOneITCompletePlan();
-             ensureR25TwoOneITCompletePlan();
-             ensureR25TwoOneAIMLCompletePlans();
 
             const individualTables = Array.isArray(data.individualTables) && data.individualTables.length
                 ? data.individualTables
@@ -4475,22 +4499,16 @@ Exam Branch
             try {
                 const payload = JSON.parse(saved);
                 const repairedSameHourRepeats = setTimeTablePayload(payload);
-                const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
-                const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
-                const completedR25TwoOneAIML = ensureR25TwoOneAIMLCompletePlans();
                 setStatus(
                     timeTableStatus,
                     'Timetable loaded from ' + formatSavedTime(payload.savedAt) +
-                    (completedR22ThreeOneIT ? '; R22 III-I IT empty slots were filled' :
-                        (completedR25TwoOneIT ? '; R25 II-I IT full load was filled' :
-                        (completedR25TwoOneAIML ? '; R25 II-I CSE (AI&ML) full load was filled' :
-                        (repairedSameHourRepeats || migratedLegacyTimetable ? '; timetable clashes were corrected' : '')))),
+                    (repairedSameHourRepeats || migratedLegacyTimetable ? '; timetable clashes were corrected' : ''),
                     'success'
                 );
-                if (completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairedSameHourRepeats || migratedLegacyTimetable) {
+                if (repairedSameHourRepeats || migratedLegacyTimetable) {
                     syncIndividualTimeTablesWithMainTables(getStoredSubjectSelections(), getClassTimeTableContexts(getStoredSubjectSelections()));
                 }
-                if (repairedSameHourRepeats || migratedLegacyTimetable || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML) {
+                if (repairedSameHourRepeats || migratedLegacyTimetable) {
                     saveTimeTableData();
                 }
             } catch (error) {
@@ -4536,10 +4554,6 @@ Exam Branch
         }
 
         function downloadMainTimeTableExcel(button) {
-            ensureR22ThreeOneITCompletePlan();
-            ensureR25TwoOneITCompletePlan();
-            ensureR25TwoOneAIMLCompletePlans();
-            applyRequiredFixedLayoutsToVisibleTables();
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
                 : (button.closest('[data-empty-timetable-card]') ? button.closest('[data-empty-timetable-card]').querySelector('.time-table-grid') : null);
@@ -4577,14 +4591,7 @@ Exam Branch
             });
             resetClassTimeTableMerges(getIndividualTimeTableSlots());
             resetClassTimeTableMerges(getEmptyTimeTableSlots());
-            document.querySelectorAll('.lab-slot-cell').forEach(function (cell) {
-                cell.textContent = '';
-                cell.classList.remove('lab-occupied');
-            });
-            const labLegendBody = document.getElementById('labTimeTableLegendBody');
-            if (labLegendBody) {
-                labLegendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
-            }
+            resetLabTimeTable();
             getIndividualTimeTableMetaFields().forEach(function (field) {
                 field.value = '';
             });
@@ -4597,10 +4604,7 @@ Exam Branch
             localStorage.removeItem(timeTableStorageKey);
             clearAllTimeTableSlotValues();
             renderAllTimeTableLoadSummaries();
-            const labLegendBody = document.getElementById('labTimeTableLegendBody');
-            if (labLegendBody) {
-                labLegendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
-            }
+            resetLabTimeTable();
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
         }
 
@@ -4920,10 +4924,6 @@ Exam Branch
             const labRoomOccupancyMap = createLabRoomOccupancyMap();
             prePopulateOccupancyMapsFromExistingData(facultyOccupancyMap, labRoomOccupancyMap);
             applyTimeTableRequirementRepairs(classContexts, selections);
-            applyRequiredFixedLayoutsToVisibleTables();
-            ensureR22ThreeOneITCompletePlan();
-            ensureR25TwoOneITCompletePlan();
-            ensureR25TwoOneAIMLCompletePlans();
             repairAllClassLabRoomConflicts(classContexts, selections);
             repairAllFacultyConflicts(classContexts, selections);
             fillAllClassBlankSlots(classContexts, selections);
@@ -5000,10 +5000,7 @@ Exam Branch
             localStorage.removeItem(timeTableStorageKey);
             clearAllTimeTableSlotValues();
             renderAllTimeTableLoadSummaries();
-            const labLegendBody = document.getElementById('labTimeTableLegendBody');
-            if (labLegendBody) {
-                labLegendBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Generate or load a timetable to view lab sessions.</td></tr>';
-            }
+            resetLabTimeTable();
             setStatus(timeTableStatus, 'Timetable cleared', 'muted');
             setStatus(subjectSelectionStatus, 'Subject selection cleared', 'muted');
         }
@@ -5375,12 +5372,6 @@ Exam Branch
         function enforceActivitiesLastHoursForContext(context) {
             if (!context || !isFirstSemesterTwoToFourContext(context)) {
                 return 0;
-            }
-            if (isR25TwoOneITContext(context)) {
-                return hasCompleteR25TwoOneITLoad(context) ? 0 : (applyR25TwoOneITDisplayPlan(context) ? 1 : 0);
-            }
-            if (isR25TwoOneAIMLContext(context)) {
-                return hasCompleteR25TwoOneAIMLLoad(context) ? 0 : (applyR25TwoOneAIMLDisplayPlan(context) ? 1 : 0);
             }
 
             const slots = context.slots || [];
@@ -6731,44 +6722,23 @@ Exam Branch
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
             }
 
-            if (!shouldUseFlexibleLabPlacement && isR22ThreeOneITContext(context)) {
-                const standardPlan = applyR22ThreeOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap);
-                if (standardPlan) {
-                    return standardPlan;
-                }
-            }
-
-            if (!shouldUseFlexibleLabPlacement && isR25TwoOneITContext(context)) {
-                const standardPlan = applyR25TwoOneITFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap);
-                if (standardPlan) {
-                    return standardPlan;
-                }
-            }
-
-            if (!shouldUseFlexibleLabPlacement && isR25TwoOneAIMLContext(context)) {
-                const standardPlan = applyR25TwoOneAIMLFullPlan(context, assignments, occupancyMap, labRoomOccupancyMap);
-                if (standardPlan) {
-                    return standardPlan;
-                }
-            }
-
-            if (isR25TwoOneITContext(context) && applyR25TwoOneITDisplayPlan(context)) {
+            if (isR25TwoOneITContext(context) && hasCompleteR25TwoOneITLoad(context)) {
                 return summarizeClassAssignmentsFromSlots(context, assignments);
             }
 
-            if (isR25TwoOneAIMLContext(context) && applyR25TwoOneAIMLDisplayPlan(context)) {
+            if (isR25TwoOneAIMLContext(context) && hasCompleteR25TwoOneAIMLLoad(context)) {
                 return summarizeClassAssignmentsFromSlots(context, assignments);
             }
 
-            if (isR22ThreeOneAIMLContext(context) && applyR22ThreeOneAIMLDisplayPlan(context)) {
+            if (isR22ThreeOneAIMLContext(context) && hasCompleteR22ThreeOneAIMLLoad(context)) {
                 return summarizeClassAssignmentsFromSlots(context, assignments);
             }
 
-            if (isR22FourOneITContext(context) && applyR22FourOneITDisplayPlan(context)) {
+            if (isR22FourOneITContext(context) && hasCompleteR22FourOneITLoad(context)) {
                 return summarizeClassAssignmentsFromSlots(context, assignments);
             }
 
-            if (isR22FourOneAIMLContext(context) && applyR22FourOneAIMLDisplayPlan(context)) {
+            if (isR22FourOneAIMLContext(context) && hasCompleteR22FourOneAIMLLoad(context)) {
                 return summarizeClassAssignmentsFromSlots(context, assignments);
             }
 
@@ -7711,10 +7681,6 @@ Exam Branch
                      return summary;
                  }, { labMergedCount: 0, totalHours: 0, contexts: [] });
                   const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
-                  applyRequiredFixedLayoutsToVisibleTables();
-                  const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
-                  const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
-                  const completedR25TwoOneAIML = ensureR25TwoOneAIMLCompletePlans();
                   const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, selections);
                   repairSummary.labRoomConflicts += finalLabRoomRepairs;
                   repairSummary.total += finalLabRoomRepairs;
@@ -7841,7 +7807,6 @@ Exam Branch
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
-                applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassTimeTableSameHourRepeats(classContexts);
                 repairAllFacultyConflicts(classContexts, selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
@@ -7874,7 +7839,6 @@ Exam Branch
                 slot.value = normalizeTimeTableDisplayValue(slot.value);
                 const selections = getStoredSubjectSelections();
                 const classContexts = getClassTimeTableContexts(selections);
-                applyRequiredFixedLayoutsToVisibleTables();
                 repairAllClassTimeTableSameHourRepeats(classContexts);
                 repairAllFacultyConflicts(classContexts, selections);
                 repairAllClassLabRoomConflicts(classContexts, selections);
@@ -7910,9 +7874,8 @@ Exam Branch
                 if (event.target.classList.contains('individual-timetable-slot')) {
                     event.target.value = normalizeTimeTableDisplayValue(event.target.value);
                     const selections = getStoredSubjectSelections();
-                    const classContexts = getClassTimeTableContexts(selections);
-                    applyRequiredFixedLayoutsToVisibleTables();
-                    repairAllClassTimeTableSameHourRepeats(classContexts);
+                const classContexts = getClassTimeTableContexts(selections);
+                repairAllClassTimeTableSameHourRepeats(classContexts);
                     repairAllFacultyConflicts(classContexts, selections);
                     repairAllClassLabRoomConflicts(classContexts, selections);
                     enforceActivitiesLastHours(classContexts);
@@ -8026,10 +7989,6 @@ Exam Branch
         window.setTimeout(function () {
             const hasSavedTimeTable = Boolean(localStorage.getItem(timeTableStorageKey));
             const hasSelections = getStoredSubjectSelections().length > 0;
-            const appliedFixedLayouts = applyRequiredFixedLayoutsToVisibleTables();
-            const completedR22ThreeOneIT = ensureR22ThreeOneITCompletePlan();
-            const completedR25TwoOneIT = ensureR25TwoOneITCompletePlan();
-            const completedR25TwoOneAIML = ensureR25TwoOneAIMLCompletePlans();
             const selections = getStoredSubjectSelections();
             const classContexts = getClassTimeTableContexts(selections);
              const repairSummary = applyTimeTableRequirementRepairs(classContexts, selections);
@@ -8042,34 +8001,28 @@ Exam Branch
              const finalBlankFills = fillAllClassBlankSlots(classContexts, selections);
              repairSummary.filledBlankSlots += finalBlankFills;
              repairSummary.total += finalBlankFills;
-             if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
+             if (repairSummary.total) {
                  syncIndividualTimeTablesWithMainTables(selections, classContexts);
              }
-            if (appliedFixedLayouts || completedR22ThreeOneIT || completedR25TwoOneIT || completedR25TwoOneAIML || repairSummary.total) {
+            if (repairSummary.total) {
                 saveTimeTableData();
                 setStatus(
                     timeTableStatus,
-                    completedR22ThreeOneIT
-                        ? 'R22 III-I IT empty slots were filled and saved'
-                        : (completedR25TwoOneIT
-                            ? 'R25 II-I IT full load was filled and saved'
-                            : (completedR25TwoOneAIML || repairSummary.addedAIMLOSLab
-                                ? 'R25 II-I CSE (AI&ML) full load was filled and saved'
-                                : (repairSummary.facultyConflicts
-                                ? 'Faculty double-bookings were resolved and saved'
-                                    : (repairSummary.labRoomConflicts
-                                    ? 'Same-room lab clashes were corrected and saved'
-                                        : (repairSummary.projectStageLabs
-                                            ? 'IV-I Project Stage-1 Lab was added and saved'
-                                            : (repairSummary.filledBlankSlots
-                                                ? 'Empty timetable slots were filled and saved'
-                                                : (repairSummary.movedActivities
-                                                    ? 'Activity hours were moved to the last hours and saved'
-                                                    : (repairSummary.annotatedLabRooms
-                                                        ? 'Lab room numbers were added and saved'
-                                                        : 'Same-hour repeated subjects were corrected and saved')))))))),
-                                'success'
-                            );
+                    repairSummary.facultyConflicts
+                        ? 'Faculty double-bookings were resolved and saved'
+                        : (repairSummary.labRoomConflicts
+                            ? 'Same-room lab clashes were corrected and saved'
+                            : (repairSummary.projectStageLabs
+                                ? 'IV-I Project Stage-1 Lab was added and saved'
+                                : (repairSummary.filledBlankSlots
+                                    ? 'Empty timetable slots were filled and saved'
+                                    : (repairSummary.movedActivities
+                                        ? 'Activity hours were moved to the last hours and saved'
+                                        : (repairSummary.annotatedLabRooms
+                                            ? 'Lab room numbers were added and saved'
+                                            : 'Same-hour repeated subjects were corrected and saved'))))),
+                    'success'
+                );
             }
             renderAllTimeTableLoadSummaries();
         }, 500);
