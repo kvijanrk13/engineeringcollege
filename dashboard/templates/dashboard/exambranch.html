@@ -2488,13 +2488,103 @@ Exam Branch
             return repairedCount;
         }
 
-        function repairAllClassTimeTableSameHourRepeats(classContexts) {
-            const contexts = classContexts || getClassTimeTableContexts();
-            return contexts.reduce(function (total, context) {
-                return total +
-                    repairSameDaySubjectRepeats(context.slots, context.slotSelector) +
-                    repairSameHourSubjectRepeats(context.slots, context.slotSelector);
-            }, 0);
+        // Direct, selection-based cross-context faculty clash resolver.
+        // Builds a subject -> faculty map straight from the user's selections (not from
+        // fragile slot-label matching) and ensures no faculty member is booked in two
+        // different class contexts at the same day/period (e.g. DM in III-I and COA in
+        // II-I both on Monday 1st hour). If a clash is found, one of the entries is moved
+        // to a free slot in its own context, or cleared if none is available.
+        function resolveCrossContextFacultyClashes(classContexts, selections) {
+            const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
+            const subjectToFaculty = new Map();
+            normalizedSelections.forEach(function (selection) {
+                const subjectKey = normalizeSubjectNameForSchedule(getShortSubjectLabel(selection.subjectName || ''));
+                const facultyKey = getFacultyScheduleKey(selection);
+                if (subjectKey && facultyKey) {
+                    subjectToFaculty.set(subjectKey, facultyKey);
+                }
+            });
+
+            const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
+            let guard = 0;
+            while (guard < 200) {
+                guard += 1;
+                const entries = [];
+                contexts.forEach(function (context) {
+                    (context.slots || []).forEach(function (slot) {
+                        if (!isVisibleFilledClassSlot(slot)) {
+                            return;
+                        }
+                        const value = (slot.value || '').trim();
+                        const subjectKey = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
+                        const facultyKey = subjectToFaculty.get(subjectKey);
+                        if (!facultyKey) {
+                            return;
+                        }
+                        const day = slot.dataset.day || '';
+                        const periodIndex = getSlotPeriodIndex(slot);
+                        const cell = getTimeTableSlotCell(slot);
+                        const duration = cell && cell.colSpan > 1 ? cell.colSpan : 1;
+                        if (day && periodIndex >= 0) {
+                            entries.push({ slot: slot, context: context, facultyKey: facultyKey, day: day, periodIndex: periodIndex, duration: duration });
+                        }
+                    });
+                });
+
+                let clash = null;
+                outer:
+                for (let i = 0; i < entries.length && !clash; i += 1) {
+                    for (let j = i + 1; j < entries.length; j += 1) {
+                        const a = entries[i];
+                        const b = entries[j];
+                        if (a.facultyKey !== b.facultyKey || a.context === b.context || a.day !== b.day) {
+                            continue;
+                        }
+                        const aEnd = a.periodIndex + a.duration - 1;
+                        const bEnd = b.periodIndex + b.duration - 1;
+                        if (a.periodIndex <= bEnd && b.periodIndex <= aEnd) {
+                            clash = { first: a, second: b };
+                            break outer;
+                        }
+                    }
+                }
+                if (!clash) {
+                    break;
+                }
+
+                const victim = clash.second;
+                const context = victim.context;
+                const duration = victim.duration;
+                const isLab = victim.duration > 1;
+                const targetSlot = (context.slots || []).find(function (candidate) {
+                    const cell = getTimeTableSlotCell(candidate);
+                    const targetPeriod = getSlotPeriodIndex(candidate);
+                    const targetDay = candidate.dataset.day || '';
+                    if (!cell || cell.style.display === 'none' || candidate.value.trim() || candidate === victim.slot) {
+                        return false;
+                    }
+                    if (targetPeriod < 0 || targetPeriod + duration > periodOrder.length) {
+                        return false;
+                    }
+                    if (isLab && (![0, 3].includes(targetPeriod) || normalizeClassValue(targetDay) === 'SAT')) {
+                        return false;
+                    }
+                    const alreadyBooked = entries.some(function (e) {
+                        return e.context === context && e.day === targetDay &&
+                            targetPeriod < e.periodIndex + e.duration && e.periodIndex < targetPeriod + duration;
+                    });
+                    return !alreadyBooked;
+                });
+
+                if (targetSlot) {
+                    moveClassSlotValue(context.slots, victim.slot, targetSlot, context.slotSelector || '.timetable-slot');
+                } else {
+                    clearClassSlotValue(victim.slot);
+                    if (victim.duration > 1) {
+                        restoreClassLabMergesFromValues(context.slots);
+                    }
+                }
+            }
         }
 
         function isFirstSemesterLabRoomContext(context) {
@@ -7784,12 +7874,13 @@ Exam Branch
                   const finalLabRoomRepairs = repairAllClassLabRoomConflicts(classContexts, selections);
                   repairSummary.labRoomConflicts += finalLabRoomRepairs;
                   repairSummary.total += finalLabRoomRepairs;
-                  const finalBlankFills = fillAllClassBlankSlots(classContexts, selections);
-                  repairSummary.filledBlankSlots += finalBlankFills;
-                  repairSummary.total += finalBlankFills;
-                  classGeneration.contexts.forEach(function (contextSummary, index) {
-                      contextSummary.hours = countClassContextHours(classContexts[index]);
-                  });
+                   const finalBlankFills = fillAllClassBlankSlots(classContexts, selections);
+                   repairSummary.filledBlankSlots += finalBlankFills;
+                   repairSummary.total += finalBlankFills;
+                   resolveCrossContextFacultyClashes(classContexts, selections);
+                   classGeneration.contexts.forEach(function (contextSummary, index) {
+                       contextSummary.hours = countClassContextHours(classContexts[index]);
+                   });
                  const labMergedCount = classGeneration.labMergedCount || 0;
                  const classTotalHours = classGeneration.contexts.reduce(function (total, contextSummary) {
                      return total + (contextSummary.hours || 0);
