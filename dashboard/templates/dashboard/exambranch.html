@@ -3049,14 +3049,22 @@ Exam Branch
                      FRI: ['NODE JS Lab', 'COA', 'DBMS', 'MSF', 'SPORTS', 'SE'],
                      SAT: ['COA', 'MSF', 'VEGS', 'MSF', 'LIBRARY', 'MENTORING']
                  },
-                 'R25|2|1|IT|': {
-                     MON: ['CM Lab', 'OOPJ', 'IoT', 'OOPJ', 'OS', 'COA'],
-                     TUE: ['Java Lab', 'OS', 'MSF', 'COA', 'OOPJ', 'OS'],
-                     WED: ['OS Lab', 'COA', 'IoT', 'MSF', 'COA', 'OOPJ'],
-                     THU: ['IoT Lab', 'MSF', 'OS', 'IoT', 'MSF', 'EVS/IKS'],
-                      FRI: ['DV Lab', 'COA', 'OOPJ', 'OS', 'SPORTS', 'IoT'],
-                     SAT: ['MSF', 'EVS/IKS', 'MENTORING', 'LIBRARY', 'OS', 'IoT']
-                 },
+                  'R25|2|1|IT|': {
+                      MON: ['CM Lab', 'OOPJ', 'IoT', 'OOPJ', 'OS', 'COA'],
+                      TUE: ['Java Lab', 'OS', 'MSF', 'COA', 'OOPJ', 'OS'],
+                      WED: ['OS Lab', 'COA', 'IoT', 'MSF', 'COA', 'OOPJ'],
+                      THU: ['IoT Lab', 'MSF', 'OS', 'IoT', 'MSF', 'EVS/IKS'],
+                       FRI: ['DV Lab', 'COA', 'OOPJ', 'OS', 'SPORTS', 'IoT'],
+                      SAT: ['MSF', 'EVS/IKS', 'MENTORING', 'LIBRARY', 'OS', 'IoT']
+                  },
+                  'R22|2|1|IT|': {
+                      MON: ['CM Lab', 'OOPJ', 'OS', 'OOPJ', 'IoT', 'COA'],
+                      TUE: ['Java Lab', 'COA', 'MSF', 'OOPJ', 'OS', 'IoT'],
+                      WED: ['OS Lab', 'IoT', 'COA', 'MSF', 'OOPJ', 'OS'],
+                      THU: ['IoT Lab', 'MSF', 'OOPJ', 'IoT', 'MSF', 'EVS/IKS'],
+                      FRI: ['DV Lab', 'COA', 'OS', 'IoT', 'SPORTS', 'OOPJ'],
+                      SAT: ['MSF', 'EVS/IKS', 'MENTORING', 'LIBRARY', 'COA', 'OS']
+                  },
                  'R22|3|1|AIML|A': {
                      MON: ['ML Lab', 'ML', 'ML', 'CN', 'DL', 'NLP'],
                      TUE: ['CN Lab', 'DA', 'ML', 'CN', 'DL', 'NLP'],
@@ -6376,6 +6384,14 @@ Exam Branch
                 normalizeClassValue(context.branch) === 'IT';
         }
 
+        function isR22TwoOneITContext(context) {
+            return context &&
+                normalizeClassValue(context.regulation || 'R22') === 'R22' &&
+                normalizeAcademicLevelValue(context.year) === '2' &&
+                normalizeAcademicLevelValue(context.semester) === '1' &&
+                normalizeClassValue(context.branch) === 'IT';
+        }
+
         function findClassAssignmentByLabel(assignments, label) {
             const wantedLabels = getScheduleLabelsForSubjectName(label).concat([label, getShortSubjectLabel(label)]);
             const wantedKeys = new Set(wantedLabels.map(function (entry) {
@@ -6582,6 +6598,33 @@ Exam Branch
             };
         }
 
+        function planIsFullySelected(context, assignments, plan) {
+            if (!plan) {
+                return false;
+            }
+            const plannedLabels = new Set();
+            Object.keys(plan).forEach(function (day) {
+                (plan[day] || []).forEach(function (label) {
+                    if (label) {
+                        plannedLabels.add(normalizeSubjectNameForSchedule(label));
+                    }
+                });
+            });
+            if (!plannedLabels.size) {
+                return false;
+            }
+            const selectedLabels = new Set((assignments || []).map(function (assignment) {
+                return normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName);
+            }));
+            let covered = true;
+            plannedLabels.forEach(function (label) {
+                if (!selectedLabels.has(label)) {
+                    covered = false;
+                }
+            });
+            return covered;
+        }
+
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap, labRoomOccupancyMap) {
             const assignments = buildClassAssignments(classSelections, context);
             const shouldUseFlexibleLabPlacement = hasLabRoomSelections(classSelections);
@@ -6607,6 +6650,23 @@ Exam Branch
 
             if (!assignments.length) {
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
+            }
+
+            // For 2-1 timetables, use the fixed 4-hours-per-subject layout (with SPORTS
+            // merged into a 2-hour block) when every subject in that layout is present in
+            // the user's faculty subject selection. This keeps generation limited to the
+            // user's selected subjects while guaranteeing the required 4h / 2h-SPORTS load.
+            if (isR25TwoOneITContext(context) || isR22TwoOneITContext(context)) {
+                const twoOnePlan = getRequiredFixedPlanForSpec(
+                    context.regulation,
+                    context.year,
+                    context.semester,
+                    context.branch,
+                    context.section
+                );
+                if (planIsFullySelected(context, assignments, twoOnePlan) && applyFixedDisplayPlan(context, twoOnePlan)) {
+                    return summarizeClassAssignmentsFromSlots(context, assignments);
+                }
             }
 
             if (isR25TwoOneITContext(context) && hasCompleteR25TwoOneITLoad(context)) {
