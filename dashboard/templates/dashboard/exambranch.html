@@ -2920,8 +2920,14 @@ Exam Branch
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(contexts, normalizedSelections);
              summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
-             summary.movedActivities += enforceActivitiesLastHours(contexts);
-             summary.annotatedLabRooms += annotateClassLabRoomNumbers(contexts, normalizedSelections);
+              summary.movedActivities += enforceActivitiesLastHours(contexts);
+              (contexts || []).forEach(function (context) {
+                  const y = normalizeAcademicLevelValue(context.year);
+                  if (y === '2' || y === '3') {
+                      summary.movedActivities += ensureSportsBlock(context);
+                  }
+              });
+              summary.annotatedLabRooms += annotateClassLabRoomNumbers(contexts, normalizedSelections);
              summary.labRoomConflicts += repairAllClassLabRoomConflicts(classContexts, normalizedSelections);
              summary.facultyConflicts += repairAllFacultyConflicts(classContexts, normalizedSelections);
              summary.filledBlankSlots += fillAllClassBlankSlots(contexts, normalizedSelections, freshFacultyOccupancyMap, freshLabRoomOccupancyMap);
@@ -2961,7 +2967,8 @@ Exam Branch
                  }
                  const day = slot.dataset.day || '';
                  const periodIndex = periodOrder.indexOf(slot.dataset.period || '');
-                 const duration = getTimeTableSlotCell(slot) && slot.closest('td').colSpan > 1 ? slot.closest('td').colSpan : (assignment.isLab ? 2 : (assignment.isActivity && (assignment.subjectName || '').toUpperCase() === 'SPORTS' ? 2 : 1));
+                  const isSlotSports = (assignment.subjectName || '').toUpperCase() === 'SPORTS';
+                  const duration = getTimeTableSlotCell(slot) && slot.closest('td').colSpan > 1 ? slot.closest('td').colSpan : (assignment.isLab ? 2 : (isSlotSports && getSportsDurationForContext(context) === 2 ? 2 : 1));
                  if (day && periodIndex >= 0) {
                      reserveSubjectPeriods(subjectPeriodUsageMap, assignment, periodIndex, duration);
                      if (assignment.isLab) {
@@ -2984,7 +2991,7 @@ Exam Branch
                   if (!assignment) {
                       return null;
                   }
-                  const duration = assignment.isLab ? 2 : 1;
+                  const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                  return (context.slots || []).find(function (slot) {
                      const periodIndex = getSlotPeriodIndex(slot);
                      const cell = getTimeTableSlotCell(slot);
@@ -3018,7 +3025,7 @@ Exam Branch
                   if (!assignment || !slot) {
                       return false;
                   }
-                  const duration = assignment.isLab ? 2 : 1;
+                  const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                  if (duration > 1) {
                      if (!mergeSlotWithNextPeriod(slot, getAssignmentSlotDisplayName(assignment), context.slotSelector)) {
                          return false;
@@ -3050,7 +3057,7 @@ Exam Branch
                           if (!assignment) {
                               return false;
                           }
-                          const duration = assignment.isLab ? 2 : 1;
+                          const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                           if (assignment.placedHours + duration > assignment.targetHours) {
                               return false;
                           }
@@ -3092,7 +3099,7 @@ Exam Branch
                     if (!slot) {
                         return;
                     }
-                    if (isLaboratorySubject(label) || normalizeSubjectNameForSchedule(label) === 'SPORTS') {
+                    if (isLaboratorySubject(label) || (normalizeSubjectNameForSchedule(label) === 'SPORTS' && getSportsDurationForContext(context) === 2)) {
                         if (!mergeSlotWithNextPeriod(slot, label, context.slotSelector)) {
                             slot.value = label;
                         }
@@ -5294,8 +5301,7 @@ Exam Branch
                 if (
                     !subjectName ||
                     !(
-                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period)) ||
-                        (subjectKey === 'SPORTS' && labStartPeriods.includes(slot.dataset.period))
+                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period))
                     )
                 ) {
                     return;
@@ -5472,6 +5478,80 @@ Exam Branch
             return timetableActivityOrder.has(key) ? key : '';
         }
 
+        // SPORTS block length depends on the academic level:
+        //  - 2-1 (II-I) timetables: a single 2-hour merged block;
+        //  - 3-1 (III-I) and every other level: a single 1-hour block.
+        function getSportsDurationForContext(context) {
+            const year = normalizeAcademicLevelValue(
+                (context && (context.year || (context.meta && context.meta.year) || (context.context && context.context.year))) || ''
+            );
+            return year === '2' ? 2 : 1;
+        }
+
+        // Normalise the SPORTS hours in a context so they match the required block length
+        // for the academic level (2 hours merged for 2-1, 1 hour for 3-1).
+        function ensureSportsBlock(context) {
+            if (!context || !context.slots) {
+                return 0;
+            }
+            const slots = context.slots;
+            const targetHours = getSportsDurationForContext(context);
+            const days = Array.from(new Set(slots.map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+            let changes = 0;
+            days.forEach(function (day) {
+                const sportsSlots = slots.filter(function (slot) {
+                    const cell = getTimeTableSlotCell(slot);
+                    return cell && cell.style.display !== 'none' && slot.dataset.day === day &&
+                        normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === 'SPORTS';
+                });
+                let sportsCount = sportsSlots.reduce(function (total, slot) {
+                    const cell = getTimeTableSlotCell(slot);
+                    return total + ((cell.colSpan && cell.colSpan > 1) ? 2 : 1);
+                }, 0);
+                if (sportsCount > targetHours) {
+                    let remaining = sportsCount - targetHours;
+                    sportsSlots.forEach(function (slot) {
+                        if (remaining <= 0) {
+                            return;
+                        }
+                        const cell = getTimeTableSlotCell(slot);
+                        if (cell && cell.colSpan > 1) {
+                            restoreClassLabMergesFromValues(slots);
+                        }
+                        slot.value = '';
+                        remaining -= (cell && cell.colSpan > 1) ? 2 : 1;
+                        changes += 1;
+                    });
+                }
+                if (targetHours >= 2) {
+                    const sportsCells = slots.filter(function (slot) {
+                        const cell = getTimeTableSlotCell(slot);
+                        return cell && cell.style.display !== 'none' && slot.dataset.day === day &&
+                            normalizeSubjectNameForSchedule(getComparableSubjectValue(slot.value)) === 'SPORTS';
+                    }).sort(function (a, b) {
+                        return periodOrder.indexOf(a.dataset.period) - periodOrder.indexOf(b.dataset.period);
+                    });
+                    const allSingle = sportsCells.length === 2 && sportsCells.every(function (slot) {
+                        const cell = getTimeTableSlotCell(slot);
+                        return !(cell.colSpan && cell.colSpan > 1);
+                    });
+                    if (allSingle) {
+                        const firstSlot = sportsCells[0];
+                        const firstIndex = periodOrder.indexOf(firstSlot.dataset.period);
+                        const nextSlot = getClassSlot(day, periodOrder[firstIndex + 1], slots);
+                        const nextCell = nextSlot ? getTimeTableSlotCell(nextSlot) : null;
+                        if (nextSlot && nextCell && nextCell.style.display !== 'none' && !nextSlot.value.trim()) {
+                            mergeSlotWithNextPeriod(firstSlot, 'SPORTS', context.slotSelector);
+                            changes += 1;
+                        }
+                    }
+                }
+            });
+            return changes;
+        }
+
         function enforceActivitiesLastHoursForContext(context) {
             if (!context || !isFirstSemesterTwoToFourContext(context)) {
                 return 0;
@@ -5523,7 +5603,10 @@ Exam Branch
                 }
             });
 
-            const activityEntries = timetableActivityLabels.map(function (label) {
+            const contextYear = normalizeAcademicLevelValue(context.year);
+            const activityEntries = timetableActivityLabels.filter(function (label) {
+                return !(label === 'SPORTS' && (contextYear === '2' || contextYear === '3'));
+            }).map(function (label) {
                 return activityEntriesByKey.get(label) || {
                     key: label,
                     slot: null,
@@ -6354,7 +6437,8 @@ Exam Branch
         }
 
         function placeClassAssignment(context, day, periodIndex, assignment, occupancyMap, enforceFacultyGap, subjectPeriodUsageMap, labRoomOccupancyMap) {
-            const duration = assignment.isLab || normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName) === 'SPORTS' ? 2 : 1;
+            const assignmentLabelKey = normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName);
+            const duration = assignment.isLab || (assignmentLabelKey === 'SPORTS' && getSportsDurationForContext(context) === 2) ? 2 : 1;
             const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
             if (!slot || !canUseClassSlot(context, day, periodIndex, duration, assignment.facultyKey, occupancyMap, enforceFacultyGap, assignment, subjectPeriodUsageMap, labRoomOccupancyMap)) {
                 return 0;
@@ -6780,7 +6864,9 @@ Exam Branch
                 }
             });
 
-            // 3. Ensure SPORTS is a single 2-hour merged block (one per day).
+            // 3. Ensure SPORTS matches the context: a single 2-hour merged block for 2-1,
+            //    or a single 1-hour block for 3-1 (and other levels).
+            const sportsTargetHours = getSportsDurationForContext(context);
             days.forEach(function (day) {
                 let sportsCount = 0;
                 slots.forEach(function (slot) {
@@ -6793,9 +6879,9 @@ Exam Branch
                         sportsCount += (cell.colSpan && cell.colSpan > 1) ? 2 : 1;
                     }
                 });
-                if (sportsCount > 2) {
+                if (sportsCount > sportsTargetHours) {
                     let removed = 0;
-                    const target = sportsCount - 2;
+                    const target = sportsCount - sportsTargetHours;
                     slots.forEach(function (slot) {
                         if (removed >= target) {
                             return;
@@ -6814,7 +6900,7 @@ Exam Branch
                         }
                     });
                 }
-                if (sportsCount === 1) {
+                if (sportsTargetHours >= 2 && sportsCount === 1) {
                     for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
                         const slot = getClassSlot(day, periodOrder[periodIndex], slots);
                         const cell = slot ? getTimeTableSlotCell(slot) : null;
@@ -6859,6 +6945,200 @@ Exam Branch
             return applyFixedDisplayPlan(context, filteredPlan);
         }
 
+        // Constraint-driven generator for 2-1 and 3-1 timetables. Guarantees, for the
+        // user's selected subjects only (nothing is injected):
+        //  - 2-1: every theory subject = exactly 4 hours/week; 3-1: exactly 5 hours/week.
+        //  - each subject appears at most once per day (no same-day repeat);
+        //  - each subject's occurrences use distinct period positions (no "same hour" on
+        //    different days, e.g. not 1st hour every day);
+        //  - labs are single 2-hour merged blocks; SPORTS is a 2-hour merged block for 2-1
+        //    and a single 1-hour block for 3-1;
+        //  - faculty is never double-booked (uses the shared occupancy maps).
+        function generateBalancedClassTimeTable(context, assignments, occupancyMap, labRoomOccupancyMap) {
+            const year = normalizeAcademicLevelValue(context.year);
+            if (year !== '2' && year !== '3') {
+                return null;
+            }
+            const isTwoOne = year === '2';
+            const isSports = function (assignment) {
+                return normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName) === normalizeSubjectNameForSchedule('SPORTS');
+            };
+            const subjectKeyOf = function (assignment) {
+                return normalizeSubjectNameForSchedule(assignment.displayName || assignment.subjectName);
+            };
+            const days = Array.from(new Set((context.slots || []).map(function (slot) {
+                return slot.dataset.day || '';
+            }).filter(Boolean)));
+
+            const usedPeriods = new Map();
+            const usedDays = new Map();
+            const counts = {};
+            let labMergedCount = 0;
+            let totalHours = 0;
+
+            function subjectUsedPeriods(key) {
+                if (!usedPeriods.has(key)) {
+                    usedPeriods.set(key, new Set());
+                }
+                return usedPeriods.get(key);
+            }
+            function subjectUsedDays(key) {
+                if (!usedDays.has(key)) {
+                    usedDays.set(key, new Set());
+                }
+                return usedDays.get(key);
+            }
+            function slotFree(day, periodIndex) {
+                const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+                const cell = slot ? getTimeTableSlotCell(slot) : null;
+                return Boolean(slot) && cell && cell.style.display !== 'none' && !slot.value.trim();
+            }
+            function facultyClashes(day, periodIndex, duration, facultyKey) {
+                return Boolean(occupancyMap) && Boolean(facultyKey) &&
+                    hasFacultyConflict(occupancyMap, facultyKey, day, periodIndex, duration);
+            }
+            function violatesDistinctHour(day, periodIndex, duration, key) {
+                for (let k = 0; k < duration; k += 1) {
+                    if (subjectUsedPeriods(key).has(periodIndex + k)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            function placeSingle(assignment, day, periodIndex) {
+                const key = subjectKeyOf(assignment);
+                const slot = getClassSlot(day, periodOrder[periodIndex], context.slots);
+                slot.value = getAssignmentSlotDisplayName(assignment);
+                subjectUsedPeriods(key).add(periodIndex);
+                subjectUsedDays(key).add(day);
+                if (occupancyMap && assignment.facultyKey) {
+                    reserveFacultyPeriods(occupancyMap, assignment.facultyKey, day, periodIndex, 1);
+                }
+                counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + 1;
+                totalHours += 1;
+            }
+            function placeMerged(assignment, day, startPeriodIndex, duration) {
+                const key = subjectKeyOf(assignment);
+                const slot = getClassSlot(day, periodOrder[startPeriodIndex], context.slots);
+                mergeSlotWithNextPeriod(slot, getAssignmentSlotDisplayName(assignment), context.slotSelector);
+                for (let k = 0; k < duration; k += 1) {
+                    subjectUsedPeriods(key).add(startPeriodIndex + k);
+                }
+                subjectUsedDays(key).add(day);
+                if (occupancyMap && assignment.facultyKey) {
+                    reserveFacultyPeriods(occupancyMap, assignment.facultyKey, day, startPeriodIndex, duration);
+                }
+                if (labRoomOccupancyMap) {
+                    reserveLabRoomPeriods(labRoomOccupancyMap, assignment, day, startPeriodIndex, duration);
+                }
+                counts[assignment.subjectName] = (counts[assignment.subjectName] || 0) + duration;
+                totalHours += duration;
+                labMergedCount += 1;
+            }
+            function targetOf(assignment) {
+                if (assignment.isLab) {
+                    return 2;
+                }
+                if (isSports(assignment)) {
+                    return isTwoOne ? 2 : 1;
+                }
+                if (assignment.isActivity) {
+                    return assignment.targetHours || 1;
+                }
+                return isTwoOne ? 4 : 5;
+            }
+            function placeSingleHours(assignment, target, idx) {
+                const key = subjectKeyOf(assignment);
+                let placed = 0;
+                let attempts = 0;
+                let periodCursor = idx % periodOrder.length;
+                while (placed < target && attempts < 300) {
+                    attempts += 1;
+                    let placedThisSubject = false;
+                    for (let d = 0; d < days.length && !placedThisSubject; d += 1) {
+                        const day = days[(idx + placed + d) % days.length];
+                        if (subjectUsedDays(key).has(day)) {
+                            continue;
+                        }
+                        for (let p = 0; p < periodOrder.length && !placedThisSubject; p += 1) {
+                            const periodIndex = (periodCursor + p) % periodOrder.length;
+                            if (subjectUsedPeriods(key).has(periodIndex)) {
+                                continue;
+                            }
+                            if (!slotFree(day, periodIndex)) {
+                                continue;
+                            }
+                            if (facultyClashes(day, periodIndex, 1, assignment.facultyKey)) {
+                                continue;
+                            }
+                            placeSingle(assignment, day, periodIndex);
+                            placed += 1;
+                            placedThisSubject = true;
+                            periodCursor = (periodCursor + 1) % periodOrder.length;
+                        }
+                    }
+                    if (!placedThisSubject) {
+                        break;
+                    }
+                }
+            }
+            function placeMergedBlock(assignment, idx, duration) {
+                const key = subjectKeyOf(assignment);
+                const startCandidates = [0, 3];
+                let placed = false;
+                for (let d = 0; d < days.length && !placed; d += 1) {
+                    const day = days[(idx + d) % days.length];
+                    if (subjectUsedDays(key).has(day) || normalizeClassValue(day) === 'SAT') {
+                        continue;
+                    }
+                    for (let s = 0; s < startCandidates.length && !placed; s += 1) {
+                        const start = startCandidates[s];
+                        const end = start + 1;
+                        if (!slotFree(day, start) || !slotFree(day, end)) {
+                            continue;
+                        }
+                        if (violatesDistinctHour(day, start, duration, key)) {
+                            continue;
+                        }
+                        if (facultyClashes(day, start, duration, assignment.facultyKey)) {
+                            continue;
+                        }
+                        placeMerged(assignment, day, start, duration);
+                        placed = true;
+                    }
+                }
+            }
+
+            const labs = (assignments || []).filter(function (a) { return a.isLab; });
+            const sports = (assignments || []).filter(function (a) { return isSports(a); });
+            const otherActivities = (assignments || []).filter(function (a) {
+                return !a.isLab && !isSports(a) && a.isActivity;
+            });
+            const theory = (assignments || []).filter(function (a) {
+                return !a.isLab && !isSports(a) && !a.isActivity;
+            });
+
+            labs.forEach(function (assignment, idx) {
+                placeMergedBlock(assignment, idx, 2);
+            });
+            sports.forEach(function (assignment, idx) {
+                const target = targetOf(assignment);
+                if (target >= 2) {
+                    placeMergedBlock(assignment, idx, 2);
+                } else {
+                    placeSingleHours(assignment, 1, idx);
+                }
+            });
+            otherActivities.forEach(function (assignment, idx) {
+                placeSingleHours(assignment, targetOf(assignment), idx);
+            });
+            theory.forEach(function (assignment, idx) {
+                placeSingleHours(assignment, targetOf(assignment), idx);
+            });
+
+            return { counts: counts, labMergedCount: labMergedCount, totalHours: totalHours };
+        }
+
         function generateClassTimeTableSlotsForContext(context, classSelections, occupancyMap, labRoomOccupancyMap) {
             const assignments = buildClassAssignments(classSelections, context);
             const shouldUseFlexibleLabPlacement = hasLabRoomSelections(classSelections);
@@ -6886,7 +7166,20 @@ Exam Branch
                 return { counts: counts, labMergedCount: 0, totalHours: 0 };
             }
 
-            // For 2-1, 3-1 and 4-1 timetables, place the user's selected subjects using
+            // For 2-1 (II-I) and 3-1 (III-I) timetables, use the balanced generator. It
+            // spreads every selected subject across distinct periods (hours 1-6) and
+            // distinct days (Monday-Saturday) so no subject is piled into the same hour,
+            // keeps labs as 2-hour merged blocks, and sets SPORTS to a 2-hour merged block
+            // for 2-1 or a single 1-hour block for 3-1. Works for any user-selected subjects.
+            const contextYear = normalizeAcademicLevelValue(context.year);
+            if (contextYear === '2' || contextYear === '3') {
+                const balanced = generateBalancedClassTimeTable(context, assignments, occupancyMap, labRoomOccupancyMap);
+                if (balanced && balanced.totalHours > 0) {
+                    return balanced;
+                }
+            }
+
+            // For 4-1 timetables (and as a fallback), place the user's selected subjects using
             // the fixed layout for that class, filtered to only those selections. The
             // layout guarantees each subject appears at most once per day (one hour per
             // day, no same-day repeats) and that labs and SPORTS are merged into 2-hour
@@ -6937,7 +7230,7 @@ Exam Branch
                     for (let offset = 0; offset < placementAssignments.length; offset += 1) {
                         const assignment = placementAssignments[(dayIndex + periodIndex + offset) % placementAssignments.length];
                         const remainingHours = assignment.targetHours - assignment.placedHours;
-                        const duration = assignment.isLab ? 2 : 1;
+                        const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                         if (remainingHours < duration || (!assignment.isActivity && dailySubjects.has(assignment.subjectName))) {
                             continue;
                         }
@@ -6975,7 +7268,7 @@ Exam Branch
                     for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
                         const day = days[(assignmentIndex + dayOffset) % days.length];
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
-                            const duration = assignment.isLab ? 2 : 1;
+                            const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
@@ -7015,7 +7308,7 @@ Exam Branch
                     for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
                         const day = days[(assignmentIndex + dayOffset) % days.length];
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
-                            const duration = assignment.isLab ? 2 : 1;
+                            const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
@@ -7056,7 +7349,7 @@ Exam Branch
                     for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
                         const day = days[(assignmentIndex + dayOffset) % days.length];
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
-                            const duration = assignment.isLab ? 2 : 1;
+                            const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
@@ -7097,7 +7390,7 @@ Exam Branch
                     for (let dayOffset = 0; dayOffset < days.length && !placed; dayOffset += 1) {
                         const day = days[(assignmentIndex + dayOffset) % days.length];
                         for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
-                            const duration = assignment.isLab ? 2 : 1;
+                            const duration = assignment.isLab ? 2 : ((assignment.subjectName || '').toUpperCase() === 'SPORTS' && getSportsDurationForContext(context) === 2 ? 2 : 1);
                             if (assignment.isLab && ![0, 3].includes(periodIndex)) {
                                 continue;
                             }
@@ -7431,8 +7724,7 @@ Exam Branch
                 if (
                     !subjectName ||
                     !(
-                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period)) ||
-                        (normalizeSubjectNameForSchedule(subjectName) === 'SPORTS' && labStartPeriods.includes(slot.dataset.period))
+                        (isLaboratorySubject(subjectName) && labStartPeriods.includes(slot.dataset.period))
                     )
                 ) {
                     return;
