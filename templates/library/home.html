@@ -223,8 +223,9 @@
            class="w-full pl-10 pr-3 py-2 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-pink-400" />
   </div>
 
-  <div class="overflow-x-auto reco-scroll">
-    <table class="min-w-[1200px] text-sm border border-gray-600">
+  <div class="grid reco-grid">
+    <div class="reco-scroll overflow-auto">
+      <table class="min-w-[1200px] text-sm border border-gray-600">
       <thead class="bg-gray-800 text-pink-300">
         <tr>
           <th class="px-2 py-1 border border-gray-600">S.No</th>
@@ -265,10 +266,19 @@
       </tbody>
     </table>
   </div>
+  </div>
 </section>
 <style>
-  .reco-scroll { scrollbar-width: thin; scrollbar-color: #ec4899 #374151; }
-  .reco-scroll::-webkit-scrollbar { height: 14px; }
+  .reco-grid { grid-template-columns: minmax(0, 1fr); }
+  .reco-scroll {
+    max-height: 70vh;
+    scrollbar-width: thin;
+    scrollbar-color: #ec4899 #374151;
+  }
+  @supports (overflow: overlay) {
+    .reco-scroll { overflow: overlay; }
+  }
+  .reco-scroll::-webkit-scrollbar { width: 14px; height: 14px; }
   .reco-scroll::-webkit-scrollbar-track { background: #374151; border-radius: 7px; }
   .reco-scroll::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 7px; }
   .reco-scroll::-webkit-scrollbar-thumb:hover { background: #f472b6; }
