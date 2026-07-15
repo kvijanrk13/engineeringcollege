@@ -185,7 +185,7 @@
                   alt="{{ rec.title|default:'book' }}"
                   class="h-16 w-12 rounded object-cover ring-1 ring-white"
                   {% if rec.image %}data-fallback="{{ rec.image.url }}"{% endif %}
-                  data-search="{{ rec.book_type|first_book_title }}"
+                  data-search="{{ rec.book_type }}"
                   onerror="recoImgError(this)"
                 />
               {% else %}
@@ -201,7 +201,7 @@
             <td class="px-3 py-2">{{ rec.book_format|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.copies_recommended|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.existing|default:"-" }}</td>
-            <td class="px-3 py-2 font-semibold text-yellow-300">{{ rec.cost|default:"-" }}</td>
+            <td class="px-3 py-2 font-semibold text-yellow-300 align-top">{{ rec.cost|split_lines|safe }}</td>
           </tr>
           {% empty %}
           <tr><td colspan="12" class="px-3 py-4 text-center text-gray-400">No recommendations yet.</td></tr>
@@ -237,7 +237,7 @@
     img.replaceWith(span);
   }
 
-  function fetchCoverByTitle(query, img) {
+  function fetchCoverByTitle(query, img, onFail) {
     const url = 'https://openlibrary.org/search.json?title=' + encodeURIComponent(query) + '&limit=1';
     fetch(url)
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -249,9 +249,26 @@
           else if (doc.isbn && doc.isbn[0]) cover = 'https://covers.openlibrary.org/b/isbn/' + doc.isbn[0] + '-L.jpg?default=false';
         }
         if (cover) img.src = cover;
-        else showNoPhoto(img);
+        else onFail();
       })
-      .catch(function () { showNoPhoto(img); });
+      .catch(function () { onFail(); });
+  }
+
+  function parseCandidates(text) {
+    if (!text) return [];
+    const out = [];
+    text.split(/[\n/]+/).forEach(function (p) {
+      let t = p.replace(/^\s*\d+[\.\)]\s*/, '').trim();
+      t = t.split(',')[0].trim();
+      t = t.replace(/\s+/g, ' ');
+      if (t && out.indexOf(t) === -1) out.push(t);
+    });
+    return out.slice(0, 4);
+  }
+
+  function tryCandidates(cands, i, img) {
+    if (i >= cands.length) { showNoPhoto(img); return; }
+    fetchCoverByTitle(cands[i], img, function () { tryCandidates(cands, i + 1, img); });
   }
 
   function recoImgError(img) {
@@ -261,10 +278,9 @@
       img.src = fb;
       return;
     }
-    const q = img.getAttribute('data-search');
-    if (q && !img.dataset.triedSearch) {
+    if (!img.dataset.triedSearch) {
       img.dataset.triedSearch = '1';
-      fetchCoverByTitle(q, img);
+      tryCandidates(parseCandidates(img.getAttribute('data-search')), 0, img);
       return;
     }
     showNoPhoto(img);
