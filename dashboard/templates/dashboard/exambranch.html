@@ -2889,6 +2889,54 @@ Exam Branch
             return annotatedCount;
         }
 
+         function repairAllClassTimeTableSameHourRepeats(classContexts) {
+             let total = 0;
+             (classContexts || []).forEach(function (context) {
+                 if (!context || !context.slots) {
+                     return;
+                 }
+                 const slots = context.slots;
+                 for (let periodIndex = 0; periodIndex < periodOrder.length; periodIndex += 1) {
+                     const period = periodOrder[periodIndex];
+                     const subjectDayMap = new Map();
+                     slots.forEach(function (slot) {
+                         if (slot.dataset.period !== period || !isVisibleFilledClassSlot(slot)) {
+                             return;
+                         }
+                         const value = slot.value.trim();
+                         const key = normalizeSubjectNameForSchedule(getComparableSubjectValue(value));
+                         if (isLaboratorySubject(value) || key === 'SPORTS' || timetableActivityOrder.has(key)) {
+                             return;
+                         }
+                         if (!subjectDayMap.has(key)) {
+                             subjectDayMap.set(key, []);
+                         }
+                         subjectDayMap.get(key).push(slot);
+                     });
+                     subjectDayMap.forEach(function (slotList, key) {
+                         if (slotList.length <= 1) {
+                             return;
+                         }
+                         for (let index = 1; index < slotList.length; index += 1) {
+                             const sourceSlot = slotList[index];
+                             const day = sourceSlot.dataset.day;
+                             const targetSlot = slots.find(function (candidate) {
+                                 return candidate.dataset.day === day &&
+                                     getSlotPeriodIndex(candidate) >= 0 &&
+                                     candidate !== sourceSlot &&
+                                     !candidate.value.trim() &&
+                                     canMoveSubjectToClassSlotWithPreferredSpacing(slots, candidate, sourceSlot.value.trim(), 1, new Set([sourceSlot]));
+                             });
+                             if (targetSlot && moveClassSlotValue(slots, sourceSlot, targetSlot, context.slotSelector || '.timetable-slot')) {
+                                 total += 1;
+                             }
+                         }
+                     });
+                 }
+             });
+             return total;
+         }
+
          function applyTimeTableRequirementRepairs(classContexts, selections) {
              const normalizedSelections = normalizeSubjectSelections(selections || getStoredSubjectSelections());
              const contexts = classContexts || getClassTimeTableContexts(normalizedSelections);
