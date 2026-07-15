@@ -178,8 +178,20 @@
           {% for rec in recommendations %}
           <tr class="border-b border-gray-700 transition-colors hover:bg-gray-800">
             <td class="px-3 py-2">{{ forloop.counter }}</td>
-            <td class="px-3 py-2">
-              {% if rec.image %}<img src="{{ rec.image.url }}" alt="textbook" class="h-16 w-12 rounded object-cover ring-1 ring-white" />{% else %}<span class="text-xs text-gray-500">NO PHOTO</span>{% endif %}
+            <td class="px-3 py-2 align-top">
+              {% if rec.isbn %}
+                <img
+                  src="https://covers.openlibrary.org/b/isbn/{{ rec.isbn|isbn_digits }}-L.jpg?default=false"
+                  alt="{{ rec.title|default:'book' }}"
+                  class="h-16 w-12 rounded object-cover ring-1 ring-white"
+                  {% if rec.image %}data-fallback="{{ rec.image.url }}"{% endif %}
+                  onerror="recoImgError(this)"
+                />
+              {% elif rec.image %}
+                <img src="{{ rec.image.url }}" alt="textbook" class="h-16 w-12 rounded object-cover ring-1 ring-white" />
+              {% else %}
+                <span class="text-xs text-gray-500">NO PHOTO</span>
+              {% endif %}
             </td>
             <td class="px-3 py-2 font-medium text-gray-100">{{ rec.title|default:"-" }}</td>
             <td class="px-3 py-2 text-blue-300">{{ rec.author|default:"-" }}</td>
@@ -218,6 +230,20 @@
 </style>
 
 <script>
+  // ---- Recommendation image fallback: try uploaded image, else show NO PHOTO ----
+  function recoImgError(img) {
+    const fb = img.getAttribute('data-fallback');
+    if (fb && !img.dataset.triedFb) {
+      img.dataset.triedFb = '1';
+      img.src = fb;
+    } else {
+      const span = document.createElement('span');
+      span.className = 'text-xs text-gray-500';
+      span.textContent = 'NO PHOTO';
+      img.replaceWith(span);
+    }
+  }
+
   // ---- SEARCH: filter recommendation rows client-side ----
   const recoSearch = document.getElementById('reco-search');
   if (recoSearch) {

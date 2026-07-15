@@ -16,3 +16,10 @@ def split_lines(value):
     if not parts:
         return "-"
     return mark_safe("<br>".join(escape(p) for p in parts))
+
+
+@register.filter
+def isbn_digits(value):
+    if not value:
+        return ""
+    return re.sub(r"[^0-9Xx]", "", str(value)).upper()
