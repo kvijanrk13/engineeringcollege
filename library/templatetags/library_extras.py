@@ -23,3 +23,17 @@ def isbn_digits(value):
     if not value:
         return ""
     return re.sub(r"[^0-9Xx]", "", str(value)).upper()
+
+
+@register.filter
+def first_book_title(value):
+    if not value:
+        return ""
+    parts = re.split(r"[\n/]+", str(value))
+    for part in parts:
+        t = re.sub(r"^\s*\d+[\.\)]\s*", "", part.strip())
+        t = t.split(",")[0].strip()
+        t = re.sub(r"\s+", " ", t)
+        if t:
+            return t
+    return ""

@@ -179,16 +179,15 @@
           <tr class="border-b border-gray-700 transition-colors hover:bg-gray-800">
             <td class="px-3 py-2">{{ forloop.counter }}</td>
             <td class="px-3 py-2 align-top">
-              {% if rec.isbn %}
+              {% if rec.isbn or rec.book_type or rec.image %}
                 <img
-                  src="https://covers.openlibrary.org/b/isbn/{{ rec.isbn|isbn_digits }}-L.jpg?default=false"
+                  src="{% if rec.isbn %}https://covers.openlibrary.org/b/isbn/{{ rec.isbn|isbn_digits }}-L.jpg?default=false{% elif rec.image %}{{ rec.image.url }}{% else %}https://covers.openlibrary.org/b/id/0-L.jpg{% endif %}"
                   alt="{{ rec.title|default:'book' }}"
                   class="h-16 w-12 rounded object-cover ring-1 ring-white"
                   {% if rec.image %}data-fallback="{{ rec.image.url }}"{% endif %}
+                  data-search="{{ rec.book_type|first_book_title }}"
                   onerror="recoImgError(this)"
                 />
-              {% elif rec.image %}
-                <img src="{{ rec.image.url }}" alt="textbook" class="h-16 w-12 rounded object-cover ring-1 ring-white" />
               {% else %}
                 <span class="text-xs text-gray-500">NO PHOTO</span>
               {% endif %}
@@ -230,18 +229,45 @@
 </style>
 
 <script>
-  // ---- Recommendation image fallback: try uploaded image, else show NO PHOTO ----
+  // ---- Recommendation image fallback: try uploaded image, then search cover by listed book title, else NO PHOTO ----
+  function showNoPhoto(img) {
+    const span = document.createElement('span');
+    span.className = 'text-xs text-gray-500';
+    span.textContent = 'NO PHOTO';
+    img.replaceWith(span);
+  }
+
+  function fetchCoverByTitle(query, img) {
+    const url = 'https://openlibrary.org/search.json?title=' + encodeURIComponent(query) + '&limit=1';
+    fetch(url)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        const doc = data && data.docs && data.docs[0];
+        let cover = null;
+        if (doc) {
+          if (doc.cover_i) cover = 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-L.jpg';
+          else if (doc.isbn && doc.isbn[0]) cover = 'https://covers.openlibrary.org/b/isbn/' + doc.isbn[0] + '-L.jpg?default=false';
+        }
+        if (cover) img.src = cover;
+        else showNoPhoto(img);
+      })
+      .catch(function () { showNoPhoto(img); });
+  }
+
   function recoImgError(img) {
     const fb = img.getAttribute('data-fallback');
     if (fb && !img.dataset.triedFb) {
       img.dataset.triedFb = '1';
       img.src = fb;
-    } else {
-      const span = document.createElement('span');
-      span.className = 'text-xs text-gray-500';
-      span.textContent = 'NO PHOTO';
-      img.replaceWith(span);
+      return;
     }
+    const q = img.getAttribute('data-search');
+    if (q && !img.dataset.triedSearch) {
+      img.dataset.triedSearch = '1';
+      fetchCoverByTitle(q, img);
+      return;
+    }
+    showNoPhoto(img);
   }
 
   // ---- SEARCH: filter recommendation rows client-side ----
