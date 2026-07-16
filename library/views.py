@@ -33,14 +33,13 @@ def allbooks(request):
             pass
 
     stat, _ = LibraryStat.objects.get_or_create(id=1)
-    borrowed = stat.borrowed_books
-    borrowed = min(borrowed, copies_sum)
+    borrowed = min(stat.borrowed_books, max(copies_sum, 0))
     stat.borrowed_books = borrowed
     stat.save()
 
-    total = max(copies_sum - borrowed, 0)
     issued = borrowed
     available = max(copies_sum - borrowed, 0)
+    total = available + issued
 
     return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available,'copies_sum':copies_sum})
 
