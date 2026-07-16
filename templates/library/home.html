@@ -205,6 +205,7 @@
                   class="h-16 w-12 rounded object-cover ring-1 ring-white"
                   {% if rec.image %}data-fallback="{{ rec.image.url }}"{% endif %}
                   data-search="{{ rec.book_type }}"
+                  data-isbn="{{ rec.isbn|isbn_digits }}"
                   onerror="recoImgError(this)"
                 />
               {% else %}
@@ -276,8 +277,11 @@
     img.replaceWith(span);
   }
 
-  function fetchCoverByTitle(query, img, onFail) {
-    const url = 'https://openlibrary.org/search.json?title=' + encodeURIComponent(query) + '&limit=1';
+  function fetchCoverByQuery(query, img, onFail) {
+    const isIsbn = /^\d{10}(\d{3})?$/.test(query.replace(/[^0-9]/g, ''));
+    const url = isIsbn
+      ? 'https://openlibrary.org/search.json?isbn=' + encodeURIComponent(query.replace(/[^0-9Xx]/g, '')) + '&limit=1'
+      : 'https://openlibrary.org/search.json?title=' + encodeURIComponent(query) + '&limit=1';
     fetch(url)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
@@ -307,7 +311,7 @@
 
   function tryCandidates(cands, i, img) {
     if (i >= cands.length) { showNoPhoto(img); return; }
-    fetchCoverByTitle(cands[i], img, function () { tryCandidates(cands, i + 1, img); });
+    fetchCoverByQuery(cands[i], img, function () { tryCandidates(cands, i + 1, img); });
   }
 
   function recoImgError(img) {
@@ -319,7 +323,10 @@
     }
     if (!img.dataset.triedSearch) {
       img.dataset.triedSearch = '1';
-      tryCandidates(parseCandidates(img.getAttribute('data-search')), 0, img);
+      const cands = parseCandidates(img.getAttribute('data-search'));
+      const isbn = (img.dataset.isbn || '').replace(/[^0-9Xx]/g, '');
+      if (isbn) cands.unshift(isbn); // try Open Library search by ISBN first
+      tryCandidates(cands, 0, img);
       return;
     }
     showNoPhoto(img);

@@ -22,7 +22,17 @@ def split_lines(value):
 def isbn_digits(value):
     if not value:
         return ""
-    return re.sub(r"[^0-9Xx]", "", str(value)).upper()
+    s = str(value)
+    # Drop "ISBN", "ISBN-13:", "ISBN10:" etc. (incl. the optional 13/10 number)
+    s = re.sub(r"(?i)ISBN[-\s]*(?:13|10)?\D*", "", s)
+    s = re.sub(r"[^\d]", "", s)  # keep only digits
+    m = re.search(r"\d{13}", s)
+    if m:
+        return m.group(0)
+    m = re.search(r"\d{10}", s)
+    if m:
+        return m.group(0)
+    return ""
 
 
 @register.filter
