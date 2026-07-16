@@ -209,7 +209,7 @@
             </td>
             <td class="px-3 py-2 font-medium text-gray-100">{{ rec.title|default:"-" }}</td>
             <td class="px-3 py-2 text-blue-300">{{ rec.author|default:"-" }}</td>
-            <td class="px-3 py-2 align-top">{{ rec.book_type|split_lines|safe }}</td>
+            <td class="px-3 py-2 align-top">{{ rec.book_type|textbooks_only|safe }}</td>
             <td class="px-3 py-2">{{ rec.isbn|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.publisher|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.edition_year|default:"-" }}</td>

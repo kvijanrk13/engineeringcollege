@@ -19,7 +19,7 @@ import re
 def allbooks(request):
     requestedbooks,issuedbooks=getmybooks(request.user)
     allbooks=Book.objects.all()
-    recommendations=BookRecommendation.objects.all().order_by('id')
+    recommendations=BookRecommendation.objects.all().order_by('id').exclude(title__icontains='laboratory')
 
     total = allbooks.count()
     issued = Issue.objects.filter(return_date__isnull=True).values('book').distinct().count()

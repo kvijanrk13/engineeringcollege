@@ -37,3 +37,19 @@ def first_book_title(value):
         if t:
             return t
     return ""
+
+
+@register.filter
+def textbooks_only(value):
+    if not value:
+        return "-"
+    parts = re.split(r"[\n/]+", str(value))
+    kept = []
+    for part in parts:
+        p = part.strip()
+        if re.match(r"^1[\.\)]", p):
+            kept.append(p)
+    kept = [k for k in kept if k]
+    if not kept:
+        return "-"
+    return mark_safe("<br>".join(escape(k) for k in kept))
