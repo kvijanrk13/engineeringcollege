@@ -42,11 +42,15 @@
     {% for book in books %}
     <li class="group flex flex-col items-center rounded-2xl border border-gray-700 bg-gradient-to-b from-gray-800 to-gray-900 p-5 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-pink-500 hover:shadow-2xl">
       <div class="relative mb-4 h-44 w-32 overflow-hidden rounded-xl bg-gray-700 ring-1 ring-white">
+        {% if book.image %}
         <img
           src="{{book.image.url}}"
           alt="{{book.name}}"
           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
+        {% else %}
+        <div class="flex h-full w-full items-center justify-center text-gray-400">No Image</div>
+        {% endif %}
       </div>
       <h2 class="text-center text-base font-bold leading-snug text-gray-100">{{book.name}}</h2>
       <h4 class="mt-1 text-xs text-blue-400">{{book.author}}</h4>
