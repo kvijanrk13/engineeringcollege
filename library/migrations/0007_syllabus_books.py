@@ -5,7 +5,6 @@ from django.db import migrations
 
 def create_syllabus_books(apps, schema_editor):
     Author = apps.get_model('library', 'Author')
-    Book = apps.get_model('library', 'Book')
     BookRecommendation = apps.get_model('library', 'BookRecommendation')
 
     books_data = [
@@ -145,30 +144,27 @@ def create_syllabus_books(apps, schema_editor):
             )
             author_cache[author_name] = author
 
-        rec, created = BookRecommendation.objects.get_or_create(
-            title=book_data['title'][:350],
-            defaults={
-                'author': book_data['author'][:350],
-                'publisher': book_data.get('publisher', '')[:200],
-                'edition_year': book_data.get('edition_year', '')[:50],
-                'book_type': book_data.get('full_text', book_data.get('book_type', ''))[:5000],
-                'isbn': book_data.get('isbn', '')[:50],
-                'book_format': book_data.get('book_format', 'Hard')[:10],
-                'copies_recommended': book_data.get('copies_recommended', '50')[:20],
-                'existing': book_data.get('existing', '')[:20],
-                'cost': book_data.get('cost', '')[:50],
-            }
-        )
+        title = book_data['title'][:350]
+        if not title:
+            continue
 
-        book_name = book_data['title'][:350]
-        if book_name:
-            book, created = Book.objects.get_or_create(
-                name=book_name,
+        try:
+            rec, created = BookRecommendation.objects.get_or_create(
+                title=title,
                 defaults={
-                    'author': author_cache.get(author_name),
-                    'category': book_data.get('section', 'TEXT')[:220],
+                    'author': book_data['author'][:350],
+                    'publisher': book_data.get('publisher', '')[:200],
+                    'edition_year': book_data.get('edition_year', '')[:50],
+                    'book_type': book_data.get('full_text', book_data.get('book_type', ''))[:5000],
+                    'isbn': book_data.get('isbn', '')[:50],
+                    'book_format': book_data.get('book_format', 'Hard')[:10],
+                    'copies_recommended': book_data.get('copies_recommended', '50')[:20],
+                    'existing': book_data.get('existing', '')[:20],
+                    'cost': book_data.get('cost', '')[:50],
                 }
             )
+        except BookRecommendation.MultipleObjectsReturned:
+            rec = BookRecommendation.objects.filter(title=title).first()
 
 
 class Migration(migrations.Migration):
