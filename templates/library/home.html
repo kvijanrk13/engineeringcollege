@@ -171,24 +171,28 @@
   </div>
 
   <div class="reco-grid">
-    <div class="reco-scroll overflow-auto rounded-xl border border-gray-700 bg-gray-900">
-      <table class="text-left text-sm" style="min-width:1200px">
-        <thead class="bg-gradient-to-r from-pink-600 to-blue-600 text-white">
-          <tr>
-            <th class="border-b border-gray-600 px-3 py-2">S.No</th>
-            <th class="border-b border-gray-600 px-3 py-2">IMAGE</th>
-            <th class="border-b border-gray-600 px-3 py-2">Title</th>
-            <th class="border-b border-gray-600 px-3 py-2">Author</th>
-            <th class="border-b border-gray-600 px-3 py-2">TEXTBOOK / REFERENCE BOOK</th>
-            <th class="border-b border-gray-600 px-3 py-2">ISBN</th>
-            <th class="border-b border-gray-600 px-3 py-2">Publisher</th>
-            <th class="border-b border-gray-600 px-3 py-2">Edition/Year</th>
-            <th class="border-b border-gray-600 px-3 py-2">Hard/E-book</th>
-            <th class="border-b border-gray-600 px-3 py-2">No of copies Recommended</th>
-            <th class="border-b border-gray-600 px-3 py-2">EXISTING</th>
-            <th class="border-b border-gray-600 px-3 py-2">Cost</th>
-          </tr>
-        </thead>
+    <form method="POST" action="/aeclibrary/borrow-books/" class="contents">
+      {% csrf_token %}
+      <div class="reco-scroll overflow-auto rounded-xl border border-gray-700 bg-gray-900">
+        <table class="text-left text-sm" style="min-width:1200px">
+          <thead class="bg-gradient-to-r from-pink-600 to-blue-600 text-white">
+            <tr>
+              <th class="border-b border-gray-600 px-3 py-2">S.No</th>
+              <th class="border-b border-gray-600 px-3 py-2">IMAGE</th>
+              <th class="border-b border-gray-600 px-3 py-2">Title</th>
+              <th class="border-b border-gray-600 px-3 py-2">Author</th>
+              <th class="border-b border-gray-600 px-3 py-2 text-center">SELECT</th>
+              <th class="border-b border-gray-600 px-3 py-2">TEXTBOOK / REFERENCE BOOK</th>
+              <th class="border-b border-gray-600 px-3 py-2 text-center">BORROW</th>
+              <th class="border-b border-gray-600 px-3 py-2">ISBN</th>
+              <th class="border-b border-gray-600 px-3 py-2">Publisher</th>
+              <th class="border-b border-gray-600 px-3 py-2">Edition/Year</th>
+              <th class="border-b border-gray-600 px-3 py-2">Hard/E-book</th>
+              <th class="border-b border-gray-600 px-3 py-2">No of copies Recommended</th>
+              <th class="border-b border-gray-600 px-3 py-2">EXISTING</th>
+              <th class="border-b border-gray-600 px-3 py-2">Cost</th>
+            </tr>
+          </thead>
         <tbody>
           {% for rec in recommendations %}
           <tr class="border-b border-gray-700 transition-colors hover:bg-gray-800">
@@ -209,7 +213,21 @@
             </td>
             <td class="px-3 py-2 font-medium text-gray-100">{{ rec.title|default:"-" }}</td>
             <td class="px-3 py-2 text-blue-300">{{ rec.author|default:"-" }}</td>
+            <td class="px-3 py-2 align-top text-center">
+              {% with entries=rec.book_type|textbook_entries %}
+                {% if entries %}
+                  {% for tb in entries %}
+                  <label class="mb-1 flex items-start justify-center gap-2 text-left">
+                    <input type="checkbox" name="sel" value="1" class="reco-check mt-1 h-4 w-4 accent-pink-500" />
+                  </label>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-xs text-gray-500">-</span>
+                {% endif %}
+              {% endwith %}
+            </td>
             <td class="px-3 py-2 align-top">{{ rec.book_type|textbooks_only|safe }}</td>
+            <td class="px-3 py-2 align-top text-center text-gray-500">—</td>
             <td class="px-3 py-2">{{ rec.isbn|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.publisher|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.edition_year|default:"-" }}</td>
@@ -219,11 +237,17 @@
             <td class="px-3 py-2 font-semibold text-yellow-300 align-top">{{ rec.cost|split_lines|safe }}</td>
           </tr>
           {% empty %}
-          <tr><td colspan="12" class="px-3 py-4 text-center text-gray-400">No recommendations yet.</td></tr>
+          <tr><td colspan="14" class="px-3 py-4 text-center text-gray-400">No recommendations yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
-    </div>
+      </div>
+      <div class="mt-5 flex justify-center">
+        <button type="submit" class="rounded-full bg-gradient-to-r from-pink-600 to-pink-500 px-10 py-2.5 text-base font-bold text-white shadow-lg shadow-pink-500/30 transition-transform duration-200 hover:scale-105">
+          BORROW
+        </button>
+      </div>
+    </form>
   </div>
 </section>
 
@@ -308,7 +332,7 @@
       const q = recoSearch.value.trim().toLowerCase();
       const rows = document.querySelectorAll('.reco-scroll tbody tr');
       rows.forEach(row => {
-        if (row.querySelector('td[colspan="12"]')) return; // skip empty-state row
+        if (row.querySelector('td[colspan="14"]')) return; // skip empty-state row
         row.style.display = (!q || row.textContent.toLowerCase().includes(q)) ? '' : 'none';
       });
     });

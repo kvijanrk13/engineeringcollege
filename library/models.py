@@ -67,6 +67,13 @@ class Fine(models.Model):
         return "{} fine->{}".format(self.issue,self.amount)
 
 
+class LibraryStat(models.Model):
+    borrowed_books = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return "LibraryStat (borrowed: {})".format(self.borrowed_books)
+
+
 class BookRecommendation(models.Model):
     image = models.ImageField(upload_to='recommendations/', blank=True, null=True)
     title = models.CharField(max_length=350, blank=True)

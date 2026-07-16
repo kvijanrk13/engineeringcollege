@@ -53,3 +53,16 @@ def textbooks_only(value):
     if not kept:
         return "-"
     return mark_safe("<br>".join(escape(k) for k in kept))
+
+
+@register.filter
+def textbook_entries(value):
+    if not value:
+        return []
+    parts = re.split(r"[\n/]+", str(value))
+    out = []
+    for part in parts:
+        p = part.strip()
+        if re.match(r"^1[\.\)]", p):
+            out.append(re.sub(r"^1[\.\)]\s*", "", p).strip())
+    return out

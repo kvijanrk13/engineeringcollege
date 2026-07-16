@@ -32,6 +32,16 @@ def allbooks(request):
         except ValueError:
             pass
 
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
+    borrowed = stat.borrowed_books
+    borrowed = min(borrowed, copies_sum)
+    stat.borrowed_books = borrowed
+    stat.save()
+
+    total = max(copies_sum - borrowed, 0)
+    issued = borrowed
+    available = max(copies_sum - borrowed, 0)
+
     return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available,'copies_sum':copies_sum})
 
 
@@ -106,6 +116,23 @@ def issuerequest(request,bookID):
     
     messages.error(request,'You are Not a Student !')
     return redirect('/aeclibrary/')
+
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/signup/')
+def borrow_books(request):
+    if request.method == "POST":
+        selected = request.POST.getlist('sel')
+        n = len(selected)
+        if n > 0:
+            stat, _ = LibraryStat.objects.get_or_create(id=1)
+            copies_sum = sum(int((r.copies_recommended or '0').strip() or 0) for r in BookRecommendation.objects.all())
+            stat.borrowed_books = min(stat.borrowed_books + n, max(copies_sum, 0))
+            stat.save()
+            messages.success(request, '{} book(s) borrowed successfully.'.format(n))
+        else:
+            messages.error(request, 'Select at least one book to borrow.')
+    return redirect('library_home')
+
 
 @login_required(login_url='/aeclibrary/student/signup/')
 @user_passes_test(lambda u: not u.is_superuser ,login_url='/aeclibrary/student/signup/')
