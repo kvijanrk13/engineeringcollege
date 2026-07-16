@@ -25,7 +25,14 @@ def allbooks(request):
     issued = Issue.objects.filter(return_date__isnull=True).values('book').distinct().count()
     available = max(total - issued, 0)
 
-    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available})
+    copies_sum = 0
+    for rec in recommendations:
+        try:
+            copies_sum += int((rec.copies_recommended or '0').strip())
+        except ValueError:
+            pass
+
+    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available,'copies_sum':copies_sum})
 
 
 def sort(request):
