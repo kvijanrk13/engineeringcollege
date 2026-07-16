@@ -20,8 +20,12 @@ def allbooks(request):
     requestedbooks,issuedbooks=getmybooks(request.user)
     allbooks=Book.objects.all()
     recommendations=BookRecommendation.objects.all().order_by('id')
-    
-    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations})
+
+    total = allbooks.count()
+    issued = Issue.objects.filter(return_date__isnull=True).values('book').distinct().count()
+    available = max(total - issued, 0)
+
+    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available})
 
 
 def sort(request):
