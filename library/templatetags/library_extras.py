@@ -53,11 +53,13 @@ def first_book_title(value):
 def textbooks_only(value):
     if not value:
         return "-"
-    parts = re.split(r"[\n/]+", str(value))
+    parts = str(value).split('/')
+    text_part = parts[0] if parts else str(value)
+    entries = re.split(r"[\n]+", text_part)
     kept = []
-    for part in parts:
-        p = part.strip()
-        if re.match(r"^1[\.\)]", p):
+    for entry in entries:
+        p = entry.strip()
+        if re.match(r"^\d+[\.\)]", p):
             kept.append(p)
     kept = [k for k in kept if k]
     if not kept:
@@ -69,10 +71,47 @@ def textbooks_only(value):
 def textbook_entries(value):
     if not value:
         return []
-    parts = re.split(r"[\n/]+", str(value))
+    parts = str(value).split('/')
+    text_part = parts[0] if parts else str(value)
+    entries = re.split(r"[\n]+", text_part)
     out = []
-    for part in parts:
-        p = part.strip()
+    for entry in entries:
+        p = entry.strip()
         if re.match(r"^1[\.\)]", p):
             out.append(re.sub(r"^1[\.\)]\s*", "", p).strip())
     return out
+
+
+@register.filter
+def reference_books(value):
+    if not value:
+        return "-"
+    parts = str(value).split('/')
+    if len(parts) < 2:
+        ref_part = parts[0] if parts else str(value)
+        entries = re.split(r"[\n]+", ref_part)
+        kept = []
+        first_found = False
+        for entry in entries:
+            p = entry.strip()
+            if re.match(r"^1[\.\)]", p):
+                first_found = True
+                continue
+            if first_found and re.match(r"^\d+[\.\)]", p):
+                kept.append(p)
+        kept = [k for k in kept if k]
+        if not kept:
+            return "-"
+        return mark_safe("<br>".join(escape(k) for k in kept))
+    
+    ref_part = parts[1]
+    ref_entries = re.split(r"[\n]+", ref_part)
+    kept = []
+    for entry in ref_entries:
+        p = entry.strip()
+        if re.match(r"^\d+[\.\)]", p):
+            kept.append(p)
+    kept = [k for k in kept if k]
+    if not kept:
+        return "-"
+    return mark_safe("<br>".join(escape(k) for k in kept))

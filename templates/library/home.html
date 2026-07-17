@@ -186,8 +186,8 @@
               <th class="border-b border-gray-600 px-3 py-2">Title</th>
               <th class="border-b border-gray-600 px-3 py-2">Author</th>
               <th class="border-b border-gray-600 px-3 py-2 text-center">SELECT</th>
-              <th class="border-b border-gray-600 px-3 py-2">TEXTBOOK / REFERENCE BOOK</th>
-              <th class="border-b border-gray-600 px-3 py-2 text-center">BORROW</th>
+              <th class="border-b border-gray-600 px-3 py-2">TEXT BOOKS</th>
+              <th class="border-b border-gray-600 px-3 py-2">REFERENCE BOOKS</th>
               <th class="border-b border-gray-600 px-3 py-2">ISBN</th>
               <th class="border-b border-gray-600 px-3 py-2">Publisher</th>
               <th class="border-b border-gray-600 px-3 py-2">Edition/Year</th>
@@ -232,7 +232,7 @@
               {% endwith %}
             </td>
             <td class="px-3 py-2 align-top">{{ rec.book_type|textbooks_only|safe }}</td>
-            <td class="px-3 py-2 align-top text-center text-gray-500">—</td>
+            <td class="px-3 py-2 align-top">{{ rec.book_type|reference_books|safe }}</td>
             <td class="px-3 py-2">{{ rec.isbn|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.publisher|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.edition_year|default:"-" }}</td>
