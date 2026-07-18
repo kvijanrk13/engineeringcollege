@@ -254,18 +254,33 @@
           <tr class="border-b border-gray-700 transition-colors hover:bg-gray-800">
             <td class="px-3 py-2">{{ forloop.counter }}</td>
             <td class="px-3 py-2 align-top">
-              {% if rec.isbn or rec.book_type or rec.image %}
+              {% if rec.image %}
                 <img
-                  src="{% if rec.isbn %}https://covers.openlibrary.org/b/isbn/{{ rec.isbn|isbn_digits }}-L.jpg?default=false{% elif rec.image %}{{ rec.image.url }}{% else %}https://covers.openlibrary.org/b/id/0-L.jpg{% endif %}"
+                  src="{{ rec.image.url }}"
                   alt="{{ rec.title|default:'book' }}"
                   class="h-16 w-12 rounded object-cover ring-1 ring-white"
-                  {% if rec.image %}data-fallback="{{ rec.image.url }}"{% endif %}
+                  data-search="{{ rec.book_type }}"
+                  data-isbn="{{ rec.isbn|isbn_digits }}"
+                  onerror="recoImgError(this)"
+                />
+              {% elif rec.isbn %}
+                <img
+                  src="https://covers.openlibrary.org/b/isbn/{{ rec.isbn|isbn_digits }}-L.jpg?default=false"
+                  alt="{{ rec.title|default:'book' }}"
+                  class="h-16 w-12 rounded object-cover ring-1 ring-white"
                   data-search="{{ rec.book_type }}"
                   data-isbn="{{ rec.isbn|isbn_digits }}"
                   onerror="recoImgError(this)"
                 />
               {% else %}
-                <span class="text-xs text-gray-500">NO PHOTO</span>
+                <img
+                  src="https://covers.openlibrary.org/b/id/0-L.jpg"
+                  alt="{{ rec.title|default:'book' }}"
+                  class="h-16 w-12 rounded object-cover ring-1 ring-white"
+                  data-search="{{ rec.book_type }}"
+                  data-isbn="{{ rec.isbn|isbn_digits }}"
+                  onerror="recoImgError(this)"
+                />
               {% endif %}
             </td>
             <td class="px-3 py-2 font-medium text-gray-100">{{ rec.title|default:"-" }}</td>
