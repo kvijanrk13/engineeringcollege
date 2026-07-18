@@ -233,11 +233,19 @@
             </td>
             <td class="px-3 py-2 align-top">
               <span class="text-pink-300">📚</span>
-              <span class="text-pink-200">{{ rec.book_type|textbooks_only|safe }}</span>
+              <span class="text-pink-200">
+                {% with tb=rec.book_type|textbooks_only %}
+                  {% if tb != "-" %}{{ tb|safe }}{% else %}{{ rec.title|default:"-" }}{% endif %}
+                {% endwith %}
+              </span>
             </td>
             <td class="px-3 py-2 align-top">
               <span class="text-blue-300">📖</span>
-              <span class="text-blue-200">{{ rec.book_type|reference_books|safe }}</span>
+              <span class="text-blue-200">
+                {% with rb=rec.book_type|reference_books %}
+                  {% if rb != "-" %}{{ rb|safe }}{% else %}-{% endif %}
+                {% endwith %}
+              </span>
             </td>
             <td class="px-3 py-2">{{ rec.isbn|default:"-" }}</td>
             <td class="px-3 py-2">{{ rec.publisher|default:"-" }}</td>
