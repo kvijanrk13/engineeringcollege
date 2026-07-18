@@ -19,6 +19,8 @@ import re
 def allbooks(request):
     requestedbooks,issuedbooks=getmybooks(request.user)
     allbooks=Book.objects.all()
+    text_books=allbooks.filter(category='TEXT')
+    reference_books=allbooks.filter(category='REFERENCE')
     recommendations=BookRecommendation.objects.all().order_by('id').exclude(title__icontains='laboratory')
 
     total = allbooks.count()
@@ -41,7 +43,7 @@ def allbooks(request):
     available = max(copies_sum - borrowed, 0)
     total = available + issued
 
-    return render(request,'library/home.html',{'books':allbooks,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available,'copies_sum':copies_sum})
+    return render(request,'library/home.html',{'books':allbooks,'text_books':text_books,'reference_books':reference_books,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks,'recommendations':recommendations,'total':total,'issued':issued,'available':available,'copies_sum':copies_sum})
 
 
 def sort(request):
