@@ -230,7 +230,6 @@ def deletefine(request,fineID):
     return redirect('/aeclibrary/all-fines/')
 
 @login_required(login_url='/aeclibrary/student/signup/')
-@user_passes_test(lambda u: u.is_superuser,login_url='/aeclibrary/student/signup/')
 def reset_issued(request):
     if request.method == "POST":
         stat, _ = LibraryStat.objects.get_or_create(id=1)

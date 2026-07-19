@@ -36,7 +36,6 @@
       <p class="text-sm font-semibold uppercase tracking-wider text-blue-300">Total</p>
       <p class="mt-1 text-3xl font-extrabold text-white">{{ total }}</p>
     </div>
-    {% if user.is_superuser %}
     <div class="rounded-2xl border border-orange-500/40 bg-gradient-to-br from-orange-900 to-gray-900 p-5 text-center shadow-lg">
       <form method="post" action="{% url 'reset_issued' %}" class="contents" onsubmit="return confirm('Are you sure you want to reset all issued books? This will set Issued to 0 and Available = Total.');">
         {% csrf_token %}
@@ -45,7 +44,6 @@
         </button>
       </form>
     </div>
-    {% endif %}
   </div>
 
   <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">

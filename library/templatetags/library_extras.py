@@ -53,14 +53,17 @@ def first_book_title(value):
 def textbooks_only(value):
     if not value:
         return "-"
-    parts = str(value).split('/')
-    text_part = parts[0] if parts else str(value)
+    text = str(value)
+    parts = text.split('/')
+    text_part = parts[0] if parts else text
     entries = re.split(r"[\n]+", text_part)
     kept = []
     for entry in entries:
         p = entry.strip()
-        if re.match(r"^\d+[\.\)]", p):
-            kept.append(p)
+        if p:
+            clean = re.sub(r"^\d+[\.\)]\s*", "", p).strip()
+            if clean:
+                kept.append(clean)
     kept = [k for k in kept if k]
     if not kept:
         return "-"
@@ -71,14 +74,17 @@ def textbooks_only(value):
 def textbook_entries(value):
     if not value:
         return []
-    parts = str(value).split('/')
-    text_part = parts[0] if parts else str(value)
+    text = str(value)
+    parts = text.split('/')
+    text_part = parts[0] if parts else text
     entries = re.split(r"[\n]+", text_part)
     out = []
     for entry in entries:
         p = entry.strip()
-        if re.match(r"^1[\.\)]", p):
-            out.append(re.sub(r"^1[\.\)]\s*", "", p).strip())
+        if p:
+            clean = re.sub(r"^1[\.\)]\s*", "", p).strip()
+            if clean:
+                out.append(clean)
     return out
 
 
@@ -86,19 +92,18 @@ def textbook_entries(value):
 def reference_books(value):
     if not value:
         return "-"
-    parts = str(value).split('/')
+    text = str(value)
+    parts = text.split('/')
     if len(parts) < 2:
-        ref_part = parts[0] if parts else str(value)
+        ref_part = parts[0] if parts else text
         entries = re.split(r"[\n]+", ref_part)
         kept = []
-        first_found = False
         for entry in entries:
             p = entry.strip()
-            if re.match(r"^1[\.\)]", p):
-                first_found = True
-                continue
-            if first_found and re.match(r"^\d+[\.\)]", p):
-                kept.append(p)
+            if p:
+                clean = re.sub(r"^\d+[\.\)]\s*", "", p).strip()
+                if clean:
+                    kept.append(clean)
         kept = [k for k in kept if k]
         if not kept:
             return "-"
@@ -109,8 +114,10 @@ def reference_books(value):
     kept = []
     for entry in ref_entries:
         p = entry.strip()
-        if re.match(r"^\d+[\.\)]", p):
-            kept.append(p)
+        if p:
+            clean = re.sub(r"^\d+[\.\)]\s*", "", p).strip()
+            if clean:
+                kept.append(clean)
     kept = [k for k in kept if k]
     if not kept:
         return "-"
