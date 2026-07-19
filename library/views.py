@@ -229,7 +229,16 @@ def deletefine(request,fineID):
     fine.delete()
     return redirect('/aeclibrary/all-fines/')
 
-def get_razorpay_client():
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u: u.is_superuser,login_url='/aeclibrary/student/signup/')
+def reset_issued(request):
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
+    stat.borrowed_books = 0
+    stat.save()
+    now = timezone.now()
+    Issue.objects.filter(issued=True, returned=False).update(issued=False, returned=True, return_date=now)
+    messages.success(request, 'Issued books reset successfully.')
+    return redirect('library_home')
     import razorpay
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
