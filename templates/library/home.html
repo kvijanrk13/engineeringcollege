@@ -16,6 +16,21 @@
 </header>
 {% endif %}
 
+<div class="mx-auto mb-8 max-w-md px-4">
+  <div class="relative">
+    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+      </svg>
+    </span>
+    <input id="book-search" type="text" placeholder="Search books by title or author..."
+           class="w-full rounded-lg border border-gray-600 bg-gray-800 py-2 pl-10 pr-10 text-white focus:border-pink-400 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+    <button id="book-search-btn" class="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-pink-600 px-3 py-1 text-sm font-semibold text-white hover:bg-pink-500">
+      SEARCH
+    </button>
+  </div>
+</div>
+
 <!-- all books -->
 <section class="mb-16">
   <div class="mb-6 flex items-center gap-3">
@@ -214,19 +229,6 @@
   {% endfor %}
 </ul>
 {% endif %}
-  .reco-grid { display: block; }
-  .reco-scroll {
-    max-height: 70vh;
-    scrollbar-width: thin;
-    scrollbar-color: #ec4899 #374151;
-  }
-  @supports (overflow: overlay) {
-    .reco-scroll { overflow: overlay; }
-  }
-  .reco-scroll::-webkit-scrollbar { width: 12px; height: 12px; }
-  .reco-scroll::-webkit-scrollbar-track { background: #374151; border-radius: 6px; }
-  .reco-scroll::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 6px; }
-  .reco-scroll::-webkit-scrollbar-thumb:hover { background: #f472b6; }
 </style>
 
 <script>
@@ -293,16 +295,30 @@
     showNoPhoto(img);
   }
 
-  // ---- SEARCH: filter recommendation rows client-side ----
-  const recoSearch = document.getElementById('reco-search');
-  if (recoSearch) {
-    recoSearch.addEventListener('input', () => {
-      const q = recoSearch.value.trim().toLowerCase();
-      const rows = document.querySelectorAll('.reco-scroll tbody tr');
-      rows.forEach(row => {
-        if (row.querySelector('td[colspan="14"]')) return; // skip empty-state row
-        row.style.display = (!q || row.textContent.toLowerCase().includes(q)) ? '' : 'none';
-      });
+  // ---- SEARCH: filter book cards client-side ----
+  const bookSearch = document.getElementById('book-search');
+  const bookSearchBtn = document.getElementById('book-search-btn');
+  function filterBookCards() {
+    if (!bookSearch) return;
+    const q = bookSearch.value.trim().toLowerCase();
+    const cards = document.querySelectorAll('section.mb-16 .group');
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = (!q || text.includes(q)) ? '' : 'none';
+    });
+  }
+  if (bookSearchBtn) {
+    bookSearchBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      filterBookCards();
+    });
+  }
+  if (bookSearch) {
+    bookSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        filterBookCards();
+      }
     });
   }
 </script>
