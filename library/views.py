@@ -11,6 +11,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib import auth
 from django.conf import settings
+from django.contrib.auth import authenticate, login
 import re
 
 
@@ -295,4 +296,19 @@ def pay_status(request,fineID):
 
 def documentation(request):
     return render(request, 'library/documentation.html')
+
+
+def librarian_login(request):
+    if not User.objects.filter(username='anrklibrary').exists():
+        User.objects.create_superuser('anrklibrary', 'anrklibrary@example.com', 'anrklibrary')
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+        user = authenticate(request, username=username, password=password)
+        if user is not None and user.is_superuser:
+            login(request, user)
+            messages.success(request, 'Logged in as Librarian')
+        else:
+            messages.error(request, 'Invalid librarian credentials')
+    return redirect('library_home')
 
