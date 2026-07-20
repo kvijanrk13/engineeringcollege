@@ -292,3 +292,7 @@ def pay_status(request,fineID):
             messages.error(request,'Payment Failure')
     return redirect('/aeclibrary/my-fines/')
 
+
+def documentation(request):
+    return render(request, 'library/documentation.html')
+
