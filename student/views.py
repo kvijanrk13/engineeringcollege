@@ -29,18 +29,6 @@ def login(request):
         username = (request.POST.get('username') or request.POST.get('studentID') or '').strip()
         password = request.POST.get('password', '')
 
-        if username == 'anrkstudent' and password == '7001':
-            user, _ = User.objects.get_or_create(username='anrkstudent')
-            user.set_password('7001')
-            user.is_active = True
-            user.save()
-            _ensure_library_student(user)
-            auth.login(request, user)
-            messages.success(request, 'Login successful')
-            if 'next' in request.POST:
-                return redirect(request.POST['next'])
-            return redirect('library_home')
-
         user = auth.authenticate(request, username=username, password=password)
         if user is None:
             messages.error(request, 'Invalid CREDENTIALS')
@@ -48,21 +36,9 @@ def login(request):
         auth.login(request, user)
         messages.success(request, 'Login successful')
         if 'next' in request.POST:
-            return redirect(request.POST['next'])
+            return redirect(request.POST.get('next'))
         return redirect('library_home')
     return redirect('/aeclibrary/student/signup/')
-
-
-def _ensure_library_student(user):
-    if Student.objects.filter(student_id=user).exists():
-        return
-    department, _ = Department.objects.get_or_create(name='Library')
-    Student.objects.create(
-        first_name='Demo',
-        last_name='Student',
-        department=department,
-        student_id=user,
-    )
 
 
 def signup(request):
