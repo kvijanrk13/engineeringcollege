@@ -1,3 +1,4 @@
+{% load static %}
 {% extends 'aeclibrary/base.html' %} {% block heading %} Documentation {% endblock heading %}
 {% block content %}
 
@@ -14,6 +15,9 @@
       <p class="text-gray-300 leading-relaxed mb-3">A Library Management System (LMS) is a project that manages and stores book information electronically according to user needs. The system helps students, faculty and the librarian to keep a constant track of all the books available in the library. It allows both the admin and the member to search for the desired book. It becomes necessary for educational institutes like colleges to keep a continuous check on the books issued and returned and even calculate fines.</p>
       <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Existing System:</strong> The existing system is physical maintenance of the library in which all transactions are done manually. This method takes more time for borrowing or returning a book and for searching members and books. Preparing lists of borrowed books and available books takes more time. It takes several days to verify all records in larger libraries.</p>
       <p class="text-gray-300 leading-relaxed"><strong class="text-white">Proposed System:</strong> The proposed system is a Book Bank / Library Management System. All difficulties in manual management have been rectified by implementing a computerized system. The administrator (librarian) can add members, add books, search members, search books, update information, edit information, borrow and return books quickly. The proposed system provides better and efficient service to members, reduces workload, allows faster retrieval of information, provides proper monitoring, reduces paperwork, provides data security, and makes all details available with a single click.</p>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/01_problem_statements.png' %}" alt="Development of Problem Statements" class="rounded-lg border border-gray-700 shadow-lg w-full" />
+      </div>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
@@ -21,6 +25,9 @@
       <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Software Requirements Specification (SRS):</strong> The purpose of this document is to record the requirements of an application that will automate the whole procedure of a library. The system is web-based. For Members: search books based on Title, Author, Subject, Keyword; issue/return books; renewal of books. For Library Staff: automatic installation; simple and intuitive GUI; shortcut keys and point-and-click operation; security features like access control using passwords and login-id; automatic calculation of late fee; facility to add/delete members, library staff and books.</p>
       <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Software Design Document (SDD):</strong> The Library Management System is divided into two modules - Student and Admin. Admin can add/update/delete members, add/update/delete books, issue new books to students, search students by student ID, view student details, and change own password. Students can register and get a student-id, view their dashboard, view listed books, update their profile, view issued books and return date-time, and change or recover their password.</p>
       <p class="text-gray-300 leading-relaxed"><strong class="text-white">Test Plan:</strong> The test plan covers Librarian Interface (Master Data, User Management, Reports), Student Interface (Profile, Search, Reserve), and Faculty Interface (Profile, Search, Reserve, Request Order). Features to be tested include adding new categories/books, editing categories/books, managing transactions, creating/editing members, generating reports, login, viewing issue details, searching books, and reserving books.</p>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/02_srs_design_testing.png' %}" alt="SRS, Design Documents and Testing Phase Documents" class="rounded-lg border border-gray-700 shadow-lg w-full" />
+      </div>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
@@ -40,6 +47,9 @@
         <li>RID 010: Legal action delays or pauses project (Probable, Marginal)</li>
       </ul>
       <p class="text-gray-300 leading-relaxed"><strong class="text-white">Configuration Management Document:</strong> Document Number: CMSD-005, Date: 08-12-2023, Release: Draft Version 6.1. Configuration items include Project Identifier PID-001-BBLMS, Item Identifier BB-SRD, Current Version 2.1, Status: Developed & In Review.</p>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/03_configuration_risk.png' %}" alt="Configuration Management and Risk Management Documents" class="rounded-lg border border-gray-700 shadow-lg w-full" />
+      </div>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
@@ -59,6 +69,9 @@
         <li>Modelio</li>
       </ul>
       <p class="text-gray-300 leading-relaxed mt-3"><strong class="text-white">StarUML:</strong> StarUML is a UML tool developed by MKLab. It is a software modeling platform that supports UML (Unified Modeling Language). StarUML supports many UML diagram types. The user can freely create and manage different diagrams as needed. StarUML uses its own file format with the .uml extension.</p>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/04_case_tools_study.png' %}" alt="Study and Usage of Design Phase CASE Tools" class="rounded-lg border border-gray-700 shadow-lg w-full" />
+      </div>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
@@ -78,6 +91,9 @@
         <li><strong class="text-white">Activity Diagram:</strong> Represents the workflow of book issue and return processes.</li>
       </ul>
       <p class="text-gray-300 leading-relaxed"><strong class="text-white">Design Architectural Models - Book Bank LMS:</strong> Component Diagram shows the organization and dependencies among components (Book Management, User Management, Issue Management, Fine Management). Deployment Diagram shows the physical deployment of artifacts on nodes (Web Server, Database Server, Client Browsers).</p>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/05_case_tools_design.png' %}" alt="Performing the Design by Using Design Phase CASE Tools" class="rounded-lg border border-gray-700 shadow-lg w-full" />
+      </div>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
@@ -138,6 +154,9 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/06_unit_integration_testing.png' %}" alt="Unit Testing and Integration Testing" class="rounded-lg border border-gray-700 shadow-lg w-full" />
       </div>
     </div>
 
@@ -239,6 +258,9 @@
             </tr>
           </tbody>
         </table>
+      </div>
+      <div class="mt-4">
+        <img src="{% static 'library/images/documentation/07_white_black_box.png' %}" alt="White Box and Black Box Testing Techniques" class="rounded-lg border border-gray-700 shadow-lg w-full" />
       </div>
     </div>
   </div>
