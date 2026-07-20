@@ -28,12 +28,8 @@
   >
     {% if user.is_anonymous %}
     <li><a class="hover:underline" href="/aeclibrary/student/signup">Sign up with Gmail</a></li>
-    <li><a class="hover:underline" href="/admin/">Admin Dashboard</a></li>
     {% elif user.is_superuser %}
-    <!-- <li><a class="hover:underline" href="/addbook/">Add Book</a></li> -->
     <li><a class="hover:underline" href="/aeclibrary/all-issues/"> Issue Requests</a></li>
-    <!-- <li><a class="hover:underline" href="/aeclibrary/all-fines/">All Fines</a></li> -->
-    <li><a class="hover:underline" href="/admin/">Admin DashBoard</a></li>
     <li><a class="hover:underline" href="/aeclibrary/student/logout">Logout</a></li>
     {% else %}
     <li><a class="hover:underline" href="/aeclibrary/my-issues/">My Issues</a></li>
