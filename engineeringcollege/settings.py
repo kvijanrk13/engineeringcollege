@@ -264,7 +264,7 @@ LOGIN_URL = '/login/'
 
 LOGIN_REDIRECT_URL = '/dashboard/faculty/list/'
 
-LOGOUT_REDIRECT_URL = '/aeclibrary/'
+LOGOUT_REDIRECT_URL = '/admin-login/'
 
 # ================================
 # DEFAULT PRIMARY KEY

@@ -31,24 +31,6 @@
   </div>
 </div>
 
-{% if not user.is_superuser %}
-<div class="mx-auto mb-8 max-w-md px-4">
-  <form method="post" action="{% url 'librarian_login' %}" class="rounded-lg border border-yellow-500/40 bg-gradient-to-br from-yellow-900 to-gray-900 p-4 shadow-lg">
-    {% csrf_token %}
-    <p class="mb-3 text-center text-sm font-semibold uppercase tracking-wider text-yellow-300">Librarian Login</p>
-    <div class="mb-3">
-      <input type="text" name="username" placeholder="Username" required class="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-    </div>
-    <div class="mb-3">
-      <input type="password" name="password" placeholder="Password" required class="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-white focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-    </div>
-    <button type="submit" class="w-full rounded-full bg-gradient-to-r from-yellow-600 to-yellow-500 px-6 py-2 text-base font-bold text-white shadow-lg shadow-yellow-500/30 transition-transform duration-200 hover:scale-105">
-      LIBRARIAN LOGIN
-    </button>
-  </form>
-</div>
-{% endif %}
-
 <div class="mx-auto mb-8 max-w-md px-4">
   <a href="{% url 'documentation' %}" class="block rounded-lg border border-blue-500/40 bg-gradient-to-br from-blue-900 to-gray-900 p-4 text-center shadow-lg hover:shadow-xl transition-all">
     <p class="text-sm font-semibold uppercase tracking-wider text-blue-300">DOCUMENTATION</p>
