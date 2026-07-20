@@ -4,44 +4,242 @@
 <div class="mx-auto max-w-4xl px-4">
   <div class="mb-8 text-center">
     <h1 class="text-3xl font-extrabold text-white mb-2">Software Engineering Lab - II-I CSE(AI&ML)</h1>
-    <p class="text-gray-400">Documentation and Lab Manual</p>
+    <p class="text-gray-400">Book Bank / Library Management System - Documentation</p>
     <div class="mx-auto mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-pink-500 to-blue-500"></div>
   </div>
 
   <div class="space-y-6">
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">1. Development of Problem Statements</h2>
-      <p class="text-gray-300 leading-relaxed">Identify and define real-world problems. Gather requirements from stakeholders. Analyze feasibility and scope. Document problem statements clearly with objectives, constraints, and expected outcomes.</p>
+      <p class="text-gray-300 leading-relaxed mb-3">A Library Management System (LMS) is a project that manages and stores book information electronically according to user needs. The system helps students, faculty and the librarian to keep a constant track of all the books available in the library. It allows both the admin and the member to search for the desired book. It becomes necessary for educational institutes like colleges to keep a continuous check on the books issued and returned and even calculate fines.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Existing System:</strong> The existing system is physical maintenance of the library in which all transactions are done manually. This method takes more time for borrowing or returning a book and for searching members and books. Preparing lists of borrowed books and available books takes more time. It takes several days to verify all records in larger libraries.</p>
+      <p class="text-gray-300 leading-relaxed"><strong class="text-white">Proposed System:</strong> The proposed system is a Book Bank / Library Management System. All difficulties in manual management have been rectified by implementing a computerized system. The administrator (librarian) can add members, add books, search members, search books, update information, edit information, borrow and return books quickly. The proposed system provides better and efficient service to members, reduces workload, allows faster retrieval of information, provides proper monitoring, reduces paperwork, provides data security, and makes all details available with a single click.</p>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">2. Preparation of Software Requirement Specification Document, Design Documents and Testing Phase Documents</h2>
-      <p class="text-gray-300 leading-relaxed">Create Software Requirement Specification (SRS) with functional and non-functional requirements. Develop design documents including system architecture, module design, and data flow diagrams. Prepare test plans, test cases, and testing phase documentation covering unit, integration, and system testing.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Software Requirements Specification (SRS):</strong> The purpose of this document is to record the requirements of an application that will automate the whole procedure of a library. The system is web-based. For Members: search books based on Title, Author, Subject, Keyword; issue/return books; renewal of books. For Library Staff: automatic installation; simple and intuitive GUI; shortcut keys and point-and-click operation; security features like access control using passwords and login-id; automatic calculation of late fee; facility to add/delete members, library staff and books.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Software Design Document (SDD):</strong> The Library Management System is divided into two modules - Student and Admin. Admin can add/update/delete members, add/update/delete books, issue new books to students, search students by student ID, view student details, and change own password. Students can register and get a student-id, view their dashboard, view listed books, update their profile, view issued books and return date-time, and change or recover their password.</p>
+      <p class="text-gray-300 leading-relaxed"><strong class="text-white">Test Plan:</strong> The test plan covers Librarian Interface (Master Data, User Management, Reports), Student Interface (Profile, Search, Reserve), and Faculty Interface (Profile, Search, Reserve, Request Order). Features to be tested include adding new categories/books, editing categories/books, managing transactions, creating/editing members, generating reports, login, viewing issue details, searching books, and reserving books.</p>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">3. Preparation of Software Configuration Management and Risk Management Documents</h2>
-      <p class="text-gray-300 leading-relaxed">Document software configuration management plans including version control, change management, and baseline identification. Prepare risk management documents with risk identification, analysis, mitigation strategies, and contingency plans.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Risk Management Methodology:</strong> Step-1: Identify, Step-2: Assess, Step-3: Respond, Step-4: Monitor. Risk identification involves stakeholders: Project Manager, Development Team, College Authorities, Librarian, Students, Faculty, Publishers, and Sellers.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Risk Register:</strong></p>
+      <ul class="list-disc list-inside text-gray-300 space-y-1 mb-3 ml-4">
+        <li>RID 001: Project purpose and need is not well-defined (Probable, Catastrophic)</li>
+        <li>RID 002: Project design and deliverable definition is incomplete (Improbable, Critical)</li>
+        <li>RID 003: Project schedule is not clearly defined or understood (Improbable, Critical)</li>
+        <li>RID 004: No control over staff priorities (Probable, Critical)</li>
+        <li>RID 005: Lack of communication, causing lack of clarity and confusion (Probable, Catastrophic)</li>
+        <li>RID 006: Delay in earlier project phases risks ability to meet fixed date (Frequent, Critical)</li>
+        <li>RID 007: Customer refuses to approve deliverables/milestones or delays approval (Probable, Critical)</li>
+        <li>RID 008: Stakeholder action delays project (Improbable, Catastrophic)</li>
+        <li>RID 009: Theft of materials, intellectual property or equipment (Improbable, Critical)</li>
+        <li>RID 010: Legal action delays or pauses project (Probable, Marginal)</li>
+      </ul>
+      <p class="text-gray-300 leading-relaxed"><strong class="text-white">Configuration Management Document:</strong> Document Number: CMSD-005, Date: 08-12-2023, Release: Draft Version 6.1. Configuration items include Project Identifier PID-001-BBLMS, Item Identifier BB-SRD, Current Version 2.1, Status: Developed & In Review.</p>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">4. Study and Usage of Design Phase CASE Tools</h2>
-      <p class="text-gray-300 leading-relaxed">Learn Computer-Aided Software Engineering (CASE) tools used in the design phase. Study tools like UML designers, diagramming tools, and modeling software. Understand how these tools improve design quality, consistency, and documentation.</p>
+      <p class="text-gray-300 leading-relaxed mb-3">Computer Aided Software Engineering (CASE) tools are software application programs used to automate SDLC activities. CASE tools are used by software project managers, analysts and engineers to develop software systems. There are a number of CASE tools available to simplify various stages of the Software Development Life Cycle such as Analysis tools, Design tools, Project management tools, Database Management tools, and Documentation tools.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">UML Modeling Tools:</strong></p>
+      <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4">
+        <li>Rational Rose - IBM Rational Software Architect</li>
+        <li>StarUML</li>
+        <li>EdrawMax</li>
+        <li>Lucid Chart</li>
+        <li>Creately</li>
+        <li>Visual Paradigm</li>
+        <li>Visio</li>
+        <li>Draw.Io</li>
+        <li>Altova</li>
+        <li>Modelio</li>
+      </ul>
+      <p class="text-gray-300 leading-relaxed mt-3"><strong class="text-white">StarUML:</strong> StarUML is a UML tool developed by MKLab. It is a software modeling platform that supports UML (Unified Modeling Language). StarUML supports many UML diagram types. The user can freely create and manage different diagrams as needed. StarUML uses its own file format with the .uml extension.</p>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">5. Performing the Design by Using Design Phase CASE Tools</h2>
-      <p class="text-gray-300 leading-relaxed">Apply CASE tools to create system designs. Generate UML diagrams including use case, class, sequence, and activity diagrams. Use modeling tools to design system architecture and module interactions. Validate designs against requirements.</p>
+      <p class="text-gray-300 leading-relaxed mb-3">The design of the Book Bank - Library Management System was performed using StarUML with the following modeling approaches: 4+1 View Model, Default Approach, Rational Approach, UML Components Approach, and Empty Approach.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Design Structural Models - Book Bank LMS:</strong></p>
+      <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4 mb-3">
+        <li><strong class="text-white">Class Diagram:</strong> Shows the static structure of the system with classes like Book, Author, Student, Issue, Fine, and their relationships.</li>
+        <li><strong class="text-white">Object Diagram:</strong> Represents instances of classes and their relationships at a particular moment.</li>
+      </ul>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Design Behavioral Models - Book Bank LMS:</strong></p>
+      <ul class="list-disc list-inside text-gray-300 space-y-1 ml-4 mb-3">
+        <li><strong class="text-white">Use Case Diagram:</strong> Represents the functionality of the system from the user's perspective, showing actors (Student, Librarian, Faculty) and their interactions with the system.</li>
+        <li><strong class="text-white">Sequence Diagram:</strong> Shows object interactions arranged in time sequence, particularly for book issue and return processes.</li>
+        <li><strong class="text-white">Collaboration Diagram:</strong> Shows the structural organization of objects that send and receive messages.</li>
+        <li><strong class="text-white">Statechart Diagram:</strong> Represents the states of a book (Available, Issued, Returned, Overdue) and transitions between them.</li>
+        <li><strong class="text-white">Activity Diagram:</strong> Represents the workflow of book issue and return processes.</li>
+      </ul>
+      <p class="text-gray-300 leading-relaxed"><strong class="text-white">Design Architectural Models - Book Bank LMS:</strong> Component Diagram shows the organization and dependencies among components (Book Management, User Management, Issue Management, Fine Management). Deployment Diagram shows the physical deployment of artifacts on nodes (Web Server, Database Server, Client Browsers).</p>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">6. Develop Test Cases for Unit Testing and Integration Testing</h2>
-      <p class="text-gray-300 leading-relaxed">Design test cases for individual modules and components. Create unit test cases covering all functions, methods, and edge cases. Develop integration test cases to verify module interactions and data flow. Document expected results and pass/fail criteria.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">Unit Testing and Integration Testing for Book Bank:</strong></p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-gray-300 border border-gray-700 rounded-lg overflow-hidden">
+          <thead class="bg-gray-700 text-white">
+            <tr>
+              <th class="px-4 py-2 text-left">Test Case ID</th>
+              <th class="px-4 py-2 text-left">Description</th>
+              <th class="px-4 py-2 text-left">Components Involved</th>
+              <th class="px-4 py-2 text-left">Input</th>
+              <th class="px-4 py-2 text-left">Expected Output</th>
+              <th class="px-4 py-2 text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700">
+            <tr>
+              <td class="px-4 py-2">TC_I01</td>
+              <td class="px-4 py-2">Test user registration and login</td>
+              <td class="px-4 py-2">User Registration, User Login</td>
+              <td class="px-4 py-2">User details, Email, Password</td>
+              <td class="px-4 py-2">Registration and login success</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_I02</td>
+              <td class="px-4 py-2">Test course creation and listing</td>
+              <td class="px-4 py-2">Course Creation, Course Listing</td>
+              <td class="px-4 py-2">Course details</td>
+              <td class="px-4 py-2">Course listed</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_I03</td>
+              <td class="px-4 py-2">Test course enrollment and access</td>
+              <td class="px-4 py-2">Enrollment, Course Access</td>
+              <td class="px-4 py-2">User ID, Course ID</td>
+              <td class="px-4 py-2">Enrollment and access success</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_I04</td>
+              <td class="px-4 py-2">Test progress tracking and update</td>
+              <td class="px-4 py-2">Progress Tracking, Update Progress</td>
+              <td class="px-4 py-2">User ID, Course ID, Progress Data</td>
+              <td class="px-4 py-2">Progress updated correctly</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_I05</td>
+              <td class="px-4 py-2">Test certificate generation</td>
+              <td class="px-4 py-2">Course Completion, Certificate Generation</td>
+              <td class="px-4 py-2">User ID, Course ID</td>
+              <td class="px-4 py-2">Certificate generated</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-xl font-bold text-pink-400 mb-3">7. Develop Test Cases for Various White Box and Black Box Testing Techniques</h2>
-      <p class="text-gray-300 leading-relaxed">Create white box test cases using statement coverage, branch coverage, and path coverage techniques. Develop black box test cases using equivalence partitioning, boundary value analysis, decision table testing, and state transition testing. Document test scenarios and expected outcomes.</p>
+      <p class="text-gray-300 leading-relaxed mb-3"><strong class="text-white">White Box Testing and Black Box Testing for Book Bank:</strong></p>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-gray-300 border border-gray-700 rounded-lg overflow-hidden">
+          <thead class="bg-gray-700 text-white">
+            <tr>
+              <th class="px-4 py-2 text-left">Test Case ID</th>
+              <th class="px-4 py-2 text-left">Technique</th>
+              <th class="px-4 py-2 text-left">Description</th>
+              <th class="px-4 py-2 text-left">Input</th>
+              <th class="px-4 py-2 text-left">Expected Output</th>
+              <th class="px-4 py-2 text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-700">
+            <tr>
+              <td class="px-4 py-2">TC_WB01</td>
+              <td class="px-4 py-2">Statement Coverage</td>
+              <td class="px-4 py-2">Ensure all statements in the user login function are executed</td>
+              <td class="px-4 py-2">Username, Password</td>
+              <td class="px-4 py-2">Login success or failure message</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_WB02</td>
+              <td class="px-4 py-2">Branch Coverage</td>
+              <td class="px-4 py-2">Test all branches of the registration function</td>
+              <td class="px-4 py-2">Valid and invalid user details</td>
+              <td class="px-4 py-2">Appropriate messages</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_WB03</td>
+              <td class="px-4 py-2">Path Coverage</td>
+              <td class="px-4 py-2">Test all paths in the book issue function</td>
+              <td class="px-4 py-2">Various combinations of issue data</td>
+              <td class="px-4 py-2">Accurate issue response</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_WB04</td>
+              <td class="px-4 py-2">Loop Coverage</td>
+              <td class="px-4 py-2">Test loop conditions in the order history retrieval function</td>
+              <td class="px-4 py-2">Various user IDs</td>
+              <td class="px-4 py-2">Correct order history</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_WB05</td>
+              <td class="px-4 py-2">Condition Coverage</td>
+              <td class="px-4 py-2">Test all conditions in the fine calculation function</td>
+              <td class="px-4 py-2">Different return dates and due dates</td>
+              <td class="px-4 py-2">Correct fine calculation outcome</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_BB01</td>
+              <td class="px-4 py-2">Equivalence Partitioning</td>
+              <td class="px-4 py-2">Test user login with valid and invalid credentials</td>
+              <td class="px-4 py-2">Various email/password combinations</td>
+              <td class="px-4 py-2">Appropriate login response</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_BB02</td>
+              <td class="px-4 py-2">Boundary Value Analysis</td>
+              <td class="px-4 py-2">Test input fields for book search with edge values</td>
+              <td class="px-4 py-2">Min and max length inputs</td>
+              <td class="px-4 py-2">Successful search or error message</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_BB03</td>
+              <td class="px-4 py-2">Decision Table Testing</td>
+              <td class="px-4 py-2">Test user access levels based on different user roles</td>
+              <td class="px-4 py-2">Various roles and permissions</td>
+              <td class="px-4 py-2">Correct access granted</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_BB04</td>
+              <td class="px-4 py-2">State Transition Testing</td>
+              <td class="px-4 py-2">Test state transitions in book issue/return process</td>
+              <td class="px-4 py-2">Various issue/return states</td>
+              <td class="px-4 py-2">Correct state transitions</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-2">TC_BB05</td>
+              <td class="px-4 py-2">Use Case Testing</td>
+              <td class="px-4 py-2">Test the end-to-end process of borrowing and returning a book</td>
+              <td class="px-4 py-2">Student ID, Book details</td>
+              <td class="px-4 py-2">Successful borrow and return</td>
+              <td class="px-4 py-2">Pass/Fail</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
