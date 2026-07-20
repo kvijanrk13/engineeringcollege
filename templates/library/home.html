@@ -31,6 +31,57 @@
   </div>
 </div>
 
+<div class="mx-auto mb-8 max-w-md px-4">
+  <button id="documentation-btn" class="w-full rounded-lg border border-blue-500/40 bg-gradient-to-br from-blue-900 to-gray-900 p-4 text-center shadow-lg hover:shadow-xl transition-all">
+    <p class="text-sm font-semibold uppercase tracking-wider text-blue-300">DOCUMENTATION</p>
+    <p class="mt-1 text-xs text-gray-400">Software Engineering Lab - II-I CSE(AI&ML)</p>
+  </button>
+</div>
+
+<!-- Documentation Modal -->
+<div id="documentation-modal" class="fixed inset-0 z-50 hidden">
+  <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+    <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    <div class="relative inline-block max-w-4xl w-full max-h-[90vh] overflow-y-auto text-left align-middle bg-gray-800 rounded-lg shadow-xl transform transition-all">
+      <div class="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-white">Software Engineering Lab - II-I CSE(AI&ML)</h3>
+        <button id="close-modal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      <div class="px-6 py-6 space-y-6">
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">1. Development of Problem Statements</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Identify and define real-world problems. Gather requirements from stakeholders. Analyze feasibility and scope. Document problem statements clearly with objectives, constraints, and expected outcomes.</p>
+        </div>
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">2. Preparation of SRS, Design Documents and Testing Phase Documents</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Create Software Requirement Specification (SRS) with functional and non-functional requirements. Develop design documents including system architecture, module design, and data flow diagrams. Prepare test plans, test cases, and testing phase documentation covering unit, integration, and system testing.</p>
+        </div>
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">3. Preparation of Software Configuration Management and Risk Management Documents</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Document software configuration management plans including version control, change management, and baseline identification. Prepare risk management documents with risk identification, analysis, mitigation strategies, and contingency plans.</p>
+        </div>
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">4. Study and Usage of Design Phase CASE Tools</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Learn Computer-Aided Software Engineering (CASE) tools used in the design phase. Study tools like UML designers, diagramming tools, and modeling software. Understand how these tools improve design quality, consistency, and documentation.</p>
+        </div>
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">5. Performing Design Using Design Phase CASE Tools</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Apply CASE tools to create system designs. Generate UML diagrams including use case, class, sequence, and activity diagrams. Use modeling tools to design system architecture and module interactions. Validate designs against requirements.</p>
+        </div>
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">6. Develop Test Cases for Unit Testing and Integration Testing</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Design test cases for individual modules and components. Create unit test cases covering all functions, methods, and edge cases. Develop integration test cases to verify module interactions and data flow. Document expected results and pass/fail criteria.</p>
+        </div>
+        <div class="bg-gray-700 rounded-lg p-4">
+          <h4 class="text-lg font-bold text-pink-400 mb-2">7. Develop Test Cases for White Box and Black Box Testing Techniques</h4>
+          <p class="text-gray-300 text-sm leading-relaxed">Create white box test cases using statement coverage, branch coverage, and path coverage techniques. Develop black box test cases using equivalence partitioning, boundary value analysis, decision table testing, and state transition testing. Document test scenarios and expected outcomes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- all books -->
 <section class="mb-16">
   <div class="mb-6 flex items-center gap-3">
@@ -318,6 +369,24 @@
       if (e.key === 'Enter') {
         e.preventDefault();
         filterBookCards();
+      }
+    });
+  }
+
+  // ---- DOCUMENTATION modal toggle ----
+  const docBtn = document.getElementById('documentation-btn');
+  const docModal = document.getElementById('documentation-modal');
+  const closeModal = document.getElementById('close-modal');
+  if (docBtn && docModal && closeModal) {
+    docBtn.addEventListener('click', () => {
+      docModal.classList.remove('hidden');
+    });
+    closeModal.addEventListener('click', () => {
+      docModal.classList.add('hidden');
+    });
+    docModal.addEventListener('click', (e) => {
+      if (e.target === docModal || e.target.classList.contains('bg-opacity-75')) {
+        docModal.classList.add('hidden');
       }
     });
   }
