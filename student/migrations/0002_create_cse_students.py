@@ -1,6 +1,4 @@
 from django.db import migrations
-from django.contrib.auth.models import User
-from student.models import Department, Student
 
 
 def create_cse_students(apps, schema_editor):
@@ -25,9 +23,8 @@ def create_cse_students(apps, schema_editor):
             }
         )
 
-        if created:
-            user.set_password(password)
-            user.save()
+        user.set_password(password)
+        user.save()
 
         Student.objects.get_or_create(
             student_id=user,
