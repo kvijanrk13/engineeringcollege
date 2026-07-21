@@ -8,6 +8,9 @@ echo "Git commit:"
 git rev-parse HEAD || true
 git rev-parse --short HEAD || true
 
+echo "Updating git submodules..."
+git submodule update --init --recursive
+
 export DJANGO_SETTINGS_MODULE=engineeringcollege.settings
 export PYTHONUNBUFFERED=1
 
