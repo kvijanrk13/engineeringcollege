@@ -77,7 +77,6 @@
           alt="{{book.name}}"
           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           data-search="{{book.name}}"
-          onerror="recoImgError(this)"
         />
       </div>
       <h2 class="text-center text-base font-bold leading-snug text-gray-100">{{book.name}}</h2>
@@ -125,7 +124,6 @@
           alt="{{book.name}}"
           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           data-search="{{book.name}}"
-          onerror="recoImgError(this)"
         />
       </div>
       <h2 class="text-center text-base font-bold leading-snug text-gray-100">{{book.name}}</h2>
@@ -200,7 +198,7 @@
   {% for book in books_results %}
   <li class="flex flex-col items-center rounded-2xl border border-gray-700 bg-gradient-to-b from-gray-800 to-gray-900 p-4 shadow-lg">
     <div class="mb-3 h-36 w-28 overflow-hidden rounded-lg bg-gray-700 ring-1 ring-white">
-      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="{{book.name}}" class="h-full w-full object-cover" data-search="{{book.name}}" onerror="recoImgError(this)" />
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="{{book.name}}" class="h-full w-full object-cover" data-search="{{book.name}}" />
     </div>
     <h2 class="text-center text-sm font-bold text-gray-100">{{book.name}}</h2>
     <h4 class="text-xs text-blue-400">{{book.author}}</h4>
@@ -244,18 +242,14 @@
   }
 
   function fetchCoverByQuery(query, img, onFail) {
-    const isIsbn = /^\d{10}(\d{3})?$/.test(query.replace(/[^0-9]/g, ''));
-    const url = isIsbn
-      ? 'https://openlibrary.org/search.json?isbn=' + encodeURIComponent(query.replace(/[^0-9Xx]/g, '')) + '&limit=1'
-      : 'https://openlibrary.org/search.json?title=' + encodeURIComponent(query) + '&limit=1';
+    const url = 'https://openlibrary.org/search.json?title=' + encodeURIComponent(query) + '&limit=1';
     fetch(url)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
         const doc = data && data.docs && data.docs[0];
         let cover = null;
-        if (doc) {
-          if (doc.cover_i) cover = 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-L.jpg';
-          else if (doc.isbn && doc.isbn[0]) cover = 'https://covers.openlibrary.org/b/isbn/' + doc.isbn[0] + '-L.jpg?default=false';
+        if (doc && doc.cover_i) {
+          cover = 'https://covers.openlibrary.org/b/id/' + doc.cover_i + '-L.jpg';
         }
         if (cover) img.src = cover;
         else onFail();
@@ -280,14 +274,20 @@
     fetchCoverByQuery(cands[i], img, function () { tryCandidates(cands, i + 1, img); });
   }
 
-  function recoImgError(img) {
-    if (!img.dataset.triedSearch) {
+  function loadBookCovers() {
+    const imgs = document.querySelectorAll('img[data-search]');
+    imgs.forEach(function(img) {
+      if (img.dataset.triedSearch) return;
       img.dataset.triedSearch = '1';
       const cands = parseCandidates(img.getAttribute('data-search'));
       tryCandidates(cands, 0, img);
-      return;
-    }
-    showNoPhoto(img);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadBookCovers);
+  } else {
+    loadBookCovers();
   }
 
   // ---- SEARCH: filter book cards client-side ----
