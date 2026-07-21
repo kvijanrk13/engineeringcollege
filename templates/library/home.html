@@ -72,25 +72,13 @@
     {% for book in text_books %}
     <li class="group flex flex-col items-center rounded-2xl border border-gray-700 bg-gradient-to-b from-gray-800 to-gray-900 p-5 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-pink-500 hover:shadow-2xl">
       <div class="relative mb-4 h-44 w-32 overflow-hidden rounded-xl bg-gray-700 ring-1 ring-white">
-        {% if book.image %}
         <img
-          src="{{book.image.url}}"
+          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
           alt="{{book.name}}"
           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          data-fallback="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false"
-          data-search="{{book.name}} {{book.author}}"
+          data-search="{{book.name}}"
           onerror="recoImgError(this)"
         />
-        {% else %}
-        <img
-          src="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false"
-          alt="{{book.name}}"
-          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          data-fallback="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false"
-          data-search="{{book.name}} {{book.author}}"
-          onerror="recoImgError(this)"
-        />
-        {% endif %}
       </div>
       <h2 class="text-center text-base font-bold leading-snug text-gray-100">{{book.name}}</h2>
       <h4 class="mt-1 text-xs text-blue-400">{{book.author}}</h4>
@@ -132,25 +120,13 @@
     {% for book in reference_books %}
     <li class="group flex flex-col items-center rounded-2xl border border-gray-700 bg-gradient-to-b from-gray-800 to-gray-900 p-5 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-pink-500 hover:shadow-2xl">
       <div class="relative mb-4 h-44 w-32 overflow-hidden rounded-xl bg-gray-700 ring-1 ring-white">
-        {% if book.image %}
         <img
-          src="{{book.image.url}}"
+          src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
           alt="{{book.name}}"
           class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          data-fallback="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false"
-          data-search="{{book.name}} {{book.author}}"
+          data-search="{{book.name}}"
           onerror="recoImgError(this)"
         />
-        {% else %}
-        <img
-          src="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false"
-          alt="{{book.name}}"
-          class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          data-fallback="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false"
-          data-search="{{book.name}} {{book.author}}"
-          onerror="recoImgError(this)"
-        />
-        {% endif %}
       </div>
       <h2 class="text-center text-base font-bold leading-snug text-gray-100">{{book.name}}</h2>
       <h4 class="mt-1 text-xs text-blue-400">{{book.author}}</h4>
@@ -224,7 +200,7 @@
   {% for book in books_results %}
   <li class="flex flex-col items-center rounded-2xl border border-gray-700 bg-gradient-to-b from-gray-800 to-gray-900 p-4 shadow-lg">
     <div class="mb-3 h-36 w-28 overflow-hidden rounded-lg bg-gray-700 ring-1 ring-white">
-      <img src="{{book.image.url}}" alt="{{book.name}}" class="h-full w-full object-cover" data-fallback="https://covers.openlibrary.org/b/isbn/{{book.isbn|default:''|slice:'0:1'}}-L.jpg?default=false" data-search="{{book.name}} {{book.author}}" data-isbn="{{book.isbn|default:''|slice:'0:1'}}" onerror="recoImgError(this)" />
+      <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="{{book.name}}" class="h-full w-full object-cover" data-search="{{book.name}}" onerror="recoImgError(this)" />
     </div>
     <h2 class="text-center text-sm font-bold text-gray-100">{{book.name}}</h2>
     <h4 class="text-xs text-blue-400">{{book.author}}</h4>
@@ -305,17 +281,9 @@
   }
 
   function recoImgError(img) {
-    const fb = img.getAttribute('data-fallback');
-    if (fb && !img.dataset.triedFb) {
-      img.dataset.triedFb = '1';
-      img.src = fb;
-      return;
-    }
     if (!img.dataset.triedSearch) {
       img.dataset.triedSearch = '1';
       const cands = parseCandidates(img.getAttribute('data-search'));
-      const isbn = (img.dataset.isbn || '').replace(/[^0-9Xx]/g, '');
-      if (isbn) cands.unshift(isbn); // try Open Library search by ISBN first
       tryCandidates(cands, 0, img);
       return;
     }
