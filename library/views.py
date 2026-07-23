@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from django.contrib import auth
 from django.conf import settings
 import re
+import os
+import markdown
 
 
 # Book
@@ -294,5 +296,19 @@ def pay_status(request,fineID):
 
 
 def documentation(request):
-    return render(request, 'library/documentation.html')
+    base = os.path.join(os.path.dirname(__file__), 'docs')
+    srd_path = os.path.join(base, 'srd_week2.md')
+    sdd_path = os.path.join(base, 'sdd_week3.md')
+    srd_text = ''
+    sdd_text = ''
+    if os.path.exists(srd_path):
+        with open(srd_path, 'r', encoding='utf-8') as f:
+            srd_text = markdown.markdown(f.read())
+    if os.path.exists(sdd_path):
+        with open(sdd_path, 'r', encoding='utf-8') as f:
+            sdd_text = markdown.markdown(f.read())
+    return render(request, 'library/documentation.html', {
+        'srd_text': srd_text,
+        'sdd_text': sdd_text,
+    })
 
