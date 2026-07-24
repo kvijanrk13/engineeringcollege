@@ -41,3 +41,4 @@ streamlit==1.41.1
 psycopg==3.1.19
 
 razorpay==1.2.0
+markdown==3.6
