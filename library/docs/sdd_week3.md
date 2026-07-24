@@ -8,8 +8,6 @@ Figure 3.1: System Architecture of Engineering College Library Management System
 
 Figure 3.1 illustrates the layered architecture of the Anurag Engineering College Library Management System. The architecture follows a modular and scalable design in which users interact with the system through secure authentication. The application is developed using the Django MVC framework, while PostgreSQL stores application data and Cloudinary stores book cover images. The entire application is deployed on the Render cloud platform.
 
-![System Architecture](/static/docs/images/sdd_image6.jpeg)
-
 1.1 Architecture Overview
 
 The Engineering College Library Management System follows a layered architecture consisting of six logical layers. Each layer performs a specific responsibility and communicates only with the adjacent layer. This separation improves modularity, maintainability, scalability, and security.
