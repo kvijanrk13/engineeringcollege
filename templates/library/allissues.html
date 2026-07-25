@@ -1,7 +1,13 @@
 {% extends 'aeclibrary/base.html' %} {% block heading %} All Issues {% endblock heading %}
 {% block content %}
-<div class="mb-6">
+<div class="mb-6 flex flex-wrap items-center gap-3">
   <a href="/aeclibrary/" class="inline-block rounded-full bg-gradient-to-r from-pink-600 to-pink-500 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-pink-500/30 transition-transform duration-200 hover:scale-105">HOME</a>
+  {% if user.is_superuser %}
+  <form method="POST" action="/aeclibrary/clear-issues/" class="inline-block" onsubmit="return confirm('Are you sure you want to clear all pending issues? This cannot be undone.');">
+    {% csrf_token %}
+    <button type="submit" class="inline-block rounded-full bg-gradient-to-r from-red-600 to-red-500 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-red-500/30 transition-transform duration-200 hover:scale-105">CLEAR</button>
+  </form>
+  {% endif %}
 </div>
 <div class="mb-6 rounded-xl border border-gray-700 bg-gray-800 p-4 shadow">
   <h2 class="text-lg font-bold text-white">Library Statistics</h2>

@@ -182,6 +182,16 @@ def requestedissues(request):
 
 @login_required(login_url='/admin/')
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/aeclibrary/student/signup/')
+def clear_issues(request):
+    if request.method == "POST":
+        deleted_count, _ = Issue.objects.filter(issued=False).delete()
+        LibraryStat.objects.filter(id=1).update(borrowed_books=Issue.objects.filter(issued=True, returned=False).count())
+        messages.success(request, f'{deleted_count} pending issue(s) cleared successfully.')
+    return redirect('/aeclibrary/all-issues/')
+
+
+@login_required(login_url='/admin/')
+@user_passes_test(lambda u:  u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def issue_book(request,issueID):
     issue=Issue.objects.get(id=issueID)
     if issue.issued:
