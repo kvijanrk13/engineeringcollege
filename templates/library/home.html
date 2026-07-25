@@ -59,12 +59,17 @@
       <p class="mt-1 text-3xl font-extrabold text-white">{{ total }}</p>
     </div>
     <div class="rounded-2xl border border-orange-500/40 bg-gradient-to-br from-orange-900 to-gray-900 p-5 text-center shadow-lg">
+      {% if user.is_superuser %}
       <form method="post" action="{% url 'reset_issued' %}" class="contents" onsubmit="return confirm('Are you sure you want to reset all issued books? This will set Issued to 0 and Available = Total.');">
         {% csrf_token %}
         <button type="submit" class="inline-block rounded-full bg-gradient-to-r from-orange-600 to-orange-500 px-6 py-2 text-base font-bold text-white shadow-lg shadow-orange-500/30 transition-transform duration-200 hover:scale-105">
           RESET
         </button>
       </form>
+      {% else %}
+      <p class="text-sm font-semibold uppercase tracking-wider text-orange-300">Reset</p>
+      <p class="mt-1 text-3xl font-extrabold text-white">-</p>
+      {% endif %}
     </div>
   </div>
 
