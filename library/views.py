@@ -64,13 +64,46 @@ def search(request):
     search_query=request.GET.get('search-query')
     search_by_author=request.GET.get('author')
     requestedbooks,issuedbooks=getmybooks(request.user)
+    
+    allbooks=Book.objects.all()
+    text_books=allbooks.filter(category='TEXT')
+    reference_books=allbooks.filter(category='REFERENCE')
+    recommendations=BookRecommendation.objects.all().order_by('id').exclude(title__icontains='laboratory')
+
+    copies_sum = 0
+    for rec in recommendations:
+        try:
+            copies_sum += int((rec.copies_recommended or '0').strip())
+        except ValueError:
+            pass
+
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
+    borrowed = min(stat.borrowed_books, max(copies_sum, 0))
+    issued = borrowed
+    available = max(copies_sum - borrowed, 0)
+    total = available + issued
+
+    context = {
+        'books':allbooks,
+        'text_books':text_books,
+        'reference_books':reference_books,
+        'issuedbooks':issuedbooks,
+        'requestedbooks':requestedbooks,
+        'recommendations':recommendations,
+        'total':total,
+        'issued':issued,
+        'available':available,
+        'copies_sum':copies_sum
+    }
 
     if search_by_author is not None:
         author_results=Author.objects.filter(name__icontains=search_query)
-        return render(request,'library/home.html',{'author_results':author_results,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks})
+        context['author_results']=author_results
     else:
         books_results=Book.objects.filter(Q(name__icontains=search_query) | Q(category__icontains=search_query))
-        return render(request,'library/home.html',{'books_results':books_results,'issuedbooks':issuedbooks,'requestedbooks':requestedbooks})
+        context['books_results']=books_results
+    
+    return render(request,'library/home.html', context)
 
 
 

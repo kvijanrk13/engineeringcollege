@@ -33,11 +33,26 @@
     {% include 'aeclibrary/nav.html' %}
     <!-- Title of the page -->
     <header
-      class="flex flex-row justify-between items-end mb-5 md:mx-auto max-w-5xl p-2"
+      class="flex flex-col md:flex-row md:items-end md:justify-between mb-5 md:mx-auto max-w-5xl p-2"
     >
-      <h1 class="font-bold text-lg sm:text-xl capitalize">
-        {%block heading %}{% endblock heading %}
-      </h1>
+      <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+        <h1 class="font-bold text-lg sm:text-xl capitalize">
+          {%block heading %}{% endblock heading %}
+        </h1>
+        <form class="flex flex-col sm:flex-row sm:items-center gap-2" action="/aeclibrary/search/" method="GET">
+          <input
+            class="w-full sm:w-64 px-3 py-1 bg-transparent border border-white rounded text-white placeholder-gray-400"
+            type="text"
+            name="search-query"
+            placeholder="Search books..."
+            required
+          />
+          <div class="flex gap-2">
+            <button type="submit" name="author" value="1" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded">Author</button>
+            <button type="submit" name="book" value="1" class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 text-xs font-bold px-3 py-1 rounded">Book</button>
+          </div>
+        </form>
+      </div>
       {% if user.is_anonymous %}
       <h2 class="text-red-400 sm:pr-5 xl:pr-3">logged out</h2>
       {% else %}
