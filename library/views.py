@@ -183,10 +183,17 @@ def requestedissues(request):
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/aeclibrary/student/signup/')
 def issue_book(request,issueID):
     issue=Issue.objects.get(id=issueID)
+    if issue.issued:
+        messages.error(request, 'Book is already issued.')
+        return redirect('/aeclibrary/all-issues/')
     issue.return_date=timezone.now() + datetime.timedelta(days=15)
     issue.issued_at=timezone.now()
     issue.issued=True
     issue.save()
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
+    stat.borrowed_books = max(stat.borrowed_books + 1, 0)
+    stat.save()
+    messages.success(request, 'Book issued successfully.')
     return redirect('/aeclibrary/all-issues/')
 
 
@@ -197,6 +204,10 @@ def return_book(request,issueID):
     calcFine(issue)
     issue.returned=True
     issue.save()
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
+    stat.borrowed_books = max(stat.borrowed_books - 1, 0)
+    stat.save()
+    messages.success(request, 'Book returned successfully.')
     return redirect('/aeclibrary/all-issues/')
 
 
