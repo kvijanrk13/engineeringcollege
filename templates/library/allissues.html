@@ -1,5 +1,8 @@
 {% extends 'aeclibrary/base.html' %} {% block heading %} All Issues {% endblock heading %}
 {% block content %}
+<div class="mb-6">
+  <a href="/aeclibrary/" class="inline-block rounded-full bg-gradient-to-r from-pink-600 to-pink-500 px-6 py-2 text-sm font-bold text-white shadow-lg shadow-pink-500/30 transition-transform duration-200 hover:scale-105">HOME</a>
+</div>
 <div class="mb-6 rounded-xl border border-gray-700 bg-gray-800 p-4 shadow">
   <h2 class="text-lg font-bold text-white">Library Statistics</h2>
   <p class="text-gray-300">Currently Borrowed Books: <span class="font-semibold text-pink-400">{{ library_stat.borrowed_books }}</span></p>
