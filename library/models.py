@@ -2,6 +2,7 @@ from django.db import models
 from student.models import Student
 import datetime
 from django.utils import timezone
+from django.conf import settings
 # Create your models here.
 class Author(models.Model):
     name=models.CharField(max_length=350)
@@ -17,6 +18,15 @@ class Book(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def cloudinary_image_url(self):
+        if self.image and self.image.name:
+            cloud_name = getattr(settings, 'CLOUDINARY_CLOUD_NAME', None)
+            if cloud_name:
+                return f'https://res.cloudinary.com/{cloud_name}/image/upload/{self.image.name}.png'
+            return self.image.url
+        return ''
     
 class Issue(models.Model):
     student=models.ForeignKey(Student,on_delete=models.CASCADE)
