@@ -3,6 +3,8 @@ from student.models import Student
 import datetime
 from django.utils import timezone
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 # Create your models here.
 class Author(models.Model):
     name=models.CharField(max_length=350)
@@ -104,3 +106,10 @@ class BookRecommendation(models.Model):
 
     def __str__(self):
         return self.title or 'Book Recommendation'
+
+
+@receiver(post_save, sender=Issue)
+def update_library_stat(sender, instance, **kwargs):
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
+    stat.borrowed_books = Issue.objects.filter(issued=True, returned=False).count()
+    stat.save()

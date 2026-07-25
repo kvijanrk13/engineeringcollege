@@ -1,7 +1,7 @@
 from django.contrib import admin
 import datetime
 from django.utils import timezone
-from .models import Author,Book,Fine,Issue
+from .models import Author,Book,Fine,Issue,LibraryStat
 # Register your models here.
 
 
@@ -70,5 +70,15 @@ class AuthorAdmin(admin.ModelAdmin):
         BookInline,
     ]
     list_per_page=30
+ 
+
+@admin.register(LibraryStat)
+class LibraryStatAdmin(admin.ModelAdmin):
+    list_display=('id','borrowed_books')
+    readonly_fields = ('borrowed_books',)
+    def has_add_permission(self, request):
+        return False
+    def has_delete_permission(self, request, obj=None):
+        return False
  
 

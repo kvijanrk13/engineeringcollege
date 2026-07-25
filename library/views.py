@@ -159,6 +159,7 @@ def myissues(request):
 @login_required(login_url='/admin/')
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
 def requestedissues(request):
+    stat, _ = LibraryStat.objects.get_or_create(id=1)
     if request.GET.get('studentID') is not None and request.GET.get('studentID') != '':
         try:
             user= User.objects.get(username=request.GET.get('studentID'))
@@ -166,7 +167,7 @@ def requestedissues(request):
             if student:
                 student=student[0]
                 issues=Issue.objects.filter(student=student,issued=False)
-                return render(request,'library/allissues.html',{'issues':issues})
+                return render(request,'library/allissues.html',{'issues':issues,'library_stat':stat})
             messages.error(request,'No Student found')
             return redirect('/aeclibrary/all-issues/') 
         except User.DoesNotExist:
@@ -175,7 +176,7 @@ def requestedissues(request):
 
     else:
         issues=Issue.objects.filter(issued=False)
-        return render(request,'library/allissues.html',{'issues':issues})
+        return render(request,'library/allissues.html',{'issues':issues,'library_stat':stat})
 
 
 
@@ -190,9 +191,6 @@ def issue_book(request,issueID):
     issue.issued_at=timezone.now()
     issue.issued=True
     issue.save()
-    stat, _ = LibraryStat.objects.get_or_create(id=1)
-    stat.borrowed_books = max(stat.borrowed_books + 1, 0)
-    stat.save()
     messages.success(request, 'Book issued successfully.')
     return redirect('/aeclibrary/all-issues/')
 
@@ -204,9 +202,6 @@ def return_book(request,issueID):
     calcFine(issue)
     issue.returned=True
     issue.save()
-    stat, _ = LibraryStat.objects.get_or_create(id=1)
-    stat.borrowed_books = max(stat.borrowed_books - 1, 0)
-    stat.save()
     messages.success(request, 'Book returned successfully.')
     return redirect('/aeclibrary/all-issues/')
 
