@@ -238,13 +238,41 @@ def allfines(request):
     issues=Issue.objects.all()
     for issue in issues:
         calcFine(issue)
-    return redirect('/admin/library/fine/')
+    fines=Fine.objects.all().order_by('-id')
+    return render(request,'library/allfines.html',{'fines':fines})
 
 @login_required(login_url='/aeclibrary/student/signup/')
 @user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
 def deletefine(request,fineID):
     fine=Fine.objects.get(id=fineID)
     fine.delete()
+    messages.success(request, 'Fine deleted successfully.')
+    return redirect('/aeclibrary/all-fines/')
+
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
+def update_fine(request,fineID):
+    fine=Fine.objects.get(id=fineID)
+    if request.method == "POST":
+        amount = request.POST.get('amount')
+        if amount is not None:
+            try:
+                fine.amount = float(amount)
+                fine.save()
+                messages.success(request, 'Fine amount updated successfully.')
+            except ValueError:
+                messages.error(request, 'Invalid amount.')
+        return redirect('/aeclibrary/all-fines/')
+    return redirect('/aeclibrary/all-fines/')
+
+@login_required(login_url='/aeclibrary/student/signup/')
+@user_passes_test(lambda u:  u.is_superuser ,login_url='/admin/')
+def waive_fine(request,fineID):
+    fine=Fine.objects.get(id=fineID)
+    fine.paid = True
+    fine.amount = 0
+    fine.save()
+    messages.success(request, 'Fine waived successfully.')
     return redirect('/aeclibrary/all-fines/')
 
 @login_required(login_url='/aeclibrary/student/signup/')
