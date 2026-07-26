@@ -354,10 +354,10 @@ def documentation(request):
     sdd_text = ''
     if os.path.exists(srd_path):
         with open(srd_path, 'r', encoding='utf-8') as f:
-            srd_text = markdown.markdown(f.read())
+            srd_text = markdown.markdown(f.read(), extensions=['tables'])
     if os.path.exists(sdd_path):
         with open(sdd_path, 'r', encoding='utf-8') as f:
-            sdd_text = markdown.markdown(f.read())
+            sdd_text = markdown.markdown(f.read(), extensions=['tables'])
     return render(request, 'library/documentation.html', {
         'srd_text': srd_text,
         'sdd_text': sdd_text,
