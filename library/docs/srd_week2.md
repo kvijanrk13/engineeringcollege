@@ -84,6 +84,19 @@ System Configuration
 
 1.3 Definitions, Acronyms and Abbreviations
 
+| Abbreviation | Meaning |
+|--------------|---------|
+| ECLMS | Engineering College Library Management System |
+| LMS | Library Management System |
+| ISBN | International Standard Book Number |
+| GUI | Graphical User Interface |
+| DBMS | Database Management System |
+| MVC | Model View Controller |
+| CRUD | Create, Read, Update, Delete |
+| OAuth | Open Authorization |
+| HTTPS | Hyper Text Transfer Protocol Secure |
+| SQL | Structured Query Language |
+
 1.4 References
 
 IEEE 830 Software Requirements Specification Standard

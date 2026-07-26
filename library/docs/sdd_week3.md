@@ -436,6 +436,105 @@ High Scalability
 
 10. Data Tables
 
+Table 1: Student Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Student_ID | Integer | Primary Key | Unique identification number |
+| 2 | Roll_Number | Varchar | 20 | College Roll Number |
+| 3 | Student_Name | Varchar | 100 | Name of Student |
+| 4 | Email | Varchar | 100 | College Gmail Address |
+| 5 | Department | Varchar | 50 | Department Name |
+| 6 | Semester | Integer | 2 | Current Semester |
+| 7 | Phone_Number | Varchar | 15 | Contact Number |
+| 8 | Status | Boolean | - | Active / Inactive |
+
+Table 2: Librarian Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Librarian_ID | Integer | Primary Key | Unique Librarian ID |
+| 2 | Librarian_Name | Varchar | 100 | Name of Librarian |
+| 3 | Email | Varchar | 100 | Official Email |
+| 4 | Phone | Varchar | 15 | Mobile Number |
+| 5 | Username | Varchar | 50 | Login Username |
+| 6 | Password | Varchar | 255 | Encrypted Password |
+
+Table 3: Administrator Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Admin_ID | Integer | Primary Key | Administrator ID |
+| 2 | Admin_Name | Varchar | 100 | Administrator Name |
+| 3 | Email | Varchar | 100 | Official Email |
+| 4 | Username | Varchar | 50 | Login Username |
+| 5 | Password | Varchar | 255 | Encrypted Password |
+
+Table 4: Book Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Book_ID | Integer | Primary Key | Unique Book ID |
+| 2 | ISBN | Varchar | 20 | International Standard Book Number |
+| 3 | Book_Title | Varchar | 200 | Title of Book |
+| 4 | Author | Varchar | 150 | Author Name |
+| 5 | Publisher | Varchar | 100 | Publisher Name |
+| 6 | Category | Varchar | 50 | Book Category |
+| 7 | Department | Varchar | 50 | Department |
+| 8 | Edition | Varchar | 20 | Edition |
+| 9 | Price | Decimal | 10,2 | Book Cost |
+| 10 | Rack_Number | Varchar | 20 | Rack Location |
+| 11 | Quantity | Integer | - | Total Copies |
+| 12 | Available_Copies | Integer | - | Available Books |
+| 13 | Book_Cover | Varchar | 255 | Cloudinary Image URL |
+
+Table 5: Issue Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Issue_ID | Integer | Primary Key | Issue Transaction ID |
+| 2 | Student_ID | Integer | Foreign Key | Borrowing Student |
+| 3 | Book_ID | Integer | Foreign Key | Issued Book |
+| 4 | Issue_Date | Date | 10 | Book Issue Date |
+| 5 | Due_Date | Date | 10 | Expected Return Date |
+| 6 | Return_Date | Date | 10 | Actual Return Date |
+| 7 | Status | Varchar | 20 | Issued / Returned |
+
+Table 6: Fine Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Fine_ID | Integer | Primary Key | Fine ID |
+| 2 | Issue_ID | Integer | Foreign Key | Book Issue Record |
+| 3 | Fine_Amount | Decimal | 10,2 | Fine Amount |
+| 4 | Fine_Status | Varchar | 20 | Paid / Unpaid |
+| 5 | Payment_Date | Date | 10 | Date of Payment |
+
+Table 7: Category Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Category_ID | Integer | Primary Key | Category ID |
+| 2 | Category_Name | Varchar | 100 | Category Name |
+| 3 | Description | Text | - | Category Description |
+
+Table 8: Department Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Department_ID | Integer | Primary Key | Department ID |
+| 2 | Department_Name | Varchar | 100 | Department Name |
+| 3 | HOD_Name | Varchar | 100 | Head of Department |
+
+Table 9: Publisher Table
+
+| S.No | Column Name | Data Type | Length | Description |
+|------|-------------|-----------|--------|-------------|
+| 1 | Publisher_ID | Integer | Primary Key | Publisher ID |
+| 2 | Publisher_Name | Varchar | 100 | Publisher Name |
+| 3 | Address | Text | - | Publisher Address |
+| 4 | Phone_Number | Varchar | 15 | Contact Number |
+
 11. CONCLUSION
 
 The proposed layered architecture provides a secure, modular, scalable, and maintainable design for the Engineering College Library Management System. By separating user interaction, authentication, application logic, functional modules, data storage, and deployment into independent layers, the system becomes easier to develop, test, maintain, and extend. This architecture is well suited for modern engineering college libraries and aligns with best practices in software engineering.
