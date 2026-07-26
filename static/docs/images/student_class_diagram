@@ -1,0 +1,9 @@
+digraph student_app {
+	bgcolor=transparent rankdir=TB
+	node [fontname=Arial fontsize=10 shape=record style=rounded]
+	Department [label="<f0> Department | <f1> - id : BigInteger | <f2> - name : Varchar(200) | <f3> + __str__() : String"]
+	Student [label="<f0> Student | <f1> - id : BigInteger | <f2> - first_name : Varchar(120) | <f3> - last_name : Varchar(120) | <f4> + __str__() : String"]
+	auth_user [label="<f0> auth_user | <f1> - id : BigInteger | <f2> - username : Varchar(150) | <f3> - password : Varchar(128) | <f4> - email : Varchar(254) | <f5> - is_active : Boolean | <f6> - is_staff : Boolean | <f7> - is_superuser : Boolean | <f8> - last_login : DateTime | <f9> - date_joined : DateTime | <f10> + __str__() : String"]
+	Department -> Student [label=1 arrowhead=none]
+	auth_user -> Student [label=1 arrowhead=none style=dashed]
+}

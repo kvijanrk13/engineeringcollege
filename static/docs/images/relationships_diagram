@@ -1,0 +1,27 @@
+digraph relationships {
+	bgcolor=transparent rankdir=TB
+	node [color="#9ca3af" fillcolor="#1f2937" fontcolor="#f3f4f6" fontname=Arial fontsize=10 shape=box style="rounded,filled"]
+	edge [color="#9ca3af" fontcolor="#d1d5db" fontname=Arial fontsize=9]
+	subgraph cluster_library {
+		color="#374151" fillcolor="#111827" fontcolor="#f3f4f6" fontname=Arial fontsize=12 label="Library App" style="rounded,filled"
+		Author [label=Author]
+		Book [label=Book]
+		Issue [label=Issue]
+		Fine [label=Fine]
+		LibraryStat [label=LibraryStat]
+		BookRecommendation [label=BookRecommendation]
+	}
+	subgraph cluster_student {
+		color="#374151" fillcolor="#111827" fontcolor="#f3f4f6" fontname=Arial fontsize=12 label="Student App" style="rounded,filled"
+		Department [label=Department]
+		Student [label=Student]
+		auth_user [label=auth_user]
+	}
+	Author -> Book [label=1 arrowhead=none]
+	Book -> Issue [label=1 arrowhead=none]
+	Issue -> Fine [label=1 arrowhead=none]
+	Student -> Issue [label=1 arrowhead=none style=dashed]
+	Book -> Issue [label=1 arrowhead=none style=dashed]
+	Department -> Student [label=1 arrowhead=none]
+	auth_user -> Student [label=1 arrowhead=none style=dashed]
+}

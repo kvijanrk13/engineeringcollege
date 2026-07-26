@@ -6,6 +6,8 @@
 
 #### 1.1 Class Diagram - Library App
 
+![Library App Class Diagram](/static/docs/images/library_class_diagram.svg)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                          Author                                 │
@@ -97,6 +99,8 @@
 
 #### 1.2 Class Diagram - Student App
 
+![Student App Class Diagram](/static/docs/images/student_class_diagram.svg)
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                          Department                             │
@@ -139,6 +143,8 @@
 ```
 
 #### 1.3 Relationships Between Apps
+
+![Relationships Between Apps](/static/docs/images/relationships_diagram.svg)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
