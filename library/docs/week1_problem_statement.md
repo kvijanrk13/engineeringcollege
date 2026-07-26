@@ -15,11 +15,11 @@ The existing system is physical maintenance of the library in which all the libr
 The proposed system is a Book Bank / Library Management System (LMS). All the difficulties in manual management of the library have been rectified by implementing a computerized system. With this, the administrator (librarian) can add members, add books, search members, search books, update information, edit information, borrow and return books in quick time.
 
 The proposed system has the following advantages:
-1. It provides "better and efficient" service to members.
-2. Reduces the workload of employees.
-3. Faster retrieval of information about the desired book.
-4. Provides facility for proper monitoring, thus reduces paperwork and provides data security.
-5. All details will be available at a click.
+- 1. It provides "better and efficient" service to members.
+- 2. Reduces the workload of employees.
+- 3. Faster retrieval of information about the desired book.
+- 4. Provides facility for proper monitoring, thus reduces paperwork and provides data security.
+- 5. All details will be available at a click.
 
 ---
 

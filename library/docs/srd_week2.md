@@ -35,71 +35,43 @@ The system provides the following facilities.
 
 For Students
 
-Login using Google Gmail Authentication
-
-Search books by Title
-
-Search books by Author
-
-Search books by ISBN
-
-Search books by Category
-
-View Book Availability
-
-Borrow Books
-
-Return Books
-
-Renew Books
-
-View Borrowing History
-
-View Fine Details
-
-Update Profile
+- Login using Google Gmail Authentication
+- Search books by Title
+- Search books by Author
+- Search books by ISBN
+- Search books by Category
+- View Book Availability
+- Borrow Books
+- Return Books
+- Renew Books
+- View Borrowing History
+- View Fine Details
+- Update Profile
 
 For Librarians
 
-Secure Login
-
-Add New Books
-
-Update Book Details
-
-Delete Books
-
-Manage Student Records
-
-Issue Books
-
-Return Books
-
-Renew Books
-
-Calculate Fine Automatically
-
-Search Books
-
-Generate Reports
+- Secure Login
+- Add New Books
+- Update Book Details
+- Delete Books
+- Manage Student Records
+- Issue Books
+- Return Books
+- Renew Books
+- Calculate Fine Automatically
+- Search Books
+- Generate Reports
 
 For Administrator
 
-Manage Librarians
-
-Manage Departments
-
-Manage Book Categories
-
-Manage Publishers
-
-Dashboard Monitoring
-
-User Management
-
-Database Backup
-
-System Configuration
+- Manage Librarians
+- Manage Departments
+- Manage Book Categories
+- Manage Publishers
+- Dashboard Monitoring
+- User Management
+- Database Backup
+- System Configuration
 
 1.4 Definitions, Acronyms and Abbreviations
 

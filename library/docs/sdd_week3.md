@@ -40,23 +40,15 @@ Students are the primary users of the system.
 
 The student module provides facilities to
 
-Search books using title, author, ISBN, publisher, or category.
-
-View complete book information.
-
-Check real-time book availability.
-
-Borrow books.
-
-Renew issued books before the due date.
-
-Return borrowed books.
-
-View borrowing history.
-
-View overdue fine details.
-
-Update personal profile.
+- Search books using title, author, ISBN, publisher, or category.
+- View complete book information.
+- Check real-time book availability.
+- Borrow books.
+- Renew issued books before the due date.
+- Return borrowed books.
+- View borrowing history.
+- View overdue fine details.
+- Update personal profile.
 
 Responsibilities
 
