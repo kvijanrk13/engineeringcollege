@@ -2,13 +2,32 @@
 
 1. Introduction
 
-1.1 Purpose
+1.1 Problem Statement
+
+A Library Management System (LMS) is a project that manages and stores books information electronically according to user needs. The system helps students, faculty, and library administrators to keep a constant track of all the books available in the library. It allows both the admin and the member to search for the desired book. It becomes necessary for educational institutes like colleges to keep a continuous check on the books issued and returned and even calculate fines. This task, if carried out manually, will be tedious and includes chances of mistakes. These errors are avoided by allowing the system to keep track of information such as issue date, last date to return the book, and even fine information, and thus there is no need to keep manual track of this information which thereby avoids chances of mistakes. Thus, this system reduces manual work to a great extent and allows smooth flow of library activities by removing chances of errors in the details.
+
+Existing System:
+
+The existing system is physical maintenance of the library in which all the library transactions are done manually. This method takes more time for a transaction like borrowing a book or returning a book and also for searching of members and books. Another major disadvantage is that preparing the list of books borrowed and the available books in the library will take more time. It takes several days to verify all records in the case of larger libraries.
+
+Proposed System:
+
+The proposed system is a Book Bank / Library Management System (LMS). All the difficulties in manual management of the library have been rectified by implementing a computerized system. With this, the administrator (librarian) can add members, add books, search members, search books, update information, edit information, borrow and return books in quick time.
+
+The proposed system has the following advantages:
+1. It provides "better and efficient" service to members.
+2. Reduces the workload of employees.
+3. Faster retrieval of information about the desired book.
+4. Provides facility for proper monitoring, thus reduces paperwork and provides data security.
+5. All details will be available at a click.
+
+1.2 Purpose
 
 The purpose of this document is to specify the software requirements for the Anurag Engineering College Library Management System (AECLMS). The application is developed to automate library operations such as maintaining book records, member registration, book issue, return, renewal, fine calculation, and report generation. The system provides a secure, user-friendly, and web-based platform that minimizes manual work and improves the efficiency of library management.
 
 This document defines all functional and non-functional requirements, system constraints, assumptions, interfaces, and operational characteristics that will guide the development, testing, deployment, and maintenance of the system.
 
-1.2 Scope
+1.3 Scope
 
 The Engineering College Library Management System is a cloud-based web application developed using the Django framework.
 
@@ -82,7 +101,7 @@ Database Backup
 
 System Configuration
 
-1.3 Definitions, Acronyms and Abbreviations
+1.4 Definitions, Acronyms and Abbreviations
 
 | Abbreviation | Meaning |
 |--------------|---------|
@@ -97,7 +116,7 @@ System Configuration
 | HTTPS | Hyper Text Transfer Protocol Secure |
 | SQL | Structured Query Language |
 
-1.4 References
+1.5 References
 
 IEEE 830 Software Requirements Specification Standard
 
@@ -113,7 +132,7 @@ Google OAuth Documentation
 
 Bootstrap Documentation
 
-1.5 Overview
+1.6 Overview
 
 The Engineering College Library Management System consists of three major users.
 

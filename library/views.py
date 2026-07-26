@@ -348,10 +348,15 @@ def pay_status(request,fineID):
 
 def documentation(request):
     base = os.path.join(os.path.dirname(__file__), 'docs')
+    week1_path = os.path.join(base, 'week1_problem_statement.md')
     srd_path = os.path.join(base, 'srd_week2.md')
     sdd_path = os.path.join(base, 'sdd_week3.md')
+    week1_text = ''
     srd_text = ''
     sdd_text = ''
+    if os.path.exists(week1_path):
+        with open(week1_path, 'r', encoding='utf-8') as f:
+            week1_text = markdown.markdown(f.read(), extensions=['tables'])
     if os.path.exists(srd_path):
         with open(srd_path, 'r', encoding='utf-8') as f:
             srd_text = markdown.markdown(f.read(), extensions=['tables'])
@@ -359,6 +364,7 @@ def documentation(request):
         with open(sdd_path, 'r', encoding='utf-8') as f:
             sdd_text = markdown.markdown(f.read(), extensions=['tables'])
     return render(request, 'library/documentation.html', {
+        'week1_text': week1_text,
         'srd_text': srd_text,
         'sdd_text': sdd_text,
     })
