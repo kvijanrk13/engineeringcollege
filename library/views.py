@@ -62,53 +62,22 @@ def sort(request):
 
 def search(request):
     search_query = request.GET.get('search-query', '').strip()
-    search_by_author = request.GET.get('author')
     requestedbooks, issuedbooks = getmybooks(request.user)
-    
+
     if not search_query:
         messages.warning(request, 'Please enter a search term.')
         return redirect('library_home')
 
-    allbooks = Book.objects.all()
-    text_books = allbooks.filter(category='TEXT')
-    reference_books = allbooks.filter(category='REFERENCE')
-    recommendations = BookRecommendation.objects.all().order_by('id').exclude(title__icontains='laboratory')
+    author_results = Author.objects.filter(name__icontains=search_query)
+    books_results = Book.objects.filter(Q(name__icontains=search_query) | Q(category__icontains=search_query))
 
-    copies_sum = 0
-    for rec in recommendations:
-        try:
-            copies_sum += int((rec.copies_recommended or '0').strip())
-        except ValueError:
-            pass
-
-    stat, _ = LibraryStat.objects.get_or_create(id=1)
-    borrowed = min(stat.borrowed_books, max(copies_sum, 0))
-    issued = borrowed
-    available = max(copies_sum - borrowed, 0)
-    total = available + issued
-
-    context = {
-        'books': allbooks,
-        'text_books': text_books,
-        'reference_books': reference_books,
+    return render(request, 'library/search_results.html', {
+        'search_query': search_query,
+        'author_results': author_results,
+        'books_results': books_results,
         'issuedbooks': issuedbooks,
         'requestedbooks': requestedbooks,
-        'recommendations': recommendations,
-        'total': total,
-        'issued': issued,
-        'available': available,
-        'copies_sum': copies_sum,
-        'search_query': search_query,
-    }
-
-    if search_by_author is not None:
-        author_results = Author.objects.filter(name__icontains=search_query)
-        context['author_results'] = author_results
-    else:
-        books_results = Book.objects.filter(Q(name__icontains=search_query) | Q(category__icontains=search_query))
-        context['books_results'] = books_results
-
-    return render(request, 'library/home.html', context)
+    })
 
 
 
