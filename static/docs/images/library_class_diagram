@@ -1,15 +1,14 @@
 digraph library_app {
-	bgcolor=transparent rankdir=TB
-	node [fontname=Arial fontsize=10 shape=record style=rounded]
-	Author [label="<f0> Author | <f1> - id : BigInteger | <f2> - name : Varchar(350) | <f3> - description : Varchar(450) | <f4> + __str__() : String"]
-	Book [label="<f0> Book | <f1> - id : BigInteger | <f2> - name : Varchar(350) | <f3> - image : ImageField | <f4> - category : Varchar(220) | <f5> + __str__() : String | <f6> + cloudinary_image_url() : String"]
-	Issue [label="<f0> Issue | <f1> - id : BigInteger | <f2> - created_at : DateTime | <f3> - issued : Boolean | <f4> - issued_at : DateTime | <f5> - returned : Boolean | <f6> - return_date : DateTime | <f7> + __str__() : String | <f8> + days_no() : String"]
-	Fine [label="<f0> Fine | <f1> - id : BigInteger | <f2> - amount : Decimal(10,2) | <f3> - paid : Boolean | <f4> - order_id : Varchar(500) | <f5> - datetime_of_payment : DateTime | <f6> - razorpay_order_id : Varchar(500) | <f7> - razorpay_payment_id : Varchar(500) | <f8> - razorpay_signature : Varchar(500) | <f9> + save() | <f10> + __str__() : String"]
-	LibraryStat [label="<f0> LibraryStat | <f1> - id : BigInteger | <f2> - borrowed_books : PositiveInteger | <f3> + __str__() : String"]
-	BookRecommendation [label="<f0> BookRecommendation | <f1> - id : BigInteger | <f2> - image : ImageField | <f3> - title : Varchar(350) | <f4> - author : Varchar(350) | <f5> - book_type : TextField | <f6> - isbn : Varchar(50) | <f7> - publisher : Varchar(200) | <f8> - edition_year : Varchar(50) | <f9> - book_format : Varchar(10) | <f10> - copies_recommended : Varchar(20) | <f11> - existing : Varchar(20) | <f12> - cost : Varchar(50) | <f13> - created_at : DateTime | <f14> + __str__() : String"]
-	Author -> Book [label=1 arrowhead=none]
-	Book -> Issue [label=1 arrowhead=none]
-	Issue -> Fine [label=1 arrowhead=none]
-	Student -> Issue [label=1 arrowhead=none style=dashed]
-	Book -> Issue [label=1 arrowhead=none style=dashed]
+	bgcolor=white dpi=150 rankdir=TB
+	node [color=black fontname=Arial fontsize=10 shape=record]
+	edge [color=black fontname=Arial fontsize=9]
+	Author [label="{Author|+ id : BigInteger\l+ name : Varchar(350)\l+ description : Varchar(450)\l+ __str__() : String\l}"]
+	Book [label="{Book|+ id : BigInteger\l+ name : Varchar(350)\l+ image : ImageField\l+ category : Varchar(220)\l+ __str__() : String\l+ cloudinary_image_url() : String\l}"]
+	Issue [label="{Issue|+ id : BigInteger\l+ created_at : DateTime\l+ issued : Boolean\l+ issued_at : DateTime\l+ returned : Boolean\l+ return_date : DateTime\l+ __str__() : String\l+ days_no() : String\l}"]
+	Fine [label="{Fine|+ id : BigInteger\l+ amount : Decimal(10,2)\l+ paid : Boolean\l+ order_id : Varchar(500)\l+ datetime_of_payment : DateTime\l+ razorpay_order_id : Varchar(500)\l+ razorpay_payment_id : Varchar(500)\l+ razorpay_signature : Varchar(500)\l+ save()\l+ __str__() : String\l}"]
+	LibraryStat [label="{LibraryStat|+ id : BigInteger\l+ borrowed_books : PositiveInteger\l+ __str__() : String\l}"]
+	BookRecommendation [label="{BookRecommendation|+ id : BigInteger\l+ image : ImageField\l+ title : Varchar(350)\l+ author : Varchar(350)\l+ book_type : TextField\l+ isbn : Varchar(50)\l+ publisher : Varchar(200)\l+ edition_year : Varchar(50)\l+ book_format : Varchar(10)\l+ copies_recommended : Varchar(20)\l+ existing : Varchar(20)\l+ cost : Varchar(50)\l+ created_at : DateTime\l+ __str__() : String\l}"]
+	Author -> Book [label=1 arrowhead=none style=solid]
+	Book -> Issue [label=1 arrowhead=none style=solid]
+	Issue -> Fine [label="0..1" arrowhead=none style=solid]
 }
