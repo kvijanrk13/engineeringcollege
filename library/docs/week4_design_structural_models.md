@@ -22,6 +22,28 @@ These diagrams use the same visual conventions as a StarUML class diagram: a cle
 
 ![StarUML-style relationships between Library and Student apps](/static/docs/images/relationships_diagram.svg)
 
+## 2. DESIGN BEHAVIORAL MODELS
+
+### 2.1 Use Case Diagram - Student
+
+![StarUML-style Student use case diagram](/static/docs/images/student_use_case_diagram.svg)
+
+### 2.2 Use Case Diagram - Librarian/Admin
+
+![StarUML-style Librarian and Admin use case diagram](/static/docs/images/admin_use_case_diagram.svg)
+
+### 2.3 Sequence Diagram - Book Issue Flow
+
+![StarUML-style book issue sequence diagram](/static/docs/images/book_issue_sequence_diagram.svg)
+
+### 2.4 Statechart Diagram - Book Status
+
+![StarUML-style book status state machine diagram](/static/docs/images/book_status_statechart_diagram.svg)
+
+### 2.5 Activity Diagram - Library Operations
+
+![StarUML-style library operations activity diagram](/static/docs/images/library_operations_activity_diagram.svg)
+
 #### 1.4 UML Relationship Summary
 
 | Source | Relationship | Target | Multiplicity |
