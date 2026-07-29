@@ -46,6 +46,32 @@
   .doc-content p {
     margin: 0.6rem 0;
   }
+  .doc-content img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 780px;
+    object-fit: contain;
+    margin: 1.25rem auto 2rem;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #9ca3af;
+    border-radius: 0.25rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  }
+  .doc-content h1:first-child {
+    display: none;
+  }
+  .doc-content h2,
+  .doc-content h3,
+  .doc-content h4 {
+    margin-top: 1.5rem;
+    color: #f3f4f6;
+    font-weight: 700;
+  }
+  .doc-content code {
+    color: #f9a8d4;
+  }
 </style>
 {% endblock extra_css %}
 {% block content %}
