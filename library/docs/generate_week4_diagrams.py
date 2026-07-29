@@ -42,32 +42,79 @@ def edge(x1, y1, x2, y2, label="", left="", right="", dashed=False, arrow=False,
     return "".join(body)
 
 
+def relation(points, label="", source_mult="", target_mult="", dashed=False, target_arrow=False,
+             label_x=None, label_y=None, source_pos=None, target_pos=None):
+    """Draw an orthogonal UML relationship without placing text over the line."""
+    marker = ' marker-end="url(#open)"' if target_arrow else ""
+    dash = ' stroke-dasharray="7 5"' if dashed else ""
+    path = " ".join(
+        (f"M{x},{y}" if index == 0 else f"L{x},{y}")
+        for index, (x, y) in enumerate(points)
+    )
+    body = [f'<path d="{path}" fill="none"{marker}{dash}/>']
+    if label:
+        lx = label_x if label_x is not None else (points[0][0] + points[-1][0]) / 2
+        ly = label_y if label_y is not None else (points[0][1] + points[-1][1]) / 2
+        body.append(f'<rect x="{lx-64}" y="{ly-15}" width="128" height="20" rx="3" fill="#f7f7f7" stroke="none"/>')
+        body.append(txt(lx, ly, label, 12, "middle", "bold"))
+    sx, sy = source_pos or (points[0][0] + 8, points[0][1] - 8)
+    tx, ty = target_pos or (points[-1][0] - 8, points[-1][1] - 8)
+    if source_mult:
+        body.append(txt(sx, sy, source_mult, 12, "start", "bold"))
+    if target_mult:
+        body.append(txt(tx, ty, target_mult, 12, "end", "bold"))
+    return "".join(body)
+
+
 def save(name, title, width, height, body):
     (OUT / name).write_text(svg(title, width, height, body), encoding="utf-8")
 
 
 def structural():
-    nodes = []
-    author, _ = box(40, 75, 255, "Author", ["- id : BigInteger", "- name : String", "- description : String"], ["+ __str__() : String"])
-    book, _ = box(365, 60, 285, "Book", ["- id : BigInteger", "- name : String", "- image : ImageField", "- category : String", "- author : Author"], ["+ __str__() : String", "+ image_url() : String"])
-    issue, issue_h = box(725, 55, 310, "Issue", ["- id : BigInteger", "- student : Student", "- book : Book", "- created_at : DateTime", "- issued : Boolean", "- issued_at : DateTime", "- returned : Boolean", "- return_date : DateTime"], ["+ days_no() : String", "+ __str__() : String"])
-    fine, _ = box(705, 390, 330, "Fine", ["- id : BigInteger", "- student : Student", "- issue : Issue", "- amount : Decimal", "- paid : Boolean", "- order_id : String", "- payment_id : String"], ["+ save() : void", "+ __str__() : String"])
-    stats, _ = box(190, 405, 275, "LibraryStat", ["- id : BigInteger", "- borrowed_books : Integer"], ["+ __str__() : String"])
-    nodes += [author, book, issue, fine, stats, edge(295, 150, 365, 150, "writes", "1", "0..*", open_arrow=True), edge(650, 165, 725, 165, "issues", "1", "0..*", open_arrow=True), edge(880, 55+issue_h, 870, 390, "generates", "1", "0..1", open_arrow=True)]
-    save("library_class_diagram.svg", "Library App - Class Diagram", 1080, 700, "".join(nodes))
+    # Library app: every persistent model is shown. Student is included as an
+    # external class because both Issue and Fine contain real foreign keys to it.
+    author, _ = box(45, 85, 270, "Author", ["- id : BigInteger", "- name : String", "- description : String"], ["+ __str__() : String"])
+    book, _ = box(420, 70, 300, "Book", ["- id : BigInteger", "- name : String", "- image : ImageField", "- category : String", "- author : Author [FK]"], ["+ __str__() : String", "+ cloudinary_image_url : String"])
+    issue, _ = box(825, 55, 325, "Issue", ["- id : BigInteger", "- student : Student [FK]", "- book : Book [FK]", "- created_at : DateTime", "- issued : Boolean", "- issued_at : DateTime [0..1]", "- returned : Boolean", "- return_date : DateTime [0..1]"], ["+ days_no() : String", "+ __str__() : String"])
+    student, _ = box(1245, 105, 250, "Student", ["«external: student app»", "- id : BigInteger"], ["+ __str__() : String"])
+    fine, _ = box(825, 470, 360, "Fine", ["- id : BigInteger", "- student : Student [FK]", "- issue : Issue [FK]", "- amount : Decimal", "- paid : Boolean", "- order_id : String [0..1]", "- razorpay_order_id : String [0..1]", "- razorpay_payment_id : String [0..1]", "- razorpay_signature : String [0..1]", "- datetime_of_payment : DateTime [0..1]"], ["+ save() : void", "+ __str__() : String"])
+    stats, _ = box(420, 500, 300, "LibraryStat", ["- id : BigInteger", "- borrowed_books : PositiveInteger"], ["+ __str__() : String"])
+    rec, _ = box(45, 430, 330, "BookRecommendation", ["- id : BigInteger", "- image : ImageField [0..1]", "- title : String", "- author : String", "- book_type : Text", "- isbn : String", "- publisher : String", "- edition_year : String", "- book_format : {Hard, E-book}", "- copies_recommended : String", "- existing : String", "- cost : String", "- created_at : DateTime"], ["+ __str__() : String"])
+    body = author + book + issue + student + fine + stats + rec
+    body += relation([(315, 150), (420, 150)], "writes / author", "1", "0..*", target_arrow=True, label_y=133)
+    body += relation([(720, 165), (825, 165)], "issue records / book", "1", "0..*", target_arrow=True, label_y=148)
+    body += relation([(1150, 185), (1245, 185)], "borrower / issues", "0..*", "1", dashed=True, target_arrow=True, label_y=168)
+    body += relation([(990, 305), (990, 470)], "generates / issue", "1", "0..*", target_arrow=True, label_x=1070, label_y=397)
+    body += relation([(1185, 590), (1380, 590), (1380, 233)], "charged to / fines", "0..*", "1", dashed=True, target_arrow=True, label_x=1300, label_y=575)
+    body += relation([(825, 275), (765, 275), (765, 560), (720, 560)], "updates on save", "", "1", dashed=True, target_arrow=True, label_x=765, label_y=425)
+    body += txt(210, 760, "Independent recommendation record (no ForeignKey relationships)", 12, "middle", "bold")
+    save("library_class_diagram.svg", "Library App - Complete Class Diagram", 1540, 810, body)
 
-    user, _ = box(45, 90, 280, "auth.User", ["- id : BigInteger", "- username : String", "- email : Email", "- password : String"], ["+ get_full_name() : String"])
-    student, _ = box(405, 70, 315, "Student", ["- id : BigInteger", "- student_id : User", "- department : Department", "- first_name : String", "- last_name : String"], ["+ __str__() : String"])
-    dept, _ = box(800, 105, 250, "Department", ["- id : BigInteger", "- name : String"], ["+ __str__() : String"])
-    body = user+student+dept+edge(325,170,405,170,"profile","1","1",open_arrow=True)+edge(720,175,800,175,"belongs to","0..*","1",open_arrow=True)
-    save("student_class_diagram.svg", "Student App - Class Diagram", 1090, 420, body)
+    user, _ = box(45, 95, 300, "auth.User", ["- id : BigInteger", "- username : String", "- email : Email", "- password : String"], ["+ get_full_name() : String"])
+    student, _ = box(465, 75, 340, "Student", ["- id : BigInteger", "- student_id : User [OneToOne]", "- department : Department [FK]", "- first_name : String", "- last_name : String"], ["+ __str__() : String"])
+    dept, _ = box(925, 105, 285, "Department", ["- id : BigInteger", "- name : String"], ["+ __str__() : String"])
+    body = user + student + dept
+    body += relation([(345, 175), (465, 175)], "account / profile", "1", "1", target_arrow=True, label_y=155)
+    body += relation([(805, 175), (925, 175)], "members / department", "0..*", "1", target_arrow=True, label_y=155)
+    body += txt(630, 335, "Student.student_id is OneToOneField(User); Student.department is ForeignKey(Department).", 13, "middle", "bold")
+    save("student_class_diagram.svg", "Student App - Complete Class Diagram", 1260, 390, body)
 
-    body = '<rect x="30" y="55" width="680" height="520" fill="#fff"/><rect x="740" y="55" width="410" height="520" fill="#fff"/>'+txt(50,82,"<<package>> library",15,weight="bold")+txt(760,82,"<<package>> student",15,weight="bold")
-    positions = [(55,115,"Author"),(270,115,"Book"),(490,115,"Issue"),(270,345,"Fine"),(55,345,"LibraryStat"),(770,125,"Student"),(770,355,"Department"),(950,355,"auth.User")]
-    for x,y,name in positions:
-        node,_=box(x,y,165,name,["- id : BigInteger"],["+ __str__() : String"]); body += node
-    body += edge(220,165,270,165,"writes","1","*",open_arrow=True)+edge(435,165,490,165,"records","1","*",open_arrow=True)+edge(655,180,770,180,"borrower","*","1",dashed=True,open_arrow=True)+edge(575,250,435,345,"fine","1","0..1",open_arrow=True)+edge(850,355,850,285,"department","*","1",open_arrow=True)+edge(935,405,950,405,"account","1","1",open_arrow=True)
-    save("relationships_diagram.svg", "Library and Student Apps - Package Diagram", 1180, 610, body)
+    # A single domain view makes the cross-app relationships explicit.
+    body = '<rect x="25" y="55" width="925" height="760" fill="#fff"/><rect x="985" y="55" width="485" height="760" fill="#fff"/>'+txt(45,84,"«package» library",16,weight="bold")+txt(1005,84,"«package» student + auth",16,weight="bold")
+    positions = [(60,120,210,"Author"),(350,120,210,"Book"),(665,120,230,"Issue"),(665,410,230,"Fine"),(350,595,230,"LibraryStat"),(60,540,235,"BookRecommendation"),(1030,120,230,"Student"),(1030,430,190,"Department"),(1260,430,170,"auth.User")]
+    for x,y,w,name in positions:
+        node,_ = box(x,y,w,name,["- id : BigInteger"],["+ __str__() : String"])
+        body += node
+    body += relation([(270,165),(350,165)],"author","1","0..*",target_arrow=True,label_y=145)
+    body += relation([(560,165),(665,165)],"book","1","0..*",target_arrow=True,label_y=145)
+    body += relation([(895,165),(1030,165)],"student","0..*","1",dashed=True,target_arrow=True,label_y=145)
+    body += relation([(780,210),(780,410)],"issue / fines","1","0..*",target_arrow=True,label_x=850,label_y=315)
+    body += relation([(895,515),(960,515),(960,245),(1030,245)],"student / fines","0..*","1",dashed=True,target_arrow=True,label_x=960,label_y=390)
+    body += relation([(1145,210),(1145,430)],"department","0..*","1",target_arrow=True,label_x=1220,label_y=330)
+    body += relation([(1260,475),(1250,475),(1250,300),(1345,300),(1345,520)],"account / profile","1","1",target_arrow=True,label_x=1345,label_y=285)
+    body += relation([(665,195),(620,195),(620,640),(580,640)],"updates count","0..*","1",dashed=True,target_arrow=True,label_x=620,label_y=455)
+    body += txt(178, 790, "No associations", 12, "middle", "bold")
+    save("relationships_diagram.svg", "AEC Library - Complete Cross-App Domain Model", 1500, 850, body)
 
 
 def actor(x, y, name):
