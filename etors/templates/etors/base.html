@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ETORS online railway reservation demonstration system">
+  <title>{% block title %}ETORS{% endblock %}</title>
+  <style>
+    :root {
+      --navy: #0b1f3a;
+      --blue: #1457a6;
+      --orange: #f47721;
+      --cream: #f7f3ec;
+      --ink: #172033;
+      --muted: #657083;
+      --line: #d9e0ea;
+      --success: #117a55;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--cream);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    a { color: inherit; }
+    .topbar {
+      color: white;
+      background: var(--navy);
+      border-bottom: 4px solid var(--orange);
+    }
+    .nav {
+      width: min(1180px, calc(100% - 32px));
+      min-height: 72px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .brand-mark {
+      width: 44px; height: 44px; display: grid; place-items: center;
+      border-radius: 50%; background: white; color: var(--blue); font-size: 24px;
+    }
+    .brand strong { display: block; letter-spacing: .04em; }
+    .brand small { display: block; color: #cbd6e6; }
+    .nav-links { display: flex; gap: 18px; flex-wrap: wrap; }
+    .nav-links a { color: white; text-decoration: none; font-weight: 650; }
+    .container { width: min(1180px, calc(100% - 32px)); margin: auto; }
+    .hero {
+      padding: 62px 0 88px;
+      color: white;
+      background:
+        linear-gradient(115deg, rgba(11,31,58,.96), rgba(20,87,166,.82)),
+        radial-gradient(circle at 80% 20%, #6599d3, #0b1f3a);
+    }
+    .hero h1 { max-width: 780px; margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; }
+    .hero p { max-width: 680px; color: #e1e9f4; font-size: 1.1rem; }
+    .panel {
+      padding: 24px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 16px 44px rgba(11,31,58,.1);
+    }
+    .search-panel { position: relative; margin-top: -48px; }
+    .grid { display: grid; gap: 18px; }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    label { display: block; margin-bottom: 6px; font-size: .9rem; font-weight: 750; }
+    .form-control {
+      width: 100%; min-height: 46px; padding: 10px 12px;
+      border: 1px solid #aeb9c8; border-radius: 8px; background: white; color: var(--ink);
+    }
+    .errorlist { margin: 5px 0; padding-left: 18px; color: var(--danger); font-size: .88rem; }
+    .btn {
+      display: inline-flex; min-height: 46px; align-items: center; justify-content: center;
+      padding: 10px 18px; border: 0; border-radius: 8px; text-decoration: none;
+      font-weight: 750; cursor: pointer;
+    }
+    .btn-primary { color: white; background: var(--orange); }
+    .btn-secondary { color: white; background: var(--blue); }
+    .btn-danger { color: white; background: var(--danger); }
+    .section { padding: 44px 0; }
+    .section h2 { margin-top: 0; color: var(--navy); }
+    .muted { color: var(--muted); }
+    .train-card {
+      display: grid; grid-template-columns: 1.4fr .8fr .8fr .8fr auto;
+      align-items: center; gap: 18px; padding: 20px 0; border-bottom: 1px solid var(--line);
+    }
+    .train-card:last-child { border-bottom: 0; }
+    .train-name { font-size: 1.1rem; font-weight: 800; color: var(--navy); }
+    .badge { display: inline-block; padding: 4px 9px; border-radius: 999px; background: #e7f7f0; color: var(--success); font-size: .82rem; font-weight: 800; }
+    .alert { margin: 18px auto; padding: 13px 16px; border-radius: 8px; background: #eaf3ff; border: 1px solid #aacaf0; }
+    .alert.success { background: #e7f7f0; border-color: #8dd3b8; }
+    .alert.error { background: #fff0ee; border-color: #f2aaa2; }
+    .summary { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .summary span:first-child { color: var(--muted); }
+    .status-confirmed { color: var(--success); font-weight: 850; }
+    .status-cancelled { color: var(--danger); font-weight: 850; }
+    .notice { padding: 14px; border-left: 4px solid var(--orange); background: #fff8ef; }
+    footer { margin-top: 56px; padding: 30px 0; color: #cbd6e6; background: var(--navy); }
+    @media (max-width: 800px) {
+      .grid-4, .grid-2 { grid-template-columns: 1fr; }
+      .train-card { grid-template-columns: 1fr 1fr; }
+      .train-card > :first-child, .train-card > :last-child { grid-column: 1 / -1; }
+      .nav { padding: 14px 0; align-items: flex-start; flex-direction: column; }
+      .hero { padding-top: 42px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav">
+      <a class="brand" href="{% url 'etors:home' %}">
+        <span class="brand-mark">🚆</span>
+        <span><strong>ETORS</strong><small>E-Ticketing Online Reservation System</small></span>
+      </a>
+      <div class="nav-links">
+        <a href="{% url 'etors:home' %}">Search Trains</a>
+        <a href="{% url 'etors:home' %}#pnr-status">PNR Status</a>
+        <a href="/">College Home</a>
+      </div>
+    </nav>
+  </header>
+
+  {% if messages %}
+    <div class="container">
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+
+  <footer>
+    <div class="container">
+      <strong>ETORS</strong> · Academic demonstration of an online railway reservation workflow.
+      Not affiliated with IRCTC or Indian Railways.
+    </div>
+  </footer>
+</body>
+</html>

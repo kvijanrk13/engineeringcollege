@@ -1,0 +1,43 @@
+{% extends "etors/base.html" %}
+{% block title %}PNR {{ booking.pnr }} · ETORS{% endblock %}
+{% block content %}
+<main class="container section">
+  <p><a href="{% url 'etors:home' %}">← ETORS home</a></p>
+  <div class="grid grid-2">
+    <section class="panel">
+      <p class="muted">Passenger Name Record</p>
+      <h1>{{ booking.pnr }}</h1>
+      <div class="summary">
+        <span>Status</span>
+        <strong class="{% if booking.status == 'CONFIRMED' %}status-confirmed{% else %}status-cancelled{% endif %}">
+          {{ booking.get_status_display }}
+        </strong>
+      </div>
+      <div class="summary"><span>Train</span><strong>{{ booking.train.number }} · {{ booking.train.name }}</strong></div>
+      <div class="summary"><span>Route</span><strong>{{ booking.train.source.code }} → {{ booking.train.destination.code }}</strong></div>
+      <div class="summary"><span>Journey</span><strong>{{ booking.journey_date|date:"d F Y" }}</strong></div>
+      <div class="summary"><span>Class</span><strong>{{ booking.get_travel_class_display }}</strong></div>
+      <div class="summary"><span>Total fare</span><strong>₹{{ booking.total_fare }}</strong></div>
+      {% if booking.status == "CONFIRMED" %}
+      <form method="post" action="{% url 'etors:cancel_booking' booking.pnr %}" style="margin-top:20px">
+        {% csrf_token %}
+        <button class="btn btn-danger" onclick="return confirm('Cancel this reservation?')">Cancel Ticket</button>
+      </form>
+      {% endif %}
+    </section>
+    <section class="panel">
+      <h2>Passenger</h2>
+      {% for passenger in booking.passengers.all %}
+      <div class="summary"><span>Name</span><strong>{{ passenger.name }}</strong></div>
+      <div class="summary"><span>Age / Gender</span><strong>{{ passenger.age }} / {{ passenger.get_gender_display }}</strong></div>
+      <div class="summary"><span>Seat</span><strong>{{ passenger.seat_number }}</strong></div>
+      <div class="summary"><span>Berth preference</span><strong>{{ passenger.berth_preference|default:"No preference" }}</strong></div>
+      {% endfor %}
+      <h2 style="margin-top:28px">Contact</h2>
+      <div class="summary"><span>Name</span><strong>{{ booking.contact_name }}</strong></div>
+      <div class="summary"><span>Mobile</span><strong>{{ booking.contact_phone }}</strong></div>
+      <div class="summary"><span>Email</span><strong>{{ booking.contact_email }}</strong></div>
+    </section>
+  </div>
+</main>
+{% endblock %}

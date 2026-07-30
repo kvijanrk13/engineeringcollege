@@ -18,6 +18,7 @@ urlpatterns = [
     path('car-price/', include('car_price_app.urls')),
     path('aeclibrary/student/', include('student.urls')),
     path('aeclibrary/', include('library.urls')),
+    path('etors/', include('etors.urls')),
     path('', include('dashboard.urls')),
 ]
 

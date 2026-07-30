@@ -106,6 +106,7 @@ INSTALLED_APPS = [
 
     'library',
     'student',
+    'etors',
 ]
 
 # ================================
