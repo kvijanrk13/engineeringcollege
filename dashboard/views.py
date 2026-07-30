@@ -3308,10 +3308,10 @@ def google_login(request):
         role = 'admin'
 
     target = request.GET.get('target', '')
-    if target not in {'aeclibrary'}:
+    if target not in {'aeclibrary', 'etors'}:
         target = ''
 
-    if target == 'aeclibrary':
+    if target in {'aeclibrary', 'etors'}:
         role = 'student'
 
     state_payload = {
@@ -3404,6 +3404,22 @@ def google_callback(request):
             request.session['aeclibrary_gmail_login'] = True
             messages.success(request, f'Welcome to the AEC Library, {user.first_name or email}.')
             return redirect('/aeclibrary/')
+
+        if state_payload.get('target') == 'etors':
+            allowed_domains = getattr(settings, 'ETORS_GOOGLE_DOMAINS', ['gmail.com'])
+            if not any(email.endswith(f'@{domain}') for domain in allowed_domains):
+                messages.error(
+                    request,
+                    'ETORS accepts verified Gmail accounts ending with @gmail.com.',
+                )
+                return redirect('/etors/')
+
+            user = _get_or_create_aeclibrary_user(email, profile.get('name', ''))
+            login(request, user)
+            audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
+            request.session['etors_gmail_login'] = True
+            messages.success(request, f'Welcome to ETORS, {user.first_name or email}.')
+            return redirect('/etors/')
 
         if state_payload.get('role') == 'student':
             student = find_record_by_email(Student, email)

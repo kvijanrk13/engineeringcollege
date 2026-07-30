@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -49,6 +50,12 @@ def home(request):
             "search": search,
         },
     )
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, "You have been logged out of ETORS.")
+    return redirect("etors:home")
 
 
 @transaction.atomic

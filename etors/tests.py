@@ -1,6 +1,7 @@
 from datetime import date, time, timedelta
 from decimal import Decimal
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
@@ -37,6 +38,24 @@ class EtorsTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Test Express")
+        self.assertContains(response, "Login with Gmail")
+        self.assertContains(response, "target=etors")
+
+    def test_authenticated_navigation_and_logout(self):
+        user = User.objects.create_user(
+            username="gmail-user",
+            email="traveller@gmail.com",
+            first_name="Traveller",
+        )
+        self.client.force_login(user)
+        response = self.client.get(reverse("etors:home"))
+        self.assertContains(response, "Hi, Traveller")
+        self.assertContains(response, "Logout")
+        self.assertNotContains(response, "College Home")
+
+        response = self.client.get(reverse("etors:logout"))
+        self.assertRedirects(response, reverse("etors:home"))
+        self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_booking_generates_pnr_and_passenger(self):
         response = self.client.post(
