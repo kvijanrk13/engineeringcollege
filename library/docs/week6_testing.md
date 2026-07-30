@@ -1,215 +1,138 @@
 # Week 6 - Unit Testing and Integration Testing
 
-## 1. Objective
+## Test Case Execution Note
 
-Design and execute repeatable test cases for the AEC Library Management System. Unit tests isolate models,
-utility functions, and small view helpers. Integration tests exercise connected Django components through the
-test client, ORM, authentication, templates, messages, signals, and mocked external services.
+The tables use the requested test-record format. **Actual Result** and **Status** are execution fields.
+They are intentionally marked `Pending execution` and `Not Run`; the tester must replace them with observed
+evidence and `Success` or `Fail` after executing each case.
 
-## 2. Test Scope
+## Test Data
 
-| Area | Included |
+| Test item | Test value |
 |---|---|
-| Authentication | Student signup, login, logout, role restrictions |
-| Catalogue | Authors, books, search, sorting, recommendations |
-| Circulation | Issue request, approval, return, reset, issue history |
-| Fines | Fine calculation, update, waiver, payment success/failure |
-| Persistence | Foreign keys, one-to-one profile, post-save signal |
-| External boundaries | Razorpay mocked at the application boundary |
-| Documentation | Week content loads and renders |
-
-Cloudinary and Razorpay live networks must not be called from automated tests. Their clients and returned
-payloads are mocked so the suite remains deterministic.
-
-## 3. Test Environment and Data
-
-Use Django `TestCase`, `Client`, `RequestFactory`, `unittest.mock.patch`, and `override_settings`.
-Each test runs in an isolated transaction-backed test database.
-
-| Test fixture | Value |
-|---|---|
+| Student ID / password | `23CSE001` / `Test@12345` |
+| Librarian ID / password | `librarian` / `Admin@12345` |
 | Department | `CSE(AI&ML)` |
-| Student user | username `23CSE001`, password `Test@12345` |
-| Admin user | username `librarian`, `is_superuser=True` |
-| Author | `Robert C. Martin` |
-| Book | `Clean Code`, category `TEXT` |
-| Issue due date | Future date for no-fine tests; 3 days past for fine tests |
+| Author / book | `Robert C. Martin` / `Clean Code` |
+| Category | `TEXT` |
 | Fine rate | ₹10 per overdue day |
-| Razorpay order | `order_test_001` |
-| Razorpay payment | `pay_test_001` |
+| Mock payment IDs | `order_test_001`, `pay_test_001`, `signature_test_001` |
 
-## 4. Unit Test Cases
+# A. Integration Testing Test Cases
 
-### 4.1 Model and Utility Tests
+## 1. Login and Authentication
 
-| ID | Unit under test | Preconditions / input | Test steps | Expected result |
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
 |---|---|---|---|---|
-| UT-01 | `Author.__str__` | Author name is `Robert C. Martin` | Create Author; call `str(author)` | Returns `Robert C. Martin` |
-| UT-02 | `Book.__str__` | Book name is `Clean Code` | Create Book; call `str(book)` | Returns `Clean Code` |
-| UT-03 | `Book.cloudinary_image_url` | Cloud name configured; image name saved | Override Cloudinary setting; access property | URL contains cloud name and image path |
-| UT-04 | `Book.cloudinary_image_url` empty case | Book has no usable image name | Access property | Returns an empty string |
-| UT-05 | `Student.__str__` | Username `23CSE001`, department exists | Create Student; call `str(student)` | Contains first name, last four username characters, and department |
-| UT-06 | `Fine.save` order generation | `order_id=None`; Student and Issue exist | Save Fine | A non-empty unique order ID is generated |
-| UT-07 | `Fine.save` preserves order | Existing `order_id=ORDER-1` | Modify amount; save again | `order_id` remains `ORDER-1` |
-| UT-08 | `Issue.days_no` future due date | Issued issue due in 5 days | Freeze/patch current time; call `days_no()` | Returns text containing `left` |
-| UT-09 | `Issue.days_no` overdue | Issued issue due 3 days ago | Call `days_no()` | Returns text containing `passed` |
-| UT-10 | `calcFine` before due date | Issued, not returned, future due date | Call `calcFine(issue)` | Returns `no fine`; no Fine is created |
-| UT-11 | `calcFine` overdue | Issued, not returned, due 3 days ago | Call utility; refresh Fine | Fine exists with amount `30.00` |
-| UT-12 | `calcFine` paid fine | Existing paid Fine | Call utility after additional overdue time | Paid Fine amount is not recalculated |
-| UT-13 | `calcFine` returned issue | `returned=True` | Call utility | Returns `no fine`; no new Fine is created |
-| UT-14 | `getmybooks` anonymous user | `AnonymousUser` | Call `getmybooks(user)` | Returns two empty lists |
-| UT-15 | `getmybooks` requested book | Student has unissued Issue | Call utility | Book appears only in requested list |
-| UT-16 | `getmybooks` issued book | Student has `issued=True` Issue | Call utility | Book appears only in issued list |
-| UT-17 | Issue post-save signal | One active issued Issue | Save Issue; load `LibraryStat(id=1)` | `borrowed_books` equals active issued/not-returned count |
-| UT-18 | `BookRecommendation.__str__` | Recommendation title is set | Call `str(recommendation)` | Returns title |
-| UT-19 | Recommendation fallback | Recommendation title is blank | Call `str(recommendation)` | Returns `Book Recommendation` |
-| UT-20 | `google_signin_enabled` | Both OAuth settings present/absent | Run helper under overridden settings | True only when both values are non-empty |
+| BB_TC_101 | 1. Open Student Login page.<br>2. Enter valid Student ID `23CSE001`.<br>3. Enter valid password `Test@12345`.<br>4. Click **Login**. | Student is authenticated and the Library Home page is displayed. | Pending execution | Not Run |
+| BB_TC_102 | 1. Open Student Login page.<br>2. Enter valid Student ID.<br>3. Enter an invalid password.<br>4. Click **Login**. | An invalid-credentials message is displayed and no authenticated session is created. | Pending execution | Not Run |
+| BB_TC_103 | 1. Open the protected Library Home URL without logging in.<br>2. Observe the response. | User is redirected to the student signup/login page. | Pending execution | Not Run |
+| BB_TC_104 | 1. Open Student Signup page.<br>2. Enter a new Student ID, name, department, and valid password.<br>3. Submit the form. | User and Student profile are created, the user is logged in, and Library Home is displayed. | Pending execution | Not Run |
+| BB_TC_105 | 1. Open Student Signup page.<br>2. Enter an already registered Student ID.<br>3. Submit the form. | Duplicate User is not created and an existing-user message is displayed. | Pending execution | Not Run |
+| BB_TC_106 | 1. Login as a student.<br>2. Open an admin-only URL such as Add Book or All Issues. | Student is redirected or denied access; admin page is not displayed. | Pending execution | Not Run |
+| BB_TC_107 | 1. Login as Librarian/Admin.<br>2. Open an admin-only URL.<br>3. Verify page access. | Librarian/Admin interface is displayed successfully. | Pending execution | Not Run |
+| BB_TC_108 | 1. Login as any valid user.<br>2. Click **Logout**.<br>3. Open a protected URL. | Session is terminated and protected URL redirects to login/signup. | Pending execution | Not Run |
 
-### 4.2 Unit-Test Acceptance Criteria
+## 2. Catalogue and Search
 
-1. Each test contains one principal behavioral assertion.
-2. Tests do not depend on execution order.
-3. Time-sensitive tests patch or freeze `timezone.now()`.
-4. External services are mocked.
-5. Tests pass individually and as a complete suite.
-
-## 5. Integration Test Cases
-
-### 5.1 Authentication and Authorization
-
-| ID | Integrated components | Preconditions | Steps | Expected result |
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
 |---|---|---|---|---|
-| IT-01 | Signup view + User + Student + Department | Department exists | POST valid signup form | User and Student created, session authenticated, redirect to library home |
-| IT-02 | Signup duplicate handling | Username already exists | POST same student ID | No duplicate User; message shown; redirect to login/signup flow |
-| IT-03 | Login view + auth backend + session | Student user exists | POST valid credentials | Session contains authenticated user; redirect to library home |
-| IT-04 | Invalid login | Student user exists | POST wrong password | User remains anonymous; invalid-credentials message displayed |
-| IT-05 | Protected home | Anonymous client | GET `/aeclibrary/` | Redirect to student signup/login |
-| IT-06 | Student blocked from admin operation | Authenticated student | GET add-book or all-issues URL | Redirect/denial according to role decorator |
-| IT-07 | Admin blocked from student issue request | Authenticated superuser | Request a book | Redirect/denial; no student Issue created |
+| BB_TC_201 | 1. Login as student.<br>2. Open Library Home.<br>3. Observe Text Books, Reference Books, recommendations, and totals. | Catalogue groups and availability totals are displayed from database records. | Pending execution | Not Run |
+| BB_TC_202 | 1. Create Book `Clean Code` in test data.<br>2. Enter `clean` in search.<br>3. Submit search. | Search results contain `Clean Code` using case-insensitive matching. | Pending execution | Not Run |
+| BB_TC_203 | 1. Create a book with category `TEXT`.<br>2. Search for `text`. | Matching TEXT-category book is displayed. | Pending execution | Not Run |
+| BB_TC_204 | 1. Open search.<br>2. Enter only spaces.<br>3. Submit. | Warning asks for a search term and user is redirected to Library Home. | Pending execution | Not Run |
+| BB_TC_205 | 1. Login as Admin.<br>2. Open Add Book.<br>3. Select Author.<br>4. Enter name/category and upload a test image.<br>5. Submit. | Book is saved with the selected Author and a success message is displayed. | Pending execution | Not Run |
+| BB_TC_206 | 1. Login as Admin.<br>2. Select an existing Book.<br>3. Click Delete Book.<br>4. Confirm deletion. | Book is removed and related Issue records follow configured cascade deletion. | Pending execution | Not Run |
+| BB_TC_207 | 1. Create Authors and Books starting with different letters.<br>2. Sort by Author and then Book.<br>3. Select a starting letter. | Only records beginning with the selected value are displayed in the correct sort mode. | Pending execution | Not Run |
 
-### 5.2 Catalogue and Search
+## 3. Book Issue Request and Approval
 
-| ID | Integrated components | Preconditions | Steps | Expected result |
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
 |---|---|---|---|---|
-| IT-08 | Home view + ORM + template | Books and recommendations exist | Login; GET library home | HTTP 200; text/reference groups and totals are in context |
-| IT-09 | Search view + query + template | Book `Clean Code` exists | GET search with `clean` | Result contains `Clean Code` |
-| IT-10 | Search by category | `TEXT` category book exists | Search for `text` | Matching book returned |
-| IT-11 | Empty search validation | Logged-in user | Submit whitespace query | Warning message and redirect to home |
-| IT-12 | Admin add book | Admin, Author, uploaded test image | POST add-book form | Book persisted with selected Author and success message |
-| IT-13 | Admin delete book cascade | Book has Issue records | Request delete-book | Book removed; dependent Issue records removed by cascade |
+| BB_TC_301 | 1. Login as student.<br>2. Select an available Book.<br>3. Click **Request Book Issue**. | One pending Issue record is created and a success message is displayed. | Pending execution | Not Run |
+| BB_TC_302 | 1. Repeat the same request for the same Student and Book.<br>2. Inspect Issue records. | `get_or_create` prevents a duplicate Issue record. | Pending execution | Not Run |
+| BB_TC_303 | 1. Login as Admin.<br>2. Open All Issues.<br>3. Select a pending Issue.<br>4. Click Issue Book. | `issued=True`; `issued_at` is set; return date is set approximately 15 days ahead. | Pending execution | Not Run |
+| BB_TC_304 | 1. Attempt to approve an already issued record again. | Error message states that the Book is already issued and issue dates are not reset. | Pending execution | Not Run |
+| BB_TC_305 | 1. Create pending and issued Issues for a Student.<br>2. Open My Issues with issued filter.<br>3. Repeat with pending filter. | Each filter displays only the corresponding Issue state. | Pending execution | Not Run |
+| BB_TC_306 | 1. Login as Admin.<br>2. Search issue requests by valid Student ID. | Pending Issues for that Student are displayed. | Pending execution | Not Run |
+| BB_TC_307 | 1. Search issue requests using an unknown Student ID. | No-student message is displayed and user returns to All Issues. | Pending execution | Not Run |
+| BB_TC_308 | 1. Create both pending and issued Issues.<br>2. Admin submits Clear Pending Issues. | Pending Issues are deleted, issued records remain, and LibraryStat is recalculated. | Pending execution | Not Run |
 
-### 5.3 Issue and Return Workflow
+## 4. Book Return and Fine Management
 
-| ID | Integrated components | Preconditions | Steps | Expected result |
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
 |---|---|---|---|---|
-| IT-14 | Issue request + Student + Book + signal | Logged-in student and Book | GET request-book-issue URL | One unissued Issue created; duplicate request does not create another |
-| IT-15 | Admin issue approval | Pending Issue; admin logged in | GET issuebook URL | `issued=True`; `issued_at` set; return date approximately 15 days later |
-| IT-16 | Duplicate issue approval | Issue already issued | Call issuebook again | Error message; dates/state are not incorrectly reset |
-| IT-17 | Student issue history filter | Student has issued and pending records | GET `my-issues/?issued=1` | Context contains only issued records |
-| IT-18 | Return before due date | Issued Issue due in future | Admin calls returnbook | `returned=True`; no Fine created |
-| IT-19 | Overdue return | Issued Issue due 3 days ago | Admin calls returnbook | `returned=True`; Fine created with amount ₹30 |
-| IT-20 | Clear pending issues | Mix of pending and issued Issues | Admin POSTs clear-issues | Pending Issues deleted; issued records retained; statistic recalculated |
-| IT-21 | Reset circulation | Active issued Issues and nonzero statistic | POST reset-issued | Statistic becomes zero; active records marked returned/reset |
+| BB_TC_401 | 1. Create an issued Book with future return date.<br>2. Login as Admin.<br>3. Return the Book. | Issue is marked returned and no Fine is created. | Pending execution | Not Run |
+| BB_TC_402 | 1. Create an issued Book overdue by 3 days.<br>2. Return the Book. | Issue is marked returned and a Fine of ₹30 is created. | Pending execution | Not Run |
+| BB_TC_403 | 1. Login as student with an overdue Issue.<br>2. Open My Fines. | Fine calculation runs and the unpaid Fine is displayed. | Pending execution | Not Run |
+| BB_TC_404 | 1. Login as Admin.<br>2. Open All Fines.<br>3. Enter a valid numeric amount.<br>4. Submit update. | Fine amount is updated and success message is displayed. | Pending execution | Not Run |
+| BB_TC_405 | 1. Open an existing Fine.<br>2. Enter nonnumeric amount `abc`.<br>3. Submit. | Fine amount remains unchanged and invalid-amount message is displayed. | Pending execution | Not Run |
+| BB_TC_406 | 1. Open an unpaid Fine as Admin.<br>2. Click **Waive Fine**. | Fine amount becomes zero and `paid=True`. | Pending execution | Not Run |
+| BB_TC_407 | 1. Open an existing Fine as Admin.<br>2. Click Delete Fine.<br>3. Confirm. | Fine record is deleted and success message is displayed. | Pending execution | Not Run |
+| BB_TC_408 | 1. Create active issued records and nonzero LibraryStat.<br>2. Submit Reset Circulation. | Borrowed count becomes zero and active issue records are reset/marked returned. | Pending execution | Not Run |
 
-### 5.4 Fine and Payment Workflow
+## 5. Razorpay Fine Payment
 
-| ID | Integrated components | Preconditions | Steps | Expected result |
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
 |---|---|---|---|---|
-| IT-22 | My fines + calculation utility | Student has overdue Issue | GET my-fines | Fine is calculated and displayed |
-| IT-23 | Admin update fine | Fine exists | POST numeric amount | Amount updated and success message shown |
-| IT-24 | Invalid fine amount | Fine exists | POST nonnumeric amount | Amount unchanged; validation message shown |
-| IT-25 | Waive fine | Unpaid Fine exists | Admin calls waive-fine | Amount becomes zero and `paid=True` |
-| IT-26 | Payment order creation | Unpaid Fine; mocked Razorpay client | GET payfines URL | Mock called with paise amount, INR, receipt; payment template rendered |
-| IT-27 | Payment verification success | Mock verifier returns success (`None`) | POST payment IDs/signature | Fine becomes paid; IDs, signature, and payment datetime saved |
-| IT-28 | Payment verification failure | Mock verifier raises exception | POST payment callback | Fine remains unpaid; failure message shown |
+| BB_TC_501 | 1. Create unpaid Fine of ₹30.<br>2. Mock Razorpay client.<br>3. Open Pay Fine. | Razorpay order is created for `3000` paise, currency `INR`, using Fine order ID as receipt. | Pending execution | Not Run |
+| BB_TC_502 | 1. Mock order response as `order_test_001`.<br>2. Open Pay Fine page. | Payment template displays ₹30 and contains the mocked Razorpay order ID. | Pending execution | Not Run |
+| BB_TC_503 | 1. Mock signature verification success.<br>2. POST order ID, payment ID, and signature to payment status URL. | Fine becomes paid; payment IDs, signature, and payment date are saved. | Pending execution | Not Run |
+| BB_TC_504 | 1. Mock signature verification failure/exception.<br>2. POST payment callback. | Fine remains unpaid and Payment Failure message is displayed. | Pending execution | Not Run |
+| BB_TC_505 | 1. Execute payment tests with mocked client.<br>2. Monitor network calls. | No real Razorpay request is made during automated testing. | Pending execution | Not Run |
 
-### 5.5 Documentation and Data Integrity
+## 6. Documentation and Database Integration
 
-| ID | Integrated components | Preconditions | Steps | Expected result |
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
 |---|---|---|---|---|
-| IT-29 | Documentation view + Markdown + template | Week files exist | GET documentation URL | HTTP 200; Week 1 through Week 6 headings rendered |
-| IT-30 | Department cascade | Department has Student and related Issues/Fines | Delete Department | Student and dependent records follow configured cascade behavior |
-| IT-31 | User one-to-one constraint | Student profile already exists for User | Attempt second Student for same User | Database raises `IntegrityError` |
-| IT-32 | Fine unique order ID | Fine with order ID exists | Create second Fine with same ID | Database raises `IntegrityError` |
+| BB_TC_601 | 1. Open `/aeclibrary/documentation/`.<br>2. Inspect section headings. | Week 1, Week 2, Week 3, Week 4 and Week 5, and Week 6 are rendered. | Pending execution | Not Run |
+| BB_TC_602 | 1. Delete an Author that owns Books.<br>2. Inspect database records. | Related Books and dependent records follow configured cascade behavior. | Pending execution | Not Run |
+| BB_TC_603 | 1. Create a Student profile for a User.<br>2. Attempt a second Student profile for the same User. | Database rejects the second profile with one-to-one integrity error. | Pending execution | Not Run |
+| BB_TC_604 | 1. Create Fine with a fixed order ID.<br>2. Attempt another Fine with the same order ID. | Database rejects duplicate order ID with uniqueness error. | Pending execution | Not Run |
 
-## 6. Requirement-to-Test Traceability
+# B. Unit Testing Test Cases
 
-| Requirement | Covered by |
-|---|---|
-| Student registration and login | IT-01 to IT-05 |
-| Role-based access | IT-06, IT-07 |
-| Catalogue management | IT-08 to IT-13 |
-| Issue and return processing | IT-14 to IT-21 |
-| Fine calculation and administration | UT-10 to UT-13, IT-18, IT-19, IT-22 to IT-25 |
-| Online fine payment | IT-26 to IT-28 |
-| Model integrity and signals | UT-06, UT-07, UT-17, IT-30 to IT-32 |
-| Documentation availability | IT-29 |
+## 7. Model Unit Tests
 
-## 7. Suggested Django Test Structure
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
+|---|---|---|---|---|
+| BB_UT_701 | 1. Create Author named `Robert C. Martin`.<br>2. Call `str(author)`. | Returns `Robert C. Martin`. | Pending execution | Not Run |
+| BB_UT_702 | 1. Create Book named `Clean Code`.<br>2. Call `str(book)`. | Returns `Clean Code`. | Pending execution | Not Run |
+| BB_UT_703 | 1. Configure Cloudinary cloud name.<br>2. Set Book image name.<br>3. Access `cloudinary_image_url`. | Generated URL contains the configured cloud name and image path. | Pending execution | Not Run |
+| BB_UT_704 | 1. Create Student linked to `23CSE001` and Department.<br>2. Call `str(student)`. | String contains first name, last four username characters, and department. | Pending execution | Not Run |
+| BB_UT_705 | 1. Create Fine with `order_id=None`.<br>2. Save Fine. | A non-empty unique order ID is generated. | Pending execution | Not Run |
+| BB_UT_706 | 1. Save Fine with `order_id=ORDER-1`.<br>2. Change amount and save again. | Existing order ID remains `ORDER-1`. | Pending execution | Not Run |
+| BB_UT_707 | 1. Create issued Issue with future due date.<br>2. Call `days_no()`. | Result contains `left`. | Pending execution | Not Run |
+| BB_UT_708 | 1. Create issued Issue overdue by 3 days.<br>2. Call `days_no()`. | Result contains `passed`. | Pending execution | Not Run |
+| BB_UT_709 | 1. Save one active issued Issue.<br>2. Load `LibraryStat(id=1)`. | Post-save signal sets borrowed count to active issued/not-returned count. | Pending execution | Not Run |
+| BB_UT_710 | 1. Create blank-title BookRecommendation.<br>2. Call `str(recommendation)`. | Returns `Book Recommendation`. | Pending execution | Not Run |
 
-```text
-library/
-  tests/
-    __init__.py
-    test_models.py
-    test_utilities.py
-    test_catalogue_views.py
-    test_issue_workflow.py
-    test_fine_payment.py
-student/
-  tests/
-    __init__.py
-    test_auth_views.py
-```
+## 8. Utility and Helper Unit Tests
 
-Use a shared fixture mixin or factory helpers for Department, User, Student, Author, Book, and Issue.
-Patch the object where it is used, for example `library.views.get_razorpay_client`.
+| Test Case ID | Test Data & Steps | Expected Result | Actual Result | Status |
+|---|---|---|---|---|
+| BB_UT_801 | 1. Create issued Issue with future return date.<br>2. Call `calcFine(issue)`. | Returns `no fine` and creates no Fine. | Pending execution | Not Run |
+| BB_UT_802 | 1. Create issued Issue overdue by 3 days.<br>2. Call `calcFine(issue)`.<br>3. Refresh Fine. | Fine exists with amount ₹30. | Pending execution | Not Run |
+| BB_UT_803 | 1. Create an overdue Issue with an already paid Fine.<br>2. Call `calcFine(issue)`. | Paid Fine amount is not recalculated. | Pending execution | Not Run |
+| BB_UT_804 | 1. Create returned Issue.<br>2. Call `calcFine(issue)`. | Returns `no fine` and creates no new Fine. | Pending execution | Not Run |
+| BB_UT_805 | 1. Pass AnonymousUser to `getmybooks`.<br>2. Inspect returned lists. | Requested and issued lists are both empty. | Pending execution | Not Run |
+| BB_UT_806 | 1. Create Student with pending Issue.<br>2. Call `getmybooks(user)`. | Book appears only in requested list. | Pending execution | Not Run |
+| BB_UT_807 | 1. Create Student with issued Issue.<br>2. Call `getmybooks(user)`. | Book appears only in issued list. | Pending execution | Not Run |
+| BB_UT_808 | 1. Override both Google OAuth settings with values.<br>2. Call `google_signin_enabled()`.<br>3. Repeat with one missing value. | Returns True only when both client ID and secret are non-empty. | Pending execution | Not Run |
 
-## 8. Execution Commands
+## 9. Execution and Result Recording
+
+Run the Django tests:
 
 ```bash
 python manage.py makemigrations --check --dry-run
 python manage.py test library student
-python manage.py test library.tests.test_utilities
-python manage.py test library.tests.test_issue_workflow
-python manage.py test --keepdb
 ```
 
-For coverage:
+After each test:
 
-```bash
-coverage run manage.py test library student
-coverage report -m
-coverage html
-```
-
-## 9. Entry and Exit Criteria
-
-### Entry criteria
-
-- Test database configuration is available.
-- All migrations apply successfully.
-- Required fixtures and uploaded test files are prepared.
-- Razorpay and time-dependent code can be mocked.
-
-### Exit criteria
-
-- All critical tests (authentication, issue, return, fine, payment) pass.
-- No test performs a live Razorpay or Cloudinary network call.
-- No migration drift is reported.
-- Each failed test has a recorded defect and reproducible input.
-- Recommended line coverage for `library` and `student` business logic is at least 80%.
-
-## 10. Test Result Record
-
-| Field | Value to record |
-|---|---|
-| Test run ID | Date/build identifier |
-| Environment | Local, CI, or staging |
-| Database | Django test database |
-| Total tests | Number executed |
-| Passed / failed / skipped | Result counts |
-| Coverage | Statement percentage |
-| Defects | Linked defect IDs |
-| Tester | Name and signature |
-| Final status | Pass / Conditional pass / Fail |
+1. Replace `Pending execution` with the observed result.
+2. Replace `Not Run` with `Success` when actual and expected results match.
+3. Use `Fail` when they differ.
+4. Record a defect ID and screenshot/log evidence for every failed test.
+5. Never mark a test `Success` without executing it.

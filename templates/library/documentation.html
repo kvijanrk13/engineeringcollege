@@ -144,6 +144,41 @@
     flex: 1;
     max-height: none;
   }
+  .week6-content {
+    overflow-x: auto;
+  }
+  .week6-content table {
+    min-width: 1120px;
+    table-layout: fixed;
+  }
+  .week6-content th:nth-child(1),
+  .week6-content td:nth-child(1) {
+    width: 12%;
+    text-align: center;
+    font-weight: 700;
+  }
+  .week6-content th:nth-child(2),
+  .week6-content td:nth-child(2) {
+    width: 36%;
+  }
+  .week6-content th:nth-child(3),
+  .week6-content td:nth-child(3) {
+    width: 24%;
+  }
+  .week6-content th:nth-child(4),
+  .week6-content td:nth-child(4) {
+    width: 18%;
+  }
+  .week6-content th:nth-child(5),
+  .week6-content td:nth-child(5) {
+    width: 10%;
+    text-align: center;
+    font-weight: 700;
+  }
+  .week6-content td {
+    vertical-align: top;
+    line-height: 1.55;
+  }
 </style>
 {% endblock extra_css %}
 {% block content %}
@@ -186,7 +221,7 @@
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-2xl font-bold text-green-400 mb-4">Week 6 - Unit Testing and Integration Testing</h2>
-      <div class="doc-content space-y-4 text-gray-300">
+      <div id="week6-doc" class="doc-content week6-content space-y-4 text-gray-300">
         {{ week6_text|safe }}
       </div>
     </div>
