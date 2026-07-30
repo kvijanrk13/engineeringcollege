@@ -1,9 +1,6 @@
-# Week 7 - White-Box and Black-Box Testing
+# Week 7 - Testing Techniques
 
-**Result: 12 passed, 0 failed.**
-
-| Test Case ID | Technique and Steps | Expected Result | Actual Result | Status |
-|---|---|---|---|---|
-| W7_TC_01 | Branch coverage: calculate a fine before the due date. | No fine is created. | No fine was created. | **Pass** |
-| W7_TC_02 | Boundary value: calculate a fine at 1 day overdue. | Fine is ₹10. | Fine was ₹10. | **Pass** |
-| W7_TC_03 | State transition: request, issue, and return a book. | Final state is Returned. | Final state was Returned. | **Pass** |
+| ID | Technique | Expected/Actual Result | Status |
+|---|---|---|---|
+| W7-01 | White-box branch test | No fine before due date | **Pass** |
+| W7-02 | Black-box boundary test | One-day fine was ₹10 | **Pass** |
