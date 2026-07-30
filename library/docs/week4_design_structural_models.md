@@ -4,6 +4,8 @@
 
 The following UML models are reverse-checked against the deployed Django application, its database models, URL routes, Razorpay integration, Cloudinary media delivery, and Render infrastructure. Multiplicities and message names reflect the implementation rather than a generic library example.
 
+The class diagrams use **arrowless solid associations** for Django `ForeignKey` and `OneToOneField` relationships. Hollow triangular arrowheads are not used because they mean generalization/inheritance in UML, and none of these model relationships is inheritance. The only dashed connector is the `Issue` post-save signal dependency on `LibraryStat`.
+
 ## 1. Class Diagram
 
 ![Complete AEC Library cross-app class diagram](/static/docs/images/relationships_diagram.svg)
@@ -79,7 +81,7 @@ The deployment model reflects the production topology: user browser over HTTPS, 
 |---|---|
 | `+` / `-` | Public operation / private attribute |
 | `1`, `0..1`, `0..*` | Relationship multiplicity |
-| Solid connector | Association, call, or deployed communication path |
+| Arrowless solid line in class diagrams | Model association (`ForeignKey` or `OneToOneField`) |
 | Dashed connector | Dependency, reply, or external integration |
-| Open arrowhead | Navigability or message direction |
+| Open arrowhead in behavioral diagrams | Message or transition direction |
 | Filled initial node / bullseye | Initial state / final state |

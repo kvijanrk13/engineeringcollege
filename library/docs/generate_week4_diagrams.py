@@ -328,3 +328,140 @@ def complete_uml_set():
 
 
 complete_uml_set()
+
+
+def association(points, name, source_mult, target_mult, label_x, label_y,
+                source_x, source_y, target_x, target_y, dashed=False):
+    """A proper UML association: no inheritance-style triangular arrowhead."""
+    path = " ".join(
+        (f"M{x},{y}" if index == 0 else f"L{x},{y}")
+        for index, (x, y) in enumerate(points)
+    )
+    dash = ' stroke-dasharray="7 5"' if dashed else ""
+    body = f'<path d="{path}" fill="none"{dash}/>'
+    if name:
+        body += f'<rect x="{label_x-68}" y="{label_y-14}" width="136" height="19" rx="3" fill="#f7f7f7" stroke="none"/>'
+        body += txt(label_x, label_y, name, 11, "middle", "bold")
+    body += txt(source_x, source_y, source_mult, 12, "middle", "bold")
+    body += txt(target_x, target_y, target_mult, 12, "middle", "bold")
+    return body
+
+
+def corrected_class_diagrams():
+    # Complete domain class diagram: compact enough to remain legible in the
+    # documentation card, with every relationship fully inside the viewBox.
+    author, _ = box(30, 75, 190, "Author",
+                    ["- id : BigInteger", "- name : String", "- description : String"],
+                    ["+ __str__() : String"])
+    book, _ = box(275, 65, 205, "Book",
+                  ["- id : BigInteger", "- name : String", "- image : ImageField",
+                   "- category : String", "- author_id : FK"],
+                  ["+ __str__() : String", "+ cloudinary_image_url : String"])
+    issue, _ = box(535, 50, 245, "Issue",
+                   ["- id : BigInteger", "- book_id : FK", "- student_id : FK",
+                    "- created_at : DateTime", "- issued : Boolean",
+                    "- issued_at : DateTime [0..1]", "- returned : Boolean",
+                    "- return_date : DateTime [0..1]"],
+                   ["+ days_no() : String", "+ __str__() : String"])
+    fine, _ = box(845, 55, 305, "Fine",
+                  ["- id : BigInteger", "- issue_id : FK", "- student_id : FK",
+                   "- amount : Decimal", "- paid : Boolean",
+                   "- order_id : String [0..1]", "- datetime_of_payment : DateTime [0..1]",
+                   "- razorpay_order_id : String [0..1]",
+                   "- razorpay_payment_id : String [0..1]",
+                   "- razorpay_signature : String [0..1]"],
+                  ["+ save() : void", "+ __str__() : String"])
+    recommendation, _ = box(30, 485, 245, "BookRecommendation",
+                            ["- id : BigInteger", "- title : String", "- author : String",
+                             "- isbn : String", "- publisher : String",
+                             "- book_format : Choice", "- copies_recommended : String",
+                             "- created_at : DateTime"],
+                            ["+ __str__() : String"])
+    stats, _ = box(330, 610, 220, "LibraryStat",
+                   ["- id : BigInteger", "- borrowed_books : PositiveInteger"],
+                   ["+ __str__() : String"])
+    department, _ = box(600, 610, 190, "Department",
+                        ["- id : BigInteger", "- name : String"],
+                        ["+ __str__() : String"])
+    student, _ = box(845, 520, 250, "Student",
+                     ["- id : BigInteger", "- department_id : FK", "- student_id_id : OneToOne",
+                      "- first_name : String", "- last_name : String"],
+                     ["+ __str__() : String"])
+    user, _ = box(1145, 610, 200, "auth.User",
+                  ["- id : BigInteger", "- username : String", "- email : Email"],
+                  ["+ get_full_name() : String"])
+    body = author+book+issue+fine+recommendation+stats+department+student+user
+    body += association([(220,150),(275,150)],"author / books","1","0..*",247,132,228,144,267,144)
+    body += association([(480,165),(535,165)],"book / issues","1","0..*",507,147,488,159,527,159)
+    body += association([(780,180),(845,180)],"issue / fines","1","0..*",812,162,788,174,837,174)
+    body += association([(657,305),(657,455),(970,455),(970,520)],"borrower / issues","0..*","1",815,443,672,320,985,513)
+    body += association([(997,361),(997,430),(1065,430),(1065,520)],"student / fines","0..*","1",1080,418,1012,376,1080,513)
+    body += association([(790,675),(845,675)],"department / students","1","0..*",817,657,798,669,837,669)
+    body += association([(1095,675),(1145,675)],"profile / account","1","1",1120,657,1103,669,1137,669)
+    body += association([(535,260),(510,260),(510,610)],"«signal» updates count","0..*","1",455,445,550,275,525,603,dashed=True)
+    body += txt(152, 775, "Independent class — no model associations", 11, "middle", "bold")
+    body += txt(690, 825, "Solid line = association   |   Dashed line = dependency   |   Numbers at both ends = multiplicity", 12, "middle", "bold")
+    save("relationships_diagram.svg", "AEC Library - Complete Class Diagram", 1380, 860, body)
+
+    # Library-only detail, including the external Student reference used by two FKs.
+    author, _ = box(35, 80, 225, "Author",
+                    ["- id : BigInteger", "- name : String", "- description : String"],
+                    ["+ __str__() : String"])
+    book, _ = box(330, 65, 255, "Book",
+                  ["- id : BigInteger", "- name : String", "- image : ImageField",
+                   "- category : String", "- author_id : FK"],
+                  ["+ __str__() : String", "+ cloudinary_image_url : String"])
+    issue, _ = box(665, 50, 280, "Issue",
+                   ["- id : BigInteger", "- book_id : FK", "- student_id : FK",
+                    "- created_at : DateTime", "- issued : Boolean",
+                    "- issued_at : DateTime [0..1]", "- returned : Boolean",
+                    "- return_date : DateTime [0..1]"],
+                   ["+ days_no() : String", "+ __str__() : String"])
+    fine, _ = box(665, 470, 315, "Fine",
+                  ["- id : BigInteger", "- issue_id : FK", "- student_id : FK",
+                   "- amount : Decimal", "- paid : Boolean", "- order_id : String [0..1]",
+                   "- datetime_of_payment : DateTime [0..1]",
+                   "- razorpay_order_id : String [0..1]",
+                   "- razorpay_payment_id : String [0..1]",
+                   "- razorpay_signature : String [0..1]"],
+                  ["+ save() : void", "+ __str__() : String"])
+    ext_student, _ = box(1045, 220, 225, "Student «external»",
+                         ["- id : BigInteger", "«student app class»"],
+                         ["+ __str__() : String"])
+    stats, _ = box(330, 520, 255, "LibraryStat",
+                   ["- id : BigInteger", "- borrowed_books : PositiveInteger"],
+                   ["+ __str__() : String"])
+    recommendation, _ = box(35, 450, 225, "BookRecommendation",
+                            ["- id : BigInteger", "- title : String", "- author : String",
+                             "- isbn : String", "- publisher : String",
+                             "- book_format : Choice", "- created_at : DateTime"],
+                            ["+ __str__() : String"])
+    body = author+book+issue+fine+ext_student+stats+recommendation
+    body += association([(260,150),(330,150)],"author / books","1","0..*",295,132,268,144,322,144)
+    body += association([(585,165),(665,165)],"book / issues","1","0..*",625,147,593,159,657,159)
+    body += association([(805,305),(805,470)],"issue / fines","1","0..*",875,395,820,320,790,463)
+    body += association([(945,175),(1010,175),(1010,260),(1045,260)],"borrower / issues","0..*","1",1010,155,960,169,1037,254)
+    body += association([(980,600),(1155,600),(1155,328)],"student / fines","0..*","1",1090,585,995,594,1170,343)
+    body += association([(665,260),(625,260),(625,575),(585,575)],"«signal» updates count","0..*","1",625,430,680,275,600,569,dashed=True)
+    body += txt(147, 760, "Independent class", 11, "middle", "bold")
+    body += txt(650, 815, "ForeignKey associations use solid lines; the post-save signal is a dashed dependency.", 12, "middle", "bold")
+    save("library_class_diagram.svg", "Library App - Class Diagram", 1310, 850, body)
+
+    user, _ = box(35, 90, 260, "auth.User",
+                  ["- id : BigInteger", "- username : String", "- email : Email", "- password : String"],
+                  ["+ get_full_name() : String"])
+    student, _ = box(390, 65, 300, "Student",
+                     ["- id : BigInteger", "- student_id_id : OneToOne",
+                      "- department_id : FK", "- first_name : String", "- last_name : String"],
+                     ["+ __str__() : String"])
+    department, _ = box(785, 100, 250, "Department",
+                        ["- id : BigInteger", "- name : String"],
+                        ["+ __str__() : String"])
+    body = user+student+department
+    body += association([(295,165),(390,165)],"account / profile","1","1",342,147,305,159,380,159)
+    body += association([(690,165),(785,165)],"students / department","0..*","1",737,147,700,159,775,159)
+    body += txt(535, 330, "Student.student_id is OneToOneField(User)   |   Student.department is ForeignKey(Department)", 12, "middle", "bold")
+    save("student_class_diagram.svg", "Student App - Class Diagram", 1070, 370, body)
+
+
+corrected_class_diagrams()
