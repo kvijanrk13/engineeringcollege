@@ -144,12 +144,18 @@
     flex: 1;
     max-height: none;
   }
-  .week6-content {
-    overflow-x: auto;
+  .test-table-scroll {
+    width: 100%;
+    overflow-x: scroll;
+    margin: 1.25rem 0;
+    padding-bottom: 0.35rem;
+    scrollbar-color: #818cf8 #1f2937;
+    scrollbar-width: auto;
   }
-  .week6-content table {
+  .test-table-scroll table {
     min-width: 1120px;
     table-layout: fixed;
+    margin: 0;
   }
   .week6-content th:nth-child(1),
   .week6-content td:nth-child(1) {
@@ -293,6 +299,16 @@
       image.loading = index === 0 ? "eager" : "lazy";
       image.setAttribute("tabindex", "0");
       updateZoom(100);
+    });
+
+    document.querySelectorAll("#week6-doc table").forEach(function (table) {
+      var scrollArea = document.createElement("div");
+      scrollArea.className = "test-table-scroll";
+      scrollArea.setAttribute("role", "region");
+      scrollArea.setAttribute("aria-label", "Scrollable test case table");
+      scrollArea.setAttribute("tabindex", "0");
+      table.parentNode.insertBefore(scrollArea, table);
+      scrollArea.appendChild(table);
     });
   });
 </script>
