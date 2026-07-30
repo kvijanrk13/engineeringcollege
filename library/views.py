@@ -11,6 +11,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib import auth
 from django.conf import settings
+from django.views.decorators.cache import never_cache
 import re
 import os
 import markdown
@@ -346,6 +347,7 @@ def pay_status(request,fineID):
     return redirect('/aeclibrary/my-fines/')
 
 
+@never_cache
 def documentation(request):
     base = os.path.join(os.path.dirname(__file__), 'docs')
     week1_path = os.path.join(base, 'week1_problem_statement.md')
@@ -378,7 +380,7 @@ def documentation(request):
     if os.path.exists(week7_path):
         with open(week7_path, 'r', encoding='utf-8') as f:
             week7_text = markdown.markdown(f.read(), extensions=['tables', 'fenced_code'])
-    return render(request, 'library/documentation.html', {
+    response = render(request, 'library/documentation.html', {
         'week1_text': week1_text,
         'srd_text': srd_text,
         'sdd_text': sdd_text,
@@ -386,4 +388,6 @@ def documentation(request):
         'week6_text': week6_text,
         'week7_text': week7_text,
     })
+    response['X-Documentation-Version'] = 'compact-v2'
+    return response
 

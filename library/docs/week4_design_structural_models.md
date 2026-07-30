@@ -1,8 +1,5 @@
 # Week 4 and Week 5 - UML Design Models
 
-The diagrams below model the implemented AEC Library system. Use the toolbar above each diagram to zoom,
-reset, or open it full screen.
-
 ## 1. Class Diagram
 
 ![Complete AEC Library class diagram](/static/docs/images/relationships_diagram.svg)
@@ -42,12 +39,3 @@ reset, or open it full screen.
 ## 8. Deployment Diagram
 
 ![AEC Library deployment diagram](/static/docs/images/library_deployment_diagram.svg)
-
-## UML Key
-
-| Notation | Meaning |
-|---|---|
-| `1`, `0..1`, `0..*` | Multiplicity |
-| Solid line | Association or communication |
-| Dashed line | Dependency or reply |
-| Filled circle / bullseye | Initial / final state |
