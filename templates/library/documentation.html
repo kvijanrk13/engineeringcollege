@@ -157,31 +157,31 @@
     table-layout: fixed;
     margin: 0;
   }
-  .week6-content th:nth-child(1),
-  .week6-content td:nth-child(1) {
+  .test-case-content th:nth-child(1),
+  .test-case-content td:nth-child(1) {
     width: 12%;
     text-align: center;
     font-weight: 700;
   }
-  .week6-content th:nth-child(2),
-  .week6-content td:nth-child(2) {
+  .test-case-content th:nth-child(2),
+  .test-case-content td:nth-child(2) {
     width: 36%;
   }
-  .week6-content th:nth-child(3),
-  .week6-content td:nth-child(3) {
+  .test-case-content th:nth-child(3),
+  .test-case-content td:nth-child(3) {
     width: 24%;
   }
-  .week6-content th:nth-child(4),
-  .week6-content td:nth-child(4) {
+  .test-case-content th:nth-child(4),
+  .test-case-content td:nth-child(4) {
     width: 18%;
   }
-  .week6-content th:nth-child(5),
-  .week6-content td:nth-child(5) {
+  .test-case-content th:nth-child(5),
+  .test-case-content td:nth-child(5) {
     width: 10%;
     text-align: center;
     font-weight: 700;
   }
-  .week6-content td {
+  .test-case-content td {
     vertical-align: top;
     line-height: 1.55;
   }
@@ -227,8 +227,15 @@
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-2xl font-bold text-green-400 mb-4">Week 6 - Unit Testing and Integration Testing</h2>
-      <div id="week6-doc" class="doc-content week6-content space-y-4 text-gray-300">
+      <div id="week6-doc" class="doc-content test-case-content space-y-4 text-gray-300">
         {{ week6_text|safe }}
+      </div>
+    </div>
+
+    <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
+      <h2 class="text-2xl font-bold text-amber-400 mb-4">Week 7 - White-Box and Black-Box Testing Techniques</h2>
+      <div id="week7-doc" class="doc-content test-case-content space-y-4 text-gray-300">
+        {{ week7_text|safe }}
       </div>
     </div>
   </div>
@@ -301,7 +308,7 @@
       updateZoom(100);
     });
 
-    document.querySelectorAll("#week6-doc table").forEach(function (table) {
+    document.querySelectorAll(".test-case-content table").forEach(function (table) {
       var scrollArea = document.createElement("div");
       scrollArea.className = "test-table-scroll";
       scrollArea.setAttribute("role", "region");

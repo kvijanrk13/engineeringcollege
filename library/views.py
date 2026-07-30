@@ -353,11 +353,13 @@ def documentation(request):
     sdd_path = os.path.join(base, 'sdd_week3.md')
     week4_path = os.path.join(base, 'week4_design_structural_models.md')
     week6_path = os.path.join(base, 'week6_testing.md')
+    week7_path = os.path.join(base, 'week7_testing_techniques.md')
     week1_text = ''
     srd_text = ''
     sdd_text = ''
     week4_text = ''
     week6_text = ''
+    week7_text = ''
     if os.path.exists(week1_path):
         with open(week1_path, 'r', encoding='utf-8') as f:
             week1_text = markdown.markdown(f.read(), extensions=['tables'])
@@ -373,11 +375,15 @@ def documentation(request):
     if os.path.exists(week6_path):
         with open(week6_path, 'r', encoding='utf-8') as f:
             week6_text = markdown.markdown(f.read(), extensions=['tables', 'fenced_code'])
+    if os.path.exists(week7_path):
+        with open(week7_path, 'r', encoding='utf-8') as f:
+            week7_text = markdown.markdown(f.read(), extensions=['tables', 'fenced_code'])
     return render(request, 'library/documentation.html', {
         'week1_text': week1_text,
         'srd_text': srd_text,
         'sdd_text': sdd_text,
         'week4_text': week4_text,
         'week6_text': week6_text,
+        'week7_text': week7_text,
     })
 
