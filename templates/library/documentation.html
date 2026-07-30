@@ -72,6 +72,78 @@
   .doc-content code {
     color: #f9a8d4;
   }
+  .diagram-viewer {
+    margin: 1.25rem auto 2rem;
+    overflow: hidden;
+    border: 1px solid #6b7280;
+    border-radius: 0.5rem;
+    background: #111827;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  }
+  .diagram-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid #4b5563;
+    background: #1f2937;
+  }
+  .diagram-toolbar button {
+    min-width: 2.5rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid #6b7280;
+    border-radius: 0.35rem;
+    background: #374151;
+    color: #f9fafb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .diagram-toolbar button:hover,
+  .diagram-toolbar button:focus-visible {
+    background: #4f46e5;
+    border-color: #818cf8;
+    outline: none;
+  }
+  .diagram-zoom-level {
+    min-width: 3.5rem;
+    color: #e5e7eb;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+  }
+  .diagram-canvas {
+    width: 100%;
+    max-height: 78vh;
+    overflow: auto;
+    padding: 1rem;
+    background: #e5e7eb;
+  }
+  .doc-content .diagram-canvas img {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    transform-origin: top left;
+  }
+  .diagram-viewer:fullscreen {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .diagram-viewer:fullscreen .diagram-canvas {
+    flex: 1;
+    max-height: none;
+  }
 </style>
 {% endblock extra_css %}
 {% block content %}
@@ -107,7 +179,7 @@
 
     <div class="bg-gray-800 rounded-xl border border-gray-700 p-6 shadow-lg">
       <h2 class="text-2xl font-bold text-purple-400 mb-4">Week 4 - Design Structural Models</h2>
-      <div class="doc-content space-y-4 text-gray-300">
+      <div id="week4-doc" class="doc-content space-y-4 text-gray-300">
         {{ week4_text|safe }}
       </div>
     </div>
@@ -119,5 +191,68 @@
     </a>
   </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("#week4-doc img").forEach(function (image, index) {
+      var viewer = document.createElement("div");
+      viewer.className = "diagram-viewer";
+
+      var toolbar = document.createElement("div");
+      toolbar.className = "diagram-toolbar";
+      toolbar.setAttribute("role", "toolbar");
+      toolbar.setAttribute("aria-label", "Diagram zoom controls");
+
+      var canvas = document.createElement("div");
+      canvas.className = "diagram-canvas";
+
+      var level = document.createElement("span");
+      level.className = "diagram-zoom-level";
+      level.textContent = "100%";
+      level.setAttribute("aria-live", "polite");
+
+      var zoom = 100;
+      function updateZoom(nextZoom) {
+        zoom = Math.min(300, Math.max(50, nextZoom));
+        image.style.width = zoom + "%";
+        level.textContent = zoom + "%";
+      }
+
+      function addButton(label, title, handler) {
+        var button = document.createElement("button");
+        button.type = "button";
+        button.textContent = label;
+        button.title = title;
+        button.setAttribute("aria-label", title);
+        button.addEventListener("click", handler);
+        toolbar.appendChild(button);
+        return button;
+      }
+
+      addButton("−", "Zoom out", function () { updateZoom(zoom - 25); });
+      toolbar.appendChild(level);
+      addButton("+", "Zoom in", function () { updateZoom(zoom + 25); });
+      addButton("Reset", "Reset zoom to 100 percent", function () {
+        updateZoom(100);
+        canvas.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      });
+      addButton("Full screen", "Open diagram in full screen", function () {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else if (viewer.requestFullscreen) {
+          viewer.requestFullscreen();
+        }
+      });
+
+      image.parentNode.insertBefore(viewer, image);
+      viewer.appendChild(toolbar);
+      viewer.appendChild(canvas);
+      canvas.appendChild(image);
+      image.loading = index === 0 ? "eager" : "lazy";
+      image.setAttribute("tabindex", "0");
+      updateZoom(100);
+    });
+  });
+</script>
 
 {% endblock %}

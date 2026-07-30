@@ -3,10 +3,12 @@ from xml.sax.saxutils import escape
 
 OUT = Path(__file__).resolve().parents[2] / "static" / "docs" / "images"
 FONT = "Arial,Helvetica,sans-serif"
+FONT_SCALE = 1.15
 
 
 def txt(x, y, value, size=14, anchor="start", weight="normal"):
-    return f'<text x="{x}" y="{y}" font-size="{size}" text-anchor="{anchor}" font-weight="{weight}" fill="#111" stroke="none">{escape(value)}</text>'
+    display_size = max(size + 1, round(size * FONT_SCALE))
+    return f'<text x="{x}" y="{y}" font-size="{display_size}" text-anchor="{anchor}" font-weight="{weight}" fill="#111" stroke="none">{escape(value)}</text>'
 
 
 def svg(title, width, height, body):
@@ -377,7 +379,7 @@ def corrected_class_diagrams():
                              "- book_format : Choice", "- copies_recommended : String",
                              "- created_at : DateTime"],
                             ["+ __str__() : String"])
-    stats, _ = box(330, 610, 220, "LibraryStat",
+    stats, _ = box(320, 610, 260, "LibraryStat",
                    ["- id : BigInteger", "- borrowed_books : PositiveInteger"],
                    ["+ __str__() : String"])
     department, _ = box(600, 610, 190, "Department",
