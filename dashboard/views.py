@@ -10065,6 +10065,33 @@ def exam_branch_download_lesson_plan(request):
             )
         output_row += 1
 
+    first_data_row = table_header_row + 1
+    last_data_row = output_row - 1
+    if last_data_row >= first_data_row:
+        week_group_start = first_data_row
+        current_week = worksheet.cell(row=first_data_row, column=4).value
+        for row_number in range(first_data_row + 1, last_data_row + 2):
+            next_week = (
+                worksheet.cell(row=row_number, column=4).value
+                if row_number <= last_data_row
+                else object()
+            )
+            if next_week == current_week:
+                continue
+            if row_number - 1 > week_group_start:
+                worksheet.merge_cells(
+                    start_row=week_group_start,
+                    start_column=4,
+                    end_row=row_number - 1,
+                    end_column=4,
+                )
+            worksheet.cell(row=week_group_start, column=4).alignment = Alignment(
+                horizontal='center',
+                vertical='center',
+            )
+            week_group_start = row_number
+            current_week = next_week
+
     column_widths = [9, 14, 20, 11, 22, 70, 18]
     for column_number, width in enumerate(column_widths, start=1):
         worksheet.column_dimensions[get_column_letter(column_number)].width = width
