@@ -9996,33 +9996,89 @@ def exam_branch_download_lesson_plan(request):
     header = payload.get('header', {}) if isinstance(payload, dict) else {}
     rows = payload.get('rows', []) if isinstance(payload, dict) else []
 
-    lines = [
-        'Teaching / Lesson Plan',
-        f"Branch: {header.get('branch', '')}",
-        f"Year: {header.get('year', '')}",
-        f"Semester: {header.get('semester', '')}",
-        f"Faculty: {header.get('faculty', '')}",
-        f"Employee Code: {header.get('employeeCode', '')}",
-        f"Subject: {header.get('subject', '')}",
-        f"Subject Code: {header.get('subjectCode', '')}",
-        '',
-        'S.No\tDate\tDay\tTopic\tMethod\tRemarks',
-    ]
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
 
-    for index, row in enumerate(rows, start=1):
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Lesson Plan'
+
+    columns = [
+        'Sl.No',
+        'Date',
+        'Day Of The Week',
+        'Week No.',
+        'No. Of Classes Taken',
+        'Topics To Be Covered',
+        'Students Present',
+    ]
+    worksheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(columns))
+    title_cell = worksheet.cell(row=1, column=1, value='Teaching / Lesson Plan')
+    title_cell.font = Font(bold=True, size=16, color='FFFFFF')
+    title_cell.fill = PatternFill('solid', fgColor='17324D')
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    worksheet.row_dimensions[1].height = 28
+
+    details = [
+        ('Branch', header.get('branch', '')),
+        ('Year', header.get('year', '')),
+        ('Semester', header.get('semester', '')),
+        ('Faculty', header.get('faculty', '')),
+        ('Employee Code', header.get('employeeCode', '')),
+        ('Subject', header.get('subject', '')),
+        ('Class', header.get('className', '')),
+        ('Subject Code', header.get('subjectCode', '')),
+    ]
+    for index, (label, value) in enumerate(details):
+        row_number = 3 + (index // 4)
+        column_number = 1 + ((index % 4) * 2)
+        worksheet.cell(row=row_number, column=column_number, value=label).font = Font(bold=True)
+        worksheet.cell(row=row_number, column=column_number + 1, value=str(value or ''))
+
+    table_header_row = 6
+    for column_number, label in enumerate(columns, start=1):
+        cell = worksheet.cell(row=table_header_row, column=column_number, value=label)
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = PatternFill('solid', fgColor='2F75B5')
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+    output_row = table_header_row + 1
+    for serial_number, row in enumerate(rows, start=1):
         if not isinstance(row, dict):
             continue
-        lines.append('\t'.join([
-            str(index),
-            str(row.get('date', '')),
-            str(row.get('day', '')),
-            str(row.get('topic', '')),
-            str(row.get('method', '')),
-            str(row.get('remarks', '')),
-        ]))
+        values = [
+            serial_number,
+            row.get('date', ''),
+            row.get('day', ''),
+            row.get('weekNum', ''),
+            row.get('classesTaken', ''),
+            row.get('topics', row.get('topic', '')),
+            row.get('studentsPresent', ''),
+        ]
+        for column_number, value in enumerate(values, start=1):
+            cell = worksheet.cell(row=output_row, column=column_number, value=value)
+            cell.alignment = Alignment(
+                horizontal='center' if column_number != 6 else 'left',
+                vertical='top',
+                wrap_text=True,
+            )
+        output_row += 1
 
-    response = HttpResponse('\n'.join(lines), content_type='text/plain; charset=utf-8')
-    response['Content-Disposition'] = 'attachment; filename="lesson_plan.txt"'
+    column_widths = [9, 14, 20, 11, 22, 70, 18]
+    for column_number, width in enumerate(column_widths, start=1):
+        worksheet.column_dimensions[get_column_letter(column_number)].width = width
+    worksheet.freeze_panes = f'A{table_header_row + 1}'
+    worksheet.auto_filter.ref = f'A{table_header_row}:G{max(table_header_row, output_row - 1)}'
+
+    output = io.BytesIO()
+    workbook.save(output)
+    output.seek(0)
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename="lesson_plan.xlsx"'
     return response
 
 
