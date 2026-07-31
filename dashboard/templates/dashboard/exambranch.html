@@ -1016,6 +1016,7 @@ Exam Branch
                             <table class="table exam-table text-center align-middle" id="teachingPlanTable" style="min-width: 980px;">
                                 <thead>
                                     <tr>
+                                        <th scope="col">Sl.No</th>
                                         <th scope="col">Date</th>
                                         <th scope="col">Day Of The Week</th>
                                         <th scope="col">Week No.</th>
@@ -3995,16 +3996,20 @@ Exam Branch
                 }
             });
 
+            let serialNumber = 1;
             grouped.forEach(function (group) {
                 group.rows.forEach(function (entry, index) {
                     const row = document.createElement('tr');
                     row.dataset.weekNum = String(group.weekNum);
 
+                    const serialCell = document.createElement('td');
+                    serialCell.innerHTML = '<input type="text" class="form-control text-center lesson-serial-input" value="' + serialNumber + '" readonly />';
+
                     const dateCell = document.createElement('td');
-                    dateCell.innerHTML = '<input type="text" class="form-control" value="' + (entry.date || '') + '" readonly />';
+                    dateCell.innerHTML = '<input type="text" class="form-control lesson-date-input" value="' + (entry.date || '') + '" readonly />';
 
                     const dayCell = document.createElement('td');
-                    dayCell.innerHTML = '<input type="text" class="form-control" value="' + (entry.day || '') + '" readonly />';
+                    dayCell.innerHTML = '<input type="text" class="form-control lesson-day-input" value="' + (entry.day || '') + '" readonly />';
 
                     const classesCell = document.createElement('td');
                     classesCell.innerHTML = '<input type="number" class="form-control classes-taken-input" value="' + (entry.classesTaken || '') + '" min="0" step="1" />';
@@ -4015,6 +4020,7 @@ Exam Branch
                     const studentsCell = document.createElement('td');
                     studentsCell.innerHTML = '<input type="number" class="form-control students-input" value="' + (entry.studentsPresent || '') + '" min="0" step="1" />';
 
+                    row.appendChild(serialCell);
                     row.appendChild(dateCell);
                     row.appendChild(dayCell);
 
@@ -4030,6 +4036,7 @@ Exam Branch
                     row.appendChild(topicsCell);
                     row.appendChild(studentsCell);
                     lessonPlanBody.appendChild(row);
+                    serialNumber += 1;
                 });
             });
 
@@ -4064,8 +4071,8 @@ Exam Branch
         function getLessonTableRows() {
             return Array.from(lessonPlanBody.querySelectorAll('tr')).map(function (row) {
                 return {
-                    date: row.querySelector('td:nth-child(1) input') ? row.querySelector('td:nth-child(1) input').value : '',
-                    day: row.querySelector('td:nth-child(2) input') ? row.querySelector('td:nth-child(2) input').value : '',
+                    date: row.querySelector('.lesson-date-input') ? row.querySelector('.lesson-date-input').value : '',
+                    day: row.querySelector('.lesson-day-input') ? row.querySelector('.lesson-day-input').value : '',
                     weekNum: Number(row.dataset.weekNum || 1),
                     classesTaken: row.querySelector('.classes-taken-input') ? row.querySelector('.classes-taken-input').value : '',
                     topics: row.querySelector('.topics-input') ? row.querySelector('.topics-input').value : '',
