@@ -45,7 +45,6 @@ class SearchForm(forms.Form):
 class BookingForm(forms.Form):
     MAX_PASSENGERS = 5
     travel_class = forms.ChoiceField(choices=Booking.CLASS_CHOICES)
-    contact_name = forms.CharField(max_length=100)
     contact_email = forms.EmailField()
     contact_phone = forms.RegexField(
         regex=r"^[6-9]\d{9}$",
@@ -134,6 +133,8 @@ class BookingForm(forms.Form):
                 if values["name"] and values["age"] and values["gender"]:
                     passengers.append(values)
         cleaned["passengers"] = passengers
+        # Passenger 1 is also the booking contact, avoiding duplicate name entry.
+        cleaned["contact_name"] = cleaned.get("passenger_name", "")
         if cleaned.get("book_cab"):
             if not cleaned.get("cab_type"):
                 self.add_error("cab_type", "Select a BOOKMYCAB vehicle type.")

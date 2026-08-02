@@ -27,16 +27,13 @@
         {% csrf_token %}
         {{ form.non_field_errors }}
         <div class="form-section">
-          <h2>Travel and contact</h2>
-          <div class="grid grid-2">
+          <h2>Add Passengers</h2>
+          <p class="muted">Choose the travel class and provide one email address and mobile number for booking updates. Passenger 1 will be used as the contact name.</p>
+          <div class="passenger-card"><h3>Travel and contact</h3><div class="grid grid-2">
             <div>{{ form.travel_class.label_tag }}{{ form.travel_class }}{{ form.travel_class.errors }}</div>
-            <div>{{ form.contact_name.label_tag }}{{ form.contact_name }}{{ form.contact_name.errors }}</div>
             <div>{{ form.contact_email.label_tag }}{{ form.contact_email }}{{ form.contact_email.errors }}</div>
             <div>{{ form.contact_phone.label_tag }}{{ form.contact_phone }}{{ form.contact_phone.errors }}</div>
-          </div>
-        </div>
-        <div class="form-section">
-          <h2>Add Passengers</h2>
+          </div></div>
           <p class="notice">Dummy IRCTC rule: passengers older than 5 receive a berth and are charged the selected train fare. Children aged 1–5 travel without a separate berth or fare.</p>
           <div class="passenger-card"><h3>Passenger 1</h3><div class="grid grid-2">
             <div>{{ form.passenger_name.label_tag }}{{ form.passenger_name }}{{ form.passenger_name.errors }}</div>

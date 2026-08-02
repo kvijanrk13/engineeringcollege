@@ -172,6 +172,7 @@ class EtorsTests(TestCase):
         response = self.client.post(reverse("etors:payment"), {"payment_method": "UPI"})
         self.assertEqual(response.status_code, 200)
         booking = Booking.objects.get(contact_email="family@example.com")
+        self.assertEqual(booking.contact_name, "Adult One")
         self.assertEqual(booking.passengers.count(), 2)
         self.assertEqual(booking.total_fare, Decimal("250"))
         self.assertEqual(booking.passengers.get(name="Child Five").seat_number, "NO BERTH")
