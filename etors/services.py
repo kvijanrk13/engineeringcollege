@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from .models import CabBooking
+from .models import Booking, CabBooking
 
 
 CAB_FARES = {
@@ -34,7 +34,25 @@ def train_availability(train, journey_date):
 
 
 def fare_for(train, travel_class):
-    return train.ac_fare if travel_class == "3A" else train.sleeper_fare
+    multipliers = {
+        "GN": (train.sleeper_fare, Decimal("0.60")),
+        "SL": (train.sleeper_fare, Decimal("1.00")),
+        "3E": (train.ac_fare, Decimal("0.90")),
+        "3A": (train.ac_fare, Decimal("1.00")),
+        "2A": (train.ac_fare, Decimal("1.40")),
+        "1A": (train.ac_fare, Decimal("2.00")),
+    }
+    base_fare, multiplier = multipliers.get(
+        travel_class, (train.sleeper_fare, Decimal("1.00"))
+    )
+    return (base_fare * multiplier).quantize(Decimal("0.01"))
+
+
+def fare_options_for(train):
+    return [
+        (label, fare_for(train, code))
+        for code, label in Booking.CLASS_CHOICES
+    ]
 
 
 def cab_fare_for(cab_type):

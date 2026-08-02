@@ -14,6 +14,7 @@ from .services import (
     cab_fare_for,
     create_cab_booking,
     fare_for,
+    fare_options_for,
     seat_number,
     train_availability,
 )
@@ -113,6 +114,7 @@ def book(request, train_id, journey_date):
             "train": train,
             "journey_date": journey_date,
             "available": available,
+            "fare_options": fare_options_for(train),
         },
     )
 

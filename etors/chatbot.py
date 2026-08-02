@@ -33,7 +33,8 @@ INTENT_ANSWERS = {
         "ETORS assigns a seat and generates a 10-digit PNR."
     ),
     "fare": (
-        "ETORS displays the Sleeper and AC 3 Tier fares on the booking page. "
+        "ETORS displays dummy fares for General, Sleeper, AC First Class (1A), AC 2 Tier (2A), "
+        "AC 3 Tier (3A), and AC 3 Economy (3E) on the booking page. "
         "It is an academic prototype and does not collect real payment."
     ),
     "pnr": (

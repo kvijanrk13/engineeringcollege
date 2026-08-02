@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from .models import Booking, CabBooking, Passenger, Station, Train
-from .services import train_availability
+from .services import fare_for, train_availability
 
 
 class EtorsTests(TestCase):
@@ -149,6 +149,18 @@ class EtorsTests(TestCase):
     def test_payment_requires_pending_booking(self):
         response = self.client.get(reverse("etors:payment"))
         self.assertRedirects(response, reverse("etors:home"))
+
+    def test_all_travel_classes_have_dummy_fares(self):
+        self.assertEqual(
+            [code for code, _label in Booking.CLASS_CHOICES],
+            ["GN", "SL", "1A", "2A", "3A", "3E"],
+        )
+        self.assertEqual(fare_for(self.train, "GN"), Decimal("150.00"))
+        self.assertEqual(fare_for(self.train, "SL"), Decimal("250.00"))
+        self.assertEqual(fare_for(self.train, "3E"), Decimal("630.00"))
+        self.assertEqual(fare_for(self.train, "3A"), Decimal("700.00"))
+        self.assertEqual(fare_for(self.train, "2A"), Decimal("980.00"))
+        self.assertEqual(fare_for(self.train, "1A"), Decimal("1400.00"))
 
     def test_multiple_passengers_and_child_berth_rule(self):
         response = self.client.post(

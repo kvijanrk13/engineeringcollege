@@ -66,8 +66,9 @@
       <div class="summary"><span>Route</span><strong>{{ train.source.code }} → {{ train.destination.code }}</strong></div>
       <div class="summary"><span>Journey</span><strong>{{ journey_date|date:"d M Y" }}</strong></div>
       <div class="summary"><span>Time</span><strong>{{ train.departure_time|time:"H:i" }} – {{ train.arrival_time|time:"H:i" }}</strong></div>
-      <div class="summary"><span>Sleeper fare</span><strong>₹{{ train.sleeper_fare }}</strong></div>
-      <div class="summary"><span>AC 3 Tier fare</span><strong>₹{{ train.ac_fare }}</strong></div>
+      {% for class_name, class_fare in fare_options %}
+      <div class="summary"><span>{{ class_name }}</span><strong>₹{{ class_fare }}</strong></div>
+      {% endfor %}
       <div class="summary"><span>Availability</span><strong class="status-confirmed">{{ available }} seats</strong></div>
       <p class="notice">Train and cab reservations are academic demonstrations. No real payment, train ticket, or taxi dispatch occurs.</p>
     </aside>

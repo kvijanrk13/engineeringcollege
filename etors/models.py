@@ -52,7 +52,14 @@ class Train(models.Model):
 
 
 class Booking(models.Model):
-    CLASS_CHOICES = (("SL", "Sleeper"), ("3A", "AC 3 Tier"))
+    CLASS_CHOICES = (
+        ("GN", "General"),
+        ("SL", "Sleeper"),
+        ("1A", "AC First Class (1A)"),
+        ("2A", "AC 2 Tier (2A)"),
+        ("3A", "AC 3 Tier (3A)"),
+        ("3E", "AC 3 Economy (3E)"),
+    )
     STATUS_CHOICES = (("CONFIRMED", "Confirmed"), ("CANCELLED", "Cancelled"))
 
     pnr = models.CharField(max_length=10, unique=True, editable=False)
