@@ -113,6 +113,30 @@ class EtorsTests(TestCase):
         answer = response.json()["answer"]
         self.assertIn("Route and journey-date search", answer)
         self.assertIn("PNR generation, lookup, and cancellation", answer)
+        self.assertIn("Verified Gmail login required", answer)
+        self.assertIn("General, Sleeper, 1A, 2A, 3A, and 3E", answer)
+        self.assertIn("Privacy-protected cab dispatch", answer)
+        self.assertIn("1800-000-3877", answer)
+
+    def test_chatbot_answers_every_recent_etors_feature(self):
+        cases = {
+            "Can children travel and who receives a berth?": ("five", "older than 5"),
+            "Which travel classes and fares are available?": ("General", "3E"),
+            "Why is Gmail login required for booking?": ("verified Gmail", "cannot book"),
+            "How is PNR status protected?": ("registered mobile", "PNR alone"),
+            "Explain passenger privacy from the cab driver and pickup OTP": ("no passenger identity", "pickup OTP"),
+            "What train and cab insurance is provided?": ("₹0.45", "₹10"),
+            "Which dummy payment methods can I use?": ("UPI", "net banking"),
+            "How does BOOKMYCAB reach the station?": ("20 minutes", "Mini"),
+            "Give both customer care helpline numbers": ("1800-000-3877", "1800-000-2222"),
+        }
+        for question, expected_parts in cases.items():
+            with self.subTest(question=question):
+                answer = self.client.post(
+                    reverse("etors:chatbot"), {"question": question}
+                ).json()["answer"]
+                for expected in expected_parts:
+                    self.assertIn(expected, answer)
 
     def test_chatbot_answers_booking_and_rejects_invalid_questions(self):
         response = self.client.post(

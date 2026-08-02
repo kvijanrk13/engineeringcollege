@@ -10,13 +10,28 @@ TEMPLATE_DIR = Path(__file__).resolve().parent / "templates" / "etors"
 
 ROUTE_DESCRIPTIONS = {
     "home": "Search active trains by source, destination, and journey date.",
-    "book": "Reserve one passenger, choose Sleeper or AC 3 Tier, and receive a confirmed ticket.",
-    "payment": "Complete a safe dummy payment simulation before ETORS confirms the reservation and assigns a seat.",
-    "pnr_search": "Look up a booking using its 10-digit PNR.",
+    "book": "After verified Gmail login, add up to five passengers, select one of six travel classes, include dummy insurance, and optionally add BOOKMYCAB.",
+    "payment": "Use dummy UPI, card, or net banking to confirm seats, insurance policies, PNR, and an optional cab.",
+    "pnr_search": "Securely look up a booking using its 10-digit PNR and registered mobile number.",
     "pnr_detail": "View booking status, journey, passenger, seat, class, fare, and contact details.",
     "cancel_booking": "Cancel a confirmed ETORS reservation and release its seat.",
     "logout": "Sign out of the ETORS account safely.",
+    "cab_dispatch": "Give a cab driver a privacy-protected dispatch view and reveal the drop address only after pickup OTP verification.",
 }
+
+FEATURE_CATALOG = (
+    "Train search between Khammam, Vijayawada, and Secunderabad with a 120-day calendar",
+    "Live dummy seat availability and cancellation-based seat release",
+    "Verified Gmail login required before booking or payment",
+    "Up to five passengers; ages 1–5 have no berth or fare, while passengers older than 5 receive a berth",
+    "General, Sleeper, 1A, 2A, 3A, and 3E travel classes with dummy fares",
+    "Dummy UPI, card, and net-banking payment with PNR and seat confirmation",
+    "Protected PNR access requiring the PNR and registered mobile number",
+    "Optional BOOKMYCAB Mini, Sedan, or SUV scheduled 20 minutes before destination arrival",
+    "Privacy-protected cab dispatch with no passenger identity or PNR and OTP-gated drop-address disclosure",
+    "Automatic dummy train and cab insurance premiums, policies, coverage, and claim guidance",
+    "Dummy train helpline 1800-000-3877 and BOOKMYCAB helpline 1800-000-2222",
+)
 
 INTENT_ANSWERS = {
     "search": (
@@ -28,9 +43,9 @@ INTENT_ANSWERS = {
         "Cancelled confirmed bookings release their seats back into availability."
     ),
     "booking": (
-        "Login with a verified Gmail account, search for a train, choose Book Ticket, enter the contact and passenger details, "
-        "select Sleeper or AC 3 Tier, and continue to dummy payment. After the simulated payment succeeds, "
-        "ETORS assigns a seat and generates a 10-digit PNR."
+        "Login with a verified Gmail account, search for a train, and choose Book Ticket. Add up to five passengers; "
+        "select General, Sleeper, 1A, 2A, 3A, or 3E; and optionally add BOOKMYCAB. Dummy insurance is included. "
+        "After dummy payment, ETORS assigns berths, issues policy references, and generates a 10-digit PNR."
     ),
     "fare": (
         "ETORS displays dummy fares for General, Sleeper, AC First Class (1A), AC 2 Tier (2A), "
@@ -38,16 +53,16 @@ INTENT_ANSWERS = {
         "It is an academic prototype and does not collect real payment."
     ),
     "pnr": (
-        "Open PNR Status on the ETORS home page and enter the 10-digit PNR from the confirmation. "
+        "Open PNR Status and enter both the 10-digit PNR and its registered mobile number. A PNR alone cannot expose data. "
         "The result shows booking status, train, route, journey, class, fare, passenger, seat, and contact details."
     ),
     "cancel": (
-        "Find the reservation using its 10-digit PNR, then choose Cancel Ticket on a confirmed booking. "
+        "Verify the reservation using its PNR and registered mobile number, then choose Cancel Ticket. "
         "ETORS marks it cancelled and releases the seat. This prototype does not process real payments or refunds."
     ),
     "login": (
-        "Choose Login with Gmail in the ETORS navigation bar. ETORS accepts the configured verified Gmail accounts. "
-        "Train search, booking, and PNR services are also available in the current demonstration workflow."
+        "Choose Login with Gmail in the ETORS navigation bar. Ticket booking and payment require a verified Gmail "
+        "login; an anonymous or ordinary non-ETORS session cannot book. Train search remains publicly available."
     ),
     "passenger": (
         "ETORS supports up to five dummy passengers per booking. Passengers older than 5 receive a berth "
@@ -73,7 +88,13 @@ INTENT_ANSWERS = {
     "cab": (
         "BOOKMYCAB is integrated into ETORS. On the passenger-details page, enable Add BOOKMYCAB, choose Mini, "
         "Sedan or SUV, and enter the destination drop address. After dummy payment, ETORS assigns a driver and "
-        "vehicle and schedules the cab at the destination station 20 minutes before train arrival."
+        "vehicle and schedules the cab at the destination station 20 minutes before train arrival. The driver uses a "
+        "random private dispatch link, receives no passenger identity or PNR, and sees the exact drop address only after pickup OTP verification."
+    ),
+    "security": (
+        "PNR details require the matching registered mobile number; a PNR alone cannot reveal passenger data, and verification attempts are limited. Cab drivers receive no passenger identity. They "
+        "receive only a random dispatch reference, station, train number, and arrival time—not the PNR, name, mobile, "
+        "email, age, gender, or seat. The exact drop address appears only after a valid short-lived pickup OTP."
     ),
 }
 
@@ -91,6 +112,7 @@ INTENT_KEYWORDS = {
     "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep"},
     "insurance": {"insurance", "policy", "premium", "claim", "coverage", "accident"},
     "helpline": {"helpline", "help line", "phone number", "customer care", "support number", "call"},
+    "security": {"privacy", "private", "security", "secure", "otp", "tracked", "tracking", "protect", "driver access"},
 }
 
 FEATURE_WORDS = {"feature", "features", "service", "services", "help", "offer", "available", "do"}
@@ -150,7 +172,7 @@ def template_features():
 
 
 def feature_summary():
-    features = list(template_features())
+    features = list(FEATURE_CATALOG) + list(template_features())
     normalized = {feature.lower().rstrip(".") for feature in features}
     for item in route_capabilities():
         description = item["description"].strip()
@@ -172,6 +194,14 @@ def answer_question(question):
     if words & FEATURE_WORDS or "what can" in question.lower():
         return feature_summary()
 
+    # Prefer narrow feature intents when a question also contains broad words
+    # such as booking, cab, passenger, or PNR.
+    for intent in ("helpline", "insurance", "security"):
+        if words & INTENT_KEYWORDS[intent]:
+            return INTENT_ANSWERS[intent]
+    if "bookmycab" in words:
+        return INTENT_ANSWERS["cab"]
+
     scores = {
         intent: len(words & keywords)
         for intent, keywords in INTENT_KEYWORDS.items()
@@ -192,5 +222,5 @@ def answer_question(question):
         return ranked[-1][1]["description"]
     return (
         "I couldn’t match that to an ETORS service. Ask about train search, availability, booking, fares, "
-        "PNR status, cancellation, passengers, Gmail login, or whether real payment is supported."
+        "PNR security, cancellation, passengers, travel classes, Gmail login, insurance, BOOKMYCAB privacy, payment, or helplines."
     )
