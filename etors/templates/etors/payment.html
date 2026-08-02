@@ -29,8 +29,10 @@
       {% endfor %}
       <div class="summary"><span>Class</span><strong>{{ travel_class }}</strong></div>
       <div class="summary"><span>Train fare</span><strong>₹{{ train_fare }}</strong></div>
+      <div class="summary"><span>Dummy train insurance</span><strong>₹{{ train_insurance_premium }}</strong></div>
       {% if book_cab %}
       <div class="summary"><span>BOOKMYCAB</span><strong>{{ cab_type }}</strong></div>
+      <div class="summary"><span>Dummy cab insurance</span><strong>₹{{ cab_insurance_premium }}</strong></div>
       <div class="summary"><span>Cab fare</span><strong>₹{{ cab_fare }}</strong></div>
       {% endif %}
       <div class="summary"><span>Total dummy fare</span><strong>₹{{ total_fare }}</strong></div>

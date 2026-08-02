@@ -176,7 +176,9 @@ class EtorsTests(TestCase):
         self.assertContains(response, "S001")
         self.assertEqual(len(booking.pnr), 10)
         self.assertEqual(booking.passengers.count(), 1)
-        self.assertEqual(booking.total_fare, Decimal("250"))
+        self.assertEqual(booking.total_fare, Decimal("250.45"))
+        self.assertEqual(booking.train_insurance_premium, Decimal("0.45"))
+        self.assertTrue(booking.train_insurance_policy.startswith("TRNINS-"))
         self.assertEqual(train_availability(self.train, self.journey_date), 1)
 
     def test_payment_requires_pending_booking(self):
@@ -221,7 +223,7 @@ class EtorsTests(TestCase):
         booking = Booking.objects.get(contact_email="family@example.com")
         self.assertEqual(booking.contact_name, "Adult One")
         self.assertEqual(booking.passengers.count(), 2)
-        self.assertEqual(booking.total_fare, Decimal("250"))
+        self.assertEqual(booking.total_fare, Decimal("250.45"))
         self.assertEqual(booking.passengers.get(name="Child Five").seat_number, "NO BERTH")
         self.assertNotEqual(booking.passengers.get(name="Adult One").seat_number, "NO BERTH")
 
@@ -252,7 +254,7 @@ class EtorsTests(TestCase):
         self.assertContains(payment, "BOOKMYCAB")
         self.assertContains(payment, "Sedan")
         self.assertContains(payment, "500.00")
-        self.assertContains(payment, "1200.00")
+        self.assertContains(payment, "1210.45")
 
         confirmation = self.client.post(
             reverse("etors:payment"),
@@ -261,8 +263,10 @@ class EtorsTests(TestCase):
         booking = Booking.objects.get(contact_email="meera@example.com")
         cab = CabBooking.objects.get(booking=booking)
         self.assertContains(confirmation, "BOOKMYCAB CONFIRMED")
-        self.assertEqual(booking.total_fare, Decimal("1200.00"))
+        self.assertEqual(booking.total_fare, Decimal("1210.45"))
         self.assertEqual(cab.fare, Decimal("500.00"))
+        self.assertEqual(cab.cab_insurance_premium, Decimal("10.00"))
+        self.assertTrue(cab.cab_insurance_policy.startswith("CABINS-"))
         self.assertEqual(cab.pickup_station, self.train.destination)
         self.assertEqual(cab.drop_address, "MG Road, Destination City")
         self.assertEqual(

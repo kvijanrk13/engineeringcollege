@@ -15,11 +15,14 @@ from .forms import BookingForm, PNRForm, SearchForm
 from .models import Booking, CabBooking, Passenger, Train
 from .services import (
     cab_fare_for,
+    CAB_INSURANCE_PREMIUM,
     create_cab_booking,
     fare_for,
+    insurance_policy,
     fare_options_for,
     seat_number,
     train_availability,
+    TRAIN_INSURANCE_PER_BERTH,
 )
 from .chatbot import answer_question
 
@@ -159,7 +162,9 @@ def payment(request):
     per_passenger_fare = fare_for(train, pending["travel_class"])
     train_fare = per_passenger_fare * berth_count
     cab_fare = cab_fare_for(pending.get("cab_type")) if pending.get("book_cab") else 0
-    total_fare = train_fare + cab_fare
+    train_insurance_premium = TRAIN_INSURANCE_PER_BERTH * berth_count
+    cab_insurance_premium = CAB_INSURANCE_PREMIUM if pending.get("book_cab") else 0
+    total_fare = train_fare + cab_fare + train_insurance_premium + cab_insurance_premium
 
     if request.method == "POST":
         payment_method = request.POST.get("payment_method")
@@ -179,6 +184,8 @@ def payment(request):
                 contact_email=pending["contact_email"],
                 contact_phone=pending["contact_phone"],
                 total_fare=total_fare,
+                train_insurance_policy=insurance_policy("TRNINS"),
+                train_insurance_premium=train_insurance_premium,
             )
             created_passengers = []
             for passenger_data in passengers:
@@ -225,7 +232,9 @@ def payment(request):
             "berth_count": berth_count,
             "per_passenger_fare": per_passenger_fare,
             "train_fare": train_fare,
+            "train_insurance_premium": train_insurance_premium,
             "cab_fare": cab_fare,
+            "cab_insurance_premium": cab_insurance_premium,
             "book_cab": pending.get("book_cab", False),
             "cab_type": dict(CabBooking.CAB_CHOICES).get(pending.get("cab_type"), ""),
             "total_fare": total_fare,

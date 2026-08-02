@@ -78,6 +78,8 @@ class Booking(models.Model):
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=15)
     total_fare = models.DecimalField(max_digits=10, decimal_places=2)
+    train_insurance_policy = models.CharField(max_length=24, blank=True)
+    train_insurance_premium = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     status = models.CharField(
         max_length=12, choices=STATUS_CHOICES, default="CONFIRMED"
     )
@@ -152,6 +154,8 @@ class CabBooking(models.Model):
     train_arrival_at = models.DateTimeField()
     cab_arrival_at = models.DateTimeField()
     fare = models.DecimalField(max_digits=8, decimal_places=2)
+    cab_insurance_policy = models.CharField(max_length=24, blank=True)
+    cab_insurance_premium = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     driver_name = models.CharField(max_length=100)
     driver_phone = models.CharField(max_length=15)
     vehicle_number = models.CharField(max_length=20)

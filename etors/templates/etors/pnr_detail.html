@@ -17,6 +17,8 @@
       <div class="summary"><span>Route</span><strong>{{ booking.train.source.code }} → {{ booking.train.destination.code }}</strong></div>
       <div class="summary"><span>Journey</span><strong>{{ booking.journey_date|date:"d F Y" }}</strong></div>
       <div class="summary"><span>Class</span><strong>{{ booking.get_travel_class_display }}</strong></div>
+      <div class="summary"><span>Dummy train insurance policy</span><strong>{{ booking.train_insurance_policy }}</strong></div>
+      <div class="summary"><span>Insurance premium</span><strong>₹{{ booking.train_insurance_premium }}</strong></div>
       <div class="summary"><span>Total fare</span><strong>₹{{ booking.total_fare }}</strong></div>
       {% if booking.status == "CONFIRMED" %}
       <form method="post" action="{% url 'etors:cancel_booking' booking.pnr %}" style="margin-top:20px">
@@ -56,6 +58,8 @@
         <div class="summary"><span>Driver</span><strong>{{ booking.cab_booking.driver_name }}</strong></div>
         <div class="summary"><span>Driver mobile</span><strong>{{ booking.cab_booking.driver_phone }}</strong></div>
         <div class="summary"><span>Vehicle</span><strong>{{ booking.cab_booking.vehicle_number }}</strong></div>
+        <div class="summary"><span>Dummy cab insurance policy</span><strong>{{ booking.cab_booking.cab_insurance_policy }}</strong></div>
+        <div class="summary"><span>Insurance premium</span><strong>₹{{ booking.cab_booking.cab_insurance_premium }}</strong></div>
         <div class="summary"><span>Dummy cab fare</span><strong>₹{{ booking.cab_booking.fare }}</strong></div>
       </div>
     </div>

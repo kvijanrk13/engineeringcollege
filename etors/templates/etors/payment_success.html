@@ -17,6 +17,12 @@
       <div class="summary"><span>{{ passenger.name }} (age {{ passenger.age }})</span><strong>{{ passenger.seat_number }}</strong></div>
       {% endfor %}
     </div>
+    <div class="notice" style="max-width:560px;margin:22px auto;text-align:left;border-left-color:var(--success)">
+      <strong>DUMMY TRAIN INSURANCE ISSUED</strong>
+      <div class="summary"><span>Policy</span><strong>{{ booking.train_insurance_policy }}</strong></div>
+      <div class="summary"><span>Premium</span><strong>₹{{ booking.train_insurance_premium }}</strong></div>
+      <p>Accidental death/permanent disability up to ₹10,00,000; hospital expenses up to ₹2,00,000. Dummy claims help: 1800-000-TRAIN.</p>
+    </div>
     {% if cab_booking %}
     <div class="notice" style="max-width:560px;margin:22px auto;text-align:left;border-left-color:var(--success)">
       <strong>BOOKMYCAB CONFIRMED · {{ cab_booking.reference }}</strong>
@@ -25,6 +31,9 @@
       <div class="summary"><span>Vehicle</span><strong>{{ cab_booking.vehicle_number }}</strong></div>
       <div class="summary"><span>Drop</span><strong>{{ cab_booking.drop_address }}</strong></div>
       <div class="summary"><span>Private pickup OTP</span><strong>{{ cab_booking.pickup_otp }}</strong></div>
+      <div class="summary"><span>Dummy cab insurance policy</span><strong>{{ cab_booking.cab_insurance_policy }}</strong></div>
+      <div class="summary"><span>Cab insurance premium</span><strong>₹{{ cab_booking.cab_insurance_premium }}</strong></div>
+      <p>Dummy personal accident cover up to ₹5,00,000 and emergency medical expenses up to ₹50,000. Claims help: 1800-000-CABS.</p>
       <p>Share this OTP with the assigned driver only after meeting the cab at the station. The driver cannot see your identity, PNR, mobile, email, seat, or exact drop address before verification.</p>
       <a class="btn btn-secondary" href="{% url 'etors:cab_dispatch' cab_booking.dispatch_token %}">Open Dummy Driver Dispatch View</a>
     </div>

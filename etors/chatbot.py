@@ -53,6 +53,11 @@ INTENT_ANSWERS = {
         "ETORS supports up to five dummy passengers per booking. Passengers older than 5 receive a berth "
         "and are charged the selected train fare; children aged 1–5 are listed without a separate berth or fare."
     ),
+    "insurance": (
+        "Every fare-paying passenger receives ₹0.45 dummy train insurance with demonstration accident, disability, "
+        "and hospital coverage. BOOKMYCAB reservations receive ₹10 dummy cab-trip insurance. Policy references "
+        "appear after payment and in the protected PNR view. These are academic simulations, not real policies or claims."
+    ),
     "payment": (
         "ETORS provides a dummy payment interface for UPI, card, or net banking. Clicking Pay & Reserve displays "
         "PAYMENT SUCCESSFULL, assigns a dummy seat, and generates a PNR. No real money is collected and no real "
@@ -80,6 +85,7 @@ INTENT_KEYWORDS = {
     "payment": {"payment", "pay", "money", "real", "irctc"},
     "admin": {"admin", "manage", "management"},
     "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep"},
+    "insurance": {"insurance", "policy", "premium", "claim", "coverage", "accident"},
 }
 
 FEATURE_WORDS = {"feature", "features", "service", "services", "help", "offer", "available", "do"}

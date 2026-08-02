@@ -14,6 +14,12 @@ CAB_FARES = {
     "SEDAN": Decimal("500.00"),
     "SUV": Decimal("750.00"),
 }
+TRAIN_INSURANCE_PER_BERTH = Decimal("0.45")
+CAB_INSURANCE_PREMIUM = Decimal("10.00")
+
+
+def insurance_policy(prefix):
+    return prefix + "-" + "".join(secrets.choice("0123456789") for _ in range(12))
 
 DUMMY_CABS = (
     ("Ravi Kumar", "9876501001", "TS 09 ET 2401"),
@@ -87,6 +93,8 @@ def create_cab_booking(booking, cab_type, drop_address):
         train_arrival_at=train_arrival_at,
         cab_arrival_at=cab_arrival_at,
         fare=cab_fare_for(cab_type),
+        cab_insurance_policy=insurance_policy("CABINS"),
+        cab_insurance_premium=CAB_INSURANCE_PREMIUM,
         driver_name=driver_name,
         driver_phone=driver_phone,
         vehicle_number=vehicle_number,

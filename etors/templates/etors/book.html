@@ -47,6 +47,16 @@
           <div class="passenger-card optional-passenger" data-passenger="5"><h3>Passenger 5</h3><div class="grid grid-2"><div>{{ form.passenger_5_name.label_tag }}{{ form.passenger_5_name }}{{ form.passenger_5_name.errors }}</div><div>{{ form.passenger_5_age.label_tag }}{{ form.passenger_5_age }}{{ form.passenger_5_age.errors }}</div><div>{{ form.passenger_5_gender.label_tag }}{{ form.passenger_5_gender }}{{ form.passenger_5_gender.errors }}</div><div>{{ form.passenger_5_berth_preference.label_tag }}{{ form.passenger_5_berth_preference }}{{ form.passenger_5_berth_preference.errors }}</div></div></div>
           <button class="btn btn-secondary" type="button" id="add-passenger" style="margin-top:14px">+ Add Passenger</button>
         </div>
+        <div class="form-section">
+          <h2>Dummy journey insurance included</h2>
+          <div class="notice">
+            <strong>Train insurance · ₹0.45 per fare-paying passenger</strong>
+            <p>Demonstration cover: accidental death or permanent disability up to ₹10,00,000; hospital expenses up to ₹2,00,000; transportation of remains up to ₹10,000.</p>
+            <strong>BOOKMYCAB insurance · ₹10 per cab booking</strong>
+            <p>When a cab is added: personal accident cover up to ₹5,00,000 and emergency medical expenses up to ₹50,000.</p>
+            <small>Academic demonstration only. No real insurance policy or claim is created.</small>
+          </div>
+        </div>
         <div class="cab-addon">
           <span class="cab-badge">ETORS × BOOKMYCAB</span>
           <label class="cab-toggle" for="{{ form.book_cab.id_for_label }}">
