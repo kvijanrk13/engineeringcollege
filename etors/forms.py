@@ -88,6 +88,12 @@ class BookingForm(forms.Form):
         label="Destination drop address",
         widget=forms.Textarea(attrs={"rows": 3}),
     )
+    cab_drop_latitude = forms.RegexField(
+        required=False, regex=r"^-?\d{1,3}(?:\.\d{1,6})?$", widget=forms.HiddenInput()
+    )
+    cab_drop_longitude = forms.RegexField(
+        required=False, regex=r"^-?\d{1,3}(?:\.\d{1,6})?$", widget=forms.HiddenInput()
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -145,12 +151,20 @@ class BookingForm(forms.Form):
                 self.add_error("cab_type", "Select a BOOKMYCAB vehicle type.")
             if not cleaned.get("cab_drop_address"):
                 self.add_error("cab_drop_address", "Enter the destination drop address.")
+            latitude = cleaned.get("cab_drop_latitude")
+            longitude = cleaned.get("cab_drop_longitude")
+            if latitude and not -90 <= float(latitude) <= 90:
+                self.add_error("cab_drop_latitude", "Invalid map latitude.")
+            if longitude and not -180 <= float(longitude) <= 180:
+                self.add_error("cab_drop_longitude", "Invalid map longitude.")
             capacity = self.CAB_CAPACITIES.get(cleaned.get("cab_type"))
             if capacity and len(passengers) > capacity:
                 self.add_error("cab_type", f"This vehicle allows {capacity} passenger{'s' if capacity != 1 else ''}. Select a larger vehicle.")
         else:
             cleaned["cab_type"] = ""
             cleaned["cab_drop_address"] = ""
+            cleaned["cab_drop_latitude"] = ""
+            cleaned["cab_drop_longitude"] = ""
         return cleaned
 
 

@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.conf import settings
 
 from .forms import BookingForm, PNRForm, SearchForm
 from .models import Booking, CabBooking, Passenger, Train
@@ -133,6 +134,7 @@ def book(request, train_id, journey_date):
             "journey_date": journey_date,
             "available": available,
             "fare_options": fare_options_for(train),
+            "google_maps_api_key": settings.GOOGLE_MAPS_API_KEY,
         },
     )
 
@@ -204,6 +206,8 @@ def payment(request):
                     booking,
                     pending["cab_type"],
                     pending["cab_drop_address"],
+                    pending.get("cab_drop_latitude"),
+                    pending.get("cab_drop_longitude"),
                 )
             request.session.pop("etors_pending_booking", None)
             authorized = request.session.get("etors_authorized_pnrs", [])

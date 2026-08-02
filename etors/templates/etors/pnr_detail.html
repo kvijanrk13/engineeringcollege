@@ -52,6 +52,7 @@
         <div class="summary"><span>Cab reaches station</span><strong>{{ booking.cab_booking.cab_arrival_at|date:"d M Y, H:i" }}</strong></div>
         <div class="summary"><span>Train arrival</span><strong>{{ booking.cab_booking.train_arrival_at|date:"d M Y, H:i" }}</strong></div>
         <div class="summary"><span>Drop address</span><strong>{{ booking.cab_booking.drop_address }}</strong></div>
+        <a href="https://www.google.com/maps/search/?api=1&amp;query={% if booking.cab_booking.drop_latitude and booking.cab_booking.drop_longitude %}{{ booking.cab_booking.drop_latitude }},{{ booking.cab_booking.drop_longitude }}{% else %}{{ booking.cab_booking.drop_address|urlencode }}{% endif %}" target="_blank" rel="noopener">Open destination in Google Maps</a>
       </div>
       <div>
         <div class="summary"><span>Cab</span><strong>{{ booking.cab_booking.get_cab_type_display }}</strong></div>

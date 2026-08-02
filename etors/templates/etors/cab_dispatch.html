@@ -15,6 +15,7 @@
     {% if verified %}
       <div class="notice" style="border-left-color:var(--success)"><strong>Pickup verified</strong><p>The passenger supplied the correct short-lived OTP.</p></div>
       <div class="summary"><span>Drop address</span><strong>{{ cab.drop_address }}</strong></div>
+      <a href="https://www.google.com/maps/search/?api=1&amp;query={% if cab.drop_latitude and cab.drop_longitude %}{{ cab.drop_latitude }},{{ cab.drop_longitude }}{% else %}{{ cab.drop_address|urlencode }}{% endif %}" target="_blank" rel="noopener">Navigate with Google Maps</a>
     {% else %}
       <form method="post" style="margin-top:22px">
         {% csrf_token %}

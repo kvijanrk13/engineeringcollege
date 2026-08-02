@@ -30,6 +30,7 @@
       <div class="summary"><span>Driver</span><strong>{{ cab_booking.driver_name }}</strong></div>
       <div class="summary"><span>Vehicle</span><strong>{{ cab_booking.vehicle_number }}</strong></div>
       <div class="summary"><span>Drop</span><strong>{{ cab_booking.drop_address }}</strong></div>
+      <a href="https://www.google.com/maps/search/?api=1&amp;query={% if cab_booking.drop_latitude and cab_booking.drop_longitude %}{{ cab_booking.drop_latitude }},{{ cab_booking.drop_longitude }}{% else %}{{ cab_booking.drop_address|urlencode }}{% endif %}" target="_blank" rel="noopener">View destination in Google Maps</a>
       <div class="summary"><span>Private pickup OTP</span><strong>{{ cab_booking.pickup_otp }}</strong></div>
       <div class="summary"><span>Dummy cab insurance policy</span><strong>{{ cab_booking.cab_insurance_policy }}</strong></div>
       <div class="summary"><span>Cab insurance premium</span><strong>₹{{ cab_booking.cab_insurance_premium }}</strong></div>

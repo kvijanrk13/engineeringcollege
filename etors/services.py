@@ -84,7 +84,7 @@ def cab_schedule_for(train, journey_date):
     return train_arrival_at, train_arrival_at - timedelta(minutes=20)
 
 
-def create_cab_booking(booking, cab_type, drop_address):
+def create_cab_booking(booking, cab_type, drop_address, drop_latitude=None, drop_longitude=None):
     train_arrival_at, cab_arrival_at = cab_schedule_for(
         booking.train,
         booking.journey_date,
@@ -96,6 +96,8 @@ def create_cab_booking(booking, cab_type, drop_address):
         cab_type=cab_type,
         pickup_station=booking.train.destination,
         drop_address=drop_address,
+        drop_latitude=drop_latitude or None,
+        drop_longitude=drop_longitude or None,
         train_arrival_at=train_arrival_at,
         cab_arrival_at=cab_arrival_at,
         fare=cab_fare_for(cab_type),

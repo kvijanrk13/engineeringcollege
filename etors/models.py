@@ -155,6 +155,8 @@ class CabBooking(models.Model):
         related_name="cab_pickups",
     )
     drop_address = models.CharField(max_length=240)
+    drop_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    drop_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     train_arrival_at = models.DateTimeField()
     cab_arrival_at = models.DateTimeField()
     fare = models.DecimalField(max_digits=8, decimal_places=2)

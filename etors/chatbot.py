@@ -28,6 +28,7 @@ FEATURE_CATALOG = (
     "Dummy UPI, card, and net-banking payment with PNR and seat confirmation",
     "Protected PNR access requiring the PNR and registered mobile number",
     "BOOKMYCAB Bike, Auto, Mini, Sedan, SUV, Tempo Traveller, and Bus options from ₹150 to ₹2,500",
+    "Google Maps destination search, optional Places autocomplete, coordinates, and navigation links",
     "Privacy-protected cab dispatch with no passenger identity or PNR and OTP-gated drop-address disclosure",
     "Automatic dummy train and cab insurance premiums, policies, coverage, and claim guidance",
     "Dummy train helpline 1800-000-3877 and BOOKMYCAB helpline 1800-000-2222",
@@ -87,7 +88,7 @@ INTENT_ANSWERS = {
     ),
     "cab": (
         "BOOKMYCAB offers Bike ₹150, Auto ₹250, Mini ₹350, Sedan ₹500, SUV ₹750, Tempo Traveller ₹1,200, "
-        "and Bus ₹2,500, with capacity checks from 1 to 30 passengers. Enter the destination drop address; after dummy payment, ETORS assigns a driver and "
+        "and Bus ₹2,500, with capacity checks from 1 to 30 passengers. Select the destination with Google Maps or type an address; after dummy payment, ETORS assigns a driver and "
         "vehicle and schedules the cab at the destination station 20 minutes before train arrival. The driver uses a "
         "random private dispatch link, receives no passenger identity or PNR, and sees the exact drop address only after pickup OTP verification."
     ),
@@ -109,7 +110,7 @@ INTENT_KEYWORDS = {
     "passenger": {"passenger", "berth", "gender", "age", "contact"},
     "payment": {"payment", "pay", "money", "real", "irctc"},
     "admin": {"admin", "manage", "management"},
-    "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep"},
+    "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep", "map", "maps", "google", "location", "navigation"},
     "insurance": {"insurance", "policy", "premium", "claim", "coverage", "accident"},
     "helpline": {"helpline", "help line", "phone number", "customer care", "support number", "call"},
     "security": {"privacy", "private", "security", "secure", "otp", "tracked", "tracking", "protect", "driver access"},

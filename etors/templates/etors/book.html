@@ -12,6 +12,8 @@
   .cab-fields { display:none; margin-top:18px; }
   .cab-fields.open { display:grid; }
   .cab-badge { display:inline-block; margin-bottom:10px; padding:5px 9px; border-radius:999px; color:#9b4c0c; background:#ffead2; font-size:.75rem; font-weight:850; letter-spacing:.07em; }
+  .map-picker { grid-column:1/-1; padding:14px; border:1px solid var(--line); border-radius:14px; background:white; }
+  #destination-map { height:280px; margin-top:12px; border-radius:12px; background:#eef3f8; }
   .passenger-card { margin-top:14px; padding:18px; border:1px solid var(--line); border-radius:16px; background:#fbfcff; }
   .passenger-card h3 { margin:0 0 14px; font-size:1rem; }
   .optional-passenger { display:none; }
@@ -65,7 +67,13 @@
           </label>
           <div class="cab-fields grid grid-2" id="cab-fields">
             <div>{{ form.cab_type.label_tag }}{{ form.cab_type }}{{ form.cab_type.errors }}</div>
-            <div>{{ form.cab_drop_address.label_tag }}{{ form.cab_drop_address }}{{ form.cab_drop_address.errors }}</div>
+            <div>{{ form.cab_drop_address.label_tag }}{{ form.cab_drop_address }}{{ form.cab_drop_address.errors }}{{ form.cab_drop_latitude }}{{ form.cab_drop_longitude }}</div>
+            <div class="map-picker">
+              <strong>Google Maps destination</strong>
+              <p class="muted">Search or type the exact drop address, then verify it in Google Maps.</p>
+              <a class="btn btn-secondary" id="open-google-maps" href="https://www.google.com/maps/search/?api=1" target="_blank" rel="noopener">Open Destination in Google Maps</a>
+              {% if google_maps_api_key %}<div id="destination-map" aria-label="Google Maps destination picker"></div>{% else %}<p class="muted">The Google Maps link works now. Set GOOGLE_MAPS_API_KEY on Render to enable embedded autocomplete and map pin selection.</p>{% endif %}
+            </div>
           </div>
         </div>
         <button class="btn btn-primary" style="width:100%;margin-top:20px">Continue to Dummy Payment →</button>
@@ -103,6 +111,35 @@
     updateAddPassenger();
     const toggle = document.getElementById('{{ form.book_cab.id_for_label }}');
     const fields = document.getElementById('cab-fields');
+    const address = document.getElementById('{{ form.cab_drop_address.id_for_label }}');
+    const latitude = document.getElementById('{{ form.cab_drop_latitude.id_for_label }}');
+    const longitude = document.getElementById('{{ form.cab_drop_longitude.id_for_label }}');
+    const mapsLink = document.getElementById('open-google-maps');
+    function updateMapsLink() {
+      const query = latitude.value && longitude.value ? `${latitude.value},${longitude.value}` : address.value;
+      mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || '{{ train.destination.name|escapejs }}')}`;
+    }
+    address.addEventListener('input', () => { latitude.value = ''; longitude.value = ''; updateMapsLink(); });
+    updateMapsLink();
+    window.initDestinationMap = function () {
+      const center = {lat: 16.5062, lng: 80.6480};
+      const map = new google.maps.Map(document.getElementById('destination-map'), {center, zoom: 12, mapTypeControl: false});
+      const marker = new google.maps.Marker({map});
+      const autocomplete = new google.maps.places.Autocomplete(address, {fields: ['formatted_address', 'geometry', 'name'], componentRestrictions: {country: 'in'}});
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+        address.value = place.formatted_address || place.name || address.value;
+        latitude.value = place.geometry.location.lat().toFixed(6);
+        longitude.value = place.geometry.location.lng().toFixed(6);
+        map.setCenter(place.geometry.location); map.setZoom(16); marker.setPosition(place.geometry.location);
+        updateMapsLink();
+      });
+      map.addListener('click', event => {
+        latitude.value = event.latLng.lat().toFixed(6); longitude.value = event.latLng.lng().toFixed(6);
+        marker.setPosition(event.latLng); updateMapsLink();
+      });
+    };
     function updateCabFields() {
       fields.classList.toggle('open', toggle.checked);
       fields.querySelectorAll('select, textarea').forEach(field => field.required = toggle.checked);
@@ -111,4 +148,5 @@
     updateCabFields();
   })();
 </script>
+{% if google_maps_api_key %}<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key|urlencode }}&amp;libraries=places&amp;callback=initDestinationMap"></script>{% endif %}
 {% endblock %}

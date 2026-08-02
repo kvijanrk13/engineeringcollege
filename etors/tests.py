@@ -306,6 +306,8 @@ class EtorsTests(TestCase):
                 "book_cab": "on",
                 "cab_type": "SEDAN",
                 "cab_drop_address": "MG Road, Destination City",
+                "cab_drop_latitude": "16.506200",
+                "cab_drop_longitude": "80.648000",
             },
         )
         self.assertRedirects(response, reverse("etors:payment"))
@@ -329,6 +331,9 @@ class EtorsTests(TestCase):
         self.assertTrue(cab.cab_insurance_policy.startswith("CABINS-"))
         self.assertEqual(cab.pickup_station, self.train.destination)
         self.assertEqual(cab.drop_address, "MG Road, Destination City")
+        self.assertEqual(cab.drop_latitude, Decimal("16.506200"))
+        self.assertEqual(cab.drop_longitude, Decimal("80.648000"))
+        self.assertContains(confirmation, "View destination in Google Maps")
         self.assertEqual(
             cab.train_arrival_at - cab.cab_arrival_at,
             timedelta(minutes=20),
@@ -346,6 +351,9 @@ class EtorsTests(TestCase):
 
     def test_bookmycab_requires_vehicle_and_drop_address(self):
         self.login_etors_passenger()
+        booking_page = self.client.get(reverse("etors:book", args=[self.train.pk, self.journey_date.isoformat()]))
+        self.assertContains(booking_page, "Google Maps destination")
+        self.assertContains(booking_page, "https://www.google.com/maps/search/?api=1")
         response = self.client.post(
             reverse(
                 "etors:book",

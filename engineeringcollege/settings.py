@@ -38,6 +38,7 @@ ACADEMIC_YEAR = os.environ.get('ACADEMIC_YEAR', '2026-2027')
 # ================================
 # GOOGLE SIGN-IN SETTINGS
 # ================================
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
 GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get('GOOGLE_OAUTH_CLIENT_SECRET', '')
 
