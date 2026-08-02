@@ -11,6 +11,7 @@
     <div class="summary"><span>Train arrival</span><strong>{{ cab.train_arrival_at|date:"d M Y, H:i" }}</strong></div>
     <div class="summary"><span>Cab reporting time</span><strong>{{ cab.cab_arrival_at|date:"d M Y, H:i" }}</strong></div>
     <div class="summary"><span>Status</span><strong>{{ cab.get_status_display }}</strong></div>
+    <div class="summary"><span>Dummy BOOKMYCAB helpline</span><strong>1800-000-2222</strong></div>
     {% if verified %}
       <div class="notice" style="border-left-color:var(--success)"><strong>Pickup verified</strong><p>The passenger supplied the correct short-lived OTP.</p></div>
       <div class="summary"><span>Drop address</span><strong>{{ cab.drop_address }}</strong></div>

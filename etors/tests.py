@@ -126,6 +126,16 @@ class EtorsTests(TestCase):
         self.assertEqual(response.json()["error"], "Enter a question about ETORS.")
 
     def test_authenticated_navigation_and_logout(self):
+        response = self.client.get(reverse("etors:home"))
+        self.assertContains(response, "1800-000-3877")
+        self.assertContains(response, "1800-000-2222")
+        answer = self.client.post(
+            reverse("etors:chatbot"),
+            {"question": "What are the customer care helpline numbers?"},
+        ).json()["answer"]
+        self.assertIn("1800-000-3877", answer)
+        self.assertIn("1800-000-2222", answer)
+
         user = User.objects.create_user(
             username="gmail-user",
             email="traveller@gmail.com",

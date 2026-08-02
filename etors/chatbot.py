@@ -58,6 +58,10 @@ INTENT_ANSWERS = {
         "and hospital coverage. BOOKMYCAB reservations receive ₹10 dummy cab-trip insurance. Policy references "
         "appear after payment and in the protected PNR view. These are academic simulations, not real policies or claims."
     ),
+    "helpline": (
+        "For this academic demonstration, call the dummy ETORS train-booking helpline 1800-000-3877 "
+        "or the dummy BOOKMYCAB helpline 1800-000-2222. These are not real customer-service numbers."
+    ),
     "payment": (
         "ETORS provides a dummy payment interface for UPI, card, or net banking. Clicking Pay & Reserve displays "
         "PAYMENT SUCCESSFULL, assigns a dummy seat, and generates a PNR. No real money is collected and no real "
@@ -86,6 +90,7 @@ INTENT_KEYWORDS = {
     "admin": {"admin", "manage", "management"},
     "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep"},
     "insurance": {"insurance", "policy", "premium", "claim", "coverage", "accident"},
+    "helpline": {"helpline", "help line", "phone number", "customer care", "support number", "call"},
 }
 
 FEATURE_WORDS = {"feature", "features", "service", "services", "help", "offer", "available", "do"}
