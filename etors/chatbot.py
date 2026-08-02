@@ -80,7 +80,9 @@ INTENT_ANSWERS = {
     ),
     "payment": (
         "ETORS provides a dummy payment interface for UPI, card, or net banking. Clicking Pay & Reserve displays "
-        "PAYMENT SUCCESSFULL, assigns a dummy seat, and generates a PNR. No real money is collected and no real "
+        "PAYMENT SUCCESSFULL, assigns a dummy seat, and generates a PNR. Cab payment is separate and UPI-only: it unlocks "
+        "after the driver enters the passenger pickup OTP and must finish before the 30-minute post-arrival deadline. "
+        "If missed, the cab amount is recorded as a dummy driver salary deduction. No real money is collected and no real "
         "railway ticket or refund is issued."
     ),
     "admin": (

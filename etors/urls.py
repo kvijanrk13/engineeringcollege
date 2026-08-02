@@ -14,4 +14,5 @@ urlpatterns = [
     path("pnr/<str:pnr>/", views.pnr_detail, name="pnr_detail"),
     path("pnr/<str:pnr>/cancel/", views.cancel_booking, name="cancel_booking"),
     path("cab/dispatch/<uuid:dispatch_token>/", views.cab_dispatch, name="cab_dispatch"),
+    path("cab/payment/<str:reference>/", views.cab_payment, name="cab_payment"),
 ]

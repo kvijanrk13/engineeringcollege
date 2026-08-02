@@ -108,9 +108,22 @@ def create_cab_booking(booking, cab_type, drop_address, drop_latitude=None, drop
         vehicle_number=vehicle_number,
         pickup_otp_hash=make_password(pickup_otp),
         pickup_otp_expires_at=train_arrival_at + timedelta(hours=2),
+        payment_deadline=train_arrival_at + timedelta(minutes=30),
     )
     cab_booking.pickup_otp = pickup_otp
     return cab_booking
+
+
+def cab_amount_due(cab):
+    return cab.fare + cab.cab_insurance_premium
+
+
+def reconcile_cab_payment(cab):
+    if cab.payment_status == "PENDING" and timezone.now() > cab.payment_deadline:
+        cab.payment_status = "DRIVER_DEDUCTION"
+        cab.driver_salary_deduction = cab_amount_due(cab)
+        cab.save(update_fields=["payment_status", "driver_salary_deduction"])
+    return cab
 
 
 def seat_number(train, journey_date):

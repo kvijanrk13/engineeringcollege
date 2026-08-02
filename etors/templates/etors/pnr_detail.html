@@ -62,6 +62,11 @@
         <div class="summary"><span>Dummy cab insurance policy</span><strong>{{ booking.cab_booking.cab_insurance_policy }}</strong></div>
         <div class="summary"><span>Insurance premium</span><strong>₹{{ booking.cab_booking.cab_insurance_premium }}</strong></div>
         <div class="summary"><span>Dummy cab fare</span><strong>₹{{ booking.cab_booking.fare }}</strong></div>
+        <div class="summary"><span>Total cab amount</span><strong>₹{{ cab_amount }}</strong></div>
+        <div class="summary"><span>Cab payment status</span><strong>{{ booking.cab_booking.get_payment_status_display }}</strong></div>
+        <div class="summary"><span>UPI deadline</span><strong>{{ booking.cab_booking.payment_deadline|date:"d M Y, H:i" }}</strong></div>
+        {% if booking.cab_booking.payment_status == "PENDING" %}<a class="btn btn-primary" href="{% url 'etors:cab_payment' booking.cab_booking.reference %}">Open Dummy UPI Cab Payment</a>{% endif %}
+        {% if booking.cab_booking.payment_status == "DRIVER_DEDUCTION" %}<div class="summary"><span>Dummy driver salary deduction</span><strong>₹{{ booking.cab_booking.driver_salary_deduction }}</strong></div>{% endif %}
       </div>
     </div>
     <p class="notice">BOOKMYCAB is simulated for this academic project. The schedule represents the cab reaching the station 20 minutes before train arrival; no real vehicle is dispatched.</p>

@@ -316,7 +316,8 @@ class EtorsTests(TestCase):
         self.assertContains(payment, "BOOKMYCAB")
         self.assertContains(payment, "Sedan")
         self.assertContains(payment, "500.00")
-        self.assertContains(payment, "1210.45")
+        self.assertContains(payment, "700.45")
+        self.assertContains(payment, "Cab amount is not charged now")
 
         confirmation = self.client.post(
             reverse("etors:payment"),
@@ -325,10 +326,11 @@ class EtorsTests(TestCase):
         booking = Booking.objects.get(contact_email="meera@example.com")
         cab = CabBooking.objects.get(booking=booking)
         self.assertContains(confirmation, "BOOKMYCAB CONFIRMED")
-        self.assertEqual(booking.total_fare, Decimal("1210.45"))
+        self.assertEqual(booking.total_fare, Decimal("700.45"))
         self.assertEqual(cab.fare, Decimal("500.00"))
         self.assertEqual(cab.cab_insurance_premium, Decimal("10.00"))
         self.assertTrue(cab.cab_insurance_policy.startswith("CABINS-"))
+        self.assertEqual(cab.payment_status, "PENDING")
         self.assertEqual(cab.pickup_station, self.train.destination)
         self.assertEqual(cab.drop_address, "MG Road, Destination City")
         self.assertEqual(cab.drop_latitude, Decimal("16.506200"))
@@ -455,6 +457,7 @@ class EtorsTests(TestCase):
             vehicle_number="TS 09 ET 2401",
             pickup_otp_hash=make_password("123456"),
             pickup_otp_expires_at=timezone.now() + timedelta(hours=3),
+            payment_deadline=timezone.now() + timedelta(hours=3),
         )
         url = reverse("etors:cab_dispatch", args=[cab.dispatch_token])
         dispatch = self.client.get(url)
@@ -467,3 +470,38 @@ class EtorsTests(TestCase):
         self.assertNotContains(rejected, "Secret Home Address")
         verified = self.client.post(url, {"pickup_otp": "123456"})
         self.assertContains(verified, "Secret Home Address")
+        cab.refresh_from_db()
+        self.assertIsNotNone(cab.pickup_verified_at)
+
+        session = self.client.session
+        session["etors_authorized_pnrs"] = [booking.pnr]
+        session.save()
+        payment_url = reverse("etors:cab_payment", args=[cab.reference])
+        cab_payment = self.client.post(payment_url, {"payment_method": "UPI"})
+        self.assertRedirects(cab_payment, reverse("etors:pnr_detail", args=[booking.pnr]))
+        cab.refresh_from_db()
+        self.assertEqual(cab.payment_status, "PAID_UPI")
+        self.assertEqual(cab.payment_method, "UPI")
+        self.assertEqual(cab.driver_salary_deduction, Decimal("0"))
+
+    def test_missed_cab_deadline_deducts_dummy_driver_salary(self):
+        booking = Booking.objects.create(
+            train=self.train, journey_date=self.journey_date, travel_class="SL",
+            contact_name="Late Passenger", contact_email="late@example.com",
+            contact_phone="9876543210", total_fare=Decimal("250.45"),
+        )
+        cab = CabBooking.objects.create(
+            booking=booking, cab_type="AUTO", pickup_station=self.train.destination,
+            drop_address="Hidden Address", train_arrival_at=timezone.now() - timedelta(hours=1),
+            cab_arrival_at=timezone.now() - timedelta(hours=1, minutes=20), fare=Decimal("250"),
+            cab_insurance_premium=Decimal("10"), driver_name="Late Driver",
+            driver_phone="9876501002", vehicle_number="AP 16 AU 5182",
+            pickup_otp_hash=make_password("654321"),
+            pickup_otp_expires_at=timezone.now() - timedelta(minutes=1),
+            payment_deadline=timezone.now() - timedelta(minutes=1),
+        )
+        response = self.client.get(reverse("etors:cab_dispatch", args=[cab.dispatch_token]))
+        self.assertContains(response, "dummy deduction from the cab driver's salary")
+        cab.refresh_from_db()
+        self.assertEqual(cab.payment_status, "DRIVER_DEDUCTION")
+        self.assertEqual(cab.driver_salary_deduction, Decimal("260.00"))

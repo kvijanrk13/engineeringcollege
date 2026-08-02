@@ -6,7 +6,7 @@
     <div style="width:72px;height:72px;margin:auto;display:grid;place-items:center;border-radius:50%;background:#e7f7f0;color:var(--success);font-size:38px">✓</div>
     <p class="muted" style="margin-top:20px">Dummy {{ payment_method }} transaction completed</p>
     <h1 style="color:var(--success)">PAYMENT SUCCESSFULL</h1>
-    <p>Your dummy train seat{% if cab_booking %} and BOOKMYCAB transfer have{% else %} has{% endif %} been confirmed.</p>
+    <p>Your dummy train seat has been confirmed.{% if cab_booking %} BOOKMYCAB is reserved, but its payment remains pending until pickup OTP verification.{% endif %}</p>
     <div style="max-width:560px;margin:24px auto;text-align:left">
       <div class="summary"><span>PNR</span><strong>{{ booking.pnr }}</strong></div>
       <div class="summary"><span>Train</span><strong>{{ booking.train.number }} · {{ booking.train.name }}</strong></div>
@@ -32,10 +32,12 @@
       <div class="summary"><span>Drop</span><strong>{{ cab_booking.drop_address }}</strong></div>
       <a href="https://www.google.com/maps/search/?api=1&amp;query={% if cab_booking.drop_latitude and cab_booking.drop_longitude %}{{ cab_booking.drop_latitude }},{{ cab_booking.drop_longitude }}{% else %}{{ cab_booking.drop_address|urlencode }}{% endif %}" target="_blank" rel="noopener">View destination in Google Maps</a>
       <div class="summary"><span>Private pickup OTP</span><strong>{{ cab_booking.pickup_otp }}</strong></div>
+      <div class="summary"><span>Cab payment</span><strong>{{ cab_booking.get_payment_status_display }}</strong></div>
+      <div class="summary"><span>UPI payment deadline</span><strong>{{ cab_booking.payment_deadline|date:"d M Y, H:i" }}</strong></div>
       <div class="summary"><span>Dummy cab insurance policy</span><strong>{{ cab_booking.cab_insurance_policy }}</strong></div>
       <div class="summary"><span>Cab insurance premium</span><strong>₹{{ cab_booking.cab_insurance_premium }}</strong></div>
       <p>Dummy personal accident cover up to ₹5,00,000 and emergency medical expenses up to ₹50,000. Claims help: 1800-000-CABS.</p>
-      <p>Share this OTP with the assigned driver only after meeting the cab at the station. The driver cannot see your identity, PNR, mobile, email, seat, or exact drop address before verification.</p>
+      <p>Share this OTP with the assigned driver only after meeting the cab. After the driver enters it, pay by dummy UPI before the deadline. If the deadline expires, the amount is recorded as a dummy driver salary deduction.</p>
       <a class="btn btn-secondary" href="{% url 'etors:cab_dispatch' cab_booking.dispatch_token %}">Open Dummy Driver Dispatch View</a>
     </div>
     {% endif %}

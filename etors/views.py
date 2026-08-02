@@ -16,10 +16,12 @@ from .forms import BookingForm, PNRForm, SearchForm
 from .models import Booking, CabBooking, Passenger, Train
 from .services import (
     cab_fare_for,
+    cab_amount_due,
     CAB_INSURANCE_PREMIUM,
     create_cab_booking,
     fare_for,
     insurance_policy,
+    reconcile_cab_payment,
     fare_options_for,
     seat_number,
     train_availability,
@@ -166,7 +168,7 @@ def payment(request):
     cab_fare = cab_fare_for(pending.get("cab_type")) if pending.get("book_cab") else 0
     train_insurance_premium = TRAIN_INSURANCE_PER_BERTH * berth_count
     cab_insurance_premium = CAB_INSURANCE_PREMIUM if pending.get("book_cab") else 0
-    total_fare = train_fare + cab_fare + train_insurance_premium + cab_insurance_premium
+    total_fare = train_fare + train_insurance_premium
 
     if request.method == "POST":
         payment_method = request.POST.get("payment_method")
@@ -287,7 +289,11 @@ def pnr_detail(request, pnr):
     if not _can_access_booking(request, booking):
         messages.error(request, "Verify the PNR with its registered mobile number to view this booking.")
         return redirect("etors:home")
-    return render(request, "etors/pnr_detail.html", {"booking": booking})
+    cab_amount = None
+    if hasattr(booking, "cab_booking"):
+        reconcile_cab_payment(booking.cab_booking)
+        cab_amount = cab_amount_due(booking.cab_booking)
+    return render(request, "etors/pnr_detail.html", {"booking": booking, "cab_amount": cab_amount})
 
 
 def cab_dispatch(request, dispatch_token):
@@ -297,6 +303,7 @@ def cab_dispatch(request, dispatch_token):
         ),
         dispatch_token=dispatch_token,
     )
+    reconcile_cab_payment(cab)
     session_key = f"etors_cab_verified_{cab.pk}"
     verified = bool(request.session.get(session_key))
     if request.method == "POST" and not verified:
@@ -305,6 +312,9 @@ def cab_dispatch(request, dispatch_token):
         otp = request.POST.get("pickup_otp", "").strip()
         if attempts >= 5:
             messages.error(request, "Too many unsuccessful OTP attempts.")
+        elif timezone.now() > cab.payment_deadline:
+            reconcile_cab_payment(cab)
+            messages.error(request, "The OTP/payment deadline expired; the dummy cab amount was deducted from driver salary.")
         elif timezone.now() > cab.pickup_otp_expires_at:
             messages.error(request, "This pickup OTP has expired.")
         elif check_password(otp, cab.pickup_otp_hash):
@@ -317,7 +327,38 @@ def cab_dispatch(request, dispatch_token):
         else:
             request.session[attempt_key] = attempts + 1
             messages.error(request, "Invalid pickup OTP.")
-    return render(request, "etors/cab_dispatch.html", {"cab": cab, "verified": verified})
+    return render(request, "etors/cab_dispatch.html", {"cab": cab, "verified": verified, "cab_amount": cab_amount_due(cab)})
+
+
+@transaction.atomic
+def cab_payment(request, reference):
+    cab = get_object_or_404(
+        CabBooking.objects.select_for_update().select_related("booking", "booking__train"),
+        reference=reference,
+    )
+    if not _can_access_booking(request, cab.booking):
+        messages.error(request, "Verify the train booking before opening cab payment.")
+        return redirect("etors:home")
+    reconcile_cab_payment(cab)
+    amount = cab_amount_due(cab)
+    if request.method == "POST":
+        if cab.payment_status != "PENDING":
+            messages.info(request, "This cab payment is no longer pending.")
+        elif not cab.pickup_verified_at:
+            messages.error(request, "The cab driver must verify the passenger pickup OTP before payment.")
+        elif timezone.now() > cab.payment_deadline:
+            reconcile_cab_payment(cab)
+            messages.error(request, "The UPI deadline expired; the dummy amount was deducted from driver salary.")
+        elif request.POST.get("payment_method") != "UPI":
+            messages.error(request, "Cab payment is available only through dummy UPI.")
+        else:
+            cab.payment_status = "PAID_UPI"
+            cab.payment_method = "UPI"
+            cab.paid_at = timezone.now()
+            cab.save(update_fields=["payment_status", "payment_method", "paid_at"])
+            messages.success(request, "Dummy BOOKMYCAB UPI payment completed successfully.")
+            return redirect("etors:pnr_detail", pnr=cab.booking.pnr)
+    return render(request, "etors/cab_payment.html", {"cab": cab, "cab_amount": amount})
 
 
 @transaction.atomic
@@ -336,7 +377,11 @@ def cancel_booking(request, pnr):
         booking.save(update_fields=["status", "cancelled_at"])
         if hasattr(booking, "cab_booking"):
             booking.cab_booking.status = "CANCELLED"
-            booking.cab_booking.save(update_fields=["status"])
+            update_fields = ["status"]
+            if booking.cab_booking.payment_status == "PENDING":
+                booking.cab_booking.payment_status = "CANCELLED"
+                update_fields.append("payment_status")
+            booking.cab_booking.save(update_fields=update_fields)
         messages.success(request, f"PNR {pnr} was cancelled successfully.")
     else:
         messages.info(request, "This booking is already cancelled.")

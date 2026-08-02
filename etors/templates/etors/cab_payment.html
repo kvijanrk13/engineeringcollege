@@ -1,0 +1,18 @@
+{% extends "etors/base.html" %}
+{% block title %}BOOKMYCAB UPI Payment · ETORS{% endblock %}
+{% block content %}
+<main class="container section"><section class="panel" style="max-width:680px;margin:auto">
+  <p class="muted">Post-pickup protected payment</p><h1>BOOKMYCAB Dummy UPI</h1>
+  <div class="summary"><span>Cab reference</span><strong>{{ cab.reference }}</strong></div>
+  <div class="summary"><span>Amount</span><strong>₹{{ cab_amount }}</strong></div>
+  <div class="summary"><span>Status</span><strong>{{ cab.get_payment_status_display }}</strong></div>
+  <div class="summary"><span>Deadline</span><strong>{{ cab.payment_deadline|date:"d M Y, H:i" }}</strong></div>
+  {% if cab.payment_status == "PENDING" and cab.pickup_verified_at %}
+  <p class="notice">Pickup OTP verified. UPI is the only available dummy cab-payment method.</p>
+  <form method="post">{% csrf_token %}<input type="hidden" name="payment_method" value="UPI"><label>Dummy UPI ID</label><input class="form-control" value="passenger@dummyupi" readonly><button class="btn btn-primary" style="width:100%;margin-top:16px">Pay ₹{{ cab_amount }} by Dummy UPI</button></form>
+  {% elif cab.payment_status == "PENDING" %}<p class="notice">Payment is locked. The concerned cab driver must first enter the passenger's valid pickup OTP within the stipulated time.</p>
+  {% elif cab.payment_status == "DRIVER_DEDUCTION" %}<p class="notice">The deadline expired. ₹{{ cab.driver_salary_deduction }} was recorded as a dummy driver salary deduction.</p>
+  {% else %}<p class="notice">No further cab payment is required.</p>{% endif %}
+  <a class="btn btn-secondary" style="margin-top:16px" href="{% url 'etors:pnr_detail' cab.booking.pnr %}">Return to Protected Booking</a>
+</section></main>
+{% endblock %}

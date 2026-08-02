@@ -137,6 +137,12 @@ class CabBooking(models.Model):
         ("COMPLETED", "Completed"),
         ("CANCELLED", "Cancelled"),
     )
+    PAYMENT_STATUS_CHOICES = (
+        ("PENDING", "Awaiting pickup OTP and UPI payment"),
+        ("PAID_UPI", "Paid by dummy UPI"),
+        ("DRIVER_DEDUCTION", "Deducted from driver salary"),
+        ("CANCELLED", "Payment cancelled"),
+    )
 
     booking = models.OneToOneField(
         Booking,
@@ -148,6 +154,11 @@ class CabBooking(models.Model):
     pickup_otp_hash = models.CharField(max_length=128, editable=False)
     pickup_otp_expires_at = models.DateTimeField()
     pickup_verified_at = models.DateTimeField(null=True, blank=True)
+    payment_deadline = models.DateTimeField()
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default="PENDING")
+    payment_method = models.CharField(max_length=8, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    driver_salary_deduction = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     cab_type = models.CharField(max_length=8, choices=CAB_CHOICES)
     pickup_station = models.ForeignKey(
         Station,

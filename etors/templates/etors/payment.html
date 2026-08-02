@@ -16,7 +16,7 @@
           <label class="panel" style="padding:14px;cursor:pointer"><input type="radio" name="payment_method" value="CARD" required> Dummy Debit / Credit Card</label>
           <label class="panel" style="padding:14px;cursor:pointer"><input type="radio" name="payment_method" value="NETBANKING" required> Dummy Net Banking</label>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:20px">Pay ₹{{ total_fare }} &amp; Confirm Services</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:20px">Pay ₹{{ total_fare }} &amp; Confirm Train Ticket</button>
       </form>
     </section>
     <aside class="panel">
@@ -33,10 +33,11 @@
       <div class="summary"><span>Dummy train insurance</span><strong>₹{{ train_insurance_premium }}</strong></div>
       {% if book_cab %}
       <div class="summary"><span>BOOKMYCAB</span><strong>{{ cab_type }}</strong></div>
+      <p class="notice"><strong>Cab amount is not charged now.</strong> It becomes payable by dummy UPI only after the driver verifies the passenger's pickup OTP and before the deadline.</p>
       <div class="summary"><span>Dummy cab insurance</span><strong>₹{{ cab_insurance_premium }}</strong></div>
       <div class="summary"><span>Cab fare</span><strong>₹{{ cab_fare }}</strong></div>
       {% endif %}
-      <div class="summary"><span>Total dummy fare</span><strong>₹{{ total_fare }}</strong></div>
+      <div class="summary"><span>Train payment now</span><strong>₹{{ total_fare }}</strong></div>
     </aside>
   </div>
 </main>

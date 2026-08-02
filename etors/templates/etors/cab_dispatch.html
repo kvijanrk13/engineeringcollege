@@ -11,9 +11,13 @@
     <div class="summary"><span>Train arrival</span><strong>{{ cab.train_arrival_at|date:"d M Y, H:i" }}</strong></div>
     <div class="summary"><span>Cab reporting time</span><strong>{{ cab.cab_arrival_at|date:"d M Y, H:i" }}</strong></div>
     <div class="summary"><span>Status</span><strong>{{ cab.get_status_display }}</strong></div>
+    <div class="summary"><span>Cab amount</span><strong>₹{{ cab_amount }}</strong></div>
+    <div class="summary"><span>Payment status</span><strong>{{ cab.get_payment_status_display }}</strong></div>
+    <div class="summary"><span>OTP / UPI deadline</span><strong>{{ cab.payment_deadline|date:"d M Y, H:i" }}</strong></div>
     <div class="summary"><span>Dummy BOOKMYCAB helpline</span><strong>1800-000-2222</strong></div>
     {% if verified %}
       <div class="notice" style="border-left-color:var(--success)"><strong>Pickup verified</strong><p>The passenger supplied the correct short-lived OTP.</p></div>
+      {% if cab.payment_status == "PENDING" %}<p class="notice">Ask the passenger to complete the cab amount through the protected dummy UPI screen before the deadline.</p>{% endif %}
       <div class="summary"><span>Drop address</span><strong>{{ cab.drop_address }}</strong></div>
       <a href="https://www.google.com/maps/search/?api=1&amp;query={% if cab.drop_latitude and cab.drop_longitude %}{{ cab.drop_latitude }},{{ cab.drop_longitude }}{% else %}{{ cab.drop_address|urlencode }}{% endif %}" target="_blank" rel="noopener">Navigate with Google Maps</a>
     {% else %}
@@ -25,6 +29,7 @@
       </form>
       <p class="muted">Ask the passenger for the OTP only after meeting at the destination station. The exact drop address remains hidden until verification.</p>
     {% endif %}
+    {% if cab.payment_status == "DRIVER_DEDUCTION" %}<p class="notice"><strong>Deadline missed:</strong> ₹{{ cab.driver_salary_deduction }} has been recorded as a dummy deduction from the cab driver's salary.</p>{% endif %}
   </section>
 </main>
 {% endblock %}
