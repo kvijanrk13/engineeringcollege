@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Booking, CabBooking, Passenger, Station, Train
-from .services import fare_for, train_availability
+from .services import cab_fare_for, fare_for, train_availability
 
 
 class EtorsTests(TestCase):
@@ -231,6 +231,32 @@ class EtorsTests(TestCase):
         self.assertEqual(fare_for(self.train, "3A"), Decimal("700.00"))
         self.assertEqual(fare_for(self.train, "2A"), Decimal("980.00"))
         self.assertEqual(fare_for(self.train, "1A"), Decimal("1400.00"))
+
+    def test_cab_vehicle_types_prices_and_capacity_validation(self):
+        self.assertEqual(
+            [code for code, _label in CabBooking.CAB_CHOICES],
+            ["BIKE", "AUTO", "MINI", "SEDAN", "SUV", "TEMPO", "BUS"],
+        )
+        expected_fares = {
+            "BIKE": "150.00", "AUTO": "250.00", "MINI": "350.00",
+            "SEDAN": "500.00", "SUV": "750.00", "TEMPO": "1200.00", "BUS": "2500.00",
+        }
+        for vehicle, fare in expected_fares.items():
+            self.assertEqual(cab_fare_for(vehicle), Decimal(fare))
+
+        self.login_etors_passenger()
+        response = self.client.post(
+            reverse("etors:book", args=[self.train.pk, self.journey_date.isoformat()]),
+            {
+                "travel_class": "SL", "contact_email": "group@example.com",
+                "contact_phone": "9876543210", "passenger_name": "Passenger One",
+                "passenger_age": 30, "passenger_gender": "M",
+                "passenger_2_name": "Passenger Two", "passenger_2_age": 28,
+                "passenger_2_gender": "F", "book_cab": "on", "cab_type": "BIKE",
+                "cab_drop_address": "Demo Address",
+            },
+        )
+        self.assertContains(response, "This vehicle allows 1 passenger. Select a larger vehicle.")
 
     def test_multiple_passengers_and_child_berth_rule(self):
         self.login_etors_passenger()

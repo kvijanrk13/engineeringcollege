@@ -10,9 +10,13 @@ from .models import Booking, CabBooking
 
 
 CAB_FARES = {
+    "BIKE": Decimal("150.00"),
+    "AUTO": Decimal("250.00"),
     "MINI": Decimal("350.00"),
     "SEDAN": Decimal("500.00"),
     "SUV": Decimal("750.00"),
+    "TEMPO": Decimal("1200.00"),
+    "BUS": Decimal("2500.00"),
 }
 TRAIN_INSURANCE_PER_BERTH = Decimal("0.45")
 CAB_INSURANCE_PREMIUM = Decimal("10.00")
@@ -21,11 +25,15 @@ CAB_INSURANCE_PREMIUM = Decimal("10.00")
 def insurance_policy(prefix):
     return prefix + "-" + "".join(secrets.choice("0123456789") for _ in range(12))
 
-DUMMY_CABS = (
-    ("Ravi Kumar", "9876501001", "TS 09 ET 2401"),
-    ("Sana Begum", "9876501002", "AP 16 ET 5182"),
-    ("Arjun Reddy", "9876501003", "TS 08 ET 7306"),
-)
+DUMMY_CABS = {
+    "BIKE": ("Ravi Kumar", "9876501001", "TS 09 BK 2401"),
+    "AUTO": ("Sana Begum", "9876501002", "AP 16 AU 5182"),
+    "MINI": ("Arjun Reddy", "9876501003", "TS 08 MN 7306"),
+    "SEDAN": ("Meera Singh", "9876501004", "AP 16 SD 4420"),
+    "SUV": ("Kiran Rao", "9876501005", "TS 09 SV 8861"),
+    "TEMPO": ("Imran Ali", "9876501006", "AP 16 TT 1212"),
+    "BUS": ("Vijay Sharma", "9876501007", "TS 08 BS 3030"),
+}
 
 
 def train_availability(train, journey_date):
@@ -81,9 +89,7 @@ def create_cab_booking(booking, cab_type, drop_address):
         booking.train,
         booking.journey_date,
     )
-    driver_name, driver_phone, vehicle_number = DUMMY_CABS[
-        int(booking.pnr[-2:]) % len(DUMMY_CABS)
-    ]
+    driver_name, driver_phone, vehicle_number = DUMMY_CABS[cab_type]
     pickup_otp = "".join(secrets.choice("0123456789") for _ in range(6))
     cab_booking = CabBooking.objects.create(
         booking=booking,

@@ -44,6 +44,7 @@ class SearchForm(forms.Form):
 
 class BookingForm(forms.Form):
     MAX_PASSENGERS = 5
+    CAB_CAPACITIES = {"BIKE": 1, "AUTO": 3, "MINI": 4, "SEDAN": 4, "SUV": 6, "TEMPO": 12, "BUS": 30}
     travel_class = forms.ChoiceField(choices=Booking.CLASS_CHOICES)
     contact_email = forms.EmailField()
     contact_phone = forms.RegexField(
@@ -72,9 +73,13 @@ class BookingForm(forms.Form):
         required=False,
         choices=(
             ("", "Select cab type"),
-            ("MINI", "Mini - ₹350"),
-            ("SEDAN", "Sedan - ₹500"),
-            ("SUV", "SUV - ₹750"),
+            ("BIKE", "Bike · 1 passenger · ₹150"),
+            ("AUTO", "Auto Rickshaw · up to 3 · ₹250"),
+            ("MINI", "Mini · up to 4 · ₹350"),
+            ("SEDAN", "Sedan · up to 4 · ₹500"),
+            ("SUV", "SUV · up to 6 · ₹750"),
+            ("TEMPO", "Tempo Traveller · up to 12 · ₹1,200"),
+            ("BUS", "Bus · up to 30 · ₹2,500"),
         ),
     )
     cab_drop_address = forms.CharField(
@@ -140,6 +145,9 @@ class BookingForm(forms.Form):
                 self.add_error("cab_type", "Select a BOOKMYCAB vehicle type.")
             if not cleaned.get("cab_drop_address"):
                 self.add_error("cab_drop_address", "Enter the destination drop address.")
+            capacity = self.CAB_CAPACITIES.get(cleaned.get("cab_type"))
+            if capacity and len(passengers) > capacity:
+                self.add_error("cab_type", f"This vehicle allows {capacity} passenger{'s' if capacity != 1 else ''}. Select a larger vehicle.")
         else:
             cleaned["cab_type"] = ""
             cleaned["cab_drop_address"] = ""

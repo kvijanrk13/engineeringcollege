@@ -123,9 +123,13 @@ class Passenger(models.Model):
 
 class CabBooking(models.Model):
     CAB_CHOICES = (
-        ("MINI", "Mini"),
-        ("SEDAN", "Sedan"),
-        ("SUV", "SUV"),
+        ("BIKE", "Bike (1 passenger)"),
+        ("AUTO", "Auto Rickshaw (3 passengers)"),
+        ("MINI", "Mini (4 passengers)"),
+        ("SEDAN", "Sedan (4 passengers)"),
+        ("SUV", "SUV (6 passengers)"),
+        ("TEMPO", "Tempo Traveller (12 passengers)"),
+        ("BUS", "Bus (30 passengers)"),
     )
     STATUS_CHOICES = (
         ("SCHEDULED", "Scheduled"),
