@@ -13,6 +13,8 @@ E-Ticketing – Online Reservation System is a Django railway reservation protot
 - Use the built-in ETORS chatbot for feature and service guidance. Its knowledge
   discovers named ETORS routes at request time and indexes feature items from the
   ETORS templates, so newly exposed and documented features become answerable.
+- Provide daily demonstration trains in both directions between Khammam,
+  Vijayawada, and Secunderabad, with browser-based journey-date selection.
 
 This is an academic demonstration and is not affiliated with IRCTC or Indian Railways. No real payment is collected.
 

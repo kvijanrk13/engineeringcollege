@@ -43,6 +43,33 @@ class EtorsTests(TestCase):
         self.assertContains(response, "ETORS Assistant")
         self.assertContains(response, reverse("etors:chatbot"))
 
+    def test_demo_stations_routes_and_calendar_are_available(self):
+        khammam = Station.objects.get(code="KMM")
+        vijayawada = Station.objects.get(code="BZA")
+        secunderabad = Station.objects.get(code="SC")
+        requested_routes = {
+            (khammam.pk, vijayawada.pk),
+            (vijayawada.pk, khammam.pk),
+            (vijayawada.pk, secunderabad.pk),
+            (secunderabad.pk, vijayawada.pk),
+            (khammam.pk, secunderabad.pk),
+            (secunderabad.pk, khammam.pk),
+        }
+        demo_routes = set(
+            Train.objects.filter(number__in=[f"0900{i}" for i in range(1, 7)])
+            .values_list("source_id", "destination_id")
+        )
+        self.assertEqual(demo_routes, requested_routes)
+
+        response = self.client.get(reverse("etors:home"))
+        self.assertContains(response, "Khammam (KMM)")
+        self.assertContains(response, 'type="date"')
+        self.assertContains(response, f'min="{date.today().isoformat()}"')
+        self.assertContains(
+            response,
+            f'max="{(date.today() + timedelta(days=120)).isoformat()}"',
+        )
+
     def test_chatbot_answers_current_features(self):
         response = self.client.post(
             reverse("etors:chatbot"),

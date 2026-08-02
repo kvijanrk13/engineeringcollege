@@ -20,6 +20,12 @@ class SearchForm(forms.Form):
         self.fields["destination"].queryset = stations
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
+        self.fields["journey_date"].widget.attrs.update(
+            {
+                "min": date.today().isoformat(),
+                "max": (date.today() + timedelta(days=120)).isoformat(),
+            }
+        )
 
     def clean_journey_date(self):
         journey_date = self.cleaned_data["journey_date"]
