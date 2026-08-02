@@ -13,7 +13,9 @@
       <div class="summary"><span>Journey</span><strong>{{ booking.journey_date|date:"d F Y" }}</strong></div>
       <div class="summary"><span>Class</span><strong>{{ booking.get_travel_class_display }}</strong></div>
       <div class="summary"><span>Total dummy fare</span><strong>₹{{ booking.total_fare }}</strong></div>
-      <div class="summary"><span>Reserved seat</span><strong>{{ passenger.seat_number }}</strong></div>
+      {% for passenger in passengers %}
+      <div class="summary"><span>{{ passenger.name }} (age {{ passenger.age }})</span><strong>{{ passenger.seat_number }}</strong></div>
+      {% endfor %}
     </div>
     {% if cab_booking %}
     <div class="notice" style="max-width:560px;margin:22px auto;text-align:left;border-left-color:var(--success)">

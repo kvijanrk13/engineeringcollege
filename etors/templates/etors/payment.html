@@ -23,7 +23,10 @@
       <div class="summary"><span>Train</span><strong>{{ train.number }} · {{ train.name }}</strong></div>
       <div class="summary"><span>Route</span><strong>{{ train.source.code }} → {{ train.destination.code }}</strong></div>
       <div class="summary"><span>Journey</span><strong>{{ journey_date|date:"d F Y" }}</strong></div>
-      <div class="summary"><span>Passenger</span><strong>{{ passenger_name }}</strong></div>
+      <div class="summary"><span>Passengers</span><strong>{{ passengers|length }}</strong></div>
+      {% for passenger in passengers %}
+      <div class="summary"><span>{{ passenger.name }} (age {{ passenger.age }})</span><strong>{% if passenger.age > 5 %}Berth included{% else %}No berth (age 1-5){% endif %}</strong></div>
+      {% endfor %}
       <div class="summary"><span>Class</span><strong>{{ travel_class }}</strong></div>
       <div class="summary"><span>Train fare</span><strong>₹{{ train_fare }}</strong></div>
       {% if book_cab %}

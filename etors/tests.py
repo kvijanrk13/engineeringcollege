@@ -150,6 +150,33 @@ class EtorsTests(TestCase):
         response = self.client.get(reverse("etors:payment"))
         self.assertRedirects(response, reverse("etors:home"))
 
+    def test_multiple_passengers_and_child_berth_rule(self):
+        response = self.client.post(
+            reverse("etors:book", args=[self.train.pk, (date.today() + timedelta(days=1)).isoformat()]),
+            {
+                "travel_class": "SL",
+                "contact_name": "Dummy Family",
+                "contact_email": "family@example.com",
+                "contact_phone": "9876543210",
+                "passenger_name": "Adult One",
+                "passenger_age": 30,
+                "passenger_gender": "M",
+                "berth_preference": "Lower",
+                "passenger_2_name": "Child Five",
+                "passenger_2_age": 5,
+                "passenger_2_gender": "F",
+                "passenger_2_berth_preference": "Upper",
+            },
+        )
+        self.assertRedirects(response, reverse("etors:payment"))
+        response = self.client.post(reverse("etors:payment"), {"payment_method": "UPI"})
+        self.assertEqual(response.status_code, 200)
+        booking = Booking.objects.get(contact_email="family@example.com")
+        self.assertEqual(booking.passengers.count(), 2)
+        self.assertEqual(booking.total_fare, Decimal("250"))
+        self.assertEqual(booking.passengers.get(name="Child Five").seat_number, "NO BERTH")
+        self.assertNotEqual(booking.passengers.get(name="Adult One").seat_number, "NO BERTH")
+
     def test_bookmycab_is_linked_scheduled_and_cancelled_with_train(self):
         response = self.client.post(
             reverse(

@@ -43,6 +43,7 @@ class SearchForm(forms.Form):
 
 
 class BookingForm(forms.Form):
+    MAX_PASSENGERS = 5
     travel_class = forms.ChoiceField(choices=Booking.CLASS_CHOICES)
     contact_name = forms.CharField(max_length=100)
     contact_email = forms.EmailField()
@@ -86,12 +87,53 @@ class BookingForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for number in range(2, self.MAX_PASSENGERS + 1):
+            self.fields[f"passenger_{number}_name"] = forms.CharField(
+                max_length=100, required=False, label="Passenger name"
+            )
+            self.fields[f"passenger_{number}_age"] = forms.IntegerField(
+                min_value=1, max_value=120, required=False, label="Age"
+            )
+            self.fields[f"passenger_{number}_gender"] = forms.ChoiceField(
+                choices=(("", "Select gender"), *Passenger.GENDER_CHOICES),
+                required=False,
+                label="Gender",
+            )
+            self.fields[f"passenger_{number}_berth_preference"] = forms.ChoiceField(
+                required=False,
+                label="Berth preference",
+                choices=self.fields["berth_preference"].choices,
+            )
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
         self.fields["book_cab"].widget.attrs["class"] = "cab-checkbox"
 
     def clean(self):
         cleaned = super().clean()
+        passengers = [
+            {
+                "name": cleaned.get("passenger_name"),
+                "age": cleaned.get("passenger_age"),
+                "gender": cleaned.get("passenger_gender"),
+                "berth_preference": cleaned.get("berth_preference", ""),
+            }
+        ]
+        for number in range(2, self.MAX_PASSENGERS + 1):
+            prefix = f"passenger_{number}_"
+            values = {
+                "name": cleaned.get(prefix + "name"),
+                "age": cleaned.get(prefix + "age"),
+                "gender": cleaned.get(prefix + "gender"),
+                "berth_preference": cleaned.get(prefix + "berth_preference", ""),
+            }
+            supplied = any(values.values())
+            if supplied:
+                for key in ("name", "age", "gender"):
+                    if not values[key]:
+                        self.add_error(prefix + key, "Complete this passenger's details.")
+                if values["name"] and values["age"] and values["gender"]:
+                    passengers.append(values)
+        cleaned["passengers"] = passengers
         if cleaned.get("book_cab"):
             if not cleaned.get("cab_type"):
                 self.add_error("cab_type", "Select a BOOKMYCAB vehicle type.")

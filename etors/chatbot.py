@@ -49,8 +49,8 @@ INTENT_ANSWERS = {
         "Train search, booking, and PNR services are also available in the current demonstration workflow."
     ),
     "passenger": (
-        "The current ETORS release supports one passenger per booking, including name, age, gender, "
-        "berth preference, contact details, and an assigned seat number."
+        "ETORS supports up to five dummy passengers per booking. Passengers older than 5 receive a berth "
+        "and are charged the selected train fare; children aged 1–5 are listed without a separate berth or fare."
     ),
     "payment": (
         "ETORS provides a dummy payment interface for UPI, card, or net banking. Clicking Pay & Reserve displays "

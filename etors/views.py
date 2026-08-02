@@ -94,8 +94,9 @@ def book(request, train_id, journey_date):
     form = BookingForm(request.POST or None)
     available = train_availability(train, journey_date)
     if request.method == "POST" and form.is_valid():
-        if available < 1:
-            messages.error(request, "No seats are available for this train.")
+        required_berths = sum(p["age"] > 5 for p in form.cleaned_data["passengers"])
+        if available < required_berths:
+            messages.error(request, f"Only {available} berths are available for these passengers.")
         else:
             request.session["etors_pending_booking"] = {
                 "train_id": train.pk,
@@ -129,7 +130,14 @@ def payment(request):
         active=True,
     )
     journey_date = date.fromisoformat(pending["journey_date"])
-    train_fare = fare_for(train, pending["travel_class"])
+    passengers = pending.get("passengers") or [{
+        "name": pending["passenger_name"], "age": pending["passenger_age"],
+        "gender": pending["passenger_gender"],
+        "berth_preference": pending["berth_preference"],
+    }]
+    berth_count = sum(passenger["age"] > 5 for passenger in passengers)
+    per_passenger_fare = fare_for(train, pending["travel_class"])
+    train_fare = per_passenger_fare * berth_count
     cab_fare = cab_fare_for(pending.get("cab_type")) if pending.get("book_cab") else 0
     total_fare = train_fare + cab_fare
 
@@ -137,7 +145,7 @@ def payment(request):
         payment_method = request.POST.get("payment_method")
         if payment_method not in {"UPI", "CARD", "NETBANKING"}:
             messages.error(request, "Select a dummy payment method.")
-        elif train_availability(train, journey_date) < 1:
+        elif train_availability(train, journey_date) < berth_count:
             request.session.pop("etors_pending_booking", None)
             messages.error(request, "No seats are available for this train now.")
             return redirect("etors:home")
@@ -152,14 +160,17 @@ def payment(request):
                 contact_phone=pending["contact_phone"],
                 total_fare=total_fare,
             )
-            passenger = Passenger.objects.create(
-                booking=booking,
-                name=pending["passenger_name"],
-                age=pending["passenger_age"],
-                gender=pending["passenger_gender"],
-                berth_preference=pending["berth_preference"],
-                seat_number=seat_number(train, journey_date),
-            )
+            created_passengers = []
+            for passenger_data in passengers:
+                has_berth = passenger_data["age"] > 5
+                created_passengers.append(Passenger.objects.create(
+                    booking=booking,
+                    name=passenger_data["name"],
+                    age=passenger_data["age"],
+                    gender=passenger_data["gender"],
+                    berth_preference=passenger_data["berth_preference"] if has_berth else "",
+                    seat_number=seat_number(train, journey_date) if has_berth else "NO BERTH",
+                ))
             cab_booking = None
             if pending.get("book_cab"):
                 cab_booking = create_cab_booking(
@@ -173,7 +184,7 @@ def payment(request):
                 "etors/payment_success.html",
                 {
                     "booking": booking,
-                    "passenger": passenger,
+                    "passengers": created_passengers,
                     "cab_booking": cab_booking,
                     "payment_method": payment_method,
                 },
@@ -186,7 +197,9 @@ def payment(request):
             "train": train,
             "journey_date": journey_date,
             "travel_class": dict(Booking.CLASS_CHOICES)[pending["travel_class"]],
-            "passenger_name": pending["passenger_name"],
+            "passengers": passengers,
+            "berth_count": berth_count,
+            "per_passenger_fare": per_passenger_fare,
             "train_fare": train_fare,
             "cab_fare": cab_fare,
             "book_cab": pending.get("book_cab", False),

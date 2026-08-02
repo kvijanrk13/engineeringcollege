@@ -12,13 +12,17 @@
   .cab-fields { display:none; margin-top:18px; }
   .cab-fields.open { display:grid; }
   .cab-badge { display:inline-block; margin-bottom:10px; padding:5px 9px; border-radius:999px; color:#9b4c0c; background:#ffead2; font-size:.75rem; font-weight:850; letter-spacing:.07em; }
+  .passenger-card { margin-top:14px; padding:18px; border:1px solid var(--line); border-radius:16px; background:#fbfcff; }
+  .passenger-card h3 { margin:0 0 14px; font-size:1rem; }
+  .optional-passenger { display:none; }
+  .optional-passenger.open { display:block; }
 </style>
 <main class="container section">
   <p><a href="{% url 'etors:home' %}">← Back to train search</a></p>
   <div class="grid grid-2">
     <section class="panel">
       <h1>Complete your reservation</h1>
-      <p class="muted">Reserve one train seat and optionally schedule BOOKMYCAB at your destination.</p>
+      <p class="muted">Add up to five passengers and optionally schedule BOOKMYCAB at your destination.</p>
       <form method="post">
         {% csrf_token %}
         {{ form.non_field_errors }}
@@ -32,13 +36,19 @@
           </div>
         </div>
         <div class="form-section">
-          <h2>Passenger details</h2>
-          <div class="grid grid-2">
+          <h2>Add Passengers</h2>
+          <p class="notice">Dummy IRCTC rule: passengers older than 5 receive a berth and are charged the selected train fare. Children aged 1–5 travel without a separate berth or fare.</p>
+          <div class="passenger-card"><h3>Passenger 1</h3><div class="grid grid-2">
             <div>{{ form.passenger_name.label_tag }}{{ form.passenger_name }}{{ form.passenger_name.errors }}</div>
             <div>{{ form.passenger_age.label_tag }}{{ form.passenger_age }}{{ form.passenger_age.errors }}</div>
             <div>{{ form.passenger_gender.label_tag }}{{ form.passenger_gender }}{{ form.passenger_gender.errors }}</div>
             <div>{{ form.berth_preference.label_tag }}{{ form.berth_preference }}{{ form.berth_preference.errors }}</div>
-          </div>
+          </div></div>
+          <div class="passenger-card optional-passenger" data-passenger="2"><h3>Passenger 2</h3><div class="grid grid-2"><div>{{ form.passenger_2_name.label_tag }}{{ form.passenger_2_name }}{{ form.passenger_2_name.errors }}</div><div>{{ form.passenger_2_age.label_tag }}{{ form.passenger_2_age }}{{ form.passenger_2_age.errors }}</div><div>{{ form.passenger_2_gender.label_tag }}{{ form.passenger_2_gender }}{{ form.passenger_2_gender.errors }}</div><div>{{ form.passenger_2_berth_preference.label_tag }}{{ form.passenger_2_berth_preference }}{{ form.passenger_2_berth_preference.errors }}</div></div></div>
+          <div class="passenger-card optional-passenger" data-passenger="3"><h3>Passenger 3</h3><div class="grid grid-2"><div>{{ form.passenger_3_name.label_tag }}{{ form.passenger_3_name }}{{ form.passenger_3_name.errors }}</div><div>{{ form.passenger_3_age.label_tag }}{{ form.passenger_3_age }}{{ form.passenger_3_age.errors }}</div><div>{{ form.passenger_3_gender.label_tag }}{{ form.passenger_3_gender }}{{ form.passenger_3_gender.errors }}</div><div>{{ form.passenger_3_berth_preference.label_tag }}{{ form.passenger_3_berth_preference }}{{ form.passenger_3_berth_preference.errors }}</div></div></div>
+          <div class="passenger-card optional-passenger" data-passenger="4"><h3>Passenger 4</h3><div class="grid grid-2"><div>{{ form.passenger_4_name.label_tag }}{{ form.passenger_4_name }}{{ form.passenger_4_name.errors }}</div><div>{{ form.passenger_4_age.label_tag }}{{ form.passenger_4_age }}{{ form.passenger_4_age.errors }}</div><div>{{ form.passenger_4_gender.label_tag }}{{ form.passenger_4_gender }}{{ form.passenger_4_gender.errors }}</div><div>{{ form.passenger_4_berth_preference.label_tag }}{{ form.passenger_4_berth_preference }}{{ form.passenger_4_berth_preference.errors }}</div></div></div>
+          <div class="passenger-card optional-passenger" data-passenger="5"><h3>Passenger 5</h3><div class="grid grid-2"><div>{{ form.passenger_5_name.label_tag }}{{ form.passenger_5_name }}{{ form.passenger_5_name.errors }}</div><div>{{ form.passenger_5_age.label_tag }}{{ form.passenger_5_age }}{{ form.passenger_5_age.errors }}</div><div>{{ form.passenger_5_gender.label_tag }}{{ form.passenger_5_gender }}{{ form.passenger_5_gender.errors }}</div><div>{{ form.passenger_5_berth_preference.label_tag }}{{ form.passenger_5_berth_preference }}{{ form.passenger_5_berth_preference.errors }}</div></div></div>
+          <button class="btn btn-secondary" type="button" id="add-passenger" style="margin-top:14px">+ Add Passenger</button>
         </div>
         <div class="cab-addon">
           <span class="cab-badge">ETORS × BOOKMYCAB</span>
@@ -68,6 +78,21 @@
 </main>
 <script>
   (() => {
+    const passengerCards = [...document.querySelectorAll('.optional-passenger')];
+    const addPassenger = document.getElementById('add-passenger');
+    passengerCards.forEach(card => {
+      const hasValue = [...card.querySelectorAll('input, select')].some(field => field.value);
+      if (hasValue || card.querySelector('.errorlist')) card.classList.add('open');
+    });
+    function updateAddPassenger() {
+      addPassenger.hidden = passengerCards.every(card => card.classList.contains('open'));
+    }
+    addPassenger.addEventListener('click', () => {
+      const next = passengerCards.find(card => !card.classList.contains('open'));
+      if (next) next.classList.add('open');
+      updateAddPassenger();
+    });
+    updateAddPassenger();
     const toggle = document.getElementById('{{ form.book_cab.id_for_label }}');
     const fields = document.getElementById('cab-fields');
     function updateCabFields() {
