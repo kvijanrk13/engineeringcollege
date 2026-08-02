@@ -2,6 +2,7 @@ from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.contrib.auth.hashers import check_password
 from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
@@ -181,6 +182,10 @@ def payment(request):
                     pending["cab_drop_address"],
                 )
             request.session.pop("etors_pending_booking", None)
+            authorized = request.session.get("etors_authorized_pnrs", [])
+            if booking.pnr not in authorized:
+                authorized.append(booking.pnr)
+            request.session["etors_authorized_pnrs"] = authorized[-20:]
             return render(
                 request,
                 "etors/payment_success.html",
@@ -212,11 +217,34 @@ def payment(request):
 
 
 def pnr_search(request):
+    attempts = request.session.get("etors_pnr_attempts", 0)
+    if attempts >= 5:
+        messages.error(request, "Too many unsuccessful verification attempts. Start a new browser session and try again.")
+        return redirect("etors:home")
     form = PNRForm(request.GET or None)
     if form.is_valid():
-        return redirect("etors:pnr_detail", pnr=form.cleaned_data["pnr"])
-    messages.error(request, "Enter a valid 10-digit PNR.")
+        booking = Booking.objects.filter(
+            pnr=form.cleaned_data["pnr"],
+            contact_phone=form.cleaned_data["contact_phone"],
+        ).first()
+        if booking:
+            authorized = request.session.get("etors_authorized_pnrs", [])
+            if booking.pnr not in authorized:
+                authorized.append(booking.pnr)
+            request.session["etors_authorized_pnrs"] = authorized[-20:]
+            request.session["etors_pnr_attempts"] = 0
+            return redirect("etors:pnr_detail", pnr=booking.pnr)
+    request.session["etors_pnr_attempts"] = attempts + 1
+    messages.error(request, "PNR and registered mobile number did not match.")
     return redirect("etors:home")
+
+
+def _can_access_booking(request, booking):
+    return (
+        request.user.is_staff
+        or (request.user.is_authenticated and booking.user_id == request.user.id)
+        or booking.pnr in request.session.get("etors_authorized_pnrs", [])
+    )
 
 
 def pnr_detail(request, pnr):
@@ -226,7 +254,40 @@ def pnr_detail(request, pnr):
         ).prefetch_related("passengers"),
         pnr=pnr,
     )
+    if not _can_access_booking(request, booking):
+        messages.error(request, "Verify the PNR with its registered mobile number to view this booking.")
+        return redirect("etors:home")
     return render(request, "etors/pnr_detail.html", {"booking": booking})
+
+
+def cab_dispatch(request, dispatch_token):
+    cab = get_object_or_404(
+        CabBooking.objects.select_related(
+            "booking__train", "pickup_station"
+        ),
+        dispatch_token=dispatch_token,
+    )
+    session_key = f"etors_cab_verified_{cab.pk}"
+    verified = bool(request.session.get(session_key))
+    if request.method == "POST" and not verified:
+        attempt_key = f"etors_cab_attempts_{cab.pk}"
+        attempts = request.session.get(attempt_key, 0)
+        otp = request.POST.get("pickup_otp", "").strip()
+        if attempts >= 5:
+            messages.error(request, "Too many unsuccessful OTP attempts.")
+        elif timezone.now() > cab.pickup_otp_expires_at:
+            messages.error(request, "This pickup OTP has expired.")
+        elif check_password(otp, cab.pickup_otp_hash):
+            request.session[session_key] = True
+            request.session[attempt_key] = 0
+            cab.pickup_verified_at = timezone.now()
+            cab.save(update_fields=["pickup_verified_at"])
+            verified = True
+            messages.success(request, "Passenger pickup verified.")
+        else:
+            request.session[attempt_key] = attempts + 1
+            messages.error(request, "Invalid pickup OTP.")
+    return render(request, "etors/cab_dispatch.html", {"cab": cab, "verified": verified})
 
 
 @transaction.atomic
@@ -236,6 +297,9 @@ def cancel_booking(request, pnr):
     booking = get_object_or_404(
         Booking.objects.select_for_update(), pnr=pnr
     )
+    if not _can_access_booking(request, booking):
+        messages.error(request, "Verify this booking before cancelling it.")
+        return redirect("etors:home")
     if booking.status == "CONFIRMED":
         booking.status = "CANCELLED"
         booking.cancelled_at = timezone.now()

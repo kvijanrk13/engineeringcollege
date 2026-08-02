@@ -1,5 +1,6 @@
 import secrets
 import string
+import uuid
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -137,6 +138,10 @@ class CabBooking(models.Model):
         related_name="cab_booking",
     )
     reference = models.CharField(max_length=12, unique=True, editable=False)
+    dispatch_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    pickup_otp_hash = models.CharField(max_length=128, editable=False)
+    pickup_otp_expires_at = models.DateTimeField()
+    pickup_verified_at = models.DateTimeField(null=True, blank=True)
     cab_type = models.CharField(max_length=8, choices=CAB_CHOICES)
     pickup_station = models.ForeignKey(
         Station,
@@ -170,4 +175,4 @@ class CabBooking(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.reference} - PNR {self.booking.pnr}"
+        return f"Private cab dispatch {self.reference}"

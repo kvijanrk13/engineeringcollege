@@ -2,8 +2,10 @@ from datetime import date, time, timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Booking, CabBooking, Passenger, Station, Train
 from .services import fare_for, train_availability
@@ -285,6 +287,9 @@ class EtorsTests(TestCase):
             gender="M",
             seat_number="S001",
         )
+        session = self.client.session
+        session["etors_authorized_pnrs"] = [booking.pnr]
+        session.save()
         self.assertEqual(train_availability(self.train, self.journey_date), 1)
         response = self.client.post(reverse("etors:cancel_booking", args=[booking.pnr]))
         booking.refresh_from_db()
@@ -295,3 +300,63 @@ class EtorsTests(TestCase):
     def test_invalid_pnr_returns_404(self):
         response = self.client.get(reverse("etors:pnr_detail", args=["0000000000"]))
         self.assertEqual(response.status_code, 404)
+
+    def test_pnr_requires_matching_registered_mobile(self):
+        booking = Booking.objects.create(
+            train=self.train,
+            journey_date=self.journey_date,
+            travel_class="SL",
+            contact_name="Private Passenger",
+            contact_email="private@example.com",
+            contact_phone="9876543210",
+            total_fare=Decimal("250"),
+        )
+        direct = self.client.get(reverse("etors:pnr_detail", args=[booking.pnr]))
+        self.assertRedirects(direct, reverse("etors:home"))
+        wrong = self.client.get(
+            reverse("etors:pnr_search"),
+            {"pnr": booking.pnr, "contact_phone": "9876543211"},
+        )
+        self.assertRedirects(wrong, reverse("etors:home"))
+        verified = self.client.get(
+            reverse("etors:pnr_search"),
+            {"pnr": booking.pnr, "contact_phone": "9876543210"},
+        )
+        self.assertRedirects(verified, reverse("etors:pnr_detail", args=[booking.pnr]))
+        self.assertContains(self.client.get(reverse("etors:pnr_detail", args=[booking.pnr])), "Private Passenger")
+
+    def test_driver_dispatch_hides_passenger_data_until_pickup_otp(self):
+        booking = Booking.objects.create(
+            train=self.train,
+            journey_date=self.journey_date,
+            travel_class="SL",
+            contact_name="Hidden Passenger",
+            contact_email="hidden@example.com",
+            contact_phone="9876543210",
+            total_fare=Decimal("250"),
+        )
+        cab = CabBooking.objects.create(
+            booking=booking,
+            cab_type="MINI",
+            pickup_station=self.train.destination,
+            drop_address="Secret Home Address",
+            train_arrival_at=timezone.now() + timedelta(hours=2),
+            cab_arrival_at=timezone.now() + timedelta(hours=1, minutes=40),
+            fare=Decimal("350"),
+            driver_name="Dummy Driver",
+            driver_phone="9876501001",
+            vehicle_number="TS 09 ET 2401",
+            pickup_otp_hash=make_password("123456"),
+            pickup_otp_expires_at=timezone.now() + timedelta(hours=3),
+        )
+        url = reverse("etors:cab_dispatch", args=[cab.dispatch_token])
+        dispatch = self.client.get(url)
+        self.assertContains(dispatch, self.train.number)
+        self.assertNotContains(dispatch, booking.pnr)
+        self.assertNotContains(dispatch, "Hidden Passenger")
+        self.assertNotContains(dispatch, "9876543210")
+        self.assertNotContains(dispatch, "Secret Home Address")
+        rejected = self.client.post(url, {"pickup_otp": "000000"})
+        self.assertNotContains(rejected, "Secret Home Address")
+        verified = self.client.post(url, {"pickup_otp": "123456"})
+        self.assertContains(verified, "Secret Home Address")

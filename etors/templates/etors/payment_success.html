@@ -24,6 +24,9 @@
       <div class="summary"><span>Driver</span><strong>{{ cab_booking.driver_name }}</strong></div>
       <div class="summary"><span>Vehicle</span><strong>{{ cab_booking.vehicle_number }}</strong></div>
       <div class="summary"><span>Drop</span><strong>{{ cab_booking.drop_address }}</strong></div>
+      <div class="summary"><span>Private pickup OTP</span><strong>{{ cab_booking.pickup_otp }}</strong></div>
+      <p>Share this OTP with the assigned driver only after meeting the cab at the station. The driver cannot see your identity, PNR, mobile, email, seat, or exact drop address before verification.</p>
+      <a class="btn btn-secondary" href="{% url 'etors:cab_dispatch' cab_booking.dispatch_token %}">Open Dummy Driver Dispatch View</a>
     </div>
     {% endif %}
     <p class="notice" style="text-align:left">Demonstration only: no real payment, railway ticket, or taxi dispatch occurred.</p>

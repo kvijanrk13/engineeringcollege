@@ -122,7 +122,7 @@
 
   <section id="pnr-status" class="section">
     <div class="grid grid-2">
-      <div class="panel"><span class="eyebrow" style="color:var(--blue);border-color:#c8dbf1;background:#edf5fd">Manage journey</span><h2>Check PNR status</h2><p class="muted">Enter the 10-digit PNR printed on your ETORS confirmation.</p><form action="{% url 'etors:pnr_search' %}" method="get">{{ pnr_form.pnr.label_tag }}{{ pnr_form.pnr }}<button class="btn btn-primary" style="margin-top:14px">Check Status</button></form></div>
+      <div class="panel"><span class="eyebrow" style="color:var(--blue);border-color:#c8dbf1;background:#edf5fd">Manage journey</span><h2>Check PNR status securely</h2><p class="muted">Enter the PNR and registered mobile number. A PNR alone cannot reveal passenger information.</p><form action="{% url 'etors:pnr_search' %}" method="get">{{ pnr_form.pnr.label_tag }}{{ pnr_form.pnr }}<div style="margin-top:12px">{{ pnr_form.contact_phone.label_tag }}{{ pnr_form.contact_phone }}</div><button class="btn btn-primary" style="margin-top:14px">Verify &amp; Check Status</button></form></div>
       <div class="panel feature-panel"><h2>Everything you need to practise</h2><ul class="feature-list"><li>Route and journey-date search</li><li>Live seat availability calculation</li><li>Sleeper and AC fare selection</li><li>PNR generation, lookup, and cancellation</li><li>Dummy fare payment and automatic seat reservation</li><li>Admin-managed stations and trains</li></ul></div>
     </div>
   </section>

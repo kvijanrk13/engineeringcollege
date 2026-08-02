@@ -155,3 +155,11 @@ class PNRForm(forms.Form):
             attrs={"class": "form-control", "placeholder": "Enter 10-digit PNR"}
         ),
     )
+    contact_phone = forms.RegexField(
+        regex=r"^[6-9]\d{9}$",
+        label="Registered Mobile Number",
+        error_messages={"invalid": "Enter the registered 10-digit mobile number."},
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "placeholder": "Registered mobile number"}
+        ),
+    )

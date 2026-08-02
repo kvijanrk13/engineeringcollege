@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import secrets
 
 from django.db.models import Count, Q
+from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
 from .models import Booking, CabBooking
@@ -76,7 +78,8 @@ def create_cab_booking(booking, cab_type, drop_address):
     driver_name, driver_phone, vehicle_number = DUMMY_CABS[
         int(booking.pnr[-2:]) % len(DUMMY_CABS)
     ]
-    return CabBooking.objects.create(
+    pickup_otp = "".join(secrets.choice("0123456789") for _ in range(6))
+    cab_booking = CabBooking.objects.create(
         booking=booking,
         cab_type=cab_type,
         pickup_station=booking.train.destination,
@@ -87,7 +90,11 @@ def create_cab_booking(booking, cab_type, drop_address):
         driver_name=driver_name,
         driver_phone=driver_phone,
         vehicle_number=vehicle_number,
+        pickup_otp_hash=make_password(pickup_otp),
+        pickup_otp_expires_at=train_arrival_at + timedelta(hours=2),
     )
+    cab_booking.pickup_otp = pickup_otp
+    return cab_booking
 
 
 def seat_number(train, journey_date):

@@ -1,0 +1,28 @@
+{% extends "etors/base.html" %}
+{% block title %}Private Cab Dispatch · BOOKMYCAB{% endblock %}
+{% block content %}
+<main class="container section">
+  <section class="panel" style="max-width:760px;margin:auto">
+    <p class="muted">Privacy-protected driver dispatch</p>
+    <h1>BOOKMYCAB · {{ cab.reference }}</h1>
+    <p class="notice">Passenger identity and ticket details are intentionally unavailable in this driver view.</p>
+    <div class="summary"><span>Pickup station</span><strong>{{ cab.pickup_station.name }}</strong></div>
+    <div class="summary"><span>Train</span><strong>{{ cab.booking.train.number }}</strong></div>
+    <div class="summary"><span>Train arrival</span><strong>{{ cab.train_arrival_at|date:"d M Y, H:i" }}</strong></div>
+    <div class="summary"><span>Cab reporting time</span><strong>{{ cab.cab_arrival_at|date:"d M Y, H:i" }}</strong></div>
+    <div class="summary"><span>Status</span><strong>{{ cab.get_status_display }}</strong></div>
+    {% if verified %}
+      <div class="notice" style="border-left-color:var(--success)"><strong>Pickup verified</strong><p>The passenger supplied the correct short-lived OTP.</p></div>
+      <div class="summary"><span>Drop address</span><strong>{{ cab.drop_address }}</strong></div>
+    {% else %}
+      <form method="post" style="margin-top:22px">
+        {% csrf_token %}
+        <label for="pickup-otp">Passenger pickup OTP</label>
+        <input class="form-control" id="pickup-otp" name="pickup_otp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" placeholder="6-digit OTP">
+        <button class="btn btn-primary" style="margin-top:14px">Verify Passenger Pickup</button>
+      </form>
+      <p class="muted">Ask the passenger for the OTP only after meeting at the destination station. The exact drop address remains hidden until verification.</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
