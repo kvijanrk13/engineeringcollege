@@ -3419,6 +3419,9 @@ def google_callback(request):
             audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
             request.session['etors_gmail_login'] = True
             messages.success(request, f'Welcome to ETORS, {user.first_name or email}.')
+            next_url = state_payload.get('next', '')
+            if next_url.startswith('/etors/') and not next_url.startswith('//'):
+                return redirect(next_url)
             return redirect('/etors/')
 
         if state_payload.get('role') == 'student':

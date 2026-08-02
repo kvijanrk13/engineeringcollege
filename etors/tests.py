@@ -29,6 +29,36 @@ class EtorsTests(TestCase):
         )
         self.journey_date = date.today() + timedelta(days=2)
 
+    def login_etors_passenger(self):
+        user = User.objects.create_user(
+            username=f"gmail-passenger-{User.objects.count()}",
+            email=f"passenger{User.objects.count()}@gmail.com",
+        )
+        self.client.force_login(user)
+        session = self.client.session
+        session["etors_gmail_login"] = True
+        session.save()
+        return user
+
+    def test_ticket_booking_requires_verified_gmail_login(self):
+        book_url = reverse("etors:book", args=[self.train.pk, self.journey_date.isoformat()])
+        response = self.client.get(book_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("dashboard:google_login"), response.url)
+        self.assertIn("target=etors", response.url)
+        self.assertFalse(Booking.objects.exists())
+
+        ordinary_user = User.objects.create_user(username="ordinary", email="ordinary@example.com")
+        self.client.force_login(ordinary_user)
+        response = self.client.get(book_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("dashboard:google_login"), response.url)
+
+        session = self.client.session
+        session["etors_gmail_login"] = True
+        session.save()
+        self.assertEqual(self.client.get(book_url).status_code, 200)
+
     def test_home_and_train_search(self):
         response = self.client.get(
             reverse("etors:home"),
@@ -112,6 +142,7 @@ class EtorsTests(TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_booking_generates_pnr_and_passenger(self):
+        self.login_etors_passenger()
         booking_data = {
             "travel_class": "SL",
             "contact_name": "Asha Kumar",
@@ -149,6 +180,7 @@ class EtorsTests(TestCase):
         self.assertEqual(train_availability(self.train, self.journey_date), 1)
 
     def test_payment_requires_pending_booking(self):
+        self.login_etors_passenger()
         response = self.client.get(reverse("etors:payment"))
         self.assertRedirects(response, reverse("etors:home"))
 
@@ -165,6 +197,7 @@ class EtorsTests(TestCase):
         self.assertEqual(fare_for(self.train, "1A"), Decimal("1400.00"))
 
     def test_multiple_passengers_and_child_berth_rule(self):
+        self.login_etors_passenger()
         response = self.client.post(
             reverse("etors:book", args=[self.train.pk, (date.today() + timedelta(days=1)).isoformat()]),
             {
@@ -193,6 +226,7 @@ class EtorsTests(TestCase):
         self.assertNotEqual(booking.passengers.get(name="Adult One").seat_number, "NO BERTH")
 
     def test_bookmycab_is_linked_scheduled_and_cancelled_with_train(self):
+        self.login_etors_passenger()
         response = self.client.post(
             reverse(
                 "etors:book",
@@ -247,6 +281,7 @@ class EtorsTests(TestCase):
         self.assertEqual(cab.status, "CANCELLED")
 
     def test_bookmycab_requires_vehicle_and_drop_address(self):
+        self.login_etors_passenger()
         response = self.client.post(
             reverse(
                 "etors:book",

@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -7,6 +8,7 @@ from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
 from .forms import BookingForm, PNRForm, SearchForm
@@ -20,6 +22,15 @@ from .services import (
     train_availability,
 )
 from .chatbot import answer_question
+
+
+def _require_etors_gmail(request):
+    if request.user.is_authenticated and request.session.get("etors_gmail_login"):
+        return None
+    messages.error(request, "Login with a verified Gmail account before booking a ticket.")
+    login_url = reverse("dashboard:google_login")
+    query = urlencode({"role": "student", "target": "etors", "next": request.get_full_path()})
+    return redirect(f"{login_url}?{query}")
 
 
 def home(request):
@@ -80,6 +91,9 @@ def logout_view(request):
 
 @transaction.atomic
 def book(request, train_id, journey_date):
+    login_redirect = _require_etors_gmail(request)
+    if login_redirect:
+        return login_redirect
     train = get_object_or_404(
         Train.objects.select_for_update().select_related("source", "destination"),
         pk=train_id,
@@ -122,6 +136,9 @@ def book(request, train_id, journey_date):
 
 @transaction.atomic
 def payment(request):
+    login_redirect = _require_etors_gmail(request)
+    if login_redirect:
+        return login_redirect
     pending = request.session.get("etors_pending_booking")
     if not pending:
         messages.error(request, "Start a reservation before opening dummy payment.")

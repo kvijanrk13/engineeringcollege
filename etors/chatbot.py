@@ -28,7 +28,7 @@ INTENT_ANSWERS = {
         "Cancelled confirmed bookings release their seats back into availability."
     ),
     "booking": (
-        "Search for a train, choose Book Ticket, enter the contact and passenger details, "
+        "Login with a verified Gmail account, search for a train, choose Book Ticket, enter the contact and passenger details, "
         "select Sleeper or AC 3 Tier, and continue to dummy payment. After the simulated payment succeeds, "
         "ETORS assigns a seat and generates a 10-digit PNR."
     ),
