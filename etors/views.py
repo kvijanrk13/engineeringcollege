@@ -91,27 +91,12 @@ def book(request, train_id, journey_date):
         if available < 1:
             messages.error(request, "No seats are available for this train.")
         else:
-            travel_class = form.cleaned_data["travel_class"]
-            booking = Booking.objects.create(
-                user=request.user if request.user.is_authenticated else None,
-                train=train,
-                journey_date=journey_date,
-                travel_class=travel_class,
-                contact_name=form.cleaned_data["contact_name"],
-                contact_email=form.cleaned_data["contact_email"],
-                contact_phone=form.cleaned_data["contact_phone"],
-                total_fare=fare_for(train, travel_class),
-            )
-            Passenger.objects.create(
-                booking=booking,
-                name=form.cleaned_data["passenger_name"],
-                age=form.cleaned_data["passenger_age"],
-                gender=form.cleaned_data["passenger_gender"],
-                berth_preference=form.cleaned_data["berth_preference"],
-                seat_number=seat_number(train, journey_date),
-            )
-            messages.success(request, f"Ticket confirmed. PNR: {booking.pnr}")
-            return redirect("etors:pnr_detail", pnr=booking.pnr)
+            request.session["etors_pending_booking"] = {
+                "train_id": train.pk,
+                "journey_date": journey_date.isoformat(),
+                **form.cleaned_data,
+            }
+            return redirect("etors:payment")
 
     return render(
         request,
@@ -121,6 +106,68 @@ def book(request, train_id, journey_date):
             "train": train,
             "journey_date": journey_date,
             "available": available,
+        },
+    )
+
+
+@transaction.atomic
+def payment(request):
+    pending = request.session.get("etors_pending_booking")
+    if not pending:
+        messages.error(request, "Start a reservation before opening dummy payment.")
+        return redirect("etors:home")
+
+    train = get_object_or_404(
+        Train.objects.select_for_update().select_related("source", "destination"),
+        pk=pending["train_id"],
+        active=True,
+    )
+    journey_date = date.fromisoformat(pending["journey_date"])
+    total_fare = fare_for(train, pending["travel_class"])
+
+    if request.method == "POST":
+        payment_method = request.POST.get("payment_method")
+        if payment_method not in {"UPI", "CARD", "NETBANKING"}:
+            messages.error(request, "Select a dummy payment method.")
+        elif train_availability(train, journey_date) < 1:
+            request.session.pop("etors_pending_booking", None)
+            messages.error(request, "No seats are available for this train now.")
+            return redirect("etors:home")
+        else:
+            booking = Booking.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                train=train,
+                journey_date=journey_date,
+                travel_class=pending["travel_class"],
+                contact_name=pending["contact_name"],
+                contact_email=pending["contact_email"],
+                contact_phone=pending["contact_phone"],
+                total_fare=total_fare,
+            )
+            passenger = Passenger.objects.create(
+                booking=booking,
+                name=pending["passenger_name"],
+                age=pending["passenger_age"],
+                gender=pending["passenger_gender"],
+                berth_preference=pending["berth_preference"],
+                seat_number=seat_number(train, journey_date),
+            )
+            request.session.pop("etors_pending_booking", None)
+            return render(
+                request,
+                "etors/payment_success.html",
+                {"booking": booking, "passenger": passenger, "payment_method": payment_method},
+            )
+
+    return render(
+        request,
+        "etors/payment.html",
+        {
+            "train": train,
+            "journey_date": journey_date,
+            "travel_class": dict(Booking.CLASS_CHOICES)[pending["travel_class"]],
+            "passenger_name": pending["passenger_name"],
+            "total_fare": total_fare,
         },
     )
 

@@ -108,27 +108,45 @@ class EtorsTests(TestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_booking_generates_pnr_and_passenger(self):
+        booking_data = {
+            "travel_class": "SL",
+            "contact_name": "Asha Kumar",
+            "contact_email": "asha@example.com",
+            "contact_phone": "9876543210",
+            "passenger_name": "Asha Kumar",
+            "passenger_age": 24,
+            "passenger_gender": "F",
+            "berth_preference": "Lower",
+        }
         response = self.client.post(
             reverse(
                 "etors:book",
                 args=[self.train.pk, self.journey_date.isoformat()],
             ),
-            {
-                "travel_class": "SL",
-                "contact_name": "Asha Kumar",
-                "contact_email": "asha@example.com",
-                "contact_phone": "9876543210",
-                "passenger_name": "Asha Kumar",
-                "passenger_age": 24,
-                "passenger_gender": "F",
-                "berth_preference": "Lower",
-            },
+            booking_data,
+        )
+        self.assertRedirects(response, reverse("etors:payment"))
+        self.assertFalse(Booking.objects.exists())
+
+        response = self.client.get(reverse("etors:payment"))
+        self.assertContains(response, "Dummy Payment")
+        self.assertContains(response, "₹250.00")
+
+        response = self.client.post(
+            reverse("etors:payment"),
+            {"payment_method": "UPI"},
         )
         booking = Booking.objects.get()
-        self.assertRedirects(response, reverse("etors:pnr_detail", args=[booking.pnr]))
+        self.assertContains(response, "PAYMENT SUCCESSFULL")
+        self.assertContains(response, "S001")
         self.assertEqual(len(booking.pnr), 10)
         self.assertEqual(booking.passengers.count(), 1)
+        self.assertEqual(booking.total_fare, Decimal("250"))
         self.assertEqual(train_availability(self.train, self.journey_date), 1)
+
+    def test_payment_requires_pending_booking(self):
+        response = self.client.get(reverse("etors:payment"))
+        self.assertRedirects(response, reverse("etors:home"))
 
     def test_cancellation_releases_availability(self):
         booking = Booking.objects.create(

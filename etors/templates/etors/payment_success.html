@@ -1,0 +1,22 @@
+{% extends "etors/base.html" %}
+{% block title %}Payment Successful · ETORS{% endblock %}
+{% block content %}
+<main class="container section">
+  <section class="panel" style="max-width:760px;margin:auto;text-align:center">
+    <div style="width:72px;height:72px;margin:auto;display:grid;place-items:center;border-radius:50%;background:#e7f7f0;color:var(--success);font-size:38px">✓</div>
+    <p class="muted" style="margin-top:20px">Dummy {{ payment_method }} transaction completed</p>
+    <h1 style="color:var(--success)">PAYMENT SUCCESSFULL</h1>
+    <p>Your dummy seat has been reserved and the ETORS ticket is confirmed.</p>
+    <div style="max-width:520px;margin:24px auto;text-align:left">
+      <div class="summary"><span>PNR</span><strong>{{ booking.pnr }}</strong></div>
+      <div class="summary"><span>Train</span><strong>{{ booking.train.number }} · {{ booking.train.name }}</strong></div>
+      <div class="summary"><span>Journey</span><strong>{{ booking.journey_date|date:"d F Y" }}</strong></div>
+      <div class="summary"><span>Class</span><strong>{{ booking.get_travel_class_display }}</strong></div>
+      <div class="summary"><span>Dummy fare</span><strong>₹{{ booking.total_fare }}</strong></div>
+      <div class="summary"><span>Reserved seat</span><strong>{{ passenger.seat_number }}</strong></div>
+    </div>
+    <p class="notice" style="text-align:left">Demonstration only: no real payment was made and this is not a real railway ticket.</p>
+    <a class="btn btn-secondary" href="{% url 'etors:pnr_detail' booking.pnr %}">View Ticket &amp; PNR</a>
+  </section>
+</main>
+{% endblock %}

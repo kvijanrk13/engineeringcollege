@@ -11,6 +11,7 @@ TEMPLATE_DIR = Path(__file__).resolve().parent / "templates" / "etors"
 ROUTE_DESCRIPTIONS = {
     "home": "Search active trains by source, destination, and journey date.",
     "book": "Reserve one passenger, choose Sleeper or AC 3 Tier, and receive a confirmed ticket.",
+    "payment": "Complete a safe dummy payment simulation before ETORS confirms the reservation and assigns a seat.",
     "pnr_search": "Look up a booking using its 10-digit PNR.",
     "pnr_detail": "View booking status, journey, passenger, seat, class, fare, and contact details.",
     "cancel_booking": "Cancel a confirmed ETORS reservation and release its seat.",
@@ -28,7 +29,8 @@ INTENT_ANSWERS = {
     ),
     "booking": (
         "Search for a train, choose Book Ticket, enter the contact and passenger details, "
-        "select Sleeper or AC 3 Tier, and confirm the reservation. ETORS then generates a 10-digit PNR."
+        "select Sleeper or AC 3 Tier, and continue to dummy payment. After the simulated payment succeeds, "
+        "ETORS assigns a seat and generates a 10-digit PNR."
     ),
     "fare": (
         "ETORS displays the Sleeper and AC 3 Tier fares on the booking page. "
@@ -51,8 +53,9 @@ INTENT_ANSWERS = {
         "berth preference, contact details, and an assigned seat number."
     ),
     "payment": (
-        "ETORS is an academic demonstration. It confirms prototype reservations immediately and does not collect "
-        "real payment, issue real railway tickets, or process real refunds."
+        "ETORS provides a dummy payment interface for UPI, card, or net banking. Clicking Pay & Reserve displays "
+        "PAYMENT SUCCESSFULL, assigns a dummy seat, and generates a PNR. No real money is collected and no real "
+        "railway ticket or refund is issued."
     ),
     "admin": (
         "Authorized administrators can manage ETORS stations, trains, bookings, and passengers through Django admin."

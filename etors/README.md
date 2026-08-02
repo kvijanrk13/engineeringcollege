@@ -15,6 +15,8 @@ E-Ticketing – Online Reservation System is a Django railway reservation protot
   ETORS templates, so newly exposed and documented features become answerable.
 - Provide daily demonstration trains in both directions between Khammam,
   Vijayawada, and Secunderabad, with browser-based journey-date selection.
+- Simulate UPI, card, or net-banking payment, display a successful-payment
+  confirmation, and reserve a dummy seat without collecting real money.
 
 This is an academic demonstration and is not affiliated with IRCTC or Indian Railways. No real payment is collected.
 
