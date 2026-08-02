@@ -7,13 +7,15 @@
   <title>{% block title %}ETORS{% endblock %}</title>
   <style>
     :root {
-      --navy: #0b1f3a;
-      --blue: #1457a6;
-      --orange: #f47721;
-      --cream: #f7f3ec;
-      --ink: #172033;
-      --muted: #657083;
-      --line: #d9e0ea;
+      --navy: #071a33;
+      --blue: #1559a8;
+      --sky: #2f80d0;
+      --orange: #f36f21;
+      --gold: #ffb547;
+      --cream: #f5f7fb;
+      --ink: #132238;
+      --muted: #66758a;
+      --line: #dce4ef;
       --success: #117a55;
       --danger: #b42318;
     }
@@ -21,13 +23,15 @@
     body {
       margin: 0;
       color: var(--ink);
-      background: var(--cream);
+      background: radial-gradient(circle at 100% 0%, rgba(47,128,208,.08), transparent 28rem), var(--cream);
       font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
     }
     a { color: inherit; }
     .topbar {
+      position: sticky; top: 0; z-index: 900;
       color: white;
-      background: var(--navy);
+      background: rgba(7,26,51,.96);
+      backdrop-filter: blur(14px);
       border-bottom: 4px solid var(--orange);
     }
     .nav {
@@ -46,24 +50,19 @@
     }
     .brand strong { display: block; letter-spacing: .04em; }
     .brand small { display: block; color: #cbd6e6; }
-    .nav-links { display: flex; gap: 18px; flex-wrap: wrap; }
-    .nav-links a { color: white; text-decoration: none; font-weight: 650; }
+    .nav-links { display: flex; align-items:center; gap: 18px; flex-wrap: wrap; }
+    .nav-links a { color: white; text-decoration: none; font-weight: 650; opacity:.9; transition:.2s ease; }
+    .nav-links a:hover { color:var(--gold); opacity:1; transform:translateY(-1px); }
     .container { width: min(1180px, calc(100% - 32px)); margin: auto; }
-    .hero {
-      padding: 62px 0 88px;
-      color: white;
-      background:
-        linear-gradient(115deg, rgba(11,31,58,.96), rgba(20,87,166,.82)),
-        radial-gradient(circle at 80% 20%, #6599d3, #0b1f3a);
-    }
+    .hero { position:relative; overflow:hidden; padding:76px 0 112px; color:white; background:linear-gradient(135deg,#071a33,#124f91); }
     .hero h1 { max-width: 780px; margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; }
     .hero p { max-width: 680px; color: #e1e9f4; font-size: 1.1rem; }
     .panel {
       padding: 24px;
       background: white;
       border: 1px solid var(--line);
-      border-radius: 16px;
-      box-shadow: 0 16px 44px rgba(11,31,58,.1);
+      border-radius: 20px;
+      box-shadow: 0 18px 50px rgba(11,31,58,.11);
     }
     .search-panel { position: relative; margin-top: -48px; }
     .grid { display: grid; gap: 18px; }
@@ -83,6 +82,8 @@
     .btn-primary { color: white; background: var(--orange); }
     .btn-secondary { color: white; background: var(--blue); }
     .btn-danger { color: white; background: var(--danger); }
+    .btn { transition:transform .2s ease, box-shadow .2s ease, filter .2s ease; }
+    .btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(7,26,51,.18); filter:brightness(1.04); }
     .section { padding: 44px 0; }
     .section h2 { margin-top: 0; color: var(--navy); }
     .muted { color: var(--muted); }
@@ -179,6 +180,7 @@
     <div class="container">
       <strong>ETORS</strong> · Academic demonstration of an online railway reservation workflow.
       Not affiliated with IRCTC or Indian Railways.
+      Train photograph: <a href="https://commons.wikimedia.org/wiki/File:Indian_Railways_Diesel_Loco.JPG" target="_blank" rel="noopener">Vinoo202 / Public domain</a>.
     </div>
   </footer>
 

@@ -1,76 +1,115 @@
 {% extends "etors/base.html" %}
-{% block title %}ETORS · Search and Book Trains{% endblock %}
+{% load static %}
+{% block title %}ETORS · Search, Book and Travel{% endblock %}
 {% block content %}
+<style>
+  .hero::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 16% 24%,rgba(47,128,208,.34),transparent 32rem); }
+  .hero-grid { position:relative; display:grid; grid-template-columns:1.05fr .95fr; align-items:center; gap:56px; }
+  .eyebrow { display:inline-flex; align-items:center; gap:8px; margin-bottom:18px; padding:7px 12px; border:1px solid rgba(255,255,255,.24); border-radius:999px; color:#dbeaff; background:rgba(255,255,255,.08); font-size:.8rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .eyebrow::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 5px rgba(255,181,71,.14); }
+  .hero h1 { max-width:650px; font-size:clamp(2.6rem,5vw,4.8rem); letter-spacing:-.045em; }
+  .hero-copy > p { max-width:620px; margin:22px 0 28px; color:#d9e6f6; font-size:1.12rem; }
+  .hero-points { display:flex; flex-wrap:wrap; gap:18px; color:#f5f8fc; font-weight:700; font-size:.9rem; }
+  .hero-points span::before { content:"✓"; display:inline-grid; place-items:center; width:21px; height:21px; margin-right:7px; border-radius:50%; color:#063c2d; background:#77e0b5; font-size:.75rem; }
+  .hero-visual { position:relative; min-height:410px; }
+  .hero-image { width:100%; height:410px; object-fit:cover; border:1px solid rgba(255,255,255,.2); border-radius:28px; box-shadow:0 35px 70px rgba(0,0,0,.34); transform:rotate(1.5deg); }
+  .hero-image-card { position:absolute; left:-22px; bottom:24px; display:flex; align-items:center; gap:12px; padding:14px 17px; border:1px solid rgba(255,255,255,.46); border-radius:16px; color:var(--ink); background:rgba(255,255,255,.94); box-shadow:0 16px 34px rgba(0,0,0,.2); backdrop-filter:blur(12px); }
+  .hero-image-card strong,.hero-image-card small { display:block; }
+  .hero-image-card small { color:var(--muted); }
+  .hero-image-icon { width:42px; height:42px; display:grid; place-items:center; border-radius:12px; color:white; background:linear-gradient(135deg,var(--orange),var(--gold)); font-size:21px; }
+  .search-panel { padding:28px; border:0; box-shadow:0 22px 65px rgba(7,26,51,.18); }
+  .search-heading-row { display:flex; justify-content:space-between; align-items:end; gap:18px; margin-bottom:20px; }
+  .search-heading-row h2 { margin:0; font-size:1.55rem; }
+  .search-heading-row p { margin:0; }
+  .search-panel .form-control { border-color:#c7d3e3; background:#f9fbfe; }
+  .search-panel .form-control:focus { outline:3px solid rgba(47,128,208,.16); border-color:var(--sky); }
+  .quick-routes { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
+  .quick-routes strong { margin-right:5px; color:var(--muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; }
+  .route-chip { padding:7px 10px; border-radius:999px; color:#185492; background:#edf5fd; font-size:.82rem; font-weight:750; }
+  .section-title { max-width:680px; margin:0 auto 34px; text-align:center; }
+  .section-title span { color:var(--orange); font-weight:850; font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; }
+  .section-title h2 { margin:8px 0 10px; font-size:clamp(1.8rem,3vw,2.7rem); letter-spacing:-.03em; }
+  .booking-steps { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  .step-card { padding:25px; border:1px solid var(--line); border-radius:20px; background:white; box-shadow:0 10px 30px rgba(11,31,58,.07); }
+  .step-number { width:44px; height:44px; display:grid; place-items:center; margin-bottom:20px; border-radius:13px; color:white; background:linear-gradient(135deg,var(--blue),var(--sky)); font-weight:900; box-shadow:0 8px 18px rgba(21,89,168,.25); }
+  .step-card h3 { margin:0 0 8px; color:var(--navy); }
+  .step-card p { margin:0; color:var(--muted); font-size:.92rem; }
+  .info-band { margin-top:44px; padding:26px; border-radius:22px; color:white; background:linear-gradient(120deg,var(--navy),#124f91); }
+  .info-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+  .info-item { padding:8px 16px; border-left:1px solid rgba(255,255,255,.18); }
+  .info-item:first-child { border-left:0; }
+  .info-item strong { display:block; margin-bottom:4px; font-size:1.06rem; }
+  .info-item small { color:#c9daef; }
+  .feature-panel { height:100%; background:linear-gradient(145deg,#fff,#f1f7fe); }
+  .feature-list { margin:0; padding:0; list-style:none; }
+  .feature-list li { position:relative; margin:12px 0; padding-left:30px; }
+  .feature-list li::before { content:"✓"; position:absolute; left:0; top:1px; width:20px; height:20px; display:grid; place-items:center; border-radius:50%; color:var(--success); background:#dff6ec; font-size:.72rem; font-weight:900; }
+  .train-card { transition:.2s ease; }
+  .train-card:hover { padding-left:12px; padding-right:12px; border-radius:14px; background:#f6faff; }
+  @media(max-width:950px){ .hero-grid{grid-template-columns:1fr}.hero-visual{min-height:330px}.hero-image{height:330px}.booking-steps,.info-grid{grid-template-columns:repeat(2,1fr)} }
+  @media(max-width:620px){ .hero{padding-top:48px}.hero h1{font-size:2.7rem}.hero-visual{min-height:250px}.hero-image{height:250px;border-radius:20px}.hero-image-card{left:10px;bottom:10px}.search-heading-row{align-items:flex-start;flex-direction:column}.booking-steps,.info-grid{grid-template-columns:1fr}.info-item{border-left:0;border-top:1px solid rgba(255,255,255,.18)}.info-item:first-child{border-top:0}.search-panel{padding:20px} }
+</style>
+
 <section class="hero">
-  <div class="container">
-    <h1>Plan your journey. Reserve with confidence.</h1>
-    <p>Search trains, check seat availability, reserve a ticket, and track it using a generated PNR.</p>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow">Simple railway reservation</span>
+      <h1>Your journey begins with one easy search.</h1>
+      <p>Discover daily demo trains between Khammam, Vijayawada and Secunderabad. Check seats, compare fares and reserve your journey in minutes.</p>
+      <div class="hero-points"><span>Instant PNR</span><span>Seat reservation</span><span>Safe dummy payment</span></div>
+    </div>
+    <div class="hero-visual">
+      <img class="hero-image" src="{% static 'etors/images/indian-railways-hero.jpg' %}" alt="Indian Railways passenger train travelling on a railway line">
+      <div class="hero-image-card"><span class="hero-image-icon">⌁</span><span><strong>Daily demo services</strong><small>3 cities · 6 direct routes</small></span></div>
+    </div>
   </div>
 </section>
 
 <main class="container">
   <section class="panel search-panel" aria-labelledby="search-heading">
-    <h2 id="search-heading">Search trains</h2>
+    <div class="search-heading-row"><div><h2 id="search-heading">Where would you like to go?</h2><p class="muted">Choose your stations and preferred journey date.</p></div><span class="badge">120-day booking window</span></div>
     <form method="get" class="grid grid-4">
       <div>{{ search_form.source.label_tag }}{{ search_form.source }}{{ search_form.source.errors }}</div>
       <div>{{ search_form.destination.label_tag }}{{ search_form.destination }}{{ search_form.destination.errors }}</div>
       <div>{{ search_form.journey_date.label_tag }}{{ search_form.journey_date }}{{ search_form.journey_date.errors }}</div>
-      <div style="align-self:end"><button class="btn btn-primary" style="width:100%">Search Trains</button></div>
+      <div style="align-self:end"><button class="btn btn-primary" style="width:100%">Search Trains →</button></div>
     </form>
     {{ search_form.non_field_errors }}
+    <div class="quick-routes"><strong>Popular routes</strong><span class="route-chip">Khammam → Vijayawada</span><span class="route-chip">Vijayawada → Secunderabad</span><span class="route-chip">Secunderabad → Khammam</span></div>
   </section>
 
   {% if trains is not None %}
   <section class="section" aria-labelledby="results-heading">
-    <h2 id="results-heading">{{ search.source.code }} → {{ search.destination.code }}</h2>
-    <p class="muted">{{ search.journey_date|date:"l, d F Y" }} · {{ trains|length }} train{{ trains|length|pluralize }} found</p>
+    <div class="search-heading-row"><div><h2 id="results-heading">{{ search.source.code }} → {{ search.destination.code }}</h2><p class="muted">{{ search.journey_date|date:"l, d F Y" }} · {{ trains|length }} train{{ trains|length|pluralize }} found</p></div><span class="badge">Live demo availability</span></div>
     <div class="panel">
       {% for item in trains %}
       <article class="train-card">
-        <div>
-          <div class="train-name">{{ item.train.number }} · {{ item.train.name }}</div>
-          <div class="muted">{{ item.train.running_days }}</div>
-        </div>
+        <div><div class="train-name">{{ item.train.number }} · {{ item.train.name }}</div><div class="muted">{{ item.train.running_days }}</div></div>
         <div><strong>{{ item.train.departure_time|time:"H:i" }}</strong><br><span class="muted">{{ item.train.source.code }}</span></div>
         <div><span class="muted">{{ item.train.duration }}</span><br>→</div>
         <div><strong>{{ item.train.arrival_time|time:"H:i" }}</strong><br><span class="muted">{{ item.train.destination.code }}</span></div>
-        <div>
-          <span class="badge">{{ item.available }} available</span><br><br>
-          {% if item.available %}
-          <a class="btn btn-secondary" href="{% url 'etors:book' item.train.pk search.journey_date|date:'Y-m-d' %}">Book Ticket</a>
-          {% else %}
-          <span class="muted">Sold out</span>
-          {% endif %}
-        </div>
+        <div><span class="badge">{{ item.available }} available</span><br><br>{% if item.available %}<a class="btn btn-secondary" href="{% url 'etors:book' item.train.pk search.journey_date|date:'Y-m-d' %}">Book Ticket</a>{% else %}<span class="muted">Sold out</span>{% endif %}</div>
       </article>
-      {% empty %}
-      <p>No direct trains are available for this route. Try another station pair.</p>
-      {% endfor %}
+      {% empty %}<p>No direct trains are available for this route. Try another station pair.</p>{% endfor %}
     </div>
   </section>
   {% endif %}
 
+  <section class="section" id="how-to-book">
+    <div class="section-title"><span>Booking guide</span><h2>From search to seat in four simple steps</h2><p class="muted">ETORS keeps the demonstration booking process clear and quick.</p></div>
+    <div class="booking-steps">
+      <article class="step-card"><div class="step-number">01</div><h3>Search your route</h3><p>Select From, To and a journey date from today through the next 120 days.</p></article>
+      <article class="step-card"><div class="step-number">02</div><h3>Choose a train</h3><p>Compare departure time, arrival time, duration and available seats.</p></article>
+      <article class="step-card"><div class="step-number">03</div><h3>Add passenger</h3><p>Enter contact details, passenger information, class and berth preference.</p></article>
+      <article class="step-card"><div class="step-number">04</div><h3>Pay & reserve</h3><p>Use dummy payment to receive a reserved seat and instant 10-digit PNR.</p></article>
+    </div>
+    <div class="info-band"><div class="info-grid"><div class="info-item"><strong>6 daily routes</strong><small>Across three Telangana/AP cities</small></div><div class="info-item"><strong>Live seat count</strong><small>Updates after booking or cancellation</small></div><div class="info-item"><strong>Instant confirmation</strong><small>PNR and seat shown immediately</small></div><div class="info-item"><strong>100% demonstration</strong><small>No real payment or railway ticket</small></div></div></div>
+  </section>
+
   <section id="pnr-status" class="section">
     <div class="grid grid-2">
-      <div class="panel">
-        <h2>Check PNR status</h2>
-        <p class="muted">Enter the PNR printed on your ETORS confirmation.</p>
-        <form action="{% url 'etors:pnr_search' %}" method="get">
-          {{ pnr_form.pnr.label_tag }}{{ pnr_form.pnr }}
-          <button class="btn btn-primary" style="margin-top:14px">Check Status</button>
-        </form>
-      </div>
-      <div class="panel">
-        <h2>Initial project features</h2>
-        <ul>
-          <li>Route and journey-date search</li>
-          <li>Live seat availability calculation</li>
-          <li>Sleeper and AC fare selection</li>
-          <li>PNR generation, lookup, and cancellation</li>
-          <li>Dummy fare payment and automatic seat reservation</li>
-          <li>Admin-managed stations and trains</li>
-        </ul>
-      </div>
+      <div class="panel"><span class="eyebrow" style="color:var(--blue);border-color:#c8dbf1;background:#edf5fd">Manage journey</span><h2>Check PNR status</h2><p class="muted">Enter the 10-digit PNR printed on your ETORS confirmation.</p><form action="{% url 'etors:pnr_search' %}" method="get">{{ pnr_form.pnr.label_tag }}{{ pnr_form.pnr }}<button class="btn btn-primary" style="margin-top:14px">Check Status</button></form></div>
+      <div class="panel feature-panel"><h2>Everything you need to practise</h2><ul class="feature-list"><li>Route and journey-date search</li><li>Live seat availability calculation</li><li>Sleeper and AC fare selection</li><li>PNR generation, lookup, and cancellation</li><li>Dummy fare payment and automatic seat reservation</li><li>Admin-managed stations and trains</li></ul></div>
     </div>
   </section>
 </main>
