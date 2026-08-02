@@ -1,0 +1,15 @@
+{% extends "etors/base.html" %}
+{% block title %}Private Company Call · BOOKMYCAB{% endblock %}
+{% block content %}
+<main class="container section"><section class="panel" style="max-width:680px;margin:auto;text-align:center">
+  <p class="muted">Privacy-protected company call relay</p><h1>1800 100 200</h1>
+  <p class="notice"><strong>Recording notice:</strong> This academic simulation records call metadata and creates a dummy recording reference. No real telephone call or audio recording occurs.</p>
+  <div class="summary"><span>Cab reference</span><strong>{{ cab.reference }}</strong></div>
+  <div class="summary"><span>Call reference</span><strong>{{ call.reference }}</strong></div>
+  <div class="summary"><span>Recording reference</span><strong>{{ call.recording_reference }}</strong></div>
+  <div class="summary"><span>Status</span><strong>{{ call.get_status_display }}</strong></div>
+  <div class="summary"><span>Started</span><strong>{{ call.started_at|date:"d M Y, H:i:s" }}</strong></div>
+  {% if call.ended_at %}<div class="summary"><span>Ended</span><strong>{{ call.ended_at|date:"d M Y, H:i:s" }}</strong></div>{% endif %}
+  {% if call.status == "ACTIVE" %}<a class="btn btn-primary" href="tel:1800100200">Dial Company Number</a><form method="post" style="margin-top:16px">{% csrf_token %}<button class="btn btn-danger">End Dummy Recorded Call</button></form>{% else %}<a class="btn btn-secondary" href="{% url 'etors:cab_dispatch' cab.dispatch_token %}">Return to Driver Dispatch</a>{% endif %}
+</section></main>
+{% endblock %}

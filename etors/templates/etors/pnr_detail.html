@@ -70,6 +70,9 @@
       </div>
     </div>
     <p class="notice">BOOKMYCAB is simulated for this academic project. The schedule represents the cab reaching the station 20 minutes before train arrival; no real vehicle is dispatched.</p>
+    <h3>Company-relayed call history</h3>
+    <p class="muted">Passenger numbers stay hidden. Cab calls use only 1800 100 200.</p>
+    {% for call in booking.cab_booking.call_logs.all %}<div class="summary"><span>{{ call.started_at|date:"d M Y, H:i" }} · {{ call.get_status_display }}</span><strong>{{ call.recording_reference }}</strong></div>{% empty %}<p class="muted">No driver calls recorded.</p>{% endfor %}
   </section>
   {% endif %}
   <section class="notice" style="margin-top:22px"><strong>Dummy customer support:</strong> ETORS train booking 1800-000-3877{% if booking.cab_booking %} · BOOKMYCAB 1800-000-2222{% endif %}. These numbers are part of the academic demonstration.</section>

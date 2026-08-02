@@ -15,6 +15,7 @@
     <div class="summary"><span>Payment status</span><strong>{{ cab.get_payment_status_display }}</strong></div>
     <div class="summary"><span>OTP / UPI deadline</span><strong>{{ cab.payment_deadline|date:"d M Y, H:i" }}</strong></div>
     <div class="summary"><span>Dummy BOOKMYCAB helpline</span><strong>1800-000-2222</strong></div>
+    <div class="notice"><strong>Passenger call privacy</strong><p>Do not use a personal number. All passenger calls must use company relay <strong>1800 100 200</strong> and are logged with a dummy recording reference.</p><form method="post" action="{% url 'etors:cab_call_start' cab.dispatch_token %}">{% csrf_token %}<button class="btn btn-secondary">Call Passenger via 1800 100 200</button></form></div>
     {% if verified %}
       <div class="notice" style="border-left-color:var(--success)"><strong>Pickup verified</strong><p>The passenger supplied the correct short-lived OTP.</p></div>
       {% if cab.payment_status == "PENDING" %}<p class="notice">Ask the passenger to complete the cab amount through the protected dummy UPI screen before the deadline.</p>{% endif %}

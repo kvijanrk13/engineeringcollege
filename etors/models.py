@@ -197,3 +197,27 @@ class CabBooking(models.Model):
 
     def __str__(self):
         return f"Private cab dispatch {self.reference}"
+
+
+class CabCallLog(models.Model):
+    STATUS_CHOICES = (("ACTIVE", "Call in progress"), ("COMPLETED", "Call completed"))
+    cab_booking = models.ForeignKey(CabBooking, on_delete=models.CASCADE, related_name="call_logs")
+    reference = models.CharField(max_length=18, unique=True, editable=False)
+    company_number = models.CharField(max_length=20, default="1800 100 200", editable=False)
+    recording_reference = models.CharField(max_length=24, unique=True, editable=False)
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default="ACTIVE")
+    started_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-started_at",)
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            self.reference = "CALL" + "".join(secrets.choice(string.digits) for _ in range(10))
+        if not self.recording_reference:
+            self.recording_reference = "REC-" + "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(12))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.reference} via {self.company_number}"

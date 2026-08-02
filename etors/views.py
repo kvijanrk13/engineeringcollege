@@ -13,7 +13,7 @@ from django.utils import timezone
 from django.conf import settings
 
 from .forms import BookingForm, PNRForm, SearchForm
-from .models import Booking, CabBooking, Passenger, Train
+from .models import Booking, CabBooking, CabCallLog, Passenger, Train
 from .services import (
     cab_fare_for,
     cab_amount_due,
@@ -359,6 +359,27 @@ def cab_payment(request, reference):
             messages.success(request, "Dummy BOOKMYCAB UPI payment completed successfully.")
             return redirect("etors:pnr_detail", pnr=cab.booking.pnr)
     return render(request, "etors/cab_payment.html", {"cab": cab, "cab_amount": amount})
+
+
+@require_POST
+def cab_call_start(request, dispatch_token):
+    cab = get_object_or_404(CabBooking, dispatch_token=dispatch_token)
+    call = CabCallLog.objects.create(cab_booking=cab)
+    return redirect("etors:cab_call_session", dispatch_token=cab.dispatch_token, call_reference=call.reference)
+
+
+def cab_call_session(request, dispatch_token, call_reference):
+    call = get_object_or_404(
+        CabCallLog.objects.select_related("cab_booking"),
+        cab_booking__dispatch_token=dispatch_token,
+        reference=call_reference,
+    )
+    if request.method == "POST" and call.status == "ACTIVE":
+        call.status = "COMPLETED"
+        call.ended_at = timezone.now()
+        call.save(update_fields=["status", "ended_at"])
+        messages.success(request, "Dummy company-relayed call ended and its recording reference was saved.")
+    return render(request, "etors/cab_call_session.html", {"call": call, "cab": call.cab_booking})
 
 
 @transaction.atomic

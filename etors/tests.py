@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Booking, CabBooking, Passenger, Station, Train
+from .models import Booking, CabBooking, CabCallLog, Passenger, Station, Train
 from .services import cab_fare_for, fare_for, train_availability
 
 
@@ -252,7 +252,7 @@ class EtorsTests(TestCase):
                 "contact_phone": "9876543210", "passenger_name": "Passenger One",
                 "passenger_age": 30, "passenger_gender": "M",
                 "passenger_2_name": "Passenger Two", "passenger_2_age": 28,
-                "passenger_2_gender": "F", "book_cab": "on", "cab_type": "BIKE",
+                "passenger_2_gender": "F", "book_cab": "on", "cab_type": "BIKE", "call_recording_consent": "on",
                 "cab_drop_address": "Demo Address",
             },
         )
@@ -304,6 +304,7 @@ class EtorsTests(TestCase):
                 "passenger_gender": "F",
                 "berth_preference": "Lower",
                 "book_cab": "on",
+                "call_recording_consent": "on",
                 "cab_type": "SEDAN",
                 "cab_drop_address": "MG Road, Destination City",
                 "cab_drop_latitude": "16.506200",
@@ -371,6 +372,7 @@ class EtorsTests(TestCase):
                 "passenger_gender": "M",
                 "berth_preference": "",
                 "book_cab": "on",
+                "call_recording_consent": "on",
                 "cab_type": "",
                 "cab_drop_address": "",
             },
@@ -462,10 +464,23 @@ class EtorsTests(TestCase):
         url = reverse("etors:cab_dispatch", args=[cab.dispatch_token])
         dispatch = self.client.get(url)
         self.assertContains(dispatch, self.train.number)
+        self.assertContains(dispatch, "1800 100 200")
         self.assertNotContains(dispatch, booking.pnr)
         self.assertNotContains(dispatch, "Hidden Passenger")
         self.assertNotContains(dispatch, "9876543210")
         self.assertNotContains(dispatch, "Secret Home Address")
+        call_start = self.client.post(reverse("etors:cab_call_start", args=[cab.dispatch_token]))
+        self.assertEqual(call_start.status_code, 302)
+        call = CabCallLog.objects.get(cab_booking=cab)
+        self.assertTrue(call.recording_reference.startswith("REC-"))
+        call_page = self.client.get(call_start.url)
+        self.assertContains(call_page, "1800 100 200")
+        self.assertContains(call_page, call.recording_reference)
+        self.assertNotContains(call_page, "9876543210")
+        self.client.post(call_start.url)
+        call.refresh_from_db()
+        self.assertEqual(call.status, "COMPLETED")
+        self.assertIsNotNone(call.ended_at)
         rejected = self.client.post(url, {"pickup_otp": "000000"})
         self.assertNotContains(rejected, "Secret Home Address")
         verified = self.client.post(url, {"pickup_otp": "123456"})
@@ -505,3 +520,11 @@ class EtorsTests(TestCase):
         cab.refresh_from_db()
         self.assertEqual(cab.payment_status, "DRIVER_DEDUCTION")
         self.assertEqual(cab.driver_salary_deduction, Decimal("260.00"))
+
+    def test_chatbot_explains_company_call_relay_and_recording(self):
+        answer = self.client.post(
+            reverse("etors:chatbot"),
+            {"question": "How does the driver call the passenger and is the conversation recording tracked?"},
+        ).json()["answer"]
+        self.assertIn("1800 100 200", answer)
+        self.assertIn("simulated recording references", answer)

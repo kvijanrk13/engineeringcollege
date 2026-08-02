@@ -15,4 +15,6 @@ urlpatterns = [
     path("pnr/<str:pnr>/cancel/", views.cancel_booking, name="cancel_booking"),
     path("cab/dispatch/<uuid:dispatch_token>/", views.cab_dispatch, name="cab_dispatch"),
     path("cab/payment/<str:reference>/", views.cab_payment, name="cab_payment"),
+    path("cab/dispatch/<uuid:dispatch_token>/call/", views.cab_call_start, name="cab_call_start"),
+    path("cab/dispatch/<uuid:dispatch_token>/call/<str:call_reference>/", views.cab_call_session, name="cab_call_session"),
 ]

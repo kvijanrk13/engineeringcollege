@@ -94,6 +94,10 @@ class BookingForm(forms.Form):
     cab_drop_longitude = forms.RegexField(
         required=False, regex=r"^-?\d{1,3}(?:\.\d{1,6})?$", widget=forms.HiddenInput()
     )
+    call_recording_consent = forms.BooleanField(
+        required=False,
+        label="I agree that dummy BOOKMYCAB calls use the company relay and are recorded for safety.",
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -157,6 +161,8 @@ class BookingForm(forms.Form):
                 self.add_error("cab_drop_latitude", "Invalid map latitude.")
             if longitude and not -180 <= float(longitude) <= 180:
                 self.add_error("cab_drop_longitude", "Invalid map longitude.")
+            if not cleaned.get("call_recording_consent"):
+                self.add_error("call_recording_consent", "Consent is required for company-relayed recorded cab calls.")
             capacity = self.CAB_CAPACITIES.get(cleaned.get("cab_type"))
             if capacity and len(passengers) > capacity:
                 self.add_error("cab_type", f"This vehicle allows {capacity} passenger{'s' if capacity != 1 else ''}. Select a larger vehicle.")
@@ -165,6 +171,7 @@ class BookingForm(forms.Form):
             cleaned["cab_drop_address"] = ""
             cleaned["cab_drop_latitude"] = ""
             cleaned["cab_drop_longitude"] = ""
+            cleaned["call_recording_consent"] = False
         return cleaned
 
 

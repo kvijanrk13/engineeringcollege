@@ -38,6 +38,7 @@
       <div class="summary"><span>Cab insurance premium</span><strong>₹{{ cab_booking.cab_insurance_premium }}</strong></div>
       <p>Dummy personal accident cover up to ₹5,00,000 and emergency medical expenses up to ₹50,000. Claims help: 1800-000-CABS.</p>
       <p>Share this OTP with the assigned driver only after meeting the cab. After the driver enters it, pay by dummy UPI before the deadline. If the deadline expires, the amount is recorded as a dummy driver salary deduction.</p>
+      <p><strong>Call privacy:</strong> the driver cannot see your mobile number and may contact you only through dummy company relay 1800 100 200. Calls create a simulated safety recording and audit reference.</p>
       <a class="btn btn-secondary" href="{% url 'etors:cab_dispatch' cab_booking.dispatch_token %}">Open Dummy Driver Dispatch View</a>
     </div>
     {% endif %}

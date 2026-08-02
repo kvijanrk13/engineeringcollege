@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Booking, CabBooking, Passenger, Station, Train
+from .models import Booking, CabBooking, CabCallLog, Passenger, Station, Train
 
 
 @admin.register(Station)
@@ -62,3 +62,10 @@ class CabBookingAdmin(admin.ModelAdmin):
     )
     list_filter = ("status", "cab_type", "pickup_station")
     search_fields = ("reference", "booking__pnr", "driver_name", "vehicle_number")
+
+
+@admin.register(CabCallLog)
+class CabCallLogAdmin(admin.ModelAdmin):
+    list_display = ("reference", "cab_booking", "company_number", "recording_reference", "status", "started_at", "ended_at")
+    list_filter = ("status", "started_at")
+    search_fields = ("reference", "recording_reference", "cab_booking__reference")

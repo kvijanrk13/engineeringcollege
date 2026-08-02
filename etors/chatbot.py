@@ -30,6 +30,7 @@ FEATURE_CATALOG = (
     "BOOKMYCAB Bike, Auto, Mini, Sedan, SUV, Tempo Traveller, and Bus options from ₹150 to ₹2,500",
     "Google Maps destination search, optional Places autocomplete, coordinates, and navigation links",
     "Privacy-protected cab dispatch with no passenger identity or PNR and OTP-gated drop-address disclosure",
+    "Driver-to-passenger calls only through dummy company relay 1800 100 200 with call audit and recording references",
     "Automatic dummy train and cab insurance premiums, policies, coverage, and claim guidance",
     "Dummy train helpline 1800-000-3877 and BOOKMYCAB helpline 1800-000-2222",
 )
@@ -97,7 +98,8 @@ INTENT_ANSWERS = {
     "security": (
         "PNR details require the matching registered mobile number; a PNR alone cannot reveal passenger data, and verification attempts are limited. Cab drivers receive no passenger identity. They "
         "receive only a random dispatch reference, station, train number, and arrival time—not the PNR, name, mobile, "
-        "email, age, gender, or seat. The exact drop address appears only after a valid short-lived pickup OTP."
+        "email, age, gender, or seat. The exact drop address appears only after a valid short-lived pickup OTP. Drivers "
+        "may call passengers only through dummy company relay 1800 100 200; calls create audit and simulated recording references."
     ),
 }
 
@@ -114,8 +116,8 @@ INTENT_KEYWORDS = {
     "admin": {"admin", "manage", "management"},
     "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep", "map", "maps", "google", "location", "navigation"},
     "insurance": {"insurance", "policy", "premium", "claim", "coverage", "accident"},
-    "helpline": {"helpline", "help line", "phone number", "customer care", "support number", "call"},
-    "security": {"privacy", "private", "security", "secure", "otp", "tracked", "tracking", "protect", "driver access"},
+    "helpline": {"helpline", "help line", "phone number", "customer care", "support number"},
+    "security": {"privacy", "private", "security", "secure", "otp", "tracked", "tracking", "protect", "driver access", "recording", "conversation", "relay", "company", "masked"},
 }
 
 FEATURE_WORDS = {"feature", "features", "service", "services", "help", "offer", "available", "do"}

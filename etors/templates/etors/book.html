@@ -74,6 +74,7 @@
               <a class="btn btn-secondary" id="open-google-maps" href="https://www.google.com/maps/search/?api=1" target="_blank" rel="noopener">Open Destination in Google Maps</a>
               {% if google_maps_api_key %}<div id="destination-map" aria-label="Google Maps destination picker"></div>{% else %}<p class="muted">The Google Maps link works now. Set GOOGLE_MAPS_API_KEY on Render to enable embedded autocomplete and map pin selection.</p>{% endif %}
             </div>
+            <div class="map-picker">{{ form.call_recording_consent }} {{ form.call_recording_consent.label_tag }}{{ form.call_recording_consent.errors }}<p class="muted">The driver can call only through the dummy company relay 1800 100 200. Passenger mobile numbers remain hidden, and the system creates a simulated recording reference and call audit log.</p></div>
           </div>
         </div>
         <button class="btn btn-primary" style="width:100%;margin-top:20px">Continue to Dummy Payment →</button>
