@@ -9,8 +9,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import BookingForm, PNRForm, SearchForm
-from .models import Booking, Passenger, Train
-from .services import fare_for, seat_number, train_availability
+from .models import Booking, CabBooking, Passenger, Train
+from .services import (
+    cab_fare_for,
+    create_cab_booking,
+    fare_for,
+    seat_number,
+    train_availability,
+)
 from .chatbot import answer_question
 
 
@@ -123,7 +129,9 @@ def payment(request):
         active=True,
     )
     journey_date = date.fromisoformat(pending["journey_date"])
-    total_fare = fare_for(train, pending["travel_class"])
+    train_fare = fare_for(train, pending["travel_class"])
+    cab_fare = cab_fare_for(pending.get("cab_type")) if pending.get("book_cab") else 0
+    total_fare = train_fare + cab_fare
 
     if request.method == "POST":
         payment_method = request.POST.get("payment_method")
@@ -152,11 +160,23 @@ def payment(request):
                 berth_preference=pending["berth_preference"],
                 seat_number=seat_number(train, journey_date),
             )
+            cab_booking = None
+            if pending.get("book_cab"):
+                cab_booking = create_cab_booking(
+                    booking,
+                    pending["cab_type"],
+                    pending["cab_drop_address"],
+                )
             request.session.pop("etors_pending_booking", None)
             return render(
                 request,
                 "etors/payment_success.html",
-                {"booking": booking, "passenger": passenger, "payment_method": payment_method},
+                {
+                    "booking": booking,
+                    "passenger": passenger,
+                    "cab_booking": cab_booking,
+                    "payment_method": payment_method,
+                },
             )
 
     return render(
@@ -167,6 +187,10 @@ def payment(request):
             "journey_date": journey_date,
             "travel_class": dict(Booking.CLASS_CHOICES)[pending["travel_class"]],
             "passenger_name": pending["passenger_name"],
+            "train_fare": train_fare,
+            "cab_fare": cab_fare,
+            "book_cab": pending.get("book_cab", False),
+            "cab_type": dict(CabBooking.CAB_CHOICES).get(pending.get("cab_type"), ""),
             "total_fare": total_fare,
         },
     )
@@ -183,7 +207,7 @@ def pnr_search(request):
 def pnr_detail(request, pnr):
     booking = get_object_or_404(
         Booking.objects.select_related(
-            "train", "train__source", "train__destination"
+            "train", "train__source", "train__destination", "cab_booking", "cab_booking__pickup_station"
         ).prefetch_related("passengers"),
         pnr=pnr,
     )
@@ -201,6 +225,9 @@ def cancel_booking(request, pnr):
         booking.status = "CANCELLED"
         booking.cancelled_at = timezone.now()
         booking.save(update_fields=["status", "cancelled_at"])
+        if hasattr(booking, "cab_booking"):
+            booking.cab_booking.status = "CANCELLED"
+            booking.cab_booking.save(update_fields=["status"])
         messages.success(request, f"PNR {pnr} was cancelled successfully.")
     else:
         messages.info(request, "This booking is already cancelled.")

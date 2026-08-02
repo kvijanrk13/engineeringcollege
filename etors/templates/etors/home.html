@@ -46,7 +46,14 @@
   .feature-list li::before { content:"✓"; position:absolute; left:0; top:1px; width:20px; height:20px; display:grid; place-items:center; border-radius:50%; color:var(--success); background:#dff6ec; font-size:.72rem; font-weight:900; }
   .train-card { transition:.2s ease; }
   .train-card:hover { padding-left:12px; padding-right:12px; border-radius:14px; background:#f6faff; }
-  @media(max-width:950px){ .hero-grid{grid-template-columns:1fr}.hero-visual{min-height:330px}.hero-image{height:330px}.booking-steps,.info-grid{grid-template-columns:repeat(2,1fr)} }
+  .cab-showcase { display:grid; grid-template-columns:.9fr 1.1fr; gap:34px; align-items:center; padding:36px; border-radius:26px; color:white; background:linear-gradient(130deg,#28134f,#7634a8 58%,#e05f32); box-shadow:0 22px 55px rgba(54,24,92,.22); }
+  .cab-mark { display:inline-block; padding:7px 11px; border:1px solid rgba(255,255,255,.28); border-radius:999px; background:rgba(255,255,255,.1); font-weight:850; letter-spacing:.08em; }
+  .cab-showcase h2 { margin:14px 0 10px; font-size:clamp(2rem,4vw,3.2rem); }
+  .cab-showcase p { color:#f2eafb; }
+  .cab-timeline { display:grid; gap:12px; }
+  .cab-timeline div { display:flex; gap:13px; align-items:center; padding:14px; border:1px solid rgba(255,255,255,.18); border-radius:15px; background:rgba(255,255,255,.09); }
+  .cab-timeline strong { width:34px; height:34px; display:grid; place-items:center; flex:0 0 auto; border-radius:10px; color:#542279; background:white; }
+  @media(max-width:950px){ .hero-grid,.cab-showcase{grid-template-columns:1fr}.hero-visual{min-height:330px}.hero-image{height:330px}.booking-steps,.info-grid{grid-template-columns:repeat(2,1fr)} }
   @media(max-width:620px){ .hero{padding-top:48px}.hero h1{font-size:2.7rem}.hero-visual{min-height:250px}.hero-image{height:250px;border-radius:20px}.hero-image-card{left:10px;bottom:10px}.search-heading-row{align-items:flex-start;flex-direction:column}.booking-steps,.info-grid{grid-template-columns:1fr}.info-item{border-left:0;border-top:1px solid rgba(255,255,255,.18)}.info-item:first-child{border-top:0}.search-panel{padding:20px} }
 </style>
 
@@ -104,6 +111,13 @@
       <article class="step-card"><div class="step-number">04</div><h3>Pay & reserve</h3><p>Use dummy payment to receive a reserved seat and instant 10-digit PNR.</p></article>
     </div>
     <div class="info-band"><div class="info-grid"><div class="info-item"><strong>6 daily routes</strong><small>Across three Telangana/AP cities</small></div><div class="info-item"><strong>Live seat count</strong><small>Updates after booking or cancellation</small></div><div class="info-item"><strong>Instant confirmation</strong><small>PNR and seat shown immediately</small></div><div class="info-item"><strong>100% demonstration</strong><small>No real payment or railway ticket</small></div></div></div>
+  </section>
+
+  <section class="section" id="bookmycab">
+    <div class="cab-showcase">
+      <div><span class="cab-mark">ETORS × BOOKMYCAB</span><h2>Train to doorstep, planned together.</h2><p>Add a Mini, Sedan or SUV while reserving your train seat. The integrated service uses the train schedule to place your dummy cab at the destination station 20 minutes before arrival.</p><a class="btn" style="color:#542279;background:white" href="#search-heading">Search a train to begin</a></div>
+      <div class="cab-timeline"><div><strong>1</strong><span><b>Select BOOKMYCAB</b><br><small>Choose the cab type and destination drop address.</small></span></div><div><strong>2</strong><span><b>Pay together</b><br><small>See train fare, cab fare and combined dummy total.</small></span></div><div><strong>3</strong><span><b>Driver assigned</b><br><small>Receive cab reference, driver, vehicle and station pickup schedule.</small></span></div><div><strong>4</strong><span><b>Cab arrives early</b><br><small>Scheduled at the destination station 20 minutes before the train.</small></span></div></div>
+    </div>
   </section>
 
   <section id="pnr-status" class="section">

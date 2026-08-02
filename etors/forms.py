@@ -64,11 +64,43 @@ class BookingForm(forms.Form):
             ("Side Upper", "Side Upper"),
         ),
     )
+    book_cab = forms.BooleanField(
+        required=False,
+        label="Add BOOKMYCAB at destination",
+    )
+    cab_type = forms.ChoiceField(
+        required=False,
+        choices=(
+            ("", "Select cab type"),
+            ("MINI", "Mini - ₹350"),
+            ("SEDAN", "Sedan - ₹500"),
+            ("SUV", "SUV - ₹750"),
+        ),
+    )
+    cab_drop_address = forms.CharField(
+        required=False,
+        max_length=240,
+        label="Destination drop address",
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs["class"] = "form-control"
+        self.fields["book_cab"].widget.attrs["class"] = "cab-checkbox"
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("book_cab"):
+            if not cleaned.get("cab_type"):
+                self.add_error("cab_type", "Select a BOOKMYCAB vehicle type.")
+            if not cleaned.get("cab_drop_address"):
+                self.add_error("cab_drop_address", "Enter the destination drop address.")
+        else:
+            cleaned["cab_type"] = ""
+            cleaned["cab_drop_address"] = ""
+        return cleaned
 
 
 class PNRForm(forms.Form):

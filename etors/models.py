@@ -109,3 +109,58 @@ class Passenger(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.seat_number}"
+
+
+class CabBooking(models.Model):
+    CAB_CHOICES = (
+        ("MINI", "Mini"),
+        ("SEDAN", "Sedan"),
+        ("SUV", "SUV"),
+    )
+    STATUS_CHOICES = (
+        ("SCHEDULED", "Scheduled"),
+        ("ARRIVED", "Arrived at station"),
+        ("COMPLETED", "Completed"),
+        ("CANCELLED", "Cancelled"),
+    )
+
+    booking = models.OneToOneField(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name="cab_booking",
+    )
+    reference = models.CharField(max_length=12, unique=True, editable=False)
+    cab_type = models.CharField(max_length=8, choices=CAB_CHOICES)
+    pickup_station = models.ForeignKey(
+        Station,
+        on_delete=models.PROTECT,
+        related_name="cab_pickups",
+    )
+    drop_address = models.CharField(max_length=240)
+    train_arrival_at = models.DateTimeField()
+    cab_arrival_at = models.DateTimeField()
+    fare = models.DecimalField(max_digits=8, decimal_places=2)
+    driver_name = models.CharField(max_length=100)
+    driver_phone = models.CharField(max_length=15)
+    vehicle_number = models.CharField(max_length=20)
+    status = models.CharField(
+        max_length=12,
+        choices=STATUS_CHOICES,
+        default="SCHEDULED",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("cab_arrival_at",)
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            while True:
+                candidate = "CAB" + "".join(secrets.choice(string.digits) for _ in range(7))
+                if not CabBooking.objects.filter(reference=candidate).exists():
+                    self.reference = candidate
+                    break
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.reference} - PNR {self.booking.pnr}"

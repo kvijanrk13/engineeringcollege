@@ -2,10 +2,10 @@
 {% block title %}Dummy Payment · ETORS{% endblock %}
 {% block content %}
 <main class="container section">
-  <p><a href="{% url 'etors:book' train.pk journey_date|date:'Y-m-d' %}">← Edit passenger details</a></p>
+  <p><a href="{% url 'etors:book' train.pk journey_date|date:'Y-m-d' %}">← Edit passenger and cab details</a></p>
   <div class="grid grid-2">
     <section class="panel">
-      <p class="muted">ETORS demonstration checkout</p>
+      <p class="muted">ETORS + BOOKMYCAB demonstration checkout</p>
       <h1>Dummy Payment</h1>
       <p class="notice"><strong>No real money will be collected.</strong> Choose any demonstration method and click Pay &amp; Reserve.</p>
       <form method="post">
@@ -15,7 +15,7 @@
           <label class="panel" style="padding:14px;cursor:pointer"><input type="radio" name="payment_method" value="CARD" required> Dummy Debit / Credit Card</label>
           <label class="panel" style="padding:14px;cursor:pointer"><input type="radio" name="payment_method" value="NETBANKING" required> Dummy Net Banking</label>
         </div>
-        <button class="btn btn-primary" style="width:100%;margin-top:20px">Pay ₹{{ total_fare }} &amp; Reserve Seat</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:20px">Pay ₹{{ total_fare }} &amp; Confirm Services</button>
       </form>
     </section>
     <aside class="panel">
@@ -25,7 +25,12 @@
       <div class="summary"><span>Journey</span><strong>{{ journey_date|date:"d F Y" }}</strong></div>
       <div class="summary"><span>Passenger</span><strong>{{ passenger_name }}</strong></div>
       <div class="summary"><span>Class</span><strong>{{ travel_class }}</strong></div>
-      <div class="summary"><span>Dummy fare</span><strong>₹{{ total_fare }}</strong></div>
+      <div class="summary"><span>Train fare</span><strong>₹{{ train_fare }}</strong></div>
+      {% if book_cab %}
+      <div class="summary"><span>BOOKMYCAB</span><strong>{{ cab_type }}</strong></div>
+      <div class="summary"><span>Cab fare</span><strong>₹{{ cab_fare }}</strong></div>
+      {% endif %}
+      <div class="summary"><span>Total dummy fare</span><strong>₹{{ total_fare }}</strong></div>
     </aside>
   </div>
 </main>

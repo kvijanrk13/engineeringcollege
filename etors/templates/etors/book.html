@@ -1,23 +1,57 @@
 {% extends "etors/base.html" %}
 {% block title %}Book {{ train.number }} · ETORS{% endblock %}
 {% block content %}
+<style>
+  .form-section { margin-top:24px; padding-top:22px; border-top:1px solid var(--line); }
+  .form-section h2 { margin:0 0 16px; font-size:1.2rem; }
+  .cab-addon { margin-top:24px; padding:20px; border:1px solid #f1c58d; border-radius:18px; background:linear-gradient(135deg,#fff9ef,#fff); }
+  .cab-toggle { display:flex; align-items:flex-start; gap:12px; cursor:pointer; }
+  .cab-toggle input { width:22px; height:22px; margin-top:3px; accent-color:var(--orange); }
+  .cab-toggle strong { display:block; color:var(--navy); font-size:1.08rem; }
+  .cab-toggle small { color:var(--muted); }
+  .cab-fields { display:none; margin-top:18px; }
+  .cab-fields.open { display:grid; }
+  .cab-badge { display:inline-block; margin-bottom:10px; padding:5px 9px; border-radius:999px; color:#9b4c0c; background:#ffead2; font-size:.75rem; font-weight:850; letter-spacing:.07em; }
+</style>
 <main class="container section">
   <p><a href="{% url 'etors:home' %}">← Back to train search</a></p>
   <div class="grid grid-2">
     <section class="panel">
-      <h1>Passenger details</h1>
-      <p class="muted">One passenger per booking in this initial release.</p>
+      <h1>Complete your reservation</h1>
+      <p class="muted">Reserve one train seat and optionally schedule BOOKMYCAB at your destination.</p>
       <form method="post">
         {% csrf_token %}
         {{ form.non_field_errors }}
-        <div class="grid grid-2">
-          {% for field in form %}
-          <div>
-            {{ field.label_tag }}{{ field }}{{ field.errors }}
+        <div class="form-section">
+          <h2>Travel and contact</h2>
+          <div class="grid grid-2">
+            <div>{{ form.travel_class.label_tag }}{{ form.travel_class }}{{ form.travel_class.errors }}</div>
+            <div>{{ form.contact_name.label_tag }}{{ form.contact_name }}{{ form.contact_name.errors }}</div>
+            <div>{{ form.contact_email.label_tag }}{{ form.contact_email }}{{ form.contact_email.errors }}</div>
+            <div>{{ form.contact_phone.label_tag }}{{ form.contact_phone }}{{ form.contact_phone.errors }}</div>
           </div>
-          {% endfor %}
         </div>
-        <button class="btn btn-primary" style="margin-top:20px">Confirm Reservation</button>
+        <div class="form-section">
+          <h2>Passenger details</h2>
+          <div class="grid grid-2">
+            <div>{{ form.passenger_name.label_tag }}{{ form.passenger_name }}{{ form.passenger_name.errors }}</div>
+            <div>{{ form.passenger_age.label_tag }}{{ form.passenger_age }}{{ form.passenger_age.errors }}</div>
+            <div>{{ form.passenger_gender.label_tag }}{{ form.passenger_gender }}{{ form.passenger_gender.errors }}</div>
+            <div>{{ form.berth_preference.label_tag }}{{ form.berth_preference }}{{ form.berth_preference.errors }}</div>
+          </div>
+        </div>
+        <div class="cab-addon">
+          <span class="cab-badge">ETORS × BOOKMYCAB</span>
+          <label class="cab-toggle" for="{{ form.book_cab.id_for_label }}">
+            {{ form.book_cab }}
+            <span><strong>Add a cab at {{ train.destination.name }}</strong><small>The cab is scheduled to reach the destination station 20 minutes before this train arrives.</small></span>
+          </label>
+          <div class="cab-fields grid grid-2" id="cab-fields">
+            <div>{{ form.cab_type.label_tag }}{{ form.cab_type }}{{ form.cab_type.errors }}</div>
+            <div>{{ form.cab_drop_address.label_tag }}{{ form.cab_drop_address }}{{ form.cab_drop_address.errors }}</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;margin-top:20px">Continue to Dummy Payment →</button>
       </form>
     </section>
     <aside class="panel">
@@ -28,8 +62,20 @@
       <div class="summary"><span>Sleeper fare</span><strong>₹{{ train.sleeper_fare }}</strong></div>
       <div class="summary"><span>AC 3 Tier fare</span><strong>₹{{ train.ac_fare }}</strong></div>
       <div class="summary"><span>Availability</span><strong class="status-confirmed">{{ available }} seats</strong></div>
-      <p class="notice">This academic prototype confirms the ticket immediately and does not collect real payment.</p>
+      <p class="notice">Train and cab reservations are academic demonstrations. No real payment, train ticket, or taxi dispatch occurs.</p>
     </aside>
   </div>
 </main>
+<script>
+  (() => {
+    const toggle = document.getElementById('{{ form.book_cab.id_for_label }}');
+    const fields = document.getElementById('cab-fields');
+    function updateCabFields() {
+      fields.classList.toggle('open', toggle.checked);
+      fields.querySelectorAll('select, textarea').forEach(field => field.required = toggle.checked);
+    }
+    toggle.addEventListener('change', updateCabFields);
+    updateCabFields();
+  })();
+</script>
 {% endblock %}

@@ -17,6 +17,9 @@ E-Ticketing – Online Reservation System is a Django railway reservation protot
   Vijayawada, and Secunderabad, with browser-based journey-date selection.
 - Simulate UPI, card, or net-banking payment, display a successful-payment
   confirmation, and reserve a dummy seat without collecting real money.
+- Integrate BOOKMYCAB as an optional destination transfer during train booking,
+  with combined dummy payment, automatic driver/vehicle assignment, and station
+  arrival scheduled 20 minutes before the train reaches its destination.
 
 This is an academic demonstration and is not affiliated with IRCTC or Indian Railways. No real payment is collected.
 

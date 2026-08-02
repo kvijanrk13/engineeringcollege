@@ -60,6 +60,11 @@ INTENT_ANSWERS = {
     "admin": (
         "Authorized administrators can manage ETORS stations, trains, bookings, and passengers through Django admin."
     ),
+    "cab": (
+        "BOOKMYCAB is integrated into ETORS. On the passenger-details page, enable Add BOOKMYCAB, choose Mini, "
+        "Sedan or SUV, and enter the destination drop address. After dummy payment, ETORS assigns a driver and "
+        "vehicle and schedules the cab at the destination station 20 minutes before train arrival."
+    ),
 }
 
 INTENT_KEYWORDS = {
@@ -73,6 +78,7 @@ INTENT_KEYWORDS = {
     "passenger": {"passenger", "berth", "gender", "age", "contact"},
     "payment": {"payment", "pay", "money", "real", "irctc"},
     "admin": {"admin", "manage", "management"},
+    "cab": {"cab", "taxi", "bookmycab", "pickup", "driver", "vehicle", "drop", "doorstep"},
 }
 
 FEATURE_WORDS = {"feature", "features", "service", "services", "help", "offer", "available", "do"}

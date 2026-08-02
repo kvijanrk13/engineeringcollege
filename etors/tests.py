@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Booking, Passenger, Station, Train
+from .models import Booking, CabBooking, Passenger, Station, Train
 from .services import train_availability
 
 
@@ -149,6 +149,84 @@ class EtorsTests(TestCase):
     def test_payment_requires_pending_booking(self):
         response = self.client.get(reverse("etors:payment"))
         self.assertRedirects(response, reverse("etors:home"))
+
+    def test_bookmycab_is_linked_scheduled_and_cancelled_with_train(self):
+        response = self.client.post(
+            reverse(
+                "etors:book",
+                args=[self.train.pk, self.journey_date.isoformat()],
+            ),
+            {
+                "travel_class": "3A",
+                "contact_name": "Meera Rao",
+                "contact_email": "meera@example.com",
+                "contact_phone": "9876543210",
+                "passenger_name": "Meera Rao",
+                "passenger_age": 31,
+                "passenger_gender": "F",
+                "berth_preference": "Lower",
+                "book_cab": "on",
+                "cab_type": "SEDAN",
+                "cab_drop_address": "MG Road, Destination City",
+            },
+        )
+        self.assertRedirects(response, reverse("etors:payment"))
+
+        payment = self.client.get(reverse("etors:payment"))
+        self.assertContains(payment, "BOOKMYCAB")
+        self.assertContains(payment, "Sedan")
+        self.assertContains(payment, "500.00")
+        self.assertContains(payment, "1200.00")
+
+        confirmation = self.client.post(
+            reverse("etors:payment"),
+            {"payment_method": "CARD"},
+        )
+        booking = Booking.objects.get(contact_email="meera@example.com")
+        cab = CabBooking.objects.get(booking=booking)
+        self.assertContains(confirmation, "BOOKMYCAB CONFIRMED")
+        self.assertEqual(booking.total_fare, Decimal("1200.00"))
+        self.assertEqual(cab.fare, Decimal("500.00"))
+        self.assertEqual(cab.pickup_station, self.train.destination)
+        self.assertEqual(cab.drop_address, "MG Road, Destination City")
+        self.assertEqual(
+            cab.train_arrival_at - cab.cab_arrival_at,
+            timedelta(minutes=20),
+        )
+        self.assertTrue(cab.driver_name)
+        self.assertTrue(cab.vehicle_number)
+
+        details = self.client.get(reverse("etors:pnr_detail", args=[booking.pnr]))
+        self.assertContains(details, cab.reference)
+        self.assertContains(details, "Cab reaches station")
+
+        self.client.post(reverse("etors:cancel_booking", args=[booking.pnr]))
+        cab.refresh_from_db()
+        self.assertEqual(cab.status, "CANCELLED")
+
+    def test_bookmycab_requires_vehicle_and_drop_address(self):
+        response = self.client.post(
+            reverse(
+                "etors:book",
+                args=[self.train.pk, self.journey_date.isoformat()],
+            ),
+            {
+                "travel_class": "SL",
+                "contact_name": "Ravi",
+                "contact_email": "ravi@example.com",
+                "contact_phone": "9876543210",
+                "passenger_name": "Ravi",
+                "passenger_age": 30,
+                "passenger_gender": "M",
+                "berth_preference": "",
+                "book_cab": "on",
+                "cab_type": "",
+                "cab_drop_address": "",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Select a BOOKMYCAB vehicle type")
+        self.assertContains(response, "Enter the destination drop address")
 
     def test_cancellation_releases_availability(self):
         booking = Booking.objects.create(

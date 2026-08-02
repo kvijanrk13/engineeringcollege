@@ -39,5 +39,28 @@
       <div class="summary"><span>Email</span><strong>{{ booking.contact_email }}</strong></div>
     </section>
   </div>
+  {% if booking.cab_booking %}
+  <section class="panel" style="margin-top:22px;border-top:5px solid var(--orange)">
+    <p class="muted">Integrated destination transfer</p>
+    <h2>BOOKMYCAB · {{ booking.cab_booking.reference }}</h2>
+    <div class="grid grid-2">
+      <div>
+        <div class="summary"><span>Status</span><strong class="{% if booking.cab_booking.status == 'CANCELLED' %}status-cancelled{% else %}status-confirmed{% endif %}">{{ booking.cab_booking.get_status_display }}</strong></div>
+        <div class="summary"><span>Pickup</span><strong>{{ booking.cab_booking.pickup_station.name }}</strong></div>
+        <div class="summary"><span>Cab reaches station</span><strong>{{ booking.cab_booking.cab_arrival_at|date:"d M Y, H:i" }}</strong></div>
+        <div class="summary"><span>Train arrival</span><strong>{{ booking.cab_booking.train_arrival_at|date:"d M Y, H:i" }}</strong></div>
+        <div class="summary"><span>Drop address</span><strong>{{ booking.cab_booking.drop_address }}</strong></div>
+      </div>
+      <div>
+        <div class="summary"><span>Cab</span><strong>{{ booking.cab_booking.get_cab_type_display }}</strong></div>
+        <div class="summary"><span>Driver</span><strong>{{ booking.cab_booking.driver_name }}</strong></div>
+        <div class="summary"><span>Driver mobile</span><strong>{{ booking.cab_booking.driver_phone }}</strong></div>
+        <div class="summary"><span>Vehicle</span><strong>{{ booking.cab_booking.vehicle_number }}</strong></div>
+        <div class="summary"><span>Dummy cab fare</span><strong>₹{{ booking.cab_booking.fare }}</strong></div>
+      </div>
+    </div>
+    <p class="notice">BOOKMYCAB is simulated for this academic project. The schedule represents the cab reaching the station 20 minutes before train arrival; no real vehicle is dispatched.</p>
+  </section>
+  {% endif %}
 </main>
 {% endblock %}
