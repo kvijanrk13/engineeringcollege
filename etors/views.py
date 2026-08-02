@@ -3,13 +3,15 @@ from datetime import date
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, JsonResponse
+from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import BookingForm, PNRForm, SearchForm
 from .models import Booking, Passenger, Train
 from .services import fare_for, seat_number, train_availability
+from .chatbot import answer_question
 
 
 def home(request):
@@ -50,6 +52,16 @@ def home(request):
             "search": search,
         },
     )
+
+
+@require_POST
+def chatbot(request):
+    question = request.POST.get("question", "").strip()
+    if not question:
+        return JsonResponse({"error": "Enter a question about ETORS."}, status=400)
+    if len(question) > 500:
+        return JsonResponse({"error": "Keep your question within 500 characters."}, status=400)
+    return JsonResponse({"answer": answer_question(question)})
 
 
 def logout_view(request):

@@ -40,6 +40,29 @@ class EtorsTests(TestCase):
         self.assertContains(response, "Test Express")
         self.assertContains(response, "Login with Gmail")
         self.assertContains(response, "target=etors")
+        self.assertContains(response, "ETORS Assistant")
+        self.assertContains(response, reverse("etors:chatbot"))
+
+    def test_chatbot_answers_current_features(self):
+        response = self.client.post(
+            reverse("etors:chatbot"),
+            {"question": "What features and services are available?"},
+        )
+        self.assertEqual(response.status_code, 200)
+        answer = response.json()["answer"]
+        self.assertIn("Route and journey-date search", answer)
+        self.assertIn("PNR generation, lookup, and cancellation", answer)
+
+    def test_chatbot_answers_booking_and_rejects_invalid_questions(self):
+        response = self.client.post(
+            reverse("etors:chatbot"),
+            {"question": "How can I book a ticket?"},
+        )
+        self.assertContains(response, "10-digit PNR")
+
+        response = self.client.post(reverse("etors:chatbot"), {"question": ""})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "Enter a question about ETORS.")
 
     def test_authenticated_navigation_and_logout(self):
         user = User.objects.create_user(

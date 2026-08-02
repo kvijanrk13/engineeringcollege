@@ -102,6 +102,32 @@
     .status-cancelled { color: var(--danger); font-weight: 850; }
     .notice { padding: 14px; border-left: 4px solid var(--orange); background: #fff8ef; }
     footer { margin-top: 56px; padding: 30px 0; color: #cbd6e6; background: var(--navy); }
+    .chat-launcher {
+      position: fixed; right: 22px; bottom: 22px; z-index: 1000;
+      width: 58px; height: 58px; border: 0; border-radius: 50%; cursor: pointer;
+      color: white; background: var(--blue); box-shadow: 0 12px 32px rgba(11,31,58,.28);
+      font-size: 25px;
+    }
+    .chat-panel {
+      position: fixed; right: 22px; bottom: 92px; z-index: 1000;
+      width: min(380px, calc(100vw - 28px)); height: min(560px, calc(100vh - 120px));
+      display: none; grid-template-rows: auto 1fr auto; overflow: hidden;
+      border: 1px solid var(--line); border-radius: 18px; background: white;
+      box-shadow: 0 20px 60px rgba(11,31,58,.25);
+    }
+    .chat-panel.open { display: grid; }
+    .chat-header { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; color:white; background:var(--navy); }
+    .chat-header small { display:block; color:#cbd6e6; }
+    .chat-close { border:0; color:white; background:transparent; cursor:pointer; font-size:22px; }
+    .chat-messages { overflow-y:auto; padding:16px; background:#f7f9fc; }
+    .chat-message { max-width:88%; margin:0 0 12px; padding:10px 12px; border-radius:14px; white-space:pre-wrap; }
+    .chat-message.bot { border-bottom-left-radius:4px; background:white; border:1px solid var(--line); }
+    .chat-message.user { margin-left:auto; border-bottom-right-radius:4px; color:white; background:var(--blue); }
+    .chat-suggestions { display:flex; gap:7px; flex-wrap:wrap; margin:2px 0 14px; }
+    .chat-suggestion { padding:6px 9px; border:1px solid #aacaf0; border-radius:999px; color:var(--blue); background:#eef5ff; cursor:pointer; font-size:.78rem; }
+    .chat-form { display:flex; gap:8px; padding:12px; border-top:1px solid var(--line); background:white; }
+    .chat-form input { min-width:0; flex:1; }
+    .chat-form button { min-height:44px; padding:9px 13px; }
     @media (max-width: 800px) {
       .grid-4, .grid-2 { grid-template-columns: 1fr; }
       .train-card { grid-template-columns: 1fr 1fr; }
@@ -155,5 +181,79 @@
       Not affiliated with IRCTC or Indian Railways.
     </div>
   </footer>
+
+  <aside class="chat-panel" id="etors-chat" aria-label="ETORS chatbot" aria-hidden="true">
+    <div class="chat-header">
+      <div><strong>ETORS Assistant</strong><small>Services and feature help</small></div>
+      <button class="chat-close" type="button" aria-label="Close chatbot">×</button>
+    </div>
+    <div class="chat-messages" aria-live="polite">
+      <div class="chat-message bot">Hello! Ask me how to search trains, book a ticket, check a PNR, or cancel a reservation.</div>
+      <div class="chat-suggestions">
+        <button class="chat-suggestion" type="button">What features are available?</button>
+        <button class="chat-suggestion" type="button">How do I book?</button>
+        <button class="chat-suggestion" type="button">How do I check PNR?</button>
+      </div>
+    </div>
+    <form class="chat-form" method="post" action="{% url 'etors:chatbot' %}">
+      {% csrf_token %}
+      <input class="form-control" name="question" maxlength="500" autocomplete="off" placeholder="Ask about ETORS…" aria-label="Question">
+      <button class="btn btn-secondary" type="submit">Send</button>
+    </form>
+  </aside>
+  <button class="chat-launcher" type="button" aria-label="Open ETORS chatbot" aria-expanded="false">💬</button>
+  <script>
+    (() => {
+      const panel = document.getElementById('etors-chat');
+      const launcher = document.querySelector('.chat-launcher');
+      const close = panel.querySelector('.chat-close');
+      const form = panel.querySelector('.chat-form');
+      const input = form.elements.question;
+      const messages = panel.querySelector('.chat-messages');
+      const submit = form.querySelector('button[type="submit"]');
+
+      function setOpen(open) {
+        panel.classList.toggle('open', open);
+        panel.setAttribute('aria-hidden', String(!open));
+        launcher.setAttribute('aria-expanded', String(open));
+        if (open) input.focus();
+      }
+      function addMessage(text, role) {
+        const message = document.createElement('div');
+        message.className = `chat-message ${role}`;
+        message.textContent = text;
+        messages.appendChild(message);
+        messages.scrollTop = messages.scrollHeight;
+      }
+      async function ask(question) {
+        const value = question.trim();
+        if (!value) return;
+        addMessage(value, 'user');
+        input.value = '';
+        submit.disabled = true;
+        const body = new FormData(form);
+        body.set('question', value);
+        try {
+          const response = await fetch(form.action, {
+            method: 'POST', body, headers: {'X-Requested-With': 'XMLHttpRequest'}
+          });
+          const data = await response.json();
+          addMessage(data.answer || data.error || 'ETORS could not answer just now.', 'bot');
+        } catch (error) {
+          addMessage('The ETORS assistant is temporarily unavailable. Please try again.', 'bot');
+        } finally {
+          submit.disabled = false;
+          input.focus();
+        }
+      }
+
+      launcher.addEventListener('click', () => setOpen(!panel.classList.contains('open')));
+      close.addEventListener('click', () => setOpen(false));
+      form.addEventListener('submit', event => { event.preventDefault(); ask(input.value); });
+      panel.querySelectorAll('.chat-suggestion').forEach(button => {
+        button.addEventListener('click', () => ask(button.textContent));
+      });
+    })();
+  </script>
 </body>
 </html>
