@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="920" viewBox="0 0 900 920" role="img" aria-labelledby="title desc">
+  <title id="title">Library Management System Class Diagram</title>
+  <desc id="desc">Class diagram showing Book, Librarian, Transaction, MemberRecord, Bill, Journals, Magzines, StudyBooks, Student and Faculty.</desc>
+  <defs>
+    <style>
+      .box{fill:#fffdb3;stroke:#8d6239;stroke-width:1.5}.rule{stroke:#8d6239;stroke-width:1.2}.link{fill:none;stroke:#7c4d4d;stroke-width:1.5}.name{font:700 18px Georgia,serif;fill:#171717;text-anchor:middle}.item{font:16px 'Times New Roman',serif;fill:#171717}.label{font:16px 'Times New Roman',serif;fill:#333;text-anchor:middle}
+    </style>
+    <marker id="inherit" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="strokeWidth">
+      <path d="M1,1 L12,7 L1,13 Z" fill="#fff" stroke="#7c4d4d" stroke-width="1.2"/>
+    </marker>
+  </defs>
+  <rect width="900" height="920" fill="#fff"/>
+
+  <!-- Relationships are drawn first so class boxes remain crisp. -->
+  <path class="link" d="M238 177 H352"/><text class="label" x="295" y="168">issues</text>
+  <path class="link" d="M500 183 H645"/><text class="label" x="572" y="174">creates</text>
+  <path class="link" d="M500 265 L686 527"/><text class="label" x="596" y="390">creates</text>
+  <path class="link" d="M711 299 V527"/><text class="label" x="751" y="418">refers</text>
+  <path class="link" d="M570 589 H665"/><text class="label" x="617" y="580">pays</text>
+  <path class="link" d="M238 267 L383 442"/><text class="label" x="318" y="372">requests</text>
+  <path class="link" d="M88 503 L119 337" marker-end="url(#inherit)"/>
+  <path class="link" d="M159 594 L158 337" marker-end="url(#inherit)"/>
+  <path class="link" d="M246 503 L208 337" marker-end="url(#inherit)"/>
+  <path class="link" d="M405 801 L421 741" marker-end="url(#inherit)"/>
+  <path class="link" d="M527 801 L506 741" marker-end="url(#inherit)"/>
+
+  <!-- Book -->
+  <g><rect class="box" x="60" y="55" width="178" height="282"/><line class="rule" x1="60" y1="92" x2="238" y2="92"/><line class="rule" x1="60" y1="272" x2="238" y2="272"/>
+    <text class="name" x="149" y="80">Book</text>
+    <text class="item" x="67" y="114">+bookId</text><text class="item" x="67" y="136">+author</text><text class="item" x="67" y="158">+name</text><text class="item" x="67" y="180">+price</text><text class="item" x="67" y="202">+rackNo</text><text class="item" x="67" y="224">+status</text><text class="item" x="67" y="246">+edition</text><text class="item" x="67" y="268">+dateOfPurchase</text>
+    <text class="item" x="67" y="296">+displayBookDetails()</text><text class="item" x="67" y="320">+updateStatus()</text>
+  </g>
+  <!-- Librarian -->
+  <g><rect class="box" x="352" y="70" width="148" height="248"/><line class="rule" x1="352" y1="107" x2="500" y2="107"/><line class="rule" x1="352" y1="157" x2="500" y2="157"/>
+    <text class="name" x="426" y="95">Librarian</text><text class="item" x="359" y="130">+name</text><text class="item" x="359" y="152">+password</text>
+    <text class="item" x="359" y="181">+searchBook()</text><text class="item" x="359" y="203">+verifyMember()</text><text class="item" x="359" y="225">+issueBook()</text><text class="item" x="359" y="247">+calculateFine()</text><text class="item" x="359" y="269">+createBill()</text><text class="item" x="359" y="291">+returnBook()</text>
+  </g>
+  <!-- Transaction -->
+  <g><rect class="box" x="645" y="60" width="190" height="239"/><line class="rule" x1="645" y1="97" x2="835" y2="97"/><line class="rule" x1="645" y1="205" x2="835" y2="205"/>
+    <text class="name" x="740" y="85">Transaction</text><text class="item" x="652" y="120">+transId</text><text class="item" x="652" y="142">+memberId</text><text class="item" x="652" y="164">+bookId</text><text class="item" x="652" y="186">+dateOfIssue</text><text class="item" x="652" y="202">+dueDate</text>
+    <text class="item" x="652" y="229">+createTransaction()</text><text class="item" x="652" y="253">+deleteTransaction()</text><text class="item" x="652" y="277">+retrieveTransaction()</text>
+  </g>
+  <!-- Specializations -->
+  <g><rect class="box" x="22" y="503" width="96" height="78"/><line class="rule" x1="22" y1="540" x2="118" y2="540"/><text class="name" x="70" y="528" font-size="16">Journals</text></g>
+  <g><rect class="box" x="117" y="594" width="92" height="82"/><line class="rule" x1="117" y1="631" x2="209" y2="631"/><text class="name" x="163" y="619" font-size="16">Magzines</text></g>
+  <g><rect class="box" x="207" y="503" width="110" height="78"/><line class="rule" x1="207" y1="540" x2="317" y2="540"/><text class="name" x="262" y="528" font-size="16">StudyBooks</text></g>
+  <!-- MemberRecord -->
+  <g><rect class="box" x="383" y="423" width="187" height="318"/><line class="rule" x1="383" y1="460" x2="570" y2="460"/><line class="rule" x1="383" y1="648" x2="570" y2="648"/>
+    <text class="name" x="476.5" y="448">MemberRecord</text><text class="item" x="390" y="483">+memberId</text><text class="item" x="390" y="505">+type</text><text class="item" x="390" y="527">+dateOfMembership</text><text class="item" x="390" y="549">+noBooksIssued</text><text class="item" x="390" y="571">+maxBookLimit</text><text class="item" x="390" y="593">+name</text><text class="item" x="390" y="615">+address</text><text class="item" x="390" y="637">+phoneNo</text>
+    <text class="item" x="390" y="662">+retriveMember()</text><text class="item" x="390" y="684">+increaseBooksIssued()</text><text class="item" x="390" y="706">+decreaseBooksIssued()</text><text class="item" x="390" y="728">+payBill()</text>
+  </g>
+  <!-- Bill -->
+  <g><rect class="box" x="665" y="527" width="120" height="193"/><line class="rule" x1="665" y1="564" x2="785" y2="564"/><line class="rule" x1="665" y1="660" x2="785" y2="660"/>
+    <text class="name" x="725" y="552">Bill</text><text class="item" x="672" y="587">+billNo</text><text class="item" x="672" y="609">+date</text><text class="item" x="672" y="631">+memberId</text><text class="item" x="672" y="653">+amount</text><text class="item" x="672" y="684">+billCreate()</text><text class="item" x="672" y="706">+billUpdate()</text>
+  </g>
+  <!-- Member specializations -->
+  <g><rect class="box" x="318" y="801" width="145" height="72"/><line class="rule" x1="318" y1="838" x2="463" y2="838"/><line class="rule" x1="318" y1="855" x2="463" y2="855"/><text class="name" x="390.5" y="826">Student</text></g>
+  <g><rect class="box" x="486" y="801" width="145" height="72"/><line class="rule" x1="486" y1="838" x2="631" y2="838"/><line class="rule" x1="486" y1="855" x2="631" y2="855"/><text class="name" x="558.5" y="826">Faculty</text></g>
+</svg>

@@ -8,7 +8,7 @@ The class diagrams use **arrowless solid associations** for Django `ForeignKey` 
 
 ## 1. Class Diagram
 
-![Complete AEC Library cross-app class diagram](/static/docs/images/relationships_diagram.svg)
+![Library management system class diagram](/static/docs/images/library_management_class_diagram.svg)
 
 The domain model spans the `library`, `student`, and Django `auth` packages. Its principal associations are:
 
