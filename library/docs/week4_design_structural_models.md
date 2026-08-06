@@ -33,7 +33,7 @@ The primary actors are Student and Librarian/Admin. Razorpay is a supporting ext
 
 ## 3. Sequence Diagram
 
-![Book issue return and fine payment sequence diagram](/static/docs/images/library_sequence_diagram.svg)
+![Book Bank LMS sequence diagram](/static/docs/images/book_bank_lms_sequence_diagram.svg)
 
 This interaction traces a complete circulation lifecycle: request creation, librarian approval, issue persistence, return and fine calculation, Razorpay order creation, signature verification, and payment persistence.
 
