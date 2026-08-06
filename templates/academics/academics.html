@@ -68,6 +68,61 @@
     .column.active .input-pin em, .column.active .sum-bit em, .column.active .carry-input em, .column.active .cout em,
     .column.done .input-pin em, .column.done .sum-bit em, .column.done .carry-input em, .column.done .cout em,
     .column.active .final-carry em, .column.done .final-carry em { display: inline-block; }
+    .signal-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .legend-swatch { display: inline-block; width: 28px; height: 5px; margin-right: 6px; border-radius: 99px; vertical-align: middle; }
+    .legend-swatch.flowing { background: linear-gradient(90deg, #23d5ff, #1677ff, #fff, #23d5ff); background-size: 200% 100%; animation: signalHorizontal .8s linear infinite; box-shadow: 0 0 8px #23d5ff; }
+    .legend-swatch.settled { background: var(--green); }
+    .legend-swatch.carrying { background: var(--red); }
+    @keyframes signalVertical {
+      from { background-position: 0 -22px; }
+      to { background-position: 0 22px; }
+    }
+    @keyframes signalHorizontal {
+      from { background-position: 100% 0; }
+      to { background-position: 0 0; }
+    }
+    @keyframes laserPulse {
+      0%, 100% { filter: drop-shadow(0 0 2px #23d5ff); opacity: .72; }
+      50% { filter: drop-shadow(0 0 10px #23d5ff); opacity: 1; }
+    }
+    @keyframes carryPulse {
+      0%, 100% { box-shadow: 0 0 2px rgba(220,53,69,.4); }
+      50% { box-shadow: 0 0 14px rgba(220,53,69,.95); }
+    }
+    .column.phase-load .input-pin::after {
+      width: 5px;
+      border-radius: 99px;
+      background: repeating-linear-gradient(to bottom, #23d5ff 0 8px, #fff 8px 13px, #1677ff 13px 20px);
+      background-size: 100% 40px;
+      animation: signalVertical .65s linear infinite;
+      box-shadow: 0 0 9px #23d5ff;
+    }
+    .column.phase-load .input-pin::before { color: #1677ff; filter: drop-shadow(0 0 5px #23d5ff); }
+    .column.phase-load .carry-input::before,
+    .column.phase-carry .cout::before {
+      height: 6px;
+      border-radius: 99px;
+      background: repeating-linear-gradient(to left, #ffefef 0 10px, #ff3557 10px 20px, #8d0018 20px 28px);
+      background-size: 56px 100%;
+      animation: signalHorizontal .62s linear infinite;
+      box-shadow: 0 0 10px #ff3557;
+    }
+    .column.phase-load .carry-input::after,
+    .column.phase-carry .cout::after { filter: drop-shadow(0 0 6px #ff3557); }
+    .column.phase-sum .fa-box { animation: laserPulse .75s ease-in-out infinite; }
+    .column.phase-sum .sum-bit::before {
+      width: 5px;
+      border-radius: 99px;
+      background: repeating-linear-gradient(to bottom, #eafff8 0 8px, #20dca0 8px 17px, #087b58 17px 23px);
+      background-size: 100% 46px;
+      animation: signalVertical .65s linear infinite;
+      box-shadow: 0 0 10px #20dca0;
+    }
+    .column.phase-sum .sum-bit::after { filter: drop-shadow(0 0 6px #20dca0); }
+    .column.phase-carry .fa-box { border-color: var(--red); animation: carryPulse .75s ease-in-out infinite; }
+    .column.phase-carry .final-carry { border-color: #ff3557; animation: carryPulse .75s ease-in-out infinite; }
+    .column.done .input-pin, .column.done .cout, .column.done .carry-input, .column.done .final-carry { color: var(--green); }
+    .column.done .input-pin::after, .column.done .sum-bit::before { background: var(--green); }
     .result { display: none; margin-top: 20px; padding: 15px 18px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; line-height: 1.6; }
     .result.show { display: block; }
     .lesson-box { margin-top: 18px; padding: 18px; border: 1px solid #b9d7ff; border-radius: 12px; background: #f5f9ff; }
@@ -145,6 +200,11 @@
 
       <div class="diagram-scroll" aria-live="polite">
         <div id="canvas"></div>
+      </div>
+      <div class="signal-legend" aria-label="Signal animation legend">
+        <span><i class="legend-swatch flowing"></i>Moving bit signal</span>
+        <span><i class="legend-swatch carrying"></i>Carry path</span>
+        <span><i class="legend-swatch settled"></i>Completed stage</span>
       </div>
       <div id="result" class="result"></div>
 
@@ -247,7 +307,7 @@
 
     function applyStageState(stage, phase, completed) {
       const node = canvas.querySelector(`[data-bit="${stage.bit}"]`);
-      node.className = `column ${completed ? 'done' : 'active'}`;
+      node.className = `column ${completed ? 'done' : `active phase-${phase}`}`;
       node.querySelector('.a-bit em').textContent = stage.aBit;
       node.querySelector('.b-bit em').textContent = stage.bBit;
       if (node.querySelector('.carry-input em')) node.querySelector('.carry-input em').textContent = stage.carryIn;
@@ -265,7 +325,7 @@
         const carryStep = lesson.steps.findIndex(step => step.type === 'carry' && step.stage === stage);
         if (carryStep < lesson.index) applyStageState(stage, 'carry', true);
       });
-      if (current.stage) applyStageState(current.stage, current.type, current.type === 'carry');
+      if (current.stage) applyStageState(current.stage, current.type, false);
       explanation.innerHTML = `<strong>${current.title}</strong><br>${current.html}`;
       stepLabel.textContent = current.title;
       stepCount.textContent = `Step ${lesson.index + 1} of ${lesson.steps.length}`;
