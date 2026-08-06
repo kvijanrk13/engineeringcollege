@@ -39,7 +39,7 @@ This interaction traces a complete circulation lifecycle: request creation, libr
 
 ## 4. Collaboration Diagram
 
-![AEC Library collaboration diagram](/static/docs/images/library_collaboration_diagram.svg)
+![Book Bank LMS collaboration diagram](/static/docs/images/book_bank_lms_collaboration_diagram.svg)
 
 The collaboration diagram presents the same runtime behavior as numbered messages between participating objects. It emphasizes object links and responsibility distribution rather than time on a vertical axis.
 

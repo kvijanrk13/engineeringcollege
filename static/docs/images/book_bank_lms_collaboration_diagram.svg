@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="747" height="795" viewBox="0 0 747 795" role="img" aria-labelledby="title desc">
+  <title id="title">Book Bank LMS collaboration diagram</title>
+  <desc id="desc">Collaboration among Librarian, Member, Book, Transaction and Bill with numbered messages for validation, details, fines, billing and record updates.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 10 5 0 10Z" fill="#970909"/></marker>
+    <style>.link{fill:none;stroke:#b32222;stroke-width:1}.msg{fill:none;stroke:#970909;stroke-width:1.1;marker-end:url(#arrow)}.obj{fill:#fffdb0;stroke:#b32222;stroke-width:1.2}.label{font:14px Arial,sans-serif;fill:#111}.heading{font:700 24px Georgia,serif;fill:#111}</style>
+  </defs>
+  <rect width="747" height="795" fill="white"/>
+  <text x="7" y="44" class="heading">3. Collaboration Diagram</text>
+  <g class="obj"><rect x="31" y="224" width="74" height="54"/><rect x="230" y="129" width="73" height="54"/><rect x="325" y="408" width="73" height="54"/><rect x="660" y="642" width="81" height="55"/><rect x="299" y="716" width="73" height="53"/></g>
+  <g class="label" text-anchor="middle" text-decoration="underline"><text x="68" y="247">: Book</text><text x="266" y="151">: Member</text><text x="361" y="431">: Librarian</text><text x="700" y="665">: Transaction</text><text x="335" y="738">: Bill</text></g>
+  <g class="link"><path d="M105 275 325 416"/><path d="M277 183 352 408"/><path d="M398 448 660 643"/><path d="M359 462 338 716"/></g>
+  <g class="msg"><path d="M354 335 338 280"/><path d="M399 319 389 273"/><path d="M505 268 488 216"/><path d="M430 381v54h11v-55"/><path d="M217 410 184 386"/><path d="M415 642v55"/><path d="M277 647 282 592"/><path d="M505 545 554 554"/></g>
+  <g class="label"><text x="285" y="312">1 : validateMember()</text><text x="519" y="524">2 : getDetails()</text><text x="338" y="271">3 : getMemberType()</text><text x="356" y="596">4</text><text x="346" y="616">&lt;&lt;create&gt;&gt;</text><text x="448" y="400">5 : calculateFine()</text><text x="378" y="665">6 : addBillDetails()</text><text x="231" y="624">7 : billPaid()</text><text x="96" y="410">8 : updateStatus()</text><text x="423" y="245">9 : updateMemberRecord()</text></g>
+</svg>
