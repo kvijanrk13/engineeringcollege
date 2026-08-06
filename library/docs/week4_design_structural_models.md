@@ -25,14 +25,6 @@ The domain model spans the `library`, `student`, and Django `auth` packages. Its
 
 `BookRecommendation` is intentionally independent because it has no foreign-key fields.
 
-### 1.1 Detailed Library Classes
-
-![Detailed Library App class diagram](/static/docs/images/library_class_diagram.svg)
-
-### 1.2 Detailed Student Classes
-
-![Detailed Student App class diagram](/static/docs/images/student_class_diagram.svg)
-
 ## 2. Use Case Diagram
 
 ![AEC Library use case diagram](/static/docs/images/library_use_case_diagram.svg)
