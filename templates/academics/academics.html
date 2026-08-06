@@ -56,6 +56,19 @@
     .column.active .bit { border-color: var(--blue); }
     .result { display: none; margin-top: 20px; padding: 15px 18px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; line-height: 1.6; }
     .result.show { display: block; }
+    .lesson-box { margin-top: 18px; padding: 18px; border: 1px solid #b9d7ff; border-radius: 12px; background: #f5f9ff; }
+    .lesson-progress { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .progress-track { height: 8px; margin: 10px 0 14px; overflow: hidden; border-radius: 99px; background: #dbeafe; }
+    .progress-bar { width: 0; height: 100%; border-radius: inherit; background: var(--blue); transition: width .35s ease; }
+    .explanation { min-height: 74px; padding: 14px; border-left: 4px solid var(--blue); border-radius: 7px; background: #fff; line-height: 1.65; }
+    .explanation strong { color: var(--navy); }
+    .playback { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .playback .btn { min-width: 96px; }
+    .btn.light { border-color: #9fb3c8; background: #fff; color: var(--navy); }
+    .btn.light:disabled { cursor: not-allowed; }
+    .binary-board { display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; margin-top: 12px; padding: 13px 16px; border-radius: 8px; background: var(--navy); color: #fff; font-family: Consolas, monospace; }
+    .binary-board .board-label { color: #b9d7ff; }
+    .binary-board .board-value { text-align: right; letter-spacing: .2em; }
     .formula-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
     .formula { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fafcff; }
     .formula strong { display: block; margin-bottom: 5px; color: var(--navy); }
@@ -99,8 +112,21 @@
         <label>Input A (decimal)<input id="aval" type="number" min="0" value="9"></label>
         <label>Input B (decimal)<input id="bval" type="number" min="0" value="6"></label>
         <label>Initial carry C₀<select id="carry-in"><option value="0">0</option><option value="1">1</option></select></label>
-        <button id="run" class="btn" type="button">Run animation</button>
+        <label>Animation pace<select id="speed"><option value="3000">Slow (3 sec)</option><option value="2200">Classroom (2.2 sec)</option><option value="1300">Normal (1.3 sec)</option></select></label>
+        <button id="run" class="btn" type="button">Start lesson</button>
         <button id="random" class="btn secondary" type="button">Random values</button>
+      </div>
+
+      <div class="lesson-box" aria-live="polite">
+        <div class="lesson-progress"><span id="step-label">Ready to begin</span><span id="step-count">Step 0 of 0</span></div>
+        <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+        <div id="explanation" class="explanation"><strong>How to use:</strong> Choose the inputs and select <em>Start lesson</em>. The animation will pause at every logical operation so you can see how carry ripples from the least-significant bit to the most-significant bit.</div>
+        <div class="playback">
+          <button id="previous" class="btn light" type="button" disabled>← Previous</button>
+          <button id="pause" class="btn light" type="button" disabled>Pause</button>
+          <button id="next" class="btn light" type="button" disabled>Next →</button>
+          <button id="replay" class="btn light" type="button" disabled>Replay</button>
+        </div>
       </div>
 
       <div class="diagram-scroll" aria-live="polite">
@@ -120,12 +146,21 @@
     const canvas = document.getElementById('canvas');
     const result = document.getElementById('result');
     const runButton = document.getElementById('run');
-    let animationTimers = [];
+    const pauseButton = document.getElementById('pause');
+    const previousButton = document.getElementById('previous');
+    const nextButton = document.getElementById('next');
+    const replayButton = document.getElementById('replay');
+    const explanation = document.getElementById('explanation');
+    const stepLabel = document.getElementById('step-label');
+    const stepCount = document.getElementById('step-count');
+    const progressBar = document.getElementById('progress-bar');
+    let lesson = null;
+    let timer = null;
+    let playing = false;
 
-    function clearTimers() {
-      animationTimers.forEach(clearTimeout);
-      animationTimers = [];
-      runButton.disabled = false;
+    function stopTimer() {
+      clearTimeout(timer);
+      timer = null;
     }
 
     function buildLayout(size) {
@@ -160,46 +195,98 @@
       return { size, max, a, b, carry: Number(document.getElementById('carry-in').value) };
     }
 
-    function runAnimation() {
-      clearTimers();
-      const { size, a, b, carry: initialCarry } = readInputs();
-      buildLayout(size);
-      runButton.disabled = true;
-      let carry = initialCarry;
+    function createLesson() {
+      const values = readInputs();
+      let carry = values.carry;
       const stages = [];
-
-      for (let bit = 0; bit < size; bit += 1) {
-        const aBit = (a >> bit) & 1;
-        const bBit = (b >> bit) & 1;
+      for (let bit = 0; bit < values.size; bit += 1) {
+        const aBit = (values.a >> bit) & 1;
+        const bBit = (values.b >> bit) & 1;
         const carryIn = carry;
-        const sum = aBit ^ bBit ^ carryIn;
-        carry = (aBit & bBit) | (carryIn & (aBit ^ bBit));
-        stages.push({ bit, aBit, bBit, carryIn, sum, carryOut: carry });
+        const xor = aBit ^ bBit;
+        const sum = xor ^ carryIn;
+        const generate = aBit & bBit;
+        const propagate = carryIn & xor;
+        carry = generate | propagate;
+        stages.push({ bit, aBit, bBit, carryIn, xor, sum, generate, propagate, carryOut: carry });
       }
-
-      stages.forEach((data, index) => {
-        animationTimers.push(setTimeout(() => {
-          const stage = canvas.querySelector(`[data-bit="${data.bit}"]`);
-          stage.classList.add('active');
-          stage.querySelector('.a-bit').innerHTML = `<small>A${data.bit}</small>${data.aBit}`;
-          stage.querySelector('.b-bit').innerHTML = `<small>B${data.bit}</small>${data.bBit}`;
-          stage.querySelector('.cin').textContent = `C${data.bit} = ${data.carryIn}`;
-          stage.querySelector('.sum-bit').innerHTML = `<small>S${data.bit}</small>${data.sum}`;
-          stage.querySelector('.cout').textContent = `C${data.bit + 1} = ${data.carryOut}`;
-          if (index > 0) canvas.querySelector(`[data-bit="${data.bit - 1}"]`).classList.replace('active', 'done');
-        }, index * 850));
+      const steps = [
+        { type: 'intro', title: '1. Convert and align the operands', html: `The augend <strong>A = ${values.a}</strong> and addend <strong>B = ${values.b}</strong> are represented as ${values.size}-bit binary words. Subscript 0 is the rightmost, least-significant bit.<div class="binary-board"><span class="board-label">A</span><span class="board-value">${values.a.toString(2).padStart(values.size, '0')}</span><span class="board-label">B</span><span class="board-value">${values.b.toString(2).padStart(values.size, '0')}</span><span class="board-label">C₀</span><span class="board-value">${values.carry}</span></div>` },
+        { type: 'structure', title: '2. Observe the parallel-adder structure', html: `A ${values.size}-bit binary parallel adder requires <strong>${values.size} full adders</strong>. All A and B bits enter together, but each stage must wait for the carry from the stage on its right. That carry dependency is why it is called a <strong>ripple-carry adder</strong>.` }
+      ];
+      stages.forEach(stage => {
+        steps.push({ type: 'load', stage, title: `Stage ${stage.bit}: apply three input bits`, html: `Full adder FA${stage.bit} receives <strong>A${stage.bit} = ${stage.aBit}</strong>, <strong>B${stage.bit} = ${stage.bBit}</strong>, and the previous carry <strong>C${stage.bit} = ${stage.carryIn}</strong>.` });
+        steps.push({ type: 'sum', stage, title: `Stage ${stage.bit}: calculate the sum bit`, html: `<strong>S${stage.bit} = A${stage.bit} ⊕ B${stage.bit} ⊕ C${stage.bit}</strong><br>S${stage.bit} = ${stage.aBit} ⊕ ${stage.bBit} ⊕ ${stage.carryIn} = <strong>${stage.sum}</strong>. XOR produces 1 when an odd number of the three inputs is 1.` });
+        steps.push({ type: 'carry', stage, title: `Stage ${stage.bit}: calculate and ripple the carry`, html: `<strong>C${stage.bit + 1} = A${stage.bit}B${stage.bit} + C${stage.bit}(A${stage.bit} ⊕ B${stage.bit})</strong><br>C${stage.bit + 1} = (${stage.aBit}·${stage.bBit}) + ${stage.carryIn}·(${stage.aBit}⊕${stage.bBit}) = ${stage.generate} + ${stage.propagate} = <strong>${stage.carryOut}</strong>. ${stage.bit < values.size - 1 ? `This now becomes the carry input of FA${stage.bit + 1}.` : 'This is the final output carry.'}` });
       });
+      const total = values.a + values.b + values.carry;
+      steps.push({ type: 'finish', title: 'Complete: read the parallel sum', html: `All carry signals have settled. Read <strong>C${values.size} S${values.size - 1}…S₀</strong> from left to right.<div class="binary-board"><span class="board-label">Binary result</span><span class="board-value">${total.toString(2).padStart(values.size, '0')}</span><span class="board-label">Decimal result</span><span class="board-value">${values.a} + ${values.b} + ${values.carry} = ${total}</span></div>` });
+      return { ...values, stages, steps, index: -1 };
+    }
 
-      animationTimers.push(setTimeout(() => {
-        const lastStage = canvas.querySelector(`[data-bit="${size - 1}"]`);
-        lastStage.classList.replace('active', 'done');
-        const total = a + b + initialCarry;
-        const binary = total.toString(2).padStart(size, '0');
-        result.innerHTML = `<strong>Result:</strong> ${a} + ${b} + C₀(${initialCarry}) = <strong>${total}</strong><br>` +
-          `<strong>Binary:</strong> ${a.toString(2).padStart(size, '0')} + ${b.toString(2).padStart(size, '0')} + ${initialCarry} = <strong>${binary}</strong>`;
+    function resetDiagram() {
+      buildLayout(lesson.size);
+      result.classList.remove('show');
+    }
+
+    function applyStageState(stage, phase, completed) {
+      const node = canvas.querySelector(`[data-bit="${stage.bit}"]`);
+      node.className = `column ${completed ? 'done' : 'active'}`;
+      node.querySelector('.a-bit').innerHTML = `<small>A${stage.bit}</small>${stage.aBit}`;
+      node.querySelector('.b-bit').innerHTML = `<small>B${stage.bit}</small>${stage.bBit}`;
+      node.querySelector('.cin').textContent = `C${stage.bit} = ${stage.carryIn}`;
+      if (phase === 'sum' || phase === 'carry' || completed) node.querySelector('.sum-bit').innerHTML = `<small>S${stage.bit}</small>${stage.sum}`;
+      if (phase === 'carry' || completed) node.querySelector('.cout').textContent = `C${stage.bit + 1} = ${stage.carryOut}`;
+    }
+
+    function renderStep() {
+      resetDiagram();
+      const current = lesson.steps[lesson.index];
+      lesson.stages.forEach(stage => {
+        const carryStep = lesson.steps.findIndex(step => step.type === 'carry' && step.stage === stage);
+        if (carryStep < lesson.index) applyStageState(stage, 'carry', true);
+      });
+      if (current.stage) applyStageState(current.stage, current.type, current.type === 'carry');
+      explanation.innerHTML = `<strong>${current.title}</strong><br>${current.html}`;
+      stepLabel.textContent = current.title;
+      stepCount.textContent = `Step ${lesson.index + 1} of ${lesson.steps.length}`;
+      progressBar.style.width = `${((lesson.index + 1) / lesson.steps.length) * 100}%`;
+      previousButton.disabled = lesson.index === 0;
+      nextButton.disabled = lesson.index === lesson.steps.length - 1;
+      replayButton.disabled = false;
+      if (current.type === 'finish') {
+        result.innerHTML = `<strong>Register transfer result:</strong> S ← A + B + C₀ = ${lesson.a + lesson.b + lesson.carry}`;
         result.classList.add('show');
-        runButton.disabled = false;
-      }, stages.length * 850));
+        playing = false;
+        pauseButton.textContent = 'Play';
+      }
+    }
+
+    function scheduleNext() {
+      stopTimer();
+      if (!playing || lesson.index >= lesson.steps.length - 1) return;
+      timer = setTimeout(() => { lesson.index += 1; renderStep(); scheduleNext(); }, Number(document.getElementById('speed').value));
+    }
+
+    function startLesson() {
+      stopTimer();
+      lesson = createLesson();
+      lesson.index = 0;
+      playing = true;
+      pauseButton.disabled = false;
+      pauseButton.textContent = 'Pause';
+      runButton.textContent = 'Restart lesson';
+      renderStep();
+      scheduleNext();
+    }
+
+    function moveStep(offset) {
+      if (!lesson) return;
+      playing = false;
+      stopTimer();
+      pauseButton.textContent = 'Play';
+      lesson.index = Math.max(0, Math.min(lesson.steps.length - 1, lesson.index + offset));
+      renderStep();
     }
 
     document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
@@ -209,14 +296,24 @@
       tab.setAttribute('aria-selected', 'true');
       document.getElementById(tab.dataset.panel).classList.add('active');
     }));
-    document.getElementById('bits').addEventListener('change', event => { clearTimers(); buildLayout(Number(event.target.value)); });
-    runButton.addEventListener('click', runAnimation);
+    document.getElementById('bits').addEventListener('change', event => { stopTimer(); lesson = null; playing = false; buildLayout(Number(event.target.value)); });
+    runButton.addEventListener('click', startLesson);
+    pauseButton.addEventListener('click', () => {
+      if (!lesson) return;
+      playing = !playing;
+      pauseButton.textContent = playing ? 'Pause' : 'Play';
+      if (playing) scheduleNext(); else stopTimer();
+    });
+    previousButton.addEventListener('click', () => moveStep(-1));
+    nextButton.addEventListener('click', () => moveStep(1));
+    replayButton.addEventListener('click', startLesson);
+    document.getElementById('speed').addEventListener('change', () => { if (playing) scheduleNext(); });
     document.getElementById('random').addEventListener('click', () => {
       const size = Number(document.getElementById('bits').value);
       const max = (2 ** size) - 1;
       document.getElementById('aval').value = Math.floor(Math.random() * (max + 1));
       document.getElementById('bval').value = Math.floor(Math.random() * (max + 1));
-      runAnimation();
+      startLesson();
     });
 
     buildLayout(4);
