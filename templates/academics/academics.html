@@ -1,140 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Academics — Binary Parallel Adder</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Academics | COA Learning Lab</title>
   <style>
-    body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222}
-    h1{margin-bottom:8px}
-    .panel{border:1px solid #ddd;padding:16px;border-radius:6px;background:#fafafa}
-    .controls{margin:12px 0}
-    .bits{display:flex;gap:12px;align-items:end;justify-content:flex-end}
-    .column{display:flex;flex-direction:column;align-items:center}
-    .bit{width:56px;height:36px;border-radius:6px;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;background:white}
-    .label{font-size:12px;color:#555;margin-bottom:6px}
-    .fa-box{width:90px;height:90px;border-radius:8px;border:2px solid #ccc;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
-    .fa-title{font-size:12px;color:#444}
-    .active{box-shadow:0 0 12px rgba(60,120,200,.4);border-color:#3c78c8}
-    .carry{font-weight:700;color:#c0392b}
-    .sum{font-weight:700;color:#117a65}
-    .row{display:flex;align-items:center;gap:12px;margin:6px 0}
-    .btn{padding:8px 12px;border-radius:6px;border:1px solid #3c78c8;background:#3c78c8;color:white;cursor:pointer}
-    .btn:disabled{opacity:.5;cursor:default}
-    .legend{margin-top:12px;font-size:13px;color:#555}
+    :root {
+      --navy: #102a43;
+      --blue: #1677ff;
+      --blue-soft: #eaf3ff;
+      --green: #0f9d72;
+      --red: #dc3545;
+      --ink: #243b53;
+      --muted: #627d98;
+      --line: #d9e2ec;
+      --surface: #fff;
+      --page: #f3f7fb;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); font-family: Inter, Arial, sans-serif; }
+    .page { width: min(1180px, calc(100% - 32px)); margin: 32px auto; }
+    .hero { padding: 28px; border-radius: 18px 18px 0 0; color: #fff; background: linear-gradient(120deg, var(--navy), #1557a0); }
+    .eyebrow { margin: 0 0 8px; color: #b9d7ff; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); }
+    .hero p:last-child { max-width: 720px; margin: 10px 0 0; color: #dbeafe; line-height: 1.6; }
+    .tabs { display: flex; gap: 8px; padding: 14px 20px 0; background: var(--surface); border-inline: 1px solid var(--line); overflow-x: auto; }
+    .tab { padding: 12px 24px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted); font: inherit; font-weight: 700; cursor: pointer; }
+    .tab:hover { color: var(--blue); background: var(--blue-soft); }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-panel { display: none; padding: 26px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 18px 18px; background: var(--surface); box-shadow: 0 12px 30px rgba(16,42,67,.08); }
+    .tab-panel.active { display: block; }
+    .topic-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 20px; }
+    .topic-head h2 { margin: 0 0 6px; color: var(--navy); }
+    .topic-head p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .video-link { white-space: nowrap; color: var(--blue); font-weight: 700; text-decoration: none; }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbff; }
+    label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    input, select { min-height: 40px; padding: 8px 10px; border: 1px solid #bcccdc; border-radius: 7px; background: #fff; color: var(--ink); font: inherit; }
+    .btn { min-height: 40px; padding: 8px 16px; border: 1px solid var(--blue); border-radius: 7px; background: var(--blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    .btn.secondary { border-color: #6b7c93; background: #6b7c93; }
+    .btn:disabled { opacity: .55; cursor: wait; }
+    .diagram-scroll { margin-top: 20px; padding: 20px 8px 8px; overflow-x: auto; }
+    .bits { display: flex; width: max-content; min-width: 100%; gap: 16px; justify-content: center; align-items: flex-start; }
+    .column { position: relative; display: grid; justify-items: center; gap: 7px; min-width: 112px; }
+    .stage-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .inputs { display: flex; gap: 6px; }
+    .bit { display: grid; place-items: center; width: 48px; height: 38px; border: 1px solid #bcccdc; border-radius: 7px; background: #fff; font-family: Consolas, monospace; font-weight: 700; }
+    .bit small { margin-right: 2px; color: var(--muted); font-size: 9px; }
+    .fa-box { display: grid; place-items: center; width: 100px; height: 82px; border: 2px solid #9fb3c8; border-radius: 12px; background: #f5f8fb; color: var(--navy); text-align: center; font-weight: 800; transition: .25s; }
+    .carry-row { display: flex; align-items: center; color: var(--red); font-family: Consolas, monospace; font-size: 13px; font-weight: 700; }
+    .carry-arrow { margin-left: 5px; font-size: 18px; }
+    .sum-bit { border-color: #80cbb4; color: var(--green); }
+    .column.active .fa-box { border-color: var(--blue); background: var(--blue-soft); box-shadow: 0 0 0 5px rgba(22,119,255,.12); transform: translateY(-2px); }
+    .column.done .fa-box { border-color: var(--green); background: #ebfaf5; }
+    .column.active .bit { border-color: var(--blue); }
+    .result { display: none; margin-top: 20px; padding: 15px 18px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; line-height: 1.6; }
+    .result.show { display: block; }
+    .formula-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+    .formula { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fafcff; }
+    .formula strong { display: block; margin-bottom: 5px; color: var(--navy); }
+    .formula code { color: #7c3aed; }
+    @media (max-width: 700px) {
+      .page { width: min(100% - 16px, 1180px); margin: 8px auto; }
+      .hero, .tab-panel { padding: 20px; }
+      .topic-head { display: block; }
+      .video-link { display: inline-block; margin-top: 10px; }
+      .formula-grid { grid-template-columns: 1fr; }
+      .bits { justify-content: flex-start; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
   </style>
 </head>
 <body>
-  <h1>Binary Parallel Adder (Animated)</h1>
-  <div class="panel">
-    <p>Visual demonstration of a 4-bit binary parallel (ripple-carry) adder built from full adders. Enter two values and watch carries propagate.</p>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Interactive Learning</p>
+      <h1>Academics</h1>
+      <p>Explore engineering subjects through visual, step-by-step demonstrations.</p>
+    </header>
 
-    <div class="controls">
-      <label>Bits: <select id="bits"><option>4</option><option>5</option><option>6</option><option>8</option></select></label>
-      <label style="margin-left:12px">A: <input id="aval" value="9" size="4"></label>
-      <label style="margin-left:12px">B: <input id="bval" value="6" size="4"></label>
-      <button id="run" class="btn">Animate</button>
-      <button id="random" class="btn" style="background:#6c5ce7;border-color:#6c5ce7;margin-left:8px">Random</button>
-    </div>
+    <nav class="tabs" role="tablist" aria-label="Academic subjects">
+      <button class="tab active" id="coa-tab" role="tab" aria-selected="true" aria-controls="coa-panel" data-panel="coa-panel">COA</button>
+    </nav>
 
-    <div id="canvas"></div>
+    <section class="tab-panel active" id="coa-panel" role="tabpanel" aria-labelledby="coa-tab">
+      <div class="topic-head">
+        <div>
+          <h2>Binary Parallel Adder</h2>
+          <p>Computer Organization and Architecture — arithmetic microoperations using a ripple-carry chain of full adders.</p>
+        </div>
+        <a class="video-link" href="https://www.youtube.com/watch?v=oqU57MIQZSo" target="_blank" rel="noopener noreferrer">View source lesson ↗</a>
+      </div>
 
-    <div class="legend">Legend: <span class="carry">Carry</span> <span style="margin-left:8px" class="sum">Sum</span></div>
-  </div>
+      <div class="controls">
+        <label>Word size
+          <select id="bits"><option value="4">4 bits</option><option value="5">5 bits</option><option value="6">6 bits</option><option value="8">8 bits</option></select>
+        </label>
+        <label>Input A (decimal)<input id="aval" type="number" min="0" value="9"></label>
+        <label>Input B (decimal)<input id="bval" type="number" min="0" value="6"></label>
+        <label>Initial carry C₀<select id="carry-in"><option value="0">0</option><option value="1">1</option></select></label>
+        <button id="run" class="btn" type="button">Run animation</button>
+        <button id="random" class="btn secondary" type="button">Random values</button>
+      </div>
+
+      <div class="diagram-scroll" aria-live="polite">
+        <div id="canvas"></div>
+      </div>
+      <div id="result" class="result"></div>
+
+      <div class="formula-grid">
+        <div class="formula"><strong>Sum at stage i</strong><code>Sᵢ = Aᵢ ⊕ Bᵢ ⊕ Cᵢ</code></div>
+        <div class="formula"><strong>Carry output</strong><code>Cᵢ₊₁ = AᵢBᵢ + Cᵢ(Aᵢ ⊕ Bᵢ)</code></div>
+        <div class="formula"><strong>Ripple action</strong><span>Each carry output becomes the next stage's carry input.</span></div>
+      </div>
+    </section>
+  </main>
 
   <script>
-    function el(tag, cls){const d=document.createElement(tag); if(cls) d.className=cls; return d}
+    const canvas = document.getElementById('canvas');
+    const result = document.getElementById('result');
+    const runButton = document.getElementById('run');
+    let animationTimers = [];
 
-    function buildLayout(n){const c=document.getElementById('canvas'); c.innerHTML='';
-      const rows=['A','B','Cin','FA','Sum','Cout'];
-      // Header labels
-      const container=document.createElement('div'); container.style.marginTop='16px';
-      // Bits columns
-      const bitsWrap=document.createElement('div'); bitsWrap.className='bits';
-      for(let i=n-1;i>=0;i--){
-        const col=el('div','column');
-        const lbl=el('div','label'); lbl.textContent='bit '+i; col.appendChild(lbl);
-        // A
-        col.appendChild(el('div','bit a-bit'));
-        col.appendChild(el('div','bit b-bit'));
-        col.appendChild(el('div','bit cin-bit'));
-        const fa=el('div','fa-box'); fa.innerHTML='<div class="fa-title">Full<br>Adder</div>'; col.appendChild(fa);
-        col.appendChild(el('div','bit sum-bit'));
-        col.appendChild(el('div','bit cout-bit'));
-        bitsWrap.appendChild(col);
-      }
-      container.appendChild(bitsWrap);
-      c.appendChild(container);
+    function clearTimers() {
+      animationTimers.forEach(clearTimeout);
+      animationTimers = [];
+      runButton.disabled = false;
     }
 
-    function animateAddition(A,B,n){
-      const canvas=document.getElementById('canvas');
-      const cols=canvas.querySelectorAll('.column');
-      const bitsA = A.toString(2).padStart(n,'0').split('').reverse().map(Number);
-      const bitsB = B.toString(2).padStart(n,'0').split('').reverse().map(Number);
-      // fill bits into DOM
-      cols.forEach((col, idx)=>{
-        const i=n-1-idx; // left-to-right col idx
+    function buildLayout(size) {
+      canvas.innerHTML = '';
+      result.classList.remove('show');
+      const wrap = document.createElement('div');
+      wrap.className = 'bits';
+      for (let bit = size - 1; bit >= 0; bit -= 1) {
+        const stage = document.createElement('div');
+        stage.className = 'column';
+        stage.dataset.bit = bit;
+        stage.innerHTML = `
+          <div class="stage-label">Stage ${bit} ${bit === 0 ? '(LSB)' : bit === size - 1 ? '(MSB)' : ''}</div>
+          <div class="inputs"><div class="bit a-bit"><small>A${bit}</small>–</div><div class="bit b-bit"><small>B${bit}</small>–</div></div>
+          <div class="carry-row"><span class="cin">C${bit} = –</span><span class="carry-arrow">→</span></div>
+          <div class="fa-box">FULL<br>ADDER</div>
+          <div class="bit sum-bit"><small>S${bit}</small>–</div>
+          <div class="carry-row cout">C${bit + 1} = –</div>`;
+        wrap.appendChild(stage);
+      }
+      canvas.appendChild(wrap);
+    }
+
+    function readInputs() {
+      const size = Number(document.getElementById('bits').value);
+      const max = (2 ** size) - 1;
+      const normalize = id => Math.max(0, Math.min(max, Number.parseInt(document.getElementById(id).value, 10) || 0));
+      const a = normalize('aval');
+      const b = normalize('bval');
+      document.getElementById('aval').value = a;
+      document.getElementById('bval').value = b;
+      return { size, max, a, b, carry: Number(document.getElementById('carry-in').value) };
+    }
+
+    function runAnimation() {
+      clearTimers();
+      const { size, a, b, carry: initialCarry } = readInputs();
+      buildLayout(size);
+      runButton.disabled = true;
+      let carry = initialCarry;
+      const stages = [];
+
+      for (let bit = 0; bit < size; bit += 1) {
+        const aBit = (a >> bit) & 1;
+        const bBit = (b >> bit) & 1;
+        const carryIn = carry;
+        const sum = aBit ^ bBit ^ carryIn;
+        carry = (aBit & bBit) | (carryIn & (aBit ^ bBit));
+        stages.push({ bit, aBit, bBit, carryIn, sum, carryOut: carry });
+      }
+
+      stages.forEach((data, index) => {
+        animationTimers.push(setTimeout(() => {
+          const stage = canvas.querySelector(`[data-bit="${data.bit}"]`);
+          stage.classList.add('active');
+          stage.querySelector('.a-bit').innerHTML = `<small>A${data.bit}</small>${data.aBit}`;
+          stage.querySelector('.b-bit').innerHTML = `<small>B${data.bit}</small>${data.bBit}`;
+          stage.querySelector('.cin').textContent = `C${data.bit} = ${data.carryIn}`;
+          stage.querySelector('.sum-bit').innerHTML = `<small>S${data.bit}</small>${data.sum}`;
+          stage.querySelector('.cout').textContent = `C${data.bit + 1} = ${data.carryOut}`;
+          if (index > 0) canvas.querySelector(`[data-bit="${data.bit - 1}"]`).classList.replace('active', 'done');
+        }, index * 850));
       });
-      // We'll animate LSB -> MSB to show carry ripple
-      let carry=0; let delay=0; const stepDelay=900;
-      for(let i=0;i<n;i++){
-        ((i,carryLocal)=>{
-          setTimeout(()=>{
-            const colIdx = n-1-i; // columns were built MSB..LSB left->right
-            const col = cols[colIdx];
-            const aBit = bitsA[i]; const bBit = bitsB[i];
-            // set values
-            col.querySelector('.a-bit').textContent = aBit;
-            col.querySelector('.b-bit').textContent = bBit;
-            col.querySelector('.cin-bit').textContent = carryLocal;
-            // highlight active
-            col.querySelector('.fa-box').classList.add('active');
-            col.querySelector('.a-bit').classList.add('active');
-            col.querySelector('.b-bit').classList.add('active');
-            col.querySelector('.cin-bit').classList.add('active');
-            // compute
-            const sum = (aBit ^ bBit ^ carryLocal);
-            const cout = ((aBit & bBit) | (bBit & carryLocal) | (aBit & carryLocal))?1:0;
-            setTimeout(()=>{
-              col.querySelector('.sum-bit').textContent = sum; col.querySelector('.sum-bit').classList.add('sum','active');
-              col.querySelector('.cout-bit').textContent = cout; col.querySelector('.cout-bit').classList.add('carry','active');
-            },250);
-            // remove highlight later
-            setTimeout(()=>{
-              col.querySelector('.fa-box').classList.remove('active');
-              col.querySelector('.a-bit').classList.remove('active');
-              col.querySelector('.b-bit').classList.remove('active');
-              col.querySelector('.cin-bit').classList.remove('active');
-            },700);
-            // next carry becomes current cout
-            carry = cout;
-          }, delay);
-        })(i,carry);
-        delay += stepDelay;
-      }
-      // final overflow display
-      setTimeout(()=>{
-        // leftmost column is cols[0]
-        const overflow=document.createElement('div'); overflow.style.marginTop='12px'; overflow.innerHTML='<strong>Result:</strong> '+ (A+B) + ' (decimal), binary: '+ (A+B).toString(2);
-        canvas.appendChild(overflow);
-      }, delay+200);
+
+      animationTimers.push(setTimeout(() => {
+        const lastStage = canvas.querySelector(`[data-bit="${size - 1}"]`);
+        lastStage.classList.replace('active', 'done');
+        const total = a + b + initialCarry;
+        const binary = total.toString(2).padStart(size, '0');
+        result.innerHTML = `<strong>Result:</strong> ${a} + ${b} + C₀(${initialCarry}) = <strong>${total}</strong><br>` +
+          `<strong>Binary:</strong> ${a.toString(2).padStart(size, '0')} + ${b.toString(2).padStart(size, '0')} + ${initialCarry} = <strong>${binary}</strong>`;
+        result.classList.add('show');
+        runButton.disabled = false;
+      }, stages.length * 850));
     }
 
-    document.getElementById('run').addEventListener('click', ()=>{
-      const n = parseInt(document.getElementById('bits').value,10);
-      const A = Math.max(0,Math.min( (1<<n)-1, parseInt(document.getElementById('aval').value)||0 ));
-      const B = Math.max(0,Math.min( (1<<n)-1, parseInt(document.getElementById('bval').value)||0 ));
-      buildLayout(n);
-      animateAddition(A,B,n);
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(item => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      document.getElementById(tab.dataset.panel).classList.add('active');
+    }));
+    document.getElementById('bits').addEventListener('change', event => { clearTimers(); buildLayout(Number(event.target.value)); });
+    runButton.addEventListener('click', runAnimation);
+    document.getElementById('random').addEventListener('click', () => {
+      const size = Number(document.getElementById('bits').value);
+      const max = (2 ** size) - 1;
+      document.getElementById('aval').value = Math.floor(Math.random() * (max + 1));
+      document.getElementById('bval').value = Math.floor(Math.random() * (max + 1));
+      runAnimation();
     });
 
-    document.getElementById('random').addEventListener('click', ()=>{
-      const n = parseInt(document.getElementById('bits').value,10);
-      const max = (1<<n)-1; document.getElementById('aval').value = Math.floor(Math.random()*(max+1)); document.getElementById('bval').value = Math.floor(Math.random()*(max+1));
-    });
-
-    // initial build
     buildLayout(4);
   </script>
 </body>
