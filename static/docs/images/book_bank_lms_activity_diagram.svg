@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="672" height="871" viewBox="0 0 672 871" role="img" aria-labelledby="title desc">
+  <title id="title">Book Bank LMS activity diagram</title>
+  <desc id="desc">Activity flow for validating a member, obtaining issue details, calculating and collecting a fine, then updating book and member issue records.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10Z" fill="none" stroke="#8c2020"/></marker>
+    <style>.node{fill:#fffdb0;stroke:#9e3939;stroke-width:1.1}.flow{fill:none;stroke:#8c2020;stroke-width:1.1;marker-end:url(#arrow)}.txt{font:13px Georgia,serif;fill:#111;text-anchor:middle}.guard{font:13px Georgia,serif;fill:#111}.heading{font:700 21px Georgia,serif;fill:#111}</style>
+  </defs>
+  <rect width="672" height="871" fill="white"/>
+  <text x="7" y="39" class="heading">5. Activity Diagram</text>
+  <circle cx="145" cy="115" r="10" fill="#a50000"/><path class="flow" d="M145 125 147 154"/>
+  <g class="node"><rect x="88" y="154" width="121" height="40" rx="20"/><path d="M93 253 153 233 213 253 153 275Z"/><rect x="32" y="318" width="243" height="34" rx="17"/><rect x="364" y="228" width="127" height="35" rx="18"/><rect x="351" y="297" width="159" height="31" rx="16"/><rect x="351" y="354" width="169" height="31" rx="16"/><path d="M361 433 431 414 502 433 431 452Z"/><rect x="343" y="493" width="194" height="31" rx="16"/><rect x="351" y="559" width="178" height="31" rx="16"/><rect x="343" y="633" width="190" height="33" rx="17"/><rect x="351" y="701" width="185" height="35" rx="18"/><rect x="313" y="768" width="265" height="33" rx="17"/></g>
+  <g class="txt"><text x="148" y="178">Validate member</text><text x="153" y="340">Display message "Not a valid member"</text><text x="428" y="250">Get issue details</text><text x="431" y="318">Get member type</text><text x="436" y="375">Calculate fine</text><text x="440" y="514">Add fine,member details to bill</text><text x="440" y="580">Create bill</text><text x="438" y="654">Collect fine</text><text x="444" y="723">Update book status</text><text x="445" y="790">Update number of books issued to member</text></g>
+  <g class="flow"><path d="M148 194 151 233"/><path d="M213 253H364"/><path d="M153 275 154 318"/><path d="M154 352 158 399"/><path d="M428 263 429 297"/><path d="M431 328 434 354"/><path d="M435 385 431 414"/><path d="M431 452 438 493"/><path d="M440 524V559"/><path d="M440 590 439 633"/><path d="M439 666 443 701"/><path d="M444 736 445 768"/><path d="M445 801 445 824"/><path d="M502 433H660V718H536"/></g>
+  <g class="guard"><text x="246" y="247">[valid member]</text><text x="96" y="306">[else]</text><text x="397" y="481">[else]</text><text x="568" y="423">[no fine]</text></g>
+  <circle cx="159" cy="411" r="12" fill="white" stroke="#9e3939" stroke-width="1.4"/><circle cx="159" cy="411" r="7" fill="#a50000"/><circle cx="445" cy="834" r="12" fill="white" stroke="#9e3939" stroke-width="1.4"/><circle cx="445" cy="834" r="7" fill="#a50000"/>
+</svg>

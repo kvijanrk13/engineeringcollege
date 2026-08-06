@@ -51,7 +51,7 @@ The state machine models an `Issue` record through Requested, Issued, Overdue, R
 
 ## 6. Activity Diagram
 
-![Borrow return and fine processing activity diagram](/static/docs/images/library_activity_diagram.svg)
+![Book Bank LMS activity diagram](/static/docs/images/book_bank_lms_activity_diagram.svg)
 
 Swimlanes separate Student, Django System, and Librarian/Payment Gateway responsibilities across login, selection, approval, return, fine calculation, and transaction closure.
 
