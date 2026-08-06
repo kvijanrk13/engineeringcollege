@@ -45,7 +45,7 @@ The collaboration diagram presents the same runtime behavior as numbered message
 
 ## 5. Statechart Diagram
 
-![Issue lifecycle statechart diagram](/static/docs/images/library_statechart_diagram.svg)
+![Book Bank LMS statechart diagram](/static/docs/images/book_bank_lms_statechart_diagram.svg)
 
 The state machine models an `Issue` record through Requested, Issued, Overdue, Returned, Fine Outstanding, Closed, and cancellation paths. Guards correspond to `issued`, `returned`, `return_date`, `Fine.amount`, and `Fine.paid`.
 

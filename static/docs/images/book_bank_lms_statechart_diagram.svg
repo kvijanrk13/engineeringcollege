@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="670" height="861" viewBox="0 0 670 861" role="img" aria-labelledby="title desc">
+  <title id="title">Book Bank LMS statechart diagram</title>
+  <desc id="desc">Statechart from member registration through requesting, issuing and returning a book, including unavailable-book and completion paths.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 10 5 0 10Z" fill="none" stroke="#a41414" stroke-width="1.2"/></marker>
+    <style>.state{fill:#fffdb0;stroke:#b63535;stroke-width:1.4}.rule{stroke:#b63535;stroke-width:1.2}.flow{fill:none;stroke:#b63535;stroke-width:1.2;marker-end:url(#arrow)}.txt{font:15px Arial,sans-serif;fill:#111}.name{font:15px Arial,sans-serif;fill:#111;text-anchor:middle}.heading{font:700 21px Georgia,serif;fill:#111}</style>
+  </defs>
+  <rect width="670" height="861" fill="white"/>
+  <text x="5" y="30" class="heading">4. Statechart Diagram</text>
+  <circle cx="75" cy="120" r="12" fill="#a40000"/><path class="flow" d="M81 132 99 172"/>
+  <g class="state"><rect x="39" y="173" width="190" height="126" rx="13"/><path class="rule" d="M39 200H229"/><rect x="216" y="361" width="219" height="77" rx="13"/><path class="rule" d="M216 390H435"/><rect x="280" y="530" width="124" height="94" rx="13"/><path class="rule" d="M280 560H404"/><rect x="255" y="716" width="176" height="125" rx="13"/><path class="rule" d="M255 744H431"/></g>
+  <g class="name"><text x="134" y="191">member registration</text><text x="325" y="381">Request for a book</text><text x="342" y="550">Issue book</text><text x="343" y="736">return book</text></g>
+  <g class="txt"><text x="44" y="219">entry/Request for registration</text><text x="44" y="238">do/add details</text><text x="44" y="257">do/Issue ID card</text><text x="44" y="276">do/verify details</text><text x="44" y="293">exit/member registered</text><text x="221" y="412">do/search book</text><text x="221" y="431">do/check book can be issued or not</text><text x="285" y="580">entry/book found</text><text x="285" y="599">do/issue book</text><text x="285" y="618">exit/book issued</text><text x="260" y="766">entry/book returing request</text><text x="260" y="785">do/return the book</text><text x="260" y="804">do/check return date</text><text x="260" y="823">do/charge fine if late return</text><text x="260" y="839">exit/book returned</text></g>
+  <g class="flow"><path d="M211 299 281 361"/><path d="M331 438 337 530"/><path d="M340 624 340 716"/><path d="M435 404 497 405 502 751"/><path d="M431 777 486 777"/></g>
+  <g class="txt"><text x="187" y="322">member requests book</text><text x="307" y="489">book available</text><text x="323" y="675">book return</text><text x="425" y="531">book not available OR Book can't issued</text><text x="416" y="769">book returned</text></g>
+  <circle cx="502" cy="783" r="16" fill="white" stroke="#a40000" stroke-width="2"/><circle cx="502" cy="783" r="10" fill="#a40000"/>
+</svg>
