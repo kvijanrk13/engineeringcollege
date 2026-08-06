@@ -174,6 +174,51 @@
     .formula { padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fafcff; }
     .formula strong { display: block; margin-bottom: 5px; color: var(--navy); }
     .formula code { color: #7c3aed; }
+    .as-section { margin-top: 34px; padding-top: 28px; border-top: 2px solid var(--line); }
+    .as-section h2 { margin: 0 0 6px; color: var(--navy); }
+    .as-subtitle { margin: 0 0 18px; color: var(--muted); line-height: 1.55; }
+    .as-diagram-scroll { margin-top: 18px; padding: 8px; overflow-x: auto; }
+    .as-bits { position: relative; display: flex; width: max-content; min-width: 100%; gap: 70px; justify-content: center; padding: 18px 78px 28px; }
+    .as-mode-bus { position: absolute; z-index: 0; top: 76px; right: 30px; left: 30px; height: 3px; background: #7c3aed; }
+    .as-mode-bus::after { content: "M"; position: absolute; right: -27px; top: -25px; color: #7c3aed; font: italic 700 22px Georgia, serif; }
+    .as-mode-bus em { position: absolute; right: 4px; top: 7px; padding: 2px 7px; border-radius: 99px; background: #7c3aed; color: #fff; font: normal 800 11px Inter, Arial, sans-serif; }
+    .as-column { position: relative; z-index: 1; flex: 0 0 190px; width: 190px; height: 330px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; }
+    .as-pin { position: absolute; top: 0; font-size: 23px; font-style: italic; font-weight: 700; text-align: center; }
+    .as-pin em, .as-xor em, .as-sum em, .as-carry em, .as-c0 em, .as-final-carry em { margin-left: 3px; padding: 2px 5px; border-radius: 99px; color: #fff; font: normal 800 11px Inter, Arial, sans-serif; }
+    .as-b { left: 38px; }
+    .as-a { right: 38px; }
+    .as-a::after { content: ""; position: absolute; top: 30px; left: 50%; width: 3px; height: 129px; background: currentColor; }
+    .as-a::before { content: ""; position: absolute; top: 151px; left: calc(50% - 5px); border-top: 10px solid currentColor; border-inline: 6px solid transparent; }
+    .as-tap { position: absolute; top: 58px; left: 51px; width: 3px; height: 32px; background: #7c3aed; }
+    .as-tap::before { content: ""; position: absolute; top: -5px; left: -4px; width: 11px; height: 11px; border-radius: 50%; background: #7c3aed; }
+    .as-xor { position: absolute; top: 82px; left: 22px; display: grid; place-items: center; width: 62px; height: 58px; border: 3px solid #7c3aed; border-radius: 48% 48% 58% 58%; background: #f5f0ff; color: #7c3aed; font: normal 800 26px Inter, Arial, sans-serif; }
+    .as-xor::before { content: ""; position: absolute; top: -53px; width: 3px; height: 51px; background: var(--navy); }
+    .as-xor::after { content: ""; position: absolute; top: 56px; width: 3px; height: 23px; background: #7c3aed; }
+    .as-xor em { position: absolute; right: -16px; top: 18px; background: #7c3aed; }
+    .as-fa { position: absolute; top: 160px; left: 0; display: grid; place-items: center; width: 190px; height: 88px; overflow: hidden; border: 3px solid #172b3a; background: #fff; font-size: 27px; font-weight: 800; transition: .25s; }
+    .as-fa small { position: absolute; right: 4px; bottom: 3px; left: 4px; color: var(--muted); font: normal 800 9px Inter, Arial, sans-serif; letter-spacing: .05em; text-align: center; text-transform: uppercase; }
+    .as-sum { position: absolute; top: 248px; left: 50%; display: grid; justify-items: center; transform: translateX(-50%); color: var(--green); font-size: 22px; font-style: italic; font-weight: 700; }
+    .as-sum::before { content: ""; width: 3px; height: 42px; background: currentColor; }
+    .as-sum::after { content: ""; position: absolute; top: 33px; border-top: 10px solid currentColor; border-inline: 6px solid transparent; }
+    .as-sum em { position: absolute; top: 45px; left: 29px; background: var(--green); }
+    .as-carry { position: absolute; top: 188px; left: -70px; width: 70px; padding-top: 18px; color: var(--red); font-size: 21px; font-style: italic; font-weight: 700; }
+    .as-carry::before { content: ""; position: absolute; top: 14px; right: 0; width: 100%; height: 3px; background: currentColor; }
+    .as-carry::after { content: ""; position: absolute; top: 9px; left: 0; border-right: 11px solid currentColor; border-block: 6px solid transparent; }
+    .as-carry em, .as-c0 em, .as-final-carry em { background: var(--red); }
+    .as-c0 { position: absolute; top: 188px; right: -76px; width: 76px; padding-top: 18px; color: var(--red); font-size: 21px; font-style: italic; font-weight: 700; text-align: right; }
+    .as-c0::before { content: ""; position: absolute; top: -109px; right: 0; width: 3px; height: 123px; background: #7c3aed; }
+    .as-c0::after { content: ""; position: absolute; top: 9px; left: 0; border-right: 11px solid currentColor; border-block: 6px solid transparent; }
+    .as-final-carry { position: absolute; top: 188px; left: -78px; width: 78px; height: 93px; border-top: 3px solid var(--red); border-left: 3px solid var(--red); color: var(--red); }
+    .as-final-carry::after { content: ""; position: absolute; bottom: -1px; left: -7px; border-top: 11px solid currentColor; border-inline: 6px solid transparent; }
+    .as-final-carry span { position: absolute; top: 86px; left: -18px; font-size: 21px; font-style: italic; font-weight: 700; white-space: nowrap; }
+    .as-column.as-active .as-fa { border-color: #7c3aed; background: #f5f0ff; box-shadow: 0 0 0 5px rgba(124,58,237,.12), 0 0 18px rgba(124,58,237,.5); animation: laserPulse .8s infinite; }
+    .as-column.as-active .as-xor { animation: valueFlash .75s infinite; box-shadow: 0 0 15px rgba(124,58,237,.7); }
+    .as-column.as-active .as-carry::before { height: 6px; background: repeating-linear-gradient(to left, #fff 0 9px, #ff3557 9px 18px, #8d0018 18px 26px); background-size: 52px 100%; animation: signalHorizontal .65s linear infinite; box-shadow: 0 0 9px #ff3557; }
+    .as-column.as-done .as-fa { border-color: var(--green); background: #ebfaf5; }
+    .as-column.as-done .as-carry, .as-column.as-done .as-final-carry { color: var(--green); border-color: var(--green); }
+    .as-status { min-height: 65px; margin-top: 10px; padding: 14px 16px; border-left: 4px solid #7c3aed; border-radius: 8px; background: #f7f3ff; line-height: 1.6; }
+    .as-result { display: none; margin-top: 12px; padding: 14px 16px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; }
+    .as-result.show { display: block; }
     @media (max-width: 700px) {
       .page { width: min(100% - 16px, 1180px); margin: 8px auto; }
       .hero, .tab-panel { padding: 20px; }
@@ -182,6 +227,7 @@
       .formula-grid { grid-template-columns: 1fr; }
       .bits { justify-content: flex-start; }
       .logic-monitor { grid-template-columns: repeat(3, 1fr); }
+      .as-bits { justify-content: flex-start; }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
   </style>
@@ -254,6 +300,20 @@
         <div class="formula"><strong>Carry output</strong><code>Cᵢ₊₁ = AᵢBᵢ + Cᵢ(Aᵢ ⊕ Bᵢ)</code></div>
         <div class="formula"><strong>Ripple action</strong><span>Each carry output becomes the next stage's carry input.</span></div>
       </div>
+
+      <section class="as-section" aria-labelledby="adder-subtractor-title">
+        <h2 id="adder-subtractor-title">Four-Bit Binary Adder–Subtractor</h2>
+        <p class="as-subtitle">The mode input controls every XOR gate and the initial carry: <strong>M = 0</strong> performs A + B, while <strong>M = 1</strong> performs A + B′ + 1 = A − B using two’s complement.</p>
+        <div class="controls">
+          <label>Input A (0–15)<input id="as-a" type="number" min="0" max="15" value="9"></label>
+          <label>Input B (0–15)<input id="as-b" type="number" min="0" max="15" value="5"></label>
+          <label>Mode M<select id="as-mode"><option value="0">0 — Add A + B</option><option value="1">1 — Subtract A − B</option></select></label>
+          <button id="as-run" class="btn" type="button">Start adder–subtractor</button>
+        </div>
+        <div class="as-diagram-scroll" aria-live="polite"><div id="as-canvas"></div></div>
+        <div id="as-status" class="as-status"><strong>Ready:</strong> Select addition or subtraction, then start the five-second staged animation.</div>
+        <div id="as-result" class="as-result"></div>
+      </section>
     </section>
   </main>
 
@@ -273,10 +333,42 @@
     let lesson = null;
     let timer = null;
     let playing = false;
+    const asCanvas = document.getElementById('as-canvas');
+    const asStatus = document.getElementById('as-status');
+    const asResult = document.getElementById('as-result');
+    let asTimers = [];
 
     function stopTimer() {
       clearTimeout(timer);
       timer = null;
+    }
+
+    function clearAdderSubtractorTimers() {
+      asTimers.forEach(clearTimeout);
+      asTimers = [];
+      document.getElementById('as-run').disabled = false;
+    }
+
+    function buildAdderSubtractor(mode = 0) {
+      asCanvas.innerHTML = '';
+      const wrap = document.createElement('div');
+      wrap.className = 'as-bits';
+      wrap.innerHTML = `<div class="as-mode-bus"><em>${mode}</em></div>`;
+      for (let bit = 3; bit >= 0; bit -= 1) {
+        const stage = document.createElement('div');
+        stage.className = 'as-column';
+        stage.dataset.asBit = bit;
+        stage.innerHTML = `
+          <div class="as-pin as-b">B<sub>${bit}</sub><em>–</em></div>
+          <div class="as-pin as-a">A<sub>${bit}</sub><em>–</em></div>
+          <div class="as-tap"></div><div class="as-xor">⊕<em>–</em></div>
+          <div class="as-fa">FA<small>Waiting</small></div>
+          <div class="as-sum">S<sub>${bit}</sub><em>–</em></div>
+          ${bit === 0 ? `<div class="as-c0">C<sub>0</sub><em>${mode}</em></div>` : ''}
+          ${bit < 3 ? `<div class="as-carry">C<sub>${bit + 1}</sub><em>–</em></div>` : `<div class="as-final-carry"><span>C<sub>4</sub><em>–</em></span></div>`}`;
+        wrap.appendChild(stage);
+      }
+      asCanvas.appendChild(wrap);
     }
 
     function buildLayout(size) {
@@ -431,6 +523,76 @@
       renderStep();
     }
 
+    function startAdderSubtractor() {
+      clearAdderSubtractorTimers();
+      const clamp4 = id => Math.max(0, Math.min(15, Number.parseInt(document.getElementById(id).value, 10) || 0));
+      const a = clamp4('as-a');
+      const b = clamp4('as-b');
+      const mode = Number(document.getElementById('as-mode').value);
+      document.getElementById('as-a').value = a;
+      document.getElementById('as-b').value = b;
+      buildAdderSubtractor(mode);
+      document.getElementById('as-run').disabled = true;
+      asResult.classList.remove('show');
+      let carry = mode;
+      const stages = [];
+
+      for (let bit = 0; bit < 4; bit += 1) {
+        const aBit = (a >> bit) & 1;
+        const bBit = (b >> bit) & 1;
+        const xorB = bBit ^ mode;
+        const carryIn = carry;
+        const sum = aBit ^ xorB ^ carryIn;
+        carry = (aBit & xorB) | (carryIn & (aBit ^ xorB));
+        stages.push({ bit, aBit, bBit, xorB, carryIn, sum, carryOut: carry });
+      }
+
+      stages.forEach(stage => {
+        const node = asCanvas.querySelector(`[data-as-bit="${stage.bit}"]`);
+        node.querySelector('.as-a em').textContent = stage.aBit;
+        node.querySelector('.as-b em').textContent = stage.bBit;
+        node.querySelector('.as-xor em').textContent = stage.xorB;
+        if (node.querySelector('.as-c0 em')) node.querySelector('.as-c0 em').textContent = mode;
+      });
+
+      asStatus.innerHTML = mode === 0
+        ? `<strong>Mode M = 0 — Addition:</strong> every XOR passes B unchanged (Bᵢ ⊕ 0 = Bᵢ), and C₀ = 0. The circuit will now evaluate A + B from FA₀ to FA₃.`
+        : `<strong>Mode M = 1 — Subtraction:</strong> every XOR complements B (Bᵢ ⊕ 1 = B̅ᵢ), and C₀ = 1. Together these form the two’s complement B̅ + 1, so the circuit evaluates A − B.`;
+
+      stages.forEach((stage, index) => {
+        asTimers.push(setTimeout(() => {
+          if (index > 0) {
+            const previous = asCanvas.querySelector(`[data-as-bit="${stage.bit - 1}"]`);
+            previous.classList.remove('as-active');
+            previous.classList.add('as-done');
+            previous.querySelector('.as-fa small').textContent = 'Stable';
+          }
+          const node = asCanvas.querySelector(`[data-as-bit="${stage.bit}"]`);
+          node.classList.add('as-active');
+          node.querySelector('.as-fa small').textContent = mode === 0 ? 'Adding bits' : 'Adding complemented B';
+          node.querySelector('.as-sum em').textContent = stage.sum;
+          const carryBadge = node.querySelector('.as-carry em, .as-final-carry em');
+          if (carryBadge) carryBadge.textContent = stage.carryOut;
+          asStatus.innerHTML = `<strong>FA${stage.bit} active:</strong> A${stage.bit}=${stage.aBit}, B${stage.bit}=${stage.bBit}, B${stage.bit}⊕M=${stage.xorB}, C${stage.bit}=${stage.carryIn}. Therefore S${stage.bit}=${stage.sum} and C${stage.bit + 1}=${stage.carryOut}. The carry now flows left.`;
+        }, (index + 1) * 5000));
+      });
+
+      asTimers.push(setTimeout(() => {
+        const last = asCanvas.querySelector('[data-as-bit="3"]');
+        last.classList.remove('as-active');
+        last.classList.add('as-done');
+        last.querySelector('.as-fa small').textContent = 'Stable';
+        const raw = a + (b ^ 15) * mode + b * (1 - mode) + mode;
+        const fourBitResult = raw & 15;
+        const decimalResult = mode === 0 ? a + b : a - b;
+        const operation = mode === 0 ? `${a} + ${b}` : `${a} − ${b}`;
+        asStatus.innerHTML = `<strong>All stages are stable.</strong> Read C₄S₃S₂S₁S₀ from left to right. ${mode === 1 ? 'For subtraction, the four sum bits are the two’s-complement result and C₄ is normally discarded.' : ''}`;
+        asResult.innerHTML = `<strong>${mode === 0 ? 'Addition' : 'Subtraction'} result:</strong> ${operation} = ${decimalResult}<br><strong>Four-bit output S₃…S₀:</strong> ${fourBitResult.toString(2).padStart(4, '0')} &nbsp; <strong>C₄:</strong> ${carry}`;
+        asResult.classList.add('show');
+        document.getElementById('as-run').disabled = false;
+      }, 25000));
+    }
+
     document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(item => { item.classList.remove('active'); item.setAttribute('aria-selected', 'false'); });
       document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
@@ -457,8 +619,11 @@
       document.getElementById('bval').value = Math.floor(Math.random() * (max + 1));
       startLesson();
     });
+    document.getElementById('as-run').addEventListener('click', startAdderSubtractor);
+    document.getElementById('as-mode').addEventListener('change', event => { clearAdderSubtractorTimers(); buildAdderSubtractor(Number(event.target.value)); asResult.classList.remove('show'); });
 
     buildLayout(4);
+    buildAdderSubtractor(0);
   </script>
 </body>
 </html>
