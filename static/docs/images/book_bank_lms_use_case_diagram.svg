@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="944" height="901" viewBox="0 0 944 901" role="img" aria-labelledby="title desc">
+  <title id="title">Book Bank LMS use case diagram</title>
+  <desc id="desc">Student and Faculty specialize Member. Member and Librarian interact with registration, login, validation, book issue, return and update use cases.</desc>
+  <defs>
+    <marker id="hollow" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" orient="auto"><path d="M1 1 11 6 1 11Z" fill="white" stroke="#b54b4b"/></marker>
+    <style>.line{fill:none;stroke:#b54b4b;stroke-width:1.25}.use{fill:#fffbd0;stroke:#b54b4b;stroke-width:1.25}.label{font:700 13px Georgia,serif;fill:#111}.small{font:12px Georgia,serif;fill:#111}.actor{fill:none;stroke:#b54b4b;stroke-width:1.4}</style>
+  </defs>
+  <rect width="944" height="901" fill="white"/>
+  <text x="14" y="40" font-family="Georgia,serif" font-weight="700" font-size="29">I. BOOK BANK - LMS</text>
+  <text x="14" y="80" font-family="Georgia,serif" font-weight="700" font-size="24">1. Usecase Diagram</text>
+  <rect x="230" y="118" width="541" height="768" fill="#fffdb5" stroke="#b54b4b"/><text x="734" y="132" class="small">System</text>
+  <g class="actor"><circle cx="143" cy="277" r="8"/><path d="M143 285v26m-12-18h24m-12 18-12 20m12-20 12 20"/><circle cx="68" cy="405" r="8"/><path d="M68 413v26m-12-18h24m-12 18-12 20m12-20 12 20"/><circle cx="170" cy="405" r="8"/><path d="M170 413v26m-12-18h24m-12 18-12 20m12-20 12 20"/><circle cx="912" cy="255" r="8"/><path d="M912 263v26m-12-18h24m-12 18-12 20m12-20 12 20"/></g>
+  <g class="label" text-anchor="middle"><text x="143" y="334">Member</text><text x="68" y="463">Student</text><text x="170" y="463">Faculty</text><text x="912" y="314">Librarian</text></g>
+  <path class="line" d="M68 397 116 346" marker-end="url(#hollow)"/><path class="line" d="M170 397 157 346" marker-end="url(#hollow)"/>
+  <g class="line"><path d="M181 282 319 199"/><path d="M181 299 276 294"/><path d="M181 342 430 509"/><path d="M181 350 489 703"/><path d="M879 275 405 190"/><path d="M879 292 548 366"/><path d="M879 307 615 505"/><path d="M879 316 515 706"/><path d="M879 322 547 786"/></g>
+  <g class="use"><ellipse cx="360" cy="184" rx="48" ry="20"/><ellipse cx="326" cy="286" rx="51" ry="19"/><ellipse cx="484" cy="365" rx="63" ry="20"/><ellipse cx="548" cy="431" rx="70" ry="20"/><ellipse cx="462" cy="520" rx="59" ry="20"/><ellipse cx="609" cy="506" rx="62" ry="20"/><ellipse cx="529" cy="611" rx="55" ry="20"/><ellipse cx="497" cy="708" rx="48" ry="20"/><ellipse cx="518" cy="786" rx="50" ry="20"/><ellipse cx="681" cy="760" rx="54" ry="20"/><ellipse cx="684" cy="833" rx="63" ry="20"/></g>
+  <g class="label" text-anchor="middle"><text x="360" y="189">Register</text><text x="326" y="291">Login</text><text x="484" y="370">Validate</text><text x="548" y="436">CheckAvailability</text><text x="462" y="525">IssueBook</text><text x="609" y="511">IssueID</text><text x="529" y="616">CalculateFine</text><text x="497" y="713">ReturnBook</text><text x="518" y="791">Update</text><text x="681" y="765">Update Book</text><text x="684" y="838">Update Member</text></g>
+  <g class="line" stroke-dasharray="4 4"><path d="M470 347 386 202" marker-end="url(#hollow)"/><path d="M455 348 351 304" marker-end="url(#hollow)"/><path d="M476 504 523 450" marker-end="url(#hollow)"/><path d="M551 505 520 510" marker-end="url(#hollow)"/><path d="M505 692 521 631" marker-end="url(#hollow)"/></g>
+  <g class="small"><text x="406" y="231">&lt;&lt;include&gt;&gt;</text><text x="355" y="352">&lt;&lt;include&gt;&gt;</text><text x="445" y="480">&lt;&lt;include&gt;&gt;</text><text x="521" y="536">&lt;&lt;extend&gt;&gt;</text><text x="462" y="660">&lt;&lt;include&gt;&gt;</text></g>
+  <path class="line" d="M627 773 568 786" marker-end="url(#hollow)"/><path class="line" d="M623 821 569 797" marker-end="url(#hollow)"/>
+</svg>

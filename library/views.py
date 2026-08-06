@@ -363,14 +363,6 @@ def documentation(request):
     if os.path.exists(week1_path):
         with open(week1_path, 'r', encoding='utf-8') as f:
             week1_text = markdown.markdown(f.read(), extensions=['tables'])
-        # Remove unwanted detailed class subsections if present in rendered HTML
-        # (defensive: ensures 1.1 and 1.2 are not shown even if source still contains them)
-        # Remove the headings and the immediately following image tags
-        week4_text = re.sub(r"<h3>\s*1\.1\s*Detailed Library Classes\s*</h3>\s*<p>\s*<img [^>]*>\s*</p>", "", week4_text, flags=re.IGNORECASE)
-        week4_text = re.sub(r"<h3>\s*1\.2\s*Detailed Student Classes\s*</h3>\s*<p>\s*<img [^>]*>\s*</p>", "", week4_text, flags=re.IGNORECASE)
-        # Replace the Use Case Diagram image reference with a replacement filename.
-        # Ensure the site will look for this file at /static/docs/images/aeclib_usecase_replacement.png
-        week4_text = week4_text.replace('/static/docs/images/library_use_case_diagram.svg', '/static/docs/images/aeclib_usecase_replacement.png')
     if os.path.exists(srd_path):
         with open(srd_path, 'r', encoding='utf-8') as f:
             srd_text = markdown.markdown(f.read(), extensions=['tables'])
@@ -380,6 +372,9 @@ def documentation(request):
     if os.path.exists(week4_path):
         with open(week4_path, 'r', encoding='utf-8') as f:
             week4_text = markdown.markdown(f.read(), extensions=['tables'])
+        # Remove unwanted detailed class subsections if present in rendered HTML.
+        week4_text = re.sub(r"<h3>\s*1\.1\s*Detailed Library Classes\s*</h3>\s*<p>\s*<img [^>]*>\s*</p>", "", week4_text, flags=re.IGNORECASE)
+        week4_text = re.sub(r"<h3>\s*1\.2\s*Detailed Student Classes\s*</h3>\s*<p>\s*<img [^>]*>\s*</p>", "", week4_text, flags=re.IGNORECASE)
     if os.path.exists(week6_path):
         with open(week6_path, 'r', encoding='utf-8') as f:
             week6_text = markdown.markdown(f.read(), extensions=['tables', 'fenced_code'])

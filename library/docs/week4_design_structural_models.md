@@ -27,7 +27,7 @@ The domain model spans the `library`, `student`, and Django `auth` packages. Its
 
 ## 2. Use Case Diagram
 
-![AEC Library use case diagram](/static/docs/images/library_use_case_diagram.svg)
+![Book Bank LMS use case diagram](/static/docs/images/book_bank_lms_use_case_diagram.svg)
 
 The primary actors are Student and Librarian/Admin. Razorpay is a supporting external actor for fine payment. The diagram covers authentication, catalogue discovery, issue requests, circulation, fine management, and documentation.
 

@@ -140,6 +140,8 @@ class LibraryWeek6Tests(TestCase):
         response = self.client.get("/aeclibrary/documentation/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Week 4 and Week 5")
+        self.assertContains(response, "/static/docs/images/book_bank_lms_use_case_diagram.svg")
+        self.assertNotContains(response, "/static/docs/images/library_use_case_diagram.svg")
         self.assertContains(response, "Week 6 - Unit Testing and Integration Testing")
 
 
