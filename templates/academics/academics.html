@@ -40,20 +40,34 @@
     .btn { min-height: 40px; padding: 8px 16px; border: 1px solid var(--blue); border-radius: 7px; background: var(--blue); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
     .btn.secondary { border-color: #6b7c93; background: #6b7c93; }
     .btn:disabled { opacity: .55; cursor: wait; }
-    .diagram-scroll { margin-top: 20px; padding: 20px 8px 8px; overflow-x: auto; }
-    .bits { display: flex; width: max-content; min-width: 100%; gap: 16px; justify-content: center; align-items: flex-start; }
-    .column { position: relative; display: grid; justify-items: center; gap: 7px; min-width: 112px; }
-    .stage-label { color: var(--muted); font-size: 12px; font-weight: 700; }
-    .inputs { display: flex; gap: 6px; }
-    .bit { display: grid; place-items: center; width: 48px; height: 38px; border: 1px solid #bcccdc; border-radius: 7px; background: #fff; font-family: Consolas, monospace; font-weight: 700; }
-    .bit small { margin-right: 2px; color: var(--muted); font-size: 9px; }
-    .fa-box { display: grid; place-items: center; width: 100px; height: 82px; border: 2px solid #9fb3c8; border-radius: 12px; background: #f5f8fb; color: var(--navy); text-align: center; font-weight: 800; transition: .25s; }
-    .carry-row { display: flex; align-items: center; color: var(--red); font-family: Consolas, monospace; font-size: 13px; font-weight: 700; }
-    .carry-arrow { margin-left: 5px; font-size: 18px; }
-    .sum-bit { border-color: #80cbb4; color: var(--green); }
+    .diagram-scroll { margin-top: 20px; padding: 12px 8px 8px; overflow-x: auto; }
+    .bits { display: flex; width: max-content; min-width: 100%; gap: 70px; justify-content: center; align-items: flex-start; padding: 18px 78px 20px; }
+    .column { position: relative; flex: 0 0 190px; width: 190px; height: 245px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; }
+    .inputs { position: absolute; top: 18px; left: 0; display: flex; justify-content: space-around; width: 100%; }
+    .input-pin { position: relative; display: grid; justify-items: center; min-width: 62px; font-size: 23px; font-style: italic; font-weight: 700; }
+    .input-pin em { display: none; position: absolute; top: -4px; right: -8px; min-width: 22px; padding: 2px 5px; border-radius: 99px; background: var(--blue); color: #fff; font-family: Inter, Arial, sans-serif; font-size: 11px; font-style: normal; text-align: center; }
+    .input-pin::after { content: ""; width: 2px; height: 42px; margin-top: 7px; background: currentColor; }
+    .input-pin::before { content: ""; position: absolute; bottom: -2px; border-top: 9px solid currentColor; border-inline: 5px solid transparent; }
+    .fa-box { position: absolute; top: 94px; left: 0; display: grid; place-items: center; width: 190px; height: 88px; border: 3px solid currentColor; border-radius: 2px; background: #fff; color: #172b3a; font-size: 27px; font-weight: 800; transition: .25s; }
+    .sum-bit { position: absolute; top: 182px; left: 50%; display: grid; justify-items: center; transform: translateX(-50%); color: var(--green); font-size: 22px; font-style: italic; font-weight: 700; }
+    .sum-bit::before { content: ""; width: 2px; height: 37px; background: currentColor; }
+    .sum-bit::after { content: ""; position: absolute; top: 28px; border-top: 9px solid currentColor; border-inline: 5px solid transparent; }
+    .sum-bit em { display: none; position: absolute; top: 39px; left: 30px; min-width: 22px; padding: 2px 5px; border-radius: 99px; background: var(--green); color: #fff; font-family: Inter, Arial, sans-serif; font-size: 11px; font-style: normal; text-align: center; }
+    .carry-input, .cout { position: absolute; top: 121px; color: var(--red); font-size: 21px; font-style: italic; font-weight: 700; white-space: nowrap; }
+    .carry-input { right: -76px; width: 76px; padding-top: 18px; text-align: right; }
+    .carry-input::before, .cout::before { content: ""; position: absolute; top: 14px; right: 0; width: 100%; height: 3px; background: currentColor; }
+    .carry-input::after, .cout::after { content: ""; position: absolute; top: 9px; left: 0; border-right: 11px solid currentColor; border-block: 6px solid transparent; }
+    .carry-input em, .cout em { display: none; margin-left: 4px; padding: 2px 5px; border-radius: 99px; background: var(--red); color: #fff; font-family: Inter, Arial, sans-serif; font-size: 11px; font-style: normal; }
+    .cout { left: -70px; width: 70px; padding-top: 18px; }
+    .final-carry { position: absolute; top: 121px; left: -78px; width: 78px; height: 93px; border-top: 3px solid currentColor; border-left: 3px solid currentColor; color: var(--red); }
+    .final-carry::after { content: ""; position: absolute; bottom: -1px; left: -7px; border-top: 11px solid currentColor; border-inline: 6px solid transparent; }
+    .final-carry span { position: absolute; top: 86px; left: -18px; font-size: 21px; font-style: italic; font-weight: 700; white-space: nowrap; }
+    .final-carry em { display: none; margin-left: 4px; padding: 2px 5px; border-radius: 99px; background: var(--red); color: #fff; font-family: Inter, Arial, sans-serif; font-size: 11px; font-style: normal; }
     .column.active .fa-box { border-color: var(--blue); background: var(--blue-soft); box-shadow: 0 0 0 5px rgba(22,119,255,.12); transform: translateY(-2px); }
     .column.done .fa-box { border-color: var(--green); background: #ebfaf5; }
-    .column.active .bit { border-color: var(--blue); }
+    .column.active .input-pin em, .column.active .sum-bit em, .column.active .carry-input em, .column.active .cout em,
+    .column.done .input-pin em, .column.done .sum-bit em, .column.done .carry-input em, .column.done .cout em,
+    .column.active .final-carry em, .column.done .final-carry em { display: inline-block; }
     .result { display: none; margin-top: 20px; padding: 15px 18px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; line-height: 1.6; }
     .result.show { display: block; }
     .lesson-box { margin-top: 18px; padding: 18px; border: 1px solid #b9d7ff; border-radius: 12px; background: #f5f9ff; }
@@ -173,12 +187,14 @@
         stage.className = 'column';
         stage.dataset.bit = bit;
         stage.innerHTML = `
-          <div class="stage-label">Stage ${bit} ${bit === 0 ? '(LSB)' : bit === size - 1 ? '(MSB)' : ''}</div>
-          <div class="inputs"><div class="bit a-bit"><small>A${bit}</small>–</div><div class="bit b-bit"><small>B${bit}</small>–</div></div>
-          <div class="carry-row"><span class="cin">C${bit} = –</span><span class="carry-arrow">→</span></div>
-          <div class="fa-box">FULL<br>ADDER</div>
-          <div class="bit sum-bit"><small>S${bit}</small>–</div>
-          <div class="carry-row cout">C${bit + 1} = –</div>`;
+          <div class="inputs">
+            <div class="input-pin b-bit"><span>B<sub>${bit}</sub></span><em>–</em></div>
+            <div class="input-pin a-bit"><span>A<sub>${bit}</sub></span><em>–</em></div>
+          </div>
+          <div class="fa-box">FA</div>
+          <div class="sum-bit"><span>S<sub>${bit}</sub></span><em>–</em></div>
+          ${bit === 0 ? `<div class="carry-input"><span>C<sub>0</sub></span><em>–</em></div>` : ''}
+          ${bit < size - 1 ? `<div class="cout"><span>C<sub>${bit + 1}</sub></span><em>–</em></div>` : `<div class="final-carry"><span>C<sub>${size}</sub><em>–</em></span></div>`}`;
         wrap.appendChild(stage);
       }
       canvas.appendChild(wrap);
@@ -232,11 +248,14 @@
     function applyStageState(stage, phase, completed) {
       const node = canvas.querySelector(`[data-bit="${stage.bit}"]`);
       node.className = `column ${completed ? 'done' : 'active'}`;
-      node.querySelector('.a-bit').innerHTML = `<small>A${stage.bit}</small>${stage.aBit}`;
-      node.querySelector('.b-bit').innerHTML = `<small>B${stage.bit}</small>${stage.bBit}`;
-      node.querySelector('.cin').textContent = `C${stage.bit} = ${stage.carryIn}`;
-      if (phase === 'sum' || phase === 'carry' || completed) node.querySelector('.sum-bit').innerHTML = `<small>S${stage.bit}</small>${stage.sum}`;
-      if (phase === 'carry' || completed) node.querySelector('.cout').textContent = `C${stage.bit + 1} = ${stage.carryOut}`;
+      node.querySelector('.a-bit em').textContent = stage.aBit;
+      node.querySelector('.b-bit em').textContent = stage.bBit;
+      if (node.querySelector('.carry-input em')) node.querySelector('.carry-input em').textContent = stage.carryIn;
+      if (phase === 'sum' || phase === 'carry' || completed) node.querySelector('.sum-bit em').textContent = stage.sum;
+      if (phase === 'carry' || completed) {
+        const carryBadge = node.querySelector('.cout em, .final-carry em');
+        if (carryBadge) carryBadge.textContent = stage.carryOut;
+      }
     }
 
     function renderStep() {
