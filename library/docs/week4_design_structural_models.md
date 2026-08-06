@@ -63,7 +63,7 @@ The component view shows the browser, Django routing and views, templates, domai
 
 ## 8. Deployment Diagram
 
-![AEC Library deployment diagram](/static/docs/images/library_deployment_diagram.svg)
+![Book Bank LMS deployment diagram](/static/docs/images/book_bank_lms_deployment_diagram.svg)
 
 The deployment model reflects the production topology: user browser over HTTPS, Gunicorn and Django on the Render web service, Render PostgreSQL through `DATABASE_URL`, and HTTPS integrations with Cloudinary and Razorpay.
 
@@ -322,7 +322,7 @@ The deployment model reflects the production topology: user browser over HTTPS, 
 7. Save the `.mdj` file.
 8. Export each diagram using **File → Export Diagram As → SVG** for scalable website display.
 9. Use descriptive filenames such as `library_class_diagram.svg` and
-   `library_deployment_diagram.svg`.
+   `book_bank_lms_deployment_diagram.svg`.
 10. Open every exported SVG and inspect it at both fitted width and 200% zoom before submission.
 
 ### Official StarUML References

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="675" height="597" viewBox="0 0 675 597" role="img" aria-labelledby="title desc">
+  <title id="title">Book Bank LMS deployment diagram</title>
+  <desc id="desc">Deployment topology with LIS database, application server and webserver connected to multiple member clients.</desc>
+  <defs><style>.node{fill:#fffdb0;stroke:#b72b20;stroke-width:1.2}.edge{fill:none;stroke:#b72b20;stroke-width:1.1}.label{font:700 14px Arial,sans-serif;fill:#111;text-anchor:middle}.heading{font:700 22px Georgia,serif;fill:#111}</style></defs>
+  <rect width="675" height="597" fill="white"/>
+  <text x="18" y="34" class="heading">2. Deployment Diagram</text>
+  <g class="edge"><path d="M348 178V226"/><path d="M350 291V339"/><path d="M297 404 137 497"/><path d="M348 404 344 497"/><path d="M401 404 542 497"/></g>
+  <g class="node"><path d="M255 124 267 112H440L429 124V178H255Z"/><path d="M429 124 440 112V166L429 178Z"/><path d="M250 237 260 226H446L434 237V291H250Z"/><path d="M434 237 446 226V279L434 291Z"/><path d="M255 350 267 339H446L434 350V404H255Z"/><path d="M434 350 446 339V392L434 404Z"/><path d="M43 508 54 497H148L137 508V562H43Z"/><path d="M137 508 148 497V550L137 562Z"/><path d="M284 508 295 497H400L389 508V562H284Z"/><path d="M389 508 400 497V550L389 562Z"/><path d="M531 508 542 497H653L642 508V562H531Z"/><path d="M642 508 653 497V550L642 562Z"/></g>
+  <g class="label"><text x="342" y="143">LIS DATABASE</text><text x="343" y="256">LIS APPLICATION SERVER</text><text x="345" y="369">LIS WEBSERVER</text><text x="91" y="527">MEMBER 1</text><text x="337" y="527">MEMBER 2</text><text x="587" y="527">MEMBER N</text></g>
+</svg>

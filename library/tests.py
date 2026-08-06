@@ -152,6 +152,8 @@ class LibraryWeek6Tests(TestCase):
         self.assertNotContains(response, "/static/docs/images/library_activity_diagram.svg")
         self.assertContains(response, "/static/docs/images/book_bank_lms_component_diagram.svg")
         self.assertNotContains(response, "/static/docs/images/library_component_diagram.svg")
+        self.assertContains(response, "/static/docs/images/book_bank_lms_deployment_diagram.svg")
+        self.assertNotContains(response, "/static/docs/images/library_deployment_diagram.svg")
         self.assertContains(response, "Week 6 - Unit Testing and Integration Testing")
 
 
