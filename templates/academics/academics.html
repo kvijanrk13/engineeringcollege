@@ -48,7 +48,12 @@
     .input-pin em { display: none; position: absolute; top: -4px; right: -8px; min-width: 22px; padding: 2px 5px; border-radius: 99px; background: var(--blue); color: #fff; font-family: Inter, Arial, sans-serif; font-size: 11px; font-style: normal; text-align: center; }
     .input-pin::after { content: ""; width: 2px; height: 42px; margin-top: 7px; background: currentColor; }
     .input-pin::before { content: ""; position: absolute; bottom: -2px; border-top: 9px solid currentColor; border-inline: 5px solid transparent; }
-    .fa-box { position: absolute; top: 94px; left: 0; display: grid; place-items: center; width: 190px; height: 88px; border: 3px solid currentColor; border-radius: 2px; background: #fff; color: #172b3a; font-size: 27px; font-weight: 800; transition: .25s; }
+    .fa-box { position: absolute; top: 94px; left: 0; display: grid; place-items: center; width: 190px; height: 88px; overflow: hidden; border: 3px solid currentColor; border-radius: 2px; background: #fff; color: #172b3a; font-size: 27px; font-weight: 800; transition: .25s; }
+    .fa-title { position: relative; z-index: 2; line-height: 1; }
+    .fa-status { position: absolute; z-index: 2; right: 4px; bottom: 3px; left: 4px; color: var(--muted); font-family: Inter, Arial, sans-serif; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-align: center; text-transform: uppercase; }
+    .electron { display: none; position: absolute; z-index: 1; width: 9px; height: 9px; border: 2px solid #fff; border-radius: 50%; background: #23d5ff; box-shadow: 0 0 5px #23d5ff, 0 0 14px #1677ff; }
+    .electron:nth-of-type(2) { animation-delay: .18s !important; }
+    .electron:nth-of-type(3) { animation-delay: .36s !important; }
     .sum-bit { position: absolute; top: 182px; left: 50%; display: grid; justify-items: center; transform: translateX(-50%); color: var(--green); font-size: 22px; font-style: italic; font-weight: 700; }
     .sum-bit::before { content: ""; width: 2px; height: 37px; background: currentColor; }
     .sum-bit::after { content: ""; position: absolute; top: 28px; border-top: 9px solid currentColor; border-inline: 5px solid transparent; }
@@ -123,6 +128,33 @@
     .column.phase-carry .final-carry { border-color: #ff3557; animation: carryPulse .75s ease-in-out infinite; }
     .column.done .input-pin, .column.done .cout, .column.done .carry-input, .column.done .final-carry { color: var(--green); }
     .column.done .input-pin::after, .column.done .sum-bit::before { background: var(--green); }
+    @keyframes electronsDown {
+      0% { top: -12px; opacity: 0; transform: translateX(-25px); }
+      18% { opacity: 1; }
+      100% { top: 86px; opacity: 0; transform: translateX(25px); }
+    }
+    @keyframes electronsSplit {
+      0% { top: 34px; left: 48%; opacity: 0; }
+      20% { opacity: 1; }
+      100% { top: 84px; left: 48%; opacity: 0; }
+    }
+    @keyframes electronsLeft {
+      0% { top: 39px; right: -10px; opacity: 0; }
+      20% { opacity: 1; }
+      100% { top: 39px; right: 190px; opacity: 0; }
+    }
+    .column.phase-load .electron { display: block; left: 48%; animation: electronsDown .95s linear infinite; }
+    .column.phase-sum .electron { display: block; animation: electronsSplit .9s linear infinite; }
+    .column.phase-carry .electron { display: block; background: #ff3557; box-shadow: 0 0 5px #ff3557, 0 0 14px #8d0018; animation: electronsLeft .9s linear infinite; }
+    .logic-monitor { display: grid; grid-template-columns: repeat(6, minmax(72px, 1fr)); gap: 8px; margin-top: 12px; }
+    .logic-cell { position: relative; padding: 9px 7px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; text-align: center; transition: .25s; }
+    .logic-cell span { display: block; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .logic-cell strong { display: block; margin-top: 3px; color: var(--navy); font-family: Consolas, monospace; font-size: 21px; }
+    .logic-cell.hot { border-color: #23d5ff; background: #eefcff; box-shadow: 0 0 10px rgba(35,213,255,.4); }
+    .logic-cell.sum-hot { border-color: #20dca0; background: #effcf8; box-shadow: 0 0 10px rgba(32,220,160,.35); }
+    .logic-cell.carry-hot { border-color: #ff3557; background: #fff2f4; box-shadow: 0 0 10px rgba(255,53,87,.35); }
+    .value-high { animation: valueFlash .75s ease-in-out infinite; }
+    @keyframes valueFlash { 50% { transform: scale(1.12); filter: brightness(1.25); } }
     .result { display: none; margin-top: 20px; padding: 15px 18px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; line-height: 1.6; }
     .result.show { display: block; }
     .lesson-box { margin-top: 18px; padding: 18px; border: 1px solid #b9d7ff; border-radius: 12px; background: #f5f9ff; }
@@ -149,6 +181,7 @@
       .video-link { display: inline-block; margin-top: 10px; }
       .formula-grid { grid-template-columns: 1fr; }
       .bits { justify-content: flex-start; }
+      .logic-monitor { grid-template-columns: repeat(3, 1fr); }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
   </style>
@@ -190,6 +223,14 @@
         <div class="lesson-progress"><span id="step-label">Ready to begin</span><span id="step-count">Step 0 of 0</span></div>
         <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
         <div id="explanation" class="explanation"><strong>How to use:</strong> Choose the inputs and select <em>Start lesson</em>. The animation will pause at every logical operation so you can see how carry ripples from the least-significant bit to the most-significant bit.</div>
+        <div id="logic-monitor" class="logic-monitor" aria-label="Live full-adder logic values">
+          <div class="logic-cell"><span>A input</span><strong>–</strong></div>
+          <div class="logic-cell"><span>B input</span><strong>–</strong></div>
+          <div class="logic-cell"><span>Carry in</span><strong>–</strong></div>
+          <div class="logic-cell"><span>A XOR B</span><strong>–</strong></div>
+          <div class="logic-cell"><span>Sum</span><strong>–</strong></div>
+          <div class="logic-cell"><span>Carry out</span><strong>–</strong></div>
+        </div>
         <div class="playback">
           <button id="previous" class="btn light" type="button" disabled>← Previous</button>
           <button id="pause" class="btn light" type="button" disabled>Pause</button>
@@ -228,6 +269,7 @@
     const stepLabel = document.getElementById('step-label');
     const stepCount = document.getElementById('step-count');
     const progressBar = document.getElementById('progress-bar');
+    const logicMonitor = document.getElementById('logic-monitor');
     let lesson = null;
     let timer = null;
     let playing = false;
@@ -251,7 +293,7 @@
             <div class="input-pin b-bit"><span>B<sub>${bit}</sub></span><em>–</em></div>
             <div class="input-pin a-bit"><span>A<sub>${bit}</sub></span><em>–</em></div>
           </div>
-          <div class="fa-box">FA</div>
+          <div class="fa-box"><span class="fa-title">FA</span><small class="fa-status">Waiting</small><i class="electron"></i><i class="electron"></i><i class="electron"></i></div>
           <div class="sum-bit"><span>S<sub>${bit}</sub></span><em>–</em></div>
           ${bit === 0 ? `<div class="carry-input"><span>C<sub>0</sub></span><em>–</em></div>` : ''}
           ${bit < size - 1 ? `<div class="cout"><span>C<sub>${bit + 1}</sub></span><em>–</em></div>` : `<div class="final-carry"><span>C<sub>${size}</sub><em>–</em></span></div>`}`;
@@ -310,12 +352,32 @@
       node.className = `column ${completed ? 'done' : `active phase-${phase}`}`;
       node.querySelector('.a-bit em').textContent = stage.aBit;
       node.querySelector('.b-bit em').textContent = stage.bBit;
+      node.querySelector('.a-bit em').classList.toggle('value-high', stage.aBit === 1 && !completed);
+      node.querySelector('.b-bit em').classList.toggle('value-high', stage.bBit === 1 && !completed);
       if (node.querySelector('.carry-input em')) node.querySelector('.carry-input em').textContent = stage.carryIn;
       if (phase === 'sum' || phase === 'carry' || completed) node.querySelector('.sum-bit em').textContent = stage.sum;
       if (phase === 'carry' || completed) {
         const carryBadge = node.querySelector('.cout em, .final-carry em');
         if (carryBadge) carryBadge.textContent = stage.carryOut;
       }
+      node.querySelector('.fa-status').textContent = completed ? 'Stable' : phase === 'load' ? 'Reading inputs' : phase === 'sum' ? 'XOR → sum' : 'Generate / propagate';
+    }
+
+    function renderLogicMonitor(step) {
+      const labels = ['A input', 'B input', 'Carry in', 'A XOR B', 'Sum', 'Carry out'];
+      if (!step.stage) {
+        logicMonitor.innerHTML = labels.map(label => `<div class="logic-cell"><span>${label}</span><strong>–</strong></div>`).join('');
+        return;
+      }
+      const stage = step.stage;
+      const values = [stage.aBit, stage.bBit, stage.carryIn, stage.xor, stage.sum, stage.carryOut];
+      logicMonitor.innerHTML = labels.map((label, index) => {
+        let activeClass = '';
+        if (step.type === 'load' && index < 3) activeClass = 'hot';
+        if (step.type === 'sum' && (index === 3 || index === 4)) activeClass = 'sum-hot';
+        if (step.type === 'carry' && index === 5) activeClass = 'carry-hot';
+        return `<div class="logic-cell ${activeClass}"><span>${label}</span><strong>${values[index]}</strong></div>`;
+      }).join('');
     }
 
     function renderStep() {
@@ -327,6 +389,7 @@
       });
       if (current.stage) applyStageState(current.stage, current.type, false);
       explanation.innerHTML = `<strong>${current.title}</strong><br>${current.html}`;
+      renderLogicMonitor(current);
       stepLabel.textContent = current.title;
       stepCount.textContent = `Step ${lesson.index + 1} of ${lesson.steps.length}`;
       progressBar.style.width = `${((lesson.index + 1) / lesson.steps.length) * 100}%`;
