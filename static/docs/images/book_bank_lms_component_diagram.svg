@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="662" height="507" viewBox="0 0 662 507" role="img" aria-labelledby="title desc">
+  <title id="title">Book Bank LMS component diagram</title>
+  <desc id="desc">Component diagram connecting LMS DB, Search, Book, Transaction and Member components.</desc>
+  <defs>
+    <marker id="open" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto"><path d="M1 1 11 6 1 11" fill="none" stroke="#9a2350"/></marker>
+    <style>.component{fill:#fffdb4;stroke:#ae3b4d;stroke-width:1.1}.link{fill:none;stroke:#9a2350;stroke-width:1.1;stroke-dasharray:13 5;marker-end:url(#open)}.solid{fill:none;stroke:#9a2350;stroke-width:1.1;marker-end:url(#open)}.label{font:20px 'Arial Narrow',Arial,sans-serif;fill:#222}.heading{font:700 21px Georgia,serif;fill:#111}</style>
+  </defs>
+  <rect width="662" height="507" fill="white"/>
+  <text x="1" y="27" class="heading">1. Component Diagram</text>
+  <g class="component"><rect x="48" y="139" width="80" height="84"/><rect x="34" y="157" width="27" height="18"/><rect x="34" y="190" width="27" height="18"/><rect x="174" y="340" width="80" height="85"/><rect x="160" y="357" width="27" height="18"/><rect x="160" y="390" width="27" height="18"/><rect x="364" y="145" width="80" height="84"/><rect x="350" y="162" width="27" height="18"/><rect x="350" y="195" width="27" height="18"/><rect x="356" y="412" width="95" height="80"/><rect x="356" y="383" width="38" height="31"/><rect x="568" y="409" width="81" height="87"/><rect x="555" y="426" width="27" height="18"/><rect x="555" y="460" width="27" height="18"/></g>
+  <g class="label"><text x="65" y="161">LMS DB</text><text x="192" y="361">Search</text><text x="383" y="165">Book</text><text x="371" y="437">Transaction</text><text x="589" y="432">Member</text></g>
+  <path class="link" d="M350 187H128"/><path class="solid" d="M181 340 107 223"/><path class="solid" d="M403 412V229"/><path class="link" d="M451 452H568"/><path class="link" d="M602 409V79H79V139"/>
+</svg>

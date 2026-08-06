@@ -57,7 +57,7 @@ Swimlanes separate Student, Django System, and Librarian/Payment Gateway respons
 
 ## 7. Component Diagram
 
-![AEC Library component diagram](/static/docs/images/library_component_diagram.svg)
+![Book Bank LMS component diagram](/static/docs/images/book_bank_lms_component_diagram.svg)
 
 The component view shows the browser, Django routing and views, templates, domain models, ORM, fine utility, PostgreSQL, Cloudinary, and Razorpay with their provided dependencies.
 
