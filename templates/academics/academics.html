@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Academics — Binary Parallel Adder</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222}
+    h1{margin-bottom:8px}
+    .panel{border:1px solid #ddd;padding:16px;border-radius:6px;background:#fafafa}
+    .controls{margin:12px 0}
+    .bits{display:flex;gap:12px;align-items:end;justify-content:flex-end}
+    .column{display:flex;flex-direction:column;align-items:center}
+    .bit{width:56px;height:36px;border-radius:6px;border:1px solid #bbb;display:flex;align-items:center;justify-content:center;background:white}
+    .label{font-size:12px;color:#555;margin-bottom:6px}
+    .fa-box{width:90px;height:90px;border-radius:8px;border:2px solid #ccc;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
+    .fa-title{font-size:12px;color:#444}
+    .active{box-shadow:0 0 12px rgba(60,120,200,.4);border-color:#3c78c8}
+    .carry{font-weight:700;color:#c0392b}
+    .sum{font-weight:700;color:#117a65}
+    .row{display:flex;align-items:center;gap:12px;margin:6px 0}
+    .btn{padding:8px 12px;border-radius:6px;border:1px solid #3c78c8;background:#3c78c8;color:white;cursor:pointer}
+    .btn:disabled{opacity:.5;cursor:default}
+    .legend{margin-top:12px;font-size:13px;color:#555}
+  </style>
+</head>
+<body>
+  <h1>Binary Parallel Adder (Animated)</h1>
+  <div class="panel">
+    <p>Visual demonstration of a 4-bit binary parallel (ripple-carry) adder built from full adders. Enter two values and watch carries propagate.</p>
+
+    <div class="controls">
+      <label>Bits: <select id="bits"><option>4</option><option>5</option><option>6</option><option>8</option></select></label>
+      <label style="margin-left:12px">A: <input id="aval" value="9" size="4"></label>
+      <label style="margin-left:12px">B: <input id="bval" value="6" size="4"></label>
+      <button id="run" class="btn">Animate</button>
+      <button id="random" class="btn" style="background:#6c5ce7;border-color:#6c5ce7;margin-left:8px">Random</button>
+    </div>
+
+    <div id="canvas"></div>
+
+    <div class="legend">Legend: <span class="carry">Carry</span> <span style="margin-left:8px" class="sum">Sum</span></div>
+  </div>
+
+  <script>
+    function el(tag, cls){const d=document.createElement(tag); if(cls) d.className=cls; return d}
+
+    function buildLayout(n){const c=document.getElementById('canvas'); c.innerHTML='';
+      const rows=['A','B','Cin','FA','Sum','Cout'];
+      // Header labels
+      const container=document.createElement('div'); container.style.marginTop='16px';
+      // Bits columns
+      const bitsWrap=document.createElement('div'); bitsWrap.className='bits';
+      for(let i=n-1;i>=0;i--){
+        const col=el('div','column');
+        const lbl=el('div','label'); lbl.textContent='bit '+i; col.appendChild(lbl);
+        // A
+        col.appendChild(el('div','bit a-bit'));
+        col.appendChild(el('div','bit b-bit'));
+        col.appendChild(el('div','bit cin-bit'));
+        const fa=el('div','fa-box'); fa.innerHTML='<div class="fa-title">Full<br>Adder</div>'; col.appendChild(fa);
+        col.appendChild(el('div','bit sum-bit'));
+        col.appendChild(el('div','bit cout-bit'));
+        bitsWrap.appendChild(col);
+      }
+      container.appendChild(bitsWrap);
+      c.appendChild(container);
+    }
+
+    function animateAddition(A,B,n){
+      const canvas=document.getElementById('canvas');
+      const cols=canvas.querySelectorAll('.column');
+      const bitsA = A.toString(2).padStart(n,'0').split('').reverse().map(Number);
+      const bitsB = B.toString(2).padStart(n,'0').split('').reverse().map(Number);
+      // fill bits into DOM
+      cols.forEach((col, idx)=>{
+        const i=n-1-idx; // left-to-right col idx
+      });
+      // We'll animate LSB -> MSB to show carry ripple
+      let carry=0; let delay=0; const stepDelay=900;
+      for(let i=0;i<n;i++){
+        ((i,carryLocal)=>{
+          setTimeout(()=>{
+            const colIdx = n-1-i; // columns were built MSB..LSB left->right
+            const col = cols[colIdx];
+            const aBit = bitsA[i]; const bBit = bitsB[i];
+            // set values
+            col.querySelector('.a-bit').textContent = aBit;
+            col.querySelector('.b-bit').textContent = bBit;
+            col.querySelector('.cin-bit').textContent = carryLocal;
+            // highlight active
+            col.querySelector('.fa-box').classList.add('active');
+            col.querySelector('.a-bit').classList.add('active');
+            col.querySelector('.b-bit').classList.add('active');
+            col.querySelector('.cin-bit').classList.add('active');
+            // compute
+            const sum = (aBit ^ bBit ^ carryLocal);
+            const cout = ((aBit & bBit) | (bBit & carryLocal) | (aBit & carryLocal))?1:0;
+            setTimeout(()=>{
+              col.querySelector('.sum-bit').textContent = sum; col.querySelector('.sum-bit').classList.add('sum','active');
+              col.querySelector('.cout-bit').textContent = cout; col.querySelector('.cout-bit').classList.add('carry','active');
+            },250);
+            // remove highlight later
+            setTimeout(()=>{
+              col.querySelector('.fa-box').classList.remove('active');
+              col.querySelector('.a-bit').classList.remove('active');
+              col.querySelector('.b-bit').classList.remove('active');
+              col.querySelector('.cin-bit').classList.remove('active');
+            },700);
+            // next carry becomes current cout
+            carry = cout;
+          }, delay);
+        })(i,carry);
+        delay += stepDelay;
+      }
+      // final overflow display
+      setTimeout(()=>{
+        // leftmost column is cols[0]
+        const overflow=document.createElement('div'); overflow.style.marginTop='12px'; overflow.innerHTML='<strong>Result:</strong> '+ (A+B) + ' (decimal), binary: '+ (A+B).toString(2);
+        canvas.appendChild(overflow);
+      }, delay+200);
+    }
+
+    document.getElementById('run').addEventListener('click', ()=>{
+      const n = parseInt(document.getElementById('bits').value,10);
+      const A = Math.max(0,Math.min( (1<<n)-1, parseInt(document.getElementById('aval').value)||0 ));
+      const B = Math.max(0,Math.min( (1<<n)-1, parseInt(document.getElementById('bval').value)||0 ));
+      buildLayout(n);
+      animateAddition(A,B,n);
+    });
+
+    document.getElementById('random').addEventListener('click', ()=>{
+      const n = parseInt(document.getElementById('bits').value,10);
+      const max = (1<<n)-1; document.getElementById('aval').value = Math.floor(Math.random()*(max+1)); document.getElementById('bval').value = Math.floor(Math.random()*(max+1));
+    });
+
+    // initial build
+    buildLayout(4);
+  </script>
+</body>
+</html>

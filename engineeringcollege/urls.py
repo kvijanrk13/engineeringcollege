@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
 from django.views.static import serve
+from django.views.generic import TemplateView
 
 
 def health_check(request):
@@ -18,6 +19,7 @@ urlpatterns = [
     path('car-price/', include('car_price_app.urls')),
     path('aeclibrary/student/', include('student.urls')),
     path('aeclibrary/', include('library.urls')),
+    path('academics/', TemplateView.as_view(template_name='academics/academics.html'), name='academics'),
     path('etors/', include('etors.urls')),
     path('', include('dashboard.urls')),
 ]
