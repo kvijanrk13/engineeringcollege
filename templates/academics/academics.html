@@ -219,6 +219,56 @@
     .as-status { min-height: 65px; margin-top: 10px; padding: 14px 16px; border-left: 4px solid #7c3aed; border-radius: 8px; background: #f7f3ff; line-height: 1.6; }
     .as-result { display: none; margin-top: 12px; padding: 14px 16px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; }
     .as-result.show { display: block; }
+    .olap-intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
+    .olap-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fbff; }
+    .olap-card h3 { margin: 0 0 9px; color: var(--navy); }
+    .olap-card p { margin: 0; color: var(--muted); line-height: 1.65; }
+    .olap-definition { border-left: 5px solid #7c3aed; background: linear-gradient(135deg, #f8f5ff, #f5fbff); }
+    .olap-dimensions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 15px; }
+    .olap-dimension { padding: 10px 7px; border-radius: 9px; background: #fff; color: var(--navy); font-size: 13px; font-weight: 800; text-align: center; box-shadow: 0 3px 10px rgba(16,42,67,.08); }
+    .olap-dimension span { display: block; margin-bottom: 4px; font-size: 22px; }
+    .olap-flow { display: grid; grid-template-columns: repeat(7, auto); justify-content: center; align-items: center; gap: 10px; margin: 22px 0; padding: 22px 15px; overflow-x: auto; border-radius: 14px; background: var(--navy); color: #fff; }
+    .olap-node { min-width: 118px; padding: 15px 10px; border: 1px solid rgba(255,255,255,.3); border-radius: 11px; background: rgba(255,255,255,.08); text-align: center; transition: .3s; }
+    .olap-node span { display: block; margin-bottom: 7px; font-size: 25px; }
+    .olap-node strong { display: block; font-size: 13px; }
+    .olap-arrow { color: #78dce8; font-size: 26px; font-weight: 900; }
+    .olap-flow.running .olap-node { animation: olapNode 4s ease-in-out infinite; }
+    .olap-flow.running .olap-node:nth-of-type(3) { animation-delay: 1s; }
+    .olap-flow.running .olap-node:nth-of-type(5) { animation-delay: 2s; }
+    .olap-flow.running .olap-node:nth-of-type(7) { animation-delay: 3s; }
+    @keyframes olapNode { 0%, 20%, 100% { transform: translateY(0); box-shadow: none; } 10% { transform: translateY(-7px); background: #1677ff; box-shadow: 0 0 20px rgba(35,213,255,.65); } }
+    .olap-lab { display: grid; grid-template-columns: minmax(290px, .9fr) minmax(330px, 1.1fr); gap: 24px; padding: 22px; border: 1px solid var(--line); border-radius: 15px; background: #fff; }
+    .cube-stage { display: grid; place-items: center; min-height: 310px; overflow: hidden; border-radius: 12px; background: radial-gradient(circle at center, #eef7ff, #e7edfa); perspective: 800px; }
+    .olap-cube { position: relative; width: 150px; height: 150px; transform-style: preserve-3d; transform: rotateX(-22deg) rotateY(32deg); transition: transform .8s ease; animation: cubeFloat 3s ease-in-out infinite; }
+    .cube-face { position: absolute; display: grid; grid-template-columns: repeat(3, 1fr); width: 150px; height: 150px; border: 2px solid rgba(255,255,255,.85); background: rgba(22,119,255,.78); box-shadow: inset 0 0 30px rgba(255,255,255,.2); backface-visibility: visible; }
+    .cube-face i { border: 1px solid rgba(255,255,255,.48); transition: .3s; }
+    .cube-front { transform: translateZ(75px); }
+    .cube-back { transform: rotateY(180deg) translateZ(75px); }
+    .cube-right { transform: rotateY(90deg) translateZ(75px); background: rgba(124,58,237,.78); }
+    .cube-left { transform: rotateY(-90deg) translateZ(75px); background: rgba(124,58,237,.78); }
+    .cube-top { transform: rotateX(90deg) translateZ(75px); background: rgba(15,157,114,.78); }
+    .cube-bottom { transform: rotateX(-90deg) translateZ(75px); }
+    @keyframes cubeFloat { 50% { margin-top: -12px; } }
+    .olap-cube.slice .cube-face i:not(:nth-child(2)):not(:nth-child(5)):not(:nth-child(8)) { opacity: .15; }
+    .olap-cube.dice .cube-face i:nth-child(odd) { opacity: .15; }
+    .olap-cube.rollup { transform: rotateX(-12deg) rotateY(18deg) scale(.72); }
+    .olap-cube.drilldown { transform: rotateX(-28deg) rotateY(38deg) scale(1.2); }
+    .olap-cube.pivot { transform: rotateX(-22deg) rotateY(122deg); }
+    .cube-label { position: absolute; z-index: 4; padding: 5px 9px; border-radius: 99px; background: var(--navy); color: #fff; font-size: 11px; font-weight: 800; }
+    .label-product { transform: translate(105px,-105px); }
+    .label-time { transform: translate(-112px,-35px); }
+    .label-location { transform: translate(82px,105px); }
+    .olap-operations h3 { margin: 0 0 7px; color: var(--navy); }
+    .olap-operations > p { margin: 0 0 15px; color: var(--muted); line-height: 1.55; }
+    .operation-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    .operation-btn { padding: 9px 12px; border: 1px solid #9fb3c8; border-radius: 8px; background: #fff; color: var(--navy); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+    .operation-btn:hover, .operation-btn.active { border-color: #7c3aed; background: #f3efff; color: #6d28d9; }
+    .operation-explanation { min-height: 126px; margin-top: 16px; padding: 15px; border-left: 4px solid #7c3aed; border-radius: 9px; background: #f8f5ff; line-height: 1.6; }
+    .operation-explanation strong { color: var(--navy); }
+    .olap-benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+    .olap-benefit { padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: #fafcff; }
+    .olap-benefit strong { display: block; margin-bottom: 5px; color: var(--navy); }
+    .olap-benefit span { color: var(--muted); font-size: 14px; line-height: 1.5; }
     @media (max-width: 700px) {
       .page { width: min(100% - 16px, 1180px); margin: 8px auto; }
       .hero, .tab-panel { padding: 20px; }
@@ -228,6 +278,9 @@
       .bits { justify-content: flex-start; }
       .logic-monitor { grid-template-columns: repeat(3, 1fr); }
       .as-bits { justify-content: flex-start; }
+      .olap-intro, .olap-lab { grid-template-columns: 1fr; }
+      .olap-benefits { grid-template-columns: 1fr; }
+      .olap-flow { justify-content: flex-start; }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
   </style>
@@ -242,6 +295,7 @@
 
     <nav class="tabs" role="tablist" aria-label="Academic subjects">
       <button class="tab active" id="coa-tab" role="tab" aria-selected="true" aria-controls="coa-panel" data-panel="coa-panel">COA</button>
+      <button class="tab" id="data-mining-tab" role="tab" aria-selected="false" aria-controls="data-mining-panel" data-panel="data-mining-panel">DATA MINING</button>
     </nav>
 
     <section class="tab-panel active" id="coa-panel" role="tabpanel" aria-labelledby="coa-tab">
@@ -315,6 +369,68 @@
         <div id="as-result" class="as-result"></div>
       </section>
     </section>
+
+    <section class="tab-panel" id="data-mining-panel" role="tabpanel" aria-labelledby="data-mining-tab">
+      <div class="topic-head">
+        <div>
+          <h2>OnLine Analytical Processing (OLAP)</h2>
+          <p>Explore how multidimensional data supports fast analysis and better decisions in data mining.</p>
+        </div>
+      </div>
+
+      <div class="olap-intro">
+        <article class="olap-card olap-definition">
+          <h3>What is OLAP?</h3>
+          <p><strong>OnLine Analytical Processing</strong> is a technology for examining large amounts of historical data from several perspectives. It organizes measures such as sales, profit, or student performance inside a multidimensional cube so users can summarize data, compare trends, and discover patterns quickly.</p>
+        </article>
+        <article class="olap-card">
+          <h3>Example sales cube</h3>
+          <p>The numerical <strong>measure</strong> is Sales. It is analyzed through three dimensions:</p>
+          <div class="olap-dimensions">
+            <div class="olap-dimension"><span>📦</span>Product</div>
+            <div class="olap-dimension"><span>📅</span>Time</div>
+            <div class="olap-dimension"><span>📍</span>Location</div>
+          </div>
+        </article>
+      </div>
+
+      <div id="olap-flow" class="olap-flow running" aria-label="OLAP data flow animation">
+        <div class="olap-node"><span>🗃️</span><strong>Data Sources</strong></div><div class="olap-arrow">→</div>
+        <div class="olap-node"><span>🏢</span><strong>Data Warehouse</strong></div><div class="olap-arrow">→</div>
+        <div class="olap-node"><span>🧊</span><strong>OLAP Cube</strong></div><div class="olap-arrow">→</div>
+        <div class="olap-node"><span>📈</span><strong>Insights</strong></div>
+      </div>
+
+      <div class="olap-lab">
+        <div class="cube-stage" aria-label="Animated OLAP cube">
+          <div id="olap-cube" class="olap-cube">
+            <div class="cube-face cube-front"></div><div class="cube-face cube-back"></div>
+            <div class="cube-face cube-right"></div><div class="cube-face cube-left"></div>
+            <div class="cube-face cube-top"></div><div class="cube-face cube-bottom"></div>
+          </div>
+          <span class="cube-label label-product">Product</span><span class="cube-label label-time">Time</span><span class="cube-label label-location">Location</span>
+        </div>
+        <div class="olap-operations">
+          <h3>Try the five OLAP operations</h3>
+          <p>Select an operation to see how an analyst changes the view of the cube.</p>
+          <div class="operation-buttons" role="group" aria-label="OLAP operations">
+            <button class="operation-btn active" type="button" data-operation="slice">Slice</button>
+            <button class="operation-btn" type="button" data-operation="dice">Dice</button>
+            <button class="operation-btn" type="button" data-operation="rollup">Roll-up</button>
+            <button class="operation-btn" type="button" data-operation="drilldown">Drill-down</button>
+            <button class="operation-btn" type="button" data-operation="pivot">Pivot</button>
+          </div>
+          <div id="operation-explanation" class="operation-explanation" aria-live="polite"></div>
+          <button id="olap-auto" class="btn" type="button">▶ Play guided animation</button>
+        </div>
+      </div>
+
+      <div class="olap-benefits">
+        <div class="olap-benefit"><strong>Fast queries</strong><span>Pre-aggregated cube values make complex analytical questions quick to answer.</span></div>
+        <div class="olap-benefit"><strong>Multidimensional view</strong><span>Compare the same measure by time, place, product, department, or other dimensions.</span></div>
+        <div class="olap-benefit"><strong>Data-mining support</strong><span>OLAP reveals trends and unusual regions that can be explored further with mining algorithms.</span></div>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -337,6 +453,48 @@
     const asStatus = document.getElementById('as-status');
     const asResult = document.getElementById('as-result');
     let asTimers = [];
+    const olapCube = document.getElementById('olap-cube');
+    const operationExplanation = document.getElementById('operation-explanation');
+    const olapOperationButtons = [...document.querySelectorAll('.operation-btn')];
+    let olapTimer = null;
+    const olapOperations = {
+      slice: ['Slice', 'Fix one dimension to a single value. Example: view sales for <strong>2026 only</strong> across every product and location.'],
+      dice: ['Dice', 'Choose a smaller sub-cube using several conditions. Example: show <strong>Laptops and Phones</strong> in <strong>Hyderabad and Delhi</strong> during Q1.'],
+      rollup: ['Roll-up', 'Aggregate detailed data into a higher-level summary. Example: combine daily sales into <strong>monthly or yearly totals</strong>.'],
+      drilldown: ['Drill-down', 'Move from a summary to finer detail. Example: open annual sales, then inspect <strong>quarters, months, and individual days</strong>.'],
+      pivot: ['Pivot', 'Rotate the cube to swap dimensions and obtain a new report orientation, such as placing <strong>Location on rows and Product on columns</strong>.']
+    };
+
+    document.querySelectorAll('.cube-face').forEach(face => {
+      face.innerHTML = '<i></i>'.repeat(9);
+    });
+
+    function showOlapOperation(operation) {
+      const content = olapOperations[operation];
+      olapCube.className = `olap-cube ${operation}`;
+      operationExplanation.innerHTML = `<strong>${content[0]}</strong><br>${content[1]}`;
+      olapOperationButtons.forEach(button => button.classList.toggle('active', button.dataset.operation === operation));
+    }
+
+    function stopOlapAnimation() {
+      clearInterval(olapTimer);
+      olapTimer = null;
+      document.getElementById('olap-auto').textContent = '▶ Play guided animation';
+    }
+
+    olapOperationButtons.forEach(button => button.addEventListener('click', () => {
+      stopOlapAnimation();
+      showOlapOperation(button.dataset.operation);
+    }));
+    document.getElementById('olap-auto').addEventListener('click', event => {
+      if (olapTimer) { stopOlapAnimation(); return; }
+      let index = 0;
+      const operations = Object.keys(olapOperations);
+      showOlapOperation(operations[index]);
+      event.currentTarget.textContent = '❚❚ Pause animation';
+      olapTimer = setInterval(() => { index = (index + 1) % operations.length; showOlapOperation(operations[index]); }, 2800);
+    });
+    showOlapOperation('slice');
 
     function stopTimer() {
       clearTimeout(timer);
@@ -599,6 +757,7 @@
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
       document.getElementById(tab.dataset.panel).classList.add('active');
+      if (tab.dataset.panel !== 'data-mining-panel') stopOlapAnimation();
     }));
     document.getElementById('bits').addEventListener('change', event => { stopTimer(); lesson = null; playing = false; buildLayout(Number(event.target.value)); });
     runButton.addEventListener('click', startLesson);
