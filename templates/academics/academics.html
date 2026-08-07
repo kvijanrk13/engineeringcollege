@@ -34,7 +34,7 @@
     .topic-head h2 { margin: 0 0 6px; color: var(--navy); }
     .topic-head p { margin: 0; color: var(--muted); line-height: 1.55; }
     .video-link { white-space: nowrap; color: var(--blue); font-weight: 700; text-decoration: none; }
-    .coa-lesson-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 22px; }
+    .coa-lesson-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 22px; }
     .coa-lesson-link { display: flex; align-items: center; gap: 12px; min-height: 74px; padding: 13px 15px; border: 2px solid var(--line); border-radius: 12px; background: #f8fbff; color: var(--navy); text-align: left; text-decoration: none; cursor: pointer; transition: .2s; }
     .coa-lesson-link:hover, .coa-lesson-link:focus { border-color: var(--blue); background: var(--blue-soft); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(16,42,67,.1); }
     .coa-lesson-link.arithmetic-link { border-color: #7c3aed; background: #f8f5ff; }
@@ -251,6 +251,23 @@
     .arithmetic-status { min-height: 76px; margin-top: 14px; padding: 15px 17px; border-left: 4px solid #7c3aed; border-radius: 9px; background: #f8f5ff; line-height: 1.65; }
     .arithmetic-result { display: none; margin-top: 12px; padding: 15px 17px; border-left: 4px solid var(--green); border-radius: 9px; background: #edfbf6; line-height: 1.6; }
     .arithmetic-result.show { display: block; }
+    .incrementer-section { margin-top: 34px; padding-top: 28px; border-top: 2px solid var(--line); }
+    .incrementer-section h2 { margin: 0 0 6px; color: var(--navy); }
+    .incrementer-board { margin-top: 18px; padding: 18px; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, #fbfdff, #eefaf6); }
+    .incrementer-svg { display: block; width: 100%; min-width: 720px; height: auto; }
+    .incrementer-svg text { fill: var(--navy); font-family: Inter, Arial, sans-serif; font-weight: 700; }
+    .incrementer-svg .inc-wire { fill: none; stroke: #8093a7; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: .3s; }
+    .incrementer-svg .ha-block { fill: #fff; stroke: var(--navy); stroke-width: 2.5; transition: .3s; }
+    .incrementer-svg .inc-stage.active .ha-block { fill: #eef7ff; stroke: var(--blue); filter: drop-shadow(0 0 8px rgba(22,119,255,.65)); }
+    .incrementer-svg .inc-stage.done .ha-block { fill: #e8faf3; stroke: var(--green); }
+    .incrementer-svg .inc-signal { stroke: #7c3aed; stroke-width: 4; stroke-dasharray: 10 7; animation: arithmeticSignal .65s linear infinite; filter: drop-shadow(0 0 4px rgba(124,58,237,.6)); }
+    .incrementer-svg .inc-carry.active { stroke: var(--red); stroke-width: 4; stroke-dasharray: 10 7; animation: arithmeticSignal .65s linear infinite; filter: drop-shadow(0 0 4px rgba(220,53,69,.65)); }
+    .incrementer-svg .inc-stage.done .sum-output { stroke: var(--green); stroke-width: 4; }
+    .incrementer-svg .inc-badge { fill: #fff; stroke: #9fb3c8; stroke-width: 1.5; }
+    .incrementer-svg .inc-value { font-family: Consolas, monospace; font-size: 14px; }
+    .incrementer-status { min-height: 76px; margin-top: 14px; padding: 15px 17px; border-left: 4px solid #7c3aed; border-radius: 9px; background: #f8f5ff; line-height: 1.65; }
+    .incrementer-result { display: none; margin-top: 12px; padding: 15px 17px; border-left: 4px solid var(--green); border-radius: 9px; background: #edfbf6; line-height: 1.6; }
+    .incrementer-result.show { display: block; }
     .function-table { width: 100%; margin-top: 18px; border-collapse: collapse; font-size: 14px; }
     .function-table th, .function-table td { padding: 10px; border: 1px solid var(--line); text-align: left; }
     .function-table th { background: var(--navy); color: #fff; }
@@ -354,6 +371,9 @@
         <a id="arithmetic-lesson-link" class="coa-lesson-link arithmetic-link" href="#arithmetic-circuit-title">
           <span class="lesson-icon">▦</span><span><strong>Arithmetic Circuit</strong><small>4×1 MUX and full-adder animation</small></span>
         </a>
+        <a id="incrementer-lesson-link" class="coa-lesson-link" href="#incrementer-title">
+          <span class="lesson-icon">↑</span><span><strong>Binary Incrementer</strong><small>Four half adders calculate A + 1</small></span>
+        </a>
       </nav>
 
       <div id="parallel-adder-lesson" class="controls">
@@ -447,6 +467,24 @@
           </tbody>
         </table>
       </section>
+
+      <section class="incrementer-section" aria-labelledby="incrementer-title">
+        <h2 id="incrementer-title">Four-Bit Binary Incrementer</h2>
+        <p class="arithmetic-lead">Four half adders increase a binary number by one. The constant <strong>1</strong> enters HA₀; each carry output becomes the y input of the half adder to its left, exactly as in the supplied circuit.</p>
+        <div class="controls">
+          <label>Input A (0–15)<input id="inc-a" type="number" min="0" max="15" value="7"></label>
+          <button id="inc-run" class="btn" type="button">Start incrementer animation</button>
+          <button id="inc-random" class="btn secondary" type="button">Random input</button>
+        </div>
+        <div class="incrementer-board" aria-live="polite"><div id="incrementer-canvas"></div></div>
+        <div id="incrementer-status" class="incrementer-status"><strong>Ready:</strong> Choose a four-bit value and start the animation to calculate A + 1.</div>
+        <div id="incrementer-result" class="incrementer-result"></div>
+        <div class="formula-grid">
+          <div class="formula"><strong>Half-adder sum</strong><code>Sᵢ = Aᵢ ⊕ Cᵢ</code></div>
+          <div class="formula"><strong>Half-adder carry</strong><code>Cᵢ₊₁ = Aᵢ · Cᵢ</code></div>
+          <div class="formula"><strong>Increment operation</strong><code>S = A + 1</code></div>
+        </div>
+      </section>
     </section>
 
     <section class="tab-panel" id="data-mining-panel" role="tabpanel" aria-labelledby="data-mining-tab">
@@ -536,6 +574,10 @@
     const arithmeticStatus = document.getElementById('arithmetic-status');
     const arithmeticResult = document.getElementById('arithmetic-result');
     let arithmeticTimers = [];
+    const incrementerCanvas = document.getElementById('incrementer-canvas');
+    const incrementerStatus = document.getElementById('incrementer-status');
+    const incrementerResult = document.getElementById('incrementer-result');
+    let incrementerTimers = [];
     const olapCube = document.getElementById('olap-cube');
     const operationExplanation = document.getElementById('operation-explanation');
     const olapOperationButtons = [...document.querySelectorAll('.operation-btn')];
@@ -594,6 +636,75 @@
       arithmeticTimers.forEach(clearTimeout);
       arithmeticTimers = [];
       document.getElementById('arith-run').disabled = false;
+    }
+
+    function clearIncrementerTimers() {
+      incrementerTimers.forEach(clearTimeout);
+      incrementerTimers = [];
+      document.getElementById('inc-run').disabled = false;
+    }
+
+    function buildIncrementer() {
+      const positions = { 3: 65, 2: 245, 1: 425, 0: 605 };
+      const stages = [3, 2, 1, 0].map(bit => {
+        const x = positions[bit];
+        return `<g class="inc-stage" data-inc-bit="${bit}">
+          <text x="${x + 29}" y="28" font-size="18">A${bit}</text><path class="inc-wire a-input" d="M${x + 35} 36 V90" />
+          <text x="${x + 27}" y="123" font-size="16">x</text><text x="${x + 82}" y="123" font-size="16">y</text>
+          <rect class="ha-block" x="${x}" y="90" width="120" height="145" rx="4" /><text x="${x + 43}" y="172" font-size="24">HA</text>
+          <text x="${x + 27}" y="217" font-size="16">C</text><text x="${x + 82}" y="217" font-size="16">S</text>
+          <path class="inc-wire sum-output" d="M${x + 85} 235 V310" /><text x="${x + 75}" y="338" font-size="18">S${bit}</text>
+          <rect class="inc-badge" x="${x + 96}" y="276" width="28" height="23" rx="11" /><text class="inc-value sum-value" x="${x + 106}" y="293">–</text>
+        </g>`;
+      }).join('');
+      const carries = [0, 1, 2].map(bit => {
+        const fromX = positions[bit] + 35;
+        const toX = positions[bit + 1] + 85;
+        return `<path class="inc-wire inc-carry" data-inc-carry="${bit + 1}" d="M${fromX} 235 V270 H${toX} V90" /><text x="${(fromX + toX) / 2 - 8}" y="265" font-size="13">C${bit + 1}</text>`;
+      }).join('');
+      incrementerCanvas.innerHTML = `<svg class="incrementer-svg" viewBox="0 0 790 360" role="img" aria-label="Animated four-bit binary incrementer made from four half adders">
+        ${stages}${carries}
+        <text x="696" y="28" font-size="19">1</text><path class="inc-wire inc-carry inc-signal" data-inc-carry="0" d="M690 36 V90" />
+        <path class="inc-wire inc-carry" data-inc-carry="4" d="M100 235 V310" /><text x="78" y="338" font-size="18">C4</text>
+      </svg>`;
+    }
+
+    function startIncrementer() {
+      clearIncrementerTimers();
+      buildIncrementer();
+      const input = Math.max(0, Math.min(15, Number.parseInt(document.getElementById('inc-a').value, 10) || 0));
+      document.getElementById('inc-a').value = input;
+      document.getElementById('inc-run').disabled = true;
+      incrementerResult.classList.remove('show');
+      let carry = 1;
+      const stages = [];
+      for (let bit = 0; bit < 4; bit += 1) {
+        const aBit = (input >> bit) & 1;
+        stages.push({ bit, aBit, carryIn: carry, sum: aBit ^ carry, carryOut: aBit & carry });
+        carry = aBit & carry;
+      }
+      incrementerStatus.innerHTML = `<strong>Constant 1 applied:</strong> HA0 receives A0 and 1. Input A = ${input.toString(2).padStart(4, '0')}.`;
+      stages.forEach((stage, index) => {
+        incrementerTimers.push(setTimeout(() => {
+          if (index > 0) incrementerCanvas.querySelector(`[data-inc-bit="${stage.bit - 1}"]`).classList.replace('active', 'done');
+          const node = incrementerCanvas.querySelector(`[data-inc-bit="${stage.bit}"]`);
+          node.classList.add('active');
+          node.querySelector('.sum-value').textContent = stage.sum;
+          const carryPath = incrementerCanvas.querySelector(`[data-inc-carry="${stage.bit}"]`);
+          if (carryPath) carryPath.classList.add('active');
+          incrementerStatus.innerHTML = `<strong>HA${stage.bit} active:</strong> x=A${stage.bit}=${stage.aBit}, y=C${stage.bit}=${stage.carryIn}. Sum S${stage.bit}=${stage.aBit} XOR ${stage.carryIn} = ${stage.sum}; carry C${stage.bit + 1}=${stage.aBit}·${stage.carryIn} = ${stage.carryOut}.`;
+        }, (index + 1) * 1500));
+      });
+      incrementerTimers.push(setTimeout(() => {
+        incrementerCanvas.querySelector('[data-inc-bit="3"]').classList.replace('active', 'done');
+        incrementerCanvas.querySelector('[data-inc-carry="4"]').classList.add('active');
+        const raw = input + 1;
+        const sum = raw & 15;
+        incrementerStatus.innerHTML = '<strong>Complete:</strong> The carry has settled through all four half adders. Read C4S3S2S1S0.';
+        incrementerResult.innerHTML = `<strong>A + 1 = ${input} + 1 = ${raw}</strong><br>Input A: ${input.toString(2).padStart(4, '0')} &nbsp; Output S: ${sum.toString(2).padStart(4, '0')} &nbsp; Overflow C4: ${raw > 15 ? 1 : 0}`;
+        incrementerResult.classList.add('show');
+        document.getElementById('inc-run').disabled = false;
+      }, 7500));
     }
 
     function muxSourceLabel(select) {
@@ -967,10 +1078,19 @@
         startArithmeticCircuit();
       }, 80);
     });
+    document.getElementById('inc-run').addEventListener('click', startIncrementer);
+    document.getElementById('inc-random').addEventListener('click', () => { document.getElementById('inc-a').value = Math.floor(Math.random() * 16); startIncrementer(); });
+    document.getElementById('incrementer-lesson-link').addEventListener('click', () => {
+      window.setTimeout(() => {
+        document.getElementById('incrementer-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        startIncrementer();
+      }, 80);
+    });
 
     buildLayout(4);
     buildAdderSubtractor(0);
     buildArithmeticCircuit(0);
+    buildIncrementer();
   </script>
 </body>
 </html>
