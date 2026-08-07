@@ -219,6 +219,34 @@
     .as-status { min-height: 65px; margin-top: 10px; padding: 14px 16px; border-left: 4px solid #7c3aed; border-radius: 8px; background: #f7f3ff; line-height: 1.6; }
     .as-result { display: none; margin-top: 12px; padding: 14px 16px; border-left: 4px solid var(--green); border-radius: 8px; background: #edfbf6; }
     .as-result.show { display: block; }
+    .arithmetic-section { margin-top: 34px; padding-top: 28px; border-top: 2px solid var(--line); }
+    .arithmetic-section h2 { margin: 0 0 6px; color: var(--navy); }
+    .arithmetic-lead { margin: 0 0 18px; color: var(--muted); line-height: 1.6; }
+    .arithmetic-board { margin-top: 18px; padding: 18px; overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, #fbfdff, #edf4fb); }
+    .arithmetic-svg { display: block; width: 100%; min-width: 760px; height: auto; }
+    .arithmetic-svg text { fill: var(--navy); font-family: Inter, Arial, sans-serif; font-weight: 700; }
+    .arithmetic-svg .wire { fill: none; stroke: #8093a7; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .3s, opacity .3s; }
+    .arithmetic-svg .bus { stroke: #7c3aed; stroke-width: 2.5; }
+    .arithmetic-svg .block { fill: #fff; stroke: var(--navy); stroke-width: 2.3; }
+    .arithmetic-svg .mux-block { fill: #f7f3ff; stroke: #7c3aed; }
+    .arithmetic-svg .fa-block { fill: #eef7ff; stroke: #1677ff; }
+    .arithmetic-svg .inverter { fill: #fff; stroke: var(--navy); stroke-width: 2; }
+    .arithmetic-svg .junction { fill: var(--navy); }
+    .arithmetic-svg .selected-wire { stroke: #7c3aed; stroke-width: 4; stroke-dasharray: 10 7; animation: arithmeticSignal .7s linear infinite; filter: drop-shadow(0 0 4px rgba(124,58,237,.65)); }
+    .arithmetic-svg .carry-wire.active { stroke: var(--red); stroke-width: 4; stroke-dasharray: 10 7; animation: arithmeticSignal .65s linear infinite; filter: drop-shadow(0 0 4px rgba(220,53,69,.65)); }
+    .arithmetic-svg .stage-active .block { filter: drop-shadow(0 0 8px rgba(22,119,255,.65)); }
+    .arithmetic-svg .stage-done .fa-block { fill: #e8faf3; stroke: var(--green); }
+    .arithmetic-svg .stage-done .output-wire { stroke: var(--green); stroke-width: 4; }
+    .arithmetic-svg .bit-badge { fill: #fff; stroke: #9fb3c8; stroke-width: 1.5; }
+    .arithmetic-svg .bit-value { font-family: Consolas, monospace; font-size: 14px; }
+    @keyframes arithmeticSignal { to { stroke-dashoffset: -34; } }
+    .arithmetic-status { min-height: 76px; margin-top: 14px; padding: 15px 17px; border-left: 4px solid #7c3aed; border-radius: 9px; background: #f8f5ff; line-height: 1.65; }
+    .arithmetic-result { display: none; margin-top: 12px; padding: 15px 17px; border-left: 4px solid var(--green); border-radius: 9px; background: #edfbf6; line-height: 1.6; }
+    .arithmetic-result.show { display: block; }
+    .function-table { width: 100%; margin-top: 18px; border-collapse: collapse; font-size: 14px; }
+    .function-table th, .function-table td { padding: 10px; border: 1px solid var(--line); text-align: left; }
+    .function-table th { background: var(--navy); color: #fff; }
+    .function-table tr.selected td { background: #f3efff; color: #6d28d9; font-weight: 800; }
     .olap-intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
     .olap-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fbff; }
     .olap-card h3 { margin: 0 0 9px; color: var(--navy); }
@@ -368,6 +396,36 @@
         <div id="as-status" class="as-status"><strong>Ready:</strong> Select addition or subtraction, then start the five-second staged animation.</div>
         <div id="as-result" class="as-result"></div>
       </section>
+
+      <section class="arithmetic-section" aria-labelledby="arithmetic-circuit-title">
+        <h2 id="arithmetic-circuit-title">Four-Bit Arithmetic Circuit</h2>
+        <p class="arithmetic-lead">This circuit follows the supplied diagram. Each 4×1 MUX selects <strong>B<sub>i</sub>, B̅<sub>i</sub>, 0, or 1</strong> using the common select lines S₁S₀. Its selected Y input is added to A<sub>i</sub> and the ripple carry by a full adder.</p>
+        <div class="controls">
+          <label>Input A (0–15)<input id="arith-a" type="number" min="0" max="15" value="9"></label>
+          <label>Input B (0–15)<input id="arith-b" type="number" min="0" max="15" value="5"></label>
+          <label>Select S₁S₀
+            <select id="arith-select"><option value="0">00 — Select B</option><option value="1">01 — Select B̅</option><option value="2">10 — Select 0</option><option value="3">11 — Select 1</option></select>
+          </label>
+          <label>Carry input Cᵢₙ<select id="arith-cin"><option value="0">0</option><option value="1">1</option></select></label>
+          <button id="arith-run" class="btn" type="button">Start circuit animation</button>
+        </div>
+        <div class="arithmetic-board" aria-live="polite"><div id="arithmetic-canvas"></div></div>
+        <div id="arithmetic-status" class="arithmetic-status"><strong>Ready:</strong> Choose S₁S₀ and Cᵢₙ to select an arithmetic microoperation, then start the animation.</div>
+        <div id="arithmetic-result" class="arithmetic-result"></div>
+        <table class="function-table" aria-label="Arithmetic circuit function table">
+          <thead><tr><th>S₁S₀</th><th>Cᵢₙ</th><th>Selected Y</th><th>Arithmetic operation</th></tr></thead>
+          <tbody>
+            <tr data-function="0-0"><td>00</td><td>0</td><td>B</td><td>D = A + B</td></tr>
+            <tr data-function="0-1"><td>00</td><td>1</td><td>B</td><td>D = A + B + 1</td></tr>
+            <tr data-function="1-0"><td>01</td><td>0</td><td>B̅</td><td>D = A + B̅ (subtract with borrow)</td></tr>
+            <tr data-function="1-1"><td>01</td><td>1</td><td>B̅</td><td>D = A − B</td></tr>
+            <tr data-function="2-0"><td>10</td><td>0</td><td>0</td><td>D = A (transfer A)</td></tr>
+            <tr data-function="2-1"><td>10</td><td>1</td><td>0</td><td>D = A + 1 (increment A)</td></tr>
+            <tr data-function="3-0"><td>11</td><td>0</td><td>1</td><td>D = A − 1 (decrement A)</td></tr>
+            <tr data-function="3-1"><td>11</td><td>1</td><td>1</td><td>D = A (with C₄ = 1)</td></tr>
+          </tbody>
+        </table>
+      </section>
     </section>
 
     <section class="tab-panel" id="data-mining-panel" role="tabpanel" aria-labelledby="data-mining-tab">
@@ -453,6 +511,10 @@
     const asStatus = document.getElementById('as-status');
     const asResult = document.getElementById('as-result');
     let asTimers = [];
+    const arithmeticCanvas = document.getElementById('arithmetic-canvas');
+    const arithmeticStatus = document.getElementById('arithmetic-status');
+    const arithmeticResult = document.getElementById('arithmetic-result');
+    let arithmeticTimers = [];
     const olapCube = document.getElementById('olap-cube');
     const operationExplanation = document.getElementById('operation-explanation');
     const olapOperationButtons = [...document.querySelectorAll('.operation-btn')];
@@ -505,6 +567,102 @@
       asTimers.forEach(clearTimeout);
       asTimers = [];
       document.getElementById('as-run').disabled = false;
+    }
+
+    function clearArithmeticTimers() {
+      arithmeticTimers.forEach(clearTimeout);
+      arithmeticTimers = [];
+      document.getElementById('arith-run').disabled = false;
+    }
+
+    function muxSourceLabel(select) {
+      return ['Bᵢ', 'B̅ᵢ', '0', '1'][select];
+    }
+
+    function buildArithmeticCircuit(select = 0) {
+      const stages = [0, 1, 2, 3].map(bit => {
+        const y = 92 + bit * 155;
+        return `<g class="arithmetic-stage" data-arith-bit="${bit}">
+          <text x="24" y="${y + 20}">A${bit}</text><path class="wire a-wire" d="M48 ${y + 16} H565" />
+          <text x="24" y="${y + 70}">B${bit}</text><path class="wire" d="M48 ${y + 66} H92" /><circle class="junction" cx="72" cy="${y + 66}" r="4" />
+          <path class="wire mux-input input-0" d="M72 ${y + 66} H300 V${y + 43} H350" />
+          <path class="wire" d="M72 ${y + 66} V${y + 88} H102" /><path class="inverter" d="M102 ${y + 77} L102 ${y + 99} L126 ${y + 88} Z" /><circle class="inverter" cx="132" cy="${y + 88}" r="6" />
+          <path class="wire mux-input input-1" d="M138 ${y + 88} H315 V${y + 63} H350" />
+          <path class="wire mux-input input-2" d="M286 ${y + 83} H350" /><text x="270" y="${y + 88}">0</text>
+          <path class="wire mux-input input-3" d="M286 ${y + 103} H350" /><text x="270" y="${y + 108}">1</text>
+          <rect class="block mux-block" x="350" y="${y + 25}" width="130" height="98" rx="5" /><text x="380" y="${y + 66}" font-size="18">4 × 1</text><text x="390" y="${y + 88}" font-size="18">MUX</text>
+          <text x="356" y="${y + 47}" font-size="12">0</text><text x="356" y="${y + 67}" font-size="12">1</text><text x="356" y="${y + 87}" font-size="12">2</text><text x="356" y="${y + 107}" font-size="12">3</text>
+          <path class="wire mux-output" d="M480 ${y + 74} H565" /><text x="505" y="${y + 67}" font-size="12">Y${bit}</text>
+          <rect class="block fa-block" x="565" y="${y}" width="105" height="105" rx="5" /><text x="605" y="${y + 58}" font-size="22">FA</text><text x="574" y="${y + 18}" font-size="12">X${bit}</text><text x="574" y="${y + 91}" font-size="12">Y${bit}</text>
+          <path class="wire output-wire" d="M670 ${y + 53} H735" /><text x="742" y="${y + 59}" font-size="17">D${bit}</text>
+          <rect class="bit-badge" x="690" y="${y + 22}" width="29" height="24" rx="12" /><text class="bit-value d-value" x="700" y="${y + 39}">–</text>
+        </g>`;
+      }).join('');
+      const carryPaths = [0, 1, 2].map(bit => {
+        const top = 92 + bit * 155;
+        return `<path class="wire carry-wire" data-carry="${bit + 1}" d="M617 ${top + 105} V${top + 155}" /><text x="625" y="${top + 137}" font-size="12">C${bit + 1}</text>`;
+      }).join('');
+      arithmeticCanvas.innerHTML = `<svg class="arithmetic-svg" viewBox="0 0 800 760" role="img" aria-label="Animated four-bit arithmetic circuit with multiplexers and full adders">
+        <text x="148" y="25" font-size="14">S₁</text><path class="wire bus" d="M164 20 V690" /><text x="190" y="25" font-size="14">S₀</text><path class="wire bus" d="M206 20 V690" />
+        <text x="680" y="25" font-size="14">Cᵢₙ</text><path class="wire carry-wire" data-carry="0" d="M617 32 V92" />
+        ${stages}${carryPaths}
+        <path class="wire carry-wire" data-carry="4" d="M617 662 V725 H705" /><text x="714" y="731" font-size="16">Cₒᵤₜ</text>
+        <text x="88" y="720" font-size="13">Common select buses choose MUX input ${select}: ${muxSourceLabel(select)}</text>
+      </svg>`;
+      arithmeticCanvas.querySelectorAll(`.input-${select}`).forEach(path => path.classList.add('selected-wire'));
+    }
+
+    function arithmeticValues() {
+      const clamp4 = id => Math.max(0, Math.min(15, Number.parseInt(document.getElementById(id).value, 10) || 0));
+      const a = clamp4('arith-a');
+      const b = clamp4('arith-b');
+      const select = Number(document.getElementById('arith-select').value);
+      const cin = Number(document.getElementById('arith-cin').value);
+      document.getElementById('arith-a').value = a;
+      document.getElementById('arith-b').value = b;
+      return { a, b, select, cin };
+    }
+
+    function startArithmeticCircuit() {
+      clearArithmeticTimers();
+      const values = arithmeticValues();
+      buildArithmeticCircuit(values.select);
+      arithmeticResult.classList.remove('show');
+      document.getElementById('arith-run').disabled = true;
+      document.querySelectorAll('[data-function]').forEach(row => row.classList.toggle('selected', row.dataset.function === `${values.select}-${values.cin}`));
+      const selectedWord = [values.b, (~values.b) & 15, 0, 15][values.select];
+      let carry = values.cin;
+      const bits = [];
+      for (let bit = 0; bit < 4; bit += 1) {
+        const aBit = (values.a >> bit) & 1;
+        const yBit = (selectedWord >> bit) & 1;
+        const sum = aBit + yBit + carry;
+        bits.push({ bit, aBit, yBit, carryIn: carry, d: sum & 1, carryOut: sum > 1 ? 1 : 0 });
+        carry = sum > 1 ? 1 : 0;
+      }
+      arithmeticStatus.innerHTML = `<strong>MUX selection:</strong> S₁S₀ = ${values.select.toString(2).padStart(2, '0')} selects ${muxSourceLabel(values.select)}. The selected four-bit word now travels to every full adder.`;
+      arithmeticCanvas.querySelector('[data-carry="0"]').classList.add('active');
+      bits.forEach((stage, index) => {
+        arithmeticTimers.push(setTimeout(() => {
+          if (index > 0) arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit - 1}"]`).classList.replace('stage-active', 'stage-done');
+          const node = arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit}"]`);
+          node.classList.add('stage-active');
+          node.querySelector('.d-value').textContent = stage.d;
+          arithmeticCanvas.querySelector(`[data-carry="${stage.bit}"]`).classList.add('active');
+          arithmeticStatus.innerHTML = `<strong>FA${stage.bit} active:</strong> X${stage.bit}=A${stage.bit}=${stage.aBit}, Y${stage.bit}=${stage.yBit}, and C${stage.bit}=${stage.carryIn}. Therefore D${stage.bit}=${stage.d} and C${stage.bit + 1}=${stage.carryOut}.`;
+        }, (index + 1) * 1600));
+      });
+      arithmeticTimers.push(setTimeout(() => {
+        arithmeticCanvas.querySelector('[data-arith-bit="3"]').classList.replace('stage-active', 'stage-done');
+        arithmeticCanvas.querySelector('[data-carry="4"]').classList.add('active');
+        const raw = values.a + selectedWord + values.cin;
+        const d = raw & 15;
+        const functionText = document.querySelector(`[data-function="${values.select}-${values.cin}"] td:last-child`).textContent;
+        arithmeticStatus.innerHTML = '<strong>Complete:</strong> All four full adders are stable. Read C₄D₃D₂D₁D₀ from the circuit outputs.';
+        arithmeticResult.innerHTML = `<strong>${functionText}</strong><br>A = ${values.a.toString(2).padStart(4, '0')}, selected Y = ${selectedWord.toString(2).padStart(4, '0')}, Cᵢₙ = ${values.cin}<br><strong>Output:</strong> D = ${d.toString(2).padStart(4, '0')} (${d}), Cₒᵤₜ = ${raw > 15 ? 1 : 0}`;
+        arithmeticResult.classList.add('show');
+        document.getElementById('arith-run').disabled = false;
+      }, 8000));
     }
 
     function buildAdderSubtractor(mode = 0) {
@@ -780,9 +938,12 @@
     });
     document.getElementById('as-run').addEventListener('click', startAdderSubtractor);
     document.getElementById('as-mode').addEventListener('change', event => { clearAdderSubtractorTimers(); buildAdderSubtractor(Number(event.target.value)); asResult.classList.remove('show'); });
+    document.getElementById('arith-run').addEventListener('click', startArithmeticCircuit);
+    document.getElementById('arith-select').addEventListener('change', event => { clearArithmeticTimers(); buildArithmeticCircuit(Number(event.target.value)); arithmeticResult.classList.remove('show'); });
 
     buildLayout(4);
     buildAdderSubtractor(0);
+    buildArithmeticCircuit(0);
   </script>
 </body>
 </html>
