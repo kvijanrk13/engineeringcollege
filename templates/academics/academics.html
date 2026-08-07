@@ -34,6 +34,14 @@
     .topic-head h2 { margin: 0 0 6px; color: var(--navy); }
     .topic-head p { margin: 0; color: var(--muted); line-height: 1.55; }
     .video-link { white-space: nowrap; color: var(--blue); font-weight: 700; text-decoration: none; }
+    .coa-lesson-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 22px; }
+    .coa-lesson-link { display: flex; align-items: center; gap: 12px; min-height: 74px; padding: 13px 15px; border: 2px solid var(--line); border-radius: 12px; background: #f8fbff; color: var(--navy); text-align: left; text-decoration: none; cursor: pointer; transition: .2s; }
+    .coa-lesson-link:hover, .coa-lesson-link:focus { border-color: var(--blue); background: var(--blue-soft); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(16,42,67,.1); }
+    .coa-lesson-link.arithmetic-link { border-color: #7c3aed; background: #f8f5ff; }
+    .coa-lesson-link .lesson-icon { flex: 0 0 42px; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; background: var(--navy); color: #fff; font-size: 22px; }
+    .coa-lesson-link.arithmetic-link .lesson-icon { background: #7c3aed; }
+    .coa-lesson-link strong, .coa-lesson-link small { display: block; }
+    .coa-lesson-link small { margin-top: 3px; color: var(--muted); line-height: 1.35; }
     .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbff; }
     label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
     input, select { min-height: 40px; padding: 8px 10px; border: 1px solid #bcccdc; border-radius: 7px; background: #fff; color: var(--ink); font: inherit; }
@@ -309,6 +317,7 @@
       .olap-intro, .olap-lab { grid-template-columns: 1fr; }
       .olap-benefits { grid-template-columns: 1fr; }
       .olap-flow { justify-content: flex-start; }
+      .coa-lesson-picker { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
   </style>
@@ -335,7 +344,19 @@
         <a class="video-link" href="https://www.youtube.com/watch?v=oqU57MIQZSo" target="_blank" rel="noopener noreferrer">View source lesson ↗</a>
       </div>
 
-      <div class="controls">
+      <nav class="coa-lesson-picker" aria-label="Choose a COA animation">
+        <a class="coa-lesson-link" href="#parallel-adder-lesson">
+          <span class="lesson-icon">＋</span><span><strong>Parallel Adder</strong><small>Ripple-carry addition lesson</small></span>
+        </a>
+        <a class="coa-lesson-link" href="#adder-subtractor-title">
+          <span class="lesson-icon">±</span><span><strong>Adder–Subtractor</strong><small>Four-bit add and subtract circuit</small></span>
+        </a>
+        <a id="arithmetic-lesson-link" class="coa-lesson-link arithmetic-link" href="#arithmetic-circuit-title">
+          <span class="lesson-icon">▦</span><span><strong>Arithmetic Circuit</strong><small>4×1 MUX and full-adder animation</small></span>
+        </a>
+      </nav>
+
+      <div id="parallel-adder-lesson" class="controls">
         <label>Word size
           <select id="bits"><option value="4">4 bits</option><option value="5">5 bits</option><option value="6">6 bits</option><option value="8">8 bits</option></select>
         </label>
@@ -940,6 +961,12 @@
     document.getElementById('as-mode').addEventListener('change', event => { clearAdderSubtractorTimers(); buildAdderSubtractor(Number(event.target.value)); asResult.classList.remove('show'); });
     document.getElementById('arith-run').addEventListener('click', startArithmeticCircuit);
     document.getElementById('arith-select').addEventListener('change', event => { clearArithmeticTimers(); buildArithmeticCircuit(Number(event.target.value)); arithmeticResult.classList.remove('show'); });
+    document.getElementById('arithmetic-lesson-link').addEventListener('click', () => {
+      window.setTimeout(() => {
+        document.getElementById('arithmetic-circuit-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        startArithmeticCircuit();
+      }, 80);
+    });
 
     buildLayout(4);
     buildAdderSubtractor(0);
