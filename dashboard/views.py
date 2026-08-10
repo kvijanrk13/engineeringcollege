@@ -927,6 +927,20 @@ def get_local_or_remote_asset(file_field=None, url=None, default_suffix='.pdf'):
                 if result:
                     return result, is_pdf
 
+            # Fallback: try Cloudinary API lookup by file field name
+            file_name = getattr(file_field, 'name', '')
+            if file_name and is_cloudinary_configured():
+                try:
+                    cloud_url, _ = cloudinary.utils.cloudinary_url(
+                        file_name, resource_type='raw', secure=True
+                    )
+                    if cloud_url:
+                        result, is_pdf = download_remote_asset(cloud_url, default_suffix=default_suffix)
+                        if result:
+                            return result, is_pdf
+                except Exception as e:
+                    logger.warning(f"Cloudinary fallback failed for {file_name}: {e}")
+
     except Exception as e:
         logger.warning(f"Error resolving asset: {e}")
     return None, False
@@ -1038,6 +1052,7 @@ def collect_faculty_photo_candidates(faculty):
 def resolve_faculty_photo_for_pdf(faculty):
     """Resolve the best faculty photo source and return a data URI plus cleanup temp paths."""
     temp_paths = []
+    fallback_url = None
 
     for candidate in collect_faculty_photo_candidates(faculty):
         source = candidate['source']
@@ -1051,6 +1066,8 @@ def resolve_faculty_photo_for_pdf(faculty):
             logger.warning(f"Photo candidate from {source} could not be encoded: {path_value}")
 
         if url_value:
+            if not fallback_url:
+                fallback_url = url_value
             downloaded_path, is_pdf = download_remote_asset(url_value, default_suffix='.jpg')
             if not downloaded_path:
                 continue
@@ -1065,6 +1082,10 @@ def resolve_faculty_photo_for_pdf(faculty):
                 return data_uri, downloaded_path, temp_paths, source
 
             logger.warning(f"Downloaded photo candidate from {source} could not be encoded: {url_value}")
+
+    if fallback_url:
+        logger.info(f"Using raw remote URL as photo fallback for {faculty.employee_code}: {fallback_url}")
+        return fallback_url, None, temp_paths, 'fallback_url'
 
     return None, None, temp_paths, None
 
@@ -5835,24 +5856,12 @@ def faculty_dashboard(request, faculty_id=None):
         if not fid:
             return HttpResponseBadRequest("Faculty ID required for PDF mode")
         faculty = get_object_or_404(Faculty, id=fid)
-        exp = calculate_experience(faculty.joining_date) if faculty.joining_date else "N/A"
-        # Resolve the faculty photo for the PDF template
-        photo_url, local_photo_path, photo_temp_paths, _photo_source = resolve_faculty_photo_for_pdf(faculty)
-        anurag_header_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'ANURAG HEADER.png')
-        context = {
-            "faculty": faculty,
-            "pdf_mode": True,
-            "current_date": timezone.now(),
-            "experience": exp,
-            "photo_url": photo_url,
-            "anurag_header_url": build_file_uri(anurag_header_path),
-            "cloudinary_status": {"has_pdf": bool(faculty.cloudinary_pdf_url)},
-        }
-        # Clean up any temp paths after rendering
+        context, temp_paths = build_faculty_pdf_context(faculty)
+        context["pdf_mode"] = True
         try:
             return render(request, "dashboard/faculty_pdf.html", context)
         finally:
-            for temp_path in photo_temp_paths:
+            for temp_path in temp_paths:
                 try:
                     if os.path.exists(temp_path):
                         os.remove(temp_path)
