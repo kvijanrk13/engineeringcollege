@@ -6,6 +6,10 @@
   .doc-header { margin-bottom: 26px; text-align: center; }
   .doc-header h1 { margin: 12px 0 8px; color: var(--navy); font-size: clamp(2rem, 4vw, 3rem); }
   .doc-header p { max-width: 720px; margin: auto; color: var(--muted); }
+  .week-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px auto 0; max-width: 880px; }
+  .week-link { padding: 15px 18px; border: 1px solid #b9cee8; border-radius: 14px; color: var(--navy); background: white; box-shadow: 0 8px 22px rgba(11,31,58,.08); text-decoration: none; font-weight: 850; }
+  .week-link span { display: block; margin-top: 3px; color: var(--muted); font-size: .8rem; font-weight: 650; }
+  .week-link:hover, .week-link:focus-visible { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
   .doc-grid { display: grid; gap: 24px; }
   .doc-card {
     padding: 28px;
@@ -25,6 +29,8 @@
   .doc-content th { background: #f4f7fb; }
   .doc-content code { padding: 2px 5px; border-radius: 5px; background: #f4f7fb; }
   .doc-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+  .doc-card { scroll-margin-top: 100px; }
+  @media(max-width:700px) { .week-nav { grid-template-columns: 1fr; } }
 </style>
 
 <section class="doc-shell">
@@ -33,6 +39,11 @@
       <span class="cab-mark" style="background:#eef5ff;color:var(--blue)">ETORS DOCUMENTATION</span>
       <h1>Software Engineering Lab Documentation</h1>
       <p>E-Ticketing Online Reservation System — problem definition, software requirements and system design.</p>
+      <nav class="week-nav" aria-label="ETORS documentation weeks">
+        <a class="week-link" href="#week-1">WEEK 1<span>Problem Statement</span></a>
+        <a class="week-link" href="#week-2">WEEK 2<span>Software Requirements (SRD)</span></a>
+        <a class="week-link" href="#week-3">WEEK 3<span>Software Design (SDD)</span></a>
+      </nav>
     </header>
     <div class="doc-grid">
       <article class="doc-card" id="week-1">

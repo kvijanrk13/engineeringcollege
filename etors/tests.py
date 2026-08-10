@@ -165,6 +165,8 @@ class EtorsTests(TestCase):
         self.assertContains(docs_response, "Software Design Document")
         self.assertContains(docs_response, "Functional Requirements")
         self.assertContains(docs_response, "System Architecture")
+        self.assertContains(docs_response, 'href="#week-2"')
+        self.assertContains(docs_response, 'href="#week-3"')
 
     def test_authenticated_navigation_and_logout(self):
         response = self.client.get(reverse("etors:home"))
