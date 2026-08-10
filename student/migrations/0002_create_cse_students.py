@@ -1,3 +1,4 @@
+from django.contrib.auth.hashers import make_password
 from django.db import migrations
 
 
@@ -23,7 +24,7 @@ def create_cse_students(apps, schema_editor):
             }
         )
 
-        user.set_password(password)
+        user.password = make_password(password)
         user.save()
 
         Student.objects.get_or_create(

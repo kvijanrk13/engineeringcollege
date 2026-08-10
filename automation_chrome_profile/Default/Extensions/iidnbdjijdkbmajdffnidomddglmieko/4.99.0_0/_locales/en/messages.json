@@ -1,0 +1,66 @@
+{
+   "contextualActionTooltipText": {
+      "description": "Tooltip on the contextual AI Cursor pill pointing users to the dropdown / more options",
+      "message": "More Tools"
+   },
+   "defaultDilationPillLabel": {
+      "description": "Default label to show on dilated pill",
+      "message": "Use AI"
+   },
+   "disableCursorPromptBody": {
+      "description": "Body text of the popup that nudges the user toward disabling the AI Cursor in Settings",
+      "message": "You can disable AI Cursor anytime from Settings."
+   },
+   "disableCursorPromptDisableCta": {
+      "description": "Button on the disable AI Cursor popup that opens Settings so the user can turn off the AI Cursor",
+      "message": "Disable"
+   },
+   "disableCursorPromptKeepCta": {
+      "description": "Button on the disable AI Cursor popup that dismisses it and keeps the AI Cursor enabled",
+      "message": "Keep it"
+   },
+   "disableCursorPromptTitle": {
+      "description": "Title of the popup that nudges the user toward disabling the AI Cursor",
+      "message": "Turn off AI Cursor?"
+   },
+   "extensionDescription": {
+      "description": "The description of the extension, displayed in the web store.",
+      "message": "Write better emails, essays and messages with Quillbot's Grammar Checker, Paraphrasing Tool, Generative AI, Summarizer and more!"
+   },
+   "extensionName": {
+      "description": "The name of the extension, displayed in the web store.",
+      "message": "Quillbot: AI Writing Assistant to Grammar Check, Paraphrase & Translate"
+   },
+   "notificationLollipopUndoDescription": {
+      "description": "Description of the notification shown after AI Text Cursor is disabled",
+      "message": "To enable AI Text Cursor, go to settings to turn it back on."
+   },
+   "notificationLollipopUndoLabel": {
+      "description": "Label of the notification shown after AI Text Cursor is disabled",
+      "message": "AI Text Cursor disabled"
+   },
+   "toolboxKeyboardShortcut": {
+      "description": "Keyboard shortcut to open the toolbox",
+      "message": "ctrl ×2"
+   },
+   "toolboxOnboardingCtaLabel": {
+      "description": "Button text for the onboarding dialog that explains the new features",
+      "message": "Start →"
+   },
+   "toolboxOnboardingHeading": {
+      "description": "Heading text for the onboarding dialog that explains the new features",
+      "message": "Let's get started with AI Text Cursor!"
+   },
+   "toolboxOnboardingLearnMore": {
+      "description": "'Learn more' link in the onboarding dialog that explains the new features",
+      "message": "Learn more"
+   },
+   "toolboxOnboardingMessage": {
+      "description": "Body text for the onboarding dialog that explains the new features",
+      "message": "You can now use our tools anywhere you write. Simply click on the text cursor to rephrase text, edit using AI, or add emojis and GIFs."
+   },
+   "toolboxTooltip": {
+      "description": "Tooltip text for the toolbox icon in the toolbox",
+      "message": "AI Tools"
+   }
+}

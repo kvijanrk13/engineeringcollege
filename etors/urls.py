@@ -6,6 +6,7 @@ app_name = "etors"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("documentation/", views.documentation, name="documentation"),
     path("chatbot/", views.chatbot, name="chatbot"),
     path("logout/", views.logout_view, name="logout"),
     path("book/<int:train_id>/<str:journey_date>/", views.book, name="book"),

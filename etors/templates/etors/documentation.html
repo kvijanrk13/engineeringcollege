@@ -1,0 +1,40 @@
+{% extends 'etors/base.html' %}
+{% block title %}ETORS · Documentation{% endblock %}
+{% block content %}
+<style>
+  .doc-shell { padding: 48px 0 72px; }
+  .doc-card {
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: white;
+    box-shadow: 0 16px 40px rgba(11,31,58,.08);
+  }
+  .doc-card h1 { margin: 0 0 10px; color: var(--navy); font-size: clamp(1.8rem, 3.3vw, 2.4rem); }
+  .doc-card p { color: var(--muted); }
+  .doc-content { margin-top: 20px; color: var(--ink); }
+  .doc-content h2, .doc-content h3, .doc-content h4 { color: var(--navy); }
+  .doc-content ul, .doc-content ol { padding-left: 20px; }
+  .doc-content table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .doc-content th, .doc-content td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+  .doc-content th { background: #f4f7fb; }
+  .doc-content code { padding: 2px 5px; border-radius: 5px; background: #f4f7fb; }
+  .doc-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+</style>
+
+<section class="doc-shell">
+  <div class="container">
+    <div class="doc-card">
+      <span class="cab-mark" style="background:#eef5ff;color:var(--blue)">ETORS DOCUMENTATION</span>
+      <h1>Week 1 · Problem Statement</h1>
+      <p>Reference documentation for the ETORS academic demo project, aligned with the existing software engineering lab documentation style.</p>
+      <div class="doc-content">
+        {{ week1_text|safe }}
+      </div>
+      <div class="doc-actions">
+        <a class="btn btn-secondary" href="{% url 'etors:home' %}">Back to ETORS</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

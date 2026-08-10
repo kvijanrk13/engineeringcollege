@@ -1,6 +1,8 @@
+import os
 from datetime import date
 from urllib.parse import urlencode
 
+import markdown
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.hashers import check_password
@@ -37,6 +39,22 @@ def _require_etors_gmail(request):
     login_url = reverse("dashboard:google_login")
     query = urlencode({"role": "student", "target": "etors", "next": request.get_full_path()})
     return redirect(f"{login_url}?{query}")
+
+
+def documentation(request):
+    base_dir = os.path.join(os.path.dirname(__file__), "docs")
+    week1_path = os.path.join(base_dir, "week1_problem_statement.md")
+    week1_text = ""
+
+    if os.path.exists(week1_path):
+        with open(week1_path, "r", encoding="utf-8") as handle:
+            week1_text = markdown.markdown(handle.read(), extensions=["tables", "fenced_code"])
+
+    return render(
+        request,
+        "etors/documentation.html",
+        {"week1_text": week1_text},
+    )
 
 
 def home(request):
