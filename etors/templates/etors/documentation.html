@@ -3,6 +3,10 @@
 {% block content %}
 <style>
   .doc-shell { padding: 48px 0 72px; }
+  .doc-header { margin-bottom: 26px; text-align: center; }
+  .doc-header h1 { margin: 12px 0 8px; color: var(--navy); font-size: clamp(2rem, 4vw, 3rem); }
+  .doc-header p { max-width: 720px; margin: auto; color: var(--muted); }
+  .doc-grid { display: grid; gap: 24px; }
   .doc-card {
     padding: 28px;
     border: 1px solid var(--line);
@@ -10,10 +14,11 @@
     background: white;
     box-shadow: 0 16px 40px rgba(11,31,58,.08);
   }
-  .doc-card h1 { margin: 0 0 10px; color: var(--navy); font-size: clamp(1.8rem, 3.3vw, 2.4rem); }
+  .doc-card > h2 { margin: 0 0 8px; color: var(--navy); font-size: clamp(1.5rem, 3vw, 2rem); }
   .doc-card p { color: var(--muted); }
   .doc-content { margin-top: 20px; color: var(--ink); }
-  .doc-content h2, .doc-content h3, .doc-content h4 { color: var(--navy); }
+  .doc-content h1:first-child { display: none; }
+  .doc-content h2, .doc-content h3, .doc-content h4 { margin-top: 24px; color: var(--navy); }
   .doc-content ul, .doc-content ol { padding-left: 20px; }
   .doc-content table { width: 100%; border-collapse: collapse; margin: 16px 0; }
   .doc-content th, .doc-content td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; }
@@ -24,13 +29,24 @@
 
 <section class="doc-shell">
   <div class="container">
-    <div class="doc-card">
+    <header class="doc-header">
       <span class="cab-mark" style="background:#eef5ff;color:var(--blue)">ETORS DOCUMENTATION</span>
-      <h1>Week 1 · Problem Statement</h1>
-      <p>Reference documentation for the ETORS academic demo project, aligned with the existing software engineering lab documentation style.</p>
-      <div class="doc-content">
-        {{ week1_text|safe }}
-      </div>
+      <h1>Software Engineering Lab Documentation</h1>
+      <p>E-Ticketing Online Reservation System — problem definition, software requirements and system design.</p>
+    </header>
+    <div class="doc-grid">
+      <article class="doc-card" id="week-1">
+        <h2>Week 1 · Problem Statement</h2>
+        <div class="doc-content">{{ week1_text|safe }}</div>
+      </article>
+      <article class="doc-card" id="week-2">
+        <h2>Week 2 · Software Requirements Document (SRD)</h2>
+        <div class="doc-content">{{ srd_text|safe }}</div>
+      </article>
+      <article class="doc-card" id="week-3">
+        <h2>Week 3 · Software Design Document (SDD)</h2>
+        <div class="doc-content">{{ sdd_text|safe }}</div>
+      </article>
       <div class="doc-actions">
         <a class="btn btn-secondary" href="{% url 'etors:home' %}">Back to ETORS</a>
       </div>

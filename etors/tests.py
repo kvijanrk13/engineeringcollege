@@ -149,7 +149,7 @@ class EtorsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"], "Enter a question about ETORS.")
 
-    def test_documentation_button_links_to_week1_page(self):
+    def test_documentation_button_links_to_week1_week2_and_week3(self):
         response = self.client.get(reverse("etors:home"))
         self.assertContains(response, "DOCUMENTATION")
         self.assertContains(response, reverse("etors:documentation"))
@@ -157,8 +157,14 @@ class EtorsTests(TestCase):
         docs_response = self.client.get(reverse("etors:documentation"))
         self.assertEqual(docs_response.status_code, 200)
         self.assertContains(docs_response, "Week 1")
+        self.assertContains(docs_response, "Week 2")
+        self.assertContains(docs_response, "Week 3")
         self.assertContains(docs_response, "ETORS")
         self.assertContains(docs_response, "Problem Statement")
+        self.assertContains(docs_response, "Software Requirements Document")
+        self.assertContains(docs_response, "Software Design Document")
+        self.assertContains(docs_response, "Functional Requirements")
+        self.assertContains(docs_response, "System Architecture")
 
     def test_authenticated_navigation_and_logout(self):
         response = self.client.get(reverse("etors:home"))
