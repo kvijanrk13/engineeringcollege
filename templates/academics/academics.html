@@ -292,6 +292,8 @@
     .arithmetic-svg .inverter { fill: #fff; stroke: var(--navy); stroke-width: 2; }
     .arithmetic-svg .junction { fill: var(--navy); }
     .arithmetic-svg .selected-wire { stroke: #7c3aed; stroke-width: 4; stroke-dasharray: 10 7; animation: arithmeticSignal .7s linear infinite; filter: drop-shadow(0 0 4px rgba(124,58,237,.65)); }
+    .arithmetic-svg .input-flow { stroke: #00a8cc; stroke-width: 4; stroke-dasharray: 9 6; animation: arithmeticSignal .65s linear infinite; filter: drop-shadow(0 0 5px rgba(0,168,204,.75)); }
+    .arithmetic-svg .bus.active { stroke: #e879f9; stroke-width: 5; stroke-dasharray: 10 7; animation: arithmeticSignal .65s linear infinite; filter: drop-shadow(0 0 5px rgba(232,121,249,.8)); }
     .arithmetic-svg .carry-wire.active { stroke: var(--red); stroke-width: 4; stroke-dasharray: 10 7; animation: arithmeticSignal .65s linear infinite; filter: drop-shadow(0 0 4px rgba(220,53,69,.65)); }
     .arithmetic-svg .stage-active .block { filter: drop-shadow(0 0 8px rgba(22,119,255,.65)); }
     .arithmetic-svg .stage-done .fa-block { fill: #e8faf3; stroke: var(--green); }
@@ -323,6 +325,20 @@
     .function-table th, .function-table td { padding: 10px; border: 1px solid var(--line); text-align: left; }
     .function-table th { background: var(--navy); color: #fff; }
     .function-table tr.selected td { background: #f3efff; color: #6d28d9; font-weight: 800; }
+    .function-table tr.selected td { animation: functionRowPulse 1s ease-in-out infinite; }
+    @keyframes functionRowPulse { 50% { background: #e5dcff; box-shadow: inset 0 0 0 2px #8b5cf6; } }
+    .function-table-title { margin: 22px 0 6px; color: var(--navy); }
+    .function-table-intro { margin: 0; color: var(--muted); line-height: 1.6; }
+    .arithmetic-animation-guide { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 18px; }
+    .animation-phase { position: relative; min-height: 86px; padding: 13px 12px 12px 42px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--muted); font-size: 12px; line-height: 1.45; transition: .3s; }
+    .animation-phase b { position: absolute; top: 12px; left: 11px; display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: #9fb3c8; color: #fff; }
+    .animation-phase strong { display: block; margin-bottom: 3px; color: var(--navy); font-size: 13px; }
+    .animation-phase.active { border-color: #7c3aed; background: #f5f0ff; color: #4c1d95; box-shadow: 0 0 0 4px rgba(124,58,237,.12), 0 8px 22px rgba(76,29,149,.15); transform: translateY(-3px); animation: guidePhasePulse 1s ease-in-out infinite; }
+    .animation-phase.active b { background: #7c3aed; }
+    .animation-phase.done { border-color: #7fcbb0; background: #edfbf6; }
+    .animation-phase.done b { background: var(--green); }
+    .microoperation-card.operation-active { border-color: #7c3aed; background: #f9f6ff; box-shadow: 0 0 0 4px rgba(124,58,237,.12); animation: guidePhasePulse 1s ease-in-out infinite; }
+    @keyframes guidePhasePulse { 50% { box-shadow: 0 0 0 6px rgba(124,58,237,.18), 0 10px 28px rgba(76,29,149,.18); } }
     .olap-intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
     .olap-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fbff; }
     .olap-card h3 { margin: 0 0 9px; color: var(--navy); }
@@ -391,6 +407,7 @@
       .connection-row { grid-template-columns: 1fr; }
       .connection-arrow { transform: rotate(90deg); }
       .signal-flow { grid-template-columns: 1fr; }
+      .arithmetic-animation-guide { grid-template-columns: 1fr 1fr; }
       .arithmetic-guide { padding: 16px; }
       .bit-walkthrough { min-width: 620px; }
       .worked-example { overflow-x: auto; }
@@ -695,14 +712,14 @@
           <h3 style="margin-top:20px">How all eight arithmetic operations are performed</h3>
           <p style="color:var(--muted);line-height:1.65">Use A = 1001₂ (9) and B = 0101₂ (5) in every card below. The fixed example shows exactly how changing only S₁S₀C<sub>in</sub> makes the same hardware perform a different operation.</p>
           <div class="microoperation-grid">
-            <div class="microoperation-card"><code>000 → A + B</code>S₁S₀ = 00 passes B through the MUXes. C<sub>in</sub> = 0 adds nothing extra. This is ordinary unsigned addition.<span class="binary-example">1001 + 0101 + 0 = 01110₂<br>D = 1110 (14), C₄ = 0</span></div>
-            <div class="microoperation-card"><code>001 → A + B + 1</code>The MUX still passes B, but C<sub>in</sub> = 1 enters FA₀. This is useful for adding a previous carry or forming a multiword addition.<span class="binary-example">1001 + 0101 + 1 = 01111₂<br>D = 1111 (15), C₄ = 0</span></div>
-            <div class="microoperation-card"><code>010 → A + B̅ = A − B − 1</code>01 selects the one’s complement of B. Since B̅ = 1111 − B for four bits, omitting the final +1 produces subtraction with an incoming borrow.<span class="binary-example">B̅ = 1010<br>1001 + 1010 + 0 = 10011₂<br>D = 0011 (3), C₄ = 1</span></div>
-            <div class="microoperation-card"><code>011 → A + B̅ + 1 = A − B</code>Complement B and inject C<sub>in</sub> = 1. B̅ + 1 is the two’s complement of B, allowing subtraction to use the same adder hardware.<span class="binary-example">1001 + 1010 + 1 = 10100₂<br>D = 0100 (4), C₄ = 1</span></div>
-            <div class="microoperation-card"><code>100 → A + 0000 = A</code>10 forces every Y bit to zero and C<sub>in</sub> is zero. Adding zero leaves A unchanged, so the circuit performs a register-transfer microoperation.<span class="binary-example">1001 + 0000 + 0 = 01001₂<br>D = 1001 (9), C₄ = 0</span></div>
-            <div class="microoperation-card"><code>101 → A + 0000 + 1 = A + 1</code>Y remains zero, but C<sub>in</sub> supplies one at FA₀. The carry travels through consecutive 1 bits, which is exactly binary incrementing.<span class="binary-example">1001 + 0000 + 1 = 01010₂<br>D = 1010 (10), C₄ = 0</span></div>
-            <div class="microoperation-card"><code>110 → A + 1111 = A − 1</code>In four-bit two’s complement, 1111 represents −1. Adding it decrements A; only the lower four D bits are retained.<span class="binary-example">1001 + 1111 + 0 = 11000₂<br>D = 1000 (8), C₄ = 1</span></div>
-            <div class="microoperation-card"><code>111 → A + 1111 + 1 = A</code>1111 + 1 creates 1 0000₂. Adding this changes only the fifth carry position, so the four result bits reproduce A and C₄ is set.<span class="binary-example">1001 + 1111 + 1 = 11001₂<br>D = 1001 (9), C₄ = 1</span></div>
+            <div class="microoperation-card" data-operation-card="0-0"><code>000 → A + B</code>S₁S₀ = 00 passes B through the MUXes. C<sub>in</sub> = 0 adds nothing extra. This is ordinary unsigned addition.<span class="binary-example">1001 + 0101 + 0 = 01110₂<br>D = 1110 (14), C₄ = 0</span></div>
+            <div class="microoperation-card" data-operation-card="0-1"><code>001 → A + B + 1</code>The MUX still passes B, but C<sub>in</sub> = 1 enters FA₀. This is useful for adding a previous carry or forming a multiword addition.<span class="binary-example">1001 + 0101 + 1 = 01111₂<br>D = 1111 (15), C₄ = 0</span></div>
+            <div class="microoperation-card" data-operation-card="1-0"><code>010 → A + B̅ = A − B − 1</code>01 selects the one’s complement of B. Since B̅ = 1111 − B for four bits, omitting the final +1 produces subtraction with an incoming borrow.<span class="binary-example">B̅ = 1010<br>1001 + 1010 + 0 = 10011₂<br>D = 0011 (3), C₄ = 1</span></div>
+            <div class="microoperation-card" data-operation-card="1-1"><code>011 → A + B̅ + 1 = A − B</code>Complement B and inject C<sub>in</sub> = 1. B̅ + 1 is the two’s complement of B, allowing subtraction to use the same adder hardware.<span class="binary-example">1001 + 1010 + 1 = 10100₂<br>D = 0100 (4), C₄ = 1</span></div>
+            <div class="microoperation-card" data-operation-card="2-0"><code>100 → A + 0000 = A</code>10 forces every Y bit to zero and C<sub>in</sub> is zero. Adding zero leaves A unchanged, so the circuit performs a register-transfer microoperation.<span class="binary-example">1001 + 0000 + 0 = 01001₂<br>D = 1001 (9), C₄ = 0</span></div>
+            <div class="microoperation-card" data-operation-card="2-1"><code>101 → A + 0000 + 1 = A + 1</code>Y remains zero, but C<sub>in</sub> supplies one at FA₀. The carry travels through consecutive 1 bits, which is exactly binary incrementing.<span class="binary-example">1001 + 0000 + 1 = 01010₂<br>D = 1010 (10), C₄ = 0</span></div>
+            <div class="microoperation-card" data-operation-card="3-0"><code>110 → A + 1111 = A − 1</code>In four-bit two’s complement, 1111 represents −1. Adding it decrements A; only the lower four D bits are retained.<span class="binary-example">1001 + 1111 + 0 = 11000₂<br>D = 1000 (8), C₄ = 1</span></div>
+            <div class="microoperation-card" data-operation-card="3-1"><code>111 → A + 1111 + 1 = A</code>1111 + 1 creates 1 0000₂. Adding this changes only the fifth carry position, so the four result bits reproduce A and C₄ is set.<span class="binary-example">1001 + 1111 + 1 = 11001₂<br>D = 1001 (9), C₄ = 1</span></div>
           </div>
 
           <div class="worked-example">
@@ -729,9 +746,21 @@
           <label>Carry input Cᵢₙ<select id="arith-cin"><option value="0">0</option><option value="1">1</option></select></label>
           <button id="arith-run" class="btn" type="button">Start circuit animation</button>
         </div>
+        <div class="arithmetic-animation-guide" aria-label="Synchronized arithmetic circuit animation phases">
+          <div class="animation-phase" data-arith-phase="encode"><b>1</b><strong>Encode A and B</strong>Decimal inputs become four-bit register signals.</div>
+          <div class="animation-phase" data-arith-phase="select"><b>2</b><strong>Select/convert Y</strong>S₁S₀ selects B, B̅, 0000, or 1111 through every MUX.</div>
+          <div class="animation-phase" data-arith-phase="carry"><b>3</b><strong>Inject Cᵢₙ</strong>C₀ enters FA₀ as the third control/input bit.</div>
+          <div class="animation-phase" data-arith-phase="fa0"><b>4</b><strong>Evaluate FA₀</strong>Calculate D₀ and ripple C₁ to FA₁.</div>
+          <div class="animation-phase" data-arith-phase="fa1"><b>5</b><strong>Evaluate FA₁</strong>Calculate D₁ using the arriving C₁.</div>
+          <div class="animation-phase" data-arith-phase="fa2"><b>6</b><strong>Evaluate FA₂</strong>Calculate D₂ and pass C₃ onward.</div>
+          <div class="animation-phase" data-arith-phase="fa3"><b>7</b><strong>Evaluate FA₃</strong>Calculate the most-significant D₃ and C₄.</div>
+          <div class="animation-phase" data-arith-phase="output"><b>8</b><strong>Read the output</strong>Interpret D₃D₂D₁D₀, C₄, and the selected operation.</div>
+        </div>
         <div class="arithmetic-board" aria-live="polite"><div id="arithmetic-canvas"></div></div>
         <div id="arithmetic-status" class="arithmetic-status"><strong>Ready:</strong> Choose S₁S₀ and Cᵢₙ to select an arithmetic microoperation, then start the animation.</div>
         <div id="arithmetic-result" class="arithmetic-result"></div>
+        <h3 class="function-table-title">Function table of the four-bit arithmetic circuit</h3>
+        <p class="function-table-intro">The selected row flashes during the animation. S₁S₀ chooses Y, Cᵢₙ chooses one of the two operations for that Y word, and the full-adder chain evaluates D = A + Y + Cᵢₙ.</p>
         <table class="function-table" aria-label="Arithmetic circuit function table">
           <thead><tr><th>S₁S₀</th><th>Cᵢₙ</th><th>Selected Y</th><th>Arithmetic operation</th></tr></thead>
           <tbody>
@@ -853,6 +882,7 @@
     const arithmeticStatus = document.getElementById('arithmetic-status');
     const arithmeticResult = document.getElementById('arithmetic-result');
     let arithmeticTimers = [];
+    const arithmeticPhaseOrder = ['encode', 'select', 'carry', 'fa0', 'fa1', 'fa2', 'fa3', 'output'];
     const incrementerCanvas = document.getElementById('incrementer-canvas');
     const incrementerStatus = document.getElementById('incrementer-status');
     const incrementerResult = document.getElementById('incrementer-result');
@@ -915,6 +945,18 @@
       arithmeticTimers.forEach(clearTimeout);
       arithmeticTimers = [];
       document.getElementById('arith-run').disabled = false;
+      document.querySelectorAll('[data-arith-phase]').forEach(card => card.classList.remove('active', 'done'));
+      document.querySelectorAll('[data-operation-card]').forEach(card => card.classList.remove('operation-active'));
+      document.querySelectorAll('[data-function]').forEach(row => row.classList.remove('selected'));
+    }
+
+    function setArithmeticPhase(phase) {
+      const activeIndex = arithmeticPhaseOrder.indexOf(phase);
+      document.querySelectorAll('[data-arith-phase]').forEach(card => {
+        const index = arithmeticPhaseOrder.indexOf(card.dataset.arithPhase);
+        card.classList.toggle('active', index === activeIndex);
+        card.classList.toggle('done', index < activeIndex);
+      });
     }
 
     function clearIncrementerTimers() {
@@ -995,7 +1037,7 @@
         const y = 92 + bit * 155;
         return `<g class="arithmetic-stage" data-arith-bit="${bit}">
           <text x="24" y="${y + 20}">A${bit}</text><path class="wire a-wire" d="M48 ${y + 16} H565" />
-          <text x="24" y="${y + 70}">B${bit}</text><path class="wire" d="M48 ${y + 66} H92" /><circle class="junction" cx="72" cy="${y + 66}" r="4" />
+          <text x="24" y="${y + 70}">B${bit}</text><path class="wire b-wire" d="M48 ${y + 66} H92" /><circle class="junction" cx="72" cy="${y + 66}" r="4" />
           <path class="wire mux-input input-0" d="M72 ${y + 66} H300 V${y + 43} H350" />
           <path class="wire" d="M72 ${y + 66} V${y + 88} H102" /><path class="inverter" d="M102 ${y + 77} L102 ${y + 99} L126 ${y + 88} Z" /><circle class="inverter" cx="132" cy="${y + 88}" r="6" />
           <path class="wire mux-input input-1" d="M138 ${y + 88} H315 V${y + 63} H350" />
@@ -1041,6 +1083,7 @@
       arithmeticResult.classList.remove('show');
       document.getElementById('arith-run').disabled = true;
       document.querySelectorAll('[data-function]').forEach(row => row.classList.toggle('selected', row.dataset.function === `${values.select}-${values.cin}`));
+      document.querySelectorAll('[data-operation-card]').forEach(card => card.classList.toggle('operation-active', card.dataset.operationCard === `${values.select}-${values.cin}`));
       const selectedWord = [values.b, (~values.b) & 15, 0, 15][values.select];
       let carry = values.cin;
       const bits = [];
@@ -1051,19 +1094,41 @@
         bits.push({ bit, aBit, yBit, carryIn: carry, d: sum & 1, carryOut: sum > 1 ? 1 : 0 });
         carry = sum > 1 ? 1 : 0;
       }
-      arithmeticStatus.innerHTML = `<strong>MUX selection:</strong> S₁S₀ = ${values.select.toString(2).padStart(2, '0')} selects ${muxSourceLabel(values.select)}. The selected four-bit word now travels to every full adder.`;
-      arithmeticCanvas.querySelector('[data-carry="0"]').classList.add('active');
+      const selectedPaths = [...arithmeticCanvas.querySelectorAll(`.input-${values.select}`)];
+      selectedPaths.forEach(path => path.classList.remove('selected-wire'));
+      setArithmeticPhase('encode');
+      arithmeticCanvas.querySelectorAll('.a-wire, .b-wire').forEach(path => path.classList.add('input-flow'));
+      arithmeticStatus.innerHTML = `<strong>Phase 1 — Encode inputs:</strong> A = ${values.a.toString(2).padStart(4, '0')} travels directly to X₃…X₀. B = ${values.b.toString(2).padStart(4, '0')} reaches the direct and inverter paths of the MUX bank.`;
+
+      arithmeticTimers.push(setTimeout(() => {
+        setArithmeticPhase('select');
+        arithmeticCanvas.querySelectorAll('.a-wire, .b-wire').forEach(path => path.classList.remove('input-flow'));
+        arithmeticCanvas.querySelectorAll('.bus').forEach(path => path.classList.add('active'));
+        selectedPaths.forEach(path => path.classList.add('selected-wire'));
+        const conversion = values.select === 1 ? `B is inverted from ${values.b.toString(2).padStart(4, '0')} to ${selectedWord.toString(2).padStart(4, '0')}.` : `The selected Y word is ${selectedWord.toString(2).padStart(4, '0')}.`;
+        arithmeticStatus.innerHTML = `<strong>Phase 2 — MUX selection:</strong> S₁S₀ = ${values.select.toString(2).padStart(2, '0')} selects ${muxSourceLabel(values.select)}. ${conversion}`;
+      }, 1200));
+
+      arithmeticTimers.push(setTimeout(() => {
+        setArithmeticPhase('carry');
+        arithmeticCanvas.querySelectorAll('.bus').forEach(path => path.classList.remove('active'));
+        arithmeticCanvas.querySelector('[data-carry="0"]').classList.add('active');
+        arithmeticStatus.innerHTML = `<strong>Phase 3 — Carry injection:</strong> Cᵢₙ = C₀ = ${values.cin} enters FA0. The configured operation is now A + Y + Cᵢₙ.`;
+      }, 2400));
+
       bits.forEach((stage, index) => {
         arithmeticTimers.push(setTimeout(() => {
           if (index > 0) arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit - 1}"]`).classList.replace('stage-active', 'stage-done');
+          setArithmeticPhase(`fa${stage.bit}`);
           const node = arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit}"]`);
           node.classList.add('stage-active');
           node.querySelector('.d-value').textContent = stage.d;
           arithmeticCanvas.querySelector(`[data-carry="${stage.bit}"]`).classList.add('active');
           arithmeticStatus.innerHTML = `<strong>FA${stage.bit} active:</strong> X${stage.bit}=A${stage.bit}=${stage.aBit}, Y${stage.bit}=${stage.yBit}, and C${stage.bit}=${stage.carryIn}. Therefore D${stage.bit}=${stage.d} and C${stage.bit + 1}=${stage.carryOut}.`;
-        }, (index + 1) * 1600));
+        }, 3600 + index * 1400));
       });
       arithmeticTimers.push(setTimeout(() => {
+        setArithmeticPhase('output');
         arithmeticCanvas.querySelector('[data-arith-bit="3"]').classList.replace('stage-active', 'stage-done');
         arithmeticCanvas.querySelector('[data-carry="4"]').classList.add('active');
         const raw = values.a + selectedWord + values.cin;
@@ -1073,7 +1138,7 @@
         arithmeticResult.innerHTML = `<strong>${functionText}</strong><br>A = ${values.a.toString(2).padStart(4, '0')}, selected Y = ${selectedWord.toString(2).padStart(4, '0')}, Cᵢₙ = ${values.cin}<br><strong>Output:</strong> D = ${d.toString(2).padStart(4, '0')} (${d}), Cₒᵤₜ = ${raw > 15 ? 1 : 0}`;
         arithmeticResult.classList.add('show');
         document.getElementById('arith-run').disabled = false;
-      }, 8000));
+      }, 9300));
     }
 
     function buildAdderSubtractor(mode = 0) {
