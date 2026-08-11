@@ -238,6 +238,10 @@
     .arithmetic-steps li { position: relative; min-height: 64px; padding: 14px 16px 14px 62px; border: 1px solid var(--line); border-radius: 11px; background: #fff; line-height: 1.6; counter-increment: arithmetic-step; }
     .arithmetic-steps li::before { content: counter(arithmetic-step); position: absolute; top: 14px; left: 14px; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: #7c3aed; color: #fff; font-weight: 900; }
     .arithmetic-steps strong { color: var(--navy); }
+    .arithmetic-steps .step-title { display: block; margin-bottom: 6px; color: var(--navy); font-size: 16px; font-weight: 900; }
+    .arithmetic-steps p { margin: 6px 0; color: #40566d; }
+    .arithmetic-steps .step-detail { padding: 9px 11px; border-radius: 8px; background: #f5f8fc; color: var(--muted); font-size: 14px; }
+    .arithmetic-steps .step-check { color: #0b7455; font-size: 14px; font-weight: 800; }
     .arithmetic-equation { margin: 16px 0 0; padding: 14px 16px; overflow-x: auto; border-radius: 10px; background: var(--navy); color: #fff; font: 700 16px/1.7 Consolas, monospace; }
     .microoperation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .microoperation-card { padding: 13px 15px; border: 1px solid var(--line); border-radius: 10px; background: #fff; line-height: 1.55; }
@@ -469,13 +473,48 @@
           <h3 id="arithmetic-guide-title">Step-by-step: from one full adder to eight arithmetic operations</h3>
           <p>The lesson begins with the general arithmetic-circuit rule and then expands it into a four-bit circuit. Follow these steps before running the animation.</p>
           <ol class="arithmetic-steps">
-            <li><strong>Identify the two four-bit operands.</strong> Register A supplies A₃A₂A₁A₀ directly to the X input of the four full adders. Register B supplies B₃B₂B₁B₀ to the multiplexers. Bit 0 is the least-significant stage, so calculation starts at FA₀.</li>
-            <li><strong>Place one 4×1 multiplexer before every full adder.</strong> MUX<sub>i</sub> has four possible inputs: I₀ = B<sub>i</sub>, I₁ = B̅<sub>i</sub>, I₂ = 0 and I₃ = 1. The same select lines S₁ and S₀ control all four multiplexers, so they construct one complete four-bit word Y.</li>
-            <li><strong>Decode the common select lines.</strong> S₁S₀ = 00 selects B, 01 selects B̅, 10 selects 0000, and 11 selects 1111. The selected bit from each MUX becomes Y<sub>i</sub>, the second data input of FA<sub>i</sub>.</li>
-            <li><strong>Choose the initial carry.</strong> C<sub>in</sub> enters FA₀ and acts as an extra 0 or 1. It is also a control variable: changing only C<sub>in</sub> changes each selected MUX function into a second microoperation.</li>
-            <li><strong>Apply the general arithmetic equation.</strong> The four-bit network always evaluates the same expression; only Y and C<sub>in</sub> change.</li>
-            <li><strong>Evaluate from right to left.</strong> At stage i, calculate D<sub>i</sub> = A<sub>i</sub> ⊕ Y<sub>i</sub> ⊕ C<sub>i</sub>. Then calculate C<sub>i+1</sub> = A<sub>i</sub>Y<sub>i</sub> + C<sub>i</sub>(A<sub>i</sub> ⊕ Y<sub>i</sub>). Carry C<sub>i+1</sub> ripples into the next full adder.</li>
-            <li><strong>Read the result.</strong> After FA₃ settles, D₃D₂D₁D₀ is the four-bit result and C₄ is the final carry. For subtraction, the four D bits are the two’s-complement result; for transfer A with S₁S₀C<sub>in</sub> = 111, C₄ is expected to be 1.</li>
+            <li>
+              <span class="step-title">Start with the one-bit arithmetic cell</span>
+              <p>A full adder accepts exactly three one-bit inputs: X<sub>i</sub>, Y<sub>i</sub>, and carry C<sub>i</sub>. It produces a result bit D<sub>i</sub> and a next carry C<sub>i+1</sub>. In this circuit X<sub>i</sub> is permanently connected to A<sub>i</sub>; the circuit changes the arithmetic operation by changing only Y<sub>i</sub> and the first carry.</p>
+              <p class="step-detail"><strong>Why this matters:</strong> the hardware does not need a separate adder, subtractor, incrementer, decrementer, and transfer circuit. One full-adder path is reused for every operation.</p>
+              <p class="step-check">On the diagram: locate FA₀ and trace A₀ directly into its X₀ input.</p>
+            </li>
+            <li>
+              <span class="step-title">Expand the cell into a four-bit ripple-carry circuit</span>
+              <p>Four-bit operands require four copies of the one-bit cell: FA₀, FA₁, FA₂, and FA₃. Register A supplies A₃A₂A₁A₀ in parallel. FA₀ handles the least-significant bit first; its C₁ output feeds FA₁, then C₂ feeds FA₂, and C₃ feeds FA₃.</p>
+              <p class="step-detail"><strong>Parallel versus ripple:</strong> all A and selected Y bits are available simultaneously, but the final answer is not stable until each carry has travelled to the next stage. That serial carry movement is the ripple-carry delay.</p>
+              <p class="step-check">On the animation: the active glow begins at FA₀ and climbs through FA₃.</p>
+            </li>
+            <li>
+              <span class="step-title">Use a 4×1 MUX to prepare each Y input</span>
+              <p>Before FA<sub>i</sub>, MUX<sub>i</sub> chooses one of four useful values: I₀ = B<sub>i</sub>, I₁ = B̅<sub>i</sub>, I₂ = 0, or I₃ = 1. The chosen value becomes Y<sub>i</sub>. These four choices are deliberate: B supports addition, B̅ supports two’s-complement subtraction, 0 isolates A, and 1 supplies an all-ones word.</p>
+              <p class="step-detail">The inverter beside each B input creates B̅<sub>i</sub>. Constant inputs 0 and 1 do not come from registers; they are fixed logic levels connected to every MUX.</p>
+              <p class="step-check">For B = 0101, the four MUXes can collectively output 0101, 1010, 0000, or 1111.</p>
+            </li>
+            <li>
+              <span class="step-title">Decode S₁S₀ as one word-wide selection</span>
+              <p>The select lines are shared by all four multiplexers. Therefore S₁S₀ does not select an isolated bit: it selects the same input number at every bit position and constructs a complete word Y.</p>
+              <p class="step-detail"><strong>00:</strong> Y = B. <strong>01:</strong> Y = B̅. <strong>10:</strong> Y = 0000. <strong>11:</strong> Y = 1111. For example, 01 makes MUX₀ select B̅₀, MUX₁ select B̅₁, and so on.</p>
+              <p class="step-check">In the simulator: changing “Select S₁S₀” highlights the selected input wire on every MUX.</p>
+            </li>
+            <li>
+              <span class="step-title">Treat Cᵢₙ as the third control bit</span>
+              <p>C<sub>in</sub> is the initial carry C₀ applied only to FA₀. Numerically it adds either 0 or 1 to the selected four-bit operation. Logically it doubles the four MUX choices into eight microoperations, so the control word is S₁S₀C<sub>in</sub>.</p>
+              <p class="step-detail">With Y = B̅, C<sub>in</sub> = 0 gives A + B̅ = A − B − 1, while C<sub>in</sub> = 1 completes the two’s complement B̅ + 1 and gives A − B. With Y = 0, the same carry chooses between transfer A and increment A.</p>
+              <p class="step-check">Read the controls together: 011 means select B̅ and inject 1, therefore subtract B from A.</p>
+            </li>
+            <li>
+              <span class="step-title">Apply the same equation at every bit position</span>
+              <p>Once Y is selected, the circuit always performs D = A + Y + C<sub>in</sub>. At stage i, XOR determines the result bit: D<sub>i</sub> = A<sub>i</sub> ⊕ Y<sub>i</sub> ⊕ C<sub>i</sub>. The carry equation is C<sub>i+1</sub> = A<sub>i</sub>Y<sub>i</sub> + C<sub>i</sub>(A<sub>i</sub> ⊕ Y<sub>i</sub>).</p>
+              <p class="step-detail">The first product A<sub>i</sub>Y<sub>i</sub> <strong>generates</strong> a carry when both data bits are 1. The second product <strong>propagates</strong> an incoming carry when A<sub>i</sub> and Y<sub>i</sub> differ. OR combines those two possible carry causes.</p>
+              <p class="step-check">At each animated FA stage, compare A<sub>i</sub>, Y<sub>i</sub>, and C<sub>i</sub> with the displayed D<sub>i</sub> and C<sub>i+1</sub>.</p>
+            </li>
+            <li>
+              <span class="step-title">Interpret D and C₄ according to the selected operation</span>
+              <p>After FA₃ settles, D₃D₂D₁D₀ is the four-bit result and C₄ is the carry beyond the register width. For unsigned addition, C₄ indicates a fifth result bit. For two’s-complement subtraction, C₄ is normally discarded; C₄ = 1 indicates no unsigned borrow, while C₄ = 0 indicates a borrow.</p>
+              <p class="step-detail">Carry is not the same as signed overflow. Signed overflow occurs when two operands with the same sign produce a result with the opposite sign; equivalently, the carry into the sign bit differs from the carry out. The simulator shows C₄, so interpret signed results separately.</p>
+              <p class="step-check">For control 111, A + 1111 + 1 = A + 10000₂: the four D bits reproduce A and C₄ becomes 1.</p>
+            </li>
           </ol>
           <div class="arithmetic-equation" aria-label="General arithmetic circuit equation">Y = MUX(S₁S₀; B, B̅, 0000, 1111)<br>D = A + Y + Cᵢₙ</div>
 
