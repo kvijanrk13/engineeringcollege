@@ -1052,33 +1052,40 @@
 
     function buildArithmeticCircuit(select = 0) {
       const stages = [0, 1, 2, 3].map(bit => {
-        const y = 92 + bit * 155;
+        const y = 105 + bit * 190;
         return `<g class="arithmetic-stage" data-arith-bit="${bit}">
-          <text x="24" y="${y + 20}">A${bit}</text><path class="wire a-wire" d="M48 ${y + 16} H565" />
-          <text x="24" y="${y + 70}">B${bit}</text><path class="wire b-wire" d="M48 ${y + 66} H92" /><circle class="junction" cx="72" cy="${y + 66}" r="4" />
-          <path class="wire mux-input input-0" d="M72 ${y + 66} H300 V${y + 43} H350" />
-          <path class="wire" d="M72 ${y + 66} V${y + 88} H102" /><path class="inverter" d="M102 ${y + 77} L102 ${y + 99} L126 ${y + 88} Z" /><circle class="inverter" cx="132" cy="${y + 88}" r="6" />
-          <path class="wire mux-input input-1" d="M138 ${y + 88} H315 V${y + 63} H350" />
-          <path class="wire mux-input input-2" d="M286 ${y + 83} H350" /><text x="270" y="${y + 88}">0</text>
-          <path class="wire mux-input input-3" d="M286 ${y + 103} H350" /><text x="270" y="${y + 108}">1</text>
-          <rect class="block mux-block" x="350" y="${y + 25}" width="130" height="98" rx="5" /><text x="380" y="${y + 66}" font-size="18">4 × 1</text><text x="390" y="${y + 88}" font-size="18">MUX</text>
-          <text x="356" y="${y + 47}" font-size="12">0</text><text x="356" y="${y + 67}" font-size="12">1</text><text x="356" y="${y + 87}" font-size="12">2</text><text x="356" y="${y + 107}" font-size="12">3</text>
-          <path class="wire mux-output" d="M480 ${y + 74} H565" /><text x="505" y="${y + 67}" font-size="12">Y${bit}</text>
-          <rect class="block fa-block" x="565" y="${y}" width="105" height="105" rx="5" /><text x="605" y="${y + 58}" font-size="22">FA</text><text x="574" y="${y + 18}" font-size="12">X${bit}</text><text x="574" y="${y + 91}" font-size="12">Y${bit}</text>
-          <path class="wire output-wire" d="M670 ${y + 53} H735" /><text x="742" y="${y + 59}" font-size="17">D${bit}</text>
-          <rect class="bit-badge" x="690" y="${y + 22}" width="29" height="24" rx="12" /><text class="bit-value d-value" x="700" y="${y + 39}">–</text>
+          <text x="30" y="${y + 26}" font-size="17">A${bit}</text><path class="wire a-wire" d="M58 ${y + 20} H700" />
+          <text x="30" y="${y + 89}" font-size="17">B${bit}</text><path class="wire b-wire" d="M58 ${y + 83} H120" /><circle class="junction" cx="100" cy="${y + 83}" r="4" />
+          <path class="wire b-wire mux-input input-0" d="M100 ${y + 83} H330 V${y + 72} H400" />
+          <path class="wire" d="M100 ${y + 83} V${y + 111} H140" /><path class="inverter" d="M140 ${y + 98} L140 ${y + 124} L174 ${y + 111} Z" /><circle class="inverter" cx="181" cy="${y + 111}" r="7" />
+          <path class="wire mux-input input-1" d="M188 ${y + 111} H355 V${y + 94} H400" />
+          <path class="wire mux-input input-2" d="M340 ${y + 116} H400" /><circle class="junction" cx="340" cy="${y + 116}" r="4" />
+          <path class="wire mux-input input-3" d="M370 ${y + 138} H400" /><circle class="junction" cx="370" cy="${y + 138}" r="4" />
+          <path class="wire bus" d="M270 ${y + 18} H452 V${y + 42}" /><path class="wire bus" d="M300 ${y + 30} H492 V${y + 42}" />
+          <rect class="block mux-block" x="400" y="${y + 42}" width="180" height="128" rx="3" />
+          <text x="456" y="${y + 103}" font-size="19">4 × 1</text><text x="461" y="${y + 127}" font-size="19">MUX</text>
+          <text x="439" y="${y + 59}" font-size="13">S₁</text><text x="479" y="${y + 59}" font-size="13">S₀</text>
+          <text x="407" y="${y + 77}" font-size="13">0</text><text x="407" y="${y + 99}" font-size="13">1</text><text x="407" y="${y + 121}" font-size="13">2</text><text x="407" y="${y + 143}" font-size="13">3</text>
+          <path class="wire mux-output" d="M580 ${y + 105} H700" /><text x="630" y="${y + 98}" font-size="14">Y${bit}</text>
+          <rect class="block fa-block" x="700" y="${y}" width="120" height="125" rx="3" />
+          <text x="744" y="${y + 70}" font-size="23">FA</text><text x="710" y="${y + 25}" font-size="14">X${bit}</text><text x="710" y="${y + 109}" font-size="14">Y${bit}</text><text x="790" y="${y + 25}" font-size="14">C${bit}</text><text x="790" y="${y + 109}" font-size="14">C${bit + 1}</text>
+          <path class="wire output-wire" d="M820 ${y + 63} H875" /><text x="882" y="${y + 69}" font-size="18">D${bit}</text>
+          <rect class="bit-badge" x="839" y="${y + 28}" width="30" height="24" rx="12" /><text class="bit-value d-value" x="849" y="${y + 45}">–</text>
         </g>`;
       }).join('');
       const carryPaths = [0, 1, 2].map(bit => {
-        const top = 92 + bit * 155;
-        return `<path class="wire carry-wire" data-carry="${bit + 1}" d="M617 ${top + 105} V${top + 155}" /><text x="625" y="${top + 137}" font-size="12">C${bit + 1}</text>`;
+        const top = 105 + bit * 190;
+        return `<path class="wire carry-wire" data-carry="${bit + 1}" d="M760 ${top + 125} V${top + 190}" /><text x="770" y="${top + 161}" font-size="13">C${bit + 1}</text>`;
       }).join('');
-      arithmeticCanvas.innerHTML = `<svg class="arithmetic-svg" viewBox="0 0 800 760" role="img" aria-label="Animated four-bit arithmetic circuit with multiplexers and full adders">
-        <text x="148" y="25" font-size="14">S₁</text><path class="wire bus" d="M164 20 V690" /><text x="190" y="25" font-size="14">S₀</text><path class="wire bus" d="M206 20 V690" />
-        <text x="680" y="25" font-size="14">Cᵢₙ</text><path class="wire carry-wire" data-carry="0" d="M617 32 V92" />
+      arithmeticCanvas.innerHTML = `<svg class="arithmetic-svg" viewBox="0 0 920 930" role="img" aria-label="Animated textbook-style four-bit arithmetic circuit with four multiplexers and four full adders">
+        <text x="26" y="31" font-size="17">Cᵢₙ</text><path class="wire carry-wire" data-carry="0" d="M66 25 H760 V105" />
+        <text x="28" y="56" font-size="17">S₁</text><path class="wire bus" d="M58 50 H270 V865" />
+        <text x="28" y="81" font-size="17">S₀</text><path class="wire bus" d="M58 75 H300 V865" />
+        <path class="wire constant-bus" d="M340 221 V875 H68" /><text x="45" y="881" font-size="18">0</text><circle class="junction" cx="105" cy="875" r="4" />
+        <path class="wire" d="M105 875 V900 H135" /><path class="inverter" d="M135 887 L135 913 L169 900 Z" /><circle class="inverter" cx="176" cy="900" r="7" /><path class="wire constant-bus" d="M183 900 H370 V243" /><text x="190" y="918" font-size="13">inverted 0 = 1</text>
         ${stages}${carryPaths}
-        <path class="wire carry-wire" data-carry="4" d="M617 662 V725 H705" /><text x="714" y="731" font-size="16">Cₒᵤₜ</text>
-        <text x="88" y="720" font-size="13">Common select buses choose MUX input ${select}: ${muxSourceLabel(select)}</text>
+        <path class="wire carry-wire" data-carry="4" d="M760 800 V875 H850" /><text x="857" y="881" font-size="17">Cₒᵤₜ</text>
+        <text x="346" y="920" font-size="15">Textbook topology · selected MUX input ${select}: ${muxSourceLabel(select)}</text>
       </svg>`;
       arithmeticCanvas.querySelectorAll(`.input-${select}`).forEach(path => path.classList.add('selected-wire'));
     }
