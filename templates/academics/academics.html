@@ -300,6 +300,16 @@
     .arithmetic-svg .stage-done .output-wire { stroke: var(--green); stroke-width: 4; }
     .arithmetic-svg .bit-badge { fill: #fff; stroke: #9fb3c8; stroke-width: 1.5; }
     .arithmetic-svg .bit-value { font-family: Consolas, monospace; font-size: 14px; }
+    .arithmetic-svg .svg-step-marker circle { fill: #fff; stroke: #829ab1; stroke-width: 2.5; transition: .3s; }
+    .arithmetic-svg .svg-step-marker .step-number { fill: #486581; font-size: 15px; font-weight: 900; text-anchor: middle; }
+    .arithmetic-svg .svg-step-marker .step-name { fill: #627d98; font-size: 12px; font-weight: 850; }
+    .arithmetic-svg .svg-step-marker.active circle { fill: #7c3aed; stroke: #c4b5fd; stroke-width: 4; animation: svgStepPulse .9s ease-in-out infinite; filter: drop-shadow(0 0 8px rgba(124,58,237,.9)); }
+    .arithmetic-svg .svg-step-marker.active .step-number { fill: #fff; }
+    .arithmetic-svg .svg-step-marker.active .step-name { fill: #6d28d9; }
+    .arithmetic-svg .svg-step-marker.done circle { fill: var(--green); stroke: #a7f3d0; }
+    .arithmetic-svg .svg-step-marker.done .step-number { fill: #fff; }
+    .arithmetic-svg .svg-step-marker.done .step-name { fill: #087b58; }
+    @keyframes svgStepPulse { 50% { r: 19px; stroke-width: 6; } }
     @keyframes arithmeticSignal { to { stroke-dashoffset: -34; } }
     .arithmetic-status { min-height: 76px; margin-top: 14px; padding: 15px 17px; border-left: 4px solid #7c3aed; border-radius: 9px; background: #f8f5ff; line-height: 1.65; }
     .arithmetic-result { display: none; margin-top: 12px; padding: 15px 17px; border-left: 4px solid var(--green); border-radius: 9px; background: #edfbf6; line-height: 1.6; }
@@ -343,6 +353,11 @@
     .arithmetic-playback { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; padding: 12px; border: 1px solid #d8cdf8; border-radius: 10px; background: #faf8ff; }
     .arithmetic-playback .btn { min-width: 105px; }
     .arithmetic-playback-status { margin-left: auto; color: #5b21b6; font-size: 13px; font-weight: 850; }
+    .arithmetic-step-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin: 9px 0 0; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .arithmetic-step-legend i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; border-radius: 50%; vertical-align: -1px; }
+    .arithmetic-step-legend .current { background: #7c3aed; box-shadow: 0 0 7px #7c3aed; }
+    .arithmetic-step-legend .complete { background: var(--green); }
+    .arithmetic-step-legend .upcoming { border: 2px solid #829ab1; background: #fff; }
     @keyframes guidePhasePulse { 50% { box-shadow: 0 0 0 6px rgba(124,58,237,.18), 0 10px 28px rgba(76,29,149,.18); } }
     .olap-intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
     .olap-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fbff; }
@@ -769,6 +784,7 @@
           <span id="arith-playback-status" class="arithmetic-playback-status">Ready · 8 phases</span>
         </div>
         <div class="arithmetic-board" aria-live="polite"><div id="arithmetic-canvas"></div></div>
+        <div class="arithmetic-step-legend" aria-label="Circuit step marker legend"><span><i class="current"></i>Current step</span><span><i class="complete"></i>Completed step</span><span><i class="upcoming"></i>Upcoming step</span></div>
         <div id="arithmetic-status" class="arithmetic-status"><strong>Ready:</strong> Choose S₁S₀ and Cᵢₙ to select an arithmetic microoperation, then start the animation.</div>
         <div id="arithmetic-result" class="arithmetic-result"></div>
         <h3 class="function-table-title">Function table of the four-bit arithmetic circuit</h3>
@@ -1077,13 +1093,22 @@
         const top = 105 + bit * 190;
         return `<path class="wire carry-wire" data-carry="${bit + 1}" d="M760 ${top + 125} V${top + 190}" /><text x="770" y="${top + 161}" font-size="13">C${bit + 1}</text>`;
       }).join('');
-      arithmeticCanvas.innerHTML = `<svg class="arithmetic-svg" viewBox="0 0 920 930" role="img" aria-label="Animated textbook-style four-bit arithmetic circuit with four multiplexers and four full adders">
+      const stepMarkers = [
+        [90, 100, 'Inputs'], [500, 28, 'MUX select'], [850, 28, 'Carry in'],
+        [950, 168, 'FA₀'], [950, 358, 'FA₁'], [950, 548, 'FA₂'],
+        [950, 738, 'FA₃'], [950, 875, 'Outputs']
+      ].map((marker, index) => `<g class="svg-step-marker" data-svg-step="${index}">
+        <circle cx="${marker[0]}" cy="${marker[1]}" r="16" />
+        <text class="step-number" x="${marker[0]}" y="${marker[1] + 5}">${index + 1}</text>
+        <text class="step-name" x="${marker[0] + 24}" y="${marker[1] + 5}">${marker[2]}</text>
+      </g>`).join('');
+      arithmeticCanvas.innerHTML = `<svg class="arithmetic-svg" viewBox="0 0 1050 930" role="img" aria-label="Animated textbook-style four-bit arithmetic circuit with numbered learning steps">
         <text x="26" y="31" font-size="17">Cᵢₙ</text><path class="wire carry-wire" data-carry="0" d="M66 25 H760 V105" />
         <text x="28" y="56" font-size="17">S₁</text><path class="wire bus" d="M58 50 H270 V865" />
         <text x="28" y="81" font-size="17">S₀</text><path class="wire bus" d="M58 75 H300 V865" />
         <path class="wire constant-bus" d="M340 221 V875 H68" /><text x="45" y="881" font-size="18">0</text><circle class="junction" cx="105" cy="875" r="4" />
         <path class="wire" d="M105 875 V900 H135" /><path class="inverter" d="M135 887 L135 913 L169 900 Z" /><circle class="inverter" cx="176" cy="900" r="7" /><path class="wire constant-bus" d="M183 900 H370 V243" /><text x="190" y="918" font-size="13">inverted 0 = 1</text>
-        ${stages}${carryPaths}
+        ${stages}${carryPaths}${stepMarkers}
         <path class="wire carry-wire" data-carry="4" d="M760 800 V875 H850" /><text x="857" y="881" font-size="17">Cₒᵤₜ</text>
         <text x="346" y="920" font-size="15">Textbook topology · selected MUX input ${select}: ${muxSourceLabel(select)}</text>
       </svg>`;
@@ -1124,6 +1149,11 @@
       buildArithmeticCircuit(lesson.select);
       arithmeticResult.classList.remove('show');
       setArithmeticPhase(phase);
+      arithmeticCanvas.querySelectorAll('[data-svg-step]').forEach(marker => {
+        const markerIndex = Number(marker.dataset.svgStep);
+        marker.classList.toggle('active', markerIndex === lesson.index);
+        marker.classList.toggle('done', markerIndex < lesson.index);
+      });
       document.querySelectorAll('[data-function]').forEach(row => row.classList.toggle('selected', row.dataset.function === `${lesson.select}-${lesson.cin}`));
       document.querySelectorAll('[data-operation-card]').forEach(card => card.classList.toggle('operation-active', card.dataset.operationCard === `${lesson.select}-${lesson.cin}`));
 
