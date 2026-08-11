@@ -358,6 +358,7 @@
     .arithmetic-step-legend .current { background: #7c3aed; box-shadow: 0 0 7px #7c3aed; }
     .arithmetic-step-legend .complete { background: var(--green); }
     .arithmetic-step-legend .upcoming { border: 2px solid #829ab1; background: #fff; }
+    .theory-mode-note { flex: 1 1 100%; padding: 12px 14px; border-left: 4px solid #7c3aed; border-radius: 8px; background: #f5f0ff; color: #4c1d95; font-size: 14px; line-height: 1.6; }
     @keyframes guidePhasePulse { 50% { box-shadow: 0 0 0 6px rgba(124,58,237,.18), 0 10px 28px rgba(76,29,149,.18); } }
     .olap-intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
     .olap-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fbff; }
@@ -758,8 +759,7 @@
           </div>
         </article>
         <div class="controls">
-          <label>Input A (0–15)<input id="arith-a" type="number" min="0" max="15" value="9"></label>
-          <label>Input B (0–15)<input id="arith-b" type="number" min="0" max="15" value="5"></label>
+          <div class="theory-mode-note"><strong>Theory animation:</strong> A and B are symbolic register inputs, as in the source lesson. A fixed internal pattern (A = 1001, B = 0101) is used only to make 0 and 1 visibly travel through the wires; there are no manual A/B number inputs. Choose the control signals to study how the circuit changes operation.</div>
           <label>Select S₁S₀
             <select id="arith-select"><option value="0">00 — Select B</option><option value="1">01 — Select B̅</option><option value="2">10 — Select 0</option><option value="3">11 — Select 1</option></select>
           </label>
@@ -1116,13 +1116,12 @@
     }
 
     function arithmeticValues() {
-      const clamp4 = id => Math.max(0, Math.min(15, Number.parseInt(document.getElementById(id).value, 10) || 0));
-      const a = clamp4('arith-a');
-      const b = clamp4('arith-b');
+      // Fixed illustrative bits keep the animation concrete while the lesson
+      // explains the symbolic A and B register paths used in the source video.
+      const a = 9;
+      const b = 5;
       const select = Number(document.getElementById('arith-select').value);
       const cin = Number(document.getElementById('arith-cin').value);
-      document.getElementById('arith-a').value = a;
-      document.getElementById('arith-b').value = b;
       return { a, b, select, cin };
     }
 
@@ -1521,7 +1520,7 @@
     document.getElementById('arith-next').addEventListener('click', () => moveArithmeticPhase((arithmeticLesson?.index ?? -1) + 1));
     document.getElementById('arith-replay').addEventListener('click', startArithmeticCircuit);
     document.querySelectorAll('[data-arith-phase]').forEach((button, index) => button.addEventListener('click', () => moveArithmeticPhase(index)));
-    ['arith-a', 'arith-b', 'arith-cin'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+    ['arith-cin'].forEach(id => document.getElementById(id).addEventListener('change', () => {
       clearArithmeticTimers();
       buildArithmeticCircuit(Number(document.getElementById('arith-select').value));
       arithmeticResult.classList.remove('show');
