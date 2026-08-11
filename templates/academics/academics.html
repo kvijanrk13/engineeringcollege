@@ -331,6 +331,8 @@
     .function-table-intro { margin: 0; color: var(--muted); line-height: 1.6; }
     .arithmetic-animation-guide { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 18px; }
     .animation-phase { position: relative; min-height: 86px; padding: 13px 12px 12px 42px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--muted); font-size: 12px; line-height: 1.45; transition: .3s; }
+    button.animation-phase { width: 100%; font-family: inherit; text-align: left; cursor: pointer; }
+    button.animation-phase:hover, button.animation-phase:focus-visible { border-color: #8b5cf6; background: #faf8ff; outline: 3px solid rgba(124,58,237,.14); }
     .animation-phase b { position: absolute; top: 12px; left: 11px; display: grid; place-items: center; width: 23px; height: 23px; border-radius: 50%; background: #9fb3c8; color: #fff; }
     .animation-phase strong { display: block; margin-bottom: 3px; color: var(--navy); font-size: 13px; }
     .animation-phase.active { border-color: #7c3aed; background: #f5f0ff; color: #4c1d95; box-shadow: 0 0 0 4px rgba(124,58,237,.12), 0 8px 22px rgba(76,29,149,.15); transform: translateY(-3px); animation: guidePhasePulse 1s ease-in-out infinite; }
@@ -338,6 +340,9 @@
     .animation-phase.done { border-color: #7fcbb0; background: #edfbf6; }
     .animation-phase.done b { background: var(--green); }
     .microoperation-card.operation-active { border-color: #7c3aed; background: #f9f6ff; box-shadow: 0 0 0 4px rgba(124,58,237,.12); animation: guidePhasePulse 1s ease-in-out infinite; }
+    .arithmetic-playback { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 0; padding: 12px; border: 1px solid #d8cdf8; border-radius: 10px; background: #faf8ff; }
+    .arithmetic-playback .btn { min-width: 105px; }
+    .arithmetic-playback-status { margin-left: auto; color: #5b21b6; font-size: 13px; font-weight: 850; }
     @keyframes guidePhasePulse { 50% { box-shadow: 0 0 0 6px rgba(124,58,237,.18), 0 10px 28px rgba(76,29,149,.18); } }
     .olap-intro { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; align-items: stretch; }
     .olap-card { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: #f8fbff; }
@@ -747,14 +752,21 @@
           <button id="arith-run" class="btn" type="button">Start circuit animation</button>
         </div>
         <div class="arithmetic-animation-guide" aria-label="Synchronized arithmetic circuit animation phases">
-          <div class="animation-phase" data-arith-phase="encode"><b>1</b><strong>Encode A and B</strong>Decimal inputs become four-bit register signals.</div>
-          <div class="animation-phase" data-arith-phase="select"><b>2</b><strong>Select/convert Y</strong>S₁S₀ selects B, B̅, 0000, or 1111 through every MUX.</div>
-          <div class="animation-phase" data-arith-phase="carry"><b>3</b><strong>Inject Cᵢₙ</strong>C₀ enters FA₀ as the third control/input bit.</div>
-          <div class="animation-phase" data-arith-phase="fa0"><b>4</b><strong>Evaluate FA₀</strong>Calculate D₀ and ripple C₁ to FA₁.</div>
-          <div class="animation-phase" data-arith-phase="fa1"><b>5</b><strong>Evaluate FA₁</strong>Calculate D₁ using the arriving C₁.</div>
-          <div class="animation-phase" data-arith-phase="fa2"><b>6</b><strong>Evaluate FA₂</strong>Calculate D₂ and pass C₃ onward.</div>
-          <div class="animation-phase" data-arith-phase="fa3"><b>7</b><strong>Evaluate FA₃</strong>Calculate the most-significant D₃ and C₄.</div>
-          <div class="animation-phase" data-arith-phase="output"><b>8</b><strong>Read the output</strong>Interpret D₃D₂D₁D₀, C₄, and the selected operation.</div>
+          <button class="animation-phase" type="button" data-arith-phase="encode"><b>1</b><strong>Encode A and B</strong>Decimal inputs become four-bit register signals.</button>
+          <button class="animation-phase" type="button" data-arith-phase="select"><b>2</b><strong>Select/convert Y</strong>S₁S₀ selects B, B̅, 0000, or 1111 through every MUX.</button>
+          <button class="animation-phase" type="button" data-arith-phase="carry"><b>3</b><strong>Inject Cᵢₙ</strong>C₀ enters FA₀ as the third control/input bit.</button>
+          <button class="animation-phase" type="button" data-arith-phase="fa0"><b>4</b><strong>Evaluate FA₀</strong>Calculate D₀ and ripple C₁ to FA₁.</button>
+          <button class="animation-phase" type="button" data-arith-phase="fa1"><b>5</b><strong>Evaluate FA₁</strong>Calculate D₁ using the arriving C₁.</button>
+          <button class="animation-phase" type="button" data-arith-phase="fa2"><b>6</b><strong>Evaluate FA₂</strong>Calculate D₂ and pass C₃ onward.</button>
+          <button class="animation-phase" type="button" data-arith-phase="fa3"><b>7</b><strong>Evaluate FA₃</strong>Calculate the most-significant D₃ and C₄.</button>
+          <button class="animation-phase" type="button" data-arith-phase="output"><b>8</b><strong>Read the output</strong>Interpret D₃D₂D₁D₀, C₄, and the selected operation.</button>
+        </div>
+        <div class="arithmetic-playback" aria-label="Arithmetic circuit animation controls">
+          <button id="arith-previous" class="btn light" type="button" disabled>← Previous</button>
+          <button id="arith-auto" class="btn" type="button">▶ Auto play all</button>
+          <button id="arith-next" class="btn light" type="button" disabled>Next →</button>
+          <button id="arith-replay" class="btn light" type="button" disabled>↻ Replay</button>
+          <span id="arith-playback-status" class="arithmetic-playback-status">Ready · 8 phases</span>
         </div>
         <div class="arithmetic-board" aria-live="polite"><div id="arithmetic-canvas"></div></div>
         <div id="arithmetic-status" class="arithmetic-status"><strong>Ready:</strong> Choose S₁S₀ and Cᵢₙ to select an arithmetic microoperation, then start the animation.</div>
@@ -881,7 +893,9 @@
     const arithmeticCanvas = document.getElementById('arithmetic-canvas');
     const arithmeticStatus = document.getElementById('arithmetic-status');
     const arithmeticResult = document.getElementById('arithmetic-result');
-    let arithmeticTimers = [];
+    let arithmeticTimer = null;
+    let arithmeticLesson = null;
+    let arithmeticPlaying = false;
     const arithmeticPhaseOrder = ['encode', 'select', 'carry', 'fa0', 'fa1', 'fa2', 'fa3', 'output'];
     const incrementerCanvas = document.getElementById('incrementer-canvas');
     const incrementerStatus = document.getElementById('incrementer-status');
@@ -942,12 +956,15 @@
     }
 
     function clearArithmeticTimers() {
-      arithmeticTimers.forEach(clearTimeout);
-      arithmeticTimers = [];
+      clearTimeout(arithmeticTimer);
+      arithmeticTimer = null;
+      arithmeticPlaying = false;
+      arithmeticLesson = null;
       document.getElementById('arith-run').disabled = false;
       document.querySelectorAll('[data-arith-phase]').forEach(card => card.classList.remove('active', 'done'));
       document.querySelectorAll('[data-operation-card]').forEach(card => card.classList.remove('operation-active'));
       document.querySelectorAll('[data-function]').forEach(row => row.classList.remove('selected'));
+      document.getElementById('arith-auto').textContent = '▶ Auto play all';
     }
 
     function setArithmeticPhase(phase) {
@@ -956,6 +973,7 @@
         const index = arithmeticPhaseOrder.indexOf(card.dataset.arithPhase);
         card.classList.toggle('active', index === activeIndex);
         card.classList.toggle('done', index < activeIndex);
+        card.setAttribute('aria-pressed', String(index === activeIndex));
       });
     }
 
@@ -1076,14 +1094,8 @@
       return { a, b, select, cin };
     }
 
-    function startArithmeticCircuit() {
-      clearArithmeticTimers();
+    function createArithmeticLesson() {
       const values = arithmeticValues();
-      buildArithmeticCircuit(values.select);
-      arithmeticResult.classList.remove('show');
-      document.getElementById('arith-run').disabled = true;
-      document.querySelectorAll('[data-function]').forEach(row => row.classList.toggle('selected', row.dataset.function === `${values.select}-${values.cin}`));
-      document.querySelectorAll('[data-operation-card]').forEach(card => card.classList.toggle('operation-active', card.dataset.operationCard === `${values.select}-${values.cin}`));
       const selectedWord = [values.b, (~values.b) & 15, 0, 15][values.select];
       let carry = values.cin;
       const bits = [];
@@ -1094,51 +1106,89 @@
         bits.push({ bit, aBit, yBit, carryIn: carry, d: sum & 1, carryOut: sum > 1 ? 1 : 0 });
         carry = sum > 1 ? 1 : 0;
       }
-      const selectedPaths = [...arithmeticCanvas.querySelectorAll(`.input-${values.select}`)];
-      selectedPaths.forEach(path => path.classList.remove('selected-wire'));
-      setArithmeticPhase('encode');
-      arithmeticCanvas.querySelectorAll('.a-wire, .b-wire').forEach(path => path.classList.add('input-flow'));
-      arithmeticStatus.innerHTML = `<strong>Phase 1 — Encode inputs:</strong> A = ${values.a.toString(2).padStart(4, '0')} travels directly to X₃…X₀. B = ${values.b.toString(2).padStart(4, '0')} reaches the direct and inverter paths of the MUX bank.`;
+      const raw = values.a + selectedWord + values.cin;
+      const functionText = document.querySelector(`[data-function="${values.select}-${values.cin}"] td:last-child`).textContent;
+      return { ...values, selectedWord, bits, raw, d: raw & 15, functionText, index: 0 };
+    }
 
-      arithmeticTimers.push(setTimeout(() => {
-        setArithmeticPhase('select');
-        arithmeticCanvas.querySelectorAll('.a-wire, .b-wire').forEach(path => path.classList.remove('input-flow'));
-        arithmeticCanvas.querySelectorAll('.bus').forEach(path => path.classList.add('active'));
-        selectedPaths.forEach(path => path.classList.add('selected-wire'));
-        const conversion = values.select === 1 ? `B is inverted from ${values.b.toString(2).padStart(4, '0')} to ${selectedWord.toString(2).padStart(4, '0')}.` : `The selected Y word is ${selectedWord.toString(2).padStart(4, '0')}.`;
-        arithmeticStatus.innerHTML = `<strong>Phase 2 — MUX selection:</strong> S₁S₀ = ${values.select.toString(2).padStart(2, '0')} selects ${muxSourceLabel(values.select)}. ${conversion}`;
-      }, 1200));
+    function renderArithmeticPhase() {
+      const lesson = arithmeticLesson;
+      const phase = arithmeticPhaseOrder[lesson.index];
+      buildArithmeticCircuit(lesson.select);
+      arithmeticResult.classList.remove('show');
+      setArithmeticPhase(phase);
+      document.querySelectorAll('[data-function]').forEach(row => row.classList.toggle('selected', row.dataset.function === `${lesson.select}-${lesson.cin}`));
+      document.querySelectorAll('[data-operation-card]').forEach(card => card.classList.toggle('operation-active', card.dataset.operationCard === `${lesson.select}-${lesson.cin}`));
 
-      arithmeticTimers.push(setTimeout(() => {
-        setArithmeticPhase('carry');
-        arithmeticCanvas.querySelectorAll('.bus').forEach(path => path.classList.remove('active'));
-        arithmeticCanvas.querySelector('[data-carry="0"]').classList.add('active');
-        arithmeticStatus.innerHTML = `<strong>Phase 3 — Carry injection:</strong> Cᵢₙ = C₀ = ${values.cin} enters FA0. The configured operation is now A + Y + Cᵢₙ.`;
-      }, 2400));
+      const selectedPaths = [...arithmeticCanvas.querySelectorAll(`.input-${lesson.select}`)];
+      const phaseIndex = lesson.index;
+      if (phaseIndex === 0) arithmeticCanvas.querySelectorAll('.a-wire, .b-wire').forEach(path => path.classList.add('input-flow'));
+      if (phaseIndex >= 1) selectedPaths.forEach(path => path.classList.add('selected-wire'));
+      if (phaseIndex === 1) arithmeticCanvas.querySelectorAll('.bus').forEach(path => path.classList.add('active'));
+      if (phaseIndex >= 2) arithmeticCanvas.querySelector('[data-carry="0"]').classList.add('active');
 
-      bits.forEach((stage, index) => {
-        arithmeticTimers.push(setTimeout(() => {
-          if (index > 0) arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit - 1}"]`).classList.replace('stage-active', 'stage-done');
-          setArithmeticPhase(`fa${stage.bit}`);
-          const node = arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit}"]`);
-          node.classList.add('stage-active');
-          node.querySelector('.d-value').textContent = stage.d;
-          arithmeticCanvas.querySelector(`[data-carry="${stage.bit}"]`).classList.add('active');
-          arithmeticStatus.innerHTML = `<strong>FA${stage.bit} active:</strong> X${stage.bit}=A${stage.bit}=${stage.aBit}, Y${stage.bit}=${stage.yBit}, and C${stage.bit}=${stage.carryIn}. Therefore D${stage.bit}=${stage.d} and C${stage.bit + 1}=${stage.carryOut}.`;
-        }, 3600 + index * 1400));
+      lesson.bits.forEach(stage => {
+        const stagePhaseIndex = 3 + stage.bit;
+        const node = arithmeticCanvas.querySelector(`[data-arith-bit="${stage.bit}"]`);
+        if (phaseIndex >= stagePhaseIndex) node.querySelector('.d-value').textContent = stage.d;
+        if (phaseIndex === stagePhaseIndex) node.classList.add('stage-active');
+        if (phaseIndex > stagePhaseIndex) node.classList.add('stage-done');
+        if (phaseIndex >= stagePhaseIndex) arithmeticCanvas.querySelector(`[data-carry="${stage.bit}"]`).classList.add('active');
       });
-      arithmeticTimers.push(setTimeout(() => {
-        setArithmeticPhase('output');
-        arithmeticCanvas.querySelector('[data-arith-bit="3"]').classList.replace('stage-active', 'stage-done');
-        arithmeticCanvas.querySelector('[data-carry="4"]').classList.add('active');
-        const raw = values.a + selectedWord + values.cin;
-        const d = raw & 15;
-        const functionText = document.querySelector(`[data-function="${values.select}-${values.cin}"] td:last-child`).textContent;
-        arithmeticStatus.innerHTML = '<strong>Complete:</strong> All four full adders are stable. Read C₄D₃D₂D₁D₀ from the circuit outputs.';
-        arithmeticResult.innerHTML = `<strong>${functionText}</strong><br>A = ${values.a.toString(2).padStart(4, '0')}, selected Y = ${selectedWord.toString(2).padStart(4, '0')}, Cᵢₙ = ${values.cin}<br><strong>Output:</strong> D = ${d.toString(2).padStart(4, '0')} (${d}), Cₒᵤₜ = ${raw > 15 ? 1 : 0}`;
+      if (phaseIndex === 7) arithmeticCanvas.querySelector('[data-carry="4"]').classList.add('active');
+
+      if (phase === 'encode') {
+        arithmeticStatus.innerHTML = `<strong>Phase 1 — Encode inputs:</strong> A = ${lesson.a.toString(2).padStart(4, '0')} travels directly to X₃…X₀. B = ${lesson.b.toString(2).padStart(4, '0')} reaches both the direct and inverter paths.`;
+      } else if (phase === 'select') {
+        const conversion = lesson.select === 1 ? `B is inverted from ${lesson.b.toString(2).padStart(4, '0')} to ${lesson.selectedWord.toString(2).padStart(4, '0')}.` : `The selected Y word is ${lesson.selectedWord.toString(2).padStart(4, '0')}.`;
+        arithmeticStatus.innerHTML = `<strong>Phase 2 — MUX selection:</strong> S₁S₀ = ${lesson.select.toString(2).padStart(2, '0')} selects ${muxSourceLabel(lesson.select)}. ${conversion}`;
+      } else if (phase === 'carry') {
+        arithmeticStatus.innerHTML = `<strong>Phase 3 — Carry injection:</strong> Cᵢₙ = C₀ = ${lesson.cin} enters FA0. The configured expression is A + Y + Cᵢₙ.`;
+      } else if (phase.startsWith('fa')) {
+        const stage = lesson.bits[Number(phase.slice(2))];
+        arithmeticStatus.innerHTML = `<strong>Phase ${lesson.index + 1} — FA${stage.bit} active:</strong> X${stage.bit}=A${stage.bit}=${stage.aBit}, Y${stage.bit}=${stage.yBit}, C${stage.bit}=${stage.carryIn}. Therefore D${stage.bit}=${stage.d} and C${stage.bit + 1}=${stage.carryOut}.`;
+      } else {
+        arithmeticStatus.innerHTML = '<strong>Phase 8 — Complete:</strong> All four full adders are stable. Read C₄D₃D₂D₁D₀ and interpret the highlighted function-table row.';
+        arithmeticResult.innerHTML = `<strong>${lesson.functionText}</strong><br>A = ${lesson.a.toString(2).padStart(4, '0')}, selected Y = ${lesson.selectedWord.toString(2).padStart(4, '0')}, Cᵢₙ = ${lesson.cin}<br><strong>Output:</strong> D = ${lesson.d.toString(2).padStart(4, '0')} (${lesson.d}), Cₒᵤₜ = ${lesson.raw > 15 ? 1 : 0}`;
         arithmeticResult.classList.add('show');
+        arithmeticPlaying = false;
         document.getElementById('arith-run').disabled = false;
-      }, 9300));
+        document.getElementById('arith-auto').textContent = '▶ Auto play all';
+      }
+
+      document.getElementById('arith-previous').disabled = lesson.index === 0;
+      document.getElementById('arith-next').disabled = lesson.index === arithmeticPhaseOrder.length - 1;
+      document.getElementById('arith-replay').disabled = false;
+      document.getElementById('arith-playback-status').textContent = `Phase ${lesson.index + 1} of ${arithmeticPhaseOrder.length} · ${arithmeticPlaying ? 'Auto playing' : 'Manual control'}`;
+    }
+
+    function scheduleArithmeticPhase() {
+      clearTimeout(arithmeticTimer);
+      if (!arithmeticPlaying || arithmeticLesson.index >= arithmeticPhaseOrder.length - 1) return;
+      arithmeticTimer = setTimeout(() => {
+        arithmeticLesson.index += 1;
+        renderArithmeticPhase();
+        scheduleArithmeticPhase();
+      }, 1900);
+    }
+
+    function startArithmeticCircuit() {
+      clearArithmeticTimers();
+      arithmeticLesson = createArithmeticLesson();
+      arithmeticPlaying = true;
+      document.getElementById('arith-run').disabled = true;
+      document.getElementById('arith-auto').textContent = '❚❚ Pause';
+      renderArithmeticPhase();
+      scheduleArithmeticPhase();
+    }
+
+    function moveArithmeticPhase(index) {
+      if (!arithmeticLesson) arithmeticLesson = createArithmeticLesson();
+      clearTimeout(arithmeticTimer);
+      arithmeticPlaying = false;
+      arithmeticLesson.index = Math.max(0, Math.min(arithmeticPhaseOrder.length - 1, index));
+      document.getElementById('arith-auto').textContent = '▶ Resume auto';
+      renderArithmeticPhase();
     }
 
     function buildAdderSubtractor(mode = 0) {
@@ -1415,7 +1465,32 @@
     document.getElementById('as-run').addEventListener('click', startAdderSubtractor);
     document.getElementById('as-mode').addEventListener('change', event => { clearAdderSubtractorTimers(); buildAdderSubtractor(Number(event.target.value)); asResult.classList.remove('show'); });
     document.getElementById('arith-run').addEventListener('click', startArithmeticCircuit);
-    document.getElementById('arith-select').addEventListener('change', event => { clearArithmeticTimers(); buildArithmeticCircuit(Number(event.target.value)); arithmeticResult.classList.remove('show'); });
+    document.getElementById('arith-auto').addEventListener('click', () => {
+      if (!arithmeticLesson) { startArithmeticCircuit(); return; }
+      arithmeticPlaying = !arithmeticPlaying;
+      clearTimeout(arithmeticTimer);
+      if (arithmeticPlaying) {
+        if (arithmeticLesson.index >= arithmeticPhaseOrder.length - 1) arithmeticLesson.index = 0;
+        document.getElementById('arith-run').disabled = true;
+        document.getElementById('arith-auto').textContent = '❚❚ Pause';
+        renderArithmeticPhase();
+        scheduleArithmeticPhase();
+      } else {
+        document.getElementById('arith-auto').textContent = '▶ Resume auto';
+        document.getElementById('arith-playback-status').textContent = `Phase ${arithmeticLesson.index + 1} of 8 · Paused`;
+      }
+    });
+    document.getElementById('arith-previous').addEventListener('click', () => moveArithmeticPhase((arithmeticLesson?.index || 0) - 1));
+    document.getElementById('arith-next').addEventListener('click', () => moveArithmeticPhase((arithmeticLesson?.index ?? -1) + 1));
+    document.getElementById('arith-replay').addEventListener('click', startArithmeticCircuit);
+    document.querySelectorAll('[data-arith-phase]').forEach((button, index) => button.addEventListener('click', () => moveArithmeticPhase(index)));
+    ['arith-a', 'arith-b', 'arith-cin'].forEach(id => document.getElementById(id).addEventListener('change', () => {
+      clearArithmeticTimers();
+      buildArithmeticCircuit(Number(document.getElementById('arith-select').value));
+      arithmeticResult.classList.remove('show');
+      arithmeticStatus.innerHTML = '<strong>Ready:</strong> Inputs changed. Select a phase or use Auto play all to begin the complete information flow.';
+    }));
+    document.getElementById('arith-select').addEventListener('change', event => { clearArithmeticTimers(); buildArithmeticCircuit(Number(event.target.value)); arithmeticResult.classList.remove('show'); arithmeticStatus.innerHTML = '<strong>Ready:</strong> Operation changed. Select a phase or use Auto play all.'; });
     document.getElementById('arithmetic-lesson-link').addEventListener('click', () => {
       window.setTimeout(() => {
         document.getElementById('arithmetic-circuit-title').scrollIntoView({ behavior: 'smooth', block: 'start' });
