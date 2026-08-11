@@ -246,6 +246,15 @@
     .microoperation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
     .microoperation-card { padding: 13px 15px; border: 1px solid var(--line); border-radius: 10px; background: #fff; line-height: 1.55; }
     .microoperation-card code { display: block; margin-bottom: 4px; color: #6d28d9; font-weight: 900; }
+    .microoperation-card .binary-example { display: block; margin-top: 8px; padding: 8px 10px; border-radius: 7px; background: #f5f2ff; color: #4c1d95; font: 700 13px/1.55 Consolas, monospace; }
+    .concept-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px; }
+    .concept-panel { padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: #fff; overflow-x: auto; }
+    .concept-panel h4 { margin: 0 0 5px; color: var(--navy); }
+    .concept-panel p { margin: 0 0 11px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .concept-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .concept-table th, .concept-table td { padding: 8px; border: 1px solid var(--line); text-align: center; }
+    .concept-table th { background: #334e68; color: #fff; }
+    .control-word { margin-top: 16px; padding: 15px 17px; border-left: 5px solid #7c3aed; border-radius: 9px; background: #fff; line-height: 1.65; }
     .worked-example { margin-top: 18px; padding: 18px; border-left: 5px solid var(--green); border-radius: 10px; background: #effbf7; }
     .worked-example h4 { margin: 0 0 8px; color: var(--navy); }
     .worked-example p { margin: 6px 0; line-height: 1.6; }
@@ -358,6 +367,7 @@
       .olap-flow { justify-content: flex-start; }
       .coa-lesson-picker { grid-template-columns: 1fr; }
       .microoperation-grid { grid-template-columns: 1fr; }
+      .concept-tables { grid-template-columns: 1fr; }
       .arithmetic-guide { padding: 16px; }
       .bit-walkthrough { min-width: 620px; }
       .worked-example { overflow-x: auto; }
@@ -518,16 +528,52 @@
           </ol>
           <div class="arithmetic-equation" aria-label="General arithmetic circuit equation">Y = MUX(S₁S₀; B, B̅, 0000, 1111)<br>D = A + Y + Cᵢₙ</div>
 
+          <h3 style="margin-top:20px">Understand the two building blocks</h3>
+          <div class="concept-tables">
+            <section class="concept-panel">
+              <h4>One full-adder truth table</h4>
+              <p>Each row shows what one FA stage does after the MUX has supplied Y<sub>i</sub>. D<sub>i</sub> is 1 for an odd number of input ones; carry is 1 when at least two inputs are 1.</p>
+              <table class="concept-table" aria-label="Full adder truth table">
+                <thead><tr><th>Aᵢ</th><th>Yᵢ</th><th>Cᵢ</th><th>Dᵢ</th><th>Cᵢ₊₁</th></tr></thead>
+                <tbody>
+                  <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                  <tr><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+                  <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                  <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+                  <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                  <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+                  <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+                  <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+                </tbody>
+              </table>
+            </section>
+            <section class="concept-panel">
+              <h4>4×1 MUX selection table</h4>
+              <p>S₁S₀ selects one input number on every MUX. Reading the four selected bits together gives the word Y used by the adder.</p>
+              <table class="concept-table" aria-label="Arithmetic circuit multiplexer selection table">
+                <thead><tr><th>S₁</th><th>S₀</th><th>MUX input</th><th>Y word</th><th>Purpose</th></tr></thead>
+                <tbody>
+                  <tr><td>0</td><td>0</td><td>I₀ = Bᵢ</td><td>B</td><td>Add B</td></tr>
+                  <tr><td>0</td><td>1</td><td>I₁ = B̅ᵢ</td><td>B̅</td><td>Subtract B</td></tr>
+                  <tr><td>1</td><td>0</td><td>I₂ = 0</td><td>0000</td><td>Transfer/increment A</td></tr>
+                  <tr><td>1</td><td>1</td><td>I₃ = 1</td><td>1111</td><td>Decrement/transfer A</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+          <div class="control-word"><strong>How the eight functions are formed:</strong> two MUX select bits provide 2² = 4 choices. The initial carry has 2 choices. Therefore the circuit has 4 × 2 = <strong>8 control combinations</strong>. Write them as S₁S₀C<sub>in</sub>, from 000 through 111. This three-bit value is a control word—it is not part of A or B.</div>
+
           <h3 style="margin-top:20px">Derive all eight microoperations</h3>
+          <p style="color:var(--muted);line-height:1.65">Use A = 1001₂ (9) and B = 0101₂ (5) in every card below. The fixed example shows exactly how changing only S₁S₀C<sub>in</sub> makes the same hardware perform a different operation.</p>
           <div class="microoperation-grid">
-            <div class="microoperation-card"><code>000 → A + B</code>Select B and add no input carry: ordinary addition.</div>
-            <div class="microoperation-card"><code>001 → A + B + 1</code>Select B and add C<sub>in</sub> = 1: addition with carry.</div>
-            <div class="microoperation-card"><code>010 → A + B̅</code>Since B̅ = (2⁴ − 1) − B, this gives A − B − 1 modulo 16: subtract with borrow.</div>
-            <div class="microoperation-card"><code>011 → A + B̅ + 1</code>B̅ + 1 is the two’s complement of B, so this is A − B.</div>
-            <div class="microoperation-card"><code>100 → A + 0000</code>The MUX supplies zero and C<sub>in</sub> = 0, so the circuit transfers A unchanged.</div>
-            <div class="microoperation-card"><code>101 → A + 0000 + 1</code>The added carry increments A by one.</div>
-            <div class="microoperation-card"><code>110 → A + 1111</code>1111 represents −1 modulo 16, so the four-bit result is A − 1.</div>
-            <div class="microoperation-card"><code>111 → A + 1111 + 1</code>The added value is binary 1 0000; D reproduces A and C₄ becomes 1.</div>
+            <div class="microoperation-card"><code>000 → A + B</code>S₁S₀ = 00 passes B through the MUXes. C<sub>in</sub> = 0 adds nothing extra. This is ordinary unsigned addition.<span class="binary-example">1001 + 0101 + 0 = 01110₂<br>D = 1110 (14), C₄ = 0</span></div>
+            <div class="microoperation-card"><code>001 → A + B + 1</code>The MUX still passes B, but C<sub>in</sub> = 1 enters FA₀. This is useful for adding a previous carry or forming a multiword addition.<span class="binary-example">1001 + 0101 + 1 = 01111₂<br>D = 1111 (15), C₄ = 0</span></div>
+            <div class="microoperation-card"><code>010 → A + B̅ = A − B − 1</code>01 selects the one’s complement of B. Since B̅ = 1111 − B for four bits, omitting the final +1 produces subtraction with an incoming borrow.<span class="binary-example">B̅ = 1010<br>1001 + 1010 + 0 = 10011₂<br>D = 0011 (3), C₄ = 1</span></div>
+            <div class="microoperation-card"><code>011 → A + B̅ + 1 = A − B</code>Complement B and inject C<sub>in</sub> = 1. B̅ + 1 is the two’s complement of B, allowing subtraction to use the same adder hardware.<span class="binary-example">1001 + 1010 + 1 = 10100₂<br>D = 0100 (4), C₄ = 1</span></div>
+            <div class="microoperation-card"><code>100 → A + 0000 = A</code>10 forces every Y bit to zero and C<sub>in</sub> is zero. Adding zero leaves A unchanged, so the circuit performs a register-transfer microoperation.<span class="binary-example">1001 + 0000 + 0 = 01001₂<br>D = 1001 (9), C₄ = 0</span></div>
+            <div class="microoperation-card"><code>101 → A + 0000 + 1 = A + 1</code>Y remains zero, but C<sub>in</sub> supplies one at FA₀. The carry travels through consecutive 1 bits, which is exactly binary incrementing.<span class="binary-example">1001 + 0000 + 1 = 01010₂<br>D = 1010 (10), C₄ = 0</span></div>
+            <div class="microoperation-card"><code>110 → A + 1111 = A − 1</code>In four-bit two’s complement, 1111 represents −1. Adding it decrements A; only the lower four D bits are retained.<span class="binary-example">1001 + 1111 + 0 = 11000₂<br>D = 1000 (8), C₄ = 1</span></div>
+            <div class="microoperation-card"><code>111 → A + 1111 + 1 = A</code>1111 + 1 creates 1 0000₂. Adding this changes only the fifth carry position, so the four result bits reproduce A and C₄ is set.<span class="binary-example">1001 + 1111 + 1 = 11001₂<br>D = 1001 (9), C₄ = 1</span></div>
           </div>
 
           <div class="worked-example">
