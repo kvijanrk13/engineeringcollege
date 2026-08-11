@@ -261,6 +261,20 @@
     .symbol-table th { background: #4c1d95; color: #fff; }
     .symbol-table td:first-child { color: #5b21b6; font: 900 16px Consolas, monospace; white-space: nowrap; }
     .symbol-note { padding: 14px 16px; border: 1px solid #f3c969; border-radius: 9px; background: #fff9e8; color: #694c00; line-height: 1.65; }
+    .connection-map { display: grid; gap: 10px; margin: 18px 0; }
+    .connection-row { display: grid; grid-template-columns: minmax(130px,.75fr) 42px minmax(180px,1fr) 42px minmax(190px,1.15fr); align-items: center; gap: 8px; }
+    .connection-node { min-height: 66px; display: grid; align-content: center; padding: 11px 13px; border: 1px solid var(--line); border-radius: 9px; background: #fff; line-height: 1.45; }
+    .connection-node strong { display: block; color: var(--navy); }
+    .connection-node small { color: var(--muted); }
+    .connection-arrow { color: #7c3aed; font-size: 25px; font-weight: 900; text-align: center; }
+    .signal-flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 16px; }
+    .flow-step { position: relative; padding: 15px 14px 14px 48px; border: 1px solid #c9d8ea; border-radius: 10px; background: #fff; line-height: 1.55; }
+    .flow-step b { position: absolute; top: 13px; left: 12px; display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: var(--blue); color: #fff; }
+    .flow-step strong { display: block; margin-bottom: 3px; color: var(--navy); }
+    .binary-role-table { width: 100%; margin-top: 16px; border-collapse: collapse; background: #fff; font-size: 14px; }
+    .binary-role-table th, .binary-role-table td { padding: 10px 11px; border: 1px solid var(--line); text-align: left; vertical-align: top; line-height: 1.55; }
+    .binary-role-table th { background: #0b607c; color: #fff; }
+    .flow-example { margin-top: 16px; padding: 16px 18px; border-left: 5px solid var(--blue); border-radius: 10px; background: #eef7ff; line-height: 1.7; }
     .worked-example { margin-top: 18px; padding: 18px; border-left: 5px solid var(--green); border-radius: 10px; background: #effbf7; }
     .worked-example h4 { margin: 0 0 8px; color: var(--navy); }
     .worked-example p { margin: 6px 0; line-height: 1.6; }
@@ -374,6 +388,9 @@
       .coa-lesson-picker { grid-template-columns: 1fr; }
       .microoperation-grid { grid-template-columns: 1fr; }
       .concept-tables { grid-template-columns: 1fr; }
+      .connection-row { grid-template-columns: 1fr; }
+      .connection-arrow { transform: rotate(90deg); }
+      .signal-flow { grid-template-columns: 1fr; }
       .arithmetic-guide { padding: 16px; }
       .bit-walkthrough { min-width: 620px; }
       .worked-example { overflow-x: auto; }
@@ -510,6 +527,45 @@
             </table>
           </div>
           <div class="symbol-note"><strong>Important notation:</strong> in this diagram, <strong>S₁ and S₀ mean “select lines,” not sum bits.</strong> The full-adder sum/result outputs are labelled <strong>D₀, D₁, D₂, and D₃</strong>. Some textbooks label the result F or S; this page uses D so it cannot be confused with the MUX controls S₁S₀.</div>
+
+          <h3 style="margin-top:20px">What is connected to what?</h3>
+          <p style="color:var(--muted);line-height:1.65">The four-bit drawing is four copies of the same one-bit path. The subscript i means “use the matching bit position,” from i = 0 at the rightmost/least-significant stage through i = 3 at the leftmost/most-significant stage.</p>
+          <div class="connection-map" aria-label="Arithmetic circuit connection map">
+            <div class="connection-row"><div class="connection-node"><strong>Register A bit Aᵢ</strong><small>First data operand</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>FAᵢ input Xᵢ</strong><small>Direct wire; no selection or conversion</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Full-adder calculation</strong><small>Xᵢ = Aᵢ is always one of the three added bits</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>Register B bit Bᵢ</strong><small>Second data operand</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>MUX input I₀</strong><small>Direct Bᵢ connection</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Yᵢ when S₁S₀ = 00</strong><small>B is used unchanged for addition</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>Register B bit Bᵢ</strong><small>The same B wire branches here</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>NOT gate → MUX I₁</strong><small>Converts Bᵢ to B̅ᵢ</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Yᵢ when S₁S₀ = 01</strong><small>Complemented B is used for subtraction</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>Fixed logic 0</strong><small>Low voltage/reference level</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>MUX input I₂</strong><small>Not taken from A or B</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Yᵢ when S₁S₀ = 10</strong><small>All stages receive 0 for transfer or increment</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>Fixed logic 1</strong><small>High voltage/reference level</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>MUX input I₃</strong><small>Not taken from A or B</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Yᵢ when S₁S₀ = 11</strong><small>All stages receive 1 for decrement or transfer-with-carry</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>MUX output Yᵢ</strong><small>One of Bᵢ, B̅ᵢ, 0, or 1</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>FAᵢ input Yᵢ</strong><small>Second full-adder data input</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Result Dᵢ</strong><small>One output bit after Aᵢ + Yᵢ + Cᵢ</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>External Cᵢₙ</strong><small>Operation control 0 or 1</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>FA₀ carry input C₀</strong><small>Only the first stage receives external carry</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>C₁ → FA₁ → C₂ → FA₂ → C₃ → FA₃ → C₄</strong><small>Internal ripple-carry chain and final carry output</small></div></div>
+            <div class="connection-row"><div class="connection-node"><strong>Common S₁ and S₀</strong><small>Two operation-select controls</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Select pins on all four MUXes</strong><small>The same choice is applied at every bit</small></div><div class="connection-arrow">→</div><div class="connection-node"><strong>Word Y = B, B̅, 0000, or 1111</strong><small>Four selected Yᵢ outputs form one operand</small></div></div>
+          </div>
+
+          <h3 style="margin-top:20px">How input and output signals flow</h3>
+          <div class="signal-flow">
+            <div class="flow-step"><b>1</b><strong>Encode the inputs</strong>Convert decimal A and B into four-bit binary. Each binary digit is placed on its matching register wire Aᵢ or Bᵢ.</div>
+            <div class="flow-step"><b>2</b><strong>Distribute B</strong>Every Bᵢ branches into two paths: unchanged to I₀ and through a NOT gate to I₁. Fixed 0 and 1 supply I₂ and I₃.</div>
+            <div class="flow-step"><b>3</b><strong>Select Y</strong>S₁S₀ activates one MUX input on all four stages. The four MUX outputs combine into Y₃Y₂Y₁Y₀.</div>
+            <div class="flow-step"><b>4</b><strong>Start at FA₀</strong>FA₀ receives X₀=A₀, the selected Y₀, and external C₀=C<sub>in</sub>. It produces D₀ and C₁.</div>
+            <div class="flow-step"><b>5</b><strong>Ripple the carry</strong>FA₁ uses C₁, FA₂ uses C₂, and FA₃ uses C₃. Each stage waits logically for the preceding carry to settle.</div>
+            <div class="flow-step"><b>6</b><strong>Collect the outputs</strong>Read D₃D₂D₁D₀ as the four-bit result. Read C₄ separately as carry/no-borrow information.</div>
+          </div>
+
+          <h3 style="margin-top:20px">Exactly when 0 and 1 are used or converted</h3>
+          <table class="binary-role-table" aria-label="Roles of binary zero and one in the arithmetic circuit">
+            <thead><tr><th>Location</th><th>Meaning of 0</th><th>Meaning of 1</th><th>When conversion occurs</th></tr></thead>
+            <tbody>
+              <tr><td>Aᵢ or Bᵢ data bit</td><td>The corresponding power of two is absent.</td><td>The corresponding power of two is present.</td><td>Decimal input is converted to a four-bit binary word before entering the circuit.</td></tr>
+              <tr><td>NOT gate on Bᵢ</td><td>Input 0 becomes output 1.</td><td>Input 1 becomes output 0.</td><td>Only the I₁/B̅ path performs this conversion; the I₀/B path remains unchanged.</td></tr>
+              <tr><td>MUX constant I₂</td><td>A permanent 0 is selected at every stage.</td><td>Not applicable to I₂.</td><td>S₁S₀ = 10 constructs Y = 0000.</td></tr>
+              <tr><td>MUX constant I₃</td><td>Not applicable to I₃.</td><td>A permanent 1 is selected at every stage.</td><td>S₁S₀ = 11 constructs Y = 1111.</td></tr>
+              <tr><td>Select lines S₁S₀</td><td>Chooses the lower-numbered branch as part of 00, 01, or 10.</td><td>Chooses the upper branch as part of 01, 10, or 11.</td><td>The pair is decoded by the MUX; it is not numerically added.</td></tr>
+              <tr><td>Initial carry Cᵢₙ</td><td>Add no extra unit.</td><td>Add one at FA₀.</td><td>No bit is inverted; changing Cᵢₙ selects the second operation in each MUX pair.</td></tr>
+              <tr><td>Full-adder result Dᵢ</td><td>An even number of Aᵢ, Yᵢ, Cᵢ inputs are 1.</td><td>An odd number of those inputs are 1.</td><td>The XOR network converts three input bits into the sum bit.</td></tr>
+              <tr><td>Full-adder carry Cᵢ₊₁</td><td>Fewer than two input bits are 1.</td><td>At least two input bits are 1.</td><td>The carry logic converts the majority condition into a bit for the next stage.</td></tr>
+            </tbody>
+          </table>
+          <div class="flow-example"><strong>Complete signal-flow example for A − B:</strong> A=9 becomes 1001 and goes directly to X. B=5 becomes 0101; the NOT gates convert it to 1010. Control S₁S₀=01 makes every MUX select the converted B̅ path, so Y=1010. C<sub>in</sub>=1 enters FA₀ to complete two’s complement. The chain evaluates 1001 + 1010 + 1, producing D=0100 and C₄=1. Therefore the four-bit output is 4 and no unsigned borrow occurred.</div>
 
           <ol class="arithmetic-steps">
             <li>
