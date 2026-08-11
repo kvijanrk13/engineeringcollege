@@ -255,6 +255,12 @@
     .concept-table th, .concept-table td { padding: 8px; border: 1px solid var(--line); text-align: center; }
     .concept-table th { background: #334e68; color: #fff; }
     .control-word { margin-top: 16px; padding: 15px 17px; border-left: 5px solid #7c3aed; border-radius: 9px; background: #fff; line-height: 1.65; }
+    .symbol-guide { margin: 18px 0; overflow-x: auto; }
+    .symbol-table { width: 100%; min-width: 760px; border-collapse: collapse; background: #fff; font-size: 14px; }
+    .symbol-table th, .symbol-table td { padding: 11px 12px; border: 1px solid var(--line); text-align: left; vertical-align: top; line-height: 1.55; }
+    .symbol-table th { background: #4c1d95; color: #fff; }
+    .symbol-table td:first-child { color: #5b21b6; font: 900 16px Consolas, monospace; white-space: nowrap; }
+    .symbol-note { padding: 14px 16px; border: 1px solid #f3c969; border-radius: 9px; background: #fff9e8; color: #694c00; line-height: 1.65; }
     .worked-example { margin-top: 18px; padding: 18px; border-left: 5px solid var(--green); border-radius: 10px; background: #effbf7; }
     .worked-example h4 { margin: 0 0 8px; color: var(--navy); }
     .worked-example p { margin: 6px 0; line-height: 1.6; }
@@ -482,6 +488,29 @@
         <article class="arithmetic-guide" aria-labelledby="arithmetic-guide-title">
           <h3 id="arithmetic-guide-title">Step-by-step: from one full adder to eight arithmetic operations</h3>
           <p>The lesson begins with the general arithmetic-circuit rule and then expands it into a four-bit circuit. Follow these steps before running the animation.</p>
+
+          <h3 style="margin-top:20px">Meaning of every symbol in the circuit</h3>
+          <div class="symbol-guide">
+            <table class="symbol-table" aria-label="Arithmetic circuit symbol glossary">
+              <thead><tr><th>Symbol</th><th>Name</th><th>Meaning in this circuit</th><th>Four-bit example</th></tr></thead>
+              <tbody>
+                <tr><td>A / Aᵢ</td><td>First operand (augend)</td><td>A is the first register word. A<sub>i</sub> is one bit of A. It goes directly to the X input of FA<sub>i</sub> and is never changed by the MUX.</td><td>A = A₃A₂A₁A₀ = 1001₂</td></tr>
+                <tr><td>B / Bᵢ</td><td>Second operand (addend/subtrahend)</td><td>B is the second register word. B<sub>i</sub> is offered to MUX input I₀; its complement B̅<sub>i</sub> is offered to I₁. B participates in addition and subtraction.</td><td>B = B₃B₂B₁B₀ = 0101₂</td></tr>
+                <tr><td>Xᵢ</td><td>First full-adder data input</td><td>X<sub>i</sub> is the label used inside the arithmetic cell for its first input. Here it is permanently wired to A<sub>i</sub>, so <strong>X<sub>i</sub> = A<sub>i</sub></strong> and X = A.</td><td>X = 1001₂ when A = 1001₂</td></tr>
+                <tr><td>Yᵢ</td><td>Selected second full-adder input</td><td>Y<sub>i</sub> is the output of MUX<sub>i</sub>. Depending on S₁S₀, the complete Y word becomes B, B̅, 0000, or 1111.</td><td>If S₁S₀ = 01 and B = 0101, Y = B̅ = 1010</td></tr>
+                <tr><td>S₁, S₀</td><td>MUX select inputs</td><td>These two control lines choose which MUX input becomes Y. They control all four MUXes together: 00→B, 01→B̅, 10→0, 11→1.</td><td>S₁S₀ = 10 makes Y = 0000</td></tr>
+                <tr><td>Cᵢₙ / C₀</td><td>Initial carry input</td><td>C<sub>in</sub> is the carry applied to FA₀ before calculation starts. It adds either 0 or 1 and acts as the third operation-control bit.</td><td>For subtraction A−B, C<sub>in</sub> = C₀ = 1</td></tr>
+                <tr><td>Cᵢ</td><td>Carry into stage i</td><td>C<sub>i</sub> is the carry received by FA<sub>i</sub>. C₀ comes from the external control; C₁, C₂, and C₃ come from the preceding full adder.</td><td>FA₂ receives C₂ from FA₁</td></tr>
+                <tr><td>Cᵢ₊₁</td><td>Carry out of stage i</td><td>Each full adder produces a carry for the next higher bit. This is why the carry moves from FA₀ toward FA₃.</td><td>FA₀ produces C₁; FA₃ produces C₄</td></tr>
+                <tr><td>Dᵢ</td><td>Arithmetic result/sum bit</td><td>D<sub>i</sub> is the one-bit sum output of FA<sub>i</sub>. The four outputs form D = D₃D₂D₁D₀, the selected arithmetic microoperation result.</td><td>For 9−5, D = 0100₂</td></tr>
+                <tr><td>C₄</td><td>Final carry output</td><td>C₄ leaves the most-significant full adder. It is a fifth unsigned result bit for addition and indicates no-borrow/borrow behavior in unsigned subtraction.</td><td>1001 + 1010 + 1 = <strong>1</strong>0100, so C₄ = 1</td></tr>
+                <tr><td>B̅</td><td>One’s complement of B</td><td>Every B bit is inverted: 0 becomes 1 and 1 becomes 0. Adding B̅ + 1 forms the two’s complement used to subtract B.</td><td>If B = 0101, B̅ = 1010</td></tr>
+                <tr><td>I₀…I₃</td><td>4×1 MUX data inputs</td><td>I₀ = B<sub>i</sub>, I₁ = B̅<sub>i</sub>, I₂ = 0, and I₃ = 1. S₁S₀ selects one of these four inputs.</td><td>S₁S₀ = 11 selects I₃ = 1 at every bit</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="symbol-note"><strong>Important notation:</strong> in this diagram, <strong>S₁ and S₀ mean “select lines,” not sum bits.</strong> The full-adder sum/result outputs are labelled <strong>D₀, D₁, D₂, and D₃</strong>. Some textbooks label the result F or S; this page uses D so it cannot be confused with the MUX controls S₁S₀.</div>
+
           <ol class="arithmetic-steps">
             <li>
               <span class="step-title">Start with the one-bit arithmetic cell</span>
@@ -607,7 +636,7 @@
           </div>
           <div class="control-word"><strong>How the eight functions are formed:</strong> two MUX select bits provide 2² = 4 choices. The initial carry has 2 choices. Therefore the circuit has 4 × 2 = <strong>8 control combinations</strong>. Write them as S₁S₀C<sub>in</sub>, from 000 through 111. This three-bit value is a control word—it is not part of A or B.</div>
 
-          <h3 style="margin-top:20px">Derive all eight microoperations</h3>
+          <h3 style="margin-top:20px">How all eight arithmetic operations are performed</h3>
           <p style="color:var(--muted);line-height:1.65">Use A = 1001₂ (9) and B = 0101₂ (5) in every card below. The fixed example shows exactly how changing only S₁S₀C<sub>in</sub> makes the same hardware perform a different operation.</p>
           <div class="microoperation-grid">
             <div class="microoperation-card"><code>000 → A + B</code>S₁S₀ = 00 passes B through the MUXes. C<sub>in</sub> = 0 adds nothing extra. This is ordinary unsigned addition.<span class="binary-example">1001 + 0101 + 0 = 01110₂<br>D = 1110 (14), C₄ = 0</span></div>
