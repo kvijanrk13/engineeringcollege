@@ -525,6 +525,50 @@
               <p class="step-detail">Carry is not the same as signed overflow. Signed overflow occurs when two operands with the same sign produce a result with the opposite sign; equivalently, the carry into the sign bit differs from the carry out. The simulator shows C₄, so interpret signed results separately.</p>
               <p class="step-check">For control 111, A + 1111 + 1 = A + 10000₂: the four D bits reproduce A and C₄ becomes 1.</p>
             </li>
+            <li>
+              <span class="step-title">Separate data signals from control signals</span>
+              <p>A and B are <strong>data words</strong>: their values change with the numbers being processed. S₁, S₀, and C<sub>in</sub> are <strong>control signals</strong>: they tell the hardware what to do with those numbers. D and C₄ are output signals. Keeping these roles separate makes the diagram easier to read.</p>
+              <p class="step-detail">A follows an unselected path directly to every full adder. B follows a selectable path through the MUX bank. S₁S₀ fan out horizontally to all MUXes, while C<sub>in</sub> enters only the rightmost full adder and then becomes an internal ripple carry.</p>
+              <p class="step-check">Do not treat S₁S₀C<sub>in</sub> as a binary number added to A; it is an instruction code that configures the datapath.</p>
+            </li>
+            <li>
+              <span class="step-title">Count the hardware and understand why it is shared</span>
+              <p>A four-bit arithmetic circuit contains four full adders, four 4×1 multiplexers, and four inverters for producing B̅. It also contains common select buses, constant-0 and constant-1 lines, and four carry connections C₀ through C₄.</p>
+              <p class="step-detail">Without the MUX bank, separate combinational circuits would be required for addition, subtraction, increment, decrement, and transfer. Selecting the second operand allows the expensive full-adder chain to be reused, reducing duplicated hardware.</p>
+              <p class="step-check">General rule: an n-bit version needs n full adders, n multiplexers, and n B inverters.</p>
+            </li>
+            <li>
+              <span class="step-title">Derive the addition and addition-with-carry pair</span>
+              <p>Set S₁S₀ = 00 so Y = B. The general equation becomes D = A + B + C<sub>in</sub>. If C<sub>in</sub> = 0, the operation is A + B. If C<sub>in</sub> = 1, the operation is A + B + 1.</p>
+              <p class="step-detail">Addition with carry is important when a processor adds words wider than its hardware. For example, a four-bit unit can add the low-order words first, then use their C₄ as C<sub>in</sub> while adding the next four-bit words.</p>
+              <p class="step-check">Controls 000 and 001 use the same Y word; only the carry input changes.</p>
+            </li>
+            <li>
+              <span class="step-title">Derive subtraction from the complement identity</span>
+              <p>For an n-bit word, the one’s complement satisfies B̅ = (2ⁿ − 1) − B. Therefore A + B̅ = A − B − 1 + 2ⁿ. Keeping only n output bits removes the 2ⁿ term and gives subtraction with borrow.</p>
+              <p>Adding one more through C<sub>in</sub> gives A + B̅ + 1 = A − B + 2ⁿ. Again, the n-bit D output is A − B. This is why control 011 performs ordinary subtraction without requiring a dedicated subtractor.</p>
+              <p class="step-detail">If A ≥ B, C₄ is normally 1 and the D word is the non-negative difference. If A &lt; B, C₄ is 0 and D is the n-bit two’s-complement encoding of a negative result.</p>
+              <p class="step-check">To decode a negative D word, complement D, add 1, and attach a minus sign.</p>
+            </li>
+            <li>
+              <span class="step-title">Derive transfer and increment by forcing Y to zero</span>
+              <p>Set S₁S₀ = 10. Every MUX selects constant 0, so Y = 0000 and B has no effect. With C<sub>in</sub> = 0, D = A + 0 = A; this transfers A through the arithmetic unit. With C<sub>in</sub> = 1, D = A + 1; this increments A.</p>
+              <p class="step-detail">During increment, carry propagates only through trailing 1s. For A = 0111, the input 1 changes bit 0 to 0 and carries through bits 1 and 2 until bit 3 changes from 0 to 1, producing 1000.</p>
+              <p class="step-check">Controls 100 and 101 prove that B can be completely isolated without disconnecting it physically.</p>
+            </li>
+            <li>
+              <span class="step-title">Derive decrement and the second transfer operation from all ones</span>
+              <p>Set S₁S₀ = 11 so Y = 1111. An all-ones n-bit word represents 2ⁿ − 1 in unsigned form and −1 in two’s-complement form. Thus A + 1111 with C<sub>in</sub> = 0 produces A − 1 in the lower four bits.</p>
+              <p>When C<sub>in</sub> = 1, Y + C<sub>in</sub> equals 1 0000₂. The lower four added bits are zero, so D = A, while the extra 1 appears as C₄. The data result is another transfer of A, but its carry behavior differs from control 100.</p>
+              <p class="step-detail">This distinction shows why both D and C₄ belong in the function table: two controls can produce the same D word while producing different carry outputs.</p>
+              <p class="step-check">For A = 0000, decrement wraps to D = 1111 with C₄ = 0.</p>
+            </li>
+            <li>
+              <span class="step-title">Use a repeatable method to solve any circuit question</span>
+              <p><strong>1.</strong> Write A and B as four-bit words. <strong>2.</strong> Read S₁S₀ and select Y. <strong>3.</strong> append C<sub>in</sub> to the equation A + Y + C<sub>in</sub>. <strong>4.</strong> Add from bit 0 through bit 3 while recording every carry. <strong>5.</strong> report D and C₄. <strong>6.</strong> interpret the result according to the chosen microoperation.</p>
+              <p class="step-detail">A quick verification is to calculate the same expression in decimal, reduce it modulo 16 for D, and check whether the unreduced value is at least 16 for C₄. For signed numbers, separately check the sign-bit overflow rule.</p>
+              <p class="step-check">Use this method with the controls and inputs below, then compare your manual result with the animated output.</p>
+            </li>
           </ol>
           <div class="arithmetic-equation" aria-label="General arithmetic circuit equation">Y = MUX(S₁S₀; B, B̅, 0000, 1111)<br>D = A + Y + Cᵢₙ</div>
 
