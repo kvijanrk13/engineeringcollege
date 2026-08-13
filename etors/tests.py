@@ -194,6 +194,20 @@ class EtorsTests(TestCase):
         self.assertIn("Academic Demonstration Notice", week2)
         self.assertNotIn("HTML/JSP/PHP", week2)
 
+    def test_week3_contains_etors_architecture_and_design_documents(self):
+        response = self.client.get(reverse("etors:documentation"))
+        content = response.content.decode()
+        week3 = content.split('id="week-3"', 1)[1]
+
+        self.assertIn("Layered System Architecture of ETORS", week3)
+        self.assertIn("/static/etors/images/etors_system_architecture.svg", week3)
+        self.assertIn("Authentication and Security Layer", week3)
+        self.assertIn("BOOKMYCAB Module", week3)
+        self.assertIn("Data Tables", week3)
+        self.assertIn("Risk Management Document", week3)
+        self.assertIn("Configuration Management Document", week3)
+        self.assertNotIn("Library Management System", week3)
+
     def test_authenticated_navigation_and_logout(self):
         response = self.client.get(reverse("etors:home"))
         self.assertContains(response, "1800-000-3877")
