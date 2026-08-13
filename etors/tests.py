@@ -168,6 +168,32 @@ class EtorsTests(TestCase):
         self.assertContains(docs_response, 'href="#week-2"')
         self.assertContains(docs_response, 'href="#week-3"')
 
+    def test_week1_includes_the_supplied_srd_content(self):
+        response = self.client.get(reverse("etors:documentation"))
+        content = response.content.decode()
+        week1 = content.split('id="week-1"', 1)[1].split('id="week-2"', 1)[0]
+
+        self.assertIn("E-TICKETING", week1)
+        self.assertIn("Software Requirements Document", week1)
+        self.assertIn("User registration and login", week1)
+        self.assertIn("Accessibility for people with disabilities", week1)
+        self.assertIn("Organizational Requirements", week1)
+        self.assertIn("External Requirements", week1)
+        self.assertIn("Interface Specification", week1)
+
+    def test_week2_srd_describes_the_implemented_etors_workflow(self):
+        response = self.client.get(reverse("etors:documentation"))
+        content = response.content.decode()
+        week2 = content.split('id="week-2"', 1)[1].split('id="week-3"', 1)[0]
+
+        self.assertIn("verified Gmail", week2)
+        self.assertIn("10-digit PNR", week2)
+        self.assertIn("registered mobile number", week2)
+        self.assertIn("BOOKMYCAB", week2)
+        self.assertIn("pickup OTP", week2)
+        self.assertIn("Academic Demonstration Notice", week2)
+        self.assertNotIn("HTML/JSP/PHP", week2)
+
     def test_authenticated_navigation_and_logout(self):
         response = self.client.get(reverse("etors:home"))
         self.assertContains(response, "1800-000-3877")
