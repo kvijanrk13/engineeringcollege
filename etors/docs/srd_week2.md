@@ -1,131 +1,150 @@
 # ETORS Week 2 - Software Requirements Document (SRD)
 
+## IV. E-TICKETING – ONLINE RESERVATION SYSTEM SRD
+
 ## 1. Introduction
 
 ### 1.1 Purpose
 
-This Software Requirements Document specifies the behavior and constraints of the **E-Ticketing Online Reservation System (ETORS)**. ETORS is an academic Django application that demonstrates searching for trains, reserving seats, generating a PNR, simulating payment and arranging a destination cab.
+The purpose of this document is to record the requirements of an application that will automate the process of ticket reservation/booking. This document reflects the features expecting from the software and constraint imposed on the development of the system.
 
 ### 1.2 Scope
 
-ETORS provides a responsive web interface for passengers to:
+The system ORS is web based application.
 
-- Search active trains by source, destination and journey date.
-- Compare schedules, travel classes, fares and current seat availability.
-- Sign in using a verified Gmail account before booking.
-- Enter details for one or more passengers and choose berth preferences.
-- complete a dummy payment and receive a confirmed seat and 10-digit PNR.
-- Verify a booking using both PNR and registered mobile number.
-- Cancel an eligible reservation.
-- Add BOOKMYCAB, choose a suitable vehicle and pay its simulated fare.
+The passengers will gain access to the available buses/trains per certain route and available seats by logging in through the customer's portal.
 
-The system is a classroom demonstration. It does not connect to IRCTC, Indian Railways, a real payment gateway or a real cab fleet.
+The staff will access the system by logging in via the staff portal where they can display the transport schedule and reserve seats and sell tickets.
 
-### 1.3 Definitions and Abbreviations
+### 1.3 Acronyms
 
-| Term | Meaning |
-|---|---|
-| ETORS | E-Ticketing Online Reservation System |
-| PNR | Passenger Name Record |
-| SRD | Software Requirements Document |
-| SDD | Software Design Document |
-| OTP | One-Time Password |
-| OAuth | Open Authorization |
-| CRUD | Create, Read, Update and Delete |
+- **ORS** – Online Reservation System
+- **GUI** – Graphical User Interface
+- **DBMS** - Database Management System
 
-## 2. Product Description
+### 1.4 References
+
+IEEE/ANSI 830-1998 SRD Standard
+
+### 1.5 Overview
+
+The rest of the document deals with all the main features of this software. It not only describes various functions but also gives details about how these functions are related to each other.
+
+## 2. Project Description
 
 ### 2.1 Product Perspective
 
-Traditional counter-based reservation requires passengers to visit a station, wait in a queue and depend on staff for schedules and availability. ETORS models a centralized online alternative. A browser communicates with Django views and services, while PostgreSQL stores stations, trains, bookings, passengers, cab bookings and call logs. Render hosts the application over HTTPS.
+Before the automation, the system suffered from the following drawbacks:
 
-### 2.2 User Classes
+- Since the number of passengers have drastically increased therefore maintaining and retrieving detailed record of passenger is extremely difficult.
+- The existing system is highly manual involving a lot of paper work and calculation and therefore may be erroneous. This has led to inconsistency and inaccuracy in the maintenance of data.
 
-| User | Capabilities |
-|---|---|
-| Visitor | Search trains, view availability, read documentation, ask the ETORS assistant and start PNR verification. |
-| Authenticated passenger | Perform visitor actions and create a booking after verified Gmail login. |
-| Booking holder | View or cancel a booking after PNR/mobile verification; access associated cab details. |
-| Administrator | Maintain demonstration data through Django administration and monitor stored records. |
+Hence the railways reservation system is proposed with the following benefits:
 
-### 2.3 Assumptions and Dependencies
+- The computerization of the reservation system will reduce a lot of paperwork and hence the load on the airline administrative staff.
+- The passenger, reservation, cancellation list can easily be retrieved and any required addition, deletion or updating can be performed.
 
-- Users have a modern browser and internet connection.
-- Google OAuth is available for passenger identity verification.
-- PostgreSQL and the Render web service are operational.
-- Train data and fares are demonstration data maintained by the project.
-- Payment, insurance, driver allocation and telephone recording are simulations only.
+### 2.2 Product Functions
 
-## 3. Functional Requirements
+There are two different users who will be using this product:
 
-| ID | Requirement |
-|---|---|
-| FR-01 | The system shall list source and destination stations and reject an identical source and destination. |
-| FR-02 | The system shall accept journey dates from today through the configured 120-day booking window. |
-| FR-03 | The system shall display matching active trains with schedule, duration and available seats. |
-| FR-04 | The system shall calculate availability from train capacity minus confirmed passengers for that journey date. |
-| FR-05 | The system shall require verified Gmail authentication before a passenger can book. |
-| FR-06 | The system shall validate contact details and details for every supplied passenger. |
-| FR-07 | The system shall support General, Sleeper, 1A, 2A, 3A and 3E travel classes and calculate the corresponding fare. |
-| FR-08 | The system shall show a dummy payment summary before confirmation. |
-| FR-09 | On successful payment, the system shall create a unique 10-digit PNR and allocate seats transactionally. |
-| FR-10 | The system shall require the registered mobile number with the PNR before revealing booking information. |
-| FR-11 | The system shall allow an authorized user to cancel a confirmed booking and restore availability. |
-| FR-12 | The system shall optionally create a BOOKMYCAB reservation for the destination station. |
-| FR-13 | The system shall validate cab capacity, destination address, map coordinates and call-recording consent. |
-| FR-14 | The system shall calculate cab arrival relative to train arrival and issue a protected pickup OTP. |
-| FR-15 | The ETORS assistant shall answer supported questions and reject empty or oversized requests. |
+- Booking agents.
+- Passengers.
 
-## 4. Non-Functional Requirements
+The features that are available to the Booking Agent and Passenger are:
 
-### 4.1 Security
+- Searching for train that are available between the "Departure location" and "Arrival location"
+- Booking and Cancelling tickets
+- Maintaining details of all the passengers supposed to travel
+- Payment facility using various modes like credit/debit card
 
-- Booking creation shall require an authenticated Gmail session.
-- PNR details shall require matching registered mobile verification.
-- State-changing form submissions shall use CSRF protection and POST where appropriate.
-- Pickup OTP values shall be stored as hashes rather than plain text.
-- Production traffic shall use HTTPS.
+### 2.3 User Characteristics
 
-### 4.2 Usability and Accessibility
+- Users of the system should be comfortable with English language.
+- User should be comfortable using general purpose applications on the computer system.
 
-- Pages shall be responsive on desktop and mobile screens.
-- Forms shall provide labels, validation messages and clear success/error feedback.
-- Booking and payment steps shall use consistent navigation and terminology.
+### 2.4 General Constraints
 
-### 4.3 Reliability and Performance
+- The system must be user friendly
 
-- Seat allocation and booking confirmation shall use database transactions to avoid partial records.
-- Availability shall never be displayed below zero.
-- Normal search and PNR requests should complete within three seconds under demonstration load.
-- Database relationships shall protect referenced station and train data from accidental deletion.
+### 2.5 Assumptions and Dependencies
 
-### 4.4 Maintainability and Portability
+- Booking Agents will be having a valid user name and password to access the software
+- The software needs booking agent to have complete knowledge of reservation system.
+- Software is dependent on access to internet.
 
-- The application shall separate models, forms, views, services, URLs and templates.
-- The system shall run in standard modern browsers without client installation.
-- Database schema changes shall be managed through Django migrations.
+## 3. Specific Requirements
 
-## 5. Interface Requirements
+### 3.1 Functional Requirements
 
-### 5.1 User Interfaces
+A functional requirement is a statement of how a system must behave. It defines what the system should do in order to meet the user's needs or expectations.
 
-- ETORS home and train search
-- Passenger and BOOKMYCAB booking form
-- Dummy payment page
-- Payment confirmation and PNR page
-- Protected PNR details and cancellation
-- Cab payment and driver dispatch pages
-- Documentation and embedded help assistant
+The following are some functional criteria for Ticketing System:
 
-### 5.2 Software Interfaces
+1. User registration and login
+2. Train search and booking
+3. Payment gateway integration
+4. Seat selection and reservation
+5. Email and SMS confirmations
+6. Cancellation and refund options
+7. Fare and schedule updates
+8. Train tracking and live status updates
+9. Feedback and ratings system
+10. Accessibility for people with disabilities
 
-| Interface | Purpose |
-|---|---|
-| Django | URL routing, validation, sessions, ORM and HTML rendering |
-| PostgreSQL | Persistent relational storage |
-| Google OAuth | Verified passenger login |
-| Render | Cloud deployment and HTTPS endpoint |
+### 3.2 Non-Functional Requirements
 
-## 6. Acceptance Criteria
+Non-functional requirements explain the limitations and constraints of the system to be designed. They define how the system should work internally (e.g., performance, security, etc.).
 
-The release is acceptable when train search returns correct matches, overselling is prevented, unauthenticated booking redirects to Gmail login, successful dummy payment produces a protected PNR, cancellation changes booking status, optional cab booking respects passenger capacity, and the documentation page renders Weeks 1–3.
+The non-functional requirements of Ticketing System:
+
+#### 3.2.1 Product Requirements:
+
+**Usability:**
+- The booking agents shall be able to work with all the features of ticketing system with 1-2 days of training and the system shall assist the users by displaying help instructions.
+
+**Performance:**
+- The home page shall support 500 passenger requests per hour must with 5 seconds or less response time in a desktop/mobile browser over a 1Mbps connection.
+
+**Reliability:**
+- The system must perform without failure in 99.5 percent of uses during normal hours and 95 percent in peak seasons.
+
+**Portability:**
+- A system running on Windows 10 device must be able to run on Windows 11 device without any change in its behavior and performance.
+
+**Scalability:**
+- The system must be scalable enough to support 25000 visits at the same time while maintaining optimal performance.
+
+**Availability:**
+- The system must be available to passengers 98percent of the time every hour during business hours of the day.
+
+**Maintainability:**
+- The mean time to restore the system (MTTRS) following a system failure must not be greater than 10 minutes.
+
+#### 3.2.2 Organizational Requirements:
+
+**Delivery:**
+- The developed system should be delivered as incremental versions to the client and the first version within 6-8 weeks of project initiation.
+
+**Implementation:**
+- The system shall implement with web technologies like HTML/JSP/PHP
+
+**Standards:**
+- The date/time format must be as follows: DD-MM-YYYY and HH:MM:SS on 0-24hr clock
+- The payments must do under RBI controlled modes.
+
+#### 3.2.3 External Requirements:
+
+**Security:**
+- The system user's data shall be encrypted in database and the travel history should be disclosed only for legal purposes.
+
+**Interoperability:**
+- The system shall operate under the control of localtransportation authority systems.
+
+#### 3.3.4 Interface Specification
+
+Various GUI elements like forms, images and standard buttons will be included in the User Interface.
+
+## 4. Appendices
+
+## 5. Index
