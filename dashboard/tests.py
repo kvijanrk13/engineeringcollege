@@ -1078,6 +1078,18 @@ class DashboardTests(TestCase):
             self.assertContains(response, f'<option value="{value}"', html=False)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_add_student_hides_main_navigation_links(self):
+        response = self.client.get(reverse('dashboard:add_student'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'class="nav-link-tab">Dashboard</a>')
+        self.assertNotContains(response, 'class="nav-link-tab">Faculty</a>')
+        self.assertNotContains(response, 'class="nav-link-tab">Syllabus</a>')
+        self.assertNotContains(response, 'class="nav-link-tab">Students</a>')
+        self.assertNotContains(response, 'class="nav-link-tab">Gallery</a>')
+        self.assertContains(response, '>Logout</a>')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
     def test_add_student_rejects_unknown_caste_category(self):
         response = self.client.post(reverse('dashboard:add_student'), {
             'ht_no': '22ITCASTE001',
