@@ -518,13 +518,37 @@
     .unit-step-panel h3 { margin: 0 0 5px; color: var(--navy); }
     .unit-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
     .unit-progress { height: 8px; overflow: hidden; border-radius: 99px; background: #dbeafe; }
-    #unit-progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); transition: width .35s; }
+    #unit-progress-bar, #operation-progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); transition: width .35s; }
     .unit-notes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-top: 18px; }
     .unit-note { padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
     .unit-note strong { display: block; margin-bottom: 5px; color: var(--navy); }
     .unit-note span { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .operation-cycle-lesson { margin-top: 38px; padding-top: 30px; border-top: 3px solid var(--line); }
+    .operation-machine { display: grid; grid-template-columns: 1fr 1.5fr; gap: 18px; margin: 20px 0; }
+    .operation-memory, .operation-cpu { padding: 18px; border: 2px solid #9fb3c8; border-radius: 14px; background: #f8fbff; }
+    .operation-memory h3, .operation-cpu h3 { margin: 0 0 12px; color: var(--navy); text-align: center; }
+    .memory-row { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid var(--line); background: #fff; transition: .3s; }
+    .memory-row:first-of-type { border-radius: 8px 8px 0 0; }.memory-row:last-child { border: 0; border-radius: 0 0 8px 8px; }
+    .memory-row span { padding: 9px; }.memory-row span:first-child { border-right: 1px solid var(--line); color: var(--muted); font-family: Consolas, monospace; }
+    .memory-row.active { position: relative; z-index: 2; background: #dff7ff; box-shadow: 0 0 0 3px var(--blue); transform: scale(1.025); }
+    .register-bank { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .register { min-height: 68px; padding: 10px; border: 2px solid #bcccdc; border-radius: 9px; background: #fff; text-align: center; transition: .3s; }
+    .register strong { display: block; color: var(--navy); }.register output { display: block; margin-top: 5px; color: var(--blue); font: 800 15px Consolas, monospace; }
+    .register.active { border-color: var(--blue); background: var(--blue-soft); box-shadow: 0 0 13px rgba(22,119,255,.35); transform: translateY(-3px); }
+    .register.changed output { animation: registerWrite .55s ease; }
+    @keyframes registerWrite { 50% { color: #fff; background: var(--green); transform: scale(1.12); } }
+    .operation-alu { grid-column: 1 / -1; padding: 13px; border: 3px solid #7c3aed; clip-path: polygon(8% 0,92% 0,75% 100%,25% 100%); background: #f5f0ff; color: #5b21b6; text-align: center; font-weight: 900; transition: .3s; }
+    .operation-alu.active { background: #7c3aed; color: #fff; filter: drop-shadow(0 0 10px #9f7aea); animation: unitPulse .8s ease-in-out infinite alternate; }
+    .operation-bus { grid-column: 1 / -1; height: 8px; margin: 2px 12%; border-radius: 99px; background: #bcccdc; }
+    .operation-bus.active { background: repeating-linear-gradient(90deg,#23d5ff 0 12px,#1677ff 12px 24px,#fff 24px 30px); background-size: 60px 100%; animation: functionalFlow .65s linear infinite; box-shadow: 0 0 10px #23d5ff; }
+    .micro-operations { margin: 15px 0; padding: 15px; border-radius: 10px; background: #102a43; color: #fff; font: 700 15px Consolas, monospace; line-height: 1.7; }
+    .instruction-format { display: grid; grid-template-columns: 1fr 1.4fr; margin: 14px 0; overflow: hidden; border: 2px solid var(--navy); border-radius: 9px; text-align: center; }
+    .instruction-format div { padding: 13px; }.instruction-format div:first-child { background: var(--navy); color: #fff; }.instruction-format div:last-child { background: var(--blue-soft); color: var(--navy); }
+    .cycle-phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+    .cycle-phase { padding: 13px; border: 2px solid var(--line); border-radius: 9px; background: #fff; text-align: center; transition: .3s; }
+    .cycle-phase.active { border-color: var(--blue); background: var(--blue-soft); color: var(--navy); font-weight: 800; }
     @media (max-width: 760px) { .apriori-controls, .apriori-workspace, .apriori-formula { grid-template-columns: 1fr; } .rule { grid-template-columns: 1fr; } }
-    @media (max-width: 760px) { .coa-definition-grid, .coa-process, .unit-notes { grid-template-columns: 1fr; } .coa-comparison { font-size: 13px; } .unit-diagram { grid-template-columns: 1fr; grid-template-areas: "input" "memory" "cpu" "output"; gap: 18px; } .data-bus { display: none; } }
+    @media (max-width: 760px) { .coa-definition-grid, .coa-process, .unit-notes, .operation-machine, .cycle-phases { grid-template-columns: 1fr; } .coa-comparison { font-size: 13px; } .unit-diagram { grid-template-columns: 1fr; grid-template-areas: "input" "memory" "cpu" "output"; gap: 18px; } .data-bus { display: none; } }
   </style>
 </head>
 <body>
@@ -659,6 +683,26 @@
             <div class="unit-note"><strong>Output</strong><span>Converts processed binary results into a form that people or external devices can use.</span></div>
           </div>
           <div class="coa-summary"><strong>Complete flow:</strong> Input supplies data and instructions → memory stores them → the control unit fetches and coordinates → the ALU processes data → memory holds the result → output presents it. All units communicate through interconnections called buses.</div>
+        </section>
+
+        <section class="operation-cycle-lesson" aria-labelledby="operation-cycle-title">
+          <div class="topic-head">
+            <div><p class="eyebrow" style="color:var(--blue)">Video lesson 3</p><h2 id="operation-cycle-title">Basic Operational Concepts of a Computer</h2><p>Animate the internal register transfers used to fetch, decode, and execute one instruction.</p></div>
+            <a class="video-link" href="https://www.youtube.com/watch?v=OtOd8e0fIHY&amp;list=PL8xmnXn7pVtxa5XAdxRWJHdYKktOe9Udo&amp;index=3" target="_blank" rel="noopener noreferrer">Watch original lesson ↗</a>
+          </div>
+          <div class="coa-summary"><strong>Stored-program concept:</strong> Instructions and data are both stored in memory. The processor repeatedly fetches an instruction, decodes it, obtains any required operand, executes the operation, and stores the result.</div>
+          <div class="instruction-format" aria-label="Example instruction"><div>Operation: ADD</div><div>Operand: NUM1, R1</div></div>
+          <p><strong>Example meaning:</strong> add the value stored at memory location NUM1 to register R1: <code>R1 ← R1 + M[NUM1]</code>.</p>
+          <div class="cycle-phases"><div class="cycle-phase" data-cycle-phase="fetch">1. Fetch</div><div class="cycle-phase" data-cycle-phase="decode">2. Decode / Operand fetch</div><div class="cycle-phase" data-cycle-phase="execute">3. Execute</div></div>
+          <div class="operation-machine">
+            <section class="operation-memory"><h3>Main Memory</h3><div class="memory-row" data-memory-address="100"><span>100</span><span>ADD NUM1, R1</span></div><div class="memory-row" data-memory-address="104"><span>104</span><span>Next instruction</span></div><div class="memory-row" data-memory-address="500"><span>NUM1</span><span>25</span></div></section>
+            <section class="operation-cpu"><h3>Processor</h3><div class="register-bank"><div class="register" data-register="pc"><strong>PC</strong><output>100</output></div><div class="register" data-register="mar"><strong>MAR</strong><output>—</output></div><div class="register" data-register="mdr"><strong>MDR</strong><output>—</output></div><div class="register" data-register="ir"><strong>IR</strong><output>—</output></div><div class="register" data-register="r1"><strong>R1</strong><output>10</output></div><div class="register" data-register="control"><strong>Control Unit</strong><output>Ready</output></div><div class="operation-alu" data-operation-alu>ALU</div><div class="operation-bus" data-operation-bus></div></div></section>
+          </div>
+          <div class="unit-progress"><div id="operation-progress-bar"></div></div>
+          <div class="unit-controls"><button id="operation-start" class="btn" type="button">Start instruction cycle</button><button id="operation-previous" class="btn light" type="button" disabled>Previous</button><button id="operation-next" class="btn light" type="button">Next step</button><button id="operation-auto" class="btn secondary" type="button">▶ Auto play</button></div>
+          <div id="operation-step-panel" class="unit-step-panel" aria-live="polite"><h3>Ready</h3>PC contains address 100, R1 contains 10, and memory location NUM1 contains 25. Start the cycle to calculate the new value of R1.</div>
+          <div id="micro-operation" class="micro-operations">Waiting for clock…</div>
+          <div class="coa-definition-grid"><section class="coa-definition"><h3>Registers used</h3><ul><li><strong>PC:</strong> address of the next instruction</li><li><strong>MAR:</strong> memory address currently accessed</li><li><strong>MDR:</strong> data moving to or from memory</li><li><strong>IR:</strong> instruction currently being decoded</li><li><strong>R1:</strong> general-purpose operand/result register</li></ul></section><section class="coa-definition"><h3>System connections</h3><ul><li><strong>Address bus:</strong> selects a memory location</li><li><strong>Data bus:</strong> transfers instructions and operands</li><li><strong>Control bus:</strong> carries read, write, and timing signals</li><li><strong>Clock:</strong> orders register transfers into steps</li><li><strong>Control unit:</strong> generates the required sequence</li></ul></section></div>
         </section>
       </article>
 
@@ -1391,6 +1435,54 @@ Bread,Butter`;
       }
     });
 
+    const operationCycleSteps = [
+      { phase: 'fetch', title: '1. PC identifies the next instruction', text: 'The Program Counter contains 100, the address of the next instruction in memory.', micro: 'PC = 100', registers: ['pc'], values: { pc: '100', mar: '—', mdr: '—', ir: '—', r1: '10', control: 'Fetch' } },
+      { phase: 'fetch', title: '2. Copy the instruction address to MAR', text: 'The processor copies the address from PC into the Memory Address Register. MAR now selects memory location 100.', micro: 'MAR ← PC', registers: ['pc', 'mar'], memory: '100', bus: true, values: { pc: '100', mar: '100', mdr: '—', ir: '—', r1: '10', control: 'Memory read' } },
+      { phase: 'fetch', title: '3. Read the instruction and advance PC', text: 'Memory sends ADD NUM1, R1 into MDR. At the same time, PC advances to 104 so it already points to the following instruction.', micro: 'MDR ← M[MAR]   |   PC ← PC + 4', registers: ['mdr', 'pc'], memory: '100', bus: true, values: { pc: '104', mar: '100', mdr: 'ADD NUM1,R1', ir: '—', r1: '10', control: 'Read complete' } },
+      { phase: 'decode', title: '4. Load and decode the instruction', text: 'The instruction moves from MDR to IR. The control unit decodes ADD and recognizes that it needs the value at NUM1 and the current contents of R1.', micro: 'IR ← MDR   |   Decode(IR)', registers: ['mdr', 'ir', 'control'], values: { pc: '104', mar: '100', mdr: 'ADD NUM1,R1', ir: 'ADD NUM1,R1', r1: '10', control: 'Decode ADD' } },
+      { phase: 'decode', title: '5. Address the source operand', text: 'The address field NUM1 from the instruction is copied to MAR, selecting the operand stored at memory location 500.', micro: 'MAR ← address field of IR = 500', registers: ['ir', 'mar'], memory: '500', bus: true, values: { pc: '104', mar: '500', mdr: 'ADD NUM1,R1', ir: 'ADD NUM1,R1', r1: '10', control: 'Operand read' } },
+      { phase: 'decode', title: '6. Fetch the operand into MDR', text: 'The selected memory word is read. Value 25 travels over the data bus and enters MDR.', micro: 'MDR ← M[MAR] = M[500] = 25', registers: ['mar', 'mdr'], memory: '500', bus: true, values: { pc: '104', mar: '500', mdr: '25', ir: 'ADD NUM1,R1', r1: '10', control: 'Operand ready' } },
+      { phase: 'execute', title: '7. ALU executes ADD', text: 'The ALU receives 10 from R1 and 25 from MDR. It performs the arithmetic operation selected by the control unit.', micro: 'ALU result ← R1 + MDR = 10 + 25 = 35', registers: ['r1', 'mdr', 'control'], alu: true, bus: true, values: { pc: '104', mar: '500', mdr: '25', ir: 'ADD NUM1,R1', r1: '10', control: 'ALU: ADD' } },
+      { phase: 'execute', title: '8. Write the result into R1', text: 'The ALU result is stored in R1. The instruction is complete; PC already contains 104, ready for the next fetch cycle.', micro: 'R1 ← 35   |   Next instruction address = PC = 104', registers: ['r1', 'pc'], changed: 'r1', values: { pc: '104', mar: '500', mdr: '25', ir: 'ADD NUM1,R1', r1: '35', control: 'Complete' } }
+    ];
+    let operationCycleIndex = -1;
+    let operationCycleTimer = null;
+    function stopOperationCycleAuto() { clearInterval(operationCycleTimer); operationCycleTimer = null; document.getElementById('operation-auto').textContent = '▶ Auto play'; }
+    function renderOperationCycleStep() {
+      const step = operationCycleSteps[operationCycleIndex];
+      document.querySelectorAll('[data-cycle-phase]').forEach(node => node.classList.toggle('active', node.dataset.cyclePhase === step.phase));
+      document.querySelectorAll('[data-register]').forEach(node => {
+        node.classList.toggle('active', step.registers.includes(node.dataset.register));
+        node.classList.toggle('changed', node.dataset.register === step.changed);
+        node.querySelector('output').textContent = step.values[node.dataset.register];
+      });
+      document.querySelectorAll('[data-memory-address]').forEach(row => row.classList.toggle('active', row.dataset.memoryAddress === step.memory));
+      document.querySelector('[data-operation-bus]').classList.toggle('active', Boolean(step.bus));
+      document.querySelector('[data-operation-alu]').classList.toggle('active', Boolean(step.alu));
+      document.getElementById('operation-step-panel').innerHTML = `<h3>${step.title}</h3>${step.text}`;
+      document.getElementById('micro-operation').textContent = step.micro;
+      document.getElementById('operation-progress-bar').style.width = `${(operationCycleIndex + 1) * 100 / operationCycleSteps.length}%`;
+      document.getElementById('operation-previous').disabled = operationCycleIndex === 0;
+      document.getElementById('operation-next').disabled = operationCycleIndex === operationCycleSteps.length - 1;
+      document.getElementById('operation-start').textContent = 'Restart instruction cycle';
+      if (operationCycleIndex === operationCycleSteps.length - 1) stopOperationCycleAuto();
+    }
+    function startOperationCycle(auto = false) {
+      stopOperationCycleAuto(); operationCycleIndex = 0; renderOperationCycleStep();
+      if (auto) {
+        document.getElementById('operation-auto').textContent = '❚❚ Pause';
+        operationCycleTimer = setInterval(() => { if (operationCycleIndex >= operationCycleSteps.length - 1) stopOperationCycleAuto(); else { operationCycleIndex += 1; renderOperationCycleStep(); } }, 2800);
+      }
+    }
+    document.getElementById('operation-start').addEventListener('click', () => startOperationCycle(false));
+    document.getElementById('operation-previous').addEventListener('click', () => { stopOperationCycleAuto(); operationCycleIndex = Math.max(0, operationCycleIndex - 1); renderOperationCycleStep(); });
+    document.getElementById('operation-next').addEventListener('click', () => { stopOperationCycleAuto(); operationCycleIndex = Math.min(operationCycleSteps.length - 1, operationCycleIndex + 1); renderOperationCycleStep(); });
+    document.getElementById('operation-auto').addEventListener('click', () => {
+      if (operationCycleTimer) { stopOperationCycleAuto(); return; }
+      if (operationCycleIndex < 0 || operationCycleIndex >= operationCycleSteps.length - 1) startOperationCycle(true);
+      else { document.getElementById('operation-auto').textContent = '❚❚ Pause'; operationCycleTimer = setInterval(() => { if (operationCycleIndex >= operationCycleSteps.length - 1) stopOperationCycleAuto(); else { operationCycleIndex += 1; renderOperationCycleStep(); } }, 2800); }
+    });
+
     function stopTimer() {
       clearTimeout(timer);
       timer = null;
@@ -1909,7 +2001,7 @@ Bread,Butter`;
       tab.setAttribute('aria-selected', 'true');
       document.getElementById(tab.dataset.panel).classList.add('active');
       if (tab.dataset.panel !== 'data-mining-panel') { stopOlapAnimation(); stopAprioriAuto(); }
-      if (tab.dataset.panel !== 'coa-panel') stopFunctionalUnitAuto();
+      if (tab.dataset.panel !== 'coa-panel') { stopFunctionalUnitAuto(); stopOperationCycleAuto(); }
     }));
     document.getElementById('bits').addEventListener('change', event => { stopTimer(); lesson = null; playing = false; buildLayout(Number(event.target.value)); });
     runButton.addEventListener('click', startLesson);
