@@ -78,7 +78,7 @@ from .models import (
     KavachSecureFile, ProjectDownloadPayment, SuspiciousActivity,
 )
 from .forms import (
-    StudentForm, CertificateForm,
+    StudentForm, CertificateForm, CASTE_CATEGORY_CHOICES, CASTE_CATEGORY_VALUES,
     BulkUploadForm, FacultyProfileForm,
 )
 from .utils import (
@@ -7120,6 +7120,11 @@ def students_data(request):
 def add_student(request):
     if request.method == 'POST':
         try:
+            category_value = request.POST.get('category', '')
+            if category_value not in CASTE_CATEGORY_VALUES:
+                messages.error(request, 'Select a valid caste category.')
+                return redirect('dashboard:add_student')
+
             ca = is_cloudinary_configured()
             temp_photo_override_path = None
             certificate_override_assets = []
@@ -7222,7 +7227,7 @@ def add_student(request):
                 dob=dob_value,
                 age=None,  # Will be calculated below
                 nationality=request.POST.get('nationality', 'Indian'),
-                category=request.POST.get('category'),
+                category=category_value,
                 religion=request.POST.get('religion'),
                 blood_group=request.POST.get('blood_group'),
                 aadhar=request.POST.get('aadhar'),
@@ -7414,6 +7419,7 @@ def add_student(request):
     try:
         return render(request, 'dashboard/add_student.html', {
             'departments': get_department_options(),
+            'caste_category_choices': CASTE_CATEGORY_CHOICES,
             'student_research_publications_json': '[]',
         })
     except Exception as e:
@@ -7638,6 +7644,7 @@ def edit_student(request, student_id):
             'title': 'Edit Student',
             'student': student,
             'departments': get_department_options(),
+            'caste_category_choices': CASTE_CATEGORY_CHOICES,
             'student_research_publications_json': build_student_research_publications_json(student),
         })
     except Exception as e:

@@ -558,13 +558,11 @@
             <h3 class="section-title">Personal Details</h3>
             <div class="form-grid">
                 <div class="form-group">
-                    <label>Category</label>
-                    <select name="category">
-                        <option value="">Select Category</option>
-                        <option value="General" {% if student.category == 'General' %}selected{% endif %}>General</option>
-                        <option value="OBC" {% if student.category == 'OBC' %}selected{% endif %}>OBC</option>
-                        <option value="SC" {% if student.category == 'SC' %}selected{% endif %}>SC</option>
-                        <option value="ST" {% if student.category == 'ST' %}selected{% endif %}>ST</option>
+                    <label for="category">Caste Category</label>
+                    <select id="category" name="category">
+                        {% for value, label in caste_category_choices %}
+                        <option value="{{ value }}" {% if student.category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">

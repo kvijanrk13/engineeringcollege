@@ -7,11 +7,37 @@ from .models import (
     FDP, BTechProject
 )
 
+
+CASTE_CATEGORY_CHOICES = (
+    ('', 'Select Caste Category'),
+    ('General', 'General'),
+    ('OC', 'OC (Open Category)'),
+    ('EWS', 'EWS (Economically Weaker Section)'),
+    ('OBC', 'OBC (Other Backward Classes)'),
+    ('BC-A', 'BC-A'),
+    ('BC-B', 'BC-B'),
+    ('BC-C', 'BC-C'),
+    ('BC-D', 'BC-D'),
+    ('BC-E', 'BC-E'),
+    ('SC', 'SC (Scheduled Caste)'),
+    ('ST', 'ST (Scheduled Tribe)'),
+    ('Others', 'Others'),
+)
+
+
+CASTE_CATEGORY_VALUES = frozenset(value for value, _label in CASTE_CATEGORY_CHOICES)
+
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=100)
     password = forms.CharField(widget=forms.PasswordInput)
 
 class StudentForm(forms.ModelForm):
+    category = forms.ChoiceField(
+        choices=CASTE_CATEGORY_CHOICES,
+        required=False,
+        label='Caste Category',
+    )
+
     class Meta:
         model = Student
         fields = [
@@ -41,7 +67,6 @@ class StudentForm(forms.ModelForm):
             'mother_name': forms.TextInput(attrs={'maxlength': 255}),
             'gender': forms.TextInput(attrs={'maxlength': 20}),
             'nationality': forms.TextInput(attrs={'maxlength': 100}),
-            'category': forms.TextInput(attrs={'maxlength': 50}),
             'religion': forms.TextInput(attrs={'maxlength': 50}),
             'blood_group': forms.TextInput(attrs={'maxlength': 10}),
             'aadhar': forms.TextInput(attrs={'maxlength': 20}),
@@ -89,8 +114,8 @@ class StudentForm(forms.ModelForm):
 
     def clean_category(self):
         val = self.cleaned_data.get('category', '')
-        if val and len(val) > 50:
-            raise forms.ValidationError("Category must be 50 characters or less.")
+        if val not in CASTE_CATEGORY_VALUES:
+            raise forms.ValidationError("Select a valid caste category.")
         return val
 
     def clean_religion(self):

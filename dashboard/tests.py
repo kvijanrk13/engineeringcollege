@@ -1066,6 +1066,28 @@ class DashboardTests(TestCase):
         self.assertContains(list_response, 'Submitted Student')
         self.assertContains(list_response, '22ITSUBMIT001')
 
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_add_student_has_complete_caste_category_dropdown(self):
+        response = self.client.get(reverse('dashboard:add_student'))
+
+        self.assertEqual(response.status_code, 200)
+        for value in (
+            'General', 'OC', 'EWS', 'OBC', 'BC-A', 'BC-B', 'BC-C',
+            'BC-D', 'BC-E', 'SC', 'ST', 'Others',
+        ):
+            self.assertContains(response, f'<option value="{value}"', html=False)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_add_student_rejects_unknown_caste_category(self):
+        response = self.client.post(reverse('dashboard:add_student'), {
+            'ht_no': '22ITCASTE001',
+            'student_name': 'Category Validation Student',
+            'category': 'INVALID-CATEGORY',
+        })
+
+        self.assertRedirects(response, reverse('dashboard:add_student'))
+        self.assertFalse(Student.objects.filter(ht_no='22ITCASTE001').exists())
+
     def test_resolve_faculty_photo_for_pdf_uses_file_field(self):
         faculty = Faculty.objects.create(
             staff_name='Photo Faculty',
