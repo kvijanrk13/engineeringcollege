@@ -434,6 +434,43 @@
       .worked-example { overflow-x: auto; }
     }
     @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+    .apriori-section { margin-top: 34px; padding-top: 30px; border-top: 2px solid var(--line); }
+    .apriori-section h2 { margin: 0 0 7px; color: var(--navy); }
+    .apriori-lead { margin: 0 0 18px; color: var(--muted); line-height: 1.6; }
+    .apriori-controls { display: grid; grid-template-columns: minmax(260px, 1.5fr) repeat(2, minmax(130px, .5fr)); gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #f8fbff; }
+    .apriori-controls label { text-transform: none; }
+    .apriori-controls input, .apriori-controls textarea { width: 100%; padding: 8px 10px; border: 1px solid #bcccdc; border-radius: 7px; background: #fff; color: var(--ink); font: inherit; }
+    .apriori-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .apriori-progress { height: 8px; overflow: hidden; border-radius: 99px; background: #dbeafe; }
+    #apriori-progress-bar { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1677ff, #0f9d72); transition: width .35s ease; }
+    .apriori-workspace { display: grid; grid-template-columns: 260px 1fr; gap: 16px; margin-top: 16px; }
+    .transaction-panel, .apriori-stage { padding: 17px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .transaction-panel h3, .apriori-stage h3 { margin: 0 0 12px; color: var(--navy); }
+    .transaction-list { display: grid; gap: 8px; }
+    .transaction { display: grid; grid-template-columns: 38px 1fr; gap: 8px; align-items: center; padding: 8px; border-radius: 8px; background: #f4f7fa; transition: .25s; }
+    .transaction strong { color: var(--blue); }
+    .transaction.scan { background: #eaf3ff; box-shadow: inset 3px 0 var(--blue); animation: aprioriScan .75s ease-in-out infinite alternate; }
+    @keyframes aprioriScan { to { transform: translateX(4px); } }
+    .apriori-stage { min-height: 330px; background: linear-gradient(145deg, #fff, #f8fbff); }
+    .apriori-step-label { margin-bottom: 12px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .itemset-levels { display: grid; gap: 13px; }
+    .itemset-level { padding: 12px; border: 1px solid #dbeafe; border-radius: 10px; background: #fff; }
+    .itemset-level h4 { margin: 0 0 9px; color: var(--navy); }
+    .itemset-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .itemset-chip { padding: 8px 10px; border: 2px solid #9fb3c8; border-radius: 9px; background: #fff; font: 700 13px Consolas, monospace; transition: .3s; }
+    .itemset-chip.frequent { border-color: var(--green); background: #edfbf6; color: #087b58; animation: itemsetPop .4s ease; }
+    .itemset-chip.pruned { border-color: #f1aeb5; background: #fff1f2; color: #b42335; opacity: .72; text-decoration: line-through; }
+    @keyframes itemsetPop { 50% { transform: scale(1.06); } }
+    .apriori-message { margin-top: 14px; padding: 13px 15px; border-left: 4px solid var(--blue); border-radius: 7px; background: #eef6ff; line-height: 1.6; }
+    .rule-list { display: grid; gap: 8px; }
+    .rule { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 10px; border: 1px solid #a7e3cf; border-radius: 8px; background: #effcf8; }
+    .rule code { color: var(--navy); font-weight: 800; }
+    .metric { padding: 4px 7px; border-radius: 99px; background: #fff; color: var(--green); font-size: 12px; font-weight: 800; }
+    .apriori-empty { padding: 35px 15px; color: var(--muted); text-align: center; }
+    .apriori-formula { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .apriori-formula div { padding: 12px; border-radius: 9px; background: var(--navy); color: #dbeafe; font-size: 13px; }
+    .apriori-formula strong { display: block; margin-bottom: 4px; color: #fff; }
+    @media (max-width: 760px) { .apriori-controls, .apriori-workspace, .apriori-formula { grid-template-columns: 1fr; } .rule { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -883,6 +920,42 @@
         <div class="olap-benefit"><strong>Multidimensional view</strong><span>Compare the same measure by time, place, product, department, or other dimensions.</span></div>
         <div class="olap-benefit"><strong>Data-mining support</strong><span>OLAP reveals trends and unusual regions that can be explored further with mining algorithms.</span></div>
       </div>
+
+      <section class="apriori-section" aria-labelledby="apriori-title">
+        <h2 id="apriori-title">Apriori Algorithm — Interactive Step-by-Step Animation</h2>
+        <p class="apriori-lead">Discover products that frequently occur together. Apriori first finds frequent itemsets level by level, prunes combinations below minimum support, and then creates strong association rules.</p>
+        <div class="apriori-controls">
+          <label>Transactions (one basket per line; comma-separated items)<textarea id="apriori-input" rows="6">Milk,Bread,Butter
+Bread,Diaper,Beer,Eggs
+Milk,Bread,Diaper,Beer
+Milk,Bread,Diaper,Butter
+Bread,Butter</textarea></label>
+          <label>Minimum support (%)<input id="apriori-support" type="number" min="1" max="100" value="40"></label>
+          <label>Minimum confidence (%)<input id="apriori-confidence" type="number" min="1" max="100" value="60"></label>
+        </div>
+        <div class="apriori-actions">
+          <button id="apriori-run" class="btn" type="button">Run Apriori</button>
+          <button id="apriori-previous" class="btn light" type="button" disabled>Previous</button>
+          <button id="apriori-next" class="btn light" type="button" disabled>Next step</button>
+          <button id="apriori-auto" class="btn secondary" type="button" disabled>▶ Auto play</button>
+          <button id="apriori-example" class="btn light" type="button">Load example</button>
+        </div>
+        <div class="apriori-progress" aria-hidden="true"><div id="apriori-progress-bar"></div></div>
+        <div class="apriori-workspace">
+          <aside class="transaction-panel"><h3>Transaction database</h3><div id="apriori-transactions" class="transaction-list"></div></aside>
+          <div class="apriori-stage" aria-live="polite">
+            <div id="apriori-step-label" class="apriori-step-label">Ready to discover frequent patterns</div>
+            <h3 id="apriori-stage-title">How it works</h3>
+            <div id="apriori-output"><div class="apriori-empty">Set the thresholds and choose <strong>Run Apriori</strong> to animate the complete algorithm.</div></div>
+            <div id="apriori-message" class="apriori-message">Apriori property: if an itemset is frequent, every non-empty subset of it must also be frequent.</div>
+          </div>
+        </div>
+        <div class="apriori-formula">
+          <div><strong>Support</strong>support(X) = baskets containing X ÷ all baskets</div>
+          <div><strong>Confidence</strong>confidence(X → Y) = support(X ∪ Y) ÷ support(X)</div>
+          <div><strong>Apriori pruning</strong>Discard a candidate when any (k−1)-subset is infrequent.</div>
+        </div>
+      </section>
     </section>
   </main>
 
@@ -959,6 +1032,130 @@
       olapTimer = setInterval(() => { index = (index + 1) % operations.length; showOlapOperation(operations[index]); }, 2800);
     });
     showOlapOperation('slice');
+
+    const aprioriExample = `Milk,Bread,Butter
+Bread,Diaper,Beer,Eggs
+Milk,Bread,Diaper,Beer
+Milk,Bread,Diaper,Butter
+Bread,Butter`;
+    let aprioriLesson = null;
+    let aprioriTimer = null;
+
+    function aprioriKey(items) { return [...items].sort().join('|'); }
+    function aprioriCombinations(items, size) {
+      const output = [];
+      function choose(start, selected) {
+        if (selected.length === size) { output.push([...selected]); return; }
+        for (let index = start; index <= items.length - (size - selected.length); index += 1) {
+          selected.push(items[index]); choose(index + 1, selected); selected.pop();
+        }
+      }
+      choose(0, []);
+      return output;
+    }
+
+    function readAprioriTransactions() {
+      return document.getElementById('apriori-input').value.split(/\r?\n/)
+        .map(line => [...new Set(line.split(',').map(item => item.trim()).filter(Boolean))].sort())
+        .filter(items => items.length);
+    }
+
+    function buildAprioriLesson() {
+      const transactions = readAprioriTransactions();
+      if (!transactions.length) return null;
+      const minSupport = Math.max(1, Math.min(100, Number(document.getElementById('apriori-support').value) || 40));
+      const minConfidence = Math.max(1, Math.min(100, Number(document.getElementById('apriori-confidence').value) || 60));
+      document.getElementById('apriori-support').value = minSupport;
+      document.getElementById('apriori-confidence').value = minConfidence;
+      const items = [...new Set(transactions.flat())].sort();
+      const supportCount = set => transactions.filter(row => set.every(item => row.includes(item))).length;
+      const supportMap = new Map();
+      const levels = [];
+      let previousFrequent = [];
+      for (let k = 1; k <= items.length; k += 1) {
+        let candidates = aprioriCombinations(items, k);
+        if (k > 1) {
+          const previousKeys = new Set(previousFrequent.map(aprioriKey));
+          candidates = candidates.filter(candidate => aprioriCombinations(candidate, k - 1).every(subset => previousKeys.has(aprioriKey(subset))));
+        }
+        const evaluated = candidates.map(set => {
+          const count = supportCount(set); const support = count * 100 / transactions.length;
+          supportMap.set(aprioriKey(set), { count, support });
+          return { set, count, support, frequent: support + 1e-9 >= minSupport };
+        });
+        const frequent = evaluated.filter(entry => entry.frequent).map(entry => entry.set);
+        if (!evaluated.length) break;
+        levels.push({ k, candidates: evaluated, frequent });
+        previousFrequent = frequent;
+        if (!frequent.length) break;
+      }
+      const rules = [];
+      levels.flatMap(level => level.frequent).filter(set => set.length > 1).forEach(set => {
+        for (let size = 1; size < set.length; size += 1) aprioriCombinations(set, size).forEach(left => {
+          const right = set.filter(item => !left.includes(item));
+          const unionMetric = supportMap.get(aprioriKey(set));
+          const leftMetric = supportMap.get(aprioriKey(left));
+          const confidence = unionMetric.count * 100 / leftMetric.count;
+          if (confidence + 1e-9 >= minConfidence) rules.push({ left, right, confidence, support: unionMetric.support });
+        });
+      });
+      rules.sort((a, b) => b.confidence - a.confidence || b.support - a.support);
+      const steps = [{ type: 'scan', title: 'Step 1 — Scan the transaction database', message: `Read ${transactions.length} baskets and found ${items.length} unique items: ${items.join(', ')}. Minimum support is ${minSupport}%, so an itemset needs at least ${Math.ceil(minSupport * transactions.length / 100)} basket(s).` }];
+      levels.forEach(level => {
+        steps.push({ type: 'candidates', level, title: `Generate C${level.k} candidate itemsets`, message: level.k === 1 ? 'Start with every distinct item. Count how many transactions contain each candidate.' : `Join frequent (k−1)-itemsets to form C${level.k}. Any candidate with an infrequent ${level.k - 1}-item subset is removed immediately by the Apriori property.` });
+        steps.push({ type: 'frequent', level, title: `Prune C${level.k} to produce L${level.k}`, message: `${level.frequent.length} candidate(s) meet minimum support and continue to the next pass. Red candidates are pruned and never extended.` });
+      });
+      steps.push({ type: 'rules', title: 'Generate strong association rules', message: `Split every frequent itemset into antecedent → consequent. Keep rules whose confidence is at least ${minConfidence}%. Found ${rules.length} strong rule(s).` });
+      steps.push({ type: 'finish', title: 'Apriori complete', message: `The algorithm stopped because no larger frequent itemset can be generated. ${levels.flatMap(level => level.frequent).length} frequent itemsets and ${rules.length} strong rules were discovered.` });
+      return { transactions, minSupport, minConfidence, levels, rules, steps, index: 0 };
+    }
+
+    function renderAprioriTransactions(scan) {
+      document.getElementById('apriori-transactions').innerHTML = aprioriLesson.transactions.map((items, index) => `<div class="transaction ${scan ? 'scan' : ''}" style="animation-delay:${index * .12}s"><strong>T${index + 1}</strong><span>${items.join(', ')}</span></div>`).join('');
+    }
+
+    function renderAprioriLevels(current) {
+      const visible = aprioriLesson.levels.filter(level => level.k < (current.level?.k || Infinity) || level === current.level);
+      return `<div class="itemset-levels">${visible.map(level => `<div class="itemset-level"><h4>${current.type === 'candidates' && level === current.level ? 'Candidates' : 'Support result'} — ${level.k}-itemsets</h4><div class="itemset-chips">${level.candidates.map(entry => {
+        const state = current.type === 'candidates' && level === current.level ? '' : entry.frequent ? 'frequent' : 'pruned';
+        return `<span class="itemset-chip ${state}">{${entry.set.join(', ')}} · ${entry.count}/${aprioriLesson.transactions.length} (${entry.support.toFixed(0)}%)</span>`;
+      }).join('')}</div></div>`).join('')}</div>`;
+    }
+
+    function renderAprioriStep() {
+      const step = aprioriLesson.steps[aprioriLesson.index];
+      renderAprioriTransactions(step.type === 'scan' || step.type === 'candidates');
+      document.getElementById('apriori-step-label').textContent = `Step ${aprioriLesson.index + 1} of ${aprioriLesson.steps.length}`;
+      document.getElementById('apriori-stage-title').textContent = step.title;
+      document.getElementById('apriori-message').innerHTML = step.message;
+      let html = '';
+      if (step.type === 'scan') html = `<div class="apriori-empty"><strong>Database scan in progress…</strong><br>Apriori counts item occurrences without assuming their order inside a basket.</div>`;
+      else if (step.type === 'rules' || step.type === 'finish') html = aprioriLesson.rules.length ? `<div class="rule-list">${aprioriLesson.rules.map(rule => `<div class="rule"><code>{${rule.left.join(', ')}} → {${rule.right.join(', ')}}</code><span class="metric">support ${rule.support.toFixed(0)}%</span><span class="metric">confidence ${rule.confidence.toFixed(0)}%</span></div>`).join('')}</div>` : '<div class="apriori-empty">No rule meets the confidence threshold. Lower the threshold or add more related transactions.</div>';
+      else html = renderAprioriLevels(step);
+      document.getElementById('apriori-output').innerHTML = html;
+      document.getElementById('apriori-progress-bar').style.width = `${(aprioriLesson.index + 1) * 100 / aprioriLesson.steps.length}%`;
+      document.getElementById('apriori-previous').disabled = aprioriLesson.index === 0;
+      document.getElementById('apriori-next').disabled = aprioriLesson.index === aprioriLesson.steps.length - 1;
+      if (aprioriLesson.index === aprioriLesson.steps.length - 1) stopAprioriAuto();
+    }
+
+    function stopAprioriAuto() { clearInterval(aprioriTimer); aprioriTimer = null; document.getElementById('apriori-auto').textContent = '▶ Auto play'; }
+    function runApriori() {
+      stopAprioriAuto(); aprioriLesson = buildAprioriLesson();
+      if (!aprioriLesson) { document.getElementById('apriori-message').textContent = 'Enter at least one valid transaction.'; return; }
+      document.getElementById('apriori-auto').disabled = false; renderAprioriStep();
+    }
+    function moveApriori(offset) { if (!aprioriLesson) return; stopAprioriAuto(); aprioriLesson.index = Math.max(0, Math.min(aprioriLesson.steps.length - 1, aprioriLesson.index + offset)); renderAprioriStep(); }
+    document.getElementById('apriori-run').addEventListener('click', runApriori);
+    document.getElementById('apriori-previous').addEventListener('click', () => moveApriori(-1));
+    document.getElementById('apriori-next').addEventListener('click', () => moveApriori(1));
+    document.getElementById('apriori-auto').addEventListener('click', event => {
+      if (aprioriTimer) { stopAprioriAuto(); return; }
+      if (!aprioriLesson) runApriori();
+      event.currentTarget.textContent = '❚❚ Pause';
+      aprioriTimer = setInterval(() => { if (aprioriLesson.index >= aprioriLesson.steps.length - 1) stopAprioriAuto(); else { aprioriLesson.index += 1; renderAprioriStep(); } }, 2200);
+    });
+    document.getElementById('apriori-example').addEventListener('click', () => { document.getElementById('apriori-input').value = aprioriExample; runApriori(); });
 
     function stopTimer() {
       clearTimeout(timer);
@@ -1477,7 +1674,7 @@
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
       document.getElementById(tab.dataset.panel).classList.add('active');
-      if (tab.dataset.panel !== 'data-mining-panel') stopOlapAnimation();
+      if (tab.dataset.panel !== 'data-mining-panel') { stopOlapAnimation(); stopAprioriAuto(); }
     }));
     document.getElementById('bits').addEventListener('change', event => { stopTimer(); lesson = null; playing = false; buildLayout(Number(event.target.value)); });
     runButton.addEventListener('click', startLesson);
@@ -1546,6 +1743,7 @@
     buildAdderSubtractor(0);
     buildArithmeticCircuit(0);
     buildIncrementer();
+    runApriori();
   </script>
 </body>
 </html>
