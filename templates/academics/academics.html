@@ -470,7 +470,35 @@
     .apriori-formula { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
     .apriori-formula div { padding: 12px; border-radius: 9px; background: var(--navy); color: #dbeafe; font-size: 13px; }
     .apriori-formula strong { display: block; margin-bottom: 4px; color: #fff; }
+    .coa-legacy-content { display: none !important; }
+    .coa-video-lesson { max-width: 980px; margin: 0 auto; }
+    .coa-video-lesson .topic-head { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .coa-summary { margin: 18px 0; padding: 18px 20px; border-left: 5px solid var(--blue); border-radius: 10px; background: var(--blue-soft); font-size: 17px; line-height: 1.7; }
+    .coa-definition-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+    .coa-definition { padding: 20px; border: 1px solid var(--line); border-radius: 13px; background: #fff; box-shadow: 0 6px 18px rgba(16,42,67,.06); }
+    .coa-definition:first-child { border-top: 5px solid var(--blue); }
+    .coa-definition:last-child { border-top: 5px solid var(--green); }
+    .coa-definition h3 { margin: 0 0 8px; color: var(--navy); }
+    .coa-definition p, .coa-definition li { line-height: 1.65; }
+    .coa-definition ul { margin-bottom: 0; padding-left: 20px; }
+    .coa-comparison { width: 100%; margin: 22px 0; border-collapse: collapse; }
+    .coa-comparison th, .coa-comparison td { padding: 13px 14px; border: 1px solid var(--line); text-align: left; vertical-align: top; line-height: 1.55; }
+    .coa-comparison th { background: var(--navy); color: #fff; }
+    .coa-comparison tbody tr:nth-child(even) { background: #f8fbff; }
+    .coa-process { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 20px 0; }
+    .coa-process article { position: relative; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .coa-process span { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 10px; border-radius: 50%; background: var(--blue); color: #fff; font-weight: 800; }
+    .coa-process h3 { margin: 0 0 6px; color: var(--navy); font-size: 16px; }
+    .coa-process p { margin: 0; color: var(--muted); line-height: 1.55; }
+    .coa-example { margin: 22px 0; padding: 20px; border: 1px solid #a7e3cf; border-radius: 12px; background: #effcf8; }
+    .coa-example h3 { margin: 0 0 8px; color: #087b58; }
+    .coa-example p { margin: 7px 0; line-height: 1.65; }
+    .coa-check { padding: 20px; border-radius: 12px; background: var(--navy); color: #dbeafe; }
+    .coa-check h3 { margin: 0 0 10px; color: #fff; }
+    .coa-check ol { margin: 0; padding-left: 22px; }
+    .coa-check li { margin: 7px 0; line-height: 1.55; }
     @media (max-width: 760px) { .apriori-controls, .apriori-workspace, .apriori-formula { grid-template-columns: 1fr; } .rule { grid-template-columns: 1fr; } }
+    @media (max-width: 760px) { .coa-definition-grid, .coa-process { grid-template-columns: 1fr; } .coa-comparison { font-size: 13px; } }
   </style>
 </head>
 <body>
@@ -487,6 +515,90 @@
     </nav>
 
     <section class="tab-panel active" id="coa-panel" role="tabpanel" aria-labelledby="coa-tab">
+      <article class="coa-video-lesson">
+        <div class="topic-head">
+          <div>
+            <p class="eyebrow" style="color:var(--blue)">Computer Organization and Architecture</p>
+            <h2>Computer Architecture vs Computer Organization</h2>
+            <p>A clear, text-based lesson adapted from the concepts explained in the referenced video.</p>
+          </div>
+          <a class="video-link" href="https://www.youtube.com/watch?v=hBTy_-dJiro&amp;list=PL8xmnXn7pVtxa5XAdxRWJHdYKktOe9Udo&amp;index=1" target="_blank" rel="noopener noreferrer">Watch original lesson ↗</a>
+        </div>
+
+        <div class="coa-summary"><strong>The central difference:</strong> Computer architecture describes <em>what</em> a computer system makes available to the programmer. Computer organization describes <em>how</em> the internal hardware units are arranged and connected to implement that architecture.</div>
+
+        <div class="coa-definition-grid">
+          <section class="coa-definition">
+            <h3>Computer Architecture</h3>
+            <p>Architecture is the functional specification of a computer as observed by a programmer. It defines the machine-level capabilities that software can use.</p>
+            <ul>
+              <li>Instruction set and supported operations</li>
+              <li>Data types, word size, and data representation</li>
+              <li>Registers visible to programs</li>
+              <li>Addressing modes and memory address space</li>
+              <li>Input/output mechanisms</li>
+            </ul>
+          </section>
+          <section class="coa-definition">
+            <h3>Computer Organization</h3>
+            <p>Organization is the physical implementation of the architectural specification. It explains the operational units, their interconnections, and the control required to make the system work.</p>
+            <ul>
+              <li>Control signals and control-unit design</li>
+              <li>Bus structure and internal data paths</li>
+              <li>Memory technology and cache arrangement</li>
+              <li>Arithmetic hardware and processing units</li>
+              <li>Interfaces between components and peripherals</li>
+            </ul>
+          </section>
+        </div>
+
+        <h2>Point-by-point comparison</h2>
+        <div style="overflow-x:auto">
+          <table class="coa-comparison" aria-label="Comparison of computer architecture and computer organization">
+            <thead><tr><th>Basis</th><th>Computer Architecture</th><th>Computer Organization</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Main question</strong></td><td>What does the computer do?</td><td>How does the computer do it?</td></tr>
+              <tr><td><strong>Viewpoint</strong></td><td>Programmer or software designer</td><td>Hardware designer or system engineer</td></tr>
+              <tr><td><strong>Visibility</strong></td><td>Features directly visible to a machine-language programmer</td><td>Implementation details normally hidden from the programmer</td></tr>
+              <tr><td><strong>Concern</strong></td><td>System behavior, functionality, and programming model</td><td>Hardware units, connections, timing, and control</td></tr>
+              <tr><td><strong>Typical elements</strong></td><td>Instructions, registers, formats, addressing modes, I/O model</td><td>Buses, control signals, cache, memory chips, ALU implementation</td></tr>
+              <tr><td><strong>Design objective</strong></td><td>Meet the functional requirements of software</td><td>Implement those requirements with suitable speed, cost, and technology</td></tr>
+              <tr><td><strong>Effect of change</strong></td><td>An architectural change may require software or compiler changes</td><td>An organizational change can preserve compatibility with existing programs</td></tr>
+              <tr><td><strong>Design order</strong></td><td>The architecture is specified first</td><td>The organization is designed to realize that specification</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>How the two concepts work together</h2>
+        <div class="coa-process">
+          <article><span>1</span><h3>Specify the architecture</h3><p>Decide which instructions, registers, data formats, addresses, and I/O facilities the machine must expose.</p></article>
+          <article><span>2</span><h3>Choose the organization</h3><p>Select the buses, control logic, memory hierarchy, processing units, and component connections that will implement it.</p></article>
+          <article><span>3</span><h3>Execute software</h3><p>Programs rely on the architectural contract, while the organization performs the internal operations needed to honor it.</p></article>
+        </div>
+
+        <section class="coa-example">
+          <h3>Example: a multiplication instruction</h3>
+          <p><strong>Architecture question:</strong> Does the instruction set provide a multiplication instruction, and which registers hold its operands and result?</p>
+          <p><strong>Organization question:</strong> Is multiplication performed by a dedicated multiplier circuit, or by repeatedly using an adder under control logic?</p>
+          <p>Two processors can therefore expose the same multiplication instruction to software while using different internal hardware. They share an architecture but have different organizations, performance, cost, or power consumption.</p>
+        </section>
+
+        <section class="coa-example">
+          <h3>Example: memory</h3>
+          <p>The number of address bits and the addressable memory space belong to architecture because software uses them. The type of memory chips, cache levels, bus width, and memory speed belong to organization because they implement that visible memory model.</p>
+        </section>
+
+        <section class="coa-check">
+          <h3>Quick method for classifying any feature</h3>
+          <ol>
+            <li>Ask whether a machine-language programmer must know the feature. If yes, it is usually architectural.</li>
+            <li>Ask whether the feature explains internal circuitry, connections, or control. If yes, it is usually organizational.</li>
+            <li>Ask whether it can change without requiring programs to be rewritten. If yes, it is normally an organizational implementation choice.</li>
+          </ol>
+        </section>
+      </article>
+
+      <div class="coa-legacy-content" aria-hidden="true">
       <div class="topic-head">
         <div>
           <h2>Binary Parallel Adder</h2>
@@ -858,6 +970,7 @@
           <div class="formula"><strong>Increment operation</strong><code>S = A + 1</code></div>
         </div>
       </section>
+      </div>
     </section>
 
     <section class="tab-panel" id="data-mining-panel" role="tabpanel" aria-labelledby="data-mining-tab">
