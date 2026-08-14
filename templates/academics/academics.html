@@ -497,8 +497,34 @@
     .coa-check h3 { margin: 0 0 10px; color: #fff; }
     .coa-check ol { margin: 0; padding-left: 22px; }
     .coa-check li { margin: 7px 0; line-height: 1.55; }
+    .functional-unit-lesson { margin-top: 38px; padding-top: 30px; border-top: 3px solid var(--line); }
+    .unit-diagram { position: relative; display: grid; grid-template-columns: 1fr 1.35fr 1fr; grid-template-areas: "input memory output" "input cpu output"; gap: 28px 70px; align-items: center; min-height: 360px; margin: 20px 0; padding: 32px; overflow: hidden; border: 1px solid var(--line); border-radius: 16px; background: #f8fbff; }
+    .unit-node { position: relative; z-index: 2; display: grid; place-items: center; min-height: 112px; padding: 16px; border: 3px solid #9fb3c8; border-radius: 13px; background: #fff; text-align: center; transition: .35s; }
+    .unit-node strong { display: block; color: var(--navy); font-size: 17px; }
+    .unit-node small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.4; }
+    .unit-input { grid-area: input; }.unit-memory { grid-area: memory; }.unit-output { grid-area: output; }.unit-cpu { grid-area: cpu; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .unit-cpu > strong { grid-column: 1 / -1; }
+    .cpu-part { padding: 12px 6px; border-radius: 8px; background: #edf2f7; color: var(--navy); font-weight: 800; }
+    .unit-node.active { border-color: var(--blue); background: var(--blue-soft); box-shadow: 0 0 0 7px rgba(22,119,255,.12), 0 10px 25px rgba(22,119,255,.18); transform: scale(1.035); }
+    .unit-node.done { border-color: var(--green); background: #edfbf6; }
+    .cpu-part.active { background: var(--blue); color: #fff; animation: unitPulse .8s ease-in-out infinite alternate; }
+    @keyframes unitPulse { to { box-shadow: 0 0 16px rgba(22,119,255,.65); transform: translateY(-2px); } }
+    .data-bus { position: absolute; z-index: 1; height: 6px; border-radius: 99px; background: #bcccdc; transition: .3s; }
+    .bus-input { top: 50%; left: 20%; width: 27%; }.bus-output { top: 50%; right: 20%; width: 27%; }.bus-memory { top: 35%; left: 47%; width: 6px; height: 28%; }
+    .data-bus.active { background: repeating-linear-gradient(90deg, #23d5ff 0 10px, #1677ff 10px 20px, #fff 20px 26px); background-size: 52px 100%; box-shadow: 0 0 12px #23d5ff; animation: functionalFlow .65s linear infinite; }
+    .bus-memory.active { background: repeating-linear-gradient(0deg, #23d5ff 0 10px, #1677ff 10px 20px, #fff 20px 26px); background-size: 100% 52px; }
+    @keyframes functionalFlow { to { background-position: 52px 0; } }
+    .unit-step-panel { padding: 17px; border-left: 5px solid var(--blue); border-radius: 9px; background: var(--blue-soft); line-height: 1.65; }
+    .unit-step-panel h3 { margin: 0 0 5px; color: var(--navy); }
+    .unit-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .unit-progress { height: 8px; overflow: hidden; border-radius: 99px; background: #dbeafe; }
+    #unit-progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, var(--blue), var(--green)); transition: width .35s; }
+    .unit-notes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; margin-top: 18px; }
+    .unit-note { padding: 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+    .unit-note strong { display: block; margin-bottom: 5px; color: var(--navy); }
+    .unit-note span { color: var(--muted); font-size: 13px; line-height: 1.45; }
     @media (max-width: 760px) { .apriori-controls, .apriori-workspace, .apriori-formula { grid-template-columns: 1fr; } .rule { grid-template-columns: 1fr; } }
-    @media (max-width: 760px) { .coa-definition-grid, .coa-process { grid-template-columns: 1fr; } .coa-comparison { font-size: 13px; } }
+    @media (max-width: 760px) { .coa-definition-grid, .coa-process, .unit-notes { grid-template-columns: 1fr; } .coa-comparison { font-size: 13px; } .unit-diagram { grid-template-columns: 1fr; grid-template-areas: "input" "memory" "cpu" "output"; gap: 18px; } .data-bus { display: none; } }
   </style>
 </head>
 <body>
@@ -596,6 +622,42 @@
             <li>Ask whether the feature explains internal circuitry, connections, or control. If yes, it is usually organizational.</li>
             <li>Ask whether it can change without requiring programs to be rewritten. If yes, it is normally an organizational implementation choice.</li>
           </ol>
+        </section>
+
+        <section class="functional-unit-lesson" aria-labelledby="functional-unit-title">
+          <div class="topic-head">
+            <div>
+              <p class="eyebrow" style="color:var(--blue)">Video lesson 2</p>
+              <h2 id="functional-unit-title">Basic Functional Units of a Computer</h2>
+              <p>Follow information as it enters a computer, is stored and processed under control, and finally becomes useful output.</p>
+            </div>
+            <a class="video-link" href="https://www.youtube.com/watch?v=9WO7W8bjeps&amp;list=PL8xmnXn7pVtxa5XAdxRWJHdYKktOe9Udo&amp;index=2" target="_blank" rel="noopener noreferrer">Watch original lesson ↗</a>
+          </div>
+
+          <div id="unit-diagram" class="unit-diagram" aria-label="Animated functional units of a computer">
+            <div class="data-bus bus-input" data-unit-bus="input"></div><div class="data-bus bus-memory" data-unit-bus="memory"></div><div class="data-bus bus-output" data-unit-bus="output"></div>
+            <div class="unit-node unit-input" data-unit="input"><div><strong>Input Unit</strong><small>Keyboard, mouse, scanner and other sources</small></div></div>
+            <div class="unit-node unit-memory" data-unit="memory"><div><strong>Memory Unit</strong><small>Stores programs, input data, intermediate values and results</small></div></div>
+            <div class="unit-node unit-cpu" data-unit="cpu"><strong>Central Processing Unit</strong><div class="cpu-part" data-cpu-part="alu">ALU</div><div class="cpu-part" data-cpu-part="control">Control Unit</div><small style="grid-column:1/-1">Registers provide fast working storage</small></div>
+            <div class="unit-node unit-output" data-unit="output"><div><strong>Output Unit</strong><small>Monitor, printer, speakers and other destinations</small></div></div>
+          </div>
+          <div class="unit-progress"><div id="unit-progress-bar"></div></div>
+          <div class="unit-controls">
+            <button id="unit-start" class="btn" type="button">Start animation</button>
+            <button id="unit-previous" class="btn light" type="button" disabled>Previous</button>
+            <button id="unit-next" class="btn light" type="button">Next step</button>
+            <button id="unit-auto" class="btn secondary" type="button">▶ Auto play</button>
+          </div>
+          <div id="unit-step-panel" class="unit-step-panel" aria-live="polite"><h3>Overview</h3>A computer is built from input, memory, arithmetic and logic, control, and output functions. Select Start to trace one complete processing cycle.</div>
+
+          <div class="unit-notes">
+            <div class="unit-note"><strong>Input</strong><span>Accepts programs and data, converts them into machine-readable signals, and sends them into the system.</span></div>
+            <div class="unit-note"><strong>Memory</strong><span>Holds instructions, original data, intermediate calculations, and final results until they are needed.</span></div>
+            <div class="unit-note"><strong>ALU</strong><span>Performs arithmetic operations and logical comparisons on data supplied through registers.</span></div>
+            <div class="unit-note"><strong>Control</strong><span>Fetches and interprets instructions, then directs all other units with timing and control signals.</span></div>
+            <div class="unit-note"><strong>Output</strong><span>Converts processed binary results into a form that people or external devices can use.</span></div>
+          </div>
+          <div class="coa-summary"><strong>Complete flow:</strong> Input supplies data and instructions → memory stores them → the control unit fetches and coordinates → the ALU processes data → memory holds the result → output presents it. All units communicate through interconnections called buses.</div>
         </section>
       </article>
 
@@ -1271,6 +1333,63 @@ Bread,Butter`;
     });
     document.getElementById('apriori-example').addEventListener('click', () => { document.getElementById('apriori-input').value = aprioriExample; runApriori(); });
 
+    const functionalUnitSteps = [
+      { title: '1. Input unit accepts information', text: 'The input unit receives data and program instructions from an external device. It translates that information into the binary form understood by the computer and transfers it toward memory.', units: ['input'], buses: ['input'] },
+      { title: '2. Memory stores data and instructions', text: 'The memory unit stores the program, its input data, intermediate processing values, and completed results. The CPU reads from and writes to this working storage throughout execution.', units: ['input', 'memory'], buses: ['input', 'memory'] },
+      { title: '3. Control unit fetches and directs', text: 'The control unit fetches an instruction from memory, decodes the required operation, and issues timing and control signals. It coordinates input, memory, the ALU, and output rather than processing data itself.', units: ['memory', 'cpu'], buses: ['memory'], cpu: 'control' },
+      { title: '4. ALU performs the operation', text: 'The Arithmetic and Logic Unit performs addition, subtraction, multiplication, division, comparisons, shifts, and Boolean operations. Registers hold operands and results close to the processor.', units: ['cpu'], buses: ['memory'], cpu: 'alu' },
+      { title: '5. Result returns to memory', text: 'After the ALU completes the selected operation, the result is placed in a register and can be written back to memory. It may become input to another instruction or wait for output.', units: ['cpu', 'memory'], buses: ['memory'] },
+      { title: '6. Output unit presents the result', text: 'The output unit receives the processed result, converts the binary representation into a usable form, and delivers it through a monitor, printer, speaker, or another external device.', units: ['memory', 'output'], buses: ['output'] },
+      { title: 'Complete functional cycle', text: 'Input, memory, ALU, control, and output cooperate as one system. The control unit coordinates the cycle, buses carry information, memory preserves it, and the ALU transforms it.', units: ['input', 'memory', 'cpu', 'output'], buses: ['input', 'memory', 'output'], complete: true }
+    ];
+    let functionalUnitIndex = -1;
+    let functionalUnitTimer = null;
+
+    function stopFunctionalUnitAuto() {
+      clearInterval(functionalUnitTimer); functionalUnitTimer = null;
+      document.getElementById('unit-auto').textContent = '▶ Auto play';
+    }
+    function renderFunctionalUnitStep() {
+      const step = functionalUnitSteps[functionalUnitIndex];
+      document.querySelectorAll('[data-unit]').forEach(node => {
+        const active = step.units.includes(node.dataset.unit);
+        node.classList.toggle('active', active && !step.complete);
+        node.classList.toggle('done', step.complete);
+      });
+      document.querySelectorAll('[data-unit-bus]').forEach(bus => bus.classList.toggle('active', step.buses.includes(bus.dataset.unitBus)));
+      document.querySelectorAll('[data-cpu-part]').forEach(part => part.classList.toggle('active', part.dataset.cpuPart === step.cpu));
+      document.getElementById('unit-step-panel').innerHTML = `<h3>${step.title}</h3>${step.text}`;
+      document.getElementById('unit-progress-bar').style.width = `${(functionalUnitIndex + 1) * 100 / functionalUnitSteps.length}%`;
+      document.getElementById('unit-previous').disabled = functionalUnitIndex === 0;
+      document.getElementById('unit-next').disabled = functionalUnitIndex === functionalUnitSteps.length - 1;
+      document.getElementById('unit-start').textContent = functionalUnitIndex < 0 ? 'Start animation' : 'Restart animation';
+      if (functionalUnitIndex === functionalUnitSteps.length - 1) stopFunctionalUnitAuto();
+    }
+    function startFunctionalUnitLesson(auto = false) {
+      stopFunctionalUnitAuto(); functionalUnitIndex = 0; renderFunctionalUnitStep();
+      if (auto) {
+        document.getElementById('unit-auto').textContent = '❚❚ Pause';
+        functionalUnitTimer = setInterval(() => {
+          if (functionalUnitIndex >= functionalUnitSteps.length - 1) stopFunctionalUnitAuto();
+          else { functionalUnitIndex += 1; renderFunctionalUnitStep(); }
+        }, 2600);
+      }
+    }
+    document.getElementById('unit-start').addEventListener('click', () => startFunctionalUnitLesson(false));
+    document.getElementById('unit-previous').addEventListener('click', () => { stopFunctionalUnitAuto(); functionalUnitIndex = Math.max(0, functionalUnitIndex - 1); renderFunctionalUnitStep(); });
+    document.getElementById('unit-next').addEventListener('click', () => { stopFunctionalUnitAuto(); functionalUnitIndex = Math.min(functionalUnitSteps.length - 1, functionalUnitIndex + 1); renderFunctionalUnitStep(); });
+    document.getElementById('unit-auto').addEventListener('click', () => {
+      if (functionalUnitTimer) { stopFunctionalUnitAuto(); return; }
+      if (functionalUnitIndex < 0 || functionalUnitIndex >= functionalUnitSteps.length - 1) startFunctionalUnitLesson(true);
+      else {
+        document.getElementById('unit-auto').textContent = '❚❚ Pause';
+        functionalUnitTimer = setInterval(() => {
+          if (functionalUnitIndex >= functionalUnitSteps.length - 1) stopFunctionalUnitAuto();
+          else { functionalUnitIndex += 1; renderFunctionalUnitStep(); }
+        }, 2600);
+      }
+    });
+
     function stopTimer() {
       clearTimeout(timer);
       timer = null;
@@ -1789,6 +1908,7 @@ Bread,Butter`;
       tab.setAttribute('aria-selected', 'true');
       document.getElementById(tab.dataset.panel).classList.add('active');
       if (tab.dataset.panel !== 'data-mining-panel') { stopOlapAnimation(); stopAprioriAuto(); }
+      if (tab.dataset.panel !== 'coa-panel') stopFunctionalUnitAuto();
     }));
     document.getElementById('bits').addEventListener('change', event => { stopTimer(); lesson = null; playing = false; buildLayout(Number(event.target.value)); });
     runButton.addEventListener('click', startLesson);
