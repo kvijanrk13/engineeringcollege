@@ -1128,11 +1128,12 @@ Exam Branch
 
                     <div class="exam-table-wrap mb-4">
                         <div class="table-responsive" style="max-height: 520px; overflow: auto;">
-                            <table class="table exam-table table-striped table-sm" id="internalMarksTable" style="min-width: 1180px;">
+                            <table class="table exam-table table-striped table-sm" id="internalMarksTable" style="min-width: 1360px;">
                                 <thead>
                                     <tr>
                                         <th>Roll No</th>
                                         <th>ATTENDANCE</th>
+                                        <th>ATTENDANCE BASED MARKS GRADE</th>
                                         <th>MID-1 Obj (10)</th>
                                         <th>MID-1 Desc (20)</th>
                                         <th>MID-1 Total</th>
@@ -1156,8 +1157,8 @@ Exam Branch
                             <div class="exam-card">
                                 <h3 class="card-title">Grade Distribution Summary</h3>
                                 <p class="card-copy mb-3">
-                                    A quick distribution view to understand how the current grading
-                                    profile is shaping up across the class.
+                                    Attendance grades and required mark ranges are calculated from
+                                    the highest attendance value in the current sheet.
                                 </p>
                                 <div class="table-responsive">
                                     <table class="table exam-table table-striped mb-0" id="gradeSummaryTable">
@@ -4242,6 +4243,35 @@ Exam Branch
             return Number.isNaN(parsed) ? 0 : parsed;
         }
 
+        function getAttendanceGrade(attendance, maximumAttendance) {
+            if (!maximumAttendance) return '-';
+            const percentage = (attendance / maximumAttendance) * 100;
+            if (percentage >= 90) return 'O';
+            if (percentage >= 80) return 'A+';
+            if (percentage >= 70) return 'A';
+            if (percentage >= 60) return 'B+';
+            if (percentage >= 50) return 'B';
+            if (percentage >= 40) return 'P';
+            return 'F';
+        }
+
+        function getMaximumAttendance() {
+            const values = Array.from(marksBody.querySelectorAll('.attendance'))
+                .map(function (input) { return input.value.trim(); })
+                .filter(Boolean)
+                .map(parseScore);
+            return values.length ? Math.max.apply(null, values) : 0;
+        }
+
+        function updateAttendanceGrades() {
+            const maximumAttendance = getMaximumAttendance();
+            marksBody.querySelectorAll('tr').forEach(function (row) {
+                const attendanceRaw = row.querySelector('.attendance').value.trim();
+                const grade = attendanceRaw === '' ? '-' : getAttendanceGrade(parseScore(attendanceRaw), maximumAttendance);
+                setGradeCell(row.querySelector('.attendance-grade'), grade);
+            });
+        }
+
         function recalculateEvaluationRow(row) {
             const mid1ObjRaw = row.querySelector('.mid1-obj').value.trim();
             const mid1DescRaw = row.querySelector('.mid1-desc').value.trim();
@@ -4288,6 +4318,7 @@ Exam Branch
                 row.innerHTML = ''
                     + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
                     + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
+                    + '<td class="attendance-grade" data-grade="-">-</td>'
                     + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '" pattern="[0-9]*"></td>'
                     + '<td><input type="text" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" pattern="[0-9]*"></td>'
                     + '<td class="mid1-total">-</td>'
@@ -4303,6 +4334,7 @@ Exam Branch
                 recalculateEvaluationRow(row);
             });
 
+            updateAttendanceGrades();
             updateGradeSummary();
             updateEvaluationMetrics();
         }
@@ -4312,6 +4344,7 @@ Exam Branch
                 return {
                     rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
                     attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
+                    attendanceGrade: row.querySelector('.attendance-grade') ? row.querySelector('.attendance-grade').textContent : '-',
                     mid1Obj: row.querySelector('.mid1-obj') ? row.querySelector('.mid1-obj').value : '',
                     mid1Desc: row.querySelector('.mid1-desc') ? row.querySelector('.mid1-desc').value : '',
                     mid2Obj: row.querySelector('.mid2-obj') ? row.querySelector('.mid2-obj').value : '',
@@ -4372,6 +4405,27 @@ Exam Branch
             return grades;
         }
 
+        function calculateAttendanceGradeDistribution(students) {
+            const grades = {
+                'O': { count: 0, rolls: [] },
+                'A+': { count: 0, rolls: [] },
+                'A': { count: 0, rolls: [] },
+                'B+': { count: 0, rolls: [] },
+                'B': { count: 0, rolls: [] },
+                'P': { count: 0, rolls: [] },
+                'F': { count: 0, rolls: [] }
+            };
+
+            students.forEach(function (student) {
+                if (!grades[student.attendanceGrade]) return;
+                grades[student.attendanceGrade].count += 1;
+                if ((student.rollNo || '').trim()) {
+                    grades[student.attendanceGrade].rolls.push(student.rollNo.trim());
+                }
+            });
+            return grades;
+        }
+
         function updateEvaluationMetrics() {
             const students = getEvaluationRows();
             const gradedStudents = students.filter(function (student) {
@@ -4402,21 +4456,23 @@ Exam Branch
 
         function updateGradeSummary() {
             const students = getEvaluationRows();
-            const grades = calculateGradeDistribution(students);
+            const grades = calculateAttendanceGradeDistribution(students);
             const gradedStudents = students.filter(function (student) {
-                return student.grade && student.grade !== '-' && student.grade !== 'ABSENT';
+                return student.attendanceGrade && student.attendanceGrade !== '-';
             });
             const totalGraded = gradedStudents.length;
             const tbody = document.getElementById('gradeSummaryBody');
             const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
+            const maximumAttendance = getMaximumAttendance();
+            const minimumFor = function (percentage) { return Math.ceil(maximumAttendance * percentage / 100); };
             const ranges = {
-                'O': '10%-15%',
-                'A+': '20%-25%',
-                'A': '20%-25%',
-                'B+': '20%-25%',
-                'B': '10%-15%',
-                'P': '0%',
-                'F': '0%'
+                'O': minimumFor(90) + '-' + maximumAttendance,
+                'A+': minimumFor(80) + '-' + (minimumFor(90) - 1),
+                'A': minimumFor(70) + '-' + (minimumFor(80) - 1),
+                'B+': minimumFor(60) + '-' + (minimumFor(70) - 1),
+                'B': minimumFor(50) + '-' + (minimumFor(60) - 1),
+                'P': minimumFor(40) + '-' + (minimumFor(50) - 1),
+                'F': '0-' + (minimumFor(40) - 1)
             };
 
             tbody.innerHTML = '';
@@ -4439,7 +4495,7 @@ Exam Branch
                 + '<td><strong>Total</strong></td>'
                 + '<td><strong>' + totalGraded + '</strong></td>'
                 + '<td><strong>' + (totalGraded ? '100%' : '0%') + '</strong></td>'
-                + '<td><strong>Graded Rows</strong></td>'
+                + '<td><strong>Attendance Rows</strong></td>'
                 + '<td></td>';
             tbody.appendChild(totalRow);
         }
@@ -8384,6 +8440,7 @@ Exam Branch
         marksBody.addEventListener('input', function (event) {
             if (event.target.closest('tr')) {
                 recalculateEvaluationRow(event.target.closest('tr'));
+                updateAttendanceGrades();
                 updateGradeSummary();
                 updateEvaluationMetrics();
                 markEvaluationDirty();
