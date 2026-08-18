@@ -1079,7 +1079,7 @@ Exam Branch
                                     want to revisit the same data later.
                                 </p>
                                 <label for="studentCount" class="form-label">Total Students</label>
-                                <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="50" />
+                                <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="56" />
 
                                 <div class="exam-action-buttons mt-3">
                                     <button id="addStudentsBtn" class="btn exam-btn exam-btn-primary">
@@ -4190,11 +4190,26 @@ Exam Branch
             setStatus(lessonPlanStatus, 'Lesson plan cleared', 'muted');
         }
 
+        const defaultEvaluationRollNumbers = [
+            '23C11A1208', '23C11A1224',
+            '24C11A1201', '24C11A1202', '24C11A1203', '24C11A1204', '24C11A1205',
+            '24C11A1206', '24C11A1207', '24C11A1208', '24C11A1209', '24C11A1210',
+            '24C11A1211', '24C11A1212', '24C11A1213', '24C11A1214', '24C11A1215',
+            '24C11A1217', '24C11A1218', '24C11A1219', '24C11A1221', '24C11A1223',
+            '24C11A1225', '24C11A1226', '24C11A1227', '24C11A1228', '24C11A1229',
+            '24C11A1230', '24C11A1231', '24C11A1232', '24C11A1233', '24C11A1234',
+            '24C11A1235', '24C11A1236', '24C11A1237', '24C11A1238', '24C11A1239',
+            '24C11A1240', '24C11A1241', '24C11A1243', '24C11A1244', '24C11A1245',
+            '24C11A1247', '24C11A1248', '24C11A1249', '24C11A1250', '24C11A1251',
+            '24C11A1252', '24C11A1254', '24C11A1255', '24C11A1256', '24C11A1257',
+            '24C11A1258', '24C11A1259', '24C11A1260', '24C11A1261'
+        ];
+
         function generateStudents(count) {
             const students = [];
             for (let index = 1; index <= count; index += 1) {
                 students.push({
-                    rollNo: 'BT' + String(index).padStart(3, '0'),
+                    rollNo: defaultEvaluationRollNumbers[index - 1] || '',
                     mid1Obj: '',
                     mid1Desc: '',
                     mid2Obj: '',
@@ -4438,8 +4453,25 @@ Exam Branch
 
             try {
                 const payload = JSON.parse(saved);
+                const savedRows = Array.isArray(payload.rows) ? payload.rows : [];
+                const hasEnteredMarks = savedRows.some(function (student) {
+                    return [student.mid1Obj, student.mid1Desc, student.mid2Obj, student.mid2Desc, student.assignment, student.viva]
+                        .some(function (value) { return String(value || '').trim(); });
+                });
+                const hasCustomRollNumbers = savedRows.some(function (student) {
+                    const rollNo = String(student.rollNo || '').trim();
+                    return rollNo && !/^BT\d{3}$/.test(rollNo);
+                });
+
+                if (!hasEnteredMarks && !hasCustomRollNumbers) {
+                    document.getElementById('studentCount').value = String(defaultEvaluationRollNumbers.length);
+                    renderStudents(generateStudents(defaultEvaluationRollNumbers.length));
+                    setStatus(evaluationSaveStatus, 'Evaluation roll numbers loaded. Save after editing.', 'success');
+                    return;
+                }
+
                 document.getElementById('studentCount').value = payload.studentCount || String(defaultCount);
-                renderStudents(Array.isArray(payload.rows) && payload.rows.length ? payload.rows : generateStudents(defaultCount));
+                renderStudents(savedRows.length ? savedRows : generateStudents(defaultCount));
                 setStatus(evaluationSaveStatus, 'Evaluation loaded from ' + formatSavedTime(payload.savedAt), 'success');
             } catch (error) {
                 console.error('Failed to load evaluation data', error);
