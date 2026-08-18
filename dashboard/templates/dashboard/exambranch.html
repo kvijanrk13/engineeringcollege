@@ -1132,6 +1132,7 @@ Exam Branch
                                 <thead>
                                     <tr>
                                         <th>Roll No</th>
+                                        <th>ATTENDANCE</th>
                                         <th>MID-1 Obj (10)</th>
                                         <th>MID-1 Desc (20)</th>
                                         <th>MID-1 Total</th>
@@ -4205,11 +4206,19 @@ Exam Branch
             '24C11A1258', '24C11A1259', '24C11A1260', '24C11A1261'
         ];
 
+        const defaultEvaluationAttendance = [
+            9, 7, 12, 0, 16, 20, 15, 15, 21, 12, 5, 10, 15, 21,
+            0, 18, 14, 13, 3, 20, 7, 14, 18, 21, 20, 1, 20, 21,
+            15, 17, 12, 15, 17, 12, 9, 18, 11, 10, 18, 17, 21, 16,
+            8, 23, 1, 19, 9, 18, 15, 18, 1, 17, 9, 6, 10, 22
+        ];
+
         function generateStudents(count) {
             const students = [];
             for (let index = 1; index <= count; index += 1) {
                 students.push({
                     rollNo: defaultEvaluationRollNumbers[index - 1] || '',
+                    attendance: index <= defaultEvaluationAttendance.length ? String(defaultEvaluationAttendance[index - 1]) : '',
                     mid1Obj: '',
                     mid1Desc: '',
                     mid2Obj: '',
@@ -4277,6 +4286,7 @@ Exam Branch
                 const row = document.createElement('tr');
                 row.innerHTML = ''
                     + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
+                    + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                     + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '" pattern="[0-9]*"></td>'
                     + '<td><input type="text" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" pattern="[0-9]*"></td>'
                     + '<td class="mid1-total">-</td>'
@@ -4300,6 +4310,7 @@ Exam Branch
             return Array.from(marksBody.querySelectorAll('tr')).map(function (row) {
                 return {
                     rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
+                    attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
                     mid1Obj: row.querySelector('.mid1-obj') ? row.querySelector('.mid1-obj').value : '',
                     mid1Desc: row.querySelector('.mid1-desc') ? row.querySelector('.mid1-desc').value : '',
                     mid2Obj: row.querySelector('.mid2-obj') ? row.querySelector('.mid2-obj').value : '',
@@ -4315,6 +4326,7 @@ Exam Branch
         function hasEvaluationContent() {
             return getEvaluationRows().some(function (student) {
                 return student.rollNo.trim()
+                    || student.attendance.trim()
                     || student.mid1Obj.trim()
                     || student.mid1Desc.trim()
                     || student.mid2Obj.trim()
@@ -4453,7 +4465,13 @@ Exam Branch
 
             try {
                 const payload = JSON.parse(saved);
-                const savedRows = Array.isArray(payload.rows) ? payload.rows : [];
+                const savedRows = Array.isArray(payload.rows) ? payload.rows.map(function (student) {
+                    const rollIndex = defaultEvaluationRollNumbers.indexOf(String(student.rollNo || '').trim());
+                    if ((student.attendance === undefined || student.attendance === '') && rollIndex >= 0) {
+                        return Object.assign({}, student, { attendance: String(defaultEvaluationAttendance[rollIndex]) });
+                    }
+                    return student;
+                }) : [];
                 const hasEnteredMarks = savedRows.some(function (student) {
                     return [student.mid1Obj, student.mid1Desc, student.mid2Obj, student.mid2Desc, student.assignment, student.viva]
                         .some(function (value) { return String(value || '').trim(); });
