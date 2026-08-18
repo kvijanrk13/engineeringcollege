@@ -4207,11 +4207,12 @@ Exam Branch
         ];
 
         const defaultEvaluationAttendance = [
-            9, 7, 12, 0, 16, 20, 15, 15, 21, 12, 5, 10, 15, 21,
-            0, 18, 14, 13, 3, 20, 7, 14, 18, 21, 20, 1, 20, 21,
-            15, 17, 12, 15, 17, 12, 9, 18, 11, 10, 18, 17, 21, 16,
-            8, 23, 1, 19, 9, 18, 15, 18, 1, 17, 9, 6, 10, 22
+            44, 38, 49, 0, 77, 85, 58, 65, 87, 56, 30, 43, 73, 90,
+            0, 69, 69, 75, 20, 89, 24, 72, 76, 88, 85, 5, 83, 83,
+            77, 79, 48, 67, 72, 63, 43, 72, 53, 41, 87, 74, 84, 67,
+            44, 86, 17, 82, 49, 84, 64, 78, 4, 85, 54, 24, 64, 90
         ];
+        const evaluationAttendanceVersion = 2;
 
         function generateStudents(count) {
             const students = [];
@@ -4446,6 +4447,7 @@ Exam Branch
         function saveEvaluationData() {
             const payload = {
                 studentCount: document.getElementById('studentCount').value,
+                attendanceVersion: evaluationAttendanceVersion,
                 rows: getEvaluationRows(),
                 savedAt: new Date().toISOString()
             };
@@ -4467,7 +4469,8 @@ Exam Branch
                 const payload = JSON.parse(saved);
                 const savedRows = Array.isArray(payload.rows) ? payload.rows.map(function (student) {
                     const rollIndex = defaultEvaluationRollNumbers.indexOf(String(student.rollNo || '').trim());
-                    if ((student.attendance === undefined || student.attendance === '') && rollIndex >= 0) {
+                    if (rollIndex >= 0 && (payload.attendanceVersion !== evaluationAttendanceVersion
+                            || student.attendance === undefined || student.attendance === '')) {
                         return Object.assign({}, student, { attendance: String(defaultEvaluationAttendance[rollIndex]) });
                     }
                     return student;
