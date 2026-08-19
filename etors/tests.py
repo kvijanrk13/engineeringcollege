@@ -74,7 +74,10 @@ class EtorsTests(TestCase):
         self.assertContains(response, "target=etors")
         self.assertContains(response, "ETORS Assistant")
         self.assertContains(response, reverse("etors:chatbot"))
-        self.assertContains(response, "From search to seat in four simple steps")
+        self.assertNotContains(response, "From search to seat in four simple steps")
+        self.assertNotContains(response, "Everything you need to practise")
+        self.assertNotContains(response, "Instant confirmation")
+        self.assertContains(response, "Check PNR status securely")
         self.assertContains(response, "indian-railways-hero.jpg")
 
     def test_demo_stations_routes_and_calendar_are_available(self):

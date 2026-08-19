@@ -9,9 +9,7 @@
   .eyebrow::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 5px rgba(255,181,71,.14); }
   .hero h1 { max-width:650px; font-size:clamp(2.6rem,5vw,4.8rem); letter-spacing:-.045em; }
   .hero-copy > p { max-width:620px; margin:22px 0 28px; color:#d9e6f6; font-size:1.12rem; }
-  .hero-points { display:flex; flex-wrap:wrap; gap:18px; color:#f5f8fc; font-weight:700; font-size:.9rem; }
   .hero-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
-  .hero-points span::before { content:"✓"; display:inline-grid; place-items:center; width:21px; height:21px; margin-right:7px; border-radius:50%; color:#063c2d; background:#77e0b5; font-size:.75rem; }
   .hero-visual { position:relative; min-height:410px; }
   .hero-image { width:100%; height:410px; object-fit:cover; border:1px solid rgba(255,255,255,.2); border-radius:28px; box-shadow:0 35px 70px rgba(0,0,0,.34); transform:rotate(1.5deg); }
   .hero-image-card { position:absolute; left:-22px; bottom:24px; display:flex; align-items:center; gap:12px; padding:14px 17px; border:1px solid rgba(255,255,255,.46); border-radius:16px; color:var(--ink); background:rgba(255,255,255,.94); box-shadow:0 16px 34px rgba(0,0,0,.2); backdrop-filter:blur(12px); }
@@ -27,24 +25,7 @@
   .quick-routes { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:18px; padding-top:18px; border-top:1px solid var(--line); }
   .quick-routes strong { margin-right:5px; color:var(--muted); font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; }
   .route-chip { padding:7px 10px; border-radius:999px; color:#185492; background:#edf5fd; font-size:.82rem; font-weight:750; }
-  .section-title { max-width:680px; margin:0 auto 34px; text-align:center; }
-  .section-title span { color:var(--orange); font-weight:850; font-size:.8rem; letter-spacing:.1em; text-transform:uppercase; }
-  .section-title h2 { margin:8px 0 10px; font-size:clamp(1.8rem,3vw,2.7rem); letter-spacing:-.03em; }
-  .booking-steps { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
-  .step-card { padding:25px; border:1px solid var(--line); border-radius:20px; background:white; box-shadow:0 10px 30px rgba(11,31,58,.07); }
-  .step-number { width:44px; height:44px; display:grid; place-items:center; margin-bottom:20px; border-radius:13px; color:white; background:linear-gradient(135deg,var(--blue),var(--sky)); font-weight:900; box-shadow:0 8px 18px rgba(21,89,168,.25); }
-  .step-card h3 { margin:0 0 8px; color:var(--navy); }
-  .step-card p { margin:0; color:var(--muted); font-size:.92rem; }
-  .info-band { margin-top:44px; padding:26px; border-radius:22px; color:white; background:linear-gradient(120deg,var(--navy),#124f91); }
-  .info-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
-  .info-item { padding:8px 16px; border-left:1px solid rgba(255,255,255,.18); }
-  .info-item:first-child { border-left:0; }
-  .info-item strong { display:block; margin-bottom:4px; font-size:1.06rem; }
-  .info-item small { color:#c9daef; }
-  .feature-panel { height:100%; background:linear-gradient(145deg,#fff,#f1f7fe); }
-  .feature-list { margin:0; padding:0; list-style:none; }
-  .feature-list li { position:relative; margin:12px 0; padding-left:30px; }
-  .feature-list li::before { content:"✓"; position:absolute; left:0; top:1px; width:20px; height:20px; display:grid; place-items:center; border-radius:50%; color:var(--success); background:#dff6ec; font-size:.72rem; font-weight:900; }
+  .pnr-panel { max-width:720px; margin:auto; }
   .train-card { transition:.2s ease; }
   .train-card:hover { padding-left:12px; padding-right:12px; border-radius:14px; background:#f6faff; }
   .cab-showcase { display:grid; grid-template-columns:.9fr 1.1fr; gap:34px; align-items:center; padding:36px; border-radius:26px; color:white; background:linear-gradient(130deg,#28134f,#7634a8 58%,#e05f32); box-shadow:0 22px 55px rgba(54,24,92,.22); }
@@ -54,8 +35,8 @@
   .cab-timeline { display:grid; gap:12px; }
   .cab-timeline div { display:flex; gap:13px; align-items:center; padding:14px; border:1px solid rgba(255,255,255,.18); border-radius:15px; background:rgba(255,255,255,.09); }
   .cab-timeline strong { width:34px; height:34px; display:grid; place-items:center; flex:0 0 auto; border-radius:10px; color:#542279; background:white; }
-  @media(max-width:950px){ .hero-grid,.cab-showcase{grid-template-columns:1fr}.hero-visual{min-height:330px}.hero-image{height:330px}.booking-steps,.info-grid{grid-template-columns:repeat(2,1fr)} }
-  @media(max-width:620px){ .hero{padding-top:48px}.hero h1{font-size:2.7rem}.hero-visual{min-height:250px}.hero-image{height:250px;border-radius:20px}.hero-image-card{left:10px;bottom:10px}.search-heading-row{align-items:flex-start;flex-direction:column}.booking-steps,.info-grid{grid-template-columns:1fr}.info-item{border-left:0;border-top:1px solid rgba(255,255,255,.18)}.info-item:first-child{border-top:0}.search-panel{padding:20px} }
+  @media(max-width:950px){ .hero-grid,.cab-showcase{grid-template-columns:1fr}.hero-visual{min-height:330px}.hero-image{height:330px} }
+  @media(max-width:620px){ .hero{padding-top:48px}.hero h1{font-size:2.7rem}.hero-visual{min-height:250px}.hero-image{height:250px;border-radius:20px}.hero-image-card{left:10px;bottom:10px}.search-heading-row{align-items:flex-start;flex-direction:column}.search-panel{padding:20px} }
 </style>
 
 <section class="hero">
@@ -64,7 +45,6 @@
       <span class="eyebrow">Simple railway reservation</span>
       <h1>Your journey begins with one easy search.</h1>
       <p>Discover daily demo trains between Khammam, Vijayawada and Secunderabad. Check seats, compare fares and reserve your journey in minutes.</p>
-      <div class="hero-points"><span>Instant PNR</span><span>Seat reservation</span><span>Safe dummy payment</span></div>
       <div class="hero-actions">
         <a class="btn btn-secondary" href="{% url 'etors:documentation' %}">DOCUMENTATION</a>
       </div>
@@ -106,17 +86,6 @@
   </section>
   {% endif %}
 
-  <section class="section" id="how-to-book">
-    <div class="section-title"><span>Booking guide</span><h2>From search to seat in four simple steps</h2><p class="muted">ETORS keeps the demonstration booking process clear and quick.</p></div>
-    <div class="booking-steps">
-      <article class="step-card"><div class="step-number">01</div><h3>Search your route</h3><p>Select From, To and a journey date from today through the next 120 days.</p></article>
-      <article class="step-card"><div class="step-number">02</div><h3>Choose a train</h3><p>Compare departure time, arrival time, duration and available seats.</p></article>
-      <article class="step-card"><div class="step-number">03</div><h3>Add passenger</h3><p>Enter contact details, passenger information, class and berth preference.</p></article>
-      <article class="step-card"><div class="step-number">04</div><h3>Pay & reserve</h3><p>Use dummy payment to receive a reserved seat and instant 10-digit PNR.</p></article>
-    </div>
-    <div class="info-band"><div class="info-grid"><div class="info-item"><strong>6 daily routes</strong><small>Across three Telangana/AP cities</small></div><div class="info-item"><strong>Live seat count</strong><small>Updates after booking or cancellation</small></div><div class="info-item"><strong>Instant confirmation</strong><small>PNR and seat shown immediately</small></div><div class="info-item"><strong>100% demonstration</strong><small>No real payment or railway ticket</small></div></div></div>
-  </section>
-
   <section class="section" id="bookmycab">
     <div class="cab-showcase">
       <div><span class="cab-mark">ETORS × BOOKMYCAB</span><h2>Bike to Bus, planned with your train.</h2><p>Choose Bike ₹150, Auto ₹250, Mini ₹350, Sedan ₹500, SUV ₹750, Tempo Traveller ₹1,200, or Bus ₹2,500. Capacity ranges from 1 to 30 passengers, and the dummy vehicle reaches the destination station 20 minutes before arrival.</p><a class="btn" style="color:#542279;background:white" href="#search-heading">Search a train to begin</a></div>
@@ -125,10 +94,7 @@
   </section>
 
   <section id="pnr-status" class="section">
-    <div class="grid grid-2">
-      <div class="panel"><span class="eyebrow" style="color:var(--blue);border-color:#c8dbf1;background:#edf5fd">Manage journey</span><h2>Check PNR status securely</h2><p class="muted">Enter the PNR and registered mobile number. A PNR alone cannot reveal passenger information.</p><form action="{% url 'etors:pnr_search' %}" method="get">{{ pnr_form.pnr.label_tag }}{{ pnr_form.pnr }}<div style="margin-top:12px">{{ pnr_form.contact_phone.label_tag }}{{ pnr_form.contact_phone }}</div><button class="btn btn-primary" style="margin-top:14px">Verify &amp; Check Status</button></form></div>
-      <div class="panel feature-panel"><h2>Everything you need to practise</h2><ul class="feature-list"><li>Route and journey-date search</li><li>Live seat availability calculation</li><li>Sleeper and AC fare selection</li><li>PNR generation, lookup, and cancellation</li><li>Dummy fare payment and automatic seat reservation</li><li>Admin-managed stations and trains</li></ul></div>
-    </div>
+    <div class="panel pnr-panel"><span class="eyebrow" style="color:var(--blue);border-color:#c8dbf1;background:#edf5fd">Manage journey</span><h2>Check PNR status securely</h2><p class="muted">Enter the PNR and registered mobile number. A PNR alone cannot reveal passenger information.</p><form action="{% url 'etors:pnr_search' %}" method="get">{{ pnr_form.pnr.label_tag }}{{ pnr_form.pnr }}<div style="margin-top:12px">{{ pnr_form.contact_phone.label_tag }}{{ pnr_form.contact_phone }}</div><button class="btn btn-primary" style="margin-top:14px">Verify &amp; Check Status</button></form></div>
   </section>
 </main>
 {% endblock %}
