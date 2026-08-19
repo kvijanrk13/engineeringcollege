@@ -59,15 +59,6 @@ def documentation(request):
                     handle.read(), extensions=["tables", "fenced_code"]
                 )
 
-    # Week 1 includes the supplied SRD as well as the problem statement. Reuse
-    # the Week 2 rendering so the requirements do not drift between sections.
-    if rendered_documents["srd_text"]:
-        rendered_documents["week1_text"] += (
-            '<hr><section class="week1-srd" aria-label="Week 1 software requirements">'
-            + rendered_documents["srd_text"]
-            + "</section>"
-        )
-
     return render(
         request,
         "etors/documentation.html",
