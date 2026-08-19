@@ -65,28 +65,3 @@
 |---|---|---|---|---|
 | BB_UT_203 | 1. Create an Issue overdue by 3 days.<br>2. Call `calcFine(issue)`.<br>3. Read the Fine amount. | Fine is calculated as `3 × ₹10 = ₹30`. | Fine record was created with amount `30`. | **Pass** |
 | BB_UT_204 | 1. Create an unissued request for the Student.<br>2. Call `getmybooks(user)`.<br>3. Inspect both returned lists. | Book appears in requested list and not in issued list. | Requested list contained `Clean Code`; issued list did not. | **Pass** |
-
-## 6. How Students Can Run the Tests
-
-```bash
-python manage.py test library.tests.LibraryWeek6Tests \
-  --settings=engineeringcollege.test_settings
-```
-
-Expected console output:
-
-```text
-Found 12 test(s).
-System check identified no issues (0 silenced).
-............
-Ran 12 tests in 1.121s
-OK
-```
-
-## 7. Result Interpretation
-
-- **Pass** means the observed result matched the expected result.
-- **Fail** means the observed result differed from the expected result.
-- A dot (`.`) in Django test output represents one passing test.
-- `OK` means the complete selected suite passed.
-- The tests use an isolated in-memory database and do not change production data.

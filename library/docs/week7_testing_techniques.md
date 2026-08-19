@@ -55,28 +55,3 @@ Black-box testing checks inputs and outputs without depending on internal code d
 | BB_BB_204 | **Technique: Decision Table**<br>1. Student opens All Issues.<br>2. Librarian opens All Issues.<br>3. Compare responses. | Student is redirected; Librarian receives the page. | Student received redirect; Librarian received HTTP 200. | **Pass** |
 | BB_BB_205 | **Technique: State-Transition Testing**<br>1. Student requests Book.<br>2. Librarian issues Book.<br>3. Librarian returns Book.<br>4. Reload Issue. | Issue moves from Requested to Issued to Returned. | Final record had `issued=True` and `returned=True`. | **Pass** |
 | BB_BB_206 | **Technique: Error Guessing**<br>1. Login as Student.<br>2. Enter spaces in Search.<br>3. Submit. | Blank-looking search is rejected and user returns to Home with warning. | Response redirected to Library Home as expected. | **Pass** |
-
-## 2. How Students Can Run Week 7 Tests
-
-```bash
-python manage.py test library.tests.LibraryWeek7TestingTechniquesTests \
-  --settings=engineeringcollege.test_settings
-```
-
-Expected console output:
-
-```text
-Found 12 test(s).
-System check identified no issues (0 silenced).
-............
-Ran 12 tests in 0.278s
-OK
-```
-
-## 3. Result Interpretation
-
-- A dot (`.`) represents one passing Django test.
-- `OK` means all selected Week 7 tests passed.
-- **Pass** means actual output matched expected output.
-- **Fail** means the outputs differed and a defect should be recorded.
-- The isolated test database is destroyed after the run; production data is unchanged.
