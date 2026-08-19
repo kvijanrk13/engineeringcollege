@@ -178,6 +178,13 @@ class EtorsTests(TestCase):
         week2 = content.split('id="week-2"', 1)[1].split('id="week-3"', 1)[0]
 
         self.assertIn("Problem Statement", week1)
+        self.assertIn("II. E-TICKETING – ONLINE RESERVATION SYSTEM", week1)
+        self.assertIn("Existing System", week1)
+        self.assertIn("Proposed System", week1)
+        self.assertIn("The proposed system has the following advantages", week1)
+        self.assertIn("unique 10-digit PNR", week1)
+        self.assertIn("BOOKMYCAB", week1)
+        self.assertNotIn("System Overview for ETORS", week1)
         self.assertNotIn("Academic Demonstration Notice", week1)
         self.assertIn("Academic Demonstration Notice", week2)
         self.assertEqual(content.count("Academic Demonstration Notice"), 1)
