@@ -203,6 +203,12 @@ class EtorsTests(TestCase):
         self.assertIn("registered mobile number", week2)
         self.assertIn("BOOKMYCAB", week2)
         self.assertIn("pickup OTP", week2)
+        self.assertIn("120-day booking window", week2)
+        self.assertIn("passengers aged one to five", week2)
+        self.assertIn("separate dummy UPI payment after pickup", week2)
+        self.assertIn("running_days", week2)
+        self.assertIn("Rs. 0.45", week2)
+        self.assertIn("five unsuccessful attempts", week2)
         self.assertIn("Academic Demonstration Notice", week2)
         self.assertNotIn("HTML/JSP/PHP", week2)
 

@@ -1,407 +1,384 @@
 # Week 2 - Software Requirements Document (SRD)
 
-## IV. E-TICKETING – ONLINE RESERVATION SYSTEM
+## IV. E-TICKETING - ONLINE RESERVATION SYSTEM SRD
 
 ## 1. Introduction
 
-### 1.1 Problem Statement
+### 1.1 Purpose
 
-An E-Ticketing Online Reservation System (ETORS) manages railway ticket enquiries and reservations electronically. In a manual reservation process, passengers must visit a booking counter or contact an operator to learn about trains, schedules, fares, and seat availability. This consumes time, creates queues, increases paperwork, and makes reservation records harder to maintain accurately.
+The purpose of this document is to record the software requirements of ETORS (E-Ticketing Online Reservation System), a web application that demonstrates the railway ticket reservation process. It describes what the system must do, the users who interact with it, the constraints placed on its operation, and the quality requirements used during development and testing.
 
-The system must provide a single web-based platform through which passengers can search for trains, check availability, enter passenger information, select a travel class, complete a demonstration payment, and obtain a unique Passenger Name Record (PNR). It must also allow passengers to retrieve and cancel a booking securely using the PNR and registered mobile number.
+ETORS automates train enquiry, berth-availability calculation, passenger booking, fare calculation, dummy payment, PNR generation, reservation retrieval, cancellation, journey insurance, and optional destination transport through BOOKMYCAB. This SRD reflects the behavior of the implemented ETORS application rather than a generic bus or railway ticketing system.
 
-**Existing System:**
+### 1.2 Scope
 
-The existing process depends heavily on booking counters, telephone enquiries, registers, and manual calculations. Passengers may need to wait in a queue to check schedules or reserve a seat. Maintaining passenger, payment, cancellation, and seat-allocation records manually can produce duplicate entries, calculation errors, delayed updates, and difficulty retrieving historical information.
+ETORS is a responsive web application within the Engineering College project. It is intended for academic demonstration and is hosted at `https://engineeringcollege.onrender.com/etors/`.
 
-**Proposed System:**
+The application enables a passenger to:
 
-The proposed ETORS is a cloud-hosted web application for railway reservation demonstrations. It provides route and date-based train search, live calculated seat availability, authenticated booking, passenger and berth details, fare calculation, dummy digital payment, automatic PNR and seat generation, secure PNR enquiry, cancellation, train insurance, and optional BOOKMYCAB destination transfer services.
+- Search active trains using different source and destination stations and a journey date within the 120-day booking window.
+- View train number, name, operating-days description, departure and arrival times, duration, and calculated berth availability.
+- Log in with a verified Gmail account before making a reservation.
+- Select General, Sleeper, AC 3 Economy, AC 3 Tier, AC 2 Tier, or AC First Class.
+- Add between one and five passengers and record age, gender, and optional berth preference.
+- Include an optional BOOKMYCAB transfer from the destination station to a specified drop address.
+- Complete a dummy train payment using UPI, card, or net banking.
+- Receive a unique 10-digit PNR, passenger seat details, and a demonstration train-insurance policy.
+- Retrieve a booking using the PNR and registered mobile number and cancel a confirmed reservation.
+- Use the ETORS Assistant for supported questions about the service.
 
-The proposed system has the following advantages:
+When BOOKMYCAB is selected, the system also demonstrates vehicle-capacity validation, map-assisted destination entry, driver and vehicle assignment, cab arrival scheduling, pickup OTP verification, company-relayed call logging, cab insurance, and a separate dummy UPI payment after pickup.
 
-1. Passengers can search and reserve tickets without visiting a booking counter.
-2. Train schedules, travel classes, fares, and available seats are displayed together.
-3. Booking and passenger records are stored centrally and can be retrieved quickly.
-4. PNR and seat numbers are generated automatically after successful payment.
-5. PNR details are protected by verification with the registered mobile number.
-6. Optional destination cab booking is available within the reservation flow.
-7. Paperwork and repetitive manual calculations are reduced.
+Administrators use Django administration facilities to maintain stations, trains, fares, capacity, bookings, passengers, cab bookings, and call records.
 
-### 1.2 Purpose
+### 1.3 Acronyms
 
-The purpose of this document is to specify the software requirements for ETORS. The application automates the principal activities involved in a demonstration railway reservation workflow: train discovery, availability checking, passenger registration, fare calculation, payment simulation, ticket confirmation, PNR enquiry, cancellation, and optional cab transfer booking.
-
-This document defines the functional and non-functional requirements, user roles, constraints, assumptions, dependencies, interfaces, and operating environment that guide the development, testing, deployment, and maintenance of ETORS.
-
-### 1.3 Scope
-
-ETORS is a responsive, cloud-based web application developed using Python and the Django framework.
-
-**For Passengers:**
-
-- Search active trains by departure station, arrival station, and journey date
-- View train number, train name, schedule, duration, running days, fares, and availability
-- Sign in through a verified Gmail account before booking
-- Select General, Sleeper, or supported AC travel classes
-- Enter contact and passenger details
-- Specify gender and berth preference for each passenger
-- Add train insurance to the reservation
-- Select an optional BOOKMYCAB vehicle and destination address
-- Complete payment through a dummy UPI, card, or net-banking flow
-- Receive a unique 10-digit PNR and allocated seat numbers
-- Retrieve a reservation using the PNR and registered mobile number
-- View train, passenger, insurance, fare, and cab details
-- Cancel a confirmed reservation
-- Use the ETORS help chatbot for supported enquiries
-
-**For Cab Passengers and Drivers:**
-
-- Schedule a cab according to the train's destination and arrival time
-- Select a vehicle according to passenger capacity
-- Generate a private cab reference and dispatch link
-- Verify passenger pickup using a time-limited OTP
-- Complete dummy cab payment through UPI after pickup verification
-- Record company-relayed driver/passenger call sessions with consent
-- Apply the configured demonstration salary-deduction rule when payment expires
-
-**For Administrators:**
-
-- Manage stations and active train services
-- Maintain schedules, running days, capacity, and class fares
-- View and administer booking, passenger, cab, and call records
-- Activate or deactivate train services
-- Monitor reservation data through Django administration facilities
-
-### 1.4 Definitions, Acronyms and Abbreviations
-
-| Abbreviation | Meaning |
+| Acronym | Meaning |
 |---|---|
 | ETORS | E-Ticketing Online Reservation System |
 | ORS | Online Reservation System |
-| PNR | Passenger Name Record |
+| SRD | Software Requirements Document |
 | GUI | Graphical User Interface |
 | DBMS | Database Management System |
+| PNR | Passenger Name Record |
 | OTP | One-Time Password |
 | UPI | Unified Payments Interface |
 | OAuth | Open Authorization |
-| HTTPS | Hypertext Transfer Protocol Secure |
 | ORM | Object-Relational Mapping |
-| RBAC | Role-Based Access Control |
+| CSRF | Cross-Site Request Forgery |
+| HTTPS | Hypertext Transfer Protocol Secure |
 
-### 1.5 References
+### 1.4 References
 
-- IEEE 830 Software Requirements Specification guidance
-- Roger S. Pressman – *Software Engineering: A Practitioner's Approach*
-- Ian Sommerville – *Software Engineering*
-- Django official documentation
-- PostgreSQL documentation
-- Google OAuth documentation
-- Render cloud documentation
-- RBI guidance for regulated digital payment modes (production consideration)
+- IEEE 830-1998 guidance for Software Requirements Specifications.
+- Django framework documentation.
+- PostgreSQL documentation.
+- Google OAuth documentation for Gmail authentication.
+- Google Maps URLs and Places/Maps integration documentation.
+- Render cloud deployment documentation.
+- ETORS models, forms, views, services, templates, and automated tests in the Engineering College project.
 
-### 1.6 Overview
+### 1.5 Overview
 
-ETORS follows a client-server architecture. Passengers interact with responsive web pages, while Django processes requests and stores stations, trains, bookings, passengers, cab bookings, and call records in a relational database. Authentication is integrated with the college application's Google sign-in flow. The deployed academic system uses demonstration train, payment, insurance, cab, driver, and communication data; it is not connected to a live railway inventory or banking network.
+The remaining sections describe the product perspective, product functions, user characteristics, constraints, assumptions, dependencies, functional requirements, non-functional requirements, interface specifications, hardware/software requirements, and indexed terms.
+
+ETORS uses a browser-based client/server design. Django receives browser requests, validates input, applies reservation rules, and stores relational records for stations, trains, bookings, passengers, cabs, and call logs. The deployed application uses sample railway and transport data and does not connect to live Indian Railways, IRCTC, banking, insurance, telephone, or vehicle-dispatch systems.
 
 ## 2. Project Description
 
 ### 2.1 Product Perspective
 
-ETORS is a dedicated module within the Engineering College web application. It replaces a paper-based demonstration of reservation activities with a centralized workflow accessible through a standard browser.
+Before computerization, passengers depend on counters or enquiry staff for schedules, fares, availability, booking, and cancellation. This causes queues and paperwork, while repeated manual entry and calculation can produce inconsistent passenger, fare, seat, and cancellation records. Onward transport from the destination station must also be arranged independently.
 
-The passenger begins by selecting source and destination stations and a valid journey date. ETORS lists matching active trains and calculates availability from capacity and confirmed passenger records. An authenticated passenger selects a train and class, enters passenger information, and optionally requests insurance and a destination cab. After the dummy payment succeeds, the application creates the booking and passenger records atomically, generates the PNR and seat assignments, and displays the confirmation.
+ETORS centralizes the demonstrated workflow. The passenger searches for a route and date, selects an available train, authenticates through Gmail, supplies passenger details, chooses a class, optionally adds BOOKMYCAB, and completes a dummy train payment. ETORS then creates the booking and passenger records in a database transaction, issues a 10-digit PNR, assigns a sequential seat to each passenger who requires a berth, and displays the confirmation.
 
-The proposed system provides these benefits:
+The computerized system provides the following benefits:
 
-- Faster route, schedule, and fare enquiries
-- Consistent capacity and availability calculations
-- Centralized booking and passenger information
-- Automatic fare, insurance, PNR, seat, and cab calculations
-- Secure booking retrieval using two identifying values
-- Immediate booking cancellation and linked cab cancellation
-- Responsive access from desktop and mobile browsers
-- Reduced paperwork and administrative effort
+- Train, schedule, availability, fare, passenger, booking, and cancellation information can be stored and retrieved centrally.
+- Server-side calculation reduces repetitive fare and availability work.
+- Confirmed bookings reduce availability, while cancelled bookings release their occupied berths.
+- PNR and registered-mobile verification prevents a PNR alone from revealing passenger information.
+- BOOKMYCAB connects destination-station pickup with the train journey while retaining a separate post-pickup cab payment.
+- Responsive screens support desktop and mobile browsers.
 
 ### 2.2 Product Functions
 
-The major product functions are:
+The product supports three user groups.
 
-**Passenger Functions**
+**Passenger functions**
 
-- Gmail authentication and logout
-- Station and journey-date selection
-- Train search and result display
-- Seat-availability calculation
-- Travel-class and fare selection
-- Multi-passenger data entry
-- Berth-preference capture
-- Train-insurance selection
-- Dummy payment processing
-- PNR and seat-number generation
-- PNR/mobile verification
-- Booking-detail display
-- Reservation cancellation
-- ETORS chatbot assistance
+- Search trains by source, destination, and date.
+- View schedule information and current calculated availability.
+- Authenticate using the parent application's verified Gmail flow.
+- Compare six travel classes and their calculated fares.
+- Book one to five passengers and provide berth preferences.
+- Complete dummy train payment by UPI, card, or net banking.
+- Receive a PNR, automatic seat allocation, and included demonstration train insurance.
+- Verify PNR status using the registered mobile number.
+- View reservation, passenger, fare, insurance, and cab information.
+- Cancel a confirmed reservation.
+- Ask supported questions through the ETORS Assistant.
 
-**BOOKMYCAB Functions**
+**BOOKMYCAB passenger and driver functions**
 
-- Vehicle selection based on passenger capacity
-- Destination-address and optional map-coordinate capture
-- Fare and cab-insurance calculation
-- Driver, vehicle, reference, and schedule generation
-- Time-limited pickup OTP verification
-- Dummy UPI payment after pickup
-- Payment-deadline reconciliation
-- Company-relayed call logging with recording consent
+- Select Bike, Auto, Mini, Sedan, SUV, Tempo Traveller, or Bus according to passenger capacity.
+- Record a destination address and optional map coordinates.
+- Require consent for company-relayed recorded calls.
+- Generate a cab reference, private dispatch token, six-digit pickup OTP, driver, vehicle, insurance policy, and schedule.
+- Schedule the demonstration vehicle to reach the destination station 20 minutes before train arrival.
+- Allow the driver to verify the pickup OTP through the private dispatch page.
+- Allow the passenger to pay the cab fare plus cab-insurance premium separately through dummy UPI after pickup verification.
+- Log demonstration call sessions and reconcile an expired unpaid cab amount as a driver-salary deduction.
 
-**Administrative Functions**
+**Administrator functions**
 
-- Station management
-- Train and schedule management
-- Capacity and fare management
-- Booking and passenger record management
-- Cab-dispatch and call-record monitoring
+- Create and maintain station and train master data.
+- Maintain train status, times, duration, running-days description, capacity, sleeper fare, and AC fare.
+- Inspect and administer bookings, passengers, cab records, payment states, and call logs.
 
 ### 2.3 User Characteristics
 
-**Administrator**
+**Passenger:** A passenger should be able to read the English interface and use a general-purpose web browser. Gmail access is required to book, and the registered Indian mobile number is required for PNR verification. No reservation-system training is expected.
 
-The administrator maintains station and train master data and can inspect reservation records. The administrator should understand the reservation workflow, Django administration interface, and basic data-management procedures.
+**Administrator:** An administrator should understand ETORS master data and reservation rules and be authorized to use Django administration facilities.
 
-**Passenger**
-
-The passenger searches for trains, completes reservations, checks PNR status, books optional cab transport, and cancels eligible bookings. A passenger requires basic English comprehension, web-browsing ability, a valid Gmail identity for booking, and access to the registered mobile number used for PNR verification.
-
-**Cab Driver (Demonstration Role)**
-
-The driver uses the private dispatch link to view assignment details, verify the passenger's pickup OTP, and initiate a company-relayed call. Only basic smartphone and web-browser skills are required.
+**Cab driver (demonstration role):** A driver follows a private dispatch link, views the assigned trip, verifies the pickup OTP, and may start or end a simulated company-relayed call. Basic smartphone browser skills are sufficient.
 
 ### 2.4 General Constraints
 
-- Internet connectivity and a supported web browser are required.
-- Source and destination stations must be different.
-- The journey date cannot be earlier than the current date.
-- Only active trains matching the selected route may be booked.
-- Booking requires an authenticated session marked as a verified ETORS Gmail login.
-- Passenger count and seat allocation cannot exceed calculated availability.
-- Contact and passenger values must pass server-side validation.
-- The PNR must contain exactly 10 digits.
-- Booking details require both the PNR and matching registered mobile number unless the authenticated owner is accessing them.
-- Payment, insurance, cab, driver, and call facilities are academic simulations.
-- Cab vehicle capacity must accommodate all passengers in the train booking.
-- Pickup OTPs and cab payment deadlines expire after configured time limits.
+- The application requires internet access and a modern browser.
+- Source and destination must be different.
+- Journey dates must be from the current date through the next 120 days.
+- Only active trains whose stored source and destination match the search are returned.
+- The `running_days` value is descriptive in the current implementation; it is displayed but is not used to reject a selected date.
+- Booking requires an authenticated user whose session is marked as a verified ETORS Gmail login.
+- A booking contains a maximum of five passengers.
+- Passengers aged above five require a berth; passengers aged one to five are recorded as `NO BERTH` and are not charged the train fare or per-berth insurance premium.
+- Availability is checked when the booking form is opened, when it is submitted, and again before confirmation.
+- Contact mobile numbers must be valid 10-digit Indian mobile numbers beginning with 6–9.
+- PNR values contain exactly 10 digits.
+- PNR verification is limited after five unsuccessful attempts in the same session.
+- A selected BOOKMYCAB vehicle must hold the entire passenger group.
+- Cab booking requires a drop address and call-recording consent.
+- Train and cab payments, policies, calls, dispatches, and deductions are simulations only.
 
 ### 2.5 Assumptions and Dependencies
 
 **Assumptions**
 
-- Train, station, schedule, capacity, and fare data entered by administrators is accurate.
-- Users provide correct passenger and contact information.
-- Google authentication and the application's session service are available.
-- The application is deployed on Render or a compatible hosting service.
-- Demonstration payments are treated as successful only after valid form submission.
+- Administrators enter accurate station, train, schedule, fare, and capacity data.
+- Passengers supply correct names, ages, email addresses, mobile numbers, and destination details.
+- Each active train record represents a direct source-to-destination service.
+- Submission of a permitted dummy payment method represents payment success for the demonstration.
+- The hosting platform and external authentication service are available when required.
 
 **Dependencies**
 
-- Python and Django framework
-- Relational database supported by Django, with PostgreSQL used in deployment
-- Google OAuth authentication supplied by the parent application
-- Render cloud hosting
-- HTML5, CSS3, and JavaScript-capable browser
-- Secure session, CSRF, and password-hashing facilities provided by Django
+- Python and Django.
+- Django ORM and a relational database; PostgreSQL is used by the deployed environment.
+- Google authentication supplied by the parent Engineering College application.
+- Django sessions, CSRF protection, password hashing, and transaction management.
+- HTML5, CSS3, and JavaScript in a standards-compliant browser.
+- Render hosting and HTTPS termination.
+- Google Maps links; embedded Places/Maps behavior additionally depends on a configured API key.
 
 ## 3. Specific Requirements
 
 ### 3.1 Functional Requirements
 
-The system shall:
+#### 3.1.1 Train Search
 
-1. Allow a user to select a source, destination, and current or future journey date.
-2. Reject a search when source and destination are identical.
-3. Display active trains that serve the selected route and operate on the selected date.
-4. Display train number, name, departure, arrival, duration, running days, fares, and available seats.
-5. Calculate availability from train capacity minus passengers on confirmed bookings for that date.
-6. Require verified Gmail authentication before opening the booking workflow.
-7. Allow selection from the travel classes configured by ETORS.
-8. Capture contact name, email address, and mobile number.
-9. Capture each passenger's name, age, gender, and berth preference.
-10. Validate that at least one passenger is included and that enough seats remain.
-11. Calculate class fare for every passenger and add selected insurance premiums.
-12. Offer dummy UPI, card, and net-banking methods for the train-ticket payment demonstration.
-13. Create the booking and all passenger records as one database transaction after payment.
-14. Generate a unique 10-digit PNR for every successful booking.
-15. Allocate a seat number to every passenger.
-16. Generate a train-insurance policy reference when insurance is selected.
-17. Allow PNR enquiry only after matching the PNR with its registered mobile number or authenticated owner.
-18. Display booking status, journey, passenger, fare, insurance, and linked cab information.
-19. Allow an authorized user to cancel a confirmed booking.
-20. Record the cancellation time and cancel a linked pending cab booking.
-21. Allow an optional destination cab to be selected during train booking.
-22. Validate the cab type against the number of passengers.
-23. Store the drop address and optional geographic coordinates.
-24. Generate a unique cab reference, dispatch token, pickup OTP, driver, and vehicle assignment.
-25. Schedule cab arrival relative to the train's destination arrival.
-26. Require pickup OTP verification before dummy cab UPI payment.
-27. Expire the OTP and reconcile unpaid cab charges after the configured deadline.
-28. Create and complete company-relayed cab call logs only after recording consent is supplied.
-29. Provide contextual answers for supported ETORS help questions through the chatbot.
-30. Permit administrators to maintain station, train, fare, capacity, and reservation data.
+1. The system shall display all stored stations in the source and destination controls.
+2. The system shall reject identical source and destination selections.
+3. The system shall reject past dates and dates more than 120 days ahead.
+4. The system shall return active trains matching the selected source and destination.
+5. The system shall display the train number, name, running-days description, departure time, arrival time, duration, and available berth count.
+6. The system shall calculate availability as train capacity minus passengers attached to confirmed bookings for that train and journey date.
+
+#### 3.1.2 Authentication and Booking
+
+7. The system shall allow public train search but shall require verified Gmail authentication before booking.
+8. The system shall allow General, Sleeper, AC 3 Economy, AC 3 Tier, AC 2 Tier, and AC First Class selection.
+9. The system shall derive each class fare from the train's stored sleeper or AC base fare and the configured class multiplier.
+10. The system shall capture the first passenger as the booking contact name together with contact email and mobile number.
+11. The system shall accept one required passenger and up to four additional passengers.
+12. The system shall validate every supplied passenger's name, age from 1 to 120, and gender, with berth preference optional.
+13. The system shall count only passengers above five years old when checking berth availability and calculating train fare.
+14. The system shall include a demonstration train-insurance premium of Rs. 0.45 for every passenger who requires a berth.
+15. The system shall recheck capacity inside the confirmation transaction to reduce overbooking risk.
+
+#### 3.1.3 Train Payment and Confirmation
+
+16. The system shall offer dummy UPI, card, and net-banking methods for train payment.
+17. The system shall clearly state that the payment is a demonstration and no real money is transferred.
+18. The train amount payable shall contain the class-based train fare plus the included train-insurance premium; it shall not charge the cab amount at this stage.
+19. After valid payment submission, the system shall create the booking and passenger records atomically.
+20. The system shall generate a unique numeric 10-digit PNR.
+21. The system shall allocate sequential seat identifiers to passengers above five and `NO BERTH` to passengers aged one to five.
+22. The system shall generate a demonstration train-insurance policy reference.
+23. The system shall show booking, PNR, passenger, seat, insurance, and optional cab confirmation details.
+
+#### 3.1.4 PNR Enquiry and Cancellation
+
+24. The system shall require a valid PNR and matching registered mobile number before authorizing public access to a reservation.
+25. The system shall also allow staff, the authenticated booking owner, or a session previously authorized for that PNR to view it.
+26. The system shall limit unsuccessful PNR/mobile verification attempts to five per browser session.
+27. The system shall display booking status, train, route, date, class, passengers, contact details, fare, insurance, and linked cab information.
+28. The system shall permit an authorized user to cancel a confirmed booking using a CSRF-protected POST request.
+29. Cancellation shall record the cancellation time, stop the booking from consuming availability, cancel a linked cab, and cancel a still-pending cab payment.
+
+#### 3.1.5 BOOKMYCAB
+
+30. The system shall allow BOOKMYCAB to be added during train booking.
+31. The system shall validate the selected vehicle capacity against the total number of passengers, including passengers who do not require train berths.
+32. The system shall require a vehicle type, drop address, and consent for company-relayed recorded calls.
+33. The system shall accept optional map latitude and longitude only within valid geographic ranges.
+34. The system shall assign the train's destination station as the cab pickup station.
+35. The system shall schedule cab arrival 20 minutes before the calculated train arrival, including an overnight arrival when appropriate.
+36. The system shall generate a unique cab reference, unguessable dispatch token, demonstration driver, vehicle number, cab-insurance policy, and hashed pickup OTP.
+37. The private dispatch page shall permit no more than five unsuccessful OTP attempts and shall reject expired OTPs.
+38. The system shall require successful pickup verification before accepting dummy cab payment.
+39. Cab payment shall be accepted only by dummy UPI and shall equal the cab fare plus the Rs. 10 cab-insurance premium.
+40. When the payment deadline expires while payment is pending, the system shall record the amount as a demonstration driver-salary deduction.
+41. The system shall create call and recording references when a company-relayed call starts and shall record its completion time when ended.
+
+#### 3.1.6 Assistance and Administration
+
+42. The ETORS Assistant shall accept a non-empty question of no more than 500 characters and return a contextual response for supported ETORS topics.
+43. The system shall provide separate demonstration support numbers for train booking and BOOKMYCAB.
+44. Authorized administrators shall be able to maintain stations, trains, fares, capacity, bookings, passengers, cab bookings, and call logs.
 
 ### 3.2 Non-Functional Requirements
+
+Non-functional requirements describe how ETORS should operate rather than which reservation functions it performs.
 
 #### 3.2.1 Product Requirements
 
 **Usability**
 
-- The interface shall use clear labels, validation messages, confirmation messages, and consistent navigation.
-- A first-time passenger with basic web skills should be able to search and complete a demonstration booking without formal training.
-- Pages shall adapt to desktop and mobile screen sizes.
+- A passenger with ordinary browser experience should be able to search trains and complete the demonstration without formal training.
+- Forms shall use visible labels, clear validation errors, explanatory notices, confirmation messages, and consistent navigation.
+- The interface shall adapt to desktop and mobile viewport sizes.
 
 **Performance**
 
-- Normal search and PNR requests should return within three seconds under expected academic demonstration load.
-- Availability and fare calculations shall be completed before a booking is confirmed.
-- Database queries should use related-object loading where required to avoid unnecessary repeated requests.
+- Normal train-search, PNR, and documentation requests should complete within five seconds under the expected academic demonstration load and a stable network connection.
+- Fare and availability calculations shall finish before confirmation is stored.
+- Views that display related train, station, passenger, or cab data should use efficient related-object queries.
 
 **Reliability**
 
-- Booking and passenger creation shall be atomic so that partial reservations are not stored.
-- PNR, cab reference, dispatch token, and call reference values shall be unique.
-- A cancelled booking shall no longer reduce available-seat totals.
+- Booking and passenger creation shall be transactional so that a failure does not leave a partial reservation.
+- Unique database constraints shall protect PNR, cab reference, dispatch token, call reference, and recording reference values.
+- Confirmed passengers shall reduce availability and cancelled passengers shall not.
 
 **Portability**
 
-- ETORS shall run through current standards-compliant browsers on Windows, Linux, macOS, Android, and iOS without platform-specific installation.
+- ETORS shall require no client installation and should work in current standards-compliant browsers on Windows, Linux, macOS, Android, and iOS.
 
 **Scalability**
 
-- The database design shall support growth in stations, trains, journey dates, passengers, and bookings.
-- Frequently used search and relationship fields shall use database-backed queries suitable for concurrent users.
+- The relational design shall permit growth in stations, trains, journey dates, bookings, passengers, and cab records.
+- Capacity checks and booking creation shall remain server-controlled when concurrent users submit reservations.
 
 **Availability**
 
-- The deployed application should be accessible continuously except during hosting outages or scheduled maintenance.
+- The deployed application should remain available continuously except during Render outages, cold starts, maintenance, or external-service interruptions.
 
 **Maintainability**
 
-- The system shall use separate Django models, forms, views, services, templates, and tests.
-- Fare, capacity, insurance, cab, and payment rules shall be centralized so they can be changed without rewriting unrelated interfaces.
+- Models, forms, views, service rules, templates, documentation, and tests shall remain separated by responsibility.
+- Fare multipliers, insurance premiums, cab fares, vehicle capacity, schedules, and payment reconciliation rules should be centralized where practical.
 
 **Accessibility**
 
-- Forms shall provide labels, keyboard-operable controls, readable contrast, and understandable error feedback.
-- Responsive layouts shall remain usable at mobile viewport widths.
+- Controls shall be keyboard operable and associated with readable labels.
+- Text, status, and validation feedback shall not depend only on color.
+- Responsive layouts shall remain understandable at narrow widths.
 
 #### 3.2.2 Organizational Requirements
 
-- The backend shall be developed with Python and Django.
-- Data shall be managed through Django's ORM and a relational database.
-- The interface shall use HTML5, CSS3, and JavaScript.
-- Source code shall be maintained using Git version control.
-- The deployed service shall use HTTPS through the cloud-hosting platform.
-- Dates displayed to users shall be unambiguous, and stored date/time values shall follow Django's timezone-aware conventions.
-- Demonstration payment screens shall clearly state that no real money is transferred.
+**Delivery:** Changes shall be delivered incrementally through Git commits and deployed from the configured repository branch.
+
+**Implementation:** The backend shall use Python and Django; data access shall use Django ORM; pages shall use HTML5, CSS3, and JavaScript; deployment shall use a Render-compatible configuration.
+
+**Standards:** Dates shown to users shall be unambiguous, time values shall use a 24-hour display where provided, stored date-times shall follow Django timezone handling, and state-changing forms shall use POST with CSRF protection.
+
+**Testing:** Reservation rules and documentation expectations shall be covered by Django automated tests. Django system checks and migration consistency checks shall be run before deployment.
 
 #### 3.2.3 External Requirements
 
 **Security**
 
-- Booking creation shall require verified Gmail authentication.
-- Django CSRF protection shall protect state-changing form submissions.
-- PNR access shall require ownership or matching mobile-number verification.
-- Cab pickup OTPs shall be stored as password hashes rather than plain text.
-- Private cab dispatch links shall use unguessable UUID tokens.
-- Server-side validation shall be applied even when browser validation is available.
-- Sensitive production communication shall use HTTPS.
+- Deployed browser traffic shall use HTTPS.
+- Booking shall require verified Gmail authentication.
+- State-changing requests shall use Django CSRF protection.
+- PNR information shall require ownership, staff authority, or prior PNR/mobile verification.
+- Cab OTPs shall be stored as password hashes, and dispatch URLs shall use UUID tokens.
+- Server-side validation shall be applied even when client-side validation is present.
 
 **Privacy**
 
-- Passenger contact and travel information shall be shown only to authorized or verified users.
-- Cab call recording consent shall be collected before a relayed call is created.
-- Travel and communication records shall be used only for the stated academic and operational purposes.
+- Passenger and travel data shall not be exposed from a PNR alone.
+- Consent shall be collected before enabling the recorded-call demonstration.
+- The company-relay workflow shall avoid showing the passenger's mobile number to the cab driver.
 
 **Interoperability**
 
-- ETORS shall integrate with the parent application's Google authentication flow.
-- The application shall operate with Django-supported relational databases and Render-compatible deployment services.
-- A production version may replace demonstration payment, railway inventory, messaging, mapping, and cab data with approved external APIs.
+- ETORS shall integrate with the parent application's Google authentication and user sessions.
+- It shall operate with the configured Django relational database and Render environment.
+- Google Maps links shall use standard HTTPS URLs; optional embedded map features shall depend on the configured Google Maps API.
+- A future production system would require approved railway inventory, payment, messaging, insurance, telephony, and dispatch APIs; these are outside the current scope.
 
 ### 3.3 Interface Specification
 
-**User Interface**
+#### 3.3.1 User Interface
 
-- ETORS home and train-search page
-- Train search-results cards
-- Gmail authentication redirect
-- Passenger and booking form
-- Dummy train-payment page
-- Payment-success and PNR confirmation page
-- PNR/mobile verification form
-- Booking-detail and cancellation page
-- BOOKMYCAB dispatch and OTP page
-- Dummy cab UPI payment page
-- Cab call-session page
-- Documentation and chatbot interfaces
-- Django administration interface
+- ETORS navigation, train-search form, search results, BOOKMYCAB introduction, and PNR-verification form.
+- Verified Gmail login redirect supplied by the parent application.
+- Booking form with travel class, contact, passenger, insurance, cab, map, and consent sections.
+- Dummy train-payment and confirmation screens.
+- PNR detail and cancellation screen.
+- Cab dispatch, pickup-OTP, cab-payment, and call-session screens.
+- ETORS documentation and chatbot interfaces.
+- Django administration interface.
 
-**Hardware Interface**
+#### 3.3.2 Hardware Interface
 
-- Desktop computer or laptop
-- Tablet or smartphone
-- Keyboard, mouse, or touch input
-- Internet connection
+- Desktop or laptop computer, tablet, or smartphone.
+- Keyboard, mouse, touch screen, or other browser-compatible input device.
+- Internet-capable network interface.
 
-**Software Interface**
+No railway terminal, card reader, GPS unit, telephone switch, or vehicle hardware is controlled by this academic system.
 
-- Django framework and ORM
-- PostgreSQL or another configured relational database
-- Google OAuth authentication from the parent system
-- Render cloud platform
-- Modern web browser
+#### 3.3.3 Software Interface
 
-**Communication Interface**
+- Django application framework, ORM, authentication, sessions, forms, and administration.
+- PostgreSQL in deployment and a compatible configured database in development/testing.
+- Parent-application Google authentication.
+- Render web-service environment.
+- Optional Google Maps/Places browser integration.
 
-- HTTPS for browser-to-server communication in deployment
-- Secure database connectivity
-- Session cookies for authenticated and verified workflows
-- POST requests protected by CSRF tokens for state changes
+#### 3.3.4 Communication Interface
+
+- HTTPS between the browser and deployed server.
+- Secure configured connection between Django and PostgreSQL.
+- Session cookies for authentication and PNR authorization.
+- CSRF tokens for protected POST requests.
+- HTTP GET for read/search operations and POST for booking, payment, OTP, call, logout, and cancellation state changes.
 
 ## 4. Appendices
 
-### Hardware Requirements
+### 4.1 Hardware Requirements
 
-- Dual-core processor or better
-- 4 GB RAM minimum for a development workstation
-- 10 GB free disk space for development tools and project files
-- Reliable internet connection
+- Development computer with a dual-core processor or better.
+- At least 4 GB RAM and sufficient storage for the project and dependencies.
+- Reliable internet access for authentication, hosted database, deployment, and live verification.
 
-### Software Requirements
+### 4.2 Software Requirements
 
-- Windows, Linux, or macOS development environment
-- Python 3.10 or later
-- Django-compatible relational database
-- HTML5, CSS3, and JavaScript
-- Git
-- Visual Studio Code, PyCharm, or equivalent editor
-- Modern standards-compliant browser
+- Python 3.10 or a project-compatible later version.
+- Django and dependencies declared by the project.
+- PostgreSQL or another configured Django-compatible relational database.
+- Git version control.
+- A modern browser and a code editor or IDE.
 
-### Academic Demonstration Notice
+### 4.3 Academic Demonstration Notice
 
-ETORS is an educational prototype. Train schedules, availability, payments, insurance policies, cab assignments, OTPs, calls, and salary deductions are demonstration data and processes. The application must not be represented as a live railway, banking, insurance, or transportation service.
+ETORS is an educational prototype. Its trains, seats, fares, payments, insurance policies, cab assignments, OTPs, calls, and salary deductions are demonstration data and processes. No real ticket, payment, insurance policy, recorded telephone call, or vehicle dispatch is created. ETORS is not affiliated with IRCTC or Indian Railways.
 
 ## 5. Index
 
-- A: Accessibility, Administrator, Authentication, Availability
-- B: Berth, Booking, BOOKMYCAB
-- C: Cab, Cancellation, Capacity, CSRF
-- D: Database, Django, Dispatch
-- F: Fare, Functional Requirements
-- G: Gmail Authentication, GUI
-- I: Insurance, Interface, Interoperability
-- O: OAuth, OTP
-- P: Passenger, Payment, Performance, PNR, Privacy
-- R: Reliability, Render, Reservation
-- S: Scope, Search, Seat, Security, Station
-- T: Train, Travel Class
-- U: UPI, Usability
+- **A:** Accessibility, Administrator, Authentication, Availability
+- **B:** Berth, Booking, BOOKMYCAB
+- **C:** Cab, Cancellation, Capacity, CSRF
+- **D:** Database, Django, Dispatch
+- **F:** Fare, Functional Requirements
+- **G:** Gmail Authentication, Google Maps, GUI
+- **I:** Insurance, Interface, Interoperability
+- **O:** OAuth, OTP
+- **P:** Passenger, Payment, Performance, PNR, Privacy
+- **R:** Reliability, Render, Reservation
+- **S:** Scope, Search, Seat, Security, Station
+- **T:** Train, Transaction, Travel Class
+- **U:** UPI, Usability
