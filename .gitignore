@@ -53,3 +53,8 @@ android/app/keystore.properties
 
 # AEC Library standalone project (separate repo under project_domains)
 project_domains/software-engineering/aeclibrary/
+# Local dependencies and resumable OCR work for the COA extraction tool
+tools/node_modules/
+tools/eng.traineddata
+tools/coa-page-*
+tmp_coa_extraction/

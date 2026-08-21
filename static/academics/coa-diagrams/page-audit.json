@@ -1,0 +1,3530 @@
+{
+  "source": "computer-systems-Architecture.pdf",
+  "page_count": 524,
+  "audited_pages": 524,
+  "pages": [
+    {
+      "pdf_page": 1,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 45
+    },
+    {
+      "pdf_page": 2,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 3,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 4,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 5,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 6,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 72
+    },
+    {
+      "pdf_page": 7,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 8,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 9,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 10,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 11,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 12,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 13,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 14,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 15,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 16,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 17,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 18,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 19,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-1"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 20,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 21,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-2"
+      ],
+      "ocr_confidence": 62
+    },
+    {
+      "pdf_page": 22,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 23,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-3"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 24,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 25,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-4",
+        "1-5"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 26,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-6"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 27,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 28,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-7"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 29,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-8"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 30,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-9",
+        "1-10"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 31,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-11"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 32,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-12"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 33,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-13"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 34,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-14"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 35,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-15"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 36,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-16"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 37,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-17"
+      ],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 38,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-18"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 39,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-19"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 40,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-20"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 41,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-21",
+        "1-22"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 42,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-23",
+        "1-23"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 43,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 44,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-24"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 45,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-25"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 46,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 47,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 48,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-26"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 49,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-27"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 50,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 51,
+      "disposition": "instructional_figures",
+      "figures": [
+        "1-28",
+        "1-29"
+      ],
+      "ocr_confidence": 72
+    },
+    {
+      "pdf_page": 52,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 53,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 78
+    },
+    {
+      "pdf_page": 54,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 55,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 56,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 57,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 58,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 59,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-1"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 60,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-2"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 61,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-3"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 62,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 63,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-4"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 64,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 65,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-5"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 66,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-6"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 67,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-8"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 68,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 69,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 73
+    },
+    {
+      "pdf_page": 70,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 71,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-10"
+      ],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 72,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 73,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 30
+    },
+    {
+      "pdf_page": 74,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 75,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-12"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 76,
+      "disposition": "instructional_figures",
+      "figures": [
+        "2-13"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 77,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 78,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 79,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 80,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 81,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 82,
+      "disposition": "instructional_figures",
+      "figures": [
+        "3-1"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 83,
+      "disposition": "instructional_figures",
+      "figures": [
+        "3-2"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 84,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 85,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 86,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 87,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 88,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 89,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 90,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 91,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 92,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 93,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 94,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 95,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 96,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 97,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 98,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 99,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 100,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 101,
+      "disposition": "instructional_figures",
+      "figures": [
+        "3-3"
+      ],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 102,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 103,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 104,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 105,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 106,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 107,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-1"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 108,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-2"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 109,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 110,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-3"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 111,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 112,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-4"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 113,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-5"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 114,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 115,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-6"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 116,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-7"
+      ],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 117,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-8"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 118,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-9"
+      ],
+      "ocr_confidence": 62
+    },
+    {
+      "pdf_page": 119,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 120,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 121,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 82
+    },
+    {
+      "pdf_page": 122,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-10"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 123,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 124,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 125,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 126,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-11"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 127,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-12"
+      ],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 128,
+      "disposition": "instructional_figures",
+      "figures": [
+        "4-13"
+      ],
+      "ocr_confidence": 85
+    },
+    {
+      "pdf_page": 129,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 130,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 85
+    },
+    {
+      "pdf_page": 131,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 132,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 133,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 81
+    },
+    {
+      "pdf_page": 134,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 135,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 136,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-1"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 137,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 138,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-2"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 139,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 140,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-3"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 141,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 55
+    },
+    {
+      "pdf_page": 142,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 143,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-5"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 144,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 145,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 146,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 147,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 148,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 149,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-7"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 150,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 151,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-8"
+      ],
+      "ocr_confidence": 80
+    },
+    {
+      "pdf_page": 152,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-8"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 153,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-9"
+      ],
+      "ocr_confidence": 83
+    },
+    {
+      "pdf_page": 154,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 155,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 156,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 157,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 158,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 159,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-10"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 160,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 161,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-11"
+      ],
+      "ocr_confidence": 77
+    },
+    {
+      "pdf_page": 162,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-12"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 163,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 164,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 165,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-13"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 166,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-14"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 167,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 168,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 169,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-15"
+      ],
+      "ocr_confidence": 73
+    },
+    {
+      "pdf_page": 170,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 58
+    },
+    {
+      "pdf_page": 171,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 172,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-16"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 173,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-17"
+      ],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 174,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-18"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 175,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-19"
+      ],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 176,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-20"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 177,
+      "disposition": "instructional_figures",
+      "figures": [
+        "5-21"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 178,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 179,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 180,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 181,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 182,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 183,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 184,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 185,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 186,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 187,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 188,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 189,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 190,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 191,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 192,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 193,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 194,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 195,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 196,
+      "disposition": "instructional_figures",
+      "figures": [
+        "6-1"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 197,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 198,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 199,
+      "disposition": "instructional_figures",
+      "figures": [
+        "6-2"
+      ],
+      "ocr_confidence": 82
+    },
+    {
+      "pdf_page": 200,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 201,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 202,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 203,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 204,
+      "disposition": "instructional_figures",
+      "figures": [
+        "6-3"
+      ],
+      "ocr_confidence": 85
+    },
+    {
+      "pdf_page": 205,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 206,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 207,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 208,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 209,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 210,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 211,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 212,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 213,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 214,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 215,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 216,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 217,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 218,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 219,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 220,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 221,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 222,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 223,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 224,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-1"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 225,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 226,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 227,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 228,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-2"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 229,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-3"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 230,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 231,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-4"
+      ],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 232,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-5"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 233,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-6"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 234,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 235,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 236,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 237,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 238,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 239,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 240,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 241,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 242,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-7"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 243,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 244,
+      "disposition": "instructional_figures",
+      "figures": [
+        "7-8"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 245,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 246,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 247,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 248,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 81
+    },
+    {
+      "pdf_page": 249,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 250,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 251,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-1"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 252,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 36
+    },
+    {
+      "pdf_page": 253,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 254,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 255,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 256,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 257,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-3"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 258,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 259,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-4"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 260,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 261,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 262,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 263,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-5"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 264,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 265,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 266,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 267,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 268,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 269,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 270,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-6"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 271,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 272,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 273,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 274,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-7"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 275,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 276,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 277,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 278,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 279,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 280,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 281,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 282,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 283,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 284,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-8"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 285,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 286,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 287,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 288,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 289,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 290,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 291,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 292,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 293,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 294,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 295,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 296,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-9"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 297,
+      "disposition": "instructional_figures",
+      "figures": [
+        "8-10"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 298,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 299,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 77
+    },
+    {
+      "pdf_page": 300,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 301,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 302,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 303,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 304,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 305,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 306,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 307,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 308,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 309,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-1"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 310,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 311,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 312,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-2"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 313,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 314,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-3",
+        "9-4"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 315,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 316,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-5"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 317,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 318,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-6"
+      ],
+      "ocr_confidence": 57
+    },
+    {
+      "pdf_page": 319,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 320,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 321,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 322,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-8"
+      ],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 323,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 324,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 325,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 326,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 327,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-9",
+        "9-9"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 328,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 329,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-10"
+      ],
+      "ocr_confidence": 72
+    },
+    {
+      "pdf_page": 330,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 331,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-11"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 332,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-12"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 333,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-13"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 334,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 335,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 336,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-14"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 337,
+      "disposition": "instructional_figures",
+      "figures": [
+        "9-15"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 338,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 87
+    },
+    {
+      "pdf_page": 339,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 85
+    },
+    {
+      "pdf_page": 340,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 341,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 342,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 343,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 344,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 345,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-1"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 346,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-2"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 347,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-3"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 348,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-4"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 349,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-5"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 350,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-6",
+        "10-6"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 351,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 352,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-7"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 353,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-8"
+      ],
+      "ocr_confidence": 80
+    },
+    {
+      "pdf_page": 354,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 355,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-9"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 356,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-10"
+      ],
+      "ocr_confidence": 70
+    },
+    {
+      "pdf_page": 357,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-11"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 358,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-12"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 359,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 360,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-13"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 361,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 362,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 363,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 364,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 365,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-14"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 366,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 367,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-15"
+      ],
+      "ocr_confidence": 73
+    },
+    {
+      "pdf_page": 368,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 369,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-16"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 370,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 371,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 372,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-17"
+      ],
+      "ocr_confidence": 83
+    },
+    {
+      "pdf_page": 373,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 374,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 375,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-18"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 376,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 377,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-19"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 378,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 379,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 380,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-20"
+      ],
+      "ocr_confidence": 76
+    },
+    {
+      "pdf_page": 381,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-21"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 382,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-22"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 383,
+      "disposition": "instructional_figures",
+      "figures": [
+        "10-23"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 384,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 84
+    },
+    {
+      "pdf_page": 385,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 386,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 387,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 388,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 85
+    },
+    {
+      "pdf_page": 389,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 390,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 391,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 392,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 393,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 394,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-1"
+      ],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 395,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 396,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 397,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 398,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-2"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 399,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 400,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-3"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 401,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-4"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 402,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-5"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 403,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-6"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 404,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 405,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-7"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 406,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 407,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-8"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 408,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 409,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-9"
+      ],
+      "ocr_confidence": 83
+    },
+    {
+      "pdf_page": 410,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 411,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 412,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-10"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 413,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-11"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 414,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 415,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 416,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 417,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-12"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 418,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-13"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 419,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-14"
+      ],
+      "ocr_confidence": 75
+    },
+    {
+      "pdf_page": 420,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 421,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-15"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 422,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 423,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 424,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-19"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 425,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-20"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 426,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 427,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-21"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 428,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 429,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-22"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 430,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 431,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-23",
+        "11-24"
+      ],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 432,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 433,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 434,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 435,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 436,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-25"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 437,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 438,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 439,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 440,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-26"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 441,
+      "disposition": "instructional_figures",
+      "figures": [
+        "11-27"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 442,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 443,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 444,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 445,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 446,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 447,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 448,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-1"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 449,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 450,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 451,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-2"
+      ],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 452,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 453,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-3"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 454,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 455,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-4"
+      ],
+      "ocr_confidence": 63
+    },
+    {
+      "pdf_page": 456,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 457,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-5"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 458,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 459,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-6"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 460,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-7"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 461,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-8"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 462,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 463,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-9"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 464,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 465,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 466,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-10",
+        "12-11"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 467,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-12"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 468,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-13"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 469,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-14"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 470,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-15"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 471,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 472,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 473,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-16",
+        "12-17"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 474,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 475,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-18",
+        "12-19"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 476,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-20"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 477,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 478,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 479,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 480,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-21"
+      ],
+      "ocr_confidence": 83
+    },
+    {
+      "pdf_page": 481,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 482,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-22",
+        "12-23"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 483,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-24"
+      ],
+      "ocr_confidence": 76
+    },
+    {
+      "pdf_page": 484,
+      "disposition": "instructional_figures",
+      "figures": [
+        "12-25"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 485,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 89
+    },
+    {
+      "pdf_page": 486,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 487,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 88
+    },
+    {
+      "pdf_page": 488,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 489,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 490,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 491,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 492,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-1"
+      ],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 493,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-2"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 494,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-3"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 495,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-4",
+        "13-5"
+      ],
+      "ocr_confidence": 85
+    },
+    {
+      "pdf_page": 496,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-6"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 497,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-7"
+      ],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 498,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-8"
+      ],
+      "ocr_confidence": 90
+    },
+    {
+      "pdf_page": 499,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-9"
+      ],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 500,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 501,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 502,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 503,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-10"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 504,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-11"
+      ],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 505,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 506,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 507,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 508,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 509,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 510,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 511,
+      "disposition": "instructional_figures",
+      "figures": [
+        "13-12",
+        "13-13"
+      ],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 512,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 91
+    },
+    {
+      "pdf_page": 513,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 95
+    },
+    {
+      "pdf_page": 514,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 86
+    },
+    {
+      "pdf_page": 515,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 45
+    },
+    {
+      "pdf_page": 516,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 82
+    },
+    {
+      "pdf_page": 517,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 518,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 519,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 520,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 521,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 92
+    },
+    {
+      "pdf_page": 522,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    },
+    {
+      "pdf_page": 523,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 93
+    },
+    {
+      "pdf_page": 524,
+      "disposition": "no_qualifying_figure",
+      "figures": [],
+      "ocr_confidence": 94
+    }
+  ]
+}

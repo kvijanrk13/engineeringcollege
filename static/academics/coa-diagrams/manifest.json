@@ -1,0 +1,5516 @@
+{
+  "source": "computer-systems-Architecture.pdf",
+  "page_count": 524,
+  "generated_at": "2026-08-21T16:22:22.177Z",
+  "figure_count": 193,
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Digital Logic Circuits",
+      "count": 29
+    },
+    {
+      "number": 2,
+      "title": "Digital Components",
+      "count": 10
+    },
+    {
+      "number": 3,
+      "title": "Data Representation",
+      "count": 3
+    },
+    {
+      "number": 4,
+      "title": "Register Transfer and Microoperations",
+      "count": 13
+    },
+    {
+      "number": 5,
+      "title": "Basic Computer Organization and Design",
+      "count": 19
+    },
+    {
+      "number": 6,
+      "title": "Programming the Basic Computer",
+      "count": 3
+    },
+    {
+      "number": 7,
+      "title": "Microprogrammed Control",
+      "count": 8
+    },
+    {
+      "number": 8,
+      "title": "Central Processing Unit",
+      "count": 9
+    },
+    {
+      "number": 9,
+      "title": "Pipeline and Vector Processing",
+      "count": 14
+    },
+    {
+      "number": 10,
+      "title": "Computer Arithmetic",
+      "count": 23
+    },
+    {
+      "number": 11,
+      "title": "Input-Output Organization",
+      "count": 24
+    },
+    {
+      "number": 12,
+      "title": "Memory Organization",
+      "count": 25
+    },
+    {
+      "number": 13,
+      "title": "Multiprocessors",
+      "count": 13
+    }
+  ],
+  "figures": [
+    {
+      "id": "figure-1-1",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Block diagram of a digital computer",
+      "caption": "Block diagram of a digital computer.",
+      "figure_number": "1-1",
+      "pdf_page": 19,
+      "source_pages": [
+        19
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-1-p019-i1.webp",
+      "alt": "Block diagram of a digital computer, Figure 1-1 from Digital Logic Circuits",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "a",
+        "digital",
+        "computer",
+        "1",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "3a53be39a00f0cf4f0860c4ddf522a3b52524d57b53b9296f39e54e3119294f6"
+    },
+    {
+      "id": "figure-1-2",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Digital logic gates",
+      "caption": "Digital logic gates.",
+      "figure_number": "1-2",
+      "pdf_page": 21,
+      "source_pages": [
+        21
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-2-p021-i1.webp",
+      "alt": "Digital logic gates, Figure 1-2 from Digital Logic Circuits",
+      "keywords": [
+        "digital",
+        "logic",
+        "gates",
+        "1",
+        "2",
+        "circuits"
+      ],
+      "sha256": "619ebc4d1359a10de23b201670aadc36074ab77b7325af910e0fd7d0a2c01dbb"
+    },
+    {
+      "id": "figure-1-3",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Truth table and logic diagram for F = x + y'z",
+      "caption": "Truth table and logic diagram for F = x + y'z.",
+      "figure_number": "1-3",
+      "pdf_page": 23,
+      "source_pages": [
+        23
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-3-p023-i1.webp",
+      "alt": "Truth table and logic diagram for F = x + y'z, Figure 1-3 from Digital Logic Circuits",
+      "keywords": [
+        "truth",
+        "table",
+        "and",
+        "logic",
+        "diagram",
+        "for",
+        "f",
+        "x",
+        "y",
+        "z",
+        "1",
+        "3",
+        "digital",
+        "circuits"
+      ],
+      "sha256": "683c68e29e0beb92b9a520930aec53df4078c000a7d74ffd74d0e0ba8f976d32"
+    },
+    {
+      "id": "figure-1-4",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Two graphic symbols for NOR gate",
+      "caption": "Two graphic symbols for NOR gate.",
+      "figure_number": "1-4",
+      "pdf_page": 25,
+      "source_pages": [
+        25
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-4-p025-i1.webp",
+      "alt": "Two graphic symbols for NOR gate, Figure 1-4 from Digital Logic Circuits",
+      "keywords": [
+        "two",
+        "graphic",
+        "symbols",
+        "for",
+        "nor",
+        "gate",
+        "1",
+        "4",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "8cf4ee661c24c53fcbc7a3d4997c2a4363b24b41d7f81f359aee11ec789913cf"
+    },
+    {
+      "id": "figure-1-5",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Two graphic symbols for NAND gate",
+      "caption": "Two graphic symbols for NAND gate.",
+      "figure_number": "1-5",
+      "pdf_page": 25,
+      "source_pages": [
+        25
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-5-p025-i2.webp",
+      "alt": "Two graphic symbols for NAND gate, Figure 1-5 from Digital Logic Circuits",
+      "keywords": [
+        "two",
+        "graphic",
+        "symbols",
+        "for",
+        "nand",
+        "gate",
+        "1",
+        "5",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "7bdbb24e9b4d98703e3943e8bceec9d97df7505e10326d97bc6e90555a2cae00"
+    },
+    {
+      "id": "figure-1-6",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Two logic diagrams for the same Boolean function",
+      "caption": "Two logic diagrams for the same Boolean function.",
+      "figure_number": "1-6",
+      "pdf_page": 26,
+      "source_pages": [
+        26
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-6-p026-i1.webp",
+      "alt": "Two logic diagrams for the same Boolean function, Figure 1-6 from Digital Logic Circuits",
+      "keywords": [
+        "two",
+        "logic",
+        "diagrams",
+        "for",
+        "the",
+        "same",
+        "boolean",
+        "function",
+        "1",
+        "6",
+        "digital",
+        "circuits"
+      ],
+      "sha256": "d05cd3ff0aa497409c8a3869df7a3337e8f34235e7736b20fe13a85ff4224da6"
+    },
+    {
+      "id": "figure-1-7",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Maps for two-, three-, and four-variable functions",
+      "caption": "Maps for two-, three-, and four-variable functions.",
+      "figure_number": "1-7",
+      "pdf_page": 28,
+      "source_pages": [
+        28
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-7-p028-i1.webp",
+      "alt": "Maps for two-, three-, and four-variable functions, Figure 1-7 from Digital Logic Circuits",
+      "keywords": [
+        "maps",
+        "for",
+        "two",
+        "three",
+        "and",
+        "four",
+        "variable",
+        "functions",
+        "1",
+        "7",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "f5e6abe35543d274505310704163fe634dafa613f19173b38688691c74578601"
+    },
+    {
+      "id": "figure-1-8",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Map for F(A, B,C) = 2 (3,4,6,7)",
+      "caption": "Map for F(A, B,C) = 2 (3,4,6,7).",
+      "figure_number": "1-8",
+      "pdf_page": 29,
+      "source_pages": [
+        29
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-8-p029-i1.webp",
+      "alt": "Map for F(A, B,C) = 2 (3,4,6,7), Figure 1-8 from Digital Logic Circuits",
+      "keywords": [
+        "map",
+        "for",
+        "f",
+        "a",
+        "b",
+        "c",
+        "2",
+        "3",
+        "4",
+        "6",
+        "7",
+        "1",
+        "8",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "482fffcdf789082d18d7448857c3b428d94cc35315af00c06147429477ca747d"
+    },
+    {
+      "id": "figure-1-9",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Map for F(A, B,C) = 2(0,2,4,5,6)",
+      "caption": "Map for F(A, B,C) = 2(0,2,4,5,6).",
+      "figure_number": "1-9",
+      "pdf_page": 30,
+      "source_pages": [
+        30
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-9-p030-i1.webp",
+      "alt": "Map for F(A, B,C) = 2(0,2,4,5,6), Figure 1-9 from Digital Logic Circuits",
+      "keywords": [
+        "map",
+        "for",
+        "f",
+        "a",
+        "b",
+        "c",
+        "2",
+        "0",
+        "4",
+        "5",
+        "6",
+        "1",
+        "9",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "6480fe70cec3194551a791a9ddac1ed95d6ed206959cf079ebc641fa86378e17"
+    },
+    {
+      "id": "figure-1-10",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Map for F(A,B,C,D) = %(0,1,2,6,8,9,10)",
+      "caption": "Map for F(A,B,C,D) = %(0,1,2,6,8,9,10).",
+      "figure_number": "1-10",
+      "pdf_page": 30,
+      "source_pages": [
+        30
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-10-p030-i2.webp",
+      "alt": "Map for F(A,B,C,D) = %(0,1,2,6,8,9,10), Figure 1-10 from Digital Logic Circuits",
+      "keywords": [
+        "map",
+        "for",
+        "f",
+        "a",
+        "b",
+        "c",
+        "d",
+        "0",
+        "1",
+        "2",
+        "6",
+        "8",
+        "9",
+        "10",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "87ed0993311026019e4097f9be10f2edb98b301e79f7e70f57ca2c5cb0fdfc22"
+    },
+    {
+      "id": "figure-1-11",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Map for F(A, B,C, D) = 3(0,1,2,5,8,9,10)",
+      "caption": "Map for F(A, B,C, D) = 3(0,1,2,5,8,9,10).",
+      "figure_number": "1-11",
+      "pdf_page": 31,
+      "source_pages": [
+        31
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-11-p031-i1.webp",
+      "alt": "Map for F(A, B,C, D) = 3(0,1,2,5,8,9,10), Figure 1-11 from Digital Logic Circuits",
+      "keywords": [
+        "map",
+        "for",
+        "f",
+        "a",
+        "b",
+        "c",
+        "d",
+        "3",
+        "0",
+        "1",
+        "2",
+        "5",
+        "8",
+        "9",
+        "10",
+        "11",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "7ad4e5bfb05e98aa46f3fe32081aea9d5633bf3641942c733ce296da645a9c69"
+    },
+    {
+      "id": "figure-1-12",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Logic diagrams with AND and OR gates",
+      "caption": "Logic diagrams with AND and OR gates.",
+      "figure_number": "1-12",
+      "pdf_page": 32,
+      "source_pages": [
+        32
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-12-p032-i1.webp",
+      "alt": "Logic diagrams with AND and OR gates, Figure 1-12 from Digital Logic Circuits",
+      "keywords": [
+        "logic",
+        "diagrams",
+        "with",
+        "and",
+        "or",
+        "gates",
+        "1",
+        "12",
+        "digital",
+        "circuits"
+      ],
+      "sha256": "6d37324268322e7d09bf3afdc2941792bcad219f7667c3a516f4b80c43c07b21"
+    },
+    {
+      "id": "figure-1-13",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Logic diagrams with NAND or NOR gates",
+      "caption": "Logic diagrams with NAND or NOR gates.",
+      "figure_number": "1-13",
+      "pdf_page": 33,
+      "source_pages": [
+        33
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-13-p033-i1.webp",
+      "alt": "Logic diagrams with NAND or NOR gates, Figure 1-13 from Digital Logic Circuits",
+      "keywords": [
+        "logic",
+        "diagrams",
+        "with",
+        "nand",
+        "or",
+        "nor",
+        "gates",
+        "1",
+        "13",
+        "digital",
+        "circuits"
+      ],
+      "sha256": "0bc94f63e4461caba962f0a4b4a550969f91d0a685f18f3ff62aa35594ae0c57"
+    },
+    {
+      "id": "figure-1-14",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Example of map with don’t-care conditions",
+      "caption": "Example of map with don’t-care conditions.",
+      "figure_number": "1-14",
+      "pdf_page": 34,
+      "source_pages": [
+        34
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-14-p034-i1.webp",
+      "alt": "Example of map with don’t-care conditions, Figure 1-14 from Digital Logic Circuits",
+      "keywords": [
+        "example",
+        "of",
+        "map",
+        "with",
+        "don",
+        "t",
+        "care",
+        "conditions",
+        "1",
+        "14",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "600de32cf1a8b99037e637cec0a8aac5e12c39c47d6fae6b0edca537777ed30c"
+    },
+    {
+      "id": "figure-1-15",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Block diagram of a combinational circuit",
+      "caption": "Block diagram of a combinational circuit.",
+      "figure_number": "1-15",
+      "pdf_page": 35,
+      "source_pages": [
+        35
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-15-p035-i1.webp",
+      "alt": "Block diagram of a combinational circuit, Figure 1-15 from Digital Logic Circuits",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "a",
+        "combinational",
+        "circuit",
+        "1",
+        "15",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "64fc1d8a4a05fb0b1c445da962c84c1512bc912727afab9837031b8058abc3c1"
+    },
+    {
+      "id": "figure-1-16",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Half-adder",
+      "caption": "Half-adder.",
+      "figure_number": "1-16",
+      "pdf_page": 36,
+      "source_pages": [
+        36
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-16-p036-i1.webp",
+      "alt": "Half-adder, Figure 1-16 from Digital Logic Circuits",
+      "keywords": [
+        "half",
+        "adder",
+        "1",
+        "16",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "e9dbda93ffb9736c19022839341a24512acd59e9a13f34d26816aa5f87642351"
+    },
+    {
+      "id": "figure-1-17",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Maps for full-adder",
+      "caption": "Maps for full-adder.",
+      "figure_number": "1-17",
+      "pdf_page": 37,
+      "source_pages": [
+        37
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-17-p037-i1.webp",
+      "alt": "Maps for full-adder, Figure 1-17 from Digital Logic Circuits",
+      "keywords": [
+        "maps",
+        "for",
+        "full",
+        "adder",
+        "1",
+        "17",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "4121b8d4ed2d82354446dfeb94e31676c5c0e6b73777315b26ab785e7578a6ac"
+    },
+    {
+      "id": "figure-1-18",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Full-adder circuit",
+      "caption": "Full-adder circuit.",
+      "figure_number": "1-18",
+      "pdf_page": 38,
+      "source_pages": [
+        38
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-18-p038-i1.webp",
+      "alt": "Full-adder circuit, Figure 1-18 from Digital Logic Circuits",
+      "keywords": [
+        "full",
+        "adder",
+        "circuit",
+        "1",
+        "18",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "ebff81f18acd4e7af6feed0e1921e212791e5681ffdfe6456918f6c2b1a939ec"
+    },
+    {
+      "id": "figure-1-19",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "SR flip-flop",
+      "caption": "SR flip-flop.",
+      "figure_number": "1-19",
+      "pdf_page": 39,
+      "source_pages": [
+        39
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-19-p039-i1.webp",
+      "alt": "SR flip-flop, Figure 1-19 from Digital Logic Circuits",
+      "keywords": [
+        "sr",
+        "flip",
+        "flop",
+        "1",
+        "19",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "987664efe70e817191a4ad956c1337929d4cf4efb99b113742a4e40c7a849f2f"
+    },
+    {
+      "id": "figure-1-20",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "flip-flop",
+      "caption": "flip-flop.",
+      "figure_number": "1-20",
+      "pdf_page": 40,
+      "source_pages": [
+        40
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-20-p040-i1.webp",
+      "alt": "flip-flop, Figure 1-20 from Digital Logic Circuits",
+      "keywords": [
+        "flip",
+        "flop",
+        "1",
+        "20",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "00e87476b703540b774624d7bef977e068a10b0e1a00d9108de510e8a9d51f30"
+    },
+    {
+      "id": "figure-1-21",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "JK flip-flop",
+      "caption": "JK flip-flop.",
+      "figure_number": "1-21",
+      "pdf_page": 41,
+      "source_pages": [
+        41
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-21-p041-i1.webp",
+      "alt": "JK flip-flop, Figure 1-21 from Digital Logic Circuits",
+      "keywords": [
+        "jk",
+        "flip",
+        "flop",
+        "1",
+        "21",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "e62af87c153b194d78f67b7cc4e516023f1a05b625a0d6c9b1bc88b1de413753"
+    },
+    {
+      "id": "figure-1-22",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "flip-flop",
+      "caption": "flip-flop.",
+      "figure_number": "1-22",
+      "pdf_page": 41,
+      "source_pages": [
+        41
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-22-p041-i2.webp",
+      "alt": "flip-flop, Figure 1-22 from Digital Logic Circuits",
+      "keywords": [
+        "flip",
+        "flop",
+        "1",
+        "22",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "962c937f6228fd6acff24e14559fdb19bf21cbc954ed4b1a789bd8a7a75dd1ff"
+    },
+    {
+      "id": "figure-1-23",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Edge-triggered flip-flop",
+      "caption": "Edge-triggered flip-flop.",
+      "figure_number": "1-23",
+      "pdf_page": 42,
+      "source_pages": [
+        42
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-23-p042-i1.webp",
+      "alt": "Edge-triggered flip-flop, Figure 1-23 from Digital Logic Circuits",
+      "keywords": [
+        "edge",
+        "triggered",
+        "flip",
+        "flop",
+        "1",
+        "23",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "1c54d3bdcc8342e23a9dcfa8aee641f3c8b3f99533984729270b2c4f2b189610"
+    },
+    {
+      "id": "figure-1-24",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Block diagram of a clocked synchronous sequential circuit",
+      "caption": "Block diagram of a clocked synchronous sequential circuit.",
+      "figure_number": "1-24",
+      "pdf_page": 44,
+      "source_pages": [
+        44
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-24-p044-i1.webp",
+      "alt": "Block diagram of a clocked synchronous sequential circuit, Figure 1-24 from Digital Logic Circuits",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "a",
+        "clocked",
+        "synchronous",
+        "sequential",
+        "circuit",
+        "1",
+        "24",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "c06391c37560c6a0f16e2fa22c480aa76958439026e1a413b3e57bf1f4950edd"
+    },
+    {
+      "id": "figure-1-25",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Example of a sequential circuit",
+      "caption": "Example of a sequential circuit.",
+      "figure_number": "1-25",
+      "pdf_page": 45,
+      "source_pages": [
+        45
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-25-p045-i1.webp",
+      "alt": "Example of a sequential circuit, Figure 1-25 from Digital Logic Circuits",
+      "keywords": [
+        "example",
+        "of",
+        "a",
+        "sequential",
+        "circuit",
+        "1",
+        "25",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "b208ed7d6e048fee832a801d6e0b08fb3ef8f9b8ff59069770310e96a4b1f1d4"
+    },
+    {
+      "id": "figure-1-26",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "State diagrams of sequential circuit",
+      "caption": "State diagrams of sequential circuit.",
+      "figure_number": "1-26",
+      "pdf_page": 48,
+      "source_pages": [
+        48
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-26-p048-i1.webp",
+      "alt": "State diagrams of sequential circuit, Figure 1-26 from Digital Logic Circuits",
+      "keywords": [
+        "state",
+        "diagrams",
+        "of",
+        "sequential",
+        "circuit",
+        "1",
+        "26",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "d2a515d5f0e2f0fb00be30cb3c5323da56641cb987bae38b99729d9e0699f5d6"
+    },
+    {
+      "id": "figure-1-27",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "State diagram for binary counter",
+      "caption": "State diagram for binary counter.",
+      "figure_number": "1-27",
+      "pdf_page": 49,
+      "source_pages": [
+        49
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-27-p049-i1.webp",
+      "alt": "State diagram for binary counter, Figure 1-27 from Digital Logic Circuits",
+      "keywords": [
+        "state",
+        "diagram",
+        "for",
+        "binary",
+        "counter",
+        "1",
+        "27",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "d9b0edc6cab5f20df1904fd97a08f38a1c2abd650c828f79bec418511d6dbb41"
+    },
+    {
+      "id": "figure-1-28",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Maps for combinational circuit of counter",
+      "caption": "Maps for combinational circuit of counter.",
+      "figure_number": "1-28",
+      "pdf_page": 51,
+      "source_pages": [
+        51
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-28-p051-i1.webp",
+      "alt": "Maps for combinational circuit of counter, Figure 1-28 from Digital Logic Circuits",
+      "keywords": [
+        "maps",
+        "for",
+        "combinational",
+        "circuit",
+        "of",
+        "counter",
+        "1",
+        "28",
+        "digital",
+        "logic",
+        "circuits"
+      ],
+      "sha256": "c945d04f2c0b49c3f46e9daec2bd9c239eaf479c3280f63498adcdb8f35f2405"
+    },
+    {
+      "id": "figure-1-29",
+      "chapter": 1,
+      "chapter_title": "Digital Logic Circuits",
+      "section": "Chapter 1",
+      "topic": "Logic diagram of a 2-bit binary counter",
+      "caption": "Logic diagram of a 2-bit binary counter.",
+      "figure_number": "1-29",
+      "pdf_page": 51,
+      "source_pages": [
+        51
+      ],
+      "image": "academics/coa-diagrams/images/figure-1-29-p051-i2.webp",
+      "alt": "Logic diagram of a 2-bit binary counter, Figure 1-29 from Digital Logic Circuits",
+      "keywords": [
+        "logic",
+        "diagram",
+        "of",
+        "a",
+        "2",
+        "bit",
+        "binary",
+        "counter",
+        "1",
+        "29",
+        "digital",
+        "circuits"
+      ],
+      "sha256": "bfbb06af39c1dd81b162e5e5fd83091d23da0f93f2b58c6b2b6500c1119d9af6"
+    },
+    {
+      "id": "figure-2-1",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "3-to-8-line decoder",
+      "caption": "3-to-8-line decoder.",
+      "figure_number": "2-1",
+      "pdf_page": 59,
+      "source_pages": [
+        59
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-1-p059-i1.webp",
+      "alt": "3-to-8-line decoder, Figure 2-1 from Digital Components",
+      "keywords": [
+        "3",
+        "to",
+        "8",
+        "line",
+        "decoder",
+        "2",
+        "1",
+        "digital",
+        "components"
+      ],
+      "sha256": "f7e4ec72f6560c9d74cac0c37d26e2ed344de14a85ff6813593accbcb940c2a6"
+    },
+    {
+      "id": "figure-2-2",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "2-to-4-line decoder with NAND gates",
+      "caption": "2-to-4-line decoder with NAND gates.",
+      "figure_number": "2-2",
+      "pdf_page": 60,
+      "source_pages": [
+        60
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-2-p060-i1.webp",
+      "alt": "2-to-4-line decoder with NAND gates, Figure 2-2 from Digital Components",
+      "keywords": [
+        "2",
+        "to",
+        "4",
+        "line",
+        "decoder",
+        "with",
+        "nand",
+        "gates",
+        "digital",
+        "components"
+      ],
+      "sha256": "c695eb4a28dccc07fe6bec45c9479802d92b2583ec50e226671b45ed1c3bc2a8"
+    },
+    {
+      "id": "figure-2-3",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "3 X 8 decoder constructed with two 2 X 4 decoders",
+      "caption": "3 X 8 decoder constructed with two 2 X 4 decoders.",
+      "figure_number": "2-3",
+      "pdf_page": 61,
+      "source_pages": [
+        61
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-3-p061-i1.webp",
+      "alt": "3 X 8 decoder constructed with two 2 X 4 decoders, Figure 2-3 from Digital Components",
+      "keywords": [
+        "3",
+        "x",
+        "8",
+        "decoder",
+        "constructed",
+        "with",
+        "two",
+        "2",
+        "4",
+        "decoders",
+        "digital",
+        "components"
+      ],
+      "sha256": "7fededd0f4573ff4e339bd51d5639518ab589385cea36ac7cd550fb8f4121843"
+    },
+    {
+      "id": "figure-2-4",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "4-to-1-line multiplexer",
+      "caption": "4-to-1-line multiplexer.",
+      "figure_number": "2-4",
+      "pdf_page": 63,
+      "source_pages": [
+        63
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-4-p063-i1.webp",
+      "alt": "4-to-1-line multiplexer, Figure 2-4 from Digital Components",
+      "keywords": [
+        "4",
+        "to",
+        "1",
+        "line",
+        "multiplexer",
+        "2",
+        "digital",
+        "components"
+      ],
+      "sha256": "758da86275f2e2c2310b0f830f8b3dc38ab855088e220b7e7b8293d68965fa04"
+    },
+    {
+      "id": "figure-2-5",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "Quadruple 2-to-1 line multiplexers",
+      "caption": "Quadruple 2-to-1 line multiplexers.",
+      "figure_number": "2-5",
+      "pdf_page": 65,
+      "source_pages": [
+        65
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-5-p065-i1.webp",
+      "alt": "Quadruple 2-to-1 line multiplexers, Figure 2-5 from Digital Components",
+      "keywords": [
+        "quadruple",
+        "2",
+        "to",
+        "1",
+        "line",
+        "multiplexers",
+        "5",
+        "digital",
+        "components"
+      ],
+      "sha256": "494e5680662458b655bc8e21b009f0573ed202649732c4da1e170cf503b03ea6"
+    },
+    {
+      "id": "figure-2-6",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "4-bit register",
+      "caption": "4-bit register.",
+      "figure_number": "2-6",
+      "pdf_page": 66,
+      "source_pages": [
+        66
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-6-p066-i1.webp",
+      "alt": "4-bit register, Figure 2-6 from Digital Components",
+      "keywords": [
+        "4",
+        "bit",
+        "register",
+        "2",
+        "6",
+        "digital",
+        "components"
+      ],
+      "sha256": "28709b2ba5ff307ae34536884125de9ab5fad60bd43baedc8665c4704504cfa7"
+    },
+    {
+      "id": "figure-2-8",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "4-bit shift register",
+      "caption": "4-bit shift register.",
+      "figure_number": "2-8",
+      "pdf_page": 67,
+      "source_pages": [
+        67
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-8-p067-i1.webp",
+      "alt": "4-bit shift register, Figure 2-8 from Digital Components",
+      "keywords": [
+        "4",
+        "bit",
+        "shift",
+        "register",
+        "2",
+        "8",
+        "digital",
+        "components"
+      ],
+      "sha256": "eaddebca7bb4f4f62e482a8b4af6f8fafce556a1d30263e3a12b67203171f66c"
+    },
+    {
+      "id": "figure-2-10",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "4-bit synchronous binary counter",
+      "caption": "4-bit synchronous binary counter.",
+      "figure_number": "2-10",
+      "pdf_page": 71,
+      "source_pages": [
+        71
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-10-p071-i1.webp",
+      "alt": "4-bit synchronous binary counter, Figure 2-10 from Digital Components",
+      "keywords": [
+        "4",
+        "bit",
+        "synchronous",
+        "binary",
+        "counter",
+        "2",
+        "10",
+        "digital",
+        "components"
+      ],
+      "sha256": "f6797fbda0cce306f40be9e375fb6eb16ce215ea8b6afc08ac88c3f6cf527906"
+    },
+    {
+      "id": "figure-2-12",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "Block diagram of random access memory (RAM)",
+      "caption": "Block diagram of random access memory (RAM).",
+      "figure_number": "2-12",
+      "pdf_page": 75,
+      "source_pages": [
+        75
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-12-p075-i1.webp",
+      "alt": "Block diagram of random access memory (RAM), Figure 2-12 from Digital Components",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "random",
+        "access",
+        "memory",
+        "ram",
+        "2",
+        "12",
+        "digital",
+        "components"
+      ],
+      "sha256": "228278b1e12f2bdbf5ca2278ef66f7ba1a6190714de9418bfb731ae6f4b14dde"
+    },
+    {
+      "id": "figure-2-13",
+      "chapter": 2,
+      "chapter_title": "Digital Components",
+      "section": "Chapter 2",
+      "topic": "Block diagram of read only memory (ROM)",
+      "caption": "Block diagram of read only memory (ROM).",
+      "figure_number": "2-13",
+      "pdf_page": 76,
+      "source_pages": [
+        76
+      ],
+      "image": "academics/coa-diagrams/images/figure-2-13-p076-i1.webp",
+      "alt": "Block diagram of read only memory (ROM), Figure 2-13 from Digital Components",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "read",
+        "only",
+        "memory",
+        "rom",
+        "2",
+        "13",
+        "digital",
+        "components"
+      ],
+      "sha256": "7ed254f299ef65c5ec8b0601975e9d2577b6086555115e34939462983e895c61"
+    },
+    {
+      "id": "figure-3-1",
+      "chapter": 3,
+      "chapter_title": "Data Representation",
+      "section": "Chapter 3",
+      "topic": "Conversion of decimal 41.6875 into binary",
+      "caption": "Conversion of decimal 41.6875 into binary.",
+      "figure_number": "3-1",
+      "pdf_page": 82,
+      "source_pages": [
+        82
+      ],
+      "image": "academics/coa-diagrams/images/figure-3-1-p082-i1.webp",
+      "alt": "Conversion of decimal 41.6875 into binary, Figure 3-1 from Data Representation",
+      "keywords": [
+        "conversion",
+        "of",
+        "decimal",
+        "41",
+        "6875",
+        "into",
+        "binary",
+        "3",
+        "1",
+        "data",
+        "representation"
+      ],
+      "sha256": "e42c90b1d2d9dc88a931e816acbdd426aa1df9530acb7ca4e7f783b733c29b08"
+    },
+    {
+      "id": "figure-3-2",
+      "chapter": 3,
+      "chapter_title": "Data Representation",
+      "section": "Chapter 3",
+      "topic": "Binary, octal, and hexadecimal conversion",
+      "caption": "Binary, octal, and hexadecimal conversion.",
+      "figure_number": "3-2",
+      "pdf_page": 83,
+      "source_pages": [
+        83
+      ],
+      "image": "academics/coa-diagrams/images/figure-3-2-p083-i1.webp",
+      "alt": "Binary, octal, and hexadecimal conversion, Figure 3-2 from Data Representation",
+      "keywords": [
+        "binary",
+        "octal",
+        "and",
+        "hexadecimal",
+        "conversion",
+        "3",
+        "2",
+        "data",
+        "representation"
+      ],
+      "sha256": "bec6a805f80d261d21e58d4f103ffe42516ca78e971c81d8c6a03a411be36fd9"
+    },
+    {
+      "id": "figure-3-3",
+      "chapter": 3,
+      "chapter_title": "Data Representation",
+      "section": "Chapter 3",
+      "topic": "Error detection with odd parity bc",
+      "caption": "Error detection with odd parity bc.",
+      "figure_number": "3-3",
+      "pdf_page": 101,
+      "source_pages": [
+        101
+      ],
+      "image": "academics/coa-diagrams/images/figure-3-3-p101-i1.webp",
+      "alt": "Error detection with odd parity bc, Figure 3-3 from Data Representation",
+      "keywords": [
+        "error",
+        "detection",
+        "with",
+        "odd",
+        "parity",
+        "bc",
+        "3",
+        "data",
+        "representation"
+      ],
+      "sha256": "4dd9182b5c55b1cc1e35d85e09928b0a750bf57d2cf99df5f190fb7050f3b94a"
+    },
+    {
+      "id": "figure-4-1",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "Block diagram of register",
+      "caption": "Block diagram of register.",
+      "figure_number": "4-1",
+      "pdf_page": 107,
+      "source_pages": [
+        107
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-1-p107-i1.webp",
+      "alt": "Block diagram of register, Figure 4-1 from Register Transfer and Microoperations",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "register",
+        "4",
+        "1",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "7e31d39d3326b185ff396de218ca41231d32eb8e57ea7761d2028284e27eae99"
+    },
+    {
+      "id": "figure-4-2",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "Transfer from R1 to R2 when P = 1",
+      "caption": "Transfer from R1 to R2 when P = 1.",
+      "figure_number": "4-2",
+      "pdf_page": 108,
+      "source_pages": [
+        108
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-2-p108-i1.webp",
+      "alt": "Transfer from R1 to R2 when P = 1, Figure 4-2 from Register Transfer and Microoperations",
+      "keywords": [
+        "transfer",
+        "from",
+        "r1",
+        "to",
+        "r2",
+        "when",
+        "p",
+        "1",
+        "4",
+        "2",
+        "register",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "330db87857e57f90599988b39a710dd160e792c5328adbf71a140667a4a0b3bf"
+    },
+    {
+      "id": "figure-4-3",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "Bus system for four registers",
+      "caption": "Bus system for four registers.",
+      "figure_number": "4-3",
+      "pdf_page": 110,
+      "source_pages": [
+        110
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-3-p110-i1.webp",
+      "alt": "Bus system for four registers, Figure 4-3 from Register Transfer and Microoperations",
+      "keywords": [
+        "bus",
+        "system",
+        "for",
+        "four",
+        "registers",
+        "4",
+        "3",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "5b6c5de166b9028660100dd4201da7805c1c147f6caf3141ea68a74f8f960595"
+    },
+    {
+      "id": "figure-4-4",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "Graphic symbols for three-state buffer",
+      "caption": "Graphic symbols for three-state buffer.",
+      "figure_number": "4-4",
+      "pdf_page": 112,
+      "source_pages": [
+        112
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-4-p112-i1.webp",
+      "alt": "Graphic symbols for three-state buffer, Figure 4-4 from Register Transfer and Microoperations",
+      "keywords": [
+        "graphic",
+        "symbols",
+        "for",
+        "three",
+        "state",
+        "buffer",
+        "4",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "066559504090f7c64a0bb4d023c08a111a82788a4786b5b288280fe223fead3b"
+    },
+    {
+      "id": "figure-4-5",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "Bus line with three state-buffers",
+      "caption": "Bus line with three state-buffers.",
+      "figure_number": "4-5",
+      "pdf_page": 113,
+      "source_pages": [
+        113
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-5-p113-i1.webp",
+      "alt": "Bus line with three state-buffers, Figure 4-5 from Register Transfer and Microoperations",
+      "keywords": [
+        "bus",
+        "line",
+        "with",
+        "three",
+        "state",
+        "buffers",
+        "4",
+        "5",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "336cc392f1069479d7bfb71e91d331d4e2f482c8dd241259a4c8e32881cb7f8f"
+    },
+    {
+      "id": "figure-4-6",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "4-bit binary adder",
+      "caption": "4-bit binary adder.",
+      "figure_number": "4-6",
+      "pdf_page": 115,
+      "source_pages": [
+        115
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-6-p115-i1.webp",
+      "alt": "4-bit binary adder, Figure 4-6 from Register Transfer and Microoperations",
+      "keywords": [
+        "4",
+        "bit",
+        "binary",
+        "adder",
+        "6",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "b6eafa20495a86eaa6119a119e2743bcc7dd9df82e240e8042b3ffa5b5bb5104"
+    },
+    {
+      "id": "figure-4-7",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "4-bit adder-subtractor",
+      "caption": "4-bit adder-subtractor.",
+      "figure_number": "4-7",
+      "pdf_page": 116,
+      "source_pages": [
+        116
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-7-p116-i1.webp",
+      "alt": "4-bit adder-subtractor, Figure 4-7 from Register Transfer and Microoperations",
+      "keywords": [
+        "4",
+        "bit",
+        "adder",
+        "subtractor",
+        "7",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "63ba76b80e738ae5b9619d2dd83c5ebd3950d55176dd967b14f66423f4aa5486"
+    },
+    {
+      "id": "figure-4-8",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "4-bit binary incrementer",
+      "caption": "4-bit binary incrementer.",
+      "figure_number": "4-8",
+      "pdf_page": 117,
+      "source_pages": [
+        117
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-8-p117-i1.webp",
+      "alt": "4-bit binary incrementer, Figure 4-8 from Register Transfer and Microoperations",
+      "keywords": [
+        "4",
+        "bit",
+        "binary",
+        "incrementer",
+        "8",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "4b5de4a7065527c25506ed4eae293887b6043e9e39927f60918873680d69fd1d"
+    },
+    {
+      "id": "figure-4-9",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "4-bit arithmetic circuit",
+      "caption": "4-bit arithmetic circuit.",
+      "figure_number": "4-9",
+      "pdf_page": 118,
+      "source_pages": [
+        118
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-9-p118-i1.webp",
+      "alt": "4-bit arithmetic circuit, Figure 4-9 from Register Transfer and Microoperations",
+      "keywords": [
+        "4",
+        "bit",
+        "arithmetic",
+        "circuit",
+        "9",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "8d5184688d6eaf1c416357155884486b1ea2143a30d5043e2eaa627739750292"
+    },
+    {
+      "id": "figure-4-10",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "One stage of logic circuit",
+      "caption": "One stage of logic circuit.",
+      "figure_number": "4-10",
+      "pdf_page": 122,
+      "source_pages": [
+        122
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-10-p122-i1.webp",
+      "alt": "One stage of logic circuit, Figure 4-10 from Register Transfer and Microoperations",
+      "keywords": [
+        "one",
+        "stage",
+        "of",
+        "logic",
+        "circuit",
+        "4",
+        "10",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "041d7aff6943f30ca64ebd3d6681a49fb6bbcd80d21dcc42753ae8563c72c0cb"
+    },
+    {
+      "id": "figure-4-11",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "Arithmetic shift right",
+      "caption": "Arithmetic shift right.",
+      "figure_number": "4-11",
+      "pdf_page": 126,
+      "source_pages": [
+        126
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-11-p126-i1.webp",
+      "alt": "Arithmetic shift right, Figure 4-11 from Register Transfer and Microoperations",
+      "keywords": [
+        "arithmetic",
+        "shift",
+        "right",
+        "4",
+        "11",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "977c296bfe763c1d913a74def3be1da8d0bde961dc79b9127b76e6ba3ca81cd1"
+    },
+    {
+      "id": "figure-4-12",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "4-bit combinational circuit shifter",
+      "caption": "4-bit combinational circuit shifter.",
+      "figure_number": "4-12",
+      "pdf_page": 127,
+      "source_pages": [
+        127
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-12-p127-i1.webp",
+      "alt": "4-bit combinational circuit shifter, Figure 4-12 from Register Transfer and Microoperations",
+      "keywords": [
+        "4",
+        "bit",
+        "combinational",
+        "circuit",
+        "shifter",
+        "12",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "d5a23fa1e5e4a549b85c5a818abdfc7cf8bc4dd7340466c44531f68513f0c2c4"
+    },
+    {
+      "id": "figure-4-13",
+      "chapter": 4,
+      "chapter_title": "Register Transfer and Microoperations",
+      "section": "Chapter 4",
+      "topic": "One stage of arithmetic logic shift unit",
+      "caption": "One stage of arithmetic logic shift unit.",
+      "figure_number": "4-13",
+      "pdf_page": 128,
+      "source_pages": [
+        128
+      ],
+      "image": "academics/coa-diagrams/images/figure-4-13-p128-i1.webp",
+      "alt": "One stage of arithmetic logic shift unit, Figure 4-13 from Register Transfer and Microoperations",
+      "keywords": [
+        "one",
+        "stage",
+        "of",
+        "arithmetic",
+        "logic",
+        "shift",
+        "unit",
+        "4",
+        "13",
+        "register",
+        "transfer",
+        "and",
+        "microoperations"
+      ],
+      "sha256": "c1da78ae893aba5fe40eea9308819d5ead0cb7b84d25951bf4f7b5672504485f"
+    },
+    {
+      "id": "figure-5-1",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Stored program organization",
+      "caption": "Stored program organization.",
+      "figure_number": "5-1",
+      "pdf_page": 136,
+      "source_pages": [
+        136
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-1-p136-i1.webp",
+      "alt": "Stored program organization, Figure 5-1 from Basic Computer Organization and Design",
+      "keywords": [
+        "stored",
+        "program",
+        "organization",
+        "5",
+        "1",
+        "basic",
+        "computer",
+        "and",
+        "design"
+      ],
+      "sha256": "5f14075cf9cc472ebd02b240edb9e1a4422a922aa207e2335e6f5f92b837b805"
+    },
+    {
+      "id": "figure-5-2",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Demonstration of direct and indirect address",
+      "caption": "Demonstration of direct and indirect address.",
+      "figure_number": "5-2",
+      "pdf_page": 138,
+      "source_pages": [
+        138
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-2-p138-i1.webp",
+      "alt": "Demonstration of direct and indirect address, Figure 5-2 from Basic Computer Organization and Design",
+      "keywords": [
+        "demonstration",
+        "of",
+        "direct",
+        "and",
+        "indirect",
+        "address",
+        "5",
+        "2",
+        "basic",
+        "computer",
+        "organization",
+        "design"
+      ],
+      "sha256": "0bf75ea4040eb181afd91a9e937ad3a0b0b1c5ea7cebeedfce0bd47768777415"
+    },
+    {
+      "id": "figure-5-3",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Basic computer registers and memory",
+      "caption": "Basic computer registers and memory.",
+      "figure_number": "5-3",
+      "pdf_page": 140,
+      "source_pages": [
+        140
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-3-p140-i1.webp",
+      "alt": "Basic computer registers and memory, Figure 5-3 from Basic Computer Organization and Design",
+      "keywords": [
+        "basic",
+        "computer",
+        "registers",
+        "and",
+        "memory",
+        "5",
+        "3",
+        "organization",
+        "design"
+      ],
+      "sha256": "a75e441dac84288af36dbd42b2d0660d06eeec2edab968541fc91a6f095d0255"
+    },
+    {
+      "id": "figure-5-5",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Basic computer instruction formats",
+      "caption": "Basic computer instruction formats.",
+      "figure_number": "5-5",
+      "pdf_page": 143,
+      "source_pages": [
+        143
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-5-p143-i1.webp",
+      "alt": "Basic computer instruction formats, Figure 5-5 from Basic Computer Organization and Design",
+      "keywords": [
+        "basic",
+        "computer",
+        "instruction",
+        "formats",
+        "5",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "a79691b8d32cb49173f9a7b3d1fc9ab87f78e1b25d1ac2716347bebac859f033"
+    },
+    {
+      "id": "figure-5-7",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Example of control timing signals",
+      "caption": "Example of control timing signals.",
+      "figure_number": "5-7",
+      "pdf_page": 149,
+      "source_pages": [
+        149
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-7-p149-i1.webp",
+      "alt": "Example of control timing signals, Figure 5-7 from Basic Computer Organization and Design",
+      "keywords": [
+        "example",
+        "of",
+        "control",
+        "timing",
+        "signals",
+        "5",
+        "7",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "09589c612b4f3ac7960f0724f81baacb0cd748cfb6f553f79c96e13be4e1816a"
+    },
+    {
+      "id": "figure-5-8",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Register transfers for the fetch phase",
+      "caption": "Register transfers for the fetch phase.",
+      "figure_number": "5-8",
+      "pdf_page": 151,
+      "source_pages": [
+        151,
+        152
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-8-p151-i1.webp",
+      "alt": "Register transfers for the fetch phase, Figure 5-8 from Basic Computer Organization and Design",
+      "keywords": [
+        "register",
+        "transfers",
+        "for",
+        "the",
+        "fetch",
+        "phase",
+        "5",
+        "8",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "850b3f0919a7d12ba53f5cce1ecd67b7132c43d31c9d2ca9f670fba058de5652"
+    },
+    {
+      "id": "figure-5-9",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Flowchart for instruction cycle (initial configuration)",
+      "caption": "Flowchart for instruction cycle (initial configuration).",
+      "figure_number": "5-9",
+      "pdf_page": 153,
+      "source_pages": [
+        153
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-9-p153-i1.webp",
+      "alt": "Flowchart for instruction cycle (initial configuration), Figure 5-9 from Basic Computer Organization and Design",
+      "keywords": [
+        "flowchart",
+        "for",
+        "instruction",
+        "cycle",
+        "initial",
+        "configuration",
+        "5",
+        "9",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "96538ac7d20262d4b206b039593d35192e7fc7bb95b1fecc88394c8d1dbe94f9"
+    },
+    {
+      "id": "figure-5-10",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Example of BSA instruction execution",
+      "caption": "Example of BSA instruction execution.",
+      "figure_number": "5-10",
+      "pdf_page": 159,
+      "source_pages": [
+        159
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-10-p159-i1.webp",
+      "alt": "Example of BSA instruction execution, Figure 5-10 from Basic Computer Organization and Design",
+      "keywords": [
+        "example",
+        "of",
+        "bsa",
+        "instruction",
+        "execution",
+        "5",
+        "10",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "eb05a72ac591ca47583b23232083d03c6236a7edca07375eadebf5a5e462bef0"
+    },
+    {
+      "id": "figure-5-11",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Flowchart for memory-reference instructions",
+      "caption": "Flowchart for memory-reference instructions.",
+      "figure_number": "5-11",
+      "pdf_page": 161,
+      "source_pages": [
+        161
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-11-p161-i1.webp",
+      "alt": "Flowchart for memory-reference instructions, Figure 5-11 from Basic Computer Organization and Design",
+      "keywords": [
+        "flowchart",
+        "for",
+        "memory",
+        "reference",
+        "instructions",
+        "5",
+        "11",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "d059fa73ec157d27eebe01ab3dbae889580408b529f4709430706210306c382c"
+    },
+    {
+      "id": "figure-5-12",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Input-output configuration",
+      "caption": "Input-output configuration.",
+      "figure_number": "5-12",
+      "pdf_page": 162,
+      "source_pages": [
+        162
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-12-p162-i1.webp",
+      "alt": "Input-output configuration, Figure 5-12 from Basic Computer Organization and Design",
+      "keywords": [
+        "input",
+        "output",
+        "configuration",
+        "5",
+        "12",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "60d34da900af05c282bdd214c96f53ed8fd8b9cb8b0de3652a96ac379dd5a7b3"
+    },
+    {
+      "id": "figure-5-13",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Flowchart for interrupt cycle",
+      "caption": "Flowchart for interrupt cycle.",
+      "figure_number": "5-13",
+      "pdf_page": 165,
+      "source_pages": [
+        165
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-13-p165-i1.webp",
+      "alt": "Flowchart for interrupt cycle, Figure 5-13 from Basic Computer Organization and Design",
+      "keywords": [
+        "flowchart",
+        "for",
+        "interrupt",
+        "cycle",
+        "5",
+        "13",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "8d9c2c9dbbb9dc1891197028b81b6f6ae22c128f334715d12142b286220c27a1"
+    },
+    {
+      "id": "figure-5-14",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Demonstration of the interrupt cycle",
+      "caption": "Demonstration of the interrupt cycle.",
+      "figure_number": "5-14",
+      "pdf_page": 166,
+      "source_pages": [
+        166
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-14-p166-i1.webp",
+      "alt": "Demonstration of the interrupt cycle, Figure 5-14 from Basic Computer Organization and Design",
+      "keywords": [
+        "demonstration",
+        "of",
+        "the",
+        "interrupt",
+        "cycle",
+        "5",
+        "14",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "191f05d663aa10df187d27441e30a365a0a1cb23ee240484d82cdfea8a384b9e"
+    },
+    {
+      "id": "figure-5-15",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Flowchart for computer operation",
+      "caption": "Flowchart for computer operation.",
+      "figure_number": "5-15",
+      "pdf_page": 169,
+      "source_pages": [
+        169
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-15-p169-i1.webp",
+      "alt": "Flowchart for computer operation, Figure 5-15 from Basic Computer Organization and Design",
+      "keywords": [
+        "flowchart",
+        "for",
+        "computer",
+        "operation",
+        "5",
+        "15",
+        "basic",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "d3112dcd02fc69854835914bd0af098d1eb3d9388caa610a766598219c6feb54"
+    },
+    {
+      "id": "figure-5-16",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Control gates associated with AR",
+      "caption": "Control gates associated with AR.",
+      "figure_number": "5-16",
+      "pdf_page": 172,
+      "source_pages": [
+        172
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-16-p172-i1.webp",
+      "alt": "Control gates associated with AR, Figure 5-16 from Basic Computer Organization and Design",
+      "keywords": [
+        "control",
+        "gates",
+        "associated",
+        "with",
+        "ar",
+        "5",
+        "16",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "288f91db1ea9e1e535fa8b397486d7df1e1d5028b5149b19ef0fe1b4537261e6"
+    },
+    {
+      "id": "figure-5-17",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Control inputs for IEN",
+      "caption": "Control inputs for IEN.",
+      "figure_number": "5-17",
+      "pdf_page": 173,
+      "source_pages": [
+        173
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-17-p173-i1.webp",
+      "alt": "Control inputs for IEN, Figure 5-17 from Basic Computer Organization and Design",
+      "keywords": [
+        "control",
+        "inputs",
+        "for",
+        "ien",
+        "5",
+        "17",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "4c40f3ac2ed2e29b73d6d3d0d8c144ddf2095f9fc0dc456feaff36a50ac5993a"
+    },
+    {
+      "id": "figure-5-18",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Encoder for bus selection inputs",
+      "caption": "Encoder for bus selection inputs.",
+      "figure_number": "5-18",
+      "pdf_page": 174,
+      "source_pages": [
+        174
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-18-p174-i1.webp",
+      "alt": "Encoder for bus selection inputs, Figure 5-18 from Basic Computer Organization and Design",
+      "keywords": [
+        "encoder",
+        "for",
+        "bus",
+        "selection",
+        "inputs",
+        "5",
+        "18",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "ef4814956f1f7da17da47c7c951d0c106dbf9498e2b1ea8bb74422072861bf9d"
+    },
+    {
+      "id": "figure-5-19",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Circuits associated with AC",
+      "caption": "Circuits associated with AC.",
+      "figure_number": "5-19",
+      "pdf_page": 175,
+      "source_pages": [
+        175
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-19-p175-i1.webp",
+      "alt": "Circuits associated with AC, Figure 5-19 from Basic Computer Organization and Design",
+      "keywords": [
+        "circuits",
+        "associated",
+        "with",
+        "ac",
+        "5",
+        "19",
+        "basic",
+        "computer",
+        "organization",
+        "and",
+        "design"
+      ],
+      "sha256": "5e83719dc064741aff959acee150e9409609031f2170ec8bda0bee05b4b709cf"
+    },
+    {
+      "id": "figure-5-20",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "Gate structure for controlling the LD, INR, and CLR of AC",
+      "caption": "Gate structure for controlling the LD, INR, and CLR of AC.",
+      "figure_number": "5-20",
+      "pdf_page": 176,
+      "source_pages": [
+        176
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-20-p176-i1.webp",
+      "alt": "Gate structure for controlling the LD, INR, and CLR of AC, Figure 5-20 from Basic Computer Organization and Design",
+      "keywords": [
+        "gate",
+        "structure",
+        "for",
+        "controlling",
+        "the",
+        "ld",
+        "inr",
+        "and",
+        "clr",
+        "of",
+        "ac",
+        "5",
+        "20",
+        "basic",
+        "computer",
+        "organization",
+        "design"
+      ],
+      "sha256": "b98de0d8fea38768f98fe323a67406fa160cd781bed74d1ca5a35bd2854ed28c"
+    },
+    {
+      "id": "figure-5-21",
+      "chapter": 5,
+      "chapter_title": "Basic Computer Organization and Design",
+      "section": "Chapter 5",
+      "topic": "One stage of adder and logic circuit",
+      "caption": "One stage of adder and logic circuit.",
+      "figure_number": "5-21",
+      "pdf_page": 177,
+      "source_pages": [
+        177
+      ],
+      "image": "academics/coa-diagrams/images/figure-5-21-p177-i1.webp",
+      "alt": "One stage of adder and logic circuit, Figure 5-21 from Basic Computer Organization and Design",
+      "keywords": [
+        "one",
+        "stage",
+        "of",
+        "adder",
+        "and",
+        "logic",
+        "circuit",
+        "5",
+        "21",
+        "basic",
+        "computer",
+        "organization",
+        "design"
+      ],
+      "sha256": "202994b8e49fbcd8b8acc42fc97f6fff1709c1103c881b95e3681d79f851fdef"
+    },
+    {
+      "id": "figure-6-1",
+      "chapter": 6,
+      "chapter_title": "Programming the Basic Computer",
+      "section": "Chapter 6",
+      "topic": "Flowchart for first pass of assembler",
+      "caption": "Flowchart for first pass of assembler.",
+      "figure_number": "6-1",
+      "pdf_page": 196,
+      "source_pages": [
+        196
+      ],
+      "image": "academics/coa-diagrams/images/figure-6-1-p196-i1.webp",
+      "alt": "Flowchart for first pass of assembler, Figure 6-1 from Programming the Basic Computer",
+      "keywords": [
+        "flowchart",
+        "for",
+        "first",
+        "pass",
+        "of",
+        "assembler",
+        "6",
+        "1",
+        "programming",
+        "the",
+        "basic",
+        "computer"
+      ],
+      "sha256": "56ee05fcebd3d0d9ea2da12c3f5396e99220cabea7762962875df8faea892e06"
+    },
+    {
+      "id": "figure-6-2",
+      "chapter": 6,
+      "chapter_title": "Programming the Basic Computer",
+      "section": "Chapter 6",
+      "topic": "Flowchart for second pass of assembler",
+      "caption": "Flowchart for second pass of assembler.",
+      "figure_number": "6-2",
+      "pdf_page": 199,
+      "source_pages": [
+        199
+      ],
+      "image": "academics/coa-diagrams/images/figure-6-2-p199-i1.webp",
+      "alt": "Flowchart for second pass of assembler, Figure 6-2 from Programming the Basic Computer",
+      "keywords": [
+        "flowchart",
+        "for",
+        "second",
+        "pass",
+        "of",
+        "assembler",
+        "6",
+        "2",
+        "programming",
+        "the",
+        "basic",
+        "computer"
+      ],
+      "sha256": "28f305244badeb1d63ef0c883be0ad06decde80c3834ffba6e429877337fc44a"
+    },
+    {
+      "id": "figure-6-3",
+      "chapter": 6,
+      "chapter_title": "Programming the Basic Computer",
+      "section": "Chapter 6",
+      "topic": "Flowchart for multiplication program",
+      "caption": "Flowchart for multiplication program.",
+      "figure_number": "6-3",
+      "pdf_page": 204,
+      "source_pages": [
+        204
+      ],
+      "image": "academics/coa-diagrams/images/figure-6-3-p204-i1.webp",
+      "alt": "Flowchart for multiplication program, Figure 6-3 from Programming the Basic Computer",
+      "keywords": [
+        "flowchart",
+        "for",
+        "multiplication",
+        "program",
+        "6",
+        "3",
+        "programming",
+        "the",
+        "basic",
+        "computer"
+      ],
+      "sha256": "7773815a4e0647ba9f41c23a8ff8e47f9194c75c965620e39081bb60779996b8"
+    },
+    {
+      "id": "figure-7-1",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Microprogrammed control organization",
+      "caption": "Microprogrammed control organization.",
+      "figure_number": "7-1",
+      "pdf_page": 224,
+      "source_pages": [
+        224
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-1-p224-i1.webp",
+      "alt": "Microprogrammed control organization, Figure 7-1 from Microprogrammed Control",
+      "keywords": [
+        "microprogrammed",
+        "control",
+        "organization",
+        "7",
+        "1"
+      ],
+      "sha256": "dc48d4e58836ff8bc2929e0670748ca6da915239d3b828bded3d3b37ef4c3029"
+    },
+    {
+      "id": "figure-7-2",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Selection of address for control memory",
+      "caption": "Selection of address for control memory.",
+      "figure_number": "7-2",
+      "pdf_page": 228,
+      "source_pages": [
+        228
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-2-p228-i1.webp",
+      "alt": "Selection of address for control memory, Figure 7-2 from Microprogrammed Control",
+      "keywords": [
+        "selection",
+        "of",
+        "address",
+        "for",
+        "control",
+        "memory",
+        "7",
+        "2",
+        "microprogrammed"
+      ],
+      "sha256": "49a92f3468d2128f37ddaf902e634b35ed51e9d6d3ff4fea4edc8417a997e59b"
+    },
+    {
+      "id": "figure-7-3",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Mapping from instruction code to microinstruction address",
+      "caption": "Mapping from instruction code to microinstruction address.",
+      "figure_number": "7-3",
+      "pdf_page": 229,
+      "source_pages": [
+        229
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-3-p229-i1.webp",
+      "alt": "Mapping from instruction code to microinstruction address, Figure 7-3 from Microprogrammed Control",
+      "keywords": [
+        "mapping",
+        "from",
+        "instruction",
+        "code",
+        "to",
+        "microinstruction",
+        "address",
+        "7",
+        "3",
+        "microprogrammed",
+        "control"
+      ],
+      "sha256": "4379849936ab260e394db8851fbf060eea48f7bf41da7fa9510cdf6fb9110229"
+    },
+    {
+      "id": "figure-7-4",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Computer hardware configuration",
+      "caption": "Computer hardware configuration.",
+      "figure_number": "7-4",
+      "pdf_page": 231,
+      "source_pages": [
+        231
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-4-p231-i1.webp",
+      "alt": "Computer hardware configuration, Figure 7-4 from Microprogrammed Control",
+      "keywords": [
+        "computer",
+        "hardware",
+        "configuration",
+        "7",
+        "4",
+        "microprogrammed",
+        "control"
+      ],
+      "sha256": "171cb7b54cc16eec6ceed84d29474c191a019c2b2a9e61743e8189d64458d527"
+    },
+    {
+      "id": "figure-7-5",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Computer instructions",
+      "caption": "Computer instructions.",
+      "figure_number": "7-5",
+      "pdf_page": 232,
+      "source_pages": [
+        232
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-5-p232-i1.webp",
+      "alt": "Computer instructions, Figure 7-5 from Microprogrammed Control",
+      "keywords": [
+        "computer",
+        "instructions",
+        "7",
+        "5",
+        "microprogrammed",
+        "control"
+      ],
+      "sha256": "213939fe1dae9470c7f45d9cb80f92fa2fe1ebfec3a910b486b3cf29f8292bbc"
+    },
+    {
+      "id": "figure-7-6",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Microinstruction code format (20 bits)",
+      "caption": "Microinstruction code format (20 bits).",
+      "figure_number": "7-6",
+      "pdf_page": 233,
+      "source_pages": [
+        233
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-6-p233-i1.webp",
+      "alt": "Microinstruction code format (20 bits), Figure 7-6 from Microprogrammed Control",
+      "keywords": [
+        "microinstruction",
+        "code",
+        "format",
+        "20",
+        "bits",
+        "7",
+        "6",
+        "microprogrammed",
+        "control"
+      ],
+      "sha256": "de9dd3a79de73eb321e8a2e47a5ac5a6e57c5a46f2b79f40e418cf5e2d2b05fe"
+    },
+    {
+      "id": "figure-7-7",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Decoding of microoperation fields",
+      "caption": "Decoding of microoperation fields.",
+      "figure_number": "7-7",
+      "pdf_page": 242,
+      "source_pages": [
+        242
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-7-p242-i1.webp",
+      "alt": "Decoding of microoperation fields, Figure 7-7 from Microprogrammed Control",
+      "keywords": [
+        "decoding",
+        "of",
+        "microoperation",
+        "fields",
+        "7",
+        "microprogrammed",
+        "control"
+      ],
+      "sha256": "1959c14953fc23363d3ae2ded732fca94acfbf26e013964a0c2a8a8078e98c8d"
+    },
+    {
+      "id": "figure-7-8",
+      "chapter": 7,
+      "chapter_title": "Microprogrammed Control",
+      "section": "Chapter 7",
+      "topic": "Microprogram sequencer for a control memory",
+      "caption": "Microprogram sequencer for a control memory.",
+      "figure_number": "7-8",
+      "pdf_page": 244,
+      "source_pages": [
+        244
+      ],
+      "image": "academics/coa-diagrams/images/figure-7-8-p244-i1.webp",
+      "alt": "Microprogram sequencer for a control memory, Figure 7-8 from Microprogrammed Control",
+      "keywords": [
+        "microprogram",
+        "sequencer",
+        "for",
+        "a",
+        "control",
+        "memory",
+        "7",
+        "8",
+        "microprogrammed"
+      ],
+      "sha256": "ea2aa335e00dfa5ad6b8be9ebc196032486aa70429b9b01cdf91e37d14d5c1a8"
+    },
+    {
+      "id": "figure-8-1",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Major components of CPU",
+      "caption": "Major components of CPU.",
+      "figure_number": "8-1",
+      "pdf_page": 251,
+      "source_pages": [
+        251
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-1-p251-i1.webp",
+      "alt": "Major components of CPU, Figure 8-1 from Central Processing Unit",
+      "keywords": [
+        "major",
+        "components",
+        "of",
+        "cpu",
+        "8",
+        "1",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "3e26a8e3c1bbec7c6665cfc6b43b2509d132fd74122a6bf9f80771835989a843"
+    },
+    {
+      "id": "figure-8-3",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Block diagram of a 64-word stack",
+      "caption": "Block diagram of a 64-word stack.",
+      "figure_number": "8-3",
+      "pdf_page": 257,
+      "source_pages": [
+        257
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-3-p257-i1.webp",
+      "alt": "Block diagram of a 64-word stack, Figure 8-3 from Central Processing Unit",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "a",
+        "64",
+        "word",
+        "stack",
+        "8",
+        "3",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "65d34bbf7ec8206c4f152303cb1296895f667027ab31ef8f019f8e4969e05d73"
+    },
+    {
+      "id": "figure-8-4",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Computer memcry wich program, data, and sack segmens",
+      "caption": "Computer memcry wich program, data, and sack segmens.",
+      "figure_number": "8-4",
+      "pdf_page": 259,
+      "source_pages": [
+        259
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-4-p259-i1.webp",
+      "alt": "Computer memcry wich program, data, and sack segmens, Figure 8-4 from Central Processing Unit",
+      "keywords": [
+        "computer",
+        "memcry",
+        "wich",
+        "program",
+        "data",
+        "and",
+        "sack",
+        "segmens",
+        "8",
+        "4",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "3368a42ed3e5e3571c883e5bbc4b60ac502f79d629d68ca62e1505c283236550"
+    },
+    {
+      "id": "figure-8-5",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Stack operations to evaluate 3 + 4 + 5 « 6",
+      "caption": "Stack operations to evaluate 3 + 4 + 5 « 6.",
+      "figure_number": "8-5",
+      "pdf_page": 263,
+      "source_pages": [
+        263
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-5-p263-i1.webp",
+      "alt": "Stack operations to evaluate 3 + 4 + 5 « 6, Figure 8-5 from Central Processing Unit",
+      "keywords": [
+        "stack",
+        "operations",
+        "to",
+        "evaluate",
+        "3",
+        "4",
+        "5",
+        "6",
+        "8",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "645863c2eda206ea65907d6c824dd6e8443a6d12b52b332c73a5feb3afbdd204"
+    },
+    {
+      "id": "figure-8-6",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Instruction format with mode field",
+      "caption": "Instruction format with mode field.",
+      "figure_number": "8-6",
+      "pdf_page": 270,
+      "source_pages": [
+        270
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-6-p270-i1.webp",
+      "alt": "Instruction format with mode field, Figure 8-6 from Central Processing Unit",
+      "keywords": [
+        "instruction",
+        "format",
+        "with",
+        "mode",
+        "field",
+        "8",
+        "6",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "434b028c8e08971e3656ce2d817deccf857f02fdb060fd188088134ed6e727b9"
+    },
+    {
+      "id": "figure-8-7",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Numerical example for addressing modes",
+      "caption": "Numerical example for addressing modes.",
+      "figure_number": "8-7",
+      "pdf_page": 274,
+      "source_pages": [
+        274
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-7-p274-i1.webp",
+      "alt": "Numerical example for addressing modes, Figure 8-7 from Central Processing Unit",
+      "keywords": [
+        "numerical",
+        "example",
+        "for",
+        "addressing",
+        "modes",
+        "8",
+        "7",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "dcc2e08c5801a0d3c94a7fe5edeb868f0a8b76eff9af305ce2d95b1dd7ea03d6"
+    },
+    {
+      "id": "figure-8-8",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Status register bits",
+      "caption": "Status register bits.",
+      "figure_number": "8-8",
+      "pdf_page": 284,
+      "source_pages": [
+        284
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-8-p284-i1.webp",
+      "alt": "Status register bits, Figure 8-8 from Central Processing Unit",
+      "keywords": [
+        "status",
+        "register",
+        "bits",
+        "8",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "d63b2bfc09891c48569211e314166029900289f6eaeedb5eddb9ff24d0762f52"
+    },
+    {
+      "id": "figure-8-9",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Overlapped register windows",
+      "caption": "Overlapped register windows.",
+      "figure_number": "8-9",
+      "pdf_page": 296,
+      "source_pages": [
+        296
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-9-p296-i1.webp",
+      "alt": "Overlapped register windows, Figure 8-9 from Central Processing Unit",
+      "keywords": [
+        "overlapped",
+        "register",
+        "windows",
+        "8",
+        "9",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "1e7961718c9a7f07f75615692b35f5200a6fcbdcffee083c62b77234363162a5"
+    },
+    {
+      "id": "figure-8-10",
+      "chapter": 8,
+      "chapter_title": "Central Processing Unit",
+      "section": "Chapter 8",
+      "topic": "Berkeley RISC I instruction formats",
+      "caption": "Berkeley RISC I instruction formats.",
+      "figure_number": "8-10",
+      "pdf_page": 297,
+      "source_pages": [
+        297
+      ],
+      "image": "academics/coa-diagrams/images/figure-8-10-p297-i1.webp",
+      "alt": "Berkeley RISC I instruction formats, Figure 8-10 from Central Processing Unit",
+      "keywords": [
+        "berkeley",
+        "risc",
+        "i",
+        "instruction",
+        "formats",
+        "8",
+        "10",
+        "central",
+        "processing",
+        "unit"
+      ],
+      "sha256": "605df91b3389034e0a5ae79a9ec77c748def4e4fce0260cdbbb9bb522bfee034"
+    },
+    {
+      "id": "figure-9-1",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Processor with multiple functional units",
+      "caption": "Processor with multiple functional units.",
+      "figure_number": "9-1",
+      "pdf_page": 309,
+      "source_pages": [
+        309
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-1-p309-i1.webp",
+      "alt": "Processor with multiple functional units, Figure 9-1 from Pipeline and Vector Processing",
+      "keywords": [
+        "processor",
+        "with",
+        "multiple",
+        "functional",
+        "units",
+        "9",
+        "1",
+        "pipeline",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "f46e8f8b5409df9140a262ead5e0c1db97a8a63311685c52935dfb19f944c917"
+    },
+    {
+      "id": "figure-9-2",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Example of pipeline processing",
+      "caption": "Example of pipeline processing.",
+      "figure_number": "9-2",
+      "pdf_page": 312,
+      "source_pages": [
+        312
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-2-p312-i1.webp",
+      "alt": "Example of pipeline processing, Figure 9-2 from Pipeline and Vector Processing",
+      "keywords": [
+        "example",
+        "of",
+        "pipeline",
+        "processing",
+        "9",
+        "2",
+        "and",
+        "vector"
+      ],
+      "sha256": "66428df9bf51b56d0a179dcd0f670cfbb25abdd499515fd58795a3f788dd5dc2"
+    },
+    {
+      "id": "figure-9-3",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Four-segment pipeline",
+      "caption": "Four-segment pipeline.",
+      "figure_number": "9-3",
+      "pdf_page": 314,
+      "source_pages": [
+        314
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-3-p314-i1.webp",
+      "alt": "Four-segment pipeline, Figure 9-3 from Pipeline and Vector Processing",
+      "keywords": [
+        "four",
+        "segment",
+        "pipeline",
+        "9",
+        "3",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "44e8b0e9ca143eacc4dd988afc77e44aec88661417239fafa986f8f19f12dc93"
+    },
+    {
+      "id": "figure-9-4",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Space-time diagram for pipeline",
+      "caption": "Space-time diagram for pipeline.",
+      "figure_number": "9-4",
+      "pdf_page": 314,
+      "source_pages": [
+        314
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-4-p314-i2.webp",
+      "alt": "Space-time diagram for pipeline, Figure 9-4 from Pipeline and Vector Processing",
+      "keywords": [
+        "space",
+        "time",
+        "diagram",
+        "for",
+        "pipeline",
+        "9",
+        "4",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "90a787f706d7d5faf58409b7dd191941f688e8bf3cedd34cb8b0fb5fbbb6493a"
+    },
+    {
+      "id": "figure-9-5",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Multiple functional units in parallel",
+      "caption": "Multiple functional units in parallel.",
+      "figure_number": "9-5",
+      "pdf_page": 316,
+      "source_pages": [
+        316
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-5-p316-i1.webp",
+      "alt": "Multiple functional units in parallel, Figure 9-5 from Pipeline and Vector Processing",
+      "keywords": [
+        "multiple",
+        "functional",
+        "units",
+        "in",
+        "parallel",
+        "9",
+        "5",
+        "pipeline",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "993175df54a694eb888dddc9e302fc29590689d8ae506f85259f53aca3243a96"
+    },
+    {
+      "id": "figure-9-6",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Pipeline for flosting point addition and sibersction",
+      "caption": "Pipeline for flosting point addition and sibersction.",
+      "figure_number": "9-6",
+      "pdf_page": 318,
+      "source_pages": [
+        318
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-6-p318-i1.webp",
+      "alt": "Pipeline for flosting point addition and sibersction, Figure 9-6 from Pipeline and Vector Processing",
+      "keywords": [
+        "pipeline",
+        "for",
+        "flosting",
+        "point",
+        "addition",
+        "and",
+        "sibersction",
+        "9",
+        "6",
+        "vector",
+        "processing"
+      ],
+      "sha256": "4e18b75a1101816d25f3a5b078666c1659e6e250143458936b141fca5f669ebb"
+    },
+    {
+      "id": "figure-9-8",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Timing of instruction pipeline",
+      "caption": "Timing of instruction pipeline.",
+      "figure_number": "9-8",
+      "pdf_page": 322,
+      "source_pages": [
+        322
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-8-p322-i1.webp",
+      "alt": "Timing of instruction pipeline, Figure 9-8 from Pipeline and Vector Processing",
+      "keywords": [
+        "timing",
+        "of",
+        "instruction",
+        "pipeline",
+        "9",
+        "8",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "b85f964d9805ff19083e3f082858eb5f1e20c3163ab92e45ab811ce5c31bfb52"
+    },
+    {
+      "id": "figure-9-9",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Three-segment pipeline timing",
+      "caption": "Three-segment pipeline timing.",
+      "figure_number": "9-9",
+      "pdf_page": 327,
+      "source_pages": [
+        327
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-9-p327-i1.webp",
+      "alt": "Three-segment pipeline timing, Figure 9-9 from Pipeline and Vector Processing",
+      "keywords": [
+        "three",
+        "segment",
+        "pipeline",
+        "timing",
+        "9",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "2d022eec55a0665562480fbfcf0b0a5383dd2c8e82629bb19059410badd1045f"
+    },
+    {
+      "id": "figure-9-10",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Example of delayed branch",
+      "caption": "Example of delayed branch.",
+      "figure_number": "9-10",
+      "pdf_page": 329,
+      "source_pages": [
+        329
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-10-p329-i1.webp",
+      "alt": "Example of delayed branch, Figure 9-10 from Pipeline and Vector Processing",
+      "keywords": [
+        "example",
+        "of",
+        "delayed",
+        "branch",
+        "9",
+        "10",
+        "pipeline",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "d804e432fec5509fab08f34968e1b4de38ed267b388301a7432ca28b13a82be7"
+    },
+    {
+      "id": "figure-9-11",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Instruction format for vector processor",
+      "caption": "Instruction format for vector processor.",
+      "figure_number": "9-11",
+      "pdf_page": 331,
+      "source_pages": [
+        331
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-11-p331-i1.webp",
+      "alt": "Instruction format for vector processor, Figure 9-11 from Pipeline and Vector Processing",
+      "keywords": [
+        "instruction",
+        "format",
+        "for",
+        "vector",
+        "processor",
+        "9",
+        "11",
+        "pipeline",
+        "and",
+        "processing"
+      ],
+      "sha256": "6b5851804cad04e6aaef8c458e64c58a6ec5fac4c58ac41991ffc44503e00591"
+    },
+    {
+      "id": "figure-9-12",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Pipeline for calculating an inner product",
+      "caption": "Pipeline for calculating an inner product.",
+      "figure_number": "9-12",
+      "pdf_page": 332,
+      "source_pages": [
+        332
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-12-p332-i1.webp",
+      "alt": "Pipeline for calculating an inner product, Figure 9-12 from Pipeline and Vector Processing",
+      "keywords": [
+        "pipeline",
+        "for",
+        "calculating",
+        "an",
+        "inner",
+        "product",
+        "9",
+        "12",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "d01afef8efcc0b3784510dcc16c569e4de9ab533fcb7adecdb89a74b35db01e5"
+    },
+    {
+      "id": "figure-9-13",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Multiple module memory organization",
+      "caption": "Multiple module memory organization.",
+      "figure_number": "9-13",
+      "pdf_page": 333,
+      "source_pages": [
+        333
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-13-p333-i1.webp",
+      "alt": "Multiple module memory organization, Figure 9-13 from Pipeline and Vector Processing",
+      "keywords": [
+        "multiple",
+        "module",
+        "memory",
+        "organization",
+        "9",
+        "13",
+        "pipeline",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "61e783b5834e6cc1a4fbea8660b5a9545fa22b41d94b1c1c50203fe4739d7c35"
+    },
+    {
+      "id": "figure-9-14",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "Attached array processor with host computer",
+      "caption": "Attached array processor with host computer.",
+      "figure_number": "9-14",
+      "pdf_page": 336,
+      "source_pages": [
+        336
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-14-p336-i1.webp",
+      "alt": "Attached array processor with host computer, Figure 9-14 from Pipeline and Vector Processing",
+      "keywords": [
+        "attached",
+        "array",
+        "processor",
+        "with",
+        "host",
+        "computer",
+        "9",
+        "14",
+        "pipeline",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "bc19a8d6b2b6e1e6b67481f9667021c68e4206f96f97926170fac6158773ab8e"
+    },
+    {
+      "id": "figure-9-15",
+      "chapter": 9,
+      "chapter_title": "Pipeline and Vector Processing",
+      "section": "Chapter 9",
+      "topic": "SIMD array processor organization",
+      "caption": "SIMD array processor organization.",
+      "figure_number": "9-15",
+      "pdf_page": 337,
+      "source_pages": [
+        337
+      ],
+      "image": "academics/coa-diagrams/images/figure-9-15-p337-i1.webp",
+      "alt": "SIMD array processor organization, Figure 9-15 from Pipeline and Vector Processing",
+      "keywords": [
+        "simd",
+        "array",
+        "processor",
+        "organization",
+        "9",
+        "15",
+        "pipeline",
+        "and",
+        "vector",
+        "processing"
+      ],
+      "sha256": "be213b6b49c7f774593f1445dfdd0cd1d0d29926fa42633ff38c6885f7b15f12"
+    },
+    {
+      "id": "figure-10-1",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Hardware for signed-magnicude addition and subtraction",
+      "caption": "Hardware for signed-magnicude addition and subtraction.",
+      "figure_number": "10-1",
+      "pdf_page": 345,
+      "source_pages": [
+        345
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-1-p345-i1.webp",
+      "alt": "Hardware for signed-magnicude addition and subtraction, Figure 10-1 from Computer Arithmetic",
+      "keywords": [
+        "hardware",
+        "for",
+        "signed",
+        "magnicude",
+        "addition",
+        "and",
+        "subtraction",
+        "10",
+        "1",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "8f4f2ed57455bc1f2fe9721be843d5962866ca53d8a8ac40d4f2264a121b3318"
+    },
+    {
+      "id": "figure-10-2",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Flowchart for add and subtract operations",
+      "caption": "Flowchart for add and subtract operations.",
+      "figure_number": "10-2",
+      "pdf_page": 346,
+      "source_pages": [
+        346
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-2-p346-i1.webp",
+      "alt": "Flowchart for add and subtract operations, Figure 10-2 from Computer Arithmetic",
+      "keywords": [
+        "flowchart",
+        "for",
+        "add",
+        "and",
+        "subtract",
+        "operations",
+        "10",
+        "2",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "1d187732b74c15c124d8ead40c26994fc16acd8467d7afe96bd6d090db722492"
+    },
+    {
+      "id": "figure-10-3",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Hardware for signed-2’s complement addition and subtraction",
+      "caption": "Hardware for signed-2’s complement addition and subtraction.",
+      "figure_number": "10-3",
+      "pdf_page": 347,
+      "source_pages": [
+        347
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-3-p347-i1.webp",
+      "alt": "Hardware for signed-2’s complement addition and subtraction, Figure 10-3 from Computer Arithmetic",
+      "keywords": [
+        "hardware",
+        "for",
+        "signed",
+        "2",
+        "s",
+        "complement",
+        "addition",
+        "and",
+        "subtraction",
+        "10",
+        "3",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "9bd55ba7525c9e945893c796ccb1bc15ac007480cccf4008deae48224cd9ac83"
+    },
+    {
+      "id": "figure-10-4",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Algorithm for adding and subtracting numbers in signed-2’s",
+      "caption": "Algorithm for adding and subtracting numbers in signed-2’s",
+      "figure_number": "10-4",
+      "pdf_page": 348,
+      "source_pages": [
+        348
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-4-p348-i1.webp",
+      "alt": "Algorithm for adding and subtracting numbers in signed-2’s, Figure 10-4 from Computer Arithmetic",
+      "keywords": [
+        "algorithm",
+        "for",
+        "adding",
+        "and",
+        "subtracting",
+        "numbers",
+        "in",
+        "signed",
+        "2",
+        "s",
+        "10",
+        "4",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "9c69053e6a872ba9a2e6f5cbeaa570aae8c6fa1378d7f863848a54f79cc21566"
+    },
+    {
+      "id": "figure-10-5",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Hardware for multiply operation",
+      "caption": "Hardware for multiply operation.",
+      "figure_number": "10-5",
+      "pdf_page": 349,
+      "source_pages": [
+        349
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-5-p349-i1.webp",
+      "alt": "Hardware for multiply operation, Figure 10-5 from Computer Arithmetic",
+      "keywords": [
+        "hardware",
+        "for",
+        "multiply",
+        "operation",
+        "10",
+        "5",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "89f92295175df468626dd35db6b277bdf9c674da5b7aa54db1249fa3eedf75d4"
+    },
+    {
+      "id": "figure-10-6",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "is a flowchart of the hardware multiply algorithm. Initially, the",
+      "caption": "is a flowchart of the hardware multiply algorithm. Initially, the",
+      "figure_number": "10-6",
+      "pdf_page": 350,
+      "source_pages": [
+        350
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-6-p350-i1.webp",
+      "alt": "is a flowchart of the hardware multiply algorithm. Initially, the, Figure 10-6 from Computer Arithmetic",
+      "keywords": [
+        "is",
+        "a",
+        "flowchart",
+        "of",
+        "the",
+        "hardware",
+        "multiply",
+        "algorithm",
+        "initially",
+        "10",
+        "6",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "25c9d3abc29a68f5f2a999a6cc40bd4bde92397317a84fc27ede9771f7a2ab69"
+    },
+    {
+      "id": "figure-10-7",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Hardware for Booth algorithm",
+      "caption": "Hardware for Booth algorithm.",
+      "figure_number": "10-7",
+      "pdf_page": 352,
+      "source_pages": [
+        352
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-7-p352-i1.webp",
+      "alt": "Hardware for Booth algorithm, Figure 10-7 from Computer Arithmetic",
+      "keywords": [
+        "hardware",
+        "for",
+        "booth",
+        "algorithm",
+        "10",
+        "7",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "a712edb7a5d24aa7384390ce54e6c32b64443396b3a4e99e2b3cb1fdd1392519"
+    },
+    {
+      "id": "figure-10-8",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Booth algorithm for multiplication of signed-2's complement",
+      "caption": "Booth algorithm for multiplication of signed-2's complement",
+      "figure_number": "10-8",
+      "pdf_page": 353,
+      "source_pages": [
+        353
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-8-p353-i1.webp",
+      "alt": "Booth algorithm for multiplication of signed-2's complement, Figure 10-8 from Computer Arithmetic",
+      "keywords": [
+        "booth",
+        "algorithm",
+        "for",
+        "multiplication",
+        "of",
+        "signed",
+        "2",
+        "s",
+        "complement",
+        "10",
+        "8",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "15512182464238393d85ec559626501cce21d86fbf5495dd8f5866cb274a5da2"
+    },
+    {
+      "id": "figure-10-9",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "2-bit by 2-bit array multiplier",
+      "caption": "2-bit by 2-bit array multiplier.",
+      "figure_number": "10-9",
+      "pdf_page": 355,
+      "source_pages": [
+        355
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-9-p355-i1.webp",
+      "alt": "2-bit by 2-bit array multiplier, Figure 10-9 from Computer Arithmetic",
+      "keywords": [
+        "2",
+        "bit",
+        "by",
+        "array",
+        "multiplier",
+        "10",
+        "9",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "603fbb778ce3dffbba782e55edbd932e0e098290b70f6d4ca3ae73a8e847ca87"
+    },
+    {
+      "id": "figure-10-10",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "4c by 3-bit aray multiplier",
+      "caption": "4c by 3-bit aray multiplier.",
+      "figure_number": "10-10",
+      "pdf_page": 356,
+      "source_pages": [
+        356
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-10-p356-i1.webp",
+      "alt": "4c by 3-bit aray multiplier, Figure 10-10 from Computer Arithmetic",
+      "keywords": [
+        "4c",
+        "by",
+        "3",
+        "bit",
+        "aray",
+        "multiplier",
+        "10",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "348aec8aeb1da631198035ecafe7831dd2a908dfe8dcd402c2928c067a9317d0"
+    },
+    {
+      "id": "figure-10-11",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Example of binary division",
+      "caption": "Example of binary division.",
+      "figure_number": "10-11",
+      "pdf_page": 357,
+      "source_pages": [
+        357
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-11-p357-i1.webp",
+      "alt": "Example of binary division, Figure 10-11 from Computer Arithmetic",
+      "keywords": [
+        "example",
+        "of",
+        "binary",
+        "division",
+        "10",
+        "11",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "77f7f54dd7b731133880eac1e7e86715a89f066d9ccd60144653c389d8b08570"
+    },
+    {
+      "id": "figure-10-12",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Example of binary division with digital hardware",
+      "caption": "Example of binary division with digital hardware.",
+      "figure_number": "10-12",
+      "pdf_page": 358,
+      "source_pages": [
+        358
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-12-p358-i1.webp",
+      "alt": "Example of binary division with digital hardware, Figure 10-12 from Computer Arithmetic",
+      "keywords": [
+        "example",
+        "of",
+        "binary",
+        "division",
+        "with",
+        "digital",
+        "hardware",
+        "10",
+        "12",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "ed63758ec8e56e3a12cb101f1332b6fc460a695cdda3f34fa07e4e9ded107025"
+    },
+    {
+      "id": "figure-10-13",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Flowchart for divide operation",
+      "caption": "Flowchart for divide operation.",
+      "figure_number": "10-13",
+      "pdf_page": 360,
+      "source_pages": [
+        360
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-13-p360-i1.webp",
+      "alt": "Flowchart for divide operation, Figure 10-13 from Computer Arithmetic",
+      "keywords": [
+        "flowchart",
+        "for",
+        "divide",
+        "operation",
+        "10",
+        "13",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "3a2f7985e25aed8d755baa15ef2da2b3f917324f920b8897798a98d1e0ba0165"
+    },
+    {
+      "id": "figure-10-14",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Registers for floating-point arithmetic operations",
+      "caption": "Registers for floating-point arithmetic operations.",
+      "figure_number": "10-14",
+      "pdf_page": 365,
+      "source_pages": [
+        365
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-14-p365-i1.webp",
+      "alt": "Registers for floating-point arithmetic operations, Figure 10-14 from Computer Arithmetic",
+      "keywords": [
+        "registers",
+        "for",
+        "floating",
+        "point",
+        "arithmetic",
+        "operations",
+        "10",
+        "14",
+        "computer"
+      ],
+      "sha256": "e851b146c5939cd241b29e2ad38f8e9741bf29c02d9b496df0acf609d89a663b"
+    },
+    {
+      "id": "figure-10-15",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Addition and subtraction of floating-point numbers",
+      "caption": "Addition and subtraction of floating-point numbers.",
+      "figure_number": "10-15",
+      "pdf_page": 367,
+      "source_pages": [
+        367
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-15-p367-i1.webp",
+      "alt": "Addition and subtraction of floating-point numbers, Figure 10-15 from Computer Arithmetic",
+      "keywords": [
+        "addition",
+        "and",
+        "subtraction",
+        "of",
+        "floating",
+        "point",
+        "numbers",
+        "10",
+        "15",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "ff2de10f18e5de69860eba5a89638c1f4aa2b9b58659110bee29e332fbb37490"
+    },
+    {
+      "id": "figure-10-16",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Multiplication of floating-point numbers",
+      "caption": "Multiplication of floating-point numbers.",
+      "figure_number": "10-16",
+      "pdf_page": 369,
+      "source_pages": [
+        369
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-16-p369-i1.webp",
+      "alt": "Multiplication of floating-point numbers, Figure 10-16 from Computer Arithmetic",
+      "keywords": [
+        "multiplication",
+        "of",
+        "floating",
+        "point",
+        "numbers",
+        "10",
+        "16",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "986bad1a2f1208e732b15afcc1f62e34fbc6b6917df89b75dcbb787deabd39eb"
+    },
+    {
+      "id": "figure-10-17",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Division of floating-point numbers",
+      "caption": "Division of floating-point numbers.",
+      "figure_number": "10-17",
+      "pdf_page": 372,
+      "source_pages": [
+        372
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-17-p372-i1.webp",
+      "alt": "Division of floating-point numbers, Figure 10-17 from Computer Arithmetic",
+      "keywords": [
+        "division",
+        "of",
+        "floating",
+        "point",
+        "numbers",
+        "10",
+        "17",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "7c44383d239e3be56d8f812241e868f5fb3eeedb44f8f716a6e4e7f05c1f92a8"
+    },
+    {
+      "id": "figure-10-18",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Block diagram of BCD adder",
+      "caption": "Block diagram of BCD adder.",
+      "figure_number": "10-18",
+      "pdf_page": 375,
+      "source_pages": [
+        375
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-18-p375-i1.webp",
+      "alt": "Block diagram of BCD adder, Figure 10-18 from Computer Arithmetic",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "bcd",
+        "adder",
+        "10",
+        "18",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "8f3741f57a46abb6ab7538ad3012a87feca027f6962c58c6dceda858b0fb27df"
+    },
+    {
+      "id": "figure-10-19",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "One stage of a decimal arithmetic unit",
+      "caption": "One stage of a decimal arithmetic unit.",
+      "figure_number": "10-19",
+      "pdf_page": 377,
+      "source_pages": [
+        377
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-19-p377-i1.webp",
+      "alt": "One stage of a decimal arithmetic unit, Figure 10-19 from Computer Arithmetic",
+      "keywords": [
+        "one",
+        "stage",
+        "of",
+        "a",
+        "decimal",
+        "arithmetic",
+        "unit",
+        "10",
+        "19",
+        "computer"
+      ],
+      "sha256": "6afab679ae1abd4233225016d07d80923df23695660c852080493544136fb124"
+    },
+    {
+      "id": "figure-10-20",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Three ways of adding decimal numbers",
+      "caption": "Three ways of adding decimal numbers.",
+      "figure_number": "10-20",
+      "pdf_page": 380,
+      "source_pages": [
+        380
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-20-p380-i1.webp",
+      "alt": "Three ways of adding decimal numbers, Figure 10-20 from Computer Arithmetic",
+      "keywords": [
+        "three",
+        "ways",
+        "of",
+        "adding",
+        "decimal",
+        "numbers",
+        "10",
+        "20",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "2edd122b4d9c546dfff7217be7acb33702bfc6d181036e505b91513171879f6a"
+    },
+    {
+      "id": "figure-10-21",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Registers for decimal arithmetic multiplication and division",
+      "caption": "Registers for decimal arithmetic multiplication and division.",
+      "figure_number": "10-21",
+      "pdf_page": 381,
+      "source_pages": [
+        381
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-21-p381-i1.webp",
+      "alt": "Registers for decimal arithmetic multiplication and division, Figure 10-21 from Computer Arithmetic",
+      "keywords": [
+        "registers",
+        "for",
+        "decimal",
+        "arithmetic",
+        "multiplication",
+        "and",
+        "division",
+        "10",
+        "21",
+        "computer"
+      ],
+      "sha256": "c43638f8164636a43832e8fa1f53495cf68117adf2b8934abc67c396eb91f28f"
+    },
+    {
+      "id": "figure-10-22",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Flowchart for decimal multiplication",
+      "caption": "Flowchart for decimal multiplication.",
+      "figure_number": "10-22",
+      "pdf_page": 382,
+      "source_pages": [
+        382
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-22-p382-i1.webp",
+      "alt": "Flowchart for decimal multiplication, Figure 10-22 from Computer Arithmetic",
+      "keywords": [
+        "flowchart",
+        "for",
+        "decimal",
+        "multiplication",
+        "10",
+        "22",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "1029969451ab1f0637babdaaf637f115422f8db2b06c058d6be3686d2f7d6a2b"
+    },
+    {
+      "id": "figure-10-23",
+      "chapter": 10,
+      "chapter_title": "Computer Arithmetic",
+      "section": "Chapter 10",
+      "topic": "Flowchart for decimal division",
+      "caption": "Flowchart for decimal division.",
+      "figure_number": "10-23",
+      "pdf_page": 383,
+      "source_pages": [
+        383
+      ],
+      "image": "academics/coa-diagrams/images/figure-10-23-p383-i1.webp",
+      "alt": "Flowchart for decimal division, Figure 10-23 from Computer Arithmetic",
+      "keywords": [
+        "flowchart",
+        "for",
+        "decimal",
+        "division",
+        "10",
+        "23",
+        "computer",
+        "arithmetic"
+      ],
+      "sha256": "f4207ef5f70d37811467153baf416170ebc17139ea5cb875ae8dd6afe93ecfc5"
+    },
+    {
+      "id": "figure-11-1",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Connection of LO bus to input-output devices",
+      "caption": "Connection of LO bus to input-output devices.",
+      "figure_number": "11-1",
+      "pdf_page": 394,
+      "source_pages": [
+        394
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-1-p394-i1.webp",
+      "alt": "Connection of LO bus to input-output devices, Figure 11-1 from Input-Output Organization",
+      "keywords": [
+        "connection",
+        "of",
+        "lo",
+        "bus",
+        "to",
+        "input",
+        "output",
+        "devices",
+        "11",
+        "1",
+        "organization"
+      ],
+      "sha256": "4c1db8fde7151a5cf0962b613312cff0eabe1ae5c997779c6ce2fdb6d8ad1172"
+    },
+    {
+      "id": "figure-11-2",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Example of I/O interface unit",
+      "caption": "Example of I/O interface unit.",
+      "figure_number": "11-2",
+      "pdf_page": 398,
+      "source_pages": [
+        398
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-2-p398-i1.webp",
+      "alt": "Example of I/O interface unit, Figure 11-2 from Input-Output Organization",
+      "keywords": [
+        "example",
+        "of",
+        "i",
+        "o",
+        "interface",
+        "unit",
+        "11",
+        "2",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "6d097794cc9b576df1184a5197679988a0938505b933f3128f9cb825f63075c6"
+    },
+    {
+      "id": "figure-11-3",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Source-initiated strobe for data transfer",
+      "caption": "Source-initiated strobe for data transfer.",
+      "figure_number": "11-3",
+      "pdf_page": 400,
+      "source_pages": [
+        400
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-3-p400-i1.webp",
+      "alt": "Source-initiated strobe for data transfer, Figure 11-3 from Input-Output Organization",
+      "keywords": [
+        "source",
+        "initiated",
+        "strobe",
+        "for",
+        "data",
+        "transfer",
+        "11",
+        "3",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "08a9a9d9fd9b393fbdc80bae3289535f3b760b6f2c4f69a4565b8963aa23ef3a"
+    },
+    {
+      "id": "figure-11-4",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Destination-initiated strobe for data transfer",
+      "caption": "Destination-initiated strobe for data transfer.",
+      "figure_number": "11-4",
+      "pdf_page": 401,
+      "source_pages": [
+        401
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-4-p401-i1.webp",
+      "alt": "Destination-initiated strobe for data transfer, Figure 11-4 from Input-Output Organization",
+      "keywords": [
+        "destination",
+        "initiated",
+        "strobe",
+        "for",
+        "data",
+        "transfer",
+        "11",
+        "4",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "90a14caef22908fdd0559e9c37513422e2a872c8dc8b0c0a1d83ddc862dc9cb0"
+    },
+    {
+      "id": "figure-11-5",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Source-initiated transfer using handshaking",
+      "caption": "Source-initiated transfer using handshaking.",
+      "figure_number": "11-5",
+      "pdf_page": 402,
+      "source_pages": [
+        402
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-5-p402-i1.webp",
+      "alt": "Source-initiated transfer using handshaking, Figure 11-5 from Input-Output Organization",
+      "keywords": [
+        "source",
+        "initiated",
+        "transfer",
+        "using",
+        "handshaking",
+        "11",
+        "5",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "157a47c4bec7dacd0dfc5bd22d3f119259652138d0ef977da8c2a776fbde3dad"
+    },
+    {
+      "id": "figure-11-6",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Destination-initiated transfer using handshaking",
+      "caption": "Destination-initiated transfer using handshaking.",
+      "figure_number": "11-6",
+      "pdf_page": 403,
+      "source_pages": [
+        403
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-6-p403-i1.webp",
+      "alt": "Destination-initiated transfer using handshaking, Figure 11-6 from Input-Output Organization",
+      "keywords": [
+        "destination",
+        "initiated",
+        "transfer",
+        "using",
+        "handshaking",
+        "11",
+        "6",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "a1c7f14ebf7eff340042aa7e2cf991a8437dc442f35e90ae84688645e6877685"
+    },
+    {
+      "id": "figure-11-7",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Asynchronous serial transmission",
+      "caption": "Asynchronous serial transmission.",
+      "figure_number": "11-7",
+      "pdf_page": 405,
+      "source_pages": [
+        405
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-7-p405-i1.webp",
+      "alt": "Asynchronous serial transmission, Figure 11-7 from Input-Output Organization",
+      "keywords": [
+        "asynchronous",
+        "serial",
+        "transmission",
+        "11",
+        "7",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "0a56b2ac5307282f78ae9f329c51cd9b1dd3b7615379a6cb10f2794cdb392986"
+    },
+    {
+      "id": "figure-11-8",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Block diagram of a typical asynchronous communication interface",
+      "caption": "Block diagram of a typical asynchronous communication interface.",
+      "figure_number": "11-8",
+      "pdf_page": 407,
+      "source_pages": [
+        407
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-8-p407-i1.webp",
+      "alt": "Block diagram of a typical asynchronous communication interface, Figure 11-8 from Input-Output Organization",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "a",
+        "typical",
+        "asynchronous",
+        "communication",
+        "interface",
+        "11",
+        "8",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "a79a0f8a05ea3ed466995ba0de3d75cb03d8c733cb6bed4ee4018a53114daea4"
+    },
+    {
+      "id": "figure-11-9",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Circuit diagram of 4 X 4 FIFO buffer",
+      "caption": "Circuit diagram of 4 X 4 FIFO buffer.",
+      "figure_number": "11-9",
+      "pdf_page": 409,
+      "source_pages": [
+        409
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-9-p409-i1.webp",
+      "alt": "Circuit diagram of 4 X 4 FIFO buffer, Figure 11-9 from Input-Output Organization",
+      "keywords": [
+        "circuit",
+        "diagram",
+        "of",
+        "4",
+        "x",
+        "fifo",
+        "buffer",
+        "11",
+        "9",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "a55ad73fdb923f2af390c4d5aa9186341808dc2a35b1a2de79360dee18935e5d"
+    },
+    {
+      "id": "figure-11-10",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Data transfer from I/O device to CPU",
+      "caption": "Data transfer from I/O device to CPU.",
+      "figure_number": "11-10",
+      "pdf_page": 412,
+      "source_pages": [
+        412
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-10-p412-i1.webp",
+      "alt": "Data transfer from I/O device to CPU, Figure 11-10 from Input-Output Organization",
+      "keywords": [
+        "data",
+        "transfer",
+        "from",
+        "i",
+        "o",
+        "device",
+        "to",
+        "cpu",
+        "11",
+        "10",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "02fe736f3bb33201c74ea7d3a4f72da546b9819ff2bb3e53c89dfd7c7aa1e592"
+    },
+    {
+      "id": "figure-11-11",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Flowchart for CPU program to input data",
+      "caption": "Flowchart for CPU program to input data.",
+      "figure_number": "11-11",
+      "pdf_page": 413,
+      "source_pages": [
+        413
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-11-p413-i1.webp",
+      "alt": "Flowchart for CPU program to input data, Figure 11-11 from Input-Output Organization",
+      "keywords": [
+        "flowchart",
+        "for",
+        "cpu",
+        "program",
+        "to",
+        "input",
+        "data",
+        "11",
+        "output",
+        "organization"
+      ],
+      "sha256": "7fc79ea9b932f7d5d2853b68410f6105615f341f5ca49034ea9dba94c956733e"
+    },
+    {
+      "id": "figure-11-12",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Daisy-chain priority interrupt",
+      "caption": "Daisy-chain priority interrupt.",
+      "figure_number": "11-12",
+      "pdf_page": 417,
+      "source_pages": [
+        417
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-12-p417-i1.webp",
+      "alt": "Daisy-chain priority interrupt, Figure 11-12 from Input-Output Organization",
+      "keywords": [
+        "daisy",
+        "chain",
+        "priority",
+        "interrupt",
+        "11",
+        "12",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "c28493f65a6a82ac412d59c7584a07f5819bfff43ef57ea676b26a5dc64691e9"
+    },
+    {
+      "id": "figure-11-13",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "One stage of the daisy-chain priority arrangement",
+      "caption": "One stage of the daisy-chain priority arrangement.",
+      "figure_number": "11-13",
+      "pdf_page": 418,
+      "source_pages": [
+        418
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-13-p418-i1.webp",
+      "alt": "One stage of the daisy-chain priority arrangement, Figure 11-13 from Input-Output Organization",
+      "keywords": [
+        "one",
+        "stage",
+        "of",
+        "the",
+        "daisy",
+        "chain",
+        "priority",
+        "arrangement",
+        "11",
+        "13",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "75e11f2b0866c6c53e6e33f49d5e5d47afb3ea89b116a6041854e4c9f7524952"
+    },
+    {
+      "id": "figure-11-14",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Priority interrupt hardware",
+      "caption": "Priority interrupt hardware.",
+      "figure_number": "11-14",
+      "pdf_page": 419,
+      "source_pages": [
+        419
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-14-p419-i1.webp",
+      "alt": "Priority interrupt hardware, Figure 11-14 from Input-Output Organization",
+      "keywords": [
+        "priority",
+        "interrupt",
+        "hardware",
+        "11",
+        "14",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "647f0259e38848ccb8529d67c20d658cb346ae2130eab9b6884e4ac5585e6595"
+    },
+    {
+      "id": "figure-11-15",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Programs stored in memory for servicing interrupts",
+      "caption": "Programs stored in memory for servicing interrupts.",
+      "figure_number": "11-15",
+      "pdf_page": 421,
+      "source_pages": [
+        421
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-15-p421-i1.webp",
+      "alt": "Programs stored in memory for servicing interrupts, Figure 11-15 from Input-Output Organization",
+      "keywords": [
+        "programs",
+        "stored",
+        "in",
+        "memory",
+        "for",
+        "servicing",
+        "interrupts",
+        "11",
+        "15",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "ff4e486398919f09b69217bd01419fb427143f91e39509e7183ff239ef29e031"
+    },
+    {
+      "id": "figure-11-19",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Block diagram of a computer with I/O processor",
+      "caption": "Block diagram of a computer with I/O processor.",
+      "figure_number": "11-19",
+      "pdf_page": 424,
+      "source_pages": [
+        424
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-19-p424-i1.webp",
+      "alt": "Block diagram of a computer with I/O processor, Figure 11-19 from Input-Output Organization",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "a",
+        "computer",
+        "with",
+        "i",
+        "o",
+        "processor",
+        "11",
+        "19",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "fe12564cb419e4098041d3559193456869e89a8ccb3a8a56670cc57f2810d50e"
+    },
+    {
+      "id": "figure-11-20",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "CPU-IOP communication",
+      "caption": "CPU-IOP communication.",
+      "figure_number": "11-20",
+      "pdf_page": 425,
+      "source_pages": [
+        425
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-20-p425-i1.webp",
+      "alt": "CPU-IOP communication, Figure 11-20 from Input-Output Organization",
+      "keywords": [
+        "cpu",
+        "iop",
+        "communication",
+        "11",
+        "20",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "d253bb005150ff9c8488ac90c773fce4bf0ec9290a4e4638513c4f729953c506"
+    },
+    {
+      "id": "figure-11-21",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "IBM 370 I/O related word formats",
+      "caption": "IBM 370 I/O related word formats.",
+      "figure_number": "11-21",
+      "pdf_page": 427,
+      "source_pages": [
+        427
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-21-p427-i1.webp",
+      "alt": "IBM 370 I/O related word formats, Figure 11-21 from Input-Output Organization",
+      "keywords": [
+        "ibm",
+        "370",
+        "i",
+        "o",
+        "related",
+        "word",
+        "formats",
+        "11",
+        "21",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "b199342e14da766f211523ccf7f33157a388bf6ce8d5fadaee39aa14f945ab27"
+    },
+    {
+      "id": "figure-11-22",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Location of information in memory for I/O operations in the",
+      "caption": "Location of information in memory for I/O operations in the",
+      "figure_number": "11-22",
+      "pdf_page": 429,
+      "source_pages": [
+        429
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-22-p429-i1.webp",
+      "alt": "Location of information in memory for I/O operations in the, Figure 11-22 from Input-Output Organization",
+      "keywords": [
+        "location",
+        "of",
+        "information",
+        "in",
+        "memory",
+        "for",
+        "i",
+        "o",
+        "operations",
+        "the",
+        "11",
+        "22",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "7ae84201c68f76d50b9627f0e53d418b420411a2c7b5dad8a7bb1ea388c751e0"
+    },
+    {
+      "id": "figure-11-23",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Intel 8086/8089 microcomputer system block diagram",
+      "caption": "Intel 8086/8089 microcomputer system block diagram.",
+      "figure_number": "11-23",
+      "pdf_page": 431,
+      "source_pages": [
+        431
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-23-p431-i1.webp",
+      "alt": "Intel 8086/8089 microcomputer system block diagram, Figure 11-23 from Input-Output Organization",
+      "keywords": [
+        "intel",
+        "8086",
+        "8089",
+        "microcomputer",
+        "system",
+        "block",
+        "diagram",
+        "11",
+        "23",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "b99c908b0587906d7f686e7abc0c50247fcf0cebad4393bc689501654175fd9d"
+    },
+    {
+      "id": "figure-11-24",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Location of information in memory for I/O operations in the",
+      "caption": "Location of information in memory for I/O operations in the",
+      "figure_number": "11-24",
+      "pdf_page": 431,
+      "source_pages": [
+        431
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-24-p431-i2.webp",
+      "alt": "Location of information in memory for I/O operations in the, Figure 11-24 from Input-Output Organization",
+      "keywords": [
+        "location",
+        "of",
+        "information",
+        "in",
+        "memory",
+        "for",
+        "i",
+        "o",
+        "operations",
+        "the",
+        "11",
+        "24",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "5ad45ebfb22ba18952521711ae20e7cb89620b326963527c90ea7dc12c749e9a"
+    },
+    {
+      "id": "figure-11-25",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Typical message format for character-oriented protocol",
+      "caption": "Typical message format for character-oriented protocol.",
+      "figure_number": "11-25",
+      "pdf_page": 436,
+      "source_pages": [
+        436
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-25-p436-i1.webp",
+      "alt": "Typical message format for character-oriented protocol, Figure 11-25 from Input-Output Organization",
+      "keywords": [
+        "typical",
+        "message",
+        "format",
+        "for",
+        "character",
+        "oriented",
+        "protocol",
+        "11",
+        "25",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "474bb7ba195a1a1c010eaa1617d6de0856ff28edebf7a7f253028c65dace6c4b"
+    },
+    {
+      "id": "figure-11-26",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Frame format for bit-oriented protocol",
+      "caption": "Frame format for bit-oriented protocol.",
+      "figure_number": "11-26",
+      "pdf_page": 440,
+      "source_pages": [
+        440
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-26-p440-i1.webp",
+      "alt": "Frame format for bit-oriented protocol, Figure 11-26 from Input-Output Organization",
+      "keywords": [
+        "frame",
+        "format",
+        "for",
+        "bit",
+        "oriented",
+        "protocol",
+        "11",
+        "26",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "dba260543c3aa7f358edbb9e0d0f3bbfb53420105979e8ddfab74444371eb054"
+    },
+    {
+      "id": "figure-11-27",
+      "chapter": 11,
+      "chapter_title": "Input-Output Organization",
+      "section": "Chapter 11",
+      "topic": "Control field format in bit-oriented protocol",
+      "caption": "Control field format in bit-oriented protocol.",
+      "figure_number": "11-27",
+      "pdf_page": 441,
+      "source_pages": [
+        441
+      ],
+      "image": "academics/coa-diagrams/images/figure-11-27-p441-i1.webp",
+      "alt": "Control field format in bit-oriented protocol, Figure 11-27 from Input-Output Organization",
+      "keywords": [
+        "control",
+        "field",
+        "format",
+        "in",
+        "bit",
+        "oriented",
+        "protocol",
+        "11",
+        "27",
+        "input",
+        "output",
+        "organization"
+      ],
+      "sha256": "56b5e4bc81dafaaaac46f732affab4376553c5dc1d968f97693852feda87a27f"
+    },
+    {
+      "id": "figure-12-1",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Memory hierarchy in a computer system",
+      "caption": "Memory hierarchy in a computer system.",
+      "figure_number": "12-1",
+      "pdf_page": 448,
+      "source_pages": [
+        448
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-1-p448-i1.webp",
+      "alt": "Memory hierarchy in a computer system, Figure 12-1 from Memory Organization",
+      "keywords": [
+        "memory",
+        "hierarchy",
+        "in",
+        "a",
+        "computer",
+        "system",
+        "12",
+        "1",
+        "organization"
+      ],
+      "sha256": "3f764b76db9877b271349782fadde6ef086b1d1c165c2a09e98944319f488880"
+    },
+    {
+      "id": "figure-12-2",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Typical RAM chip",
+      "caption": "Typical RAM chip.",
+      "figure_number": "12-2",
+      "pdf_page": 451,
+      "source_pages": [
+        451
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-2-p451-i1.webp",
+      "alt": "Typical RAM chip, Figure 12-2 from Memory Organization",
+      "keywords": [
+        "typical",
+        "ram",
+        "chip",
+        "12",
+        "2",
+        "memory",
+        "organization"
+      ],
+      "sha256": "470b53d4314d6d396081a8cf4c5a02f1ceda63a760795cfd1df16fdd4d6a8347"
+    },
+    {
+      "id": "figure-12-3",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Typical ROM chip",
+      "caption": "Typical ROM chip.",
+      "figure_number": "12-3",
+      "pdf_page": 453,
+      "source_pages": [
+        453
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-3-p453-i1.webp",
+      "alt": "Typical ROM chip, Figure 12-3 from Memory Organization",
+      "keywords": [
+        "typical",
+        "rom",
+        "chip",
+        "12",
+        "3",
+        "memory",
+        "organization"
+      ],
+      "sha256": "602a7c24f52862672b1d4e697df9d75de26903dddb0fbe00c33be8b81da5ce23"
+    },
+    {
+      "id": "figure-12-4",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Memory connection to the CPU",
+      "caption": "Memory connection to the CPU.",
+      "figure_number": "12-4",
+      "pdf_page": 455,
+      "source_pages": [
+        455
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-4-p455-i1.webp",
+      "alt": "Memory connection to the CPU, Figure 12-4 from Memory Organization",
+      "keywords": [
+        "memory",
+        "connection",
+        "to",
+        "the",
+        "cpu",
+        "12",
+        "4",
+        "organization"
+      ],
+      "sha256": "fc05af31e4f23a72def08800e164469f027298e1b4e5acdc5a128c151e6f510f"
+    },
+    {
+      "id": "figure-12-5",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Magnetic disk",
+      "caption": "Magnetic disk.",
+      "figure_number": "12-5",
+      "pdf_page": 457,
+      "source_pages": [
+        457
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-5-p457-i1.webp",
+      "alt": "Magnetic disk, Figure 12-5 from Memory Organization",
+      "keywords": [
+        "magnetic",
+        "disk",
+        "12",
+        "5",
+        "memory",
+        "organization"
+      ],
+      "sha256": "185c2c4a448484d499c15250d50ca86d2d73afaaf367a07cf490a661b1cf41bc"
+    },
+    {
+      "id": "figure-12-6",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Block diagram of associative memory",
+      "caption": "Block diagram of associative memory.",
+      "figure_number": "12-6",
+      "pdf_page": 459,
+      "source_pages": [
+        459
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-6-p459-i1.webp",
+      "alt": "Block diagram of associative memory, Figure 12-6 from Memory Organization",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "associative",
+        "memory",
+        "12",
+        "6",
+        "organization"
+      ],
+      "sha256": "c00fc534f59b1f8d482683bd168f5945b51944b804b36e82520a336b0690adcc"
+    },
+    {
+      "id": "figure-12-7",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Associative memory of m word, n cells per word",
+      "caption": "Associative memory of m word, n cells per word.",
+      "figure_number": "12-7",
+      "pdf_page": 460,
+      "source_pages": [
+        460
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-7-p460-i1.webp",
+      "alt": "Associative memory of m word, n cells per word, Figure 12-7 from Memory Organization",
+      "keywords": [
+        "associative",
+        "memory",
+        "of",
+        "m",
+        "word",
+        "n",
+        "cells",
+        "per",
+        "12",
+        "7",
+        "organization"
+      ],
+      "sha256": "74cb016232a2d7456406f100360490124bb79f0cd554cf6917fcd2facbd7aa59"
+    },
+    {
+      "id": "figure-12-8",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "One cell of associative memory",
+      "caption": "One cell of associative memory.",
+      "figure_number": "12-8",
+      "pdf_page": 461,
+      "source_pages": [
+        461
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-8-p461-i1.webp",
+      "alt": "One cell of associative memory, Figure 12-8 from Memory Organization",
+      "keywords": [
+        "one",
+        "cell",
+        "of",
+        "associative",
+        "memory",
+        "12",
+        "8",
+        "organization"
+      ],
+      "sha256": "75ee760de690651a961f1627eaf87b2a746de986a69839835e9c080ecb7e6d71"
+    },
+    {
+      "id": "figure-12-9",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Match logic for one word of associative memory",
+      "caption": "Match logic for one word of associative memory.",
+      "figure_number": "12-9",
+      "pdf_page": 463,
+      "source_pages": [
+        463
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-9-p463-i1.webp",
+      "alt": "Match logic for one word of associative memory, Figure 12-9 from Memory Organization",
+      "keywords": [
+        "match",
+        "logic",
+        "for",
+        "one",
+        "word",
+        "of",
+        "associative",
+        "memory",
+        "12",
+        "9",
+        "organization"
+      ],
+      "sha256": "95b4ac2c8a258b53bf3beb10e20c8b2c2b982d4a8666fba37abaf2b5bdad087f"
+    },
+    {
+      "id": "figure-12-10",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Example of cache memory",
+      "caption": "Example of cache memory.",
+      "figure_number": "12-10",
+      "pdf_page": 466,
+      "source_pages": [
+        466
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-10-p466-i1.webp",
+      "alt": "Example of cache memory, Figure 12-10 from Memory Organization",
+      "keywords": [
+        "example",
+        "of",
+        "cache",
+        "memory",
+        "12",
+        "10",
+        "organization"
+      ],
+      "sha256": "390de873c16c1f2d268965e6705750be339e8ea4c863f8811eb0937f950ff992"
+    },
+    {
+      "id": "figure-12-11",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Associative mapping cache (all numbers in octal)",
+      "caption": "Associative mapping cache (all numbers in octal).",
+      "figure_number": "12-11",
+      "pdf_page": 466,
+      "source_pages": [
+        466
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-11-p466-i2.webp",
+      "alt": "Associative mapping cache (all numbers in octal), Figure 12-11 from Memory Organization",
+      "keywords": [
+        "associative",
+        "mapping",
+        "cache",
+        "all",
+        "numbers",
+        "in",
+        "octal",
+        "12",
+        "11",
+        "memory",
+        "organization"
+      ],
+      "sha256": "a4534a71fc673bca958e0b5ff99504f2bfd0a4126e753f0d0acc402ea09792ec"
+    },
+    {
+      "id": "figure-12-12",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Addressing relationships between main and cache memories",
+      "caption": "Addressing relationships between main and cache memories.",
+      "figure_number": "12-12",
+      "pdf_page": 467,
+      "source_pages": [
+        467
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-12-p467-i1.webp",
+      "alt": "Addressing relationships between main and cache memories, Figure 12-12 from Memory Organization",
+      "keywords": [
+        "addressing",
+        "relationships",
+        "between",
+        "main",
+        "and",
+        "cache",
+        "memories",
+        "12",
+        "memory",
+        "organization"
+      ],
+      "sha256": "551721a986b57d2ede1cdcfe233e048f656ade022df2059f85b0802340c46ed0"
+    },
+    {
+      "id": "figure-12-13",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Direct mapping cache organization",
+      "caption": "Direct mapping cache organization.",
+      "figure_number": "12-13",
+      "pdf_page": 468,
+      "source_pages": [
+        468
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-13-p468-i1.webp",
+      "alt": "Direct mapping cache organization, Figure 12-13 from Memory Organization",
+      "keywords": [
+        "direct",
+        "mapping",
+        "cache",
+        "organization",
+        "12",
+        "13",
+        "memory"
+      ],
+      "sha256": "ebc5dc27e39886c5b1f9d5b1e327c6283eacf31596823ffa9718dbe5fc1d2a6a"
+    },
+    {
+      "id": "figure-12-14",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Direct mapping cache with block size of 8 words",
+      "caption": "Direct mapping cache with block size of 8 words.",
+      "figure_number": "12-14",
+      "pdf_page": 469,
+      "source_pages": [
+        469
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-14-p469-i1.webp",
+      "alt": "Direct mapping cache with block size of 8 words, Figure 12-14 from Memory Organization",
+      "keywords": [
+        "direct",
+        "mapping",
+        "cache",
+        "with",
+        "block",
+        "size",
+        "of",
+        "8",
+        "words",
+        "12",
+        "14",
+        "memory",
+        "organization"
+      ],
+      "sha256": "00fa03d0192890afdb54bb53133a5bc2bece035f523969bfd8bbc7e1fc6b0dac"
+    },
+    {
+      "id": "figure-12-15",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Two-way set-associative mapping cache",
+      "caption": "Two-way set-associative mapping cache.",
+      "figure_number": "12-15",
+      "pdf_page": 470,
+      "source_pages": [
+        470
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-15-p470-i1.webp",
+      "alt": "Two-way set-associative mapping cache, Figure 12-15 from Memory Organization",
+      "keywords": [
+        "two",
+        "way",
+        "set",
+        "associative",
+        "mapping",
+        "cache",
+        "12",
+        "15",
+        "memory",
+        "organization"
+      ],
+      "sha256": "5a770e1987fb1372ba902e936da3eb90a6b1248afc70e9f3f962ef19f23bff4e"
+    },
+    {
+      "id": "figure-12-16",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Relation between address and memory space in a virtual",
+      "caption": "Relation between address and memory space in a virtual",
+      "figure_number": "12-16",
+      "pdf_page": 473,
+      "source_pages": [
+        473
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-16-p473-i1.webp",
+      "alt": "Relation between address and memory space in a virtual, Figure 12-16 from Memory Organization",
+      "keywords": [
+        "relation",
+        "between",
+        "address",
+        "and",
+        "memory",
+        "space",
+        "in",
+        "a",
+        "virtual",
+        "12",
+        "16",
+        "organization"
+      ],
+      "sha256": "0b60825b84ba15255d3768ddcdfbd7a789a83737c1d29034b79e959a750354e6"
+    },
+    {
+      "id": "figure-12-17",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Memory table for mapping a virtual address",
+      "caption": "Memory table for mapping a virtual address.",
+      "figure_number": "12-17",
+      "pdf_page": 473,
+      "source_pages": [
+        473
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-17-p473-i2.webp",
+      "alt": "Memory table for mapping a virtual address, Figure 12-17 from Memory Organization",
+      "keywords": [
+        "memory",
+        "table",
+        "for",
+        "mapping",
+        "a",
+        "virtual",
+        "address",
+        "12",
+        "17",
+        "organization"
+      ],
+      "sha256": "e7ffa6735ed666226c7933eeb1c29acf3642b828c815f6195a109bb76cfc3d83"
+    },
+    {
+      "id": "figure-12-18",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Address space and memory space split into groups of 1K words",
+      "caption": "Address space and memory space split into groups of 1K words.",
+      "figure_number": "12-18",
+      "pdf_page": 475,
+      "source_pages": [
+        475
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-18-p475-i1.webp",
+      "alt": "Address space and memory space split into groups of 1K words, Figure 12-18 from Memory Organization",
+      "keywords": [
+        "address",
+        "space",
+        "and",
+        "memory",
+        "split",
+        "into",
+        "groups",
+        "of",
+        "1k",
+        "words",
+        "12",
+        "18",
+        "organization"
+      ],
+      "sha256": "b5d66d870a46cc67688c03db1439d107b1253a533918fd51f471e6df4e365c69"
+    },
+    {
+      "id": "figure-12-19",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Memory table in a paged system",
+      "caption": "Memory table in a paged system.",
+      "figure_number": "12-19",
+      "pdf_page": 475,
+      "source_pages": [
+        475
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-19-p475-i2.webp",
+      "alt": "Memory table in a paged system, Figure 12-19 from Memory Organization",
+      "keywords": [
+        "memory",
+        "table",
+        "in",
+        "a",
+        "paged",
+        "system",
+        "12",
+        "19",
+        "organization"
+      ],
+      "sha256": "de734fc4ee44c3c34ee66d3c956654fef31a09fefe3b06c75295ca3c7a3045aa"
+    },
+    {
+      "id": "figure-12-20",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "An associative memory page table",
+      "caption": "An associative memory page table.",
+      "figure_number": "12-20",
+      "pdf_page": 476,
+      "source_pages": [
+        476
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-20-p476-i1.webp",
+      "alt": "An associative memory page table, Figure 12-20 from Memory Organization",
+      "keywords": [
+        "an",
+        "associative",
+        "memory",
+        "page",
+        "table",
+        "12",
+        "20",
+        "organization"
+      ],
+      "sha256": "7f8197987188199f0c329227fc7f0217d616204c197163ddd65a2a437c52d1ed"
+    },
+    {
+      "id": "figure-12-21",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Mapping in segmented-page memory management unit",
+      "caption": "Mapping in segmented-page memory management unit.",
+      "figure_number": "12-21",
+      "pdf_page": 480,
+      "source_pages": [
+        480
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-21-p480-i1.webp",
+      "alt": "Mapping in segmented-page memory management unit, Figure 12-21 from Memory Organization",
+      "keywords": [
+        "mapping",
+        "in",
+        "segmented",
+        "page",
+        "memory",
+        "management",
+        "unit",
+        "12",
+        "21",
+        "organization"
+      ],
+      "sha256": "903ac3f1a03ec030c44d1040545bbd92576286c1cee0aec08c95f1025b47f73c"
+    },
+    {
+      "id": "figure-12-22",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "An example of logical and physical addresses",
+      "caption": "An example of logical and physical addresses.",
+      "figure_number": "12-22",
+      "pdf_page": 482,
+      "source_pages": [
+        482
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-22-p482-i1.webp",
+      "alt": "An example of logical and physical addresses, Figure 12-22 from Memory Organization",
+      "keywords": [
+        "an",
+        "example",
+        "of",
+        "logical",
+        "and",
+        "physical",
+        "addresses",
+        "12",
+        "22",
+        "memory",
+        "organization"
+      ],
+      "sha256": "2a0f803737af0b05ffedb810105dbc2c926e774005e8b817c567b80d66fdc914"
+    },
+    {
+      "id": "figure-12-23",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Example of logical and physical memory address assignment",
+      "caption": "Example of logical and physical memory address assignment.",
+      "figure_number": "12-23",
+      "pdf_page": 482,
+      "source_pages": [
+        482
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-23-p482-i2.webp",
+      "alt": "Example of logical and physical memory address assignment, Figure 12-23 from Memory Organization",
+      "keywords": [
+        "example",
+        "of",
+        "logical",
+        "and",
+        "physical",
+        "memory",
+        "address",
+        "assignment",
+        "12",
+        "23",
+        "organization"
+      ],
+      "sha256": "7490e0de63f6d52ccbd5cb8443a1da4de96780fa015efd3173a90fc0840d25b1"
+    },
+    {
+      "id": "figure-12-24",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Logical to physical memory mapping example (all numbers are",
+      "caption": "Logical to physical memory mapping example (all numbers are",
+      "figure_number": "12-24",
+      "pdf_page": 483,
+      "source_pages": [
+        483
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-24-p483-i1.webp",
+      "alt": "Logical to physical memory mapping example (all numbers are, Figure 12-24 from Memory Organization",
+      "keywords": [
+        "logical",
+        "to",
+        "physical",
+        "memory",
+        "mapping",
+        "example",
+        "all",
+        "numbers",
+        "are",
+        "12",
+        "24",
+        "organization"
+      ],
+      "sha256": "47f91257ec015b48a524bc6a321b12173cf8f7f58d3e2692d9ef5a0b19e238a0"
+    },
+    {
+      "id": "figure-12-25",
+      "chapter": 12,
+      "chapter_title": "Memory Organization",
+      "section": "Chapter 12",
+      "topic": "Format of a typical segment descriptor",
+      "caption": "Format of a typical segment descriptor.",
+      "figure_number": "12-25",
+      "pdf_page": 484,
+      "source_pages": [
+        484
+      ],
+      "image": "academics/coa-diagrams/images/figure-12-25-p484-i1.webp",
+      "alt": "Format of a typical segment descriptor, Figure 12-25 from Memory Organization",
+      "keywords": [
+        "format",
+        "of",
+        "a",
+        "typical",
+        "segment",
+        "descriptor",
+        "12",
+        "25",
+        "memory",
+        "organization"
+      ],
+      "sha256": "6a2af91ea5ec4563c41edd0581821a4000232171aba17b47964bbc83831c43a3"
+    },
+    {
+      "id": "figure-13-1",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Time-shared common bus organization",
+      "caption": "Time-shared common bus organization.",
+      "figure_number": "13-1",
+      "pdf_page": 492,
+      "source_pages": [
+        492
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-1-p492-i1.webp",
+      "alt": "Time-shared common bus organization, Figure 13-1 from Multiprocessors",
+      "keywords": [
+        "time",
+        "shared",
+        "common",
+        "bus",
+        "organization",
+        "13",
+        "1",
+        "multiprocessors"
+      ],
+      "sha256": "2abf8af0002107e94216d19dbe6bc18fa4a785ef63676b8a0be2c428f7632353"
+    },
+    {
+      "id": "figure-13-2",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "System bus structure for multiprocessors",
+      "caption": "System bus structure for multiprocessors.",
+      "figure_number": "13-2",
+      "pdf_page": 493,
+      "source_pages": [
+        493
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-2-p493-i1.webp",
+      "alt": "System bus structure for multiprocessors, Figure 13-2 from Multiprocessors",
+      "keywords": [
+        "system",
+        "bus",
+        "structure",
+        "for",
+        "multiprocessors",
+        "13",
+        "2"
+      ],
+      "sha256": "6d9691076661f4cbf739e4e8fd7baf40b28f5fea9326cdb538da2e3a10787e52"
+    },
+    {
+      "id": "figure-13-3",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Multiport memory organization",
+      "caption": "Multiport memory organization.",
+      "figure_number": "13-3",
+      "pdf_page": 494,
+      "source_pages": [
+        494
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-3-p494-i1.webp",
+      "alt": "Multiport memory organization, Figure 13-3 from Multiprocessors",
+      "keywords": [
+        "multiport",
+        "memory",
+        "organization",
+        "13",
+        "3",
+        "multiprocessors"
+      ],
+      "sha256": "41365cda46ef47c23d30701e0696c844abf8e3c1dee3a4002cccd1eb55c8cf89"
+    },
+    {
+      "id": "figure-13-4",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Crossbar switch",
+      "caption": "Crossbar switch.",
+      "figure_number": "13-4",
+      "pdf_page": 495,
+      "source_pages": [
+        495
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-4-p495-i1.webp",
+      "alt": "Crossbar switch, Figure 13-4 from Multiprocessors",
+      "keywords": [
+        "crossbar",
+        "switch",
+        "13",
+        "4",
+        "multiprocessors"
+      ],
+      "sha256": "af99aa7e990f1e03d086f3071b181aaacc8a665f27f34348f3d0beaf2d68b403"
+    },
+    {
+      "id": "figure-13-5",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Block diagram of crossbar switch",
+      "caption": "Block diagram of crossbar switch.",
+      "figure_number": "13-5",
+      "pdf_page": 495,
+      "source_pages": [
+        495
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-5-p495-i2.webp",
+      "alt": "Block diagram of crossbar switch, Figure 13-5 from Multiprocessors",
+      "keywords": [
+        "block",
+        "diagram",
+        "of",
+        "crossbar",
+        "switch",
+        "13",
+        "5",
+        "multiprocessors"
+      ],
+      "sha256": "8c22cb1df705b32b5573d779a93d544d053688ba8f4f26e08f19e53a41cc4a86"
+    },
+    {
+      "id": "figure-13-6",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Operation of a 2 X 2 interchange switch",
+      "caption": "Operation of a 2 X 2 interchange switch.",
+      "figure_number": "13-6",
+      "pdf_page": 496,
+      "source_pages": [
+        496
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-6-p496-i1.webp",
+      "alt": "Operation of a 2 X 2 interchange switch, Figure 13-6 from Multiprocessors",
+      "keywords": [
+        "operation",
+        "of",
+        "a",
+        "2",
+        "x",
+        "interchange",
+        "switch",
+        "13",
+        "6",
+        "multiprocessors"
+      ],
+      "sha256": "ee137681af6207943df15ccbf49337a423527067f77e322371868d5e6ead3f8d"
+    },
+    {
+      "id": "figure-13-7",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Binary tree with 2 X 2 switches",
+      "caption": "Binary tree with 2 X 2 switches.",
+      "figure_number": "13-7",
+      "pdf_page": 497,
+      "source_pages": [
+        497
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-7-p497-i1.webp",
+      "alt": "Binary tree with 2 X 2 switches, Figure 13-7 from Multiprocessors",
+      "keywords": [
+        "binary",
+        "tree",
+        "with",
+        "2",
+        "x",
+        "switches",
+        "13",
+        "7",
+        "multiprocessors"
+      ],
+      "sha256": "90e4f27a3d818aece47e2e9ccd1aad448003bf9d127229672e85bd78feeaacd1"
+    },
+    {
+      "id": "figure-13-8",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "8 X 8 omega switching network",
+      "caption": "8 X 8 omega switching network.",
+      "figure_number": "13-8",
+      "pdf_page": 498,
+      "source_pages": [
+        498
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-8-p498-i1.webp",
+      "alt": "8 X 8 omega switching network, Figure 13-8 from Multiprocessors",
+      "keywords": [
+        "8",
+        "x",
+        "omega",
+        "switching",
+        "network",
+        "13",
+        "multiprocessors"
+      ],
+      "sha256": "3a4c0990fd422ed8dc36cc742a16bd225ed1cfa2369090899871cf2dc1656279"
+    },
+    {
+      "id": "figure-13-9",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Hypercube structures for n = 1,2,3",
+      "caption": "Hypercube structures for n = 1,2,3.",
+      "figure_number": "13-9",
+      "pdf_page": 499,
+      "source_pages": [
+        499
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-9-p499-i1.webp",
+      "alt": "Hypercube structures for n = 1,2,3, Figure 13-9 from Multiprocessors",
+      "keywords": [
+        "hypercube",
+        "structures",
+        "for",
+        "n",
+        "1",
+        "2",
+        "3",
+        "13",
+        "9",
+        "multiprocessors"
+      ],
+      "sha256": "732f90fcaea71ab75a524e4b2cf96e7283032f08d7e95de0bdcc427749b03bbc"
+    },
+    {
+      "id": "figure-13-10",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Serial (daisy-chain) arbitration",
+      "caption": "Serial (daisy-chain) arbitration.",
+      "figure_number": "13-10",
+      "pdf_page": 503,
+      "source_pages": [
+        503
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-10-p503-i1.webp",
+      "alt": "Serial (daisy-chain) arbitration, Figure 13-10 from Multiprocessors",
+      "keywords": [
+        "serial",
+        "daisy",
+        "chain",
+        "arbitration",
+        "13",
+        "10",
+        "multiprocessors"
+      ],
+      "sha256": "dbdd25478b63d4ec55ba69f1d42cb5ba825b1d397a04ef44b7bc205d1f52009d"
+    },
+    {
+      "id": "figure-13-11",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Parallel arbitration",
+      "caption": "Parallel arbitration.",
+      "figure_number": "13-11",
+      "pdf_page": 504,
+      "source_pages": [
+        504
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-11-p504-i1.webp",
+      "alt": "Parallel arbitration, Figure 13-11 from Multiprocessors",
+      "keywords": [
+        "parallel",
+        "arbitration",
+        "13",
+        "11",
+        "multiprocessors"
+      ],
+      "sha256": "3573b956c4ac935f0eebe03b8be267e6efac20e3ad919ad20ad11c850af70ab0"
+    },
+    {
+      "id": "figure-13-12",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Cache configuration after a load on X",
+      "caption": "Cache configuration after a load on X.",
+      "figure_number": "13-12",
+      "pdf_page": 511,
+      "source_pages": [
+        511
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-12-p511-i1.webp",
+      "alt": "Cache configuration after a load on X, Figure 13-12 from Multiprocessors",
+      "keywords": [
+        "cache",
+        "configuration",
+        "after",
+        "a",
+        "load",
+        "on",
+        "x",
+        "13",
+        "12",
+        "multiprocessors"
+      ],
+      "sha256": "04a29af0cae53d62bb441dc9de914c72595d006a490c48c7f31c6d49abf6f396"
+    },
+    {
+      "id": "figure-13-13",
+      "chapter": 13,
+      "chapter_title": "Multiprocessors",
+      "section": "Chapter 13",
+      "topic": "Cache configuration after a store to X by processor P,",
+      "caption": "Cache configuration after a store to X by processor P,.",
+      "figure_number": "13-13",
+      "pdf_page": 511,
+      "source_pages": [
+        511
+      ],
+      "image": "academics/coa-diagrams/images/figure-13-13-p511-i2.webp",
+      "alt": "Cache configuration after a store to X by processor P,, Figure 13-13 from Multiprocessors",
+      "keywords": [
+        "cache",
+        "configuration",
+        "after",
+        "a",
+        "store",
+        "to",
+        "x",
+        "by",
+        "processor",
+        "p",
+        "13",
+        "multiprocessors"
+      ],
+      "sha256": "f18bedbf163c393b2a7deff40d63414424c83c6b9220f89322c2e55e4a974d58"
+    }
+  ]
+}

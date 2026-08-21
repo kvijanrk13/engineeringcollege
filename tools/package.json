@@ -1,0 +1,14 @@
+{
+  "name": "engineeringcollege-coa-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "extract:coa": "node extract_coa_diagrams.mjs",
+    "test:coa": "node test_coa_diagrams.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "5.4.624",
+    "sharp": "0.34.5",
+    "tesseract.js": "7.0.0"
+  }
+}

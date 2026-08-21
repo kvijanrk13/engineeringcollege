@@ -595,6 +595,38 @@
     .ic-reference-figure figcaption { padding:10px 5px 2px; color:#475569; font-size:14px; }
     @keyframes icPulse { to { transform:translate(-50%,-50%) scale(1.2); box-shadow:0 0 0 13px rgba(239,68,68,.08),0 0 30px #ef4444; } }
     @media (max-width:760px) { .ic-datapath { grid-template-columns:1fr; } .ic-bus { width:100%; height:18px; } .ic-bus::after { left:50%; top:28px; transform:translateX(-50%); } .ic-signal-board { grid-template-columns:repeat(2,1fr); } }
+    .coa-diagram-library { margin:0 0 28px; padding:clamp(18px,3vw,30px); border:1px solid #bfdbfe; border-radius:18px; background:linear-gradient(145deg,#eff6ff,#fff); box-shadow:0 18px 40px rgba(30,64,175,.08); }
+    .coa-diagram-toolbar { display:grid; grid-template-columns:minmax(220px,1fr) auto; gap:14px; align-items:end; margin:18px 0 12px; }
+    .coa-diagram-search { display:grid; gap:6px; color:#334155; font-weight:700; }
+    .coa-diagram-search input { width:100%; padding:12px 14px; border:1px solid #94a3b8; border-radius:10px; font:inherit; background:#fff; }
+    .coa-diagram-search input:focus { outline:3px solid rgba(37,99,235,.22); border-color:#2563eb; }
+    .coa-diagram-count { color:#475569; font-weight:700; white-space:nowrap; }
+    .coa-chapter-filters { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 20px; }
+    .coa-chapter-filter { padding:8px 11px; border:1px solid #93c5fd; border-radius:999px; color:#1e3a8a; background:#fff; font:700 13px/1.2 inherit; cursor:pointer; }
+    .coa-chapter-filter[aria-pressed="true"] { color:#fff; border-color:#1d4ed8; background:#1d4ed8; }
+    .coa-diagram-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(245px,1fr)); gap:16px; }
+    .coa-diagram-card { overflow:hidden; border:1px solid #cbd5e1; border-radius:14px; background:#fff; box-shadow:0 8px 22px rgba(15,23,42,.07); }
+    .coa-diagram-open { display:block; width:100%; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:zoom-in; }
+    .coa-diagram-image-wrap { display:grid; place-items:center; height:210px; padding:8px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
+    .coa-diagram-image-wrap img { display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
+    .coa-diagram-copy { padding:13px 14px 15px; }
+    .coa-diagram-copy h3 { margin:0 0 7px; color:#0f172a; font-size:16px; line-height:1.3; }
+    .coa-diagram-copy p { margin:0; color:#475569; font-size:13px; }
+    .coa-diagram-source { display:block; margin-top:8px; color:#1d4ed8; font-weight:700; }
+    .coa-diagram-empty,.coa-diagram-error { padding:24px; border:1px dashed #94a3b8; border-radius:12px; color:#475569; background:#fff; text-align:center; }
+    .coa-diagram-error { color:#991b1b; border-color:#fca5a5; background:#fef2f2; }
+    .coa-lightbox { width:min(96vw,1200px); max-height:94vh; padding:0; border:0; border-radius:16px; background:#fff; box-shadow:0 28px 90px rgba(0,0,0,.42); }
+    .coa-lightbox::backdrop { background:rgba(15,23,42,.82); }
+    .coa-lightbox-layout { display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:94vh; }
+    .coa-lightbox-head,.coa-lightbox-foot { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 16px; }
+    .coa-lightbox-head { border-bottom:1px solid #e2e8f0; }
+    .coa-lightbox-head h3 { margin:0; font-size:18px; }
+    .coa-lightbox-close,.coa-lightbox-nav { min-width:42px; min-height:42px; border:1px solid #94a3b8; border-radius:9px; background:#fff; font:700 16px/1 inherit; cursor:pointer; }
+    .coa-lightbox-stage { overflow:auto; display:grid; place-items:center; padding:16px; background:#f1f5f9; }
+    .coa-lightbox-stage img { display:block; max-width:100%; height:auto; background:#fff; }
+    .coa-lightbox-foot { border-top:1px solid #e2e8f0; color:#475569; }
+    .coa-lightbox-caption { flex:1; margin:0; text-align:center; font-size:14px; }
+    @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-lightbox-foot { gap:7px; padding:9px; } }
   </style>
 </head>
 <body>
@@ -611,6 +643,38 @@
     </nav>
 
     <section class="tab-panel active" id="coa-panel" role="tabpanel" aria-labelledby="coa-tab">
+      <article class="coa-diagram-library" id="coa-diagram-library" data-manifest-url="{% static 'academics/coa-diagrams/manifest.json' %}" aria-labelledby="coa-diagram-title">
+        <div class="topic-head">
+          <div>
+            <p class="eyebrow" style="color:var(--blue)">Complete scanned-textbook figure index</p>
+            <h2 id="coa-diagram-title">COA Textbook Diagrams</h2>
+            <p>Browse 193 instructional figures extracted from all 524 pages, organized by chapter and labeled with their printed topics.</p>
+          </div>
+        </div>
+        <div class="coa-diagram-toolbar">
+          <label class="coa-diagram-search" for="coa-diagram-search">Search diagrams
+            <input id="coa-diagram-search" type="search" placeholder="Try instruction cycle, cache, logic gate..." autocomplete="off">
+          </label>
+          <div class="coa-diagram-count" id="coa-diagram-count" aria-live="polite">Loading diagram index…</div>
+        </div>
+        <div class="coa-chapter-filters" id="coa-chapter-filters" aria-label="Filter diagrams by chapter"></div>
+        <div class="coa-diagram-grid" id="coa-diagram-grid" aria-busy="true"></div>
+        <div class="coa-diagram-empty" id="coa-diagram-empty" hidden>No diagrams match this search and chapter filter.</div>
+        <div class="coa-diagram-error" id="coa-diagram-error" role="alert" hidden>The textbook diagram index could not be loaded. Please refresh the page.</div>
+      </article>
+
+      <dialog class="coa-lightbox" id="coa-diagram-lightbox" aria-labelledby="coa-lightbox-title" aria-describedby="coa-lightbox-caption">
+        <div class="coa-lightbox-layout">
+          <header class="coa-lightbox-head"><h3 id="coa-lightbox-title">Diagram</h3><button class="coa-lightbox-close" type="button" aria-label="Close diagram viewer">&#10005;</button></header>
+          <div class="coa-lightbox-stage"><img id="coa-lightbox-image" alt=""></div>
+          <footer class="coa-lightbox-foot">
+            <button class="coa-lightbox-nav" id="coa-lightbox-previous" type="button" aria-label="Previous diagram">&#8592;</button>
+            <p class="coa-lightbox-caption" id="coa-lightbox-caption"></p>
+            <button class="coa-lightbox-nav" id="coa-lightbox-next" type="button" aria-label="Next diagram">&#8594;</button>
+          </footer>
+        </div>
+      </dialog>
+
       <article class="video-text-library" aria-labelledby="video-text-title">
         <div class="topic-head">
           <div>
@@ -2563,6 +2627,102 @@ Bread,Butter`;
     buildArithmeticCircuit(0);
     buildIncrementer();
     runApriori();
+  </script>
+  <script>
+    (() => {
+      const library = document.getElementById('coa-diagram-library');
+      const grid = document.getElementById('coa-diagram-grid');
+      const filters = document.getElementById('coa-chapter-filters');
+      const search = document.getElementById('coa-diagram-search');
+      const count = document.getElementById('coa-diagram-count');
+      const empty = document.getElementById('coa-diagram-empty');
+      const error = document.getElementById('coa-diagram-error');
+      const dialog = document.getElementById('coa-diagram-lightbox');
+      const dialogImage = document.getElementById('coa-lightbox-image');
+      const dialogTitle = document.getElementById('coa-lightbox-title');
+      const dialogCaption = document.getElementById('coa-lightbox-caption');
+      const previous = document.getElementById('coa-lightbox-previous');
+      const next = document.getElementById('coa-lightbox-next');
+      const manifestUrl = library.dataset.manifestUrl;
+      let figures = [], visibleFigures = [], selectedChapter = 'all', lightboxIndex = -1, returnFocus = null;
+
+      const imageUrl = figure => manifestUrl.replace('academics/coa-diagrams/manifest.json', figure.image);
+      const element = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== undefined) node.textContent = text;
+        return node;
+      };
+
+      function makeFilter(label, value, pressed = false) {
+        const button = element('button', 'coa-chapter-filter', label);
+        button.type = 'button'; button.dataset.chapter = value; button.setAttribute('aria-pressed', String(pressed));
+        button.addEventListener('click', () => {
+          selectedChapter = value;
+          filters.querySelectorAll('button').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+          render();
+        });
+        return button;
+      }
+
+      function openLightbox(index, trigger) {
+        const figure = visibleFigures[index];
+        if (!figure) return;
+        lightboxIndex = index; returnFocus = trigger || document.activeElement;
+        dialogTitle.textContent = `${figure.topic} — Figure ${figure.figure_number}`;
+        dialogCaption.textContent = `${figure.caption} · Chapter ${figure.chapter}: ${figure.chapter_title} · PDF page ${figure.pdf_page}`;
+        dialogImage.src = imageUrl(figure); dialogImage.alt = figure.alt;
+        previous.disabled = index === 0; next.disabled = index === visibleFigures.length - 1;
+        if (!dialog.open) dialog.showModal();
+      }
+
+      function makeCard(figure, index) {
+        const card = element('article', 'coa-diagram-card');
+        const button = element('button', 'coa-diagram-open'); button.type = 'button';
+        button.setAttribute('aria-label', `Open full-size ${figure.topic}, Figure ${figure.figure_number}`);
+        const imageWrap = element('span', 'coa-diagram-image-wrap');
+        const image = document.createElement('img'); image.src = imageUrl(figure); image.alt = figure.alt; image.loading = 'lazy'; image.decoding = 'async';
+        image.addEventListener('error', () => { image.alt = ''; imageWrap.textContent = 'Image unavailable'; card.dataset.imageError = 'true'; });
+        imageWrap.appendChild(image);
+        const copy = element('span', 'coa-diagram-copy');
+        copy.appendChild(element('h3', '', figure.topic));
+        copy.appendChild(element('p', '', `Figure ${figure.figure_number} · Chapter ${figure.chapter}: ${figure.chapter_title}`));
+        copy.appendChild(element('span', 'coa-diagram-source', `Source PDF page ${figure.pdf_page}`));
+        button.append(imageWrap, copy); button.addEventListener('click', () => openLightbox(index, button)); card.appendChild(button);
+        return card;
+      }
+
+      function render() {
+        const query = search.value.trim().toLocaleLowerCase();
+        visibleFigures = figures.filter(figure => (selectedChapter === 'all' || String(figure.chapter) === selectedChapter) && (!query || `${figure.topic} ${figure.caption} ${figure.figure_number} ${figure.chapter_title} ${figure.keywords.join(' ')}`.toLocaleLowerCase().includes(query)));
+        const fragment = document.createDocumentFragment();
+        visibleFigures.forEach((figure, index) => fragment.appendChild(makeCard(figure, index)));
+        grid.replaceChildren(fragment); grid.setAttribute('aria-busy', 'false');
+        count.textContent = `Showing ${visibleFigures.length} of ${figures.length} diagrams`;
+        empty.hidden = visibleFigures.length !== 0;
+      }
+
+      search.addEventListener('input', render);
+      previous.addEventListener('click', () => openLightbox(lightboxIndex - 1));
+      next.addEventListener('click', () => openLightbox(lightboxIndex + 1));
+      dialog.querySelector('.coa-lightbox-close').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+      dialog.addEventListener('close', () => { dialogImage.removeAttribute('src'); if (returnFocus?.isConnected) returnFocus.focus(); });
+      dialog.addEventListener('keydown', event => {
+        if (event.key === 'ArrowLeft' && lightboxIndex > 0) { event.preventDefault(); openLightbox(lightboxIndex - 1); }
+        if (event.key === 'ArrowRight' && lightboxIndex < visibleFigures.length - 1) { event.preventDefault(); openLightbox(lightboxIndex + 1); }
+      });
+
+      fetch(manifestUrl).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); }).then(manifest => {
+        figures = manifest.figures;
+        filters.appendChild(makeFilter(`All chapters (${figures.length})`, 'all', true));
+        manifest.chapters.filter(chapter => chapter.count).forEach(chapter => filters.appendChild(makeFilter(`Ch. ${chapter.number} (${chapter.count})`, String(chapter.number))));
+        render();
+      }).catch(loadError => {
+        console.error('COA diagram manifest failed to load', loadError);
+        grid.setAttribute('aria-busy', 'false'); count.textContent = 'Diagram index unavailable'; error.hidden = false;
+      });
+    })();
   </script>
 </body>
 </html>
