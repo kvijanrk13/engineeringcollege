@@ -604,10 +604,10 @@
     .coa-chapter-filters { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 20px; }
     .coa-chapter-filter { padding:8px 11px; border:1px solid #93c5fd; border-radius:999px; color:#1e3a8a; background:#fff; font:700 13px/1.2 inherit; cursor:pointer; }
     .coa-chapter-filter[aria-pressed="true"] { color:#fff; border-color:#1d4ed8; background:#1d4ed8; }
-    .coa-diagram-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(245px,1fr)); gap:16px; }
+    .coa-diagram-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:22px; }
     .coa-diagram-card { overflow:hidden; border:1px solid #cbd5e1; border-radius:14px; background:#fff; box-shadow:0 8px 22px rgba(15,23,42,.07); }
     .coa-diagram-open { display:block; width:100%; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:zoom-in; }
-    .coa-diagram-image-wrap { display:grid; place-items:center; height:210px; padding:8px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
+    .coa-diagram-image-wrap { display:grid; place-items:center; height:clamp(300px,34vw,430px); padding:14px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
     .coa-diagram-image-wrap img { display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
     .coa-diagram-copy { padding:13px 14px 15px; }
     .coa-diagram-copy h3 { margin:0 0 7px; color:#0f172a; font-size:16px; line-height:1.3; }
@@ -615,18 +615,31 @@
     .coa-diagram-source { display:block; margin-top:8px; color:#1d4ed8; font-weight:700; }
     .coa-diagram-empty,.coa-diagram-error { padding:24px; border:1px dashed #94a3b8; border-radius:12px; color:#475569; background:#fff; text-align:center; }
     .coa-diagram-error { color:#991b1b; border-color:#fca5a5; background:#fef2f2; }
-    .coa-lightbox { width:min(96vw,1200px); max-height:94vh; padding:0; border:0; border-radius:16px; background:#fff; box-shadow:0 28px 90px rgba(0,0,0,.42); }
+    .coa-lightbox { width:98vw; max-width:1600px; height:96vh; max-height:96vh; padding:0; border:0; border-radius:16px; background:#fff; box-shadow:0 28px 90px rgba(0,0,0,.42); }
     .coa-lightbox::backdrop { background:rgba(15,23,42,.82); }
-    .coa-lightbox-layout { display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:94vh; }
+    .coa-lightbox-layout { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; height:96vh; max-height:96vh; }
     .coa-lightbox-head,.coa-lightbox-foot { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 16px; }
     .coa-lightbox-head { border-bottom:1px solid #e2e8f0; }
     .coa-lightbox-head h3 { margin:0; font-size:18px; }
     .coa-lightbox-close,.coa-lightbox-nav { min-width:42px; min-height:42px; border:1px solid #94a3b8; border-radius:9px; background:#fff; font:700 16px/1 inherit; cursor:pointer; }
-    .coa-lightbox-stage { overflow:auto; display:grid; place-items:center; padding:16px; background:#f1f5f9; }
-    .coa-lightbox-stage img { display:block; max-width:100%; height:auto; background:#fff; }
+    .coa-lightbox-stage { position:relative; overflow:hidden; display:grid; place-items:center; min-height:360px; padding:20px; background:#e2e8f0; }
+    .coa-lightbox-stage img { display:block; max-width:96%; max-height:100%; width:auto; height:auto; background:#fff; transform-origin:center; transition:transform 1.1s cubic-bezier(.2,.75,.25,1),filter .5s; box-shadow:0 12px 34px rgba(15,23,42,.16); }
+    .coa-lightbox-stage.is-animating img { filter:contrast(1.04) saturate(1.03); }
+    .coa-animation-focus { --focus-x:50%; --focus-y:50%; position:absolute; left:var(--focus-x); top:var(--focus-y); width:72px; height:72px; border:4px solid #ef4444; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 10px rgba(239,68,68,.16),0 0 28px rgba(239,68,68,.8); transition:left 1.1s ease,top 1.1s ease; pointer-events:none; animation:coaFocusPulse .9s infinite alternate; }
+    @keyframes coaFocusPulse { to { width:90px; height:90px; box-shadow:0 0 0 15px rgba(239,68,68,.08),0 0 36px rgba(239,68,68,.9); } }
+    .coa-animation-panel { display:grid; grid-template-columns:auto minmax(220px,1fr) auto; align-items:center; gap:14px; padding:12px 16px; border-top:1px solid #cbd5e1; background:#eff6ff; }
+    .coa-animation-controls { display:flex; flex-wrap:wrap; gap:8px; }
+    .coa-animation-button { min-height:40px; padding:8px 12px; border:1px solid #60a5fa; border-radius:9px; color:#1e3a8a; background:#fff; font:700 14px/1 inherit; cursor:pointer; }
+    .coa-animation-button.primary { color:#fff; border-color:#1d4ed8; background:#1d4ed8; }
+    .coa-animation-button:disabled { opacity:.45; cursor:not-allowed; }
+    .coa-animation-copy strong,.coa-animation-copy span { display:block; }
+    .coa-animation-copy strong { margin-bottom:4px; color:#0f172a; }
+    .coa-animation-copy span { color:#334155; font-size:14px; line-height:1.4; }
+    .coa-animation-progress { color:#1e3a8a; font-weight:800; white-space:nowrap; }
     .coa-lightbox-foot { border-top:1px solid #e2e8f0; color:#475569; }
     .coa-lightbox-caption { flex:1; margin:0; text-align:center; font-size:14px; }
-    @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-lightbox-foot { gap:7px; padding:9px; } }
+    @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-diagram-image-wrap { height:330px; } .coa-lightbox { width:100vw; height:100vh; max-height:100vh; border-radius:0; } .coa-lightbox-layout { height:100vh; max-height:100vh; } .coa-lightbox-stage { min-height:260px; padding:8px; } .coa-animation-panel { grid-template-columns:1fr; gap:8px; padding:10px; } .coa-animation-progress { white-space:normal; } .coa-lightbox-foot { gap:7px; padding:9px; } }
+    @media (prefers-reduced-motion:reduce) { .coa-lightbox-stage img,.coa-animation-focus { transition:none; } .coa-animation-focus { animation:none; } }
   </style>
 </head>
 <body>
@@ -666,7 +679,16 @@
       <dialog class="coa-lightbox" id="coa-diagram-lightbox" aria-labelledby="coa-lightbox-title" aria-describedby="coa-lightbox-caption">
         <div class="coa-lightbox-layout">
           <header class="coa-lightbox-head"><h3 id="coa-lightbox-title">Diagram</h3><button class="coa-lightbox-close" type="button" aria-label="Close diagram viewer">&#10005;</button></header>
-          <div class="coa-lightbox-stage"><img id="coa-lightbox-image" alt=""></div>
+          <div class="coa-lightbox-stage" id="coa-lightbox-stage"><img id="coa-lightbox-image" alt=""><span class="coa-animation-focus" id="coa-animation-focus" aria-hidden="true" hidden></span></div>
+          <section class="coa-animation-panel" aria-labelledby="coa-animation-step-title">
+            <div class="coa-animation-controls">
+              <button class="coa-animation-button primary" id="coa-animation-play" type="button">&#9654; Animate working</button>
+              <button class="coa-animation-button" id="coa-animation-step-previous" type="button" aria-label="Previous explanation step">&#8592; Step</button>
+              <button class="coa-animation-button" id="coa-animation-step-next" type="button" aria-label="Next explanation step">Step &#8594;</button>
+            </div>
+            <div class="coa-animation-copy" aria-live="polite"><strong id="coa-animation-step-title">Step-by-step working</strong><span id="coa-animation-step-text">Press Animate working to trace this diagram.</span></div>
+            <div class="coa-animation-progress" id="coa-animation-progress">Step 0 of 4</div>
+          </section>
           <footer class="coa-lightbox-foot">
             <button class="coa-lightbox-nav" id="coa-lightbox-previous" type="button" aria-label="Previous diagram">&#8592;</button>
             <p class="coa-lightbox-caption" id="coa-lightbox-caption"></p>
@@ -2641,10 +2663,19 @@ Bread,Butter`;
       const dialogImage = document.getElementById('coa-lightbox-image');
       const dialogTitle = document.getElementById('coa-lightbox-title');
       const dialogCaption = document.getElementById('coa-lightbox-caption');
+      const dialogStage = document.getElementById('coa-lightbox-stage');
+      const animationFocus = document.getElementById('coa-animation-focus');
+      const animationPlay = document.getElementById('coa-animation-play');
+      const stepPrevious = document.getElementById('coa-animation-step-previous');
+      const stepNext = document.getElementById('coa-animation-step-next');
+      const stepTitle = document.getElementById('coa-animation-step-title');
+      const stepText = document.getElementById('coa-animation-step-text');
+      const stepProgress = document.getElementById('coa-animation-progress');
       const previous = document.getElementById('coa-lightbox-previous');
       const next = document.getElementById('coa-lightbox-next');
       const manifestUrl = library.dataset.manifestUrl;
       let figures = [], visibleFigures = [], selectedChapter = 'all', lightboxIndex = -1, returnFocus = null;
+      let activeSteps = [], stepIndex = -1, animationTimer = null, isPlaying = false;
 
       const imageUrl = figure => manifestUrl.replace('academics/coa-diagrams/manifest.json', figure.image);
       const element = (tag, className, text) => {
@@ -2665,6 +2696,78 @@ Bread,Butter`;
         return button;
       }
 
+      function workingSteps(figure) {
+        const subject = figure.topic.replace(/[.]$/, '');
+        const words = `${figure.topic} ${figure.caption} ${figure.chapter_title}`.toLocaleLowerCase();
+        if (/flowchart|instruction|control|sequence|microprogram/.test(words)) return [
+          { title:'1. Start and inputs', text:`Locate the starting state and inputs of ${subject}. Arrows show where control begins.`, x:50, y:18, scale:1.16, tx:0, ty:12 },
+          { title:'2. Decode the decision', text:'Follow the first control or decision path. Its condition selects the next microoperation or branch.', x:50, y:42, scale:1.28, tx:0, ty:2 },
+          { title:'3. Execute the operation', text:'Trace the selected path through the operation blocks. Each arrow represents the order of data transfer or control.', x:55, y:68, scale:1.25, tx:-2, ty:-10 },
+          { title:'4. Complete and repeat', text:`Observe the result or return path. ${subject} finishes by producing its output or restoring the next starting state.`, x:50, y:86, scale:1.12, tx:0, ty:-10 },
+        ];
+        if (/gate|flip-flop|logic|adder|subtractor|arithmetic|circuit/.test(words)) return [
+          { title:'1. Apply the inputs', text:`Read the input variables and control values entering ${subject}.`, x:18, y:50, scale:1.24, tx:12, ty:0 },
+          { title:'2. Evaluate each stage', text:'Follow the signal from left to right through each gate or arithmetic element, applying the operation shown by its symbol.', x:43, y:48, scale:1.3, tx:4, ty:0 },
+          { title:'3. Propagate intermediate values', text:'Intermediate outputs become inputs to the next stage; clock or carry paths determine when and how they propagate.', x:68, y:50, scale:1.28, tx:-7, ty:0 },
+          { title:'4. Read the result', text:`The final line gives the output of ${subject}; compare it with the stated Boolean, arithmetic, or timing condition.`, x:88, y:50, scale:1.22, tx:-12, ty:0 },
+        ];
+        if (/memory|cache|register|bus|storage|address/.test(words)) return [
+          { title:'1. Identify storage and address paths', text:`Locate the storage blocks, address source, and data inputs in ${subject}.`, x:42, y:22, scale:1.2, tx:3, ty:10 },
+          { title:'2. Select the source', text:'Address, select, read/write, or load controls choose the active location and the source that may place data on the path.', x:22, y:52, scale:1.26, tx:10, ty:0 },
+          { title:'3. Transfer the data', text:'Follow the arrows or common bus from the selected source to the enabled destination during the active control interval.', x:55, y:53, scale:1.3, tx:-2, ty:0 },
+          { title:'4. Store or return the result', text:`The destination captures the value, or ${subject} returns the selected word to the processor/output path.`, x:82, y:55, scale:1.22, tx:-12, ty:0 },
+        ];
+        if (/pipeline|network|switch|interconnect|processor|multiprocessor|array/.test(words)) return [
+          { title:'1. Locate source and destination', text:`Identify the processing nodes or stages and the entry and exit points of ${subject}.`, x:18, y:28, scale:1.2, tx:12, ty:8 },
+          { title:'2. Enter the first stage', text:'Input data or a request enters the first available processing or switching stage.', x:32, y:48, scale:1.27, tx:7, ty:0 },
+          { title:'3. Route through the structure', text:'Trace connections stage by stage. Control, destination bits, or availability determines the active route.', x:58, y:52, scale:1.3, tx:-3, ty:0 },
+          { title:'4. Produce the destination result', text:`The final stage delivers the processed value or establishes the requested connection in ${subject}.`, x:84, y:62, scale:1.2, tx:-12, ty:-5 },
+        ];
+        return [
+          { title:'1. Overview', text:`Identify the complete ${subject} and the labeled blocks, arrows, signals, or values that connect its parts.`, x:50, y:22, scale:1.15, tx:0, ty:10 },
+          { title:'2. Main components', text:'Read each labeled component and determine the information, signal, or value it receives.', x:27, y:50, scale:1.25, tx:9, ty:0 },
+          { title:'3. Working relationship', text:'Follow arrows and connecting lines to see how one component changes, controls, or supplies the next.', x:62, y:52, scale:1.3, tx:-5, ty:0 },
+          { title:'4. Final meaning', text:`Combine the paths and labels to explain the complete purpose and result of ${subject}.`, x:78, y:72, scale:1.18, tx:-10, ty:-7 },
+        ];
+      }
+
+      function stopAnimation() {
+        clearTimeout(animationTimer); animationTimer = null; isPlaying = false;
+        animationPlay.innerHTML = '&#9654; Animate working';
+      }
+
+      function showStep(index) {
+        if (!activeSteps.length) return;
+        stepIndex = Math.max(0, Math.min(index, activeSteps.length - 1));
+        const step = activeSteps[stepIndex];
+        stepTitle.textContent = step.title; stepText.textContent = step.text;
+        stepProgress.textContent = `Step ${stepIndex + 1} of ${activeSteps.length}`;
+        stepPrevious.disabled = stepIndex === 0; stepNext.disabled = stepIndex === activeSteps.length - 1;
+        dialogImage.style.transform = `translate(${step.tx}%,${step.ty}%) scale(${step.scale})`;
+        animationFocus.hidden = false; animationFocus.style.setProperty('--focus-x', `${step.x}%`); animationFocus.style.setProperty('--focus-y', `${step.y}%`);
+        dialogStage.classList.add('is-animating');
+      }
+
+      function scheduleAnimation() {
+        clearTimeout(animationTimer);
+        if (!isPlaying) return;
+        if (stepIndex >= activeSteps.length - 1) { stopAnimation(); return; }
+        animationTimer = setTimeout(() => { showStep(stepIndex + 1); scheduleAnimation(); }, 3800);
+      }
+
+      function toggleAnimation() {
+        if (isPlaying) { stopAnimation(); return; }
+        if (stepIndex < 0 || stepIndex >= activeSteps.length - 1) showStep(0);
+        isPlaying = true; animationPlay.textContent = 'Pause animation'; scheduleAnimation();
+      }
+
+      function resetAnimation(figure) {
+        stopAnimation(); activeSteps = workingSteps(figure); stepIndex = -1;
+        dialogImage.style.transform = ''; animationFocus.hidden = true; dialogStage.classList.remove('is-animating');
+        stepTitle.textContent = 'Step-by-step working'; stepText.textContent = `Press Animate working to trace ${figure.topic}.`;
+        stepProgress.textContent = `Step 0 of ${activeSteps.length}`; stepPrevious.disabled = true; stepNext.disabled = false;
+      }
+
       function openLightbox(index, trigger) {
         const figure = visibleFigures[index];
         if (!figure) return;
@@ -2672,6 +2775,7 @@ Bread,Butter`;
         dialogTitle.textContent = `${figure.topic} — Figure ${figure.figure_number}`;
         dialogCaption.textContent = `${figure.caption} · Chapter ${figure.chapter}: ${figure.chapter_title} · PDF page ${figure.pdf_page}`;
         dialogImage.src = imageUrl(figure); dialogImage.alt = figure.alt;
+        resetAnimation(figure);
         previous.disabled = index === 0; next.disabled = index === visibleFigures.length - 1;
         if (!dialog.open) dialog.showModal();
       }
@@ -2679,7 +2783,7 @@ Bread,Butter`;
       function makeCard(figure, index) {
         const card = element('article', 'coa-diagram-card');
         const button = element('button', 'coa-diagram-open'); button.type = 'button';
-        button.setAttribute('aria-label', `Open full-size ${figure.topic}, Figure ${figure.figure_number}`);
+        button.setAttribute('aria-label', `Enlarge and animate ${figure.topic}, Figure ${figure.figure_number}`);
         const imageWrap = element('span', 'coa-diagram-image-wrap');
         const image = document.createElement('img'); image.src = imageUrl(figure); image.alt = figure.alt; image.loading = 'lazy'; image.decoding = 'async';
         image.addEventListener('error', () => { image.alt = ''; imageWrap.textContent = 'Image unavailable'; card.dataset.imageError = 'true'; });
@@ -2688,6 +2792,7 @@ Bread,Butter`;
         copy.appendChild(element('h3', '', figure.topic));
         copy.appendChild(element('p', '', `Figure ${figure.figure_number} · Chapter ${figure.chapter}: ${figure.chapter_title}`));
         copy.appendChild(element('span', 'coa-diagram-source', `Source PDF page ${figure.pdf_page}`));
+        copy.appendChild(element('span', 'coa-diagram-source', 'Enlarge + animate working'));
         button.append(imageWrap, copy); button.addEventListener('click', () => openLightbox(index, button)); card.appendChild(button);
         return card;
       }
@@ -2705,12 +2810,18 @@ Bread,Butter`;
       search.addEventListener('input', render);
       previous.addEventListener('click', () => openLightbox(lightboxIndex - 1));
       next.addEventListener('click', () => openLightbox(lightboxIndex + 1));
+      animationPlay.addEventListener('click', toggleAnimation);
+      stepPrevious.addEventListener('click', () => { stopAnimation(); showStep(stepIndex <= 0 ? 0 : stepIndex - 1); });
+      stepNext.addEventListener('click', () => { stopAnimation(); showStep(stepIndex < 0 ? 0 : stepIndex + 1); });
       dialog.querySelector('.coa-lightbox-close').addEventListener('click', () => dialog.close());
       dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-      dialog.addEventListener('close', () => { dialogImage.removeAttribute('src'); if (returnFocus?.isConnected) returnFocus.focus(); });
+      dialog.addEventListener('close', () => { stopAnimation(); dialogImage.removeAttribute('src'); dialogImage.style.transform = ''; animationFocus.hidden = true; if (returnFocus?.isConnected) returnFocus.focus(); });
       dialog.addEventListener('keydown', event => {
         if (event.key === 'ArrowLeft' && lightboxIndex > 0) { event.preventDefault(); openLightbox(lightboxIndex - 1); }
         if (event.key === 'ArrowRight' && lightboxIndex < visibleFigures.length - 1) { event.preventDefault(); openLightbox(lightboxIndex + 1); }
+        if (event.key === 'PageUp') { event.preventDefault(); stopAnimation(); showStep(stepIndex <= 0 ? 0 : stepIndex - 1); }
+        if (event.key === 'PageDown') { event.preventDefault(); stopAnimation(); showStep(stepIndex < 0 ? 0 : stepIndex + 1); }
+        if (event.key === ' ') { event.preventDefault(); toggleAnimation(); }
       });
 
       fetch(manifestUrl).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); }).then(manifest => {
