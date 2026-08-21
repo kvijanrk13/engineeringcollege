@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -586,6 +587,13 @@
     .ic-arrow { font-size:21px; color:#64748b; line-height:1; }
     .ic-animation-status { min-height:84px; margin-top:14px; padding:15px; border-left:5px solid #2563eb; border-radius:10px; background:#fff; }
     .ic-step-count { font-size:13px; color:#64748b; font-weight:700; }
+    .ic-reference-figure { margin:18px auto; max-width:980px; padding:12px; border:1px solid #cbd5e1; border-radius:14px; background:#fff; box-shadow:0 12px 28px rgba(15,23,42,.08); }
+    .ic-reference-stage { position:relative; overflow:hidden; border-radius:8px; background:#fff; }
+    .ic-reference-stage img { display:block; width:100%; height:auto; }
+    .ic-marker { --x:50%; --y:10%; position:absolute; left:var(--x); top:var(--y); width:25px; height:25px; border:5px solid #ef4444; border-radius:50%; background:rgba(254,226,226,.75); transform:translate(-50%,-50%); box-shadow:0 0 0 8px rgba(239,68,68,.16),0 0 24px #ef4444; transition:left .55s ease,top .55s ease; pointer-events:none; animation:icPulse 1s infinite alternate; }
+    .ic-marker::after { content:attr(data-label); position:absolute; left:29px; top:-9px; min-width:max-content; padding:5px 8px; border-radius:7px; color:#fff; background:#b91c1c; font:700 12px/1.2 system-ui,sans-serif; }
+    .ic-reference-figure figcaption { padding:10px 5px 2px; color:#475569; font-size:14px; }
+    @keyframes icPulse { to { transform:translate(-50%,-50%) scale(1.2); box-shadow:0 0 0 13px rgba(239,68,68,.08),0 0 30px #ef4444; } }
     @media (max-width:760px) { .ic-datapath { grid-template-columns:1fr; } .ic-bus { width:100%; height:18px; } .ic-bus::after { left:50%; top:28px; transform:translateX(-50%); } .ic-signal-board { grid-template-columns:repeat(2,1fr); } }
   </style>
 </head>
@@ -872,6 +880,21 @@
               <button id="ic-auto" class="btn secondary" type="button">&#9654; Auto play</button>
               <button id="ic-reset" class="btn light" type="button">Reset</button>
             </div>
+
+            <figure id="ic-fetch-reference" class="ic-reference-figure">
+              <div class="ic-reference-stage">
+                <img src="{% static 'academics/images/instruction-cycle-fetch-hardware.png' %}" alt="Fetch-cycle hardware diagram showing memory, AR, PC, IR, common bus, timing and control signals" loading="lazy">
+                <span id="ic-fetch-marker" class="ic-marker" data-label="Ready" aria-hidden="true"></span>
+              </div>
+              <figcaption><strong>Figure 1.</strong> Fetch-cycle hardware from the supplied image. The animated marker follows the active component or transfer path while the signal board reports the exact control values.</figcaption>
+            </figure>
+            <figure id="ic-flow-reference" class="ic-reference-figure" hidden>
+              <div class="ic-reference-stage">
+                <img src="{% static 'academics/images/instruction-cycle-flowchart.png' %}" alt="Complete instruction-cycle flowchart with D7 and I decision branches" loading="lazy">
+                <span id="ic-flow-marker" class="ic-marker" data-label="Start" aria-hidden="true"></span>
+              </div>
+              <figcaption><strong>Figure 2.</strong> Complete instruction-cycle flowchart from the supplied image. Select a path to animate its decisions from fetch through execution and back to <code>T0</code>.</figcaption>
+            </figure>
 
             <div id="ic-datapath" class="ic-datapath" aria-label="Animated fetch-cycle hardware">
               <div class="ic-stack">
@@ -2420,6 +2443,10 @@ Bread,Butter`;
     const icPath = document.getElementById('ic-path');
     const icDatapath = document.getElementById('ic-datapath');
     const icFlowchart = document.getElementById('ic-flowchart');
+    const icFetchReference = document.getElementById('ic-fetch-reference');
+    const icFlowReference = document.getElementById('ic-flow-reference');
+    const icFetchMarker = document.getElementById('ic-fetch-marker');
+    const icFlowMarker = document.getElementById('ic-flow-marker');
     const icStatus = document.getElementById('ic-animation-status');
     const icStepCount = document.getElementById('ic-step-count');
     const icPrevious = document.getElementById('ic-previous');
@@ -2437,6 +2464,18 @@ Bread,Butter`;
       { nodes:['memory','bus','ir','pc'], time:'T1', select:'S2S1S0: 111', memory:'Read: 1', register:'LD(IR): 1 · INR(PC): 1', title:'T1 — fetch and increment', text:'IR loads the memory word while PC increments through its dedicated INR circuit. Thus IR ← M[AR] and PC ← PC + 1 occur together.' },
       { nodes:['ir','ar','control'], time:'T2', select:'Internal decode', memory:'Read: 0', register:'AR ← IR(0–11) · I ← IR(15)', title:'T2 — decode instruction', text:'The opcode IR(12–14) activates one decoder output D0…D7. The address/function field enters AR, and bit 15 enters I.' }
     ];
+    const icFetchMarkerPositions = [
+      {x:'84%',y:'12%',label:'Control ready'}, {x:'54%',y:'64%',label:'PC selected'},
+      {x:'54%',y:'48%',label:'AR loads PC'}, {x:'55%',y:'26%',label:'Memory Read'},
+      {x:'54%',y:'80%',label:'IR loads · PC increments'}, {x:'54%',y:'80%',label:'Decode IR'}
+    ];
+    const icFlowMarkerPositions = {start:['51%','4%'],t0:['51%','14%'],t1:['51%','24%'],t2:['51%','34%'],d7:['51%','47%']};
+
+    function positionIcMarker(marker, position, label) {
+      marker.style.setProperty('--x', position[0] || position.x);
+      marker.style.setProperty('--y', position[1] || position.y);
+      marker.dataset.label = label;
+    }
 
     function icFlowSteps() {
       const path = icPath.value;
@@ -2469,11 +2508,19 @@ Bread,Butter`;
         document.querySelector('[data-ic-signal="memory"]').textContent = step.memory;
         document.querySelector('[data-ic-signal="register"]').textContent = step.register;
         document.querySelectorAll('[data-ic-signal]').forEach(node => node.classList.add('active'));
+        positionIcMarker(icFetchMarker, icFetchMarkerPositions[icIndex], step.title);
       } else {
         steps.slice(0,icIndex).forEach(item => document.querySelector(`[data-ic-flow="${item.key}"]`)?.classList.add('done'));
         document.querySelector(`[data-ic-flow="${step.key}"]`)?.classList.add('active');
         const execute = document.querySelector('[data-ic-flow="execute"]');
         execute.innerHTML = `<strong>${icPath.options[icPath.selectedIndex].text}</strong><br>Execute · SC &larr; 0`;
+        let position = icFlowMarkerPositions[step.key];
+        if (step.key === 'i') position = icPath.value === 'register' || icPath.value === 'io' ? ['26%','56%'] : ['76%','56%'];
+        if (step.key === 'indirect') position = ['66%','68%'];
+        if (step.key === 'execute') {
+          position = {io:['14%','72%'],register:['40%','72%'],indirect:['76%','82%'],direct:['90%','68%']}[icPath.value];
+        }
+        positionIcMarker(icFlowMarker, position, step.title);
       }
       icStatus.innerHTML = `<strong>${step.title}</strong><br>${step.text}`;
       icStepCount.textContent = `Step ${icIndex + 1} of ${steps.length}`;
@@ -2497,6 +2544,8 @@ Bread,Butter`;
       icDatapath.hidden = icView.value !== 'datapath';
       document.getElementById('ic-signals').hidden = icView.value !== 'datapath';
       icFlowchart.hidden = icView.value !== 'flowchart';
+      icFetchReference.hidden = icView.value !== 'datapath';
+      icFlowReference.hidden = icView.value !== 'flowchart';
       icPath.disabled = icView.value !== 'flowchart';
       resetIcAnimation();
     }
