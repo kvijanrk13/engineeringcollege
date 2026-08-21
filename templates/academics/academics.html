@@ -607,12 +607,21 @@
     .coa-diagram-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:22px; }
     .coa-diagram-card { overflow:hidden; border:1px solid #cbd5e1; border-radius:14px; background:#fff; box-shadow:0 8px 22px rgba(15,23,42,.07); }
     .coa-diagram-open { display:block; width:100%; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:zoom-in; }
-    .coa-diagram-image-wrap { display:grid; place-items:center; height:clamp(300px,34vw,430px); padding:14px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-    .coa-diagram-image-wrap img { display:block; max-width:100%; max-height:100%; width:auto; height:auto; }
+    .coa-diagram-image-wrap { position:relative; overflow:hidden; display:grid; place-items:center; height:clamp(300px,34vw,430px); padding:14px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
+    .coa-diagram-image-wrap img { display:block; max-width:100%; max-height:100%; width:auto; height:auto; transform-origin:center; transition:transform .9s ease,filter .4s; }
     .coa-diagram-copy { padding:13px 14px 15px; }
     .coa-diagram-copy h3 { margin:0 0 7px; color:#0f172a; font-size:16px; line-height:1.3; }
     .coa-diagram-copy p { margin:0; color:#475569; font-size:13px; }
     .coa-diagram-source { display:block; margin-top:8px; color:#1d4ed8; font-weight:700; }
+    .coa-card-actions { display:flex; flex-wrap:wrap; gap:8px; margin:13px 0 11px; }
+    .coa-card-action { min-height:40px; padding:8px 12px; border:1px solid #2563eb; border-radius:9px; color:#1e3a8a; background:#fff; font:700 14px/1 inherit; cursor:pointer; }
+    .coa-card-action.primary { color:#fff; background:#1d4ed8; }
+    .coa-card-steps { margin:10px 0 0; padding:12px 12px 12px 34px; border-radius:10px; color:#334155; background:#f8fafc; font-size:13px; line-height:1.4; }
+    .coa-card-steps li { margin:0 0 8px; padding:6px 8px; border-radius:7px; transition:background .3s,box-shadow .3s; }
+    .coa-card-steps li:last-child { margin-bottom:0; }
+    .coa-card-steps li.active { color:#1e3a8a; background:#dbeafe; box-shadow:inset 4px 0 #2563eb; }
+    .coa-card-step-status { min-height:42px; margin:8px 0 0; color:#1e3a8a; font-weight:700; }
+    .coa-card-focus { --focus-x:50%; --focus-y:50%; position:absolute; left:var(--focus-x); top:var(--focus-y); width:46px; height:46px; border:3px solid #ef4444; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 7px rgba(239,68,68,.14); transition:left .9s ease,top .9s ease; pointer-events:none; animation:coaFocusPulse .9s infinite alternate; }
     .coa-diagram-empty,.coa-diagram-error { padding:24px; border:1px dashed #94a3b8; border-radius:12px; color:#475569; background:#fff; text-align:center; }
     .coa-diagram-error { color:#991b1b; border-color:#fca5a5; background:#fef2f2; }
     .coa-lightbox { width:98vw; max-width:1600px; height:96vh; max-height:96vh; padding:0; border:0; border-radius:16px; background:#fff; box-shadow:0 28px 90px rgba(0,0,0,.42); }
@@ -639,7 +648,7 @@
     .coa-lightbox-foot { border-top:1px solid #e2e8f0; color:#475569; }
     .coa-lightbox-caption { flex:1; margin:0; text-align:center; font-size:14px; }
     @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-diagram-image-wrap { height:330px; } .coa-lightbox { width:100vw; height:100vh; max-height:100vh; border-radius:0; } .coa-lightbox-layout { height:100vh; max-height:100vh; } .coa-lightbox-stage { min-height:260px; padding:8px; } .coa-animation-panel { grid-template-columns:1fr; gap:8px; padding:10px; } .coa-animation-progress { white-space:normal; } .coa-lightbox-foot { gap:7px; padding:9px; } }
-    @media (prefers-reduced-motion:reduce) { .coa-lightbox-stage img,.coa-animation-focus { transition:none; } .coa-animation-focus { animation:none; } }
+    @media (prefers-reduced-motion:reduce) { .coa-lightbox-stage img,.coa-animation-focus,.coa-diagram-image-wrap img,.coa-card-focus { transition:none; } .coa-animation-focus,.coa-card-focus { animation:none; } }
   </style>
 </head>
 <body>
@@ -2676,6 +2685,7 @@ Bread,Butter`;
       const manifestUrl = library.dataset.manifestUrl;
       let figures = [], visibleFigures = [], selectedChapter = 'all', lightboxIndex = -1, returnFocus = null;
       let activeSteps = [], stepIndex = -1, animationTimer = null, isPlaying = false;
+      let activeCardStop = null;
 
       const imageUrl = figure => manifestUrl.replace('academics/coa-diagrams/manifest.json', figure.image);
       const element = (tag, className, text) => {
@@ -2788,16 +2798,49 @@ Bread,Butter`;
         const image = document.createElement('img'); image.src = imageUrl(figure); image.alt = figure.alt; image.loading = 'lazy'; image.decoding = 'async';
         image.addEventListener('error', () => { image.alt = ''; imageWrap.textContent = 'Image unavailable'; card.dataset.imageError = 'true'; });
         imageWrap.appendChild(image);
+        const focus = element('span', 'coa-card-focus'); focus.hidden = true; focus.setAttribute('aria-hidden', 'true'); imageWrap.appendChild(focus);
         const copy = element('span', 'coa-diagram-copy');
         copy.appendChild(element('h3', '', figure.topic));
         copy.appendChild(element('p', '', `Figure ${figure.figure_number} · Chapter ${figure.chapter}: ${figure.chapter_title}`));
         copy.appendChild(element('span', 'coa-diagram-source', `Source PDF page ${figure.pdf_page}`));
         copy.appendChild(element('span', 'coa-diagram-source', 'Enlarge + animate working'));
         button.append(imageWrap, copy); button.addEventListener('click', () => openLightbox(index, button)); card.appendChild(button);
+        const panel = element('div', 'coa-diagram-copy');
+        const actions = element('div', 'coa-card-actions');
+        const play = element('button', 'coa-card-action primary', 'Animate this diagram'); play.type = 'button';
+        const enlarge = element('button', 'coa-card-action', 'Enlarge full screen'); enlarge.type = 'button';
+        enlarge.addEventListener('click', () => openLightbox(index, enlarge)); actions.append(play, enlarge); panel.appendChild(actions);
+        const status = element('div', 'coa-card-step-status', 'Animation ready - press Animate this diagram.'); status.setAttribute('aria-live', 'polite'); panel.appendChild(status);
+        const steps = workingSteps(figure);
+        const list = element('ol', 'coa-card-steps');
+        const listItems = steps.map(step => { const item = element('li', '', `${step.title}: ${step.text}`); list.appendChild(item); return item; });
+        panel.appendChild(list);
+        let localIndex = -1, localTimer = null, localPlaying = false;
+        const stopLocal = () => { clearTimeout(localTimer); localTimer = null; localPlaying = false; play.textContent = 'Animate this diagram'; if (activeCardStop === stopLocal) activeCardStop = null; };
+        const showLocalStep = stepNumber => {
+          localIndex = Math.max(0, Math.min(stepNumber, steps.length - 1)); const step = steps[localIndex];
+          listItems.forEach((item, itemIndex) => item.classList.toggle('active', itemIndex === localIndex));
+          status.textContent = `${step.title} - ${step.text}`;
+          image.style.transform = `translate(${step.tx}%,${step.ty}%) scale(${Math.min(step.scale,1.22)})`;
+          focus.hidden = false; focus.style.setProperty('--focus-x', `${step.x}%`); focus.style.setProperty('--focus-y', `${step.y}%`);
+        };
+        const scheduleLocal = () => {
+          clearTimeout(localTimer); if (!localPlaying) return;
+          if (localIndex >= steps.length - 1) { stopLocal(); status.textContent += ' Animation complete.'; return; }
+          localTimer = setTimeout(() => { showLocalStep(localIndex + 1); scheduleLocal(); }, 3200);
+        };
+        play.addEventListener('click', () => {
+          if (localPlaying) { stopLocal(); return; }
+          if (activeCardStop && activeCardStop !== stopLocal) activeCardStop(); activeCardStop = stopLocal;
+          if (localIndex < 0 || localIndex >= steps.length - 1) showLocalStep(0);
+          localPlaying = true; play.textContent = 'Pause animation'; scheduleLocal();
+        });
+        card.appendChild(panel);
         return card;
       }
 
       function render() {
+        if (activeCardStop) activeCardStop();
         const query = search.value.trim().toLocaleLowerCase();
         visibleFigures = figures.filter(figure => (selectedChapter === 'all' || String(figure.chapter) === selectedChapter) && (!query || `${figure.topic} ${figure.caption} ${figure.figure_number} ${figure.chapter_title} ${figure.keywords.join(' ')}`.toLocaleLowerCase().includes(query)));
         const fragment = document.createDocumentFragment();
