@@ -715,6 +715,31 @@
           </div>
           <p>At <code>T0</code>, the address of the next instruction moves from PC to AR. At <code>T1</code>, memory is read, the instruction enters IR, and PC increments so that it points to the following instruction. At <code>T2</code>, the opcode is decoded by a 3-to-8 decoder, the 12-bit address field is copied to AR, and the most significant bit is copied to the indirect-address bit <code>I</code>.</p>
 
+          <section class="coa-example" aria-labelledby="fetch-hardware-figure-title">
+            <h3 id="fetch-hardware-figure-title">Figure 1: hardware implementation of the fetch cycle</h3>
+            <p>The first supplied diagram shows how the control unit realizes the <code>T0</code> and <code>T1</code> register transfers through the common bus. The vertical block on the right is the bus-selection logic. Its outputs <code>S2</code>, <code>S1</code>, and <code>S0</code> select exactly one bus source. The numbers beside the bus inputs identify the source code used in the basic computer: input 1 selects AR, input 2 selects PC, input 5 selects IR, and input 7 selects the memory output.</p>
+            <div style="overflow-x:auto">
+              <table class="register-table" aria-label="Explanation of fetch-cycle hardware paths">
+                <thead><tr><th>Time</th><th>Control action in the diagram</th><th>Data path and result</th></tr></thead>
+                <tbody>
+                  <tr><td><code>T0</code></td><td>The OR gates generate the bus select code for input 2 and activate <code>LD(AR)</code>.</td><td>PC drives the common bus. At the clock edge, AR loads the bus value: <code>AR &larr; PC</code>.</td></tr>
+                  <tr><td><code>T1</code></td><td>AR supplies the memory address, the Read line is asserted, memory output 7 is selected, <code>LD(IR)</code> is enabled, and <code>INR(PC)</code> is enabled.</td><td>The word at <code>M[AR]</code> travels on the common bus into IR while PC increments in parallel: <code>IR &larr; M[AR]</code> and <code>PC &larr; PC + 1</code>.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <h4>Meaning of each connection</h4>
+            <ul>
+              <li><strong>AR to memory Address:</strong> the contents of AR continuously identify the memory location to be accessed.</li>
+              <li><strong>Memory to bus input 7:</strong> when Read is active, the selected memory word becomes a possible bus source.</li>
+              <li><strong>PC to bus input 2:</strong> selecting source 2 places the next-instruction address on the bus.</li>
+              <li><strong>Bus to AR and IR:</strong> the common bus reaches register inputs, but a register changes only when its load signal is asserted.</li>
+              <li><strong>PC increment input:</strong> PC can increment internally at the same clock edge at which IR receives the fetched instruction.</li>
+              <li><strong>Clock:</strong> control signals prepare the paths during the timing interval; the active clock edge stores the new register values.</li>
+              <li><strong>OR gates:</strong> several control conditions may require the same bus selection or register operation. OR gates combine those conditions into one physical control input.</li>
+            </ul>
+            <p><strong>Why operations can occur together at T1:</strong> reading memory and loading IR use the common bus, whereas incrementing PC uses PC's dedicated increment circuit. Because the two operations do not compete for the same destination hardware, both are performed during the same timing pulse.</p>
+          </section>
+
           <h3>Classifying the decoded instruction</h3>
           <div style="overflow-x:auto">
             <table class="register-table" aria-label="Instruction classification after decoding">
@@ -777,6 +802,32 @@
             <li>If <code>D7 = 1</code>, use <code>I</code> to choose register-reference (<code>I = 0</code>) or input/output (<code>I = 1</code>).</li>
             <li>Execute the selected operation, clear SC, test for an interrupt, and begin the next instruction cycle.</li>
           </ol>
+
+          <section class="coa-example" aria-labelledby="cycle-flowchart-figure-title">
+            <h3 id="cycle-flowchart-figure-title">Figure 2: complete instruction-cycle flowchart</h3>
+            <p>The second supplied diagram follows the control unit from startup through every possible instruction class. It begins with <code>SC &larr; 0</code>, so the decoder connected to the sequence counter produces <code>T0</code>. The same three fetch/decode steps are followed for every instruction before the decision diamonds divide the control path.</p>
+            <div class="coa-process">
+              <article><span>1</span><h3>Common fetch</h3><p><code>T0: AR &larr; PC</code>. Copy the address of the next instruction into the address register.</p></article>
+              <article><span>2</span><h3>Memory read</h3><p><code>T1: IR &larr; M[AR]</code> and <code>PC &larr; PC + 1</code>. Fetch the instruction and prepare PC for the following one.</p></article>
+              <article><span>3</span><h3>Common decode</h3><p><code>T2</code> decodes the opcode, transfers the address/function field into AR, and copies bit 15 into I.</p></article>
+            </div>
+            <h4>First decision: decoder output D7</h4>
+            <p>The opcode bits <code>IR(12-14)</code> enter a 3-to-8 decoder. Outputs <code>D0</code> through <code>D6</code> identify the seven memory-reference instructions, so <code>D7 = 0</code> means “memory-reference.” An opcode of 111 activates <code>D7</code>; therefore <code>D7 = 1</code> means the low-order bits describe either a register-reference or an I/O instruction.</p>
+            <h4>Second decision: the I bit</h4>
+            <div style="overflow-x:auto">
+              <table class="register-table" aria-label="All paths through the instruction-cycle flowchart">
+                <thead><tr><th>D7</th><th>I</th><th>Path at T3</th><th>Reason</th></tr></thead>
+                <tbody>
+                  <tr><td>0</td><td>0</td><td>No indirect operation; execute the memory-reference instruction.</td><td>The address already copied from IR into AR is the effective address.</td></tr>
+                  <tr><td>0</td><td>1</td><td><code>AR &larr; M[AR]</code>, then execute the memory-reference instruction.</td><td>The address field points to a word containing the effective address.</td></tr>
+                  <tr><td>1</td><td>0</td><td>Execute the selected register-reference instruction and clear SC.</td><td>The twelve function bits directly control operations on CPU registers.</td></tr>
+                  <tr><td>1</td><td>1</td><td>Execute the selected input/output instruction and clear SC.</td><td>The twelve function bits select an I/O or interrupt-control operation.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>The word <strong>Nothing</strong> on the direct-address branch does not mean that the CPU is idle. It means that no separate indirect cycle is needed at <code>T3</code>; AR already contains the correct effective address, so control proceeds directly to the execution routine for <code>D0</code> through <code>D6</code>.</p>
+            <p>Every bottom branch contains or eventually produces <code>SC &larr; 0</code>. This rejoins the return line on the left of the flowchart. The next clock pulse produces <code>T0</code>, and the CPU begins fetching the next instruction. The diagram therefore represents a repeating control loop, not a one-time sequence.</p>
+          </section>
 
           <section class="coa-check">
             <h3>Exam-ready distinction</h3>
