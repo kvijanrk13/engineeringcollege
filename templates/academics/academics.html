@@ -609,6 +609,10 @@
     .coa-diagram-open { display:block; width:100%; padding:0; border:0; color:inherit; background:transparent; text-align:left; cursor:zoom-in; }
     .coa-diagram-image-wrap { position:relative; overflow:hidden; display:grid; place-items:center; height:clamp(300px,34vw,430px); padding:14px; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
     .coa-diagram-image-wrap img { display:block; max-width:100%; max-height:100%; width:auto; height:auto; transform-origin:center; transition:transform .9s ease,filter .4s; }
+    .coa-redraw-canvas { display:block; max-width:100%; max-height:100%; width:auto; height:auto; background:#fff; box-shadow:0 8px 24px rgba(15,23,42,.12); }
+    .coa-redraw-canvas[hidden] { display:none; }
+    .coa-diagram-image-wrap.is-redrawing img { display:none; }
+    .coa-redraw-label { position:absolute; left:14px; top:14px; max-width:calc(100% - 28px); padding:6px 9px; border-radius:7px; color:#fff; background:rgba(30,64,175,.9); font:700 12px/1.25 system-ui,sans-serif; }
     .coa-diagram-copy { padding:13px 14px 15px; }
     .coa-diagram-copy h3 { margin:0 0 7px; color:#0f172a; font-size:16px; line-height:1.3; }
     .coa-diagram-copy p { margin:0; color:#475569; font-size:13px; }
@@ -2799,6 +2803,8 @@ Bread,Butter`;
         image.addEventListener('error', () => { image.alt = ''; imageWrap.textContent = 'Image unavailable'; card.dataset.imageError = 'true'; });
         imageWrap.appendChild(image);
         const focus = element('span', 'coa-card-focus'); focus.hidden = true; focus.setAttribute('aria-hidden', 'true'); imageWrap.appendChild(focus);
+        const redrawCanvas = element('canvas', 'coa-redraw-canvas'); redrawCanvas.hidden = true; redrawCanvas.setAttribute('role', 'img'); redrawCanvas.setAttribute('aria-label', `Animated redraw of ${figure.topic}`); imageWrap.appendChild(redrawCanvas);
+        const redrawLabel = element('span', 'coa-redraw-label', 'Preparing animated redrawâ€¦'); redrawLabel.hidden = true; imageWrap.appendChild(redrawLabel);
         const copy = element('span', 'coa-diagram-copy');
         copy.appendChild(element('h3', '', figure.topic));
         copy.appendChild(element('p', '', `Figure ${figure.figure_number} · Chapter ${figure.chapter}: ${figure.chapter_title}`));
@@ -2815,24 +2821,52 @@ Bread,Butter`;
         const list = element('ol', 'coa-card-steps');
         const listItems = steps.map(step => { const item = element('li', '', `${step.title}: ${step.text}`); list.appendChild(item); return item; });
         panel.appendChild(list);
-        let localIndex = -1, localTimer = null, localPlaying = false;
-        const stopLocal = () => { clearTimeout(localTimer); localTimer = null; localPlaying = false; play.textContent = 'Animate this diagram'; if (activeCardStop === stopLocal) activeCardStop = null; };
-        const showLocalStep = stepNumber => {
+        let localIndex = -1, localTimer = null, localFrame = null, localPlaying = false, redrawBuffer = null;
+        const stopLocal = () => { clearTimeout(localTimer); cancelAnimationFrame(localFrame); localTimer = null; localFrame = null; localPlaying = false; play.textContent = 'Animate this diagram'; if (activeCardStop === stopLocal) activeCardStop = null; };
+        const prepareRedraw = async () => {
+          if (redrawBuffer) return;
+          if (!image.complete) await image.decode();
+          const scale = Math.min(1, 1400 / image.naturalWidth);
+          redrawCanvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); redrawCanvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+          const buffer = document.createElement('canvas'); buffer.width = redrawCanvas.width; buffer.height = redrawCanvas.height;
+          const bufferContext = buffer.getContext('2d', { willReadFrequently:true });
+          bufferContext.fillStyle = '#fff'; bufferContext.fillRect(0,0,buffer.width,buffer.height); bufferContext.drawImage(image,0,0,buffer.width,buffer.height);
+          const pixels = bufferContext.getImageData(0,0,buffer.width,buffer.height);
+          for (let pixel = 0; pixel < pixels.data.length; pixel += 4) {
+            const luminance = pixels.data[pixel] * .299 + pixels.data[pixel + 1] * .587 + pixels.data[pixel + 2] * .114;
+            const ink = luminance < 115 ? 12 : luminance < 205 ? 118 : 255;
+            pixels.data[pixel] = ink; pixels.data[pixel + 1] = ink; pixels.data[pixel + 2] = ink; pixels.data[pixel + 3] = 255;
+          }
+          bufferContext.putImageData(pixels,0,0); redrawBuffer = buffer;
+          imageWrap.classList.add('is-redrawing'); redrawCanvas.hidden = false; redrawLabel.hidden = false;
+        };
+        const drawStage = stage => new Promise(resolve => {
+          const context = redrawCanvas.getContext('2d'); const previous = Math.max(0, stage) / steps.length; const target = (stage + 1) / steps.length;
+          const started = performance.now(); redrawLabel.textContent = `Redrawing stage ${stage + 1} of ${steps.length}`;
+          const frame = now => {
+            const progress = Math.min(1, (now - started) / 1100); const revealed = previous + (target - previous) * progress;
+            context.fillStyle = '#fff'; context.fillRect(0,0,redrawCanvas.width,redrawCanvas.height);
+            const width = Math.max(1, Math.round(redrawCanvas.width * revealed)); context.drawImage(redrawBuffer,0,0,width,redrawCanvas.height,0,0,width,redrawCanvas.height);
+            if (progress < 1) localFrame = requestAnimationFrame(frame); else { localFrame = null; resolve(); }
+          };
+          localFrame = requestAnimationFrame(frame);
+        });
+        const showLocalStep = async stepNumber => {
           localIndex = Math.max(0, Math.min(stepNumber, steps.length - 1)); const step = steps[localIndex];
           listItems.forEach((item, itemIndex) => item.classList.toggle('active', itemIndex === localIndex));
-          status.textContent = `${step.title} - ${step.text}`;
-          image.style.transform = `translate(${step.tx}%,${step.ty}%) scale(${Math.min(step.scale,1.22)})`;
-          focus.hidden = false; focus.style.setProperty('--focus-x', `${step.x}%`); focus.style.setProperty('--focus-y', `${step.y}%`);
+          status.textContent = `${step.title} - redraw in progressâ€¦`;
+          await prepareRedraw(); await drawStage(localIndex);
+          redrawLabel.textContent = `${step.title} complete`; status.textContent = `${step.title} - ${step.text}`;
         };
         const scheduleLocal = () => {
           clearTimeout(localTimer); if (!localPlaying) return;
           if (localIndex >= steps.length - 1) { stopLocal(); status.textContent += ' Animation complete.'; return; }
-          localTimer = setTimeout(() => { showLocalStep(localIndex + 1); scheduleLocal(); }, 3200);
+          localTimer = setTimeout(async () => { await showLocalStep(localIndex + 1); scheduleLocal(); }, 2200);
         };
-        play.addEventListener('click', () => {
+        play.addEventListener('click', async () => {
           if (localPlaying) { stopLocal(); return; }
           if (activeCardStop && activeCardStop !== stopLocal) activeCardStop(); activeCardStop = stopLocal;
-          if (localIndex < 0 || localIndex >= steps.length - 1) showLocalStep(0);
+          if (localIndex < 0 || localIndex >= steps.length - 1) { localIndex = -1; redrawBuffer = null; await showLocalStep(0); }
           localPlaying = true; play.textContent = 'Pause animation'; scheduleLocal();
         });
         card.appendChild(panel);

@@ -28,5 +28,5 @@ for (const figure of manifest.figures) {
   assert.equal(crypto.createHash('sha256').update(fs.readFileSync(asset)).digest('hex'), figure.sha256, `${figure.id} checksum mismatch`);
 }
 
-for (const hook of ['coa-diagram-library','coa-diagram-search','coa-chapter-filters','coa-diagram-grid','coa-diagram-lightbox','showModal()','workingSteps','coa-animation-play','coa-animation-step-previous','coa-animation-step-next','coa-card-steps','coa-card-step-status','activeCardStop','prefers-reduced-motion','ArrowLeft','ArrowRight','PageUp','PageDown']) assert.ok(template.includes(hook), `template missing ${hook}`);
+for (const hook of ['coa-diagram-library','coa-diagram-search','coa-chapter-filters','coa-diagram-grid','coa-diagram-lightbox','showModal()','workingSteps','coa-animation-play','coa-animation-step-previous','coa-animation-step-next','coa-card-steps','coa-card-step-status','coa-redraw-canvas','prepareRedraw','drawStage','activeCardStop','prefers-reduced-motion','ArrowLeft','ArrowRight','PageUp','PageDown']) assert.ok(template.includes(hook), `template missing ${hook}`);
 console.log(`COA diagram validation passed: ${audit.audited_pages} pages, ${manifest.figure_count} figures, ${manifest.chapters.length} chapters.`);
