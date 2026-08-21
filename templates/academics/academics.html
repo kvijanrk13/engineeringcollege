@@ -666,6 +666,37 @@
 
           <p>An <strong>instruction cycle</strong> is the complete sequence of operations performed by the CPU for one instruction. The processor fetches an instruction from memory, decodes it to identify the required operation, determines whether an additional memory access is needed, executes the operation, and then checks for an interrupt. This sequence repeats until every instruction in the program has been completed.</p>
 
+          <div class="coa-summary"><strong>Why it is called a cycle:</strong> after one instruction is completed, the sequence counter returns the control unit to timing signal T0. The CPU then performs the same fetch-and-decode sequence for the next instruction. Only the execution steps change according to the decoded operation.</div>
+
+          <h3>Instruction format used in the basic computer</h3>
+          <p>The lecture explains the instruction cycle using a 16-bit basic computer. Each instruction is divided into three fields:</p>
+          <div class="instruction-format" aria-label="Sixteen-bit basic computer instruction format">
+            <div><strong>Bit 15</strong><br>Indirect bit I</div>
+            <div><strong>Bits 14-12</strong><br>3-bit opcode</div>
+            <div><strong>Bits 11-0</strong><br>12-bit address or function field</div>
+          </div>
+          <ul>
+            <li>The <strong>I bit</strong> selects direct or indirect addressing for a memory-reference instruction.</li>
+            <li>The <strong>opcode</strong> tells the control unit which operation must be performed. Its eight possible decoded outputs are named <code>D0</code> through <code>D7</code>.</li>
+            <li>The <strong>12 low-order bits</strong> hold a memory address when <code>D7 = 0</code>. When <code>D7 = 1</code>, they specify a register-reference or input/output function.</li>
+          </ul>
+
+          <h3>Registers and control elements involved</h3>
+          <div style="overflow-x:auto">
+            <table class="register-table" aria-label="Registers used during the instruction cycle">
+              <thead><tr><th>Element</th><th>Role in the instruction cycle</th></tr></thead>
+              <tbody>
+                <tr><td><strong>PC</strong> — Program Counter</td><td>Contains the address of the next instruction and increments after the current instruction is fetched.</td></tr>
+                <tr><td><strong>AR</strong> — Address Register</td><td>Receives the instruction address, the instruction's address field, or an indirect effective address.</td></tr>
+                <tr><td><strong>IR</strong> — Instruction Register</td><td>Holds the complete 16-bit instruction while its opcode, I bit, and remaining fields are decoded.</td></tr>
+                <tr><td><strong>DR</strong> — Data Register</td><td>Temporarily holds an operand read from memory for operations such as AND, ADD, and ISZ.</td></tr>
+                <tr><td><strong>AC</strong> — Accumulator</td><td>Holds an arithmetic or logic operand and receives the result produced by the ALU.</td></tr>
+                <tr><td><strong>SC</strong> — Sequence Counter</td><td>Generates the ordered timing steps. Clearing SC after execution makes the next timing signal T0.</td></tr>
+                <tr><td><strong>I</strong> and <strong>R</strong></td><td>I records the addressing-mode bit; R records whether an interrupt cycle is required.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
           <h3>Instruction-cycle phases</h3>
           <ol>
             <li><strong>Fetch:</strong> read the next instruction from memory into the Instruction Register (IR).</li>
@@ -698,11 +729,59 @@
           </div>
           <p><strong>Direct addressing</strong> means the address field itself is the effective address. <strong>Indirect addressing</strong> means the address field points to a memory word that contains the effective address. The indirect cycle is therefore required only for an indirect memory-reference instruction.</p>
 
+          <h3>Direct and indirect addressing example</h3>
+          <p>Suppose the instruction's address field is <code>500</code>. With direct addressing (<code>I = 0</code>), the operand is found at memory location 500, so <code>EA = 500</code>. With indirect addressing (<code>I = 1</code>), location 500 does not contain the operand; it contains another address. If <code>M[500] = 825</code>, the effective address becomes <code>EA = 825</code>, and the operand is read from <code>M[825]</code>.</p>
+          <div class="micro-operations" aria-label="Direct and indirect address comparison">
+            <code>Direct: EA &larr; IR(0-11)</code><br>
+            <code>Indirect at T3: AR &larr; M[AR], therefore EA &larr; M[address field]</code>
+          </div>
+
           <h3>Execution and return to fetch</h3>
           <p>After classification, the control unit activates the timing and control signals for the selected instruction. A memory-reference instruction such as AND, ADD, LDA, STA, BUN, BSA, or ISZ may continue through later timing steps. Register-reference and I/O instructions are completed at <code>T3</code>. When execution finishes, the control logic clears the sequence counter with <code>SC &larr; 0</code>. The next clock then generates <code>T0</code>, beginning the fetch cycle for the next instruction.</p>
 
+          <h3>What happens during memory-reference execution</h3>
+          <div style="overflow-x:auto">
+            <table class="register-table" aria-label="Basic computer memory-reference instructions">
+              <thead><tr><th>Decoder</th><th>Instruction</th><th>Meaning</th><th>Typical register-transfer sequence</th></tr></thead>
+              <tbody>
+                <tr><td><code>D0</code></td><td><strong>AND</strong></td><td>Logic AND the memory operand with AC.</td><td><code>DR &larr; M[AR]</code>, then <code>AC &larr; AC &and; DR</code></td></tr>
+                <tr><td><code>D1</code></td><td><strong>ADD</strong></td><td>Add the memory operand to AC.</td><td><code>DR &larr; M[AR]</code>, then <code>AC &larr; AC + DR</code></td></tr>
+                <tr><td><code>D2</code></td><td><strong>LDA</strong></td><td>Load AC with the memory operand.</td><td><code>DR &larr; M[AR]</code>, then <code>AC &larr; DR</code></td></tr>
+                <tr><td><code>D3</code></td><td><strong>STA</strong></td><td>Store the contents of AC in memory.</td><td><code>M[AR] &larr; AC</code></td></tr>
+                <tr><td><code>D4</code></td><td><strong>BUN</strong></td><td>Branch unconditionally.</td><td><code>PC &larr; AR</code></td></tr>
+                <tr><td><code>D5</code></td><td><strong>BSA</strong></td><td>Save the return address and branch to a subroutine.</td><td><code>M[AR] &larr; PC</code>, <code>AR &larr; AR + 1</code>, <code>PC &larr; AR</code></td></tr>
+                <tr><td><code>D6</code></td><td><strong>ISZ</strong></td><td>Increment a memory word and skip the next instruction if the result is zero.</td><td><code>DR &larr; M[AR]</code>, <code>DR &larr; DR + 1</code>, <code>M[AR] &larr; DR</code>; if zero, <code>PC &larr; PC + 1</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Every instruction ends by clearing <code>SC</code>. This is essential: without <code>SC &larr; 0</code>, the control unit would continue producing later timing signals instead of returning to the fetch phase.</p>
+
+          <h3>Register-reference and input/output paths</h3>
+          <p>When the opcode decoder produces <code>D7 = 1</code>, the address field is no longer treated as a memory address. If <code>I = 0</code>, one of the low-order IR bits selects a register-reference operation such as clearing or complementing AC, shifting, incrementing AC, skipping on a condition, or halting. If <code>I = 1</code>, the low-order bits select an input/output operation. Both classes can be identified and completed at <code>T3</code> because an indirect-address memory read is not required.</p>
+
           <h3>Interrupt cycle</h3>
           <p>Before beginning the next normal fetch, the processor tests the interrupt flip-flop <code>R</code>. If <code>R = 0</code>, it fetches the next program instruction. If <code>R = 1</code>, it enters the interrupt cycle: the current PC is saved as the return address, control branches to the interrupt service program, interrupts are temporarily disabled, and the request flip-flop is cleared. After the service routine finishes, the saved address allows the interrupted program to continue.</p>
+
+          <div class="micro-operations" aria-label="Interrupt-cycle microoperations">
+            <code>RT0: AR &larr; 0, TR &larr; PC</code><br>
+            <code>RT1: M[AR] &larr; TR, PC &larr; 0</code><br>
+            <code>RT2: PC &larr; PC + 1, IEN &larr; 0, R &larr; 0, SC &larr; 0</code>
+          </div>
+          <p>These steps save the return address in memory location 0 and start the interrupt service routine at location 1. Disabling interrupts prevents a second request from disturbing the save-and-branch operation. The service routine later returns indirectly through location 0 and can enable interrupts again.</p>
+
+          <h3>How to read the instruction-cycle flowchart</h3>
+          <ol>
+            <li>Test <code>R</code>. A set interrupt flip-flop sends control to the interrupt cycle; otherwise normal instruction processing begins.</li>
+            <li>Perform the common fetch and decode operations at <code>T0</code>, <code>T1</code>, and <code>T2</code>.</li>
+            <li>Test <code>D7</code>. If it is 0, the instruction is a memory-reference instruction; use <code>I</code> to decide whether an indirect cycle is required.</li>
+            <li>If <code>D7 = 1</code>, use <code>I</code> to choose register-reference (<code>I = 0</code>) or input/output (<code>I = 1</code>).</li>
+            <li>Execute the selected operation, clear SC, test for an interrupt, and begin the next instruction cycle.</li>
+          </ol>
+
+          <section class="coa-check">
+            <h3>Exam-ready distinction</h3>
+            <p><strong>Instruction cycle</strong> is the complete processing of one instruction. A <strong>machine cycle</strong> is one smaller operation—such as a memory read or write—within it. A <strong>clock cycle</strong> is a single timing interval. Therefore, one instruction cycle can contain several machine operations and several clock cycles.</p>
+          </section>
 
           <div class="coa-summary"><strong>Overall flow:</strong> check interrupt &#8594; fetch instruction &#8594; decode opcode &#8594; identify memory-reference, register-reference, or I/O instruction &#8594; obtain an indirect effective address if required &#8594; execute &#8594; clear SC &#8594; repeat.</div>
         </section>
