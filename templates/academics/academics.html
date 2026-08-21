@@ -561,6 +561,32 @@
     .bus-selection div { padding: 10px; border-radius: 8px; background: #eef6ff; text-align: center; font-family: Consolas, monospace; }
     @media (max-width: 760px) { .apriori-controls, .apriori-workspace, .apriori-formula { grid-template-columns: 1fr; } .rule { grid-template-columns: 1fr; } }
     @media (max-width: 760px) { .coa-definition-grid, .coa-process, .unit-notes, .operation-machine, .cycle-phases { grid-template-columns: 1fr; } .coa-comparison { font-size: 13px; } .unit-diagram { grid-template-columns: 1fr; grid-template-areas: "input" "memory" "cpu" "output"; gap: 18px; } .data-bus { display: none; } .video-text-card { padding: 18px; } .bus-selection { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .ic-animation { margin: 28px 0; padding: 22px; border: 1px solid #cbd5e1; border-radius: 18px; background: linear-gradient(145deg,#f8fbff,#eef6ff); }
+    .ic-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:end; margin:16px 0; }
+    .ic-toolbar label { display:grid; gap:5px; font-weight:700; color:#334155; }
+    .ic-toolbar select { padding:9px 12px; border:1px solid #94a3b8; border-radius:8px; background:#fff; }
+    .ic-datapath { display:grid; grid-template-columns:1fr 74px 1fr; gap:14px; align-items:center; min-height:320px; }
+    .ic-stack { display:grid; gap:13px; }
+    .ic-node { padding:13px; border:2px solid #94a3b8; border-radius:12px; background:#fff; text-align:center; transition:.3s ease; position:relative; }
+    .ic-node small { display:block; color:#64748b; margin-top:4px; }
+    .ic-node.active { border-color:#2563eb; background:#dbeafe; box-shadow:0 0 0 5px rgba(37,99,235,.13); transform:scale(1.025); }
+    .ic-node.done { border-color:#16a34a; background:#dcfce7; }
+    .ic-bus { height:285px; width:22px; margin:auto; border-radius:12px; background:#94a3b8; position:relative; transition:.3s ease; }
+    .ic-bus::after { content:'COMMON BUS'; position:absolute; left:31px; top:50%; white-space:nowrap; transform:translateY(-50%) rotate(90deg); transform-origin:left center; font-size:11px; font-weight:800; letter-spacing:.08em; color:#475569; }
+    .ic-bus.active { background:#f97316; box-shadow:0 0 18px rgba(249,115,22,.65); }
+    .ic-signal-board { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:14px; }
+    .ic-signal { padding:9px; border-radius:9px; background:#e2e8f0; text-align:center; font-family:Consolas,monospace; transition:.3s; }
+    .ic-signal.active { color:#fff; background:#7c3aed; box-shadow:0 5px 14px rgba(124,58,237,.3); }
+    .ic-flow { display:grid; justify-items:center; gap:9px; padding:12px 0; }
+    .ic-flow-row { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; width:100%; }
+    .ic-flow-node { width:min(100%,280px); padding:11px 14px; border:2px solid #94a3b8; border-radius:10px; background:#fff; text-align:center; transition:.3s; }
+    .ic-flow-node.decision { border-radius:35px; background:#fff7ed; }
+    .ic-flow-node.active { border-color:#dc2626; background:#fee2e2; box-shadow:0 0 0 5px rgba(220,38,38,.12); transform:scale(1.035); }
+    .ic-flow-node.done { border-color:#16a34a; background:#dcfce7; }
+    .ic-arrow { font-size:21px; color:#64748b; line-height:1; }
+    .ic-animation-status { min-height:84px; margin-top:14px; padding:15px; border-left:5px solid #2563eb; border-radius:10px; background:#fff; }
+    .ic-step-count { font-size:13px; color:#64748b; font-weight:700; }
+    @media (max-width:760px) { .ic-datapath { grid-template-columns:1fr; } .ic-bus { width:100%; height:18px; } .ic-bus::after { left:50%; top:28px; transform:translateX(-50%); } .ic-signal-board { grid-template-columns:repeat(2,1fr); } }
   </style>
 </head>
 <body>
@@ -827,6 +853,56 @@
             </div>
             <p>The word <strong>Nothing</strong> on the direct-address branch does not mean that the CPU is idle. It means that no separate indirect cycle is needed at <code>T3</code>; AR already contains the correct effective address, so control proceeds directly to the execution routine for <code>D0</code> through <code>D6</code>.</p>
             <p>Every bottom branch contains or eventually produces <code>SC &larr; 0</code>. This rejoins the return line on the left of the flowchart. The next clock pulse produces <code>T0</code>, and the CPU begins fetching the next instruction. The diagram therefore represents a repeating control loop, not a one-time sequence.</p>
+          </section>
+
+          <section class="ic-animation" aria-labelledby="instruction-animation-title">
+            <div class="topic-head">
+              <div><p class="eyebrow" style="color:var(--blue)">Interactive version of the supplied diagrams</p><h3 id="instruction-animation-title">Instruction Cycle Animation</h3><p>Trace the hardware transfers and then follow any branch through the complete control flow.</p></div>
+            </div>
+            <div class="ic-toolbar">
+              <label>Diagram
+                <select id="ic-view"><option value="datapath">Figure 1 — Fetch hardware</option><option value="flowchart">Figure 2 — Cycle flowchart</option></select>
+              </label>
+              <label>Instruction path
+                <select id="ic-path"><option value="direct">Direct memory-reference</option><option value="indirect">Indirect memory-reference</option><option value="register">Register-reference</option><option value="io">Input/output</option></select>
+              </label>
+              <button id="ic-start" class="btn" type="button">Start</button>
+              <button id="ic-previous" class="btn light" type="button" disabled>Previous</button>
+              <button id="ic-next" class="btn light" type="button">Next</button>
+              <button id="ic-auto" class="btn secondary" type="button">&#9654; Auto play</button>
+              <button id="ic-reset" class="btn light" type="button">Reset</button>
+            </div>
+
+            <div id="ic-datapath" class="ic-datapath" aria-label="Animated fetch-cycle hardware">
+              <div class="ic-stack">
+                <div class="ic-node" data-ic-node="memory"><strong>Memory Unit</strong><small>M[AR] supplies bus input 7</small></div>
+                <div class="ic-node" data-ic-node="ar"><strong>AR</strong><small>Address Register · bus input 1</small></div>
+              </div>
+              <div class="ic-bus" data-ic-node="bus"></div>
+              <div class="ic-stack">
+                <div class="ic-node" data-ic-node="pc"><strong>PC</strong><small>Program Counter · bus input 2</small></div>
+                <div class="ic-node" data-ic-node="ir"><strong>IR</strong><small>Instruction Register · bus input 5</small></div>
+                <div class="ic-node" data-ic-node="control"><strong>Control Logic</strong><small>T0, T1, S2S1S0, Read, LD, INR</small></div>
+              </div>
+            </div>
+            <div id="ic-signals" class="ic-signal-board" aria-label="Active fetch control signals">
+              <div class="ic-signal" data-ic-signal="time">Time: —</div><div class="ic-signal" data-ic-signal="select">S2S1S0: —</div><div class="ic-signal" data-ic-signal="memory">Read: 0</div><div class="ic-signal" data-ic-signal="register">Register control: —</div>
+            </div>
+
+            <div id="ic-flowchart" class="ic-flow" aria-label="Animated instruction-cycle flowchart" hidden>
+              <div class="ic-flow-node" data-ic-flow="start">Start · SC &larr; 0</div><div class="ic-arrow">&#8595;</div>
+              <div class="ic-flow-node" data-ic-flow="t0">T0 · AR &larr; PC</div><div class="ic-arrow">&#8595;</div>
+              <div class="ic-flow-node" data-ic-flow="t1">T1 · IR &larr; M[AR], PC &larr; PC + 1</div><div class="ic-arrow">&#8595;</div>
+              <div class="ic-flow-node" data-ic-flow="t2">T2 · Decode opcode, AR &larr; IR(0–11), I &larr; IR(15)</div><div class="ic-arrow">&#8595;</div>
+              <div class="ic-flow-node decision" data-ic-flow="d7">Decision · D7?</div><div class="ic-arrow">&#8595;</div>
+              <div class="ic-flow-node decision" data-ic-flow="i">Decision · I?</div><div class="ic-arrow">&#8595;</div>
+              <div class="ic-flow-row">
+                <div class="ic-flow-node" data-ic-flow="indirect">Indirect T3 · AR &larr; M[AR]</div>
+                <div class="ic-flow-node" data-ic-flow="execute">Execute selected instruction · SC &larr; 0</div>
+              </div><div class="ic-arrow">&#8634; next instruction</div>
+            </div>
+            <div id="ic-animation-status" class="ic-animation-status" aria-live="polite"><strong>Ready.</strong> Choose a diagram and instruction path, then press Start or Next.</div>
+            <div id="ic-step-count" class="ic-step-count">Step 0</div>
           </section>
 
           <section class="coa-check">
@@ -2339,6 +2415,99 @@ Bread,Butter`;
         startIncrementer();
       }, 80);
     });
+
+    const icView = document.getElementById('ic-view');
+    const icPath = document.getElementById('ic-path');
+    const icDatapath = document.getElementById('ic-datapath');
+    const icFlowchart = document.getElementById('ic-flowchart');
+    const icStatus = document.getElementById('ic-animation-status');
+    const icStepCount = document.getElementById('ic-step-count');
+    const icPrevious = document.getElementById('ic-previous');
+    const icNext = document.getElementById('ic-next');
+    const icAuto = document.getElementById('ic-auto');
+    let icIndex = -1;
+    let icTimer = null;
+    let icPlaying = false;
+
+    const icDatapathSteps = [
+      { nodes:['control'], time:'Ready', select:'—', memory:'Read: 0', register:'Register control: —', title:'Fetch cycle ready', text:'SC is zero, so the next timing signal is T0. PC holds the address of the next instruction.' },
+      { nodes:['control','pc','bus'], time:'T0', select:'S2S1S0: 010', memory:'Read: 0', register:'LD(AR): 1', title:'T0 — select PC', text:'Bus selection code 010 connects PC (bus input 2) to the common bus. The value on the bus is the next-instruction address.' },
+      { nodes:['pc','bus','ar'], time:'T0', select:'S2S1S0: 010', memory:'Read: 0', register:'LD(AR): 1', title:'T0 — load AR', text:'At the clock edge, AR loads the value carried by the bus. The completed microoperation is AR ← PC.' },
+      { nodes:['ar','memory','control'], time:'T1', select:'S2S1S0: 111', memory:'Read: 1', register:'LD(IR): 1 · INR(PC): 1', title:'T1 — read memory', text:'AR drives the memory address input. Read is asserted and source 7 is selected, placing M[AR] on the common bus.' },
+      { nodes:['memory','bus','ir','pc'], time:'T1', select:'S2S1S0: 111', memory:'Read: 1', register:'LD(IR): 1 · INR(PC): 1', title:'T1 — fetch and increment', text:'IR loads the memory word while PC increments through its dedicated INR circuit. Thus IR ← M[AR] and PC ← PC + 1 occur together.' },
+      { nodes:['ir','ar','control'], time:'T2', select:'Internal decode', memory:'Read: 0', register:'AR ← IR(0–11) · I ← IR(15)', title:'T2 — decode instruction', text:'The opcode IR(12–14) activates one decoder output D0…D7. The address/function field enters AR, and bit 15 enters I.' }
+    ];
+
+    function icFlowSteps() {
+      const path = icPath.value;
+      const common = [
+        {key:'start', title:'Start', text:'Clear SC so the control sequence begins at T0.'},
+        {key:'t0', title:'T0 — fetch address', text:'Copy PC into AR.'},
+        {key:'t1', title:'T1 — fetch instruction', text:'Read memory into IR and increment PC.'},
+        {key:'t2', title:'T2 — decode', text:'Decode the opcode, copy the low 12 bits into AR, and copy bit 15 into I.'},
+        {key:'d7', title:'Test D7', text:path === 'direct' || path === 'indirect' ? 'D7 = 0: follow the memory-reference branch.' : 'D7 = 1: follow the register-reference or I/O branch.'},
+        {key:'i', title:'Test I', text:path === 'direct' ? 'I = 0: direct address; AR already contains the effective address.' : path === 'indirect' ? 'I = 1: an indirect cycle must obtain the effective address.' : path === 'register' ? 'I = 0 with D7 = 1: execute a register-reference instruction.' : 'I = 1 with D7 = 1: execute an input/output instruction.'}
+      ];
+      if (path === 'indirect') common.push({key:'indirect', title:'T3 — indirect cycle', text:'Read the effective address from memory: AR ← M[AR].'});
+      const labels = {direct:'Direct memory-reference', indirect:'Indirect memory-reference', register:'Register-reference', io:'Input/output'};
+      common.push({key:'execute', title:`Execute ${labels[path]}`, text:'Perform the selected operation, clear SC, and return to T0 for the next instruction.'});
+      return common;
+    }
+
+    function stopIcAuto() { clearTimeout(icTimer); icTimer = null; icPlaying = false; icAuto.textContent = '▶ Auto play'; }
+    function currentIcSteps() { return icView.value === 'datapath' ? icDatapathSteps : icFlowSteps(); }
+    function renderIcStep() {
+      const steps = currentIcSteps();
+      icIndex = Math.max(0, Math.min(icIndex, steps.length - 1));
+      document.querySelectorAll('[data-ic-node],[data-ic-flow]').forEach(node => node.classList.remove('active','done'));
+      document.querySelectorAll('[data-ic-signal]').forEach(node => node.classList.remove('active'));
+      const step = steps[icIndex];
+      if (icView.value === 'datapath') {
+        step.nodes.forEach(key => document.querySelector(`[data-ic-node="${key}"]`)?.classList.add('active'));
+        document.querySelector('[data-ic-signal="time"]').textContent = `Time: ${step.time}`;
+        document.querySelector('[data-ic-signal="select"]').textContent = step.select;
+        document.querySelector('[data-ic-signal="memory"]').textContent = step.memory;
+        document.querySelector('[data-ic-signal="register"]').textContent = step.register;
+        document.querySelectorAll('[data-ic-signal]').forEach(node => node.classList.add('active'));
+      } else {
+        steps.slice(0,icIndex).forEach(item => document.querySelector(`[data-ic-flow="${item.key}"]`)?.classList.add('done'));
+        document.querySelector(`[data-ic-flow="${step.key}"]`)?.classList.add('active');
+        const execute = document.querySelector('[data-ic-flow="execute"]');
+        execute.innerHTML = `<strong>${icPath.options[icPath.selectedIndex].text}</strong><br>Execute · SC &larr; 0`;
+      }
+      icStatus.innerHTML = `<strong>${step.title}</strong><br>${step.text}`;
+      icStepCount.textContent = `Step ${icIndex + 1} of ${steps.length}`;
+      icPrevious.disabled = icIndex === 0;
+      icNext.disabled = icIndex === steps.length - 1;
+    }
+    function scheduleIcAuto() {
+      clearTimeout(icTimer);
+      if (!icPlaying) return;
+      const steps = currentIcSteps();
+      if (icIndex >= steps.length - 1) { stopIcAuto(); return; }
+      icTimer = setTimeout(() => { icIndex += 1; renderIcStep(); scheduleIcAuto(); }, 1800);
+    }
+    function resetIcAnimation() {
+      stopIcAuto(); icIndex = -1;
+      document.querySelectorAll('[data-ic-node],[data-ic-flow],[data-ic-signal]').forEach(node => node.classList.remove('active','done'));
+      icStatus.innerHTML = '<strong>Ready.</strong> Choose a diagram and instruction path, then press Start or Next.';
+      icStepCount.textContent = 'Step 0'; icPrevious.disabled = true; icNext.disabled = false;
+    }
+    function setIcView() {
+      icDatapath.hidden = icView.value !== 'datapath';
+      document.getElementById('ic-signals').hidden = icView.value !== 'datapath';
+      icFlowchart.hidden = icView.value !== 'flowchart';
+      icPath.disabled = icView.value !== 'flowchart';
+      resetIcAnimation();
+    }
+    document.getElementById('ic-start').addEventListener('click', () => { stopIcAuto(); icIndex = 0; renderIcStep(); });
+    icPrevious.addEventListener('click', () => { stopIcAuto(); icIndex -= 1; renderIcStep(); });
+    icNext.addEventListener('click', () => { stopIcAuto(); if (icIndex < 0) icIndex = 0; else icIndex += 1; renderIcStep(); });
+    icAuto.addEventListener('click', () => { if (icPlaying) { stopIcAuto(); return; } if (icIndex < 0 || icIndex >= currentIcSteps().length - 1) icIndex = 0; icPlaying = true; icAuto.textContent = '❚❚ Pause'; renderIcStep(); scheduleIcAuto(); });
+    document.getElementById('ic-reset').addEventListener('click', resetIcAnimation);
+    icView.addEventListener('change', setIcView);
+    icPath.addEventListener('change', resetIcAnimation);
+    setIcView();
 
     buildLayout(4);
     buildAdderSubtractor(0);
