@@ -680,8 +680,23 @@
     .dm-lightbox-bar { display: flex; justify-content: space-between; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
     .dm-lightbox-bar h3 { margin: 0; }
     .dm-lightbox-close { border: 0; background: transparent; font-size: 26px; cursor: pointer; }
-    .dm-lightbox img { display: block; width: 100%; max-height: 72vh; object-fit: contain; background: #fff; }
+    .dm-lightbox-stage { position: relative; overflow: hidden; background: #eaf1f8; }
+    .dm-lightbox-stage img { display: block; width: 100%; max-height: 58vh; object-fit: contain; background: #fff; transform-origin: center; transition: transform .85s ease, filter .4s ease; }
+    .dm-lightbox-stage.is-animating img { filter: saturate(1.08) contrast(1.03); }
+    .dm-animation-focus { --focus-x: 50%; --focus-y: 50%; position: absolute; left: var(--focus-x); top: var(--focus-y); width: 62px; height: 62px; border: 3px solid #ef4444; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 0 9px #ef444426, 0 0 24px #ef4444b8; transition: left .85s ease, top .85s ease; pointer-events: none; animation: dmFocusPulse .9s infinite alternate; }
+    @keyframes dmFocusPulse { to { width: 78px; height: 78px; box-shadow: 0 0 0 13px #ef44441c, 0 0 32px #ef4444d1; } }
+    .dm-animation-panel { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto; align-items: center; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--line); background: #f1f7ff; }
+    .dm-animation-controls { display: flex; flex-wrap: wrap; gap: 7px; }
+    .dm-animation-button { min-height: 38px; padding: 8px 11px; border: 1px solid #8bb8e8; border-radius: 8px; background: #fff; color: var(--navy); font: 700 13px/1 inherit; cursor: pointer; }
+    .dm-animation-button.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .dm-animation-button:disabled { opacity: .45; cursor: not-allowed; }
+    .dm-animation-copy strong, .dm-animation-copy span { display: block; }
+    .dm-animation-copy strong { margin-bottom: 3px; color: var(--navy); }
+    .dm-animation-copy span { color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .dm-animation-progress { color: var(--blue); font-size: 13px; font-weight: 800; white-space: nowrap; }
     .dm-lightbox-meta { padding: 12px 20px 18px; color: var(--muted); }
+    @media (max-width: 680px) { .dm-animation-panel { grid-template-columns: 1fr; padding: 10px; } .dm-animation-progress { white-space: normal; } }
+    @media (prefers-reduced-motion: reduce) { .dm-lightbox-stage img, .dm-animation-focus { transition: none; } .dm-animation-focus { animation: none; } }
     @media (max-width: 680px) { .dm-tools { grid-template-columns: 1fr; } .dm-library { padding: 18px; } }
   </style>
 </head>
@@ -1605,7 +1620,16 @@
 
       <dialog class="dm-lightbox" id="dm-textbook-lightbox">
         <div class="dm-lightbox-bar"><h3 id="dm-lightbox-title">Textbook asset</h3><button class="dm-lightbox-close" type="button" aria-label="Close">&times;</button></div>
-        <img id="dm-lightbox-image" alt="">
+        <div class="dm-lightbox-stage" id="dm-lightbox-stage"><img id="dm-lightbox-image" alt=""><span class="dm-animation-focus" id="dm-animation-focus" aria-hidden="true" hidden></span></div>
+        <section class="dm-animation-panel" aria-labelledby="dm-animation-step-title">
+          <div class="dm-animation-controls">
+            <button class="dm-animation-button primary" id="dm-animation-play" type="button">&#9654; Animate flow</button>
+            <button class="dm-animation-button" id="dm-animation-previous" type="button" aria-label="Previous explanation step">&#8592; Step</button>
+            <button class="dm-animation-button" id="dm-animation-next" type="button" aria-label="Next explanation step">Step &#8594;</button>
+          </div>
+          <div class="dm-animation-copy" aria-live="polite"><strong id="dm-animation-step-title">Application and execution</strong><span id="dm-animation-step-text">Animate the flow to see how this algorithm or diagram is applied.</span></div>
+          <div class="dm-animation-progress" id="dm-animation-progress">Step 0 of 4</div>
+        </section>
         <div class="dm-lightbox-meta" id="dm-lightbox-meta"></div>
       </dialog>
 
@@ -2980,9 +3004,67 @@ Bread,Butter`;
       const error = document.getElementById('dm-textbook-error');
       const dialog = document.getElementById('dm-textbook-lightbox');
       const dialogImage = document.getElementById('dm-lightbox-image');
-      let items = [], activeType = 'all', activeChapter = 'all';
+      const stage = document.getElementById('dm-lightbox-stage');
+      const focus = document.getElementById('dm-animation-focus');
+      const animationPlay = document.getElementById('dm-animation-play');
+      const animationPrevious = document.getElementById('dm-animation-previous');
+      const animationNext = document.getElementById('dm-animation-next');
+      const animationTitle = document.getElementById('dm-animation-step-title');
+      const animationText = document.getElementById('dm-animation-step-text');
+      const animationProgress = document.getElementById('dm-animation-progress');
+      let items = [], activeType = 'all', activeChapter = 'all', activeItem = null, animationStep = 0, animationTimer = null;
 
       const assetUrl = item => manifestUrl.replace('academics/dm-textbook/manifest.json', item.image);
+      const focusPoints = [[50, 50], [22, 34], [52, 50], [78, 66], [50, 82]];
+      function animationSteps(item) {
+        const name = item.type === 'algorithm' ? item.title : `Figure ${item.number}`;
+        if (item.type === 'algorithm') {
+          return [
+            ['Input', `Prepare the records and parameters for ${name}.`],
+            ['Generate', 'Apply the algorithm to transform the input into candidate patterns or decisions.'],
+            ['Evaluate', 'Compare the candidates using the relevant measure, threshold, or split condition.'],
+            ['Select', 'Keep the useful result and discard values that fail the algorithm criteria.'],
+            ['Apply', 'Use the selected result to make a prediction, group, rule, or other data-mining decision.']
+          ];
+        }
+        return [
+          ['Context', `Start with the complete flow shown in ${name}.`],
+          ['Input', 'Locate the source data, entities, or measurements entering the illustrated process.'],
+          ['Process', 'Follow the highlighted relationship or transformation to see how the data is organized.'],
+          ['Result', 'Read the output, pattern, cluster, or decision produced by the illustrated flow.'],
+          ['Application', 'Connect the result to a practical data-mining task or analytical question.']
+        ];
+      }
+      function stopAnimation() {
+        clearInterval(animationTimer); animationTimer = null;
+        animationPlay.textContent = 'Animate flow';
+      }
+      function showAnimationStep(step) {
+        if (!activeItem) return;
+        const steps = animationSteps(activeItem);
+        animationStep = Math.max(0, Math.min(step, steps.length - 1));
+        const current = steps[animationStep];
+        animationTitle.textContent = `${current[0]}: ${activeItem.type === 'algorithm' ? 'algorithm execution' : 'diagram walkthrough'}`;
+        animationText.textContent = current[1];
+        animationProgress.textContent = `Step ${animationStep + 1} of ${steps.length}`;
+        animationPrevious.disabled = animationStep === 0;
+        animationNext.disabled = animationStep === steps.length - 1;
+        if (animationStep === 0) { focus.hidden = true; dialogImage.style.transform = ''; }
+        else {
+          const [x, y] = focusPoints[animationStep];
+          focus.hidden = false; focus.style.setProperty('--focus-x', `${x}%`); focus.style.setProperty('--focus-y', `${y}%`);
+          dialogImage.style.transform = `scale(${1 + animationStep * .025})`;
+        }
+      }
+      function toggleAnimation() {
+        if (animationTimer) { stopAnimation(); return; }
+        if (animationStep >= animationSteps(activeItem).length - 1) showAnimationStep(0);
+        stage.classList.add('is-animating'); animationPlay.textContent = 'Pause animation';
+        animationTimer = setInterval(() => {
+          if (animationStep >= animationSteps(activeItem).length - 1) { stopAnimation(); return; }
+          showAnimationStep(animationStep + 1);
+        }, 1500);
+      }
       function filterButton(label, value, group) {
         const button = document.createElement('button');
         button.type = 'button'; button.className = `dm-filter${value === 'all' ? ' active' : ''}`; button.textContent = label;
@@ -2993,6 +3075,7 @@ Bread,Butter`;
         return button;
       }
       function openItem(item) {
+        stopAnimation(); activeItem = item; stage.classList.remove('is-animating'); showAnimationStep(0);
         document.getElementById('dm-lightbox-title').textContent = item.type === 'algorithm' ? `Algorithm: ${item.title}` : `Figure ${item.number}: ${item.title}`;
         dialogImage.src = assetUrl(item); dialogImage.alt = item.alt;
         document.getElementById('dm-lightbox-meta').textContent = `Chapter ${item.chapter} — ${item.chapter_title} · PDF page ${item.pdf_page} · Han, Kamber & Pei, Third Edition`;
@@ -3013,9 +3096,12 @@ Bread,Butter`;
         grid.appendChild(fragment);
       }
       search.addEventListener('input', render);
+      animationPlay.addEventListener('click', toggleAnimation);
+      animationPrevious.addEventListener('click', () => { stopAnimation(); showAnimationStep(animationStep - 1); });
+      animationNext.addEventListener('click', () => { stopAnimation(); showAnimationStep(animationStep + 1); });
       dialog.querySelector('.dm-lightbox-close').addEventListener('click', () => dialog.close());
       dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-      dialog.addEventListener('close', () => dialogImage.removeAttribute('src'));
+      dialog.addEventListener('close', () => { stopAnimation(); activeItem = null; stage.classList.remove('is-animating'); focus.hidden = true; dialogImage.removeAttribute('src'); dialogImage.style.transform = ''; });
       fetch(manifestUrl).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); }).then(manifest => {
         items = manifest.items;
         document.getElementById('dm-algorithm-count').textContent = `${manifest.algorithm_count} algorithms`;
