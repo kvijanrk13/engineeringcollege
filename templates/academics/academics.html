@@ -625,6 +625,17 @@
     .coa-card-steps li:last-child { margin-bottom:0; }
     .coa-card-steps li.active { color:#1e3a8a; background:#dbeafe; box-shadow:inset 4px 0 #2563eb; }
     .coa-card-step-status { min-height:42px; margin:8px 0 0; color:#1e3a8a; font-weight:700; }
+    .coa-card-io { margin-top:12px; padding:12px; border:1px solid #99f6e4; border-radius:11px; background:#f0fdfa; }
+    .coa-card-io h4 { margin:0 0 4px; color:#115e59; font-size:14px; }
+    .coa-card-io-hint { margin:0 0 9px; color:#475569; font-size:12px; line-height:1.4; }
+    .coa-card-io-controls { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:7px; }
+    .coa-card-io-input { min-width:0; width:100%; padding:9px 10px; border:1px solid #5eead4; border-radius:8px; font:inherit; }
+    .coa-card-io-button { padding:8px 10px; border:1px solid #0f766e; border-radius:8px; color:#115e59; background:#fff; font-weight:800; cursor:pointer; }
+    .coa-card-io-button.run { color:#fff; background:#0f766e; }
+    .coa-card-io-result { display:grid; grid-template-columns:1fr auto 1.4fr auto 1fr; gap:5px; align-items:center; margin-top:9px; font-size:12px; }
+    .coa-card-io-value { min-width:0; padding:7px; border-radius:7px; background:#fff; overflow-wrap:anywhere; }
+    .coa-card-io-value strong { display:block; margin-bottom:3px; color:#0f766e; font-size:10px; text-transform:uppercase; }
+    @media (max-width:500px) { .coa-card-io-controls,.coa-card-io-result { grid-template-columns:1fr; } .coa-card-io-result > b { justify-self:center; transform:rotate(90deg); } }
     .coa-card-focus { --focus-x:50%; --focus-y:50%; position:absolute; left:var(--focus-x); top:var(--focus-y); width:46px; height:46px; border:3px solid #ef4444; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 7px rgba(239,68,68,.14); transition:left .9s ease,top .9s ease; pointer-events:none; animation:coaFocusPulse .9s infinite alternate; }
     .coa-diagram-empty,.coa-diagram-error { padding:24px; border:1px dashed #94a3b8; border-radius:12px; color:#475569; background:#fff; text-align:center; }
     .coa-diagram-error { color:#991b1b; border-color:#fca5a5; background:#fef2f2; }
@@ -764,7 +775,7 @@
     </nav>
 
     <section class="tab-panel active" id="coa-panel" role="tabpanel" aria-labelledby="coa-tab">
-      <article class="coa-diagram-library" id="coa-diagram-library" data-manifest-url="{% static 'academics/coa-diagrams/manifest.json' %}" aria-labelledby="coa-diagram-title">
+      <article class="coa-diagram-library" id="coa-diagram-library" data-manifest-url="{% static 'academics/coa-diagrams/manifest.json' %}?v=interactive-io-2" aria-labelledby="coa-diagram-title">
         <div class="topic-head">
           <div>
             <p class="eyebrow" style="color:var(--blue)">Complete scanned-textbook figure index</p>
@@ -2881,7 +2892,7 @@ Bread,Butter`;
       let currentFigure = null;
       const simulatorMemory = new Map();
 
-      const imageUrl = figure => manifestUrl.replace('academics/coa-diagrams/manifest.json', figure.image);
+      const imageUrl = figure => manifestUrl.split('?')[0].replace('academics/coa-diagrams/manifest.json', figure.image);
       const element = (tag, className, text) => {
         const node = document.createElement(tag);
         if (className) node.className = className;
@@ -3111,6 +3122,21 @@ Bread,Butter`;
         const enlarge = element('button', 'coa-card-action', 'Open input/output lab'); enlarge.type = 'button';
         enlarge.addEventListener('click', () => openLightbox(index, enlarge)); actions.append(play, enlarge); panel.appendChild(actions);
         const status = element('div', 'coa-card-step-status', 'Animation ready - press Animate this diagram.'); status.setAttribute('aria-live', 'polite'); panel.appendChild(status);
+        const simulator = figure.simulator || { input_label:'Diagram input', example:'1010', hint:'Enter a value to trace its conversion.' };
+        const ioLab = element('section', 'coa-card-io'); ioLab.setAttribute('aria-label', `Input output lab for ${figure.topic}`);
+        ioLab.appendChild(element('h4', '', 'Try your own input → generate output'));
+        ioLab.appendChild(element('p', 'coa-card-io-hint', `${simulator.input_label}: ${simulator.hint}`));
+        const ioControls = element('div', 'coa-card-io-controls');
+        const cardInput = element('input', 'coa-card-io-input'); cardInput.placeholder = simulator.example; cardInput.setAttribute('aria-label', simulator.input_label);
+        const cardExample = element('button', 'coa-card-io-button', 'Example'); cardExample.type = 'button';
+        const cardRun = element('button', 'coa-card-io-button run', 'Generate'); cardRun.type = 'button'; ioControls.append(cardInput, cardExample, cardRun); ioLab.appendChild(ioControls);
+        const ioResult = element('div', 'coa-card-io-result');
+        const cardInputResult = element('span', 'coa-card-io-value'); cardInputResult.innerHTML = '<strong>Input</strong>Waiting';
+        const arrowOne = element('b', '', '→');
+        const cardProcessResult = element('span', 'coa-card-io-value'); cardProcessResult.innerHTML = '<strong>Process</strong>Enter a value';
+        const arrowTwo = element('b', '', '→');
+        const cardOutputResult = element('span', 'coa-card-io-value'); cardOutputResult.innerHTML = '<strong>Output</strong>Not generated';
+        ioResult.append(cardInputResult, arrowOne, cardProcessResult, arrowTwo, cardOutputResult); ioLab.appendChild(ioResult); panel.appendChild(ioLab);
         const steps = workingSteps(figure);
         const list = element('ol', 'coa-card-steps');
         const listItems = steps.map(step => { const item = element('li', '', `${step.title}: ${step.text}`); list.appendChild(item); return item; });
@@ -3163,6 +3189,22 @@ Bread,Butter`;
           if (localIndex < 0 || localIndex >= steps.length - 1) { localIndex = -1; redrawBuffer = null; await showLocalStep(0); }
           localPlaying = true; play.textContent = 'Pause animation'; scheduleLocal();
         });
+        const runCardSimulator = async () => {
+          try {
+            const result = simulateFigure(figure, cardInput.value); cardInput.setAttribute('aria-invalid', 'false');
+            cardInputResult.innerHTML = '<strong>Input</strong>'; cardInputResult.append(document.createTextNode(result.input));
+            cardProcessResult.innerHTML = '<strong>Process</strong>'; cardProcessResult.append(document.createTextNode(result.process));
+            cardOutputResult.innerHTML = '<strong>Output</strong>'; cardOutputResult.append(document.createTextNode(result.output));
+            if (activeCardStop && activeCardStop !== stopLocal) activeCardStop(); activeCardStop = stopLocal; stopLocal(); localIndex = -1; redrawBuffer = null;
+            await showLocalStep(0); localPlaying = true; activeCardStop = stopLocal; play.textContent = 'Pause animation'; scheduleLocal();
+          } catch (simulationError) {
+            cardInput.setAttribute('aria-invalid', 'true'); cardProcessResult.innerHTML = '<strong>Process</strong>Input validation stopped conversion.';
+            cardOutputResult.innerHTML = '<strong>Output</strong>'; cardOutputResult.append(document.createTextNode(simulationError.message));
+          }
+        };
+        cardExample.addEventListener('click', () => { cardInput.value = simulator.example; runCardSimulator(); });
+        cardRun.addEventListener('click', runCardSimulator);
+        cardInput.addEventListener('keydown', event => { if (event.key === 'Enter') runCardSimulator(); });
         card.appendChild(panel);
         return card;
       }
