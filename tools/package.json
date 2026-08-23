@@ -4,9 +4,12 @@
   "type": "module",
   "scripts": {
     "extract:coa": "node extract_coa_diagrams.mjs",
-    "test:coa": "node test_coa_diagrams.mjs"
+    "test:coa": "node test_coa_diagrams.mjs",
+    "extract:dm": "node extract_dm_textbook.mjs",
+    "test:dm": "node test_dm_textbook.mjs"
   },
   "dependencies": {
+    "mupdf": "^1.28.0",
     "pdfjs-dist": "5.4.624",
     "sharp": "0.34.5",
     "tesseract.js": "7.0.0"

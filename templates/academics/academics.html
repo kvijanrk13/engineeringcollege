@@ -653,6 +653,36 @@
     .coa-lightbox-caption { flex:1; margin:0; text-align:center; font-size:14px; }
     @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-diagram-image-wrap { height:330px; } .coa-lightbox { width:100vw; height:100vh; max-height:100vh; border-radius:0; } .coa-lightbox-layout { height:100vh; max-height:100vh; } .coa-lightbox-stage { min-height:260px; padding:8px; } .coa-animation-panel { grid-template-columns:1fr; gap:8px; padding:10px; } .coa-animation-progress { white-space:normal; } .coa-lightbox-foot { gap:7px; padding:9px; } }
     @media (prefers-reduced-motion:reduce) { .coa-lightbox-stage img,.coa-animation-focus,.coa-diagram-image-wrap img,.coa-card-focus { transition:none; } .coa-animation-focus,.coa-card-focus { animation:none; } }
+    .dm-library { margin-bottom: 34px; padding: 26px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+    .dm-library-head { display: flex; justify-content: space-between; gap: 20px; align-items: end; flex-wrap: wrap; }
+    .dm-library-head h2 { margin: 0 0 6px; color: var(--navy); }
+    .dm-library-head p { margin: 0; color: var(--muted); max-width: 720px; line-height: 1.55; }
+    .dm-library-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dm-stat { padding: 8px 12px; border-radius: 999px; background: #eaf3ff; color: #1557a0; font-weight: 800; font-size: 13px; }
+    .dm-tools { display: grid; grid-template-columns: minmax(220px, 1fr) auto; gap: 12px; margin: 22px 0 14px; }
+    .dm-search { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+    .dm-type-filters, .dm-chapter-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dm-filter { padding: 9px 12px; border: 1px solid #b9cde4; border-radius: 999px; background: #fff; color: var(--navy); font-weight: 700; cursor: pointer; }
+    .dm-filter.active { color: #fff; background: var(--blue); border-color: var(--blue); }
+    .dm-chapter-filters { margin-bottom: 18px; }
+    .dm-library-count { margin: 14px 0; color: var(--muted); font-weight: 700; }
+    .dm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)); gap: 16px; }
+    .dm-asset { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; text-align: left; padding: 0; cursor: pointer; color: inherit; }
+    .dm-asset:hover { transform: translateY(-2px); box-shadow: 0 10px 24px #102a4320; }
+    .dm-asset img { display: block; width: 100%; height: 190px; object-fit: contain; background: #f8fafc; border-bottom: 1px solid var(--line); }
+    .dm-asset-copy { display: block; padding: 14px; }
+    .dm-asset-kind { color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .dm-asset strong { display: block; margin: 6px 0; line-height: 1.35; }
+    .dm-asset small { color: var(--muted); }
+    .dm-empty { padding: 30px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; }
+    .dm-lightbox { width: min(1100px, calc(100% - 28px)); border: 0; border-radius: 16px; padding: 0; }
+    .dm-lightbox::backdrop { background: #061526d9; }
+    .dm-lightbox-bar { display: flex; justify-content: space-between; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .dm-lightbox-bar h3 { margin: 0; }
+    .dm-lightbox-close { border: 0; background: transparent; font-size: 26px; cursor: pointer; }
+    .dm-lightbox img { display: block; width: 100%; max-height: 72vh; object-fit: contain; background: #fff; }
+    .dm-lightbox-meta { padding: 12px 20px 18px; color: var(--muted); }
+    @media (max-width: 680px) { .dm-tools { grid-template-columns: 1fr; } .dm-library { padding: 18px; } }
   </style>
 </head>
 <body>
@@ -1554,6 +1584,31 @@
     </section>
 
     <section class="tab-panel" id="data-mining-panel" role="tabpanel" aria-labelledby="data-mining-tab">
+      <article class="dm-library" id="dm-textbook-library" data-manifest-url="{% static 'academics/dm-textbook/manifest.json' %}">
+        <div class="dm-library-head">
+          <div>
+            <p class="eyebrow" style="color:#1677ff">Complete textbook visual index</p>
+            <h2>Data Mining Algorithms &amp; Diagrams</h2>
+            <p>Search and explore the numbered figures and formal pseudocode algorithms extracted from <cite>Data Mining: Concepts and Techniques</cite>, Third Edition. Every item includes its chapter and PDF source page.</p>
+          </div>
+          <div class="dm-library-stats" aria-live="polite"><span class="dm-stat" id="dm-algorithm-count">Algorithms</span><span class="dm-stat" id="dm-diagram-count">Diagrams</span><span class="dm-stat">740 pages audited</span></div>
+        </div>
+        <div class="dm-tools">
+          <input class="dm-search" id="dm-textbook-search" type="search" placeholder="Search Apriori, clustering, decision tree, outlier…" aria-label="Search textbook algorithms and diagrams">
+          <div class="dm-type-filters" id="dm-type-filters" aria-label="Filter by asset type"></div>
+        </div>
+        <div class="dm-chapter-filters" id="dm-chapter-filters" aria-label="Filter by chapter"></div>
+        <p class="dm-library-count" id="dm-library-count">Loading textbook index…</p>
+        <div class="dm-grid" id="dm-textbook-grid" aria-live="polite"></div>
+        <div class="dm-empty" id="dm-textbook-error" hidden>The textbook index could not be loaded. Please refresh the page.</div>
+      </article>
+
+      <dialog class="dm-lightbox" id="dm-textbook-lightbox">
+        <div class="dm-lightbox-bar"><h3 id="dm-lightbox-title">Textbook asset</h3><button class="dm-lightbox-close" type="button" aria-label="Close">&times;</button></div>
+        <img id="dm-lightbox-image" alt="">
+        <div class="dm-lightbox-meta" id="dm-lightbox-meta"></div>
+      </dialog>
+
       <div class="topic-head">
         <div>
           <h2>OnLine Analytical Processing (OLAP)</h2>
@@ -2910,6 +2965,66 @@ Bread,Butter`;
         console.error('COA diagram manifest failed to load', loadError);
         grid.setAttribute('aria-busy', 'false'); count.textContent = 'Diagram index unavailable'; error.hidden = false;
       });
+    })();
+  </script>
+  <script>
+    (() => {
+      const library = document.getElementById('dm-textbook-library');
+      if (!library) return;
+      const manifestUrl = library.dataset.manifestUrl;
+      const grid = document.getElementById('dm-textbook-grid');
+      const search = document.getElementById('dm-textbook-search');
+      const typeFilters = document.getElementById('dm-type-filters');
+      const chapterFilters = document.getElementById('dm-chapter-filters');
+      const count = document.getElementById('dm-library-count');
+      const error = document.getElementById('dm-textbook-error');
+      const dialog = document.getElementById('dm-textbook-lightbox');
+      const dialogImage = document.getElementById('dm-lightbox-image');
+      let items = [], activeType = 'all', activeChapter = 'all';
+
+      const assetUrl = item => manifestUrl.replace('academics/dm-textbook/manifest.json', item.image);
+      function filterButton(label, value, group) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.className = `dm-filter${value === 'all' ? ' active' : ''}`; button.textContent = label;
+        button.addEventListener('click', () => {
+          group.querySelectorAll('.dm-filter').forEach(node => node.classList.remove('active')); button.classList.add('active');
+          if (group === typeFilters) activeType = value; else activeChapter = value; render();
+        });
+        return button;
+      }
+      function openItem(item) {
+        document.getElementById('dm-lightbox-title').textContent = item.type === 'algorithm' ? `Algorithm: ${item.title}` : `Figure ${item.number}: ${item.title}`;
+        dialogImage.src = assetUrl(item); dialogImage.alt = item.alt;
+        document.getElementById('dm-lightbox-meta').textContent = `Chapter ${item.chapter} — ${item.chapter_title} · PDF page ${item.pdf_page} · Han, Kamber & Pei, Third Edition`;
+        dialog.showModal();
+      }
+      function render() {
+        const term = search.value.trim().toLowerCase();
+        const visible = items.filter(item => (activeType === 'all' || item.type === activeType) && (activeChapter === 'all' || String(item.chapter) === activeChapter) && (!term || `${item.title} ${item.number} ${item.chapter_title} ${item.keywords.join(' ')}`.toLowerCase().includes(term)));
+        count.textContent = `Showing ${visible.length} of ${items.length} textbook assets`;
+        grid.innerHTML = '';
+        if (!visible.length) { grid.innerHTML = '<div class="dm-empty">No algorithms or diagrams match these filters.</div>'; return; }
+        const fragment = document.createDocumentFragment();
+        visible.forEach(item => {
+          const card = document.createElement('button'); card.type = 'button'; card.className = 'dm-asset';
+          card.innerHTML = `<img loading="lazy" src="${assetUrl(item)}" alt="${item.alt.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"><span class="dm-asset-copy"><span class="dm-asset-kind">${item.type === 'algorithm' ? 'Algorithm' : `Figure ${item.number}`}</span><strong>${item.title}</strong><small>Chapter ${item.chapter} · PDF page ${item.pdf_page}</small></span>`;
+          card.addEventListener('click', () => openItem(item)); fragment.appendChild(card);
+        });
+        grid.appendChild(fragment);
+      }
+      search.addEventListener('input', render);
+      dialog.querySelector('.dm-lightbox-close').addEventListener('click', () => dialog.close());
+      dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+      dialog.addEventListener('close', () => dialogImage.removeAttribute('src'));
+      fetch(manifestUrl).then(response => { if (!response.ok) throw new Error(`HTTP ${response.status}`); return response.json(); }).then(manifest => {
+        items = manifest.items;
+        document.getElementById('dm-algorithm-count').textContent = `${manifest.algorithm_count} algorithms`;
+        document.getElementById('dm-diagram-count').textContent = `${manifest.diagram_count} diagrams`;
+        typeFilters.append(filterButton(`All (${items.length})`, 'all', typeFilters), filterButton(`Algorithms (${manifest.algorithm_count})`, 'algorithm', typeFilters), filterButton(`Diagrams (${manifest.diagram_count})`, 'diagram', typeFilters));
+        chapterFilters.append(filterButton('All chapters', 'all', chapterFilters));
+        manifest.chapters.filter(chapter => chapter.count).forEach(chapter => chapterFilters.append(filterButton(`Ch. ${chapter.number} (${chapter.count})`, String(chapter.number), chapterFilters)));
+        render();
+      }).catch(loadError => { console.error('Data Mining textbook manifest failed to load', loadError); count.textContent = 'Textbook index unavailable'; error.hidden = false; });
     })();
   </script>
 </body>
