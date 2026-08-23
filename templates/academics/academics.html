@@ -698,6 +698,37 @@
     @media (max-width: 680px) { .dm-animation-panel { grid-template-columns: 1fr; padding: 10px; } .dm-animation-progress { white-space: normal; } }
     @media (prefers-reduced-motion: reduce) { .dm-lightbox-stage img, .dm-animation-focus { transition: none; } .dm-animation-focus { animation: none; } }
     @media (max-width: 680px) { .dm-tools { grid-template-columns: 1fr; } .dm-library { padding: 18px; } }
+    .dma-studio { margin-top: 38px; padding-top: 30px; border-top: 3px solid var(--line); }
+    .dma-studio-lead { margin: 0 0 18px; color: var(--muted); line-height: 1.6; max-width: 820px; }
+    .dma-select { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+    .dma-algo-btn { padding: 9px 13px; border: 1px solid #b9cde4; border-radius: 999px; background: #fff; color: var(--navy); font: 700 13px/1 inherit; cursor: pointer; transition: .2s; }
+    .dma-algo-btn:hover { border-color: var(--blue); background: var(--blue-soft); }
+    .dma-algo-btn.active { color: #fff; background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(22,119,255,.13); }
+    .dma-summary { margin: 0 0 18px; padding: 16px 18px; border-left: 5px solid #7c3aed; border-radius: 10px; background: #f8f5ff; color: #4c1d95; line-height: 1.65; }
+    .dma-stage { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 18px; align-items: start; }
+    .dma-visual { padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, #fbfdff, #eef4fb); }
+    .dma-visual canvas { display: block; width: 100%; height: auto; border-radius: 8px; background: #f8fbff; }
+    .dma-legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .dma-legend i { display: inline-block; width: 14px; height: 14px; margin-right: 6px; border-radius: 4px; vertical-align: -2px; }
+    .dma-side { display: flex; flex-direction: column; gap: 12px; }
+    .dma-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px; border: 1px solid #d8cdf8; border-radius: 10px; background: #faf8ff; }
+    .dma-controls .btn { min-width: 84px; }
+    .dma-speed { display: grid; gap: 3px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .dma-speed select { min-height: 34px; }
+    .dma-status { min-height: 70px; padding: 14px 16px; border-left: 4px solid var(--blue); border-radius: 9px; background: #eef7ff; line-height: 1.6; }
+    .dma-status strong { color: var(--navy); }
+    .dma-progress { height: 8px; overflow: hidden; border-radius: 99px; background: #dbeafe; }
+    #dma-progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, #1677ff, #0f9d72); transition: width .3s ease; }
+    .dma-steps { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; display: grid; gap: 8px; }
+    .dma-steps li { padding: 10px 12px 10px 40px; border: 1px solid var(--line); border-radius: 9px; background: #fff; line-height: 1.5; position: relative; transition: .25s; }
+    .dma-steps li::before { content: counter(dma); counter-increment: dma; position: absolute; top: 9px; left: 10px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #cbd5e1; color: #334155; font-size: 12px; font-weight: 800; }
+    .dma-steps { counter-reset: dma; }
+    .dma-steps li.active { border-color: var(--blue); background: var(--blue-soft); box-shadow: inset 4px 0 var(--blue); }
+    .dma-steps li.active::before { background: var(--blue); color: #fff; }
+    .dma-steps li.done { border-color: #9fe3c8; }
+    .dma-steps li.done::before { background: var(--green); color: #fff; }
+    .dma-steps li b { display: block; color: var(--navy); margin-bottom: 2px; }
+    @media (max-width: 880px) { .dma-stage { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -1726,6 +1757,42 @@ Bread,Butter</textarea></label>
           <div><strong>Support</strong>support(X) = baskets containing X ÷ all baskets</div>
           <div><strong>Confidence</strong>confidence(X → Y) = support(X ∪ Y) ÷ support(X)</div>
           <div><strong>Apriori pruning</strong>Discard a candidate when any (k−1)-subset is infrequent.</div>
+        </div>
+      </section>
+
+      <section class="dma-studio" id="dma-studio" aria-labelledby="dma-studio-title">
+        <div class="topic-head">
+          <div>
+            <p class="eyebrow" style="color:#1677ff">Every algorithm, animated</p>
+            <h2 id="dma-studio-title">Data Mining Algorithm Animation Studio</h2>
+            <p class="dma-studio-lead">Recreate each textbook algorithm as a live, step-by-step animation. Choose an algorithm, then watch its flow diagram build and a worked execution trace run frame by frame with neat steps of flow and execution.</p>
+          </div>
+        </div>
+        <div class="dma-select" id="dma-select" role="tablist" aria-label="Choose a data mining algorithm"></div>
+        <div class="dma-summary" id="dma-summary"></div>
+        <div class="dma-stage">
+          <div class="dma-visual">
+            <canvas id="dma-canvas" width="560" height="380" aria-label="Algorithm animation canvas"></canvas>
+            <div class="dma-legend" id="dma-legend"></div>
+          </div>
+          <aside class="dma-side">
+            <div class="dma-controls">
+              <button class="btn" id="dma-play" type="button">&#9654; Play</button>
+              <button class="btn light" id="dma-prev" type="button">&#8249; Step</button>
+              <button class="btn light" id="dma-next" type="button">Step &#8250;</button>
+              <button class="btn light" id="dma-reset" type="button">&#8634; Reset</button>
+              <label class="dma-speed">Speed
+                <select id="dma-speed">
+                  <option value="1500">Slow</option>
+                  <option value="950" selected>Normal</option>
+                  <option value="520">Fast</option>
+                </select>
+              </label>
+            </div>
+            <div class="dma-status" id="dma-status"></div>
+            <div class="dma-progress"><div id="dma-progress-bar"></div></div>
+            <ol class="dma-steps" id="dma-steps" aria-live="polite"></ol>
+          </aside>
         </div>
       </section>
     </section>
@@ -3113,5 +3180,6 @@ Bread,Butter`;
       }).catch(loadError => { console.error('Data Mining textbook manifest failed to load', loadError); count.textContent = 'Textbook index unavailable'; error.hidden = false; });
     })();
   </script>
+  <script src="{% static 'academics/dm_studio.js' %}"></script>
 </body>
 </html>
