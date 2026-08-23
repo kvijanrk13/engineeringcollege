@@ -25,6 +25,7 @@ for (const figure of manifest.figures) {
     for (const key of ['title','text','x','y','scale','tx','ty']) assert.notEqual(step[key], undefined, `${figure.id} step ${index + 1} missing ${key}`);
     assert.ok(step.text.includes(`Figure ${figure.figure_number}`) || index > 0, `${figure.id} first step must be diagram-specific`);
   }
+  for (const key of ['type','operation','input_label','example','hint']) assert.ok(figure.simulator?.[key], `${figure.id} simulator missing ${key}`);
   assert.match(figure.figure_number, /^\d{1,2}-\d{1,3}$/);
   assert.ok(figure.source_pages.includes(figure.pdf_page), `${figure.id} source provenance`);
   const asset = path.join(staticRoot, ...figure.image.split('/'));
@@ -33,5 +34,5 @@ for (const figure of manifest.figures) {
   assert.equal(crypto.createHash('sha256').update(fs.readFileSync(asset)).digest('hex'), figure.sha256, `${figure.id} checksum mismatch`);
 }
 
-for (const hook of ['coa-diagram-library','coa-diagram-search','coa-chapter-filters','coa-diagram-grid','coa-diagram-lightbox','showModal()','workingSteps','coa-animation-play','coa-animation-step-previous','coa-animation-step-next','coa-card-steps','coa-card-step-status','coa-redraw-canvas','prepareRedraw','drawStage','activeCardStop','prefers-reduced-motion','ArrowLeft','ArrowRight','PageUp','PageDown']) assert.ok(template.includes(hook), `template missing ${hook}`);
+for (const hook of ['coa-diagram-library','coa-diagram-search','coa-chapter-filters','coa-diagram-grid','coa-diagram-lightbox','showModal()','workingSteps','coa-animation-play','coa-animation-step-previous','coa-animation-step-next','coa-card-steps','coa-card-step-status','coa-redraw-canvas','prepareRedraw','drawStage','activeCardStop','coa-io-input','coa-io-process','coa-io-output','simulateFigure','runSimulator','prefers-reduced-motion','ArrowLeft','ArrowRight','PageUp','PageDown']) assert.ok(template.includes(hook), `template missing ${hook}`);
 console.log(`COA diagram validation passed: ${audit.audited_pages} pages, ${manifest.figure_count} figures, ${manifest.chapters.length} chapters.`);

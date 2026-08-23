@@ -102,3 +102,26 @@ export function buildWorkingSteps(figure) {
     'Combine the final paths and labels to explain the complete result represented by the diagram.'
   );
 }
+
+/** Describe the interactive input/process/output model used by the browser lab. */
+export function buildSimulatorSpec(figure) {
+  const words = `${figure.topic} ${figure.caption} ${figure.chapter_title}`.toLowerCase();
+  const spec = (type, operation, label, example, hint) => ({ type, operation, input_label: label, example, hint });
+  if (/and gate|nand/.test(words)) return spec('logic', /nand/.test(words) ? 'nand' : 'and', 'Binary inputs', '1, 1', 'Enter 0 or 1 values separated by commas.');
+  if (/or gate|nor/.test(words)) return spec('logic', /nor/.test(words) ? 'nor' : 'or', 'Binary inputs', '1, 0', 'Enter 0 or 1 values separated by commas.');
+  if (/exclusive|xor/.test(words)) return spec('logic', 'xor', 'Binary inputs', '1, 0', 'Enter 0 or 1 values separated by commas.');
+  if (/inverter|not gate/.test(words)) return spec('logic', 'not', 'Binary input', '1', 'Enter one binary value.');
+  if (/adder|addition|increment|arithmetic circuit|alu|carry/.test(words)) return spec('arithmetic', /increment/.test(words) ? 'increment' : 'add', 'Operands A, B', /increment/.test(words) ? '15' : '13, 6', 'Enter decimal or 0b-prefixed binary integers.');
+  if (/subtractor|subtraction/.test(words)) return spec('arithmetic', 'subtract', 'Operands A, B', '13, 6', 'The simulator calculates A − B.');
+  if (/booth|multiply|multiplication/.test(words)) return spec('arithmetic', 'multiply', 'Multiplicand, multiplier', '7, -3', 'Signed decimal integers are supported.');
+  if (/division|divide/.test(words)) return spec('arithmetic', 'divide', 'Dividend, divisor', '29, 5', 'The output includes quotient and remainder.');
+  if (/flip-flop|counter|shift register|sequence detector/.test(words)) return spec('sequential', /counter/.test(words) ? 'counter' : /shift/.test(words) ? 'shift' : 'state', 'Initial bits, cycles', '1011; 3', 'Use “binary-state; number-of-clocks”.');
+  if (/decoder|encoder|multiplexer|demultiplexer/.test(words)) return spec('selector', /decoder/.test(words) ? 'decoder' : /encoder/.test(words) ? 'encoder' : /demultiplexer/.test(words) ? 'demux' : 'mux', 'Data values; select', '8, 3, 12, 5; 2', 'List data values, then a semicolon and select code.');
+  if (/cache|memory|ram|rom|page|storage|address/.test(words)) return spec('memory', /cache/.test(words) ? 'cache' : /page|virtual/.test(words) ? 'virtual' : 'memory', 'Operation, address, data', 'write, 12, 45', 'Use read/write, a nonnegative address, and optional data.');
+  if (/pipeline|space-time|reservation table/.test(words)) return spec('pipeline', 'pipeline', 'Values; stages', '4, 7, 2, 9; 4', 'Enter items followed by the pipeline stage count.');
+  if (/instruction|control|microprogram|flowchart|interrupt|fetch|decode/.test(words)) return spec('control', 'control', 'Instruction and operands', 'ADD R1, R2', 'Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT.');
+  if (/i\/o|input.output|dma|handshak|asynchronous|peripheral/.test(words)) return spec('io', 'transfer', 'Direction, payload', 'input, 101101', 'Use input/output followed by a payload.');
+  if (/network|interconnection|crossbar|omega|hypercube|multiprocessor/.test(words)) return spec('route', 'route', 'Source, destination, payload', 'P1, M3, 42', 'Enter source node, destination node, and payload.');
+  if (/truth table|map|karnaugh|boolean|logic function/.test(words)) return spec('logic', 'truth', 'Binary inputs', '1, 0, 1', 'The evaluator shows the input minterm and representative Boolean output.');
+  return spec('trace', 'trace', 'Input value or signal', '1010', `The lab traces this value through ${figure.topic}.`);
+}

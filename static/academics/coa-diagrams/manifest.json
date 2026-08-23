@@ -134,7 +134,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-1-2",
@@ -196,7 +203,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Digital logic gates."
+      }
     },
     {
       "id": "figure-1-3",
@@ -266,7 +280,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-1-4",
@@ -333,7 +354,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "nor",
+        "input_label": "Binary inputs",
+        "example": "1, 0",
+        "hint": "Enter 0 or 1 values separated by commas."
+      }
     },
     {
       "id": "figure-1-5",
@@ -400,7 +428,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "nand",
+        "input_label": "Binary inputs",
+        "example": "1, 1",
+        "hint": "Enter 0 or 1 values separated by commas."
+      }
     },
     {
       "id": "figure-1-6",
@@ -468,7 +503,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-1-7",
@@ -537,7 +579,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "truth",
+        "input_label": "Binary inputs",
+        "example": "1, 0, 1",
+        "hint": "The evaluator shows the input minterm and representative Boolean output."
+      }
     },
     {
       "id": "figure-1-8",
@@ -609,7 +658,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "truth",
+        "input_label": "Binary inputs",
+        "example": "1, 0, 1",
+        "hint": "The evaluator shows the input minterm and representative Boolean output."
+      }
     },
     {
       "id": "figure-1-9",
@@ -681,7 +737,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "truth",
+        "input_label": "Binary inputs",
+        "example": "1, 0, 1",
+        "hint": "The evaluator shows the input minterm and representative Boolean output."
+      }
     },
     {
       "id": "figure-1-10",
@@ -754,7 +817,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "truth",
+        "input_label": "Binary inputs",
+        "example": "1, 0, 1",
+        "hint": "The evaluator shows the input minterm and representative Boolean output."
+      }
     },
     {
       "id": "figure-1-11",
@@ -829,7 +899,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "truth",
+        "input_label": "Binary inputs",
+        "example": "1, 0, 1",
+        "hint": "The evaluator shows the input minterm and representative Boolean output."
+      }
     },
     {
       "id": "figure-1-12",
@@ -895,7 +972,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "or",
+        "input_label": "Binary inputs",
+        "example": "1, 0",
+        "hint": "Enter 0 or 1 values separated by commas."
+      }
     },
     {
       "id": "figure-1-13",
@@ -962,7 +1046,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "nand",
+        "input_label": "Binary inputs",
+        "example": "1, 1",
+        "hint": "Enter 0 or 1 values separated by commas."
+      }
     },
     {
       "id": "figure-1-14",
@@ -1031,7 +1122,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "truth",
+        "input_label": "Binary inputs",
+        "example": "1, 0, 1",
+        "hint": "The evaluator shows the input minterm and representative Boolean output."
+      }
     },
     {
       "id": "figure-1-15",
@@ -1098,7 +1196,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-1-16",
@@ -1161,7 +1266,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-1-17",
@@ -1226,7 +1338,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-1-18",
@@ -1290,7 +1409,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-1-19",
@@ -1354,7 +1480,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "state",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-20",
@@ -1417,7 +1550,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "state",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-21",
@@ -1481,7 +1621,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "state",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-22",
@@ -1544,7 +1691,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "state",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-23",
@@ -1609,7 +1763,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "state",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-24",
@@ -1678,7 +1839,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-1-25",
@@ -1744,7 +1912,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Example of a sequential circuit."
+      }
     },
     {
       "id": "figure-1-26",
@@ -1810,7 +1985,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-1-27",
@@ -1876,7 +2058,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "counter",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-28",
@@ -1943,7 +2132,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "counter",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-1-29",
@@ -2011,7 +2207,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "counter",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-2-1",
@@ -2076,7 +2279,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "selector",
+        "operation": "decoder",
+        "input_label": "Data values; select",
+        "example": "8, 3, 12, 5; 2",
+        "hint": "List data values, then a semicolon and select code."
+      }
     },
     {
       "id": "figure-2-2",
@@ -2142,7 +2352,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "logic",
+        "operation": "nand",
+        "input_label": "Binary inputs",
+        "example": "1, 1",
+        "hint": "Enter 0 or 1 values separated by commas."
+      }
     },
     {
       "id": "figure-2-3",
@@ -2210,7 +2427,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "selector",
+        "operation": "decoder",
+        "input_label": "Data values; select",
+        "example": "8, 3, 12, 5; 2",
+        "hint": "List data values, then a semicolon and select code."
+      }
     },
     {
       "id": "figure-2-4",
@@ -2274,7 +2498,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "selector",
+        "operation": "mux",
+        "input_label": "Data values; select",
+        "example": "8, 3, 12, 5; 2",
+        "hint": "List data values, then a semicolon and select code."
+      }
     },
     {
       "id": "figure-2-5",
@@ -2339,7 +2570,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "selector",
+        "operation": "mux",
+        "input_label": "Data values; select",
+        "example": "8, 3, 12, 5; 2",
+        "hint": "List data values, then a semicolon and select code."
+      }
     },
     {
       "id": "figure-2-6",
@@ -2402,7 +2640,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through 4-bit register."
+      }
     },
     {
       "id": "figure-2-8",
@@ -2466,7 +2711,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "shift",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-2-10",
@@ -2531,7 +2783,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "sequential",
+        "operation": "counter",
+        "input_label": "Initial bits, cycles",
+        "example": "1011; 3",
+        "hint": "Use “binary-state; number-of-clocks”."
+      }
     },
     {
       "id": "figure-2-12",
@@ -2598,7 +2857,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-2-13",
@@ -2665,7 +2931,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-3-1",
@@ -2732,7 +3005,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Conversion of decimal 41.6875 into binary."
+      }
     },
     {
       "id": "figure-3-2",
@@ -2797,7 +3077,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Binary, octal, and hexadecimal conversion."
+      }
     },
     {
       "id": "figure-3-3",
@@ -2862,7 +3149,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Error detection with odd parity bc."
+      }
     },
     {
       "id": "figure-4-1",
@@ -2927,7 +3221,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-4-2",
@@ -2996,7 +3297,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-4-3",
@@ -3063,7 +3371,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Bus system for four registers."
+      }
     },
     {
       "id": "figure-4-4",
@@ -3130,7 +3445,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Graphic symbols for three-state buffer."
+      }
     },
     {
       "id": "figure-4-5",
@@ -3198,7 +3520,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Bus line with three state-buffers."
+      }
     },
     {
       "id": "figure-4-6",
@@ -3263,7 +3592,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-4-7",
@@ -3328,7 +3664,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-4-8",
@@ -3393,7 +3736,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "increment",
+        "input_label": "Operands A, B",
+        "example": "15",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-4-9",
@@ -3458,7 +3808,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-4-10",
@@ -3525,7 +3882,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through One stage of logic circuit."
+      }
     },
     {
       "id": "figure-4-11",
@@ -3590,7 +3954,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Arithmetic shift right."
+      }
     },
     {
       "id": "figure-4-12",
@@ -3656,7 +4027,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through 4-bit combinational circuit shifter."
+      }
     },
     {
       "id": "figure-4-13",
@@ -3725,7 +4103,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through One stage of arithmetic logic shift unit."
+      }
     },
     {
       "id": "figure-5-1",
@@ -3790,7 +4175,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-5-2",
@@ -3858,7 +4250,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-5-3",
@@ -3923,7 +4322,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-5-5",
@@ -3987,7 +4393,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-7",
@@ -4055,7 +4468,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-8",
@@ -4125,7 +4545,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-9",
@@ -4194,7 +4621,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-10",
@@ -4262,7 +4696,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-11",
@@ -4330,7 +4771,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-5-12",
@@ -4396,7 +4844,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-5-13",
@@ -4463,7 +4918,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-14",
@@ -4531,7 +4993,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-15",
@@ -4597,7 +5066,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-16",
@@ -4665,7 +5141,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-17",
@@ -4732,7 +5215,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-18",
@@ -4800,7 +5290,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "selector",
+        "operation": "encoder",
+        "input_label": "Data values; select",
+        "example": "8, 3, 12, 5; 2",
+        "hint": "List data values, then a semicolon and select code."
+      }
     },
     {
       "id": "figure-5-19",
@@ -4867,7 +5364,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Circuits associated with AC."
+      }
     },
     {
       "id": "figure-5-20",
@@ -4940,7 +5444,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-5-21",
@@ -5009,7 +5520,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-6-1",
@@ -5077,7 +5595,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-6-2",
@@ -5145,7 +5670,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-6-3",
@@ -5211,7 +5743,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-7-1",
@@ -5272,7 +5811,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-2",
@@ -5337,7 +5883,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-3",
@@ -5404,7 +5957,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-4",
@@ -5467,7 +6027,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-5",
@@ -5529,7 +6096,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-6",
@@ -5594,7 +6168,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-7",
@@ -5657,7 +6238,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-7-8",
@@ -5722,7 +6310,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-8-1",
@@ -5787,7 +6382,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Major components of CPU."
+      }
     },
     {
       "id": "figure-8-3",
@@ -5855,7 +6457,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-8-4",
@@ -5924,7 +6533,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-8-5",
@@ -5992,7 +6608,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-8-6",
@@ -6058,7 +6681,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-8-7",
@@ -6124,7 +6754,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-8-8",
@@ -6187,7 +6824,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Status register bits."
+      }
     },
     {
       "id": "figure-8-9",
@@ -6251,7 +6895,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Overlapped register windows."
+      }
     },
     {
       "id": "figure-8-10",
@@ -6317,7 +6968,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-9-1",
@@ -6384,7 +7042,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-2",
@@ -6448,7 +7113,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-3",
@@ -6512,7 +7184,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-4",
@@ -6578,7 +7257,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-9-5",
@@ -6645,7 +7331,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-6",
@@ -6712,7 +7405,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-9-8",
@@ -6777,7 +7477,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-9",
@@ -6841,7 +7548,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-10",
@@ -6907,7 +7621,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-11",
@@ -6973,7 +7694,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-12",
@@ -7040,7 +7768,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-13",
@@ -7106,7 +7841,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-9-14",
@@ -7174,7 +7916,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-9-15",
@@ -7240,7 +7989,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "pipeline",
+        "operation": "pipeline",
+        "input_label": "Values; stages",
+        "example": "4, 7, 2, 9; 4",
+        "hint": "Enter items followed by the pipeline stage count."
+      }
     },
     {
       "id": "figure-10-1",
@@ -7307,7 +8063,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-10-2",
@@ -7373,7 +8136,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-10-3",
@@ -7442,7 +8212,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-10-4",
@@ -7512,7 +8289,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Algorithm for adding and subtracting numbers in signed-2’s."
+      }
     },
     {
       "id": "figure-10-5",
@@ -7576,7 +8360,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-6",
@@ -7645,7 +8436,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-7",
@@ -7709,7 +8507,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-8",
@@ -7778,7 +8583,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-9",
@@ -7843,7 +8655,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through 2-bit by 2-bit array multiplier."
+      }
     },
     {
       "id": "figure-10-10",
@@ -7908,7 +8727,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through 4c by 3-bit aray multiplier."
+      }
     },
     {
       "id": "figure-10-11",
@@ -7972,7 +8798,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "divide",
+        "input_label": "Dividend, divisor",
+        "example": "29, 5",
+        "hint": "The output includes quotient and remainder."
+      }
     },
     {
       "id": "figure-10-12",
@@ -8039,7 +8872,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "divide",
+        "input_label": "Dividend, divisor",
+        "example": "29, 5",
+        "hint": "The output includes quotient and remainder."
+      }
     },
     {
       "id": "figure-10-13",
@@ -8103,7 +8943,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "divide",
+        "input_label": "Dividend, divisor",
+        "example": "29, 5",
+        "hint": "The output includes quotient and remainder."
+      }
     },
     {
       "id": "figure-10-14",
@@ -8168,7 +9015,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Registers for floating-point arithmetic operations."
+      }
     },
     {
       "id": "figure-10-15",
@@ -8235,7 +9089,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-10-16",
@@ -8300,7 +9161,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-17",
@@ -8365,7 +9233,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "divide",
+        "input_label": "Dividend, divisor",
+        "example": "29, 5",
+        "hint": "The output includes quotient and remainder."
+      }
     },
     {
       "id": "figure-10-18",
@@ -8430,7 +9305,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "add",
+        "input_label": "Operands A, B",
+        "example": "13, 6",
+        "hint": "Enter decimal or 0b-prefixed binary integers."
+      }
     },
     {
       "id": "figure-10-19",
@@ -8496,7 +9378,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through One stage of a decimal arithmetic unit."
+      }
     },
     {
       "id": "figure-10-20",
@@ -8562,7 +9451,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "trace",
+        "operation": "trace",
+        "input_label": "Input value or signal",
+        "example": "1010",
+        "hint": "The lab traces this value through Three ways of adding decimal numbers."
+      }
     },
     {
       "id": "figure-10-21",
@@ -8628,7 +9524,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-22",
@@ -8692,7 +9595,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "multiply",
+        "input_label": "Multiplicand, multiplier",
+        "example": "7, -3",
+        "hint": "Signed decimal integers are supported."
+      }
     },
     {
       "id": "figure-10-23",
@@ -8756,7 +9666,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "arithmetic",
+        "operation": "divide",
+        "input_label": "Dividend, divisor",
+        "example": "29, 5",
+        "hint": "The output includes quotient and remainder."
+      }
     },
     {
       "id": "figure-11-1",
@@ -8823,7 +9740,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-2",
@@ -8890,7 +9814,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-3",
@@ -8957,7 +9888,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-4",
@@ -9024,7 +9962,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-5",
@@ -9090,7 +10035,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-6",
@@ -9156,7 +10108,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-7",
@@ -9220,7 +10179,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-8",
@@ -9289,7 +10255,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-9",
@@ -9357,7 +10330,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-10",
@@ -9426,7 +10406,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-11",
@@ -9492,7 +10479,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-12",
@@ -9557,7 +10551,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-11-13",
@@ -9626,7 +10627,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-14",
@@ -9690,7 +10698,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-11-15",
@@ -9758,7 +10773,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-19",
@@ -9828,7 +10850,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-20",
@@ -9892,7 +10921,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-21",
@@ -9960,7 +10996,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-22",
@@ -10031,7 +11074,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-23",
@@ -10099,7 +11149,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-24",
@@ -10170,7 +11227,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-25",
@@ -10238,7 +11302,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "io",
+        "operation": "transfer",
+        "input_label": "Direction, payload",
+        "example": "input, 101101",
+        "hint": "Use input/output followed by a payload."
+      }
     },
     {
       "id": "figure-11-26",
@@ -10305,7 +11376,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-11-27",
@@ -10373,7 +11451,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "control",
+        "operation": "control",
+        "input_label": "Instruction and operands",
+        "example": "ADD R1, R2",
+        "hint": "Enter a simple instruction such as ADD, LOAD, STORE, BRANCH, or INTERRUPT."
+      }
     },
     {
       "id": "figure-12-1",
@@ -10438,7 +11523,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-2",
@@ -10501,7 +11593,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-3",
@@ -10564,7 +11663,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-4",
@@ -10628,7 +11734,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-5",
@@ -10690,7 +11803,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-6",
@@ -10754,7 +11874,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-7",
@@ -10821,7 +11948,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-8",
@@ -10885,7 +12019,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-9",
@@ -10952,7 +12093,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-10",
@@ -11015,7 +12163,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-11",
@@ -11082,7 +12237,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-12",
@@ -11148,7 +12310,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-13",
@@ -11211,7 +12380,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-14",
@@ -11280,7 +12456,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-15",
@@ -11346,7 +12529,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-16",
@@ -11414,7 +12604,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "virtual",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-17",
@@ -11480,7 +12677,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "virtual",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-18",
@@ -11549,7 +12753,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-19",
@@ -11614,7 +12825,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "virtual",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-20",
@@ -11678,7 +12896,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "virtual",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-21",
@@ -11744,7 +12969,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "virtual",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-22",
@@ -11811,7 +13043,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-23",
@@ -11878,7 +13117,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-24",
@@ -11946,7 +13192,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-12-25",
@@ -12012,7 +13265,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-13-1",
@@ -12076,7 +13336,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-2",
@@ -12139,7 +13406,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-3",
@@ -12201,7 +13475,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-13-4",
@@ -12262,7 +13543,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-5",
@@ -12326,7 +13614,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "memory",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-13-6",
@@ -12392,7 +13687,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-7",
@@ -12457,7 +13759,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-8",
@@ -12520,7 +13829,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-9",
@@ -12586,7 +13902,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-10",
@@ -12649,7 +13972,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-11",
@@ -12710,7 +14040,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "route",
+        "operation": "route",
+        "input_label": "Source, destination, payload",
+        "example": "P1, M3, 42",
+        "hint": "Enter source node, destination node, and payload."
+      }
     },
     {
       "id": "figure-13-12",
@@ -12776,7 +14113,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     },
     {
       "id": "figure-13-13",
@@ -12844,7 +14188,14 @@
           "tx": -12,
           "ty": 0
         }
-      ]
+      ],
+      "simulator": {
+        "type": "memory",
+        "operation": "cache",
+        "input_label": "Operation, address, data",
+        "example": "write, 12, 45",
+        "hint": "Use read/write, a nonnegative address, and optional data."
+      }
     }
   ]
 }

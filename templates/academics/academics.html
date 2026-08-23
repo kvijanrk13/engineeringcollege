@@ -630,7 +630,7 @@
     .coa-diagram-error { color:#991b1b; border-color:#fca5a5; background:#fef2f2; }
     .coa-lightbox { width:98vw; max-width:1600px; height:96vh; max-height:96vh; padding:0; border:0; border-radius:16px; background:#fff; box-shadow:0 28px 90px rgba(0,0,0,.42); }
     .coa-lightbox::backdrop { background:rgba(15,23,42,.82); }
-    .coa-lightbox-layout { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto; height:96vh; max-height:96vh; }
+    .coa-lightbox-layout { display:grid; grid-template-rows:auto minmax(0,1fr) auto auto auto; height:96vh; max-height:96vh; }
     .coa-lightbox-head,.coa-lightbox-foot { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 16px; }
     .coa-lightbox-head { border-bottom:1px solid #e2e8f0; }
     .coa-lightbox-head h3 { margin:0; font-size:18px; }
@@ -649,9 +649,28 @@
     .coa-animation-copy strong { margin-bottom:4px; color:#0f172a; }
     .coa-animation-copy span { color:#334155; font-size:14px; line-height:1.4; }
     .coa-animation-progress { color:#1e3a8a; font-weight:800; white-space:nowrap; }
+    .coa-io-lab { display:grid; grid-template-columns:minmax(230px,.8fr) minmax(360px,1.6fr); gap:14px; padding:12px 16px; border-top:1px solid #cbd5e1; background:#f8fafc; }
+    .coa-io-form { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:8px; align-items:end; }
+    .coa-io-form label { grid-column:1/-1; color:#334155; font-size:13px; font-weight:800; }
+    .coa-io-input { min-width:0; padding:10px 12px; border:1px solid #94a3b8; border-radius:9px; font:inherit; }
+    .coa-io-example,.coa-io-run { min-height:42px; padding:8px 12px; border:1px solid #2563eb; border-radius:9px; color:#1e3a8a; background:#fff; font-weight:800; cursor:pointer; }
+    .coa-io-run { color:#fff; background:#0f766e; border-color:#0f766e; }
+    .coa-io-hint { grid-column:1/-1; margin:0; color:#64748b; font-size:12px; }
+    .coa-io-flow { display:grid; grid-template-columns:1fr auto 1.35fr auto 1fr; gap:8px; align-items:stretch; }
+    .coa-io-node { min-width:0; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; }
+    .coa-io-node strong,.coa-io-node output { display:block; overflow-wrap:anywhere; }
+    .coa-io-node strong { margin-bottom:4px; color:#0f172a; font-size:12px; text-transform:uppercase; }
+    .coa-io-node output { color:#1e3a8a; font-weight:750; }
+    .coa-io-node.process { border-color:#60a5fa; background:#eff6ff; }
+    .coa-io-node.output { border-color:#5eead4; background:#f0fdfa; }
+    .coa-io-arrow { align-self:center; color:#2563eb; font-size:22px; font-weight:900; }
+    .coa-io-flow.running .coa-io-node { animation:coaIoNode .55s both; }
+    .coa-io-flow.running .coa-io-node.process { animation-delay:.35s; }
+    .coa-io-flow.running .coa-io-node.output { animation-delay:.7s; }
+    @keyframes coaIoNode { from { opacity:.25; transform:translateY(7px); } to { opacity:1; transform:none; box-shadow:0 5px 14px rgba(37,99,235,.12); } }
     .coa-lightbox-foot { border-top:1px solid #e2e8f0; color:#475569; }
     .coa-lightbox-caption { flex:1; margin:0; text-align:center; font-size:14px; }
-    @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-diagram-image-wrap { height:330px; } .coa-lightbox { width:100vw; height:100vh; max-height:100vh; border-radius:0; } .coa-lightbox-layout { height:100vh; max-height:100vh; } .coa-lightbox-stage { min-height:260px; padding:8px; } .coa-animation-panel { grid-template-columns:1fr; gap:8px; padding:10px; } .coa-animation-progress { white-space:normal; } .coa-lightbox-foot { gap:7px; padding:9px; } }
+    @media (max-width:700px) { .coa-diagram-toolbar { grid-template-columns:1fr; } .coa-diagram-count { white-space:normal; } .coa-diagram-grid { grid-template-columns:1fr; } .coa-diagram-image-wrap { height:330px; } .coa-lightbox { width:100vw; height:100vh; max-height:100vh; border-radius:0; } .coa-lightbox-layout { height:100vh; max-height:100vh; overflow:auto; display:block; } .coa-lightbox-head { position:sticky; top:0; z-index:4; background:#fff; } .coa-lightbox-stage { min-height:260px; height:42vh; padding:8px; } .coa-animation-panel,.coa-io-lab { grid-template-columns:1fr; gap:8px; padding:10px; } .coa-io-flow { grid-template-columns:1fr; } .coa-io-arrow { transform:rotate(90deg); justify-self:center; } .coa-animation-progress { white-space:normal; } .coa-lightbox-foot { gap:7px; padding:9px; } }
     @media (prefers-reduced-motion:reduce) { .coa-lightbox-stage img,.coa-animation-focus,.coa-diagram-image-wrap img,.coa-card-focus { transition:none; } .coa-animation-focus,.coa-card-focus { animation:none; } }
     .dm-library { margin-bottom: 34px; padding: 26px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
     .dm-library-head { display: flex; justify-content: space-between; gap: 20px; align-items: end; flex-wrap: wrap; }
@@ -777,6 +796,20 @@
             </div>
             <div class="coa-animation-copy" aria-live="polite"><strong id="coa-animation-step-title">Step-by-step working</strong><span id="coa-animation-step-text">Press Animate working to trace this diagram.</span></div>
             <div class="coa-animation-progress" id="coa-animation-progress">Step 0 of 4</div>
+          </section>
+          <section class="coa-io-lab" aria-label="Interactive input process output simulator">
+            <div class="coa-io-form">
+              <label id="coa-io-label" for="coa-io-input">Diagram input</label>
+              <input class="coa-io-input" id="coa-io-input" autocomplete="off">
+              <button class="coa-io-example" id="coa-io-example" type="button">Example</button>
+              <button class="coa-io-run" id="coa-io-run" type="button">Generate output</button>
+              <p class="coa-io-hint" id="coa-io-hint">Enter an input to trace its conversion.</p>
+            </div>
+            <div class="coa-io-flow" id="coa-io-flow" aria-live="polite">
+              <div class="coa-io-node"><strong>Input</strong><output id="coa-io-input-value">Waiting for input</output></div><span class="coa-io-arrow">&#8594;</span>
+              <div class="coa-io-node process"><strong>Conversion process</strong><output id="coa-io-process">Choose Generate output</output></div><span class="coa-io-arrow">&#8594;</span>
+              <div class="coa-io-node output"><strong>Output</strong><output id="coa-io-output">Not generated</output></div>
+            </div>
           </section>
           <footer class="coa-lightbox-foot">
             <button class="coa-lightbox-nav" id="coa-lightbox-previous" type="button" aria-label="Previous diagram">&#8592;</button>
@@ -2832,10 +2865,21 @@ Bread,Butter`;
       const stepProgress = document.getElementById('coa-animation-progress');
       const previous = document.getElementById('coa-lightbox-previous');
       const next = document.getElementById('coa-lightbox-next');
+      const ioInput = document.getElementById('coa-io-input');
+      const ioLabel = document.getElementById('coa-io-label');
+      const ioHint = document.getElementById('coa-io-hint');
+      const ioExample = document.getElementById('coa-io-example');
+      const ioRun = document.getElementById('coa-io-run');
+      const ioFlow = document.getElementById('coa-io-flow');
+      const ioInputValue = document.getElementById('coa-io-input-value');
+      const ioProcess = document.getElementById('coa-io-process');
+      const ioOutput = document.getElementById('coa-io-output');
       const manifestUrl = library.dataset.manifestUrl;
       let figures = [], visibleFigures = [], selectedChapter = 'all', lightboxIndex = -1, returnFocus = null;
       let activeSteps = [], stepIndex = -1, animationTimer = null, isPlaying = false;
       let activeCardStop = null;
+      let currentFigure = null;
+      const simulatorMemory = new Map();
 
       const imageUrl = figure => manifestUrl.replace('academics/coa-diagrams/manifest.json', figure.image);
       const element = (tag, className, text) => {
@@ -2929,6 +2973,108 @@ Bread,Butter`;
         stepProgress.textContent = `Step 0 of ${activeSteps.length}`; stepPrevious.disabled = true; stepNext.disabled = false;
       }
 
+      const integer = value => {
+        const number = Number(value.trim());
+        if (!Number.isSafeInteger(number)) throw new Error(`“${value.trim()}” is not a valid integer.`);
+        return number;
+      };
+      const integers = value => value.split(',').map(integer);
+      function simulateFigure(figure, raw) {
+        const spec = figure.simulator || { type:'trace', operation:'trace' };
+        const value = raw.trim();
+        if (!value) throw new Error('Enter an input value before generating output.');
+        if (spec.type === 'logic') {
+          const bits = integers(value);
+          if (!bits.length || bits.some(bit => bit !== 0 && bit !== 1)) throw new Error('Logic inputs must contain only 0 and 1.');
+          let result;
+          if (spec.operation === 'not') result = bits[0] ? 0 : 1;
+          else if (spec.operation === 'and' || spec.operation === 'nand') result = bits.every(Boolean) ? 1 : 0;
+          else if (spec.operation === 'or' || spec.operation === 'nor') result = bits.some(Boolean) ? 1 : 0;
+          else result = bits.reduce((parity, bit) => parity ^ bit, 0);
+          if (spec.operation === 'nand' || spec.operation === 'nor') result = result ? 0 : 1;
+          const expression = spec.operation === 'truth' ? `minterm ${bits.join('')}; parity demonstration` : `${spec.operation.toUpperCase()}(${bits.join(', ')})`;
+          return { input:bits.join(', '), process:`Validate binary inputs → evaluate ${expression} → reduce to one output bit`, output:String(result) };
+        }
+        if (spec.type === 'arithmetic') {
+          const values = integers(value); const a = values[0], b = values[1] ?? 0;
+          if (spec.operation !== 'increment' && values.length < 2) throw new Error('Enter two operands separated by a comma.');
+          if (spec.operation === 'divide' && b === 0) throw new Error('The divisor cannot be zero.');
+          let result, process;
+          if (spec.operation === 'subtract') { result = a - b; process = `Load A=${a}, B=${b} → form A + two’s-complement(B) → propagate carry`; }
+          else if (spec.operation === 'multiply') { result = a * b; process = `Load ${a} and ${b} → generate signed partial products → add and shift`; }
+          else if (spec.operation === 'divide') { result = `${Math.trunc(a / b)} remainder ${a % b}`; process = `Load dividend ${a} → compare/subtract divisor ${b} → shift quotient bits`; }
+          else if (spec.operation === 'increment') { result = a + 1; process = `Load ${a} → inject carry-in 1 → propagate until a zero bit is found`; }
+          else { result = a + b; process = `Load A=${a}, B=${b} → add least-significant bits → propagate carry through higher bits`; }
+          return { input:value, process, output:`${result} (binary ${Number.isInteger(result) ? '0b' + (result >>> 0).toString(2) : 'shown as quotient/remainder'})` };
+        }
+        if (spec.type === 'sequential') {
+          const [bitsRaw, cyclesRaw = '1'] = value.split(';'); const bits = bitsRaw.trim(); const cycles = integer(cyclesRaw);
+          if (!/^[01]+$/.test(bits) || cycles < 0 || cycles > 64) throw new Error('Use a binary state and 0–64 clock cycles.');
+          const width = bits.length; let state = parseInt(bits, 2);
+          if (spec.operation === 'counter') state = (state + cycles) % (2 ** width);
+          else for (let cycle = 0; cycle < cycles; cycle += 1) state = ((state << 1) & (2 ** width - 1));
+          const output = state.toString(2).padStart(width, '0');
+          return { input:`state ${bits}, ${cycles} clock(s)`, process:`Apply ${cycles} active clock edge(s) → evaluate next-state logic → transfer state between register stages`, output:`next state ${output}` };
+        }
+        if (spec.type === 'selector') {
+          const [dataRaw, selectRaw = '0'] = value.split(';'); const data = integers(dataRaw); const select = integer(selectRaw);
+          if (select < 0) throw new Error('Select must be nonnegative.');
+          let output, process;
+          if (spec.operation === 'decoder') { const size = 2 ** Math.max(1, data.length); output = Array.from({length:size}, (_, i) => i === select ? 1 : 0).join(''); process = `Decode select ${select} → assert one of ${size} output lines`; }
+          else if (spec.operation === 'encoder') { const active = data.findIndex(Boolean); output = active < 0 ? 'no active input' : active.toString(2); process = `Scan active input lines → encode active index ${active}`; }
+          else { if (select >= data.length) throw new Error(`Select must be between 0 and ${data.length - 1}.`); output = data[select]; process = `Decode select ${select} → enable data path D${select} → block all other paths`; }
+          return { input:value, process, output:String(output) };
+        }
+        if (spec.type === 'memory') {
+          const [operationRaw, addressRaw, dataRaw] = value.split(','); const operation = operationRaw?.trim().toLowerCase(); const address = integer(addressRaw || '');
+          if (!['read','write'].includes(operation) || address < 0) throw new Error('Use “read/write, nonnegative address, optional data”.');
+          const memory = simulatorMemory.get(figure.id) || new Map(); simulatorMemory.set(figure.id, memory);
+          if (operation === 'write') { if (dataRaw === undefined) throw new Error('A write operation requires data.'); memory.set(address, dataRaw.trim()); }
+          const output = operation === 'write' ? `stored ${dataRaw.trim()} at address ${address}` : memory.has(address) ? memory.get(address) : `0 (uninitialized location ${address})`;
+          return { input:value, process:`Decode address ${address} → ${operation === 'write' ? 'enable write drivers and latch data' : 'select word line and sense stored data'} → update status`, output:String(output) };
+        }
+        if (spec.type === 'pipeline') {
+          const [valuesRaw, stagesRaw = '4'] = value.split(';'); const values = integers(valuesRaw); const stages = integer(stagesRaw);
+          if (stages < 1 || stages > 16) throw new Error('Pipeline stages must be between 1 and 16.');
+          return { input:`${values.length} item(s), ${stages} stages`, process:`Fill ${stages} stages → advance one stage per clock → overlap ${values.length} independent item(s) → drain`, output:`${values.join(', ')} completed in ${values.length + stages - 1} ideal clock cycles` };
+        }
+        if (spec.type === 'control') {
+          const opcode = value.split(/\s|,/)[0].toUpperCase();
+          const operations = { ADD:'fetch → decode ADD → read operands → ALU add → write result', LOAD:'fetch → decode LOAD → calculate address → memory read → load register', STORE:'fetch → decode STORE → calculate address → memory write', BRANCH:'fetch → decode BRANCH → test condition → update PC', INTERRUPT:'save PC → identify source → load service address → execute handler → restore PC' };
+          return { input:value, process:operations[opcode] || `fetch → decode ${opcode} → select control path → execute microoperations`, output:`${opcode} sequence completed; control returns to fetch` };
+        }
+        if (spec.type === 'io') {
+          const [directionRaw, ...payloadParts] = value.split(','); const direction = directionRaw.trim().toLowerCase(), payload = payloadParts.join(',').trim();
+          if (!['input','output'].includes(direction) || !payload) throw new Error('Use “input/output, payload”.');
+          return { input:value, process:`Assert ${direction} request → wait for ready/acknowledge → transfer payload through interface register → clear request`, output:`${payload} transferred to ${direction === 'input' ? 'processor' : 'peripheral'}` };
+        }
+        if (spec.type === 'route') {
+          const [source, destination, ...payload] = value.split(',').map(part => part.trim());
+          if (!source || !destination || !payload.length) throw new Error('Enter source, destination, and payload.');
+          return { input:value, process:`Accept at ${source} → decode destination ${destination} → arbitrate links/switches → forward stage by stage`, output:`${payload.join(', ')} delivered to ${destination}` };
+        }
+        return { input:value, process:`Accept ${value} → apply the four labelled operations of Figure ${figure.figure_number} in sequence → propagate through ${figure.topic}`, output:`Processed signal: ${value}` };
+      }
+
+      function resetSimulator(figure) {
+        currentFigure = figure; const spec = figure.simulator || {};
+        ioLabel.textContent = spec.input_label || 'Diagram input'; ioInput.placeholder = spec.example || 'Enter input'; ioInput.value = '';
+        ioHint.textContent = spec.hint || 'Enter an input to trace its conversion.';
+        ioInputValue.textContent = 'Waiting for input'; ioProcess.textContent = 'Choose Generate output'; ioOutput.textContent = 'Not generated';
+        ioFlow.classList.remove('running');
+      }
+      function runSimulator() {
+        if (!currentFigure) return;
+        try {
+          const result = simulateFigure(currentFigure, ioInput.value);
+          ioInput.setAttribute('aria-invalid', 'false'); ioInputValue.textContent = result.input; ioProcess.textContent = result.process; ioOutput.textContent = result.output;
+          ioFlow.classList.remove('running'); void ioFlow.offsetWidth; ioFlow.classList.add('running');
+          stopAnimation(); showStep(0); isPlaying = true; animationPlay.textContent = 'Pause animation'; scheduleAnimation();
+        } catch (simulationError) {
+          ioInput.setAttribute('aria-invalid', 'true'); ioOutput.textContent = simulationError.message; ioProcess.textContent = 'Input validation stopped the conversion.';
+        }
+      }
+
       function openLightbox(index, trigger) {
         const figure = visibleFigures[index];
         if (!figure) return;
@@ -2937,6 +3083,7 @@ Bread,Butter`;
         dialogCaption.textContent = `${figure.caption} · Chapter ${figure.chapter}: ${figure.chapter_title} · PDF page ${figure.pdf_page}`;
         dialogImage.src = imageUrl(figure); dialogImage.alt = figure.alt;
         resetAnimation(figure);
+        resetSimulator(figure);
         previous.disabled = index === 0; next.disabled = index === visibleFigures.length - 1;
         if (!dialog.open) dialog.showModal();
       }
@@ -2956,12 +3103,12 @@ Bread,Butter`;
         copy.appendChild(element('h3', '', figure.topic));
         copy.appendChild(element('p', '', `Figure ${figure.figure_number} · Chapter ${figure.chapter}: ${figure.chapter_title}`));
         copy.appendChild(element('span', 'coa-diagram-source', `Source PDF page ${figure.pdf_page}`));
-        copy.appendChild(element('span', 'coa-diagram-source', 'Enlarge + animate working'));
+        copy.appendChild(element('span', 'coa-diagram-source', 'Enlarge + animate + try your own input'));
         button.append(imageWrap, copy); button.addEventListener('click', () => openLightbox(index, button)); card.appendChild(button);
         const panel = element('div', 'coa-diagram-copy');
         const actions = element('div', 'coa-card-actions');
         const play = element('button', 'coa-card-action primary', 'Animate this diagram'); play.type = 'button';
-        const enlarge = element('button', 'coa-card-action', 'Enlarge full screen'); enlarge.type = 'button';
+        const enlarge = element('button', 'coa-card-action', 'Open input/output lab'); enlarge.type = 'button';
         enlarge.addEventListener('click', () => openLightbox(index, enlarge)); actions.append(play, enlarge); panel.appendChild(actions);
         const status = element('div', 'coa-card-step-status', 'Animation ready - press Animate this diagram.'); status.setAttribute('aria-live', 'polite'); panel.appendChild(status);
         const steps = workingSteps(figure);
@@ -3032,6 +3179,9 @@ Bread,Butter`;
       }
 
       search.addEventListener('input', render);
+      ioRun.addEventListener('click', runSimulator);
+      ioExample.addEventListener('click', () => { if (!currentFigure) return; ioInput.value = currentFigure.simulator?.example || '1010'; runSimulator(); });
+      ioInput.addEventListener('keydown', event => { if (event.key === 'Enter') runSimulator(); });
       previous.addEventListener('click', () => openLightbox(lightboxIndex - 1));
       next.addEventListener('click', () => openLightbox(lightboxIndex + 1));
       animationPlay.addEventListener('click', toggleAnimation);
