@@ -2857,6 +2857,7 @@ Bread,Butter`;
       }
 
       function workingSteps(figure) {
+        if (Array.isArray(figure.working_steps) && figure.working_steps.length >= 4) return figure.working_steps;
         const subject = figure.topic.replace(/[.]$/, '');
         const words = `${figure.topic} ${figure.caption} ${figure.chapter_title}`.toLocaleLowerCase();
         if (/flowchart|instruction|control|sequence|microprogram/.test(words)) return [

@@ -9,6 +9,7 @@ import crypto from 'node:crypto';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import sharp from 'sharp';
 import { createWorker } from 'tesseract.js';
+import { buildWorkingSteps } from './coa_working_steps.mjs';
 
 const pdfPath = path.resolve(process.argv[2] || '');
 const projectRoot = path.resolve(process.argv[3] || path.join(import.meta.dirname, '..'));
@@ -157,7 +158,9 @@ for (const page of audits) {
     }
     const digest = crypto.createHash('sha256').update(fs.readFileSync(destination)).digest('hex');
     const title = item.caption.replace(/[.;:]$/, '') || `Figure ${item.figure}`;
-    figures.push({ id, chapter: item.chapter, chapter_title: CHAPTERS[item.chapter] || `Chapter ${item.chapter}`, section: `Chapter ${item.chapter}`, topic: title, caption: item.caption, figure_number: item.figure, pdf_page: page.pdf_page, source_pages: [page.pdf_page], image: `academics/coa-diagrams/images/${fileName}`, alt: `${title}, Figure ${item.figure} from ${CHAPTERS[item.chapter] || `Chapter ${item.chapter}`}`, keywords: [...new Set(`${title} ${item.figure} ${CHAPTERS[item.chapter] || ''}`.toLowerCase().match(/[a-z0-9]+/g) || [])], sha256: digest });
+    const figure = { id, chapter: item.chapter, chapter_title: CHAPTERS[item.chapter] || `Chapter ${item.chapter}`, section: `Chapter ${item.chapter}`, topic: title, caption: item.caption, figure_number: item.figure, pdf_page: page.pdf_page, source_pages: [page.pdf_page], image: `academics/coa-diagrams/images/${fileName}`, alt: `${title}, Figure ${item.figure} from ${CHAPTERS[item.chapter] || `Chapter ${item.chapter}`}`, keywords: [...new Set(`${title} ${item.figure} ${CHAPTERS[item.chapter] || ''}`.toLowerCase().match(/[a-z0-9]+/g) || [])], sha256: digest };
+    figure.working_steps = buildWorkingSteps(figure);
+    figures.push(figure);
   }
 }
 

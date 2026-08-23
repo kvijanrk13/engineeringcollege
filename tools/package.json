@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "extract:coa": "node extract_coa_diagrams.mjs",
+    "build:coa-steps": "node build_coa_working_steps.mjs",
     "test:coa": "node test_coa_diagrams.mjs",
     "extract:dm": "node extract_dm_textbook.mjs",
     "test:dm": "node test_dm_textbook.mjs"

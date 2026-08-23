@@ -20,6 +20,11 @@ assert.equal(manifest.chapters.reduce((sum, chapter) => sum + chapter.count, 0),
 
 for (const figure of manifest.figures) {
   for (const key of ['chapter','chapter_title','section','topic','caption','figure_number','pdf_page','image','alt','keywords','sha256']) assert.ok(figure[key] !== undefined && figure[key] !== '', `${figure.id} missing ${key}`);
+  assert.equal(figure.working_steps.length, 4, `${figure.id} must have four working steps`);
+  for (const [index, step] of figure.working_steps.entries()) {
+    for (const key of ['title','text','x','y','scale','tx','ty']) assert.notEqual(step[key], undefined, `${figure.id} step ${index + 1} missing ${key}`);
+    assert.ok(step.text.includes(`Figure ${figure.figure_number}`) || index > 0, `${figure.id} first step must be diagram-specific`);
+  }
   assert.match(figure.figure_number, /^\d{1,2}-\d{1,3}$/);
   assert.ok(figure.source_pages.includes(figure.pdf_page), `${figure.id} source provenance`);
   const asset = path.join(staticRoot, ...figure.image.split('/'));
