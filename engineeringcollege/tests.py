@@ -9,5 +9,5 @@ class MoocsPageTests(SimpleTestCase):
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertContains(response, "Question palette")
         self.assertContains(response, "/static/moocs/moocs.js")
-        self.assertContains(response, "/static/moocs/syllabus_questions.js")
+        self.assertContains(response, "/static/moocs/textbook_questions.js")
         self.assertContains(response, "/static/moocs/feedback.css")
