@@ -102,16 +102,6 @@ Q('Data Mining 49','Privacy','Data anonymization aims to:',['Increase identifica
 Q('Data Mining 50','Applications','A recommender system commonly estimates:',['User preference for items','CPU clock frequency','Page-table entries','Compiler tokens'],0,'Recommendation models rank items according to predicted relevance or preference.')
 ];
 
-// Keep the answer key balanced without changing question meaning: each answer
-// position (A, B, C, D) is correct exactly 25 times in this 100-item bank.
-QUESTIONS.forEach((item,index)=>{
-  const balancedPosition=index%4;
-  if(item.a!==balancedPosition){
-    [item.o[item.a],item.o[balancedPosition]]=[item.o[balancedPosition],item.o[item.a]];
-    item.a=balancedPosition;
-  }
-});
-
 Object.assign(QUESTIONS[0],{img:'/static/moocs/diagrams/logic-gates.svg',alt:'AND and OR logic gate truth-flow diagram'});
 Object.assign(QUESTIONS[3],{img:'/static/moocs/diagrams/multiplexer.svg',alt:'Four input multiplexer with select lines and one output'});
 Object.assign(QUESTIONS[12],{img:'/static/moocs/diagrams/register-transfer.svg',alt:'Register transfer through a common system bus'});
@@ -120,3 +110,66 @@ Object.assign(QUESTIONS[29],{img:'/static/moocs/diagrams/pipeline.svg',alt:'Over
 Object.assign(QUESTIONS[33],{img:'/static/moocs/diagrams/dma.svg',alt:'DMA controller path between input output device and main memory'});
 Object.assign(QUESTIONS[38],{img:'/static/moocs/diagrams/cache.svg',alt:'CPU cache and main memory hierarchy diagram'});
 Object.assign(QUESTIONS[45],{img:'/static/moocs/diagrams/multiprocessor.svg',alt:'Shared-memory multiprocessor with private caches'});
+
+const DATA_STRUCTURE_QUESTIONS=[
+Q('Data Structures 1','Abstract Data Types','An abstract data type is defined primarily by:',['Its memory address','Its operations and behavior','A specific programming language','Its file extension'],1,'An ADT specifies values and permitted operations independently of implementation.'),
+Q('Data Structures 2','Algorithm Analysis','Binary search on a sorted array has worst-case time:',['O(1)','O(n)','O(log n)','O(n²)'],2,'Each comparison halves the remaining search interval.'),
+Q('Data Structures 3','Recursion','Every correct recursive algorithm requires:',['A base case','A queue','Two loops','A hash function'],0,'The base case stops further recursive calls.'),
+Q('Data Structures 4','Stacks','Which order characterizes a stack?',['FIFO','Random order','Priority order','LIFO'],3,'A stack removes the most recently pushed item first.'),
+Q('Data Structures 5','Stacks','Postfix expression evaluation primarily uses a:',['Stack','Graph','B-tree','Circular queue'],0,'Operands are pushed and operators combine values from the stack.'),
+Q('Data Structures 6','Queues','A standard queue removes an item from the:',['Rear','Middle','Front','Highest index only'],2,'Enqueue occurs at the rear and dequeue occurs at the front.'),
+Q('Data Structures 7','Linked Lists','A singly linked node normally contains data and:',['A link to the next node','A CPU register','A hash table','A matrix row'],0,'The link connects the node to its successor.'),
+Q('Data Structures 8','Linked Lists','A circular linked list is identified because:',['Every node is null','The last node links to the first','It has no head','Nodes are stored contiguously'],1,'The final link closes the list by referring to the first node.'),
+Q('Data Structures 9','Doubly Linked Lists','Compared with a singly linked list, a doubly linked list adds:',['A parent link','A previous-node link','A hash key','A stack pointer'],1,'Previous and next links support traversal in both directions.'),
+Q('Data Structures 10','Trees','A node with no children is called a:',['Root','Ancestor','Leaf','Sibling'],2,'A leaf is a terminal node with degree zero.'),
+Q('Data Structures 11','Binary Trees','The maximum number of nodes at level k, with root at level 0, is:',['k','2^k','2k','k²'],1,'Each level can contain twice as many nodes as the preceding level.'),
+Q('Data Structures 12','Tree Traversal','Preorder traversal visits nodes in which order?',['Left, root, right','Left, right, root','Root, left, right','Right, root, left'],2,'Preorder processes the root before its subtrees.'),
+Q('Data Structures 13','Binary Search Trees','Inorder traversal of a binary search tree produces keys in:',['Sorted order','Random order','Reverse insertion order','Level order'],0,'BST ordering makes left-root-right traversal sorted.'),
+Q('Data Structures 14','Binary Search Trees','Searching a balanced BST is typically:',['O(n²)','O(log n)','O(2^n)','O(n!)'],1,'A balanced tree discards about half of the remaining keys at each level.'),
+Q('Data Structures 15','AVL Trees','An AVL node balance factor must be:',['Only 0','Between -1 and 1','Greater than 2','Equal to tree height'],1,'AVL balance permits -1, 0, or +1.'),
+Q('Data Structures 16','AVL Trees','An LL imbalance is corrected with a:',['Left rotation','Double right-left rotation','Right rotation','Heapify operation'],2,'A single right rotation repairs a left-left imbalance.'),
+Q('Data Structures 17','Heaps','In a max-heap, every parent key is:',['No smaller than its children','Smaller than both children','Always equal to its children','Unrelated to its children'],0,'The max-heap order places a maximum key at the root.'),
+Q('Data Structures 18','Priority Queues','An efficient implementation of a priority queue is a:',['Linked stack only','Binary heap','Adjacency matrix','Sequential file'],1,'A heap supports insertion and priority removal in logarithmic time.'),
+Q('Data Structures 19','B-Trees','B-trees are especially useful for:',['Expression parsing only','Disk-based indexing','CPU instruction decoding','Image compression only'],1,'Their high branching factor reduces expensive storage accesses.'),
+Q('Data Structures 20','Graphs','An undirected graph edge connects:',['An ordered pair only','Two vertices symmetrically','A vertex to itself only','Exactly three vertices'],1,'Undirected adjacency has no source-to-destination orientation.'),
+Q('Data Structures 21','Graph Storage','For a sparse graph, the more space-efficient representation is usually:',['Adjacency list','Full adjacency matrix','Truth table','Binary heap array'],0,'Adjacency lists store existing edges instead of every possible pair.'),
+Q('Data Structures 22','Graph Traversal','Breadth-first search uses a:',['Stack','Priority register','Queue','Binary search'],2,'The queue processes vertices level by level.'),
+Q('Data Structures 23','Graph Traversal','Depth-first search is naturally implemented using:',['A queue only','A stack or recursion','A B-tree only','A cache line'],1,'The call stack or an explicit stack follows one path deeply.'),
+Q('Data Structures 24','Minimum Spanning Trees','A minimum spanning tree of a connected graph with V vertices has:',['V edges','V+1 edges','V-1 edges','2V edges'],2,'Every tree connecting V vertices contains V-1 edges.'),
+Q('Data Structures 25','Shortest Paths','Dijkstra’s algorithm assumes edge weights are:',['Nonnegative','All equal to zero','Negative only','Complex numbers'],0,'Its greedy finalization is valid for nonnegative weights.'),
+Q('Data Structures 26','Sorting','Which sorting method is stable in its standard form?',['Heap sort','Quick sort','Insertion sort','Selection sort'],2,'Insertion sort preserves the relative order of equal keys.'),
+Q('Data Structures 27','Sorting','The average time complexity of quicksort is:',['O(log n)','O(n log n)','O(n² log n)','O(1)'],1,'Balanced partitions across levels yield n log n average work.'),
+Q('Data Structures 28','Sorting','Heap sort has worst-case time complexity:',['O(n log n)','O(n²)','O(log n)','O(2^n)'],0,'Heap construction and repeated logarithmic deletion remain O(n log n).'),
+Q('Data Structures 29','Searching','Sequential search is appropriate when data is:',['Necessarily sorted','Unsorted or small','Stored only in a BST','Always hashed perfectly'],1,'Linear search requires no ordering or preprocessing.'),
+Q('Data Structures 30','Hashing','A collision occurs when:',['A table is empty','Two keys map to the same slot','A key is deleted','The load factor is zero'],1,'Collision resolution is needed when hash addresses coincide.'),
+Q('Data Structures 31','Hashing','Separate chaining resolves collisions by:',['Rejecting every collision','Keeping a list at each table slot','Sorting the entire table each time','Doubling every key'],1,'Each bucket stores all keys assigned to that hash location.'),
+Q('Data Structures 32','Complexity','Two nested loops each running n times usually require:',['O(log n)','O(n)','O(n²)','O(1)'],2,'Their iteration counts multiply to n squared.'),
+Q('Data Structures 33','Queues','The diagrammed circular queue reuses array space by applying:',['Modulo arithmetic','Tree rotation','Recursion only','Hash chaining'],0,'Modulo arithmetic wraps front and rear indices to the start.'),
+Q('Data Structures 34','Trees','In the diagrammed BST, values smaller than a node belong in its:',['Right subtree','Parent node','Left subtree','Root only'],2,'The BST invariant places smaller keys to the left.')
+];
+
+Object.assign(DATA_STRUCTURE_QUESTIONS[3],{img:'/static/moocs/diagrams/stack.svg',alt:'LIFO stack push and pop diagram'});
+Object.assign(DATA_STRUCTURE_QUESTIONS[6],{img:'/static/moocs/diagrams/linked-list.svg',alt:'Singly linked list nodes and pointers'});
+Object.assign(DATA_STRUCTURE_QUESTIONS[21],{img:'/static/moocs/diagrams/graph-traversal.svg',alt:'Graph for breadth-first traversal'});
+Object.assign(DATA_STRUCTURE_QUESTIONS[32],{img:'/static/moocs/diagrams/circular-queue.svg',alt:'Circular queue front and rear positions'});
+Object.assign(DATA_STRUCTURE_QUESTIONS[33],{img:'/static/moocs/diagrams/bst.svg',alt:'Binary search tree with ordered keys'});
+
+// Set 1 alternates the three subjects: 33 COA + 34 Data Structures + 33 Data Mining.
+const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,33);
+const MINING_QUESTIONS=QUESTIONS.slice(50,83);
+const SET_ONE=[];
+for(let index=0;index<34;index++){
+  if(index<33) SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
+  SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
+  if(index<33) SET_ONE.push(MINING_QUESTIONS[index]);
+}
+QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
+
+QUESTIONS.forEach((item,index)=>{
+  item.s=`Set 1 • ${item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':'Data Mining'}`;
+  const balancedPosition=index%4;
+  if(item.a!==balancedPosition){
+    [item.o[item.a],item.o[balancedPosition]]=[item.o[balancedPosition],item.o[item.a]];
+    item.a=balancedPosition;
+  }
+});

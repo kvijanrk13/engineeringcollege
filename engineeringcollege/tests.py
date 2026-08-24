@@ -6,6 +6,9 @@ class MoocsPageTests(SimpleTestCase):
         response = self.client.get("/MOOCS")
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Set 1")
+        self.assertContains(response, "Data Structures")
+        self.assertContains(response, "Data Mining")
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertContains(response, "Question palette")
         self.assertContains(response, "/static/moocs/moocs.js")
