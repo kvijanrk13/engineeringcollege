@@ -736,8 +736,13 @@
     .dma-algo-btn.active { color: #fff; background: var(--blue); border-color: var(--blue); box-shadow: 0 0 0 4px rgba(22,119,255,.13); }
     .dma-summary { margin: 0 0 18px; padding: 16px 18px; border-left: 5px solid #7c3aed; border-radius: 10px; background: #f8f5ff; color: #4c1d95; line-height: 1.65; }
     .dma-stage { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr); gap: 18px; align-items: start; }
-    .dma-visual { padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, #fbfdff, #eef4fb); }
-    .dma-visual canvas { display: block; width: 100%; height: auto; border-radius: 8px; background: #f8fbff; }
+    .dma-visual { position: relative; overflow: hidden; padding: 12px; border: 1px solid #164e63; border-radius: 14px; background: radial-gradient(circle at 50% 0, #123354, #071525 66%); box-shadow: inset 0 0 35px rgba(34,211,238,.08), 0 15px 30px rgba(8,47,73,.18); }
+    .dma-visual::before { content: ""; position: absolute; z-index: 3; top: 0; bottom: 0; left: -16%; width: 12%; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(34,211,238,.1), rgba(255,255,255,.75), rgba(34,211,238,.15), transparent); filter: blur(1px); opacity: 0; transform: skewX(-12deg); }
+    .dma-visual.laser-running::before { opacity: 1; animation: dmaLaserScan 1.25s linear infinite; }
+    .dma-visual canvas { position: relative; z-index: 1; display: block; width: 100%; height: auto; border: 1px solid rgba(103,232,249,.18); border-radius: 8px; background: rgba(248,251,255,.97); box-shadow: 0 0 22px rgba(34,211,238,.12); }
+    .dma-laser-hud { position: absolute; z-index: 4; top: 22px; right: 22px; display: flex; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid rgba(103,232,249,.42); border-radius: 999px; background: rgba(3,15,29,.82); color: #a5f3fc; font: 800 10px/1 Inter, sans-serif; letter-spacing: .12em; text-transform: uppercase; backdrop-filter: blur(5px); }
+    .dma-laser-hud i { width: 8px; height: 8px; border-radius: 50%; background: #22d3ee; box-shadow: 0 0 10px 3px #22d3ee; animation: dmaHudPulse .85s ease-in-out infinite; }
+    .dma-laser-hud.idle i { background: #64748b; box-shadow: none; animation: none; }
     .dma-legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
     .dma-legend i { display: inline-block; width: 14px; height: 14px; margin-right: 6px; border-radius: 4px; vertical-align: -2px; }
     .dma-side { display: flex; flex-direction: column; gap: 12px; }
@@ -745,19 +750,32 @@
     .dma-controls .btn { min-width: 84px; }
     .dma-speed { display: grid; gap: 3px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; }
     .dma-speed select { min-height: 34px; }
-    .dma-status { min-height: 70px; padding: 14px 16px; border-left: 4px solid var(--blue); border-radius: 9px; background: #eef7ff; line-height: 1.6; }
+    .dma-status { min-height: 70px; padding: 14px 16px; border: 1px solid #a5f3fc; border-left: 5px solid #06b6d4; border-radius: 9px; background: linear-gradient(105deg, #ecfeff, #eff6ff); line-height: 1.6; box-shadow: 0 0 16px rgba(6,182,212,.12); }
     .dma-status strong { color: var(--navy); }
     .dma-progress { height: 8px; overflow: hidden; border-radius: 99px; background: #dbeafe; }
-    #dma-progress-bar { width: 0; height: 100%; background: linear-gradient(90deg, #1677ff, #0f9d72); transition: width .3s ease; }
+    #dma-progress-bar { position: relative; width: 0; height: 100%; background: linear-gradient(90deg, #1677ff, #22d3ee 70%, #fff); box-shadow: 0 0 10px #22d3ee; transition: width .3s ease; }
+    #dma-progress-bar::after { content: ""; position: absolute; top: 50%; right: -5px; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px 3px #22d3ee, 0 0 18px 6px rgba(34,211,238,.65); transform: translateY(-50%); }
     .dma-steps { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; display: grid; gap: 8px; }
-    .dma-steps li { padding: 10px 12px 10px 40px; border: 1px solid var(--line); border-radius: 9px; background: #fff; line-height: 1.5; position: relative; transition: .25s; }
+    .dma-steps li { position: relative; margin-left: 8px; padding: 10px 12px 10px 44px; border: 1px solid var(--line); border-radius: 9px; background: #fff; line-height: 1.5; transition: .25s; }
+    .dma-steps li:not(:last-child)::after { content: ""; position: absolute; z-index: 0; top: 31px; bottom: -11px; left: 20px; width: 3px; background: #cbd5e1; }
     .dma-steps li::before { content: counter(dma); counter-increment: dma; position: absolute; top: 9px; left: 10px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #cbd5e1; color: #334155; font-size: 12px; font-weight: 800; }
     .dma-steps { counter-reset: dma; }
-    .dma-steps li.active { border-color: var(--blue); background: var(--blue-soft); box-shadow: inset 4px 0 var(--blue); }
-    .dma-steps li.active::before { background: var(--blue); color: #fff; }
+    .dma-steps li.active { border-color: #22d3ee; background: #ecfeff; box-shadow: inset 4px 0 #06b6d4, 0 0 17px rgba(34,211,238,.25); transform: translateX(3px); }
+    .dma-steps li.active::before { z-index: 2; background: #06b6d4; color: #fff; box-shadow: 0 0 8px 3px #67e8f9; animation: dmaStepPulse .8s ease-in-out infinite; }
+    .dma-steps li.active:not(:last-child)::after { background: repeating-linear-gradient(to bottom, #fff 0 7px, #22d3ee 7px 15px, #0369a1 15px 22px); background-size: 100% 44px; box-shadow: 0 0 8px #22d3ee; animation: dmaBeamDown .55s linear infinite; }
     .dma-steps li.done { border-color: #9fe3c8; }
-    .dma-steps li.done::before { background: var(--green); color: #fff; }
+    .dma-steps li.done::before { z-index: 2; background: var(--green); color: #fff; box-shadow: 0 0 7px rgba(15,157,114,.5); }
+    .dma-steps li.done:not(:last-child)::after { background: #0f9d72; box-shadow: 0 0 5px rgba(15,157,114,.5); }
     .dma-steps li b { display: block; color: var(--navy); margin-bottom: 2px; }
+    .dma-telemetry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .dma-meter { padding: 9px 10px; border: 1px solid #bae6fd; border-radius: 9px; background: #f0f9ff; }
+    .dma-meter small { display: block; color: #64748b; font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    .dma-meter strong { display: block; margin-top: 3px; color: #075985; font: 800 13px Consolas, monospace; }
+    @keyframes dmaLaserScan { to { left: 112%; } }
+    @keyframes dmaHudPulse { 50% { opacity: .45; transform: scale(.75); } }
+    @keyframes dmaStepPulse { 50% { box-shadow: 0 0 14px 5px rgba(34,211,238,.8); transform: scale(1.08); } }
+    @keyframes dmaBeamDown { to { background-position: 0 44px; } }
+    @media (prefers-reduced-motion: reduce) { .dma-visual::before, .dma-laser-hud i, .dma-steps li.active::before, .dma-steps li.active::after { animation: none !important; } }
     @media (max-width: 880px) { .dma-stage { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -1816,6 +1834,7 @@ Bread,Butter</textarea></label>
         <div class="dma-summary" id="dma-summary"></div>
         <div class="dma-stage">
           <div class="dma-visual">
+            <div class="dma-laser-hud idle" id="dma-laser-hud"><i></i><span>Laser idle</span></div>
             <canvas id="dma-canvas" width="560" height="380" aria-label="Algorithm animation canvas"></canvas>
             <div class="dma-legend" id="dma-legend"></div>
           </div>
@@ -1835,6 +1854,11 @@ Bread,Butter</textarea></label>
             </div>
             <div class="dma-status" id="dma-status"></div>
             <div class="dma-progress"><div id="dma-progress-bar"></div></div>
+            <div class="dma-telemetry" aria-live="polite">
+              <div class="dma-meter"><small>Phase</small><strong id="dma-phase">01 / 01</strong></div>
+              <div class="dma-meter"><small>Beam</small><strong id="dma-beam-state">STANDBY</strong></div>
+              <div class="dma-meter"><small>Execution</small><strong id="dma-execution">0%</strong></div>
+            </div>
             <ol class="dma-steps" id="dma-steps" aria-live="polite"></ol>
           </aside>
         </div>

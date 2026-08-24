@@ -376,6 +376,11 @@
   var stepsBox=document.getElementById('dma-steps');
   var legend=document.getElementById('dma-legend');
   var progressBar=document.getElementById('dma-progress-bar');
+  var visual=document.querySelector('.dma-visual');
+  var laserHud=document.getElementById('dma-laser-hud');
+  var phaseMeter=document.getElementById('dma-phase');
+  var beamMeter=document.getElementById('dma-beam-state');
+  var executionMeter=document.getElementById('dma-execution');
   var playBtn=document.getElementById('dma-play'),prevBtn=document.getElementById('dma-prev'),nextBtn=document.getElementById('dma-next'),resetBtn=document.getElementById('dma-reset'),speedSel=document.getElementById('dma-speed');
   var current=null,index=0,timer=null;
 
@@ -404,15 +409,24 @@
     if(current.render) current.render(ctx,index); else defaultFlow(ctx,current.steps,index);
     var s=current.steps[Math.min(index,current.steps.length-1)];
     status.innerHTML='<strong>'+(index+1)+'. '+s.title+'</strong><br>'+s.text;
-    progressBar.style.width=((index+1)*100/current.steps.length)+'%';
+    var percent=Math.round((index+1)*100/current.steps.length);
+    progressBar.style.width=percent+'%';
+    phaseMeter.textContent=String(index+1).padStart(2,'0')+' / '+String(current.steps.length).padStart(2,'0');
+    executionMeter.textContent=percent+'%';
     var lis=stepsBox.querySelectorAll('li');
     lis.forEach(function(li,i){li.classList.toggle('active',i===index);li.classList.toggle('done',i<index);});
-    if(index>=current.steps.length-1)stopTimer();
+    if(index>=current.steps.length-1){setLaser(false);stopTimer();}
   }
 
+  function setLaser(active){
+    visual.classList.toggle('laser-running',active);
+    laserHud.classList.toggle('idle',!active);
+    laserHud.querySelector('span').textContent=active?'Laser tracing':'Laser locked';
+    beamMeter.textContent=active?'TRACING':'LOCKED';
+  }
   function stopTimer(){clearInterval(timer);timer=null;playBtn.textContent='▶ Play';}
   function startTimer(){stopTimer();playBtn.textContent='❚❚ Pause';timer=setInterval(function(){if(index>=current.steps.length-1){stopTimer();return;}index++;render();},Number(speedSel.value));}
-  playBtn.addEventListener('click',function(){if(!current)return;if(timer)stopTimer();else{if(index>=current.steps.length-1)index=0;startTimer();}});
+  playBtn.addEventListener('click',function(){if(!current)return;if(timer){stopTimer();setLaser(false);}else{if(index>=current.steps.length-1)index=0;startTimer();setLaser(true);}});
   nextBtn.addEventListener('click',function(){if(!current)return;stopTimer();index=Math.min(current.steps.length-1,index+1);render();});
   prevBtn.addEventListener('click',function(){if(!current)return;stopTimer();index=Math.max(0,index-1);render();});
   resetBtn.addEventListener('click',function(){if(!current)return;stopTimer();index=0;render();});
@@ -420,7 +434,5 @@
 
   selectAlgo('k-means');
 })();
-
-
 
 
