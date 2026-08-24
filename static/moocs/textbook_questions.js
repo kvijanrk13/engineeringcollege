@@ -154,19 +154,54 @@ Object.assign(DATA_STRUCTURE_QUESTIONS[21],{img:'/static/moocs/diagrams/graph-tr
 Object.assign(DATA_STRUCTURE_QUESTIONS[32],{img:'/static/moocs/diagrams/circular-queue.svg',alt:'Circular queue front and rear positions'});
 Object.assign(DATA_STRUCTURE_QUESTIONS[33],{img:'/static/moocs/diagrams/bst.svg',alt:'Binary search tree with ordered keys'});
 
-// Set 1 alternates the three subjects: 33 COA + 34 Data Structures + 33 Data Mining.
-const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,33);
-const MINING_QUESTIONS=QUESTIONS.slice(50,83);
+const DISCRETE_MATHEMATICS_QUESTIONS=[
+Q('Discrete Mathematics 1','Propositional Logic','The negation of p AND q is logically equivalent to:',['NOT p AND NOT q','NOT p OR NOT q','p OR q','p implies q'],1,'De Morgan’s law gives NOT(p AND q) = NOT p OR NOT q.'),
+Q('Discrete Mathematics 2','Propositional Logic','A proposition that is true for every truth assignment is a:',['Contradiction','Contingency','Tautology','Predicate'],2,'A tautology evaluates to true under all possible assignments.'),
+Q('Discrete Mathematics 3','Implication','The implication p → q is false only when:',['p and q are true','p is false and q is true','p and q are false','p is true and q is false'],3,'An implication fails precisely when a true premise leads to a false conclusion.'),
+Q('Discrete Mathematics 4','Predicate Logic','The negation of “for every x, P(x)” is:',['For every x, not P(x)','There exists x such that not P(x)','There exists x such that P(x)','P(x) is always true'],1,'Negating a universal quantifier produces an existential counterexample.'),
+Q('Discrete Mathematics 5','Sets','The diagrammed shaded overlap of sets A and B represents:',['A union B','A minus B','A intersection B','The empty set'],2,'The shared region contains elements belonging to both sets.'),
+Q('Discrete Mathematics 6','Sets','If a finite set has n elements, its power set contains:',['n² elements','2n elements','n! elements','2^n elements'],3,'Each element has two inclusion choices, giving 2^n subsets.'),
+Q('Discrete Mathematics 7','Relations','A relation R is reflexive when:',['aRb for all distinct a,b','aRa for every a','aRb implies bRa only','aRb and bRc never occur'],1,'Reflexivity requires every element to relate to itself.'),
+Q('Discrete Mathematics 8','Relations','An equivalence relation must be:',['Reflexive, symmetric, and transitive','Irreflexive and asymmetric','Only transitive','Only symmetric'],0,'These three properties characterize equivalence relations.'),
+Q('Discrete Mathematics 9','Partial Orders','In the diagrammed divisibility poset, a Hasse diagram omits:',['All vertices','Loops and transitive edges','Maximal elements','Cover relations'],1,'Hasse diagrams show cover relations while suppressing loops and transitively implied edges.'),
+Q('Discrete Mathematics 10','Functions','A function is injective if:',['Every codomain value is used','Distinct inputs have distinct outputs','Every input has two outputs','Domain equals codomain'],1,'Injectivity prevents two different domain elements from sharing an image.'),
+Q('Discrete Mathematics 11','Functions','A bijection is a function that is:',['Only injective','Only surjective','Both injective and surjective','Neither injective nor surjective'],2,'A bijection pairs domain and codomain elements one-to-one and onto.'),
+Q('Discrete Mathematics 12','Induction','Mathematical induction requires a base case and:',['An inductive step','A truth table','A graph coloring','A random example'],0,'The inductive step proves that truth for k implies truth for k+1.'),
+Q('Discrete Mathematics 13','Counting','The number of permutations of n distinct objects is:',['2^n','n!','n²','n+1'],1,'There are n choices, then n-1, continuing to 1, whose product is n!.'),
+Q('Discrete Mathematics 14','Counting','The number of ways to choose r objects from n without regard to order is:',['n^r','n!','n choose r','r choose n'],2,'Combinations count unordered selections and equal n!/(r!(n-r)!).'),
+Q('Discrete Mathematics 15','Pigeonhole Principle','Placing 11 objects into 10 boxes guarantees that:',['Every box is occupied','Some box contains at least two objects','One box contains all objects','No box contains two objects'],1,'More objects than boxes forces at least one shared box.'),
+Q('Discrete Mathematics 16','Recurrence Relations','The recurrence T(n)=T(n-1)+1 with T(1)=1 has solution:',['T(n)=n','T(n)=log n','T(n)=n²','T(n)=2^n'],0,'Repeated substitution adds one at each of n-1 steps.'),
+Q('Discrete Mathematics 17','Graph Theory','The sum of all vertex degrees in an undirected graph equals:',['The number of vertices','The number of edges','Twice the number of edges','The square of the edges'],2,'The handshaking lemma counts each edge at both endpoints.'),
+Q('Discrete Mathematics 18','Graph Theory','A connected graph with n vertices is a tree exactly when it has:',['n edges','n-1 edges and no cycles','n+1 edges','No leaves'],1,'A tree is minimally connected and therefore contains n-1 edges.'),
+Q('Discrete Mathematics 19','Euler Paths','The diagrammed connected graph has an Euler circuit when:',['Exactly two vertices have odd degree','Every vertex has even degree','Every vertex has odd degree','It has no edges'],1,'A connected graph has an Euler circuit precisely when all degrees are even.'),
+Q('Discrete Mathematics 20','Planar Graphs','For a connected planar graph, Euler’s formula is:',['V+E+F=2','V-E+F=2','V-E-F=0','E=V²'],1,'Vertices minus edges plus faces equals two.'),
+Q('Discrete Mathematics 21','Graph Coloring','The chromatic number is the minimum number of:',['Edges in a path','Colors for adjacent vertices to differ','Cycles in a graph','Vertices in a tree'],1,'A proper vertex coloring assigns different colors to adjacent vertices.'),
+Q('Discrete Mathematics 22','Boolean Algebra','In Boolean algebra, x + x equals:',['0','1','x','NOT x'],2,'The idempotent law states x OR x = x.'),
+Q('Discrete Mathematics 23','Boolean Algebra','The diagrammed truth table shows p XOR q is true when:',['Both inputs are equal','Exactly one input is true','Both inputs are false','p is always false'],1,'Exclusive OR is true exactly when the inputs differ.'),
+Q('Discrete Mathematics 24','Algebraic Structures','A group operation must satisfy closure, associativity, identity, and:',['Distributivity','An inverse for every element','Commutativity always','Idempotence'],1,'Each group element must have an inverse; commutativity is optional.'),
+Q('Discrete Mathematics 25','Finite State Machines','A deterministic finite automaton has:',['Exactly one transition for each state-symbol pair','No accepting states','An infinite state set','Two mandatory start states'],0,'Determinism assigns one next state for each state and input symbol.')
+];
+
+Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[4],{img:'/static/moocs/diagrams/set-intersection.svg',alt:'Venn diagram with the intersection of sets A and B shaded'});
+Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[8],{img:'/static/moocs/diagrams/hasse-diagram.svg',alt:'Hasse diagram for divisibility on a finite set'});
+Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[18],{img:'/static/moocs/diagrams/euler-graph.svg',alt:'Connected graph whose vertices have even degree'});
+Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[22],{img:'/static/moocs/diagrams/xor-truth-table.svg',alt:'Truth table for the exclusive OR operation'});
+
+// Set 1 alternates four subjects, with 25 questions from each subject.
+const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,25);
+const MINING_QUESTIONS=QUESTIONS.slice(50,75);
 const SET_ONE=[];
-for(let index=0;index<34;index++){
-  if(index<33) SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
+for(let index=0;index<25;index++){
+  SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
   SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
-  if(index<33) SET_ONE.push(MINING_QUESTIONS[index]);
+  SET_ONE.push(MINING_QUESTIONS[index]);
+  SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
 }
 QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
 
 QUESTIONS.forEach((item,index)=>{
-  item.s=`Set 1 • ${item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':'Data Mining'}`;
+  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':'Discrete Mathematics';
+  item.s=`Set 1 • ${subject}`;
   const balancedPosition=index%4;
   if(item.a!==balancedPosition){
     [item.o[item.a],item.o[balancedPosition]]=[item.o[balancedPosition],item.o[item.a]];
