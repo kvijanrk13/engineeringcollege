@@ -1,0 +1,11 @@
+.course-sources { margin: 16px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.course-sources a { color: var(--blue); font-weight: 800; }
+.option.correct-option { border-color: var(--green); background: #eafaf4; box-shadow: inset 5px 0 var(--green); }
+.option.wrong-option { border-color: var(--red); background: #fff0f2; box-shadow: inset 5px 0 var(--red); }
+.instant-feedback { display: grid; gap: 5px; margin-top: 7px; padding: 15px 17px; border-left: 5px solid; border-radius: 10px; animation: feedback-in .25s ease-out; }
+.instant-feedback strong { font-size: 17px; }
+.instant-feedback span { font-weight: 800; }
+.instant-feedback p { margin: 3px 0 0; line-height: 1.55; }
+.feedback-correct { border-color: var(--green); background: #ecfbf5; color: #086b4a; }
+.feedback-wrong { border-color: var(--red); background: #fff1f3; color: #9f2230; }
+@keyframes feedback-in { from { opacity: 0; transform: translateY(8px); } }

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>MOOCS — TS SET Computer Science Mock Examination</title>
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}">
+  <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}">
 </head>
 <body>
   <header class="topbar">
@@ -18,7 +19,7 @@
     <section id="welcome" class="welcome card">
       <p class="eyebrow">PYQ-informed computer-based examination</p>
       <h1>Computer Science Mock Examination</h1>
-      <p class="lead">A full exam-console experience designed after analysing the TS SET previous-question papers in the supplied PYQ collection.</p>
+      <p class="lead">A full exam-console experience aligned to all 10 units of the official UGC NET Computer Science and Applications syllabus.</p>
       <div class="pattern-grid">
         <div><strong>30</strong><span>Questions</span></div><div><strong>60</strong><span>Minutes</span></div>
         <div><strong>60</strong><span>Maximum marks</span></div><div><strong>0</strong><span>Negative marks</span></div>
@@ -27,6 +28,7 @@
         <h2>Coverage identified from the papers</h2>
         <div class="chips"><span>Teaching &amp; Research Aptitude</span><span>Discrete Mathematics</span><span>Computer Architecture</span><span>Programming &amp; Data Structures</span><span>Algorithms</span><span>DBMS</span><span>Operating Systems</span><span>Computer Networks</span><span>Software Engineering</span><span>Theory of Computation</span><span>AI &amp; Data Mining</span><span>Computer Graphics</span></div>
       </div>
+      <p class="course-sources">Question design is informed by open course coverage from <a href="https://ocw.mit.edu/" target="_blank" rel="noopener">MIT OpenCourseWare</a>, <a href="https://onlinecourses.nptel.ac.in/" target="_blank" rel="noopener">NPTEL/SWAYAM</a>, and <a href="https://www.coursera.org/" target="_blank" rel="noopener">Coursera</a>. All questions and explanations are original.</p>
       <label class="declaration"><input id="declaration" type="checkbox"> I have read the instructions and am ready to begin.</label>
       <button id="start-exam" class="primary" disabled>Start examination</button>
     </section>
@@ -69,6 +71,7 @@
       <button id="retry" class="primary">Take another attempt</button>
     </section>
   </main>
+  <script src="{% static 'moocs/syllabus_questions.js' %}"></script>
   <script src="{% static 'moocs/moocs.js' %}"></script>
 </body>
 </html>
