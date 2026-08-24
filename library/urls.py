@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import allbooks,search,addbook,deletebook,issuerequest,borrow_books,myissues,issue_book,return_book,requestedissues,myfines,allfines,deletefine,payfine,pay_status,sort,reset_issued,documentation,clear_issues,update_fine,waive_fine
+from .views import allbooks,search,addbook,deletebook,issuerequest,borrow_books,myissues,issue_book,return_book,requestedissues,myfines,allfines,deletefine,payfine,pay_status,sort,reset_issued,documentation,virtual_testing,clear_issues,update_fine,waive_fine
 urlpatterns = [
     path('',allbooks,name='library_home'),
     path('search/',search),
@@ -22,4 +22,5 @@ urlpatterns = [
     path('reset-issued/',reset_issued,name='reset_issued'),
     path('clear-issues/',clear_issues,name='clear_issues'),
     path('documentation/',documentation,name='documentation'),
+    path('virtual-testing/',virtual_testing,name='virtual_testing'),
 ]

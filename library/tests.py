@@ -156,6 +156,13 @@ class LibraryWeek6Tests(TestCase):
         self.assertNotContains(response, "/static/docs/images/library_deployment_diagram.svg")
         self.assertContains(response, "Week 6 - Unit Testing and Integration Testing")
 
+    def test_virtual_testing_lab_lists_week6_and_week7_cases(self):
+        response = self.client.get("/aeclibrary/virtual-testing/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Virtual Testing Lab")
+        self.assertContains(response, "BB_TC_101")
+        self.assertContains(response, "BB_BB_206")
+
 
 class LibraryWeek7TestingTechniquesTests(TestCase):
     """Executable examples of white-box and black-box testing techniques."""

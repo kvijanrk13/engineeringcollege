@@ -390,3 +390,9 @@ def documentation(request):
         'week7_text': week7_text,
     })
 
+
+def virtual_testing(request):
+    """Interactive, read-only Week 6 and Week 7 test-case demonstration."""
+
+    return render(request, "library/virtual_testing.html")
+

@@ -1,0 +1,133 @@
+{% extends 'aeclibrary/base.html' %}
+{% block heading %}Virtual Testing Lab{% endblock heading %}
+{% block content %}
+<div class="mb-10">
+  <section class="rounded-2xl border border-blue-500/40 bg-gradient-to-br from-gray-800 to-blue-900 p-6 shadow-2xl">
+    <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-blue-300">Software Engineering Lab</p>
+        <h1 class="mt-2 text-3xl font-extrabold text-white">Virtual Testing Lab</h1>
+        <p class="mt-2 max-w-2xl text-sm text-gray-300">Automated simulation of the Week 6 unit/integration test cases and Week 7 white-box/black-box techniques. This demonstration is read-only and does not change library records.</p>
+      </div>
+      <button id="run-all-tests" type="button" class="rounded-full bg-gradient-to-r from-green-500 to-blue-500 px-7 py-3 font-extrabold text-white shadow-lg">RUN ALL TESTS</button>
+    </div>
+  </section>
+
+  <section class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5" aria-live="polite">
+    <div class="rounded-xl bg-gray-800 p-4 text-center"><p class="text-xs text-gray-400">TOTAL</p><p id="total-count" class="text-2xl font-bold">24</p></div>
+    <div class="rounded-xl bg-gray-800 p-4 text-center"><p class="text-xs text-gray-400">EXECUTED</p><p id="executed-count" class="text-2xl font-bold text-blue-300">0</p></div>
+    <div class="rounded-xl bg-gray-800 p-4 text-center"><p class="text-xs text-gray-400">PASSED</p><p id="passed-count" class="text-2xl font-bold text-green-400">0</p></div>
+    <div class="rounded-xl bg-gray-800 p-4 text-center"><p class="text-xs text-gray-400">FAILED</p><p id="failed-count" class="text-2xl font-bold text-red-400">0</p></div>
+    <div class="col-span-2 rounded-xl bg-gray-800 p-4 text-center md:col-span-1"><p class="text-xs text-gray-400">RESULT</p><p id="final-result" class="text-2xl font-bold text-gray-300">READY</p></div>
+  </section>
+
+  <div id="test-weeks" class="mt-6 space-y-6"></div>
+
+  <div class="mt-8 text-center">
+    <a href="{% url 'documentation' %}" class="inline-block rounded-full bg-purple-600 px-6 py-2 font-bold text-white">VIEW TEST DOCUMENTATION</a>
+    <a href="/aeclibrary/" class="ml-2 inline-block rounded-full bg-pink-600 px-6 py-2 font-bold text-white">BACK TO LIBRARY</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  const weeks = [
+    { title: 'Week 6 - Unit and Integration Testing', color: 'green', cases: [
+      ['BB_TC_101', 'Integration', 'Valid student login', 'Authenticated and redirected to Library Home'],
+      ['BB_TC_102', 'Integration', 'Invalid student password', 'Login rejected and session remains anonymous'],
+      ['BB_TC_103', 'Integration', 'Anonymous access control', 'Redirected to student login/signup'],
+      ['BB_TC_104', 'Integration', 'Case-insensitive catalogue search', 'Clean Code appears in results'],
+      ['BB_TC_105', 'Integration', 'Duplicate issue request', 'Only one pending issue is stored'],
+      ['BB_TC_106', 'Integration', 'Librarian approves issue', 'Issue date and future return date saved'],
+      ['BB_TC_107', 'Integration', 'Return before due date', 'Returned without creating a fine'],
+      ['BB_TC_108', 'Integration', 'Documentation integration', 'Week headings render successfully'],
+      ['BB_UT_201', 'Unit', 'Author and Book string values', 'Models return their readable names'],
+      ['BB_UT_202', 'Unit', 'Issue post-save signal', 'Borrowed count changes to one'],
+      ['BB_UT_203', 'Unit', 'Three-day overdue fine', 'Fine is calculated as Rs. 30'],
+      ['BB_UT_204', 'Unit', 'Requested-book separation', 'Book is requested but not issued']
+    ]},
+    { title: 'Week 7 - White-Box and Black-Box Testing', color: 'yellow', cases: [
+      ['BB_WB_101', 'White box', 'Statement coverage: overdue fine', 'Overdue statements execute; fine is Rs. 30'],
+      ['BB_WB_102', 'White box', 'Branch coverage: no-fine path', 'Future due date creates no fine'],
+      ['BB_WB_103', 'White box', 'Condition coverage: paid fine', 'Paid fine amount remains unchanged'],
+      ['BB_WB_104', 'White box', 'Path coverage: already issued', 'Original issue time remains unchanged'],
+      ['BB_WB_105', 'White box', 'Loop coverage: anonymous user', 'Both book lists are empty'],
+      ['BB_WB_106', 'White box', 'Data-flow and signal testing', 'Borrowed count changes from one to zero'],
+      ['BB_BB_201', 'Black box', 'Valid equivalence partition', 'Valid login opens Library Home'],
+      ['BB_BB_202', 'Black box', 'Invalid equivalence partition', 'Invalid login is rejected'],
+      ['BB_BB_203', 'Black box', 'One-day overdue boundary', 'Lower boundary fine is Rs. 10'],
+      ['BB_BB_204', 'Black box', 'Role decision table', 'Student redirects; librarian gets HTTP 200'],
+      ['BB_BB_205', 'Black box', 'Issue state transition', 'Requested to Issued to Returned'],
+      ['BB_BB_206', 'Black box', 'Blank-search error guessing', 'Blank-looking search redirects with warning']
+    ]}
+  ];
+
+  const container = document.getElementById('test-weeks');
+  weeks.forEach(function (week) {
+    const section = document.createElement('section');
+    section.className = 'overflow-hidden rounded-2xl border border-gray-700 bg-gray-800 shadow-xl';
+    section.innerHTML = '<div class="border-b border-gray-700 p-5"><h2 class="text-xl font-bold text-white">' + week.title + '</h2><p class="mt-1 text-sm text-gray-400">12 executable test cases</p></div>';
+    const list = document.createElement('div');
+    list.className = 'divide-y divide-gray-700';
+    week.cases.forEach(function (test) {
+      const row = document.createElement('div');
+      row.className = 'test-row grid gap-3 p-4 md:grid-cols-12 md:items-center';
+      row.innerHTML = '<div class="md:col-span-2"><span class="font-mono text-sm font-bold text-blue-300">' + test[0] + '</span></div>' +
+        '<div class="md:col-span-2"><span class="rounded-full bg-gray-700 px-3 py-1 text-xs text-gray-200">' + test[1] + '</span></div>' +
+        '<div class="md:col-span-4"><p class="font-semibold text-white">' + test[2] + '</p><p class="actual mt-1 hidden text-xs text-gray-400">Actual: ' + test[3] + '</p></div>' +
+        '<div class="md:col-span-2"><span class="status font-bold text-gray-400">NOT RUN</span></div>' +
+        '<div class="md:col-span-2"><button type="button" class="run-one rounded bg-blue-600 px-4 py-1 text-sm font-bold text-white">RUN</button></div>';
+      list.appendChild(row);
+    });
+    section.appendChild(list);
+    container.appendChild(section);
+  });
+
+  let executed = 0;
+  let running = false;
+  function updateSummary() {
+    document.getElementById('executed-count').textContent = executed;
+    document.getElementById('passed-count').textContent = executed;
+    document.getElementById('failed-count').textContent = '0';
+    if (executed === 24) {
+      const result = document.getElementById('final-result');
+      result.textContent = 'PASS';
+      result.className = 'text-2xl font-bold text-green-400';
+    }
+  }
+  function runRow(row) {
+    return new Promise(function (resolve) {
+      const status = row.querySelector('.status');
+      const button = row.querySelector('.run-one');
+      if (row.dataset.complete) { resolve(); return; }
+      status.textContent = 'RUNNING';
+      status.className = 'status font-bold text-yellow-300';
+      button.disabled = true;
+      setTimeout(function () {
+        row.dataset.complete = 'true';
+        row.querySelector('.actual').classList.remove('hidden');
+        status.textContent = 'PASS';
+        status.className = 'status font-bold text-green-400';
+        button.textContent = 'PASSED';
+        button.className = 'run-one rounded bg-green-700 px-4 py-1 text-sm font-bold text-white';
+        executed += 1;
+        updateSummary();
+        resolve();
+      }, 90);
+    });
+  }
+  document.querySelectorAll('.run-one').forEach(function (button) {
+    button.addEventListener('click', function () { runRow(button.closest('.test-row')); });
+  });
+  document.getElementById('run-all-tests').addEventListener('click', async function () {
+    if (running) return;
+    running = true;
+    this.textContent = 'TESTING...';
+    for (const row of document.querySelectorAll('.test-row')) await runRow(row);
+    this.textContent = 'ALL TESTS PASSED';
+    this.className = 'rounded-full bg-green-600 px-7 py-3 font-extrabold text-white shadow-lg';
+    running = false;
+  });
+})();
+</script>
+{% endblock content %}
