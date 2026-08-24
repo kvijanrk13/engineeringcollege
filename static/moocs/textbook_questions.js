@@ -101,3 +101,22 @@ Q('Data Mining 48','Graph Mining','A frequent subgraph is a graph pattern that:'
 Q('Data Mining 49','Privacy','Data anonymization aims to:',['Increase identification','Reduce disclosure risk while retaining utility','Delete every attribute','Guarantee perfect prediction'],1,'Anonymization limits re-identification while preserving useful analytical structure.'),
 Q('Data Mining 50','Applications','A recommender system commonly estimates:',['User preference for items','CPU clock frequency','Page-table entries','Compiler tokens'],0,'Recommendation models rank items according to predicted relevance or preference.')
 ];
+
+// Keep the answer key balanced without changing question meaning: each answer
+// position (A, B, C, D) is correct exactly 25 times in this 100-item bank.
+QUESTIONS.forEach((item,index)=>{
+  const balancedPosition=index%4;
+  if(item.a!==balancedPosition){
+    [item.o[item.a],item.o[balancedPosition]]=[item.o[balancedPosition],item.o[item.a]];
+    item.a=balancedPosition;
+  }
+});
+
+Object.assign(QUESTIONS[0],{img:'/static/moocs/diagrams/logic-gates.svg',alt:'AND and OR logic gate truth-flow diagram'});
+Object.assign(QUESTIONS[3],{img:'/static/moocs/diagrams/multiplexer.svg',alt:'Four input multiplexer with select lines and one output'});
+Object.assign(QUESTIONS[12],{img:'/static/moocs/diagrams/register-transfer.svg',alt:'Register transfer through a common system bus'});
+Object.assign(QUESTIONS[17],{img:'/static/moocs/diagrams/instruction-cycle.svg',alt:'Fetch decode execute and interrupt instruction cycle'});
+Object.assign(QUESTIONS[29],{img:'/static/moocs/diagrams/pipeline.svg',alt:'Overlapped instruction pipeline timing diagram'});
+Object.assign(QUESTIONS[33],{img:'/static/moocs/diagrams/dma.svg',alt:'DMA controller path between input output device and main memory'});
+Object.assign(QUESTIONS[38],{img:'/static/moocs/diagrams/cache.svg',alt:'CPU cache and main memory hierarchy diagram'});
+Object.assign(QUESTIONS[45],{img:'/static/moocs/diagrams/multiprocessor.svg',alt:'Shared-memory multiprocessor with private caches'});

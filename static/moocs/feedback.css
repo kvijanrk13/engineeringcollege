@@ -9,3 +9,5 @@
 .feedback-correct { border-color: var(--green); background: #ecfbf5; color: #086b4a; }
 .feedback-wrong { border-color: var(--red); background: #fff1f3; color: #9f2230; }
 @keyframes feedback-in { from { opacity: 0; transform: translateY(8px); } }
+.question-card h2 .question-diagram { display: block; width: min(100%, 640px); max-height: 280px; margin: 0 auto 18px; padding: 12px; border: 1px solid #bdd6ee; border-radius: 12px; background: #f8fbff; object-fit: contain; box-shadow: 0 8px 24px rgba(7,27,51,.1); }
+.question-card h2 > span { display: block; }
