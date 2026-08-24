@@ -1,0 +1,74 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MOOCS — TS SET Computer Science Mock Examination</title>
+  <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
+    <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
+    <a class="home-link" href="/academics/">Academics</a>
+  </header>
+
+  <main>
+    <section id="welcome" class="welcome card">
+      <p class="eyebrow">PYQ-informed computer-based examination</p>
+      <h1>Computer Science Mock Examination</h1>
+      <p class="lead">A full exam-console experience designed after analysing the TS SET previous-question papers in the supplied PYQ collection.</p>
+      <div class="pattern-grid">
+        <div><strong>30</strong><span>Questions</span></div><div><strong>60</strong><span>Minutes</span></div>
+        <div><strong>60</strong><span>Maximum marks</span></div><div><strong>0</strong><span>Negative marks</span></div>
+      </div>
+      <div class="syllabus">
+        <h2>Coverage identified from the papers</h2>
+        <div class="chips"><span>Teaching &amp; Research Aptitude</span><span>Discrete Mathematics</span><span>Computer Architecture</span><span>Programming &amp; Data Structures</span><span>Algorithms</span><span>DBMS</span><span>Operating Systems</span><span>Computer Networks</span><span>Software Engineering</span><span>Theory of Computation</span><span>AI &amp; Data Mining</span><span>Computer Graphics</span></div>
+      </div>
+      <label class="declaration"><input id="declaration" type="checkbox"> I have read the instructions and am ready to begin.</label>
+      <button id="start-exam" class="primary" disabled>Start examination</button>
+    </section>
+
+    <section id="exam" class="exam-shell" hidden>
+      <div class="exam-toolbar">
+        <div><span class="live-dot"></span><strong>Examination in progress</strong></div>
+        <div class="timer-box"><small>Time left</small><strong id="timer">60:00</strong></div>
+      </div>
+      <div class="exam-layout">
+        <section class="question-card card">
+          <div class="question-meta"><span id="section-label">Section</span><span><b id="question-number">1</b> of <b id="question-total">30</b></span><span>Marks: +2 / 0</span></div>
+          <div class="topic" id="topic"></div>
+          <h2 id="question-text"></h2>
+          <div id="options" class="options"></div>
+          <div class="question-actions">
+            <button id="mark-review" class="review">Mark for review &amp; next</button>
+            <button id="clear-response" class="secondary">Clear response</button>
+            <span class="spacer"></span>
+            <button id="previous" class="secondary">Previous</button>
+            <button id="save-next" class="primary">Save &amp; next</button>
+          </div>
+        </section>
+        <aside class="palette card">
+          <h2>Question palette</h2>
+          <div class="legend"><span><i class="answered"></i>Answered</span><span><i class="not-answered"></i>Not answered</span><span><i class="reviewed"></i>Review</span><span><i class="unseen"></i>Not visited</span></div>
+          <div id="palette-grid" class="palette-grid"></div>
+          <div class="attempt-stats"><span>Answered <b id="answered-count">0</b></span><span>Review <b id="review-count">0</b></span><span>Unanswered <b id="unanswered-count">30</b></span></div>
+          <button id="submit-exam" class="danger">Submit examination</button>
+        </aside>
+      </div>
+    </section>
+
+    <section id="result" class="result card" hidden>
+      <p class="eyebrow">Examination submitted</p><h1>Performance report</h1>
+      <div class="score-ring"><strong id="score">0</strong><span>/ 60</span></div>
+      <div class="result-grid"><div><strong id="correct">0</strong><span>Correct</span></div><div><strong id="incorrect">0</strong><span>Incorrect</span></div><div><strong id="unattempted">0</strong><span>Unattempted</span></div><div><strong id="accuracy">0%</strong><span>Accuracy</span></div></div>
+      <div id="topic-analysis" class="topic-analysis"></div>
+      <h2>Answer review and explanations</h2><div id="solutions" class="solutions"></div>
+      <button id="retry" class="primary">Take another attempt</button>
+    </section>
+  </main>
+  <script src="{% static 'moocs/moocs.js' %}"></script>
+</body>
+</html>

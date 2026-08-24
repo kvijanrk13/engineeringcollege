@@ -15,6 +15,8 @@ def health_check(request):
 
 urlpatterns = [
     path('health/', health_check, name='health_check'),
+    path('MOOCS', TemplateView.as_view(template_name='moocs/index.html'), name='moocs'),
+    path('MOOCS/', TemplateView.as_view(template_name='moocs/index.html')),
     path('admin/', admin.site.urls),
     path('car-price/', include('car_price_app.urls')),
     path('aeclibrary/student/', include('student.urls')),
