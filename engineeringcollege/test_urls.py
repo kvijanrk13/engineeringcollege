@@ -3,6 +3,7 @@
 from django.http import HttpResponse
 from django.urls import include, path
 from django.views.generic import TemplateView
+from engineeringcollege.moocs_views import moocs_exam, moocs_logout
 
 
 def google_login_stub(request):
@@ -12,8 +13,9 @@ def google_login_stub(request):
 
 
 urlpatterns = [
-    path("MOOCS", TemplateView.as_view(template_name="moocs/index.html"), name="moocs"),
-    path("MOOCS/", TemplateView.as_view(template_name="moocs/index.html")),
+    path("MOOCS", moocs_exam, name="moocs"),
+    path("MOOCS/", moocs_exam),
+    path("MOOCS/logout/", moocs_logout, name="moocs_logout"),
     path(
         "accounts/",
         include(

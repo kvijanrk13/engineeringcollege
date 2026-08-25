@@ -6,27 +6,50 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>MOOCS — TS SET Computer Science Mock Examination</title>
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}">
-  <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=4">
+  <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=6">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
     <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
-    <a class="home-link" href="/academics/">Academics</a>
+    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="home-link" href="{% url 'moocs_logout' %}">Sign out</a>{% else %}<a class="home-link" href="/academics/">Academics</a>{% endif %}
   </header>
 
   <main>
+    {% if not moocs_gmail_verified %}
+    <section class="gmail-gate card">
+      <div class="google-mark" aria-hidden="true"><span>G</span></div>
+      <p class="eyebrow">Secure examination access</p>
+      <h1>Sign in before starting Set 1</h1>
+      <p class="lead">Use a verified Gmail account to enter the MOOCS examination. Authentication happens securely on Google; this website never receives or stores your Gmail password.</p>
+      {% if messages %}{% for message in messages %}<div class="login-message">{{ message }}</div>{% endfor %}{% endif %}
+      {% if google_signin_enabled %}
+      <a class="google-login-button" href="{{ moocs_google_login_url }}">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 23.6 6 10.5V38h36V10.5L24 23.6Z"/><path fill="#FBBC04" d="M6 10.5 24 23.6 42 10.5V9c0-1.7-1.3-3-3-3H9C7.3 6 6 7.3 6 9v1.5Z"/><path fill="#34A853" d="M6 10.5V38h9V17.1L6 10.5Z"/><path fill="#4285F4" d="M33 17.1V38h9V10.5l-9 6.6Z"/></svg>
+        <span>Continue with Gmail</span>
+      </a>
+      {% else %}
+      <div class="login-message">Google sign-in is not configured on this server.</div>
+      {% endif %}
+      <p class="privacy-note">Only your verified email address and basic profile are requested.</p>
+    </section>
+    {% else %}
     <section id="welcome" class="welcome card">
       <p class="eyebrow">PYQ-informed computer-based examination</p>
       <h1>Set 1 — Computer Science Mock Examination</h1>
-      <p class="lead">A mixed 100-question exam with 25 questions each from Computer Organization and Architecture, Data Structures, Data Mining, and Discrete Mathematics.</p>
+      <p class="lead">A mixed 100-question exam with 20 questions each from Computer Organization and Architecture, Data Structures, Data Mining, Discrete Mathematics, and Data Communications and Networking.</p>
       <div class="pattern-grid">
         <div><strong>100</strong><span>Questions</span></div><div><strong>120</strong><span>Minutes</span></div>
         <div><strong>200</strong><span>Maximum marks</span></div><div><strong>0</strong><span>Negative marks</span></div>
       </div>
+      <div class="level-guide">
+        <div><strong>Level 1</strong><span>34 foundation questions</span></div>
+        <div><strong>Level 2</strong><span>33 application questions</span></div>
+        <div><strong>Level 3</strong><span>33 analytical questions</span></div>
+      </div>
       <div class="syllabus">
         <h2>Textbook coverage</h2>
-        <div class="chips"><span>Digital Logic</span><span>CPU &amp; Pipeline</span><span>I/O &amp; Memory</span><span>Stacks &amp; Queues</span><span>Linked Lists</span><span>Trees &amp; Graphs</span><span>Sorting &amp; Searching</span><span>Data Preprocessing</span><span>Classification</span><span>Clustering</span><span>Logic &amp; Sets</span><span>Relations &amp; Functions</span><span>Combinatorics</span><span>Discrete Graph Theory</span></div>
+        <div class="chips"><span>Digital Logic</span><span>CPU &amp; Pipeline</span><span>I/O &amp; Memory</span><span>Stacks &amp; Queues</span><span>Linked Lists</span><span>Trees &amp; Graphs</span><span>Data Preprocessing</span><span>Classification</span><span>Logic &amp; Sets</span><span>Combinatorics</span><span>Signals &amp; Transmission</span><span>Data Link Control</span><span>IPv4 &amp; Routing</span><span>TCP/IP</span></div>
       </div>
       <p class="course-sources">Question design is informed by open course coverage from <a href="https://ocw.mit.edu/" target="_blank" rel="noopener">MIT OpenCourseWare</a>, <a href="https://onlinecourses.nptel.ac.in/" target="_blank" rel="noopener">NPTEL/SWAYAM</a>, and <a href="https://www.coursera.org/" target="_blank" rel="noopener">Coursera</a>. All questions and explanations are original.</p>
       <label class="declaration"><input id="declaration" type="checkbox"> I have read the instructions and am ready to begin.</label>
@@ -42,6 +65,7 @@
         <section class="question-card card">
           <div class="question-meta"><span id="section-label">Set 1</span><span><b id="question-number">1</b> of <b id="question-total">100</b></span><span>Marks: +2 / 0</span></div>
           <div class="topic" id="topic"></div>
+          <div id="question-passage" class="question-passage" hidden></div>
           <h2 id="question-text"></h2>
           <div id="options" class="options"></div>
           <div class="question-actions">
@@ -70,8 +94,11 @@
       <h2>Answer review and explanations</h2><div id="solutions" class="solutions"></div>
       <button id="retry" class="primary">Take another attempt</button>
     </section>
+    {% endif %}
   </main>
-  <script src="{% static 'moocs/textbook_questions.js' %}?v=4"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=4"></script>
+  {% if moocs_gmail_verified %}
+  <script src="{% static 'moocs/textbook_questions.js' %}?v=8"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=8"></script>
+  {% endif %}
 </body>
 </html>

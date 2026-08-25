@@ -187,24 +187,91 @@ Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[8],{img:'/static/moocs/diagrams/has
 Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[18],{img:'/static/moocs/diagrams/euler-graph.svg',alt:'Connected graph whose vertices have even degree'});
 Object.assign(DISCRETE_MATHEMATICS_QUESTIONS[22],{img:'/static/moocs/diagrams/xor-truth-table.svg',alt:'Truth table for the exclusive OR operation'});
 
-// Set 1 alternates four subjects, with 25 questions from each subject.
-const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,25);
-const MINING_QUESTIONS=QUESTIONS.slice(50,75);
+const DATA_COMMUNICATION_QUESTIONS=[
+Q('Data Communications 1','Network Models','Which OSI layer is responsible for end-to-end process delivery?',['Data link','Transport','Physical','Presentation'],1,'The transport layer provides process-to-process delivery and reliability services.'),
+Q('Data Communications 2','Network Models','The diagrammed encapsulation process adds headers as data moves:',['Up the sender stack','Down the sender stack','Only across the physical medium','Directly to the application'],1,'Each lower protocol layer encapsulates the unit received from the layer above.'),
+Q('Data Communications 3','Signals','A signal completes 200 cycles in one second. Its frequency is:',['20 Hz','100 Hz','200 Hz','400 Hz'],2,'Frequency is the number of cycles per second, measured in hertz.'),
+Q('Data Communications 4','Transmission','If a noiseless channel has bandwidth B and L signal levels, Nyquist bit rate is:',['B log₂L','2B log₂L','B/L','2B/L'],1,'Nyquist gives 2B log₂L bits per second for a noiseless channel.'),
+Q('Data Communications 5','Transmission','Shannon capacity increases when:',['Bandwidth or signal-to-noise ratio increases','Noise power alone increases','Bandwidth becomes zero','The signal is removed'],0,'Capacity is B log₂(1+S/N), so bandwidth and SNR improve the limit.'),
+Q('Data Communications 6','Line Coding','Manchester encoding represents each bit using:',['No transition','A transition in the middle of the bit interval','Only positive voltage','A separate carrier frequency'],1,'A mid-bit transition provides both data and synchronization.'),
+Q('Data Communications 7','Multiplexing','Which technique assigns different frequency bands to simultaneous signals?',['TDM','FDM','CRC','ARQ'],1,'Frequency-division multiplexing separates channels in frequency.'),
+Q('Data Communications 8','Switching','A datagram network routes each packet:',['Along an independently selected path','Only after a dedicated circuit is reserved','Without an address','Through one permanent physical wire'],0,'Connectionless packets carry addressing information and may follow different routes.'),
+Q('Data Communications 9','Error Detection','The diagrammed CRC sender appends:',['The divisor itself','The quotient','The division remainder','The original frame length'],2,'CRC appends the modulo-2 division remainder as redundant bits.'),
+Q('Data Communications 10','Data Link Control','In Stop-and-Wait ARQ, the sender retransmits when:',['A timer expires before a valid acknowledgment','Every acknowledgment arrives','The window becomes larger','The receiver sends data'],0,'Timeout indicates a lost or damaged frame or acknowledgment.'),
+Q('Data Communications 11','Multiple Access','CSMA/CD was designed for:',['Traditional shared Ethernet','Circuit-switched telephony','IPv6 routing','DNS name resolution'],0,'Shared half-duplex Ethernet detects collisions while transmitting.'),
+Q('Data Communications 12','Ethernet','A standard Ethernet switch primarily forwards frames using:',['IP port numbers','MAC addresses','Domain names','Process identifiers'],1,'Layer-2 switches learn and use destination MAC addresses.'),
+Q('Data Communications 13','IPv4 Addressing','The diagrammed /26 IPv4 subnet contains how many total addresses?',['32','64','128','256'],1,'A /26 prefix leaves six host bits, producing 2^6 = 64 addresses.'),
+Q('Data Communications 14','IPv4','Which field prevents an IPv4 datagram from circulating forever?',['Version','Header length','Time to Live','Source address'],2,'Routers decrement TTL and discard the packet when it reaches zero.'),
+Q('Data Communications 15','Routing','A router chooses a forwarding entry using:',['Longest-prefix matching','Shortest MAC address','Largest port number','Alphabetical order'],0,'The most specific matching network prefix determines the route.'),
+Q('Data Communications 16','Transport Layer','UDP differs from TCP because UDP:',['Requires a connection handshake','Provides byte-stream reliability','Is connectionless and has lower overhead','Uses no port numbers'],2,'UDP sends independent datagrams without connection setup or reliability machinery.'),
+Q('Data Communications 17','TCP','The diagrammed TCP connection establishment sequence is:',['ACK, SYN, FIN','SYN, SYN-ACK, ACK','FIN, ACK, SYN','SYN, FIN, RST'],1,'TCP establishes synchronized sequence numbers with the three-way handshake.'),
+Q('Data Communications 18','Application Layer','DNS normally maps:',['Domain names to IP addresses','MAC addresses to passwords','Frames to checksums','Ports to cables'],0,'The Domain Name System resolves names into network addresses and related records.'),
+Q('Data Communications 19','Application Layer','HTTP status code 404 indicates:',['Successful request','Permanent redirect','Resource not found','Server gateway success'],2,'A 404 response means the requested resource was not found.'),
+Q('Data Communications 20','Security','TLS primarily provides communication:',['Compression only','Confidentiality, integrity, and authentication','Physical addressing','Route discovery'],1,'TLS protects application traffic using authenticated cryptographic sessions.')
+];
+
+Object.assign(DATA_COMMUNICATION_QUESTIONS[1],{img:'/static/moocs/diagrams/osi-encapsulation.svg',alt:'OSI encapsulation from application data to transmitted bits'});
+Object.assign(DATA_COMMUNICATION_QUESTIONS[8],{img:'/static/moocs/diagrams/crc-division.svg',alt:'CRC modulo-2 division and appended remainder'});
+Object.assign(DATA_COMMUNICATION_QUESTIONS[12],{img:'/static/moocs/diagrams/ipv4-subnet.svg',alt:'IPv4 address divided into a 26-bit network prefix and 6 host bits'});
+Object.assign(DATA_COMMUNICATION_QUESTIONS[16],{img:'/static/moocs/diagrams/tcp-handshake.svg',alt:'TCP three-way handshake between client and server'});
+
+// Set 1 alternates five subjects, with 20 questions from each subject.
+const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,20);
+const MINING_QUESTIONS=QUESTIONS.slice(50,70);
 const SET_ONE=[];
-for(let index=0;index<25;index++){
+for(let index=0;index<20;index++){
   SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
   SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
   SET_ONE.push(MINING_QUESTIONS[index]);
   SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
+  SET_ONE.push(DATA_COMMUNICATION_QUESTIONS[index]);
 }
 QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
 
+// Randomize the answer-key positions on every exam load. The pool contains 25
+// of each position, so A/B/C/D remain balanced without forming a visible cycle.
+const RANDOM_ANSWER_POSITIONS=Array.from({length:100},(_,index)=>index%4);
+for(let index=RANDOM_ANSWER_POSITIONS.length-1;index>0;index--){
+  const swapIndex=Math.floor(Math.random()*(index+1));
+  [RANDOM_ANSWER_POSITIONS[index],RANDOM_ANSWER_POSITIONS[swapIndex]]=[RANDOM_ANSWER_POSITIONS[swapIndex],RANDOM_ANSWER_POSITIONS[index]];
+}
+
 QUESTIONS.forEach((item,index)=>{
-  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':'Discrete Mathematics';
-  item.s=`Set 1 • ${subject}`;
-  const balancedPosition=index%4;
-  if(item.a!==balancedPosition){
-    [item.o[item.a],item.o[balancedPosition]]=[item.o[balancedPosition],item.o[item.a]];
-    item.a=balancedPosition;
+  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':'Data Communications and Networking';
+  item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
+  item.s=`Set 1 • ${item.level} • ${subject}`;
+  const randomPosition=RANDOM_ANSWER_POSITIONS[index];
+  if(item.a!==randomPosition){
+    [item.o[item.a],item.o[randomPosition]]=[item.o[randomPosition],item.o[item.a]];
+    item.a=randomPosition;
   }
+});
+
+// Passage-based questions require learners to interpret a scenario before
+// applying the concept. They are distributed across all three levels.
+const PARAGRAPH_QUESTIONS={
+  4:'A student sends a project file from a browser to a server. The data must reach the correct server process, be divided into manageable units, and—when reliability is requested—be reordered and recovered after loss.',
+  9:'A message starts as application data. At the sender, each protocol layer adds control information needed by its peer layer. The receiver removes that information in reverse order.',
+  24:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
+  34:'A provider must carry several continuous radio programs over one physical channel at the same time. Each program is shifted into a separate non-overlapping portion of the available spectrum.',
+  44:'A sender treats a frame as a polynomial, appends zero bits, and performs modulo-2 division using a shared generator. The receiver repeats the calculation to detect transmission errors.',
+  62:'A retailer builds a multidimensional sales cube, but most combinations have negligible support. To reduce storage and computation, it materializes only cells whose aggregate count reaches a specified threshold.',
+  69:'During a routing fault, two routers repeatedly forward the same IPv4 datagram to each other. The protocol needs a header mechanism that eventually destroys the looping datagram.',
+  76:'Keys 50, 30, and 20 are inserted in that order into an initially empty AVL tree. The root becomes left-heavy, and the newly inserted key lies in the left subtree of the root’s left child.',
+  93:'A maintenance robot must traverse every corridor of a connected facility exactly once and return to its starting point. Corridors are modeled as edges and intersections as vertices.'
+};
+Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
+  QUESTIONS[Number(index)].passage=passage;
+  QUESTIONS[Number(index)].mode='paragraph';
+});
+
+// Convert three randomly chosen questions per subject into fill-in-the-blank
+// items for this attempt; all remaining items use selection buttons.
+['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking'].forEach(subject=>{
+  const candidates=QUESTIONS.map((item,index)=>item.s.endsWith(subject)&&item.mode!=='paragraph'?index:-1).filter(index=>index>=0);
+  for(let index=candidates.length-1;index>0;index--){
+    const swapIndex=Math.floor(Math.random()*(index+1));
+    [candidates[index],candidates[swapIndex]]=[candidates[swapIndex],candidates[index]];
+  }
+  candidates.slice(0,3).forEach(index=>{ QUESTIONS[index].mode='fill'; });
 });

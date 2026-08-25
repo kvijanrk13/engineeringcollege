@@ -3308,10 +3308,10 @@ def google_login(request):
         role = 'admin'
 
     target = request.GET.get('target', '')
-    if target not in {'aeclibrary', 'etors'}:
+    if target not in {'aeclibrary', 'etors', 'moocs'}:
         target = ''
 
-    if target in {'aeclibrary', 'etors'}:
+    if target in {'aeclibrary', 'etors', 'moocs'}:
         role = 'student'
 
     state_payload = {
@@ -3423,6 +3423,18 @@ def google_callback(request):
             if next_url.startswith('/etors/') and not next_url.startswith('//'):
                 return redirect(next_url)
             return redirect('/etors/')
+
+        if state_payload.get('target') == 'moocs':
+            if not email.endswith('@gmail.com'):
+                messages.error(request, 'MOOCS accepts verified Gmail accounts ending with @gmail.com.')
+                return redirect('/MOOCS')
+            request.session['moocs_gmail_verified'] = True
+            request.session['moocs_gmail_email'] = email
+            request.session['google_oauth_email'] = email
+            request.session['google_oauth_name'] = profile.get('name', '')
+            audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
+            messages.success(request, 'Gmail verified. You can now start the MOOCS examination.')
+            return redirect('/MOOCS')
 
         if state_payload.get('role') == 'student':
             student = find_record_by_email(Student, email)

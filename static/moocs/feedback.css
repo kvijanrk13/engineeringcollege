@@ -11,3 +11,26 @@
 @keyframes feedback-in { from { opacity: 0; transform: translateY(8px); } }
 .question-card h2 .question-diagram { display: block; width: min(100%, 640px); max-height: 280px; margin: 0 auto 18px; padding: 12px; border: 1px solid #bdd6ee; border-radius: 12px; background: #f8fbff; object-fit: contain; box-shadow: 0 8px 24px rgba(7,27,51,.1); }
 .question-card h2 > span { display: block; }
+.level-guide { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 0 0 24px; }
+.level-guide div { display: grid; gap: 4px; padding: 13px; border-radius: 10px; background: linear-gradient(135deg,#eef6ff,#f8fbff); border: 1px solid #cfe0f4; }
+.level-guide strong { color: var(--blue); }
+.level-guide span { color: var(--muted); font-size: 12px; }
+.question-passage { margin: 16px 0 10px; padding: 17px 19px; border-left: 5px solid #7c3aed; border-radius: 10px; background: #f5f3ff; color: #3f3a66; font-size: 15px; line-height: 1.65; }
+.question-passage::before { content: 'Read the passage'; display: block; margin-bottom: 6px; color: #6d28d9; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.selection-button { width: 100%; color: var(--ink); background: #fff; text-align: left; font-size: 14px; line-height: 1.45; }
+.selection-button span { pointer-events: none; }
+.fill-answer-panel { display: grid; gap: 9px; padding: 18px; border: 1px solid #bdd6ee; border-radius: 12px; background: #f7fbff; }
+.fill-answer-panel label { color: var(--navy); font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
+.fill-answer-panel > div { display: flex; gap: 9px; }
+.fill-answer-panel input { flex: 1; min-width: 0; padding: 13px 14px; border: 2px solid #b9c9da; border-radius: 9px; color: var(--ink); background: #fff; font: inherit; font-weight: 600; outline: none; }
+.fill-answer-panel input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #1267d622; }
+@media(max-width:520px){.level-guide{grid-template-columns:1fr}.fill-answer-panel > div{flex-direction:column}.fill-answer-panel button{width:100%}}
+.gmail-gate { max-width: 650px; margin: 60px auto; padding: clamp(28px,6vw,58px); text-align: center; }
+.google-mark { display: grid; place-items: center; width: 68px; height: 68px; margin: 0 auto 20px; border: 1px solid #d8e2ee; border-radius: 18px; background: #fff; box-shadow: 0 10px 28px #183b5b1c; }
+.google-mark span { font-size: 38px; font-weight: 900; color: #4285f4; }
+.google-login-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; padding: 13px 22px; border: 1px solid #c8d4e1; border-radius: 10px; background: #fff; color: #24364b; box-shadow: 0 6px 18px #183b5b17; font-weight: 800; text-decoration: none; }
+.google-login-button:hover { border-color: #4285f4; background: #f8fbff; }
+.google-login-button svg { width: 25px; height: 25px; }
+.login-message { margin: 16px auto; padding: 12px 15px; border-radius: 9px; background: #fff4df; color: #805300; }
+.privacy-note { color: var(--muted); font-size: 12px; }
+.signed-in-email { margin-left: auto; color: #bcd2e8; font-size: 12px; }
