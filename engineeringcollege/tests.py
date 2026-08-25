@@ -24,6 +24,8 @@ class MoocsPageTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Set 1")
+        self.assertContains(response, "Set 2")
+        self.assertContains(response, "New questions, no Set 1 repeats")
         self.assertContains(response, "Data Structures")
         self.assertContains(response, "Data Mining")
         self.assertContains(response, "Discrete Mathematics")

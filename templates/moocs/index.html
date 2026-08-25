@@ -7,6 +7,7 @@
   <title>MOOCS — TS SET Computer Science Mock Examination</title>
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}">
   <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=6">
+  <style>.set-picker{display:grid;gap:8px;margin:22px 0;padding:16px;border:1px solid #bfdbfe;border-radius:12px;background:#f7fbff}.set-picker span{color:#071b33;font-size:13px;font-weight:900}.set-picker select{width:100%;padding:12px;border:1px solid #9fc3e8;border-radius:9px;background:#fff;color:#172b4d;font:700 14px Inter,Segoe UI,Arial,sans-serif}</style>
 </head>
 <body>
   <header class="topbar">
@@ -36,8 +37,9 @@
     {% else %}
     <section id="welcome" class="welcome card">
       <p class="eyebrow">PYQ-informed computer-based examination</p>
-      <h1>Set 1 — Computer Science Mock Examination</h1>
+      <h1><span id="selected-set-title">Set 1</span> — Computer Science Mock Examination</h1>
       <p class="lead">A 100-question exam mixing COA, Data Structures, Data Mining, Discrete Mathematics, Data Communications and Networking, Java Programming, Database Management Systems, Operating Systems, Cryptography and Network Security, Software Engineering, Fundamentals of Computer Algorithms, HTML, XHTML, CSS and JavaScript, C Programming, and Machine Learning.</p>
+      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Original mixed paper</option><option value="2">Set 2 — New questions, no Set 1 repeats</option></select></label>
       <div class="pattern-grid">
         <div><strong>100</strong><span>Questions</span></div><div><strong>120</strong><span>Minutes</span></div>
         <div><strong>200</strong><span>Maximum marks</span></div><div><strong>0</strong><span>Negative marks</span></div>
@@ -97,8 +99,8 @@
     {% endif %}
   </main>
   {% if moocs_gmail_verified %}
-  <script src="{% static 'moocs/textbook_questions.js' %}?v=17"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=13"></script>
+  <script src="{% static 'moocs/textbook_questions.js' %}?v=18"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=14"></script>
   {% endif %}
 </body>
 </html>

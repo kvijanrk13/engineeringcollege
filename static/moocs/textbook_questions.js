@@ -381,6 +381,8 @@ Object.assign(MACHINE_LEARNING_QUESTIONS[2],{img:'/static/moocs/diagrams/ml-deci
 Object.assign(MACHINE_LEARNING_QUESTIONS[3],{img:'/static/moocs/diagrams/ml-neural-network.svg',alt:'Feedforward neural network with backward error propagation arrows'});
 Object.assign(MACHINE_LEARNING_QUESTIONS[6],{img:'/static/moocs/diagrams/ml-reinforcement.svg',alt:'Agent environment reinforcement learning interaction loop'});
 
+const RAW_TEXTBOOK_BANK=[...QUESTIONS,...DATA_STRUCTURE_QUESTIONS,...DISCRETE_MATHEMATICS_QUESTIONS,...DATA_COMMUNICATION_QUESTIONS,...JAVA_QUESTIONS,...DBMS_QUESTIONS,...OPERATING_SYSTEM_QUESTIONS,...CRYPTOGRAPHY_QUESTIONS,...SOFTWARE_ENGINEERING_QUESTIONS,...ALGORITHM_QUESTIONS,...WEB_DEVELOPMENT_QUESTIONS,...C_PROGRAMMING_QUESTIONS,...MACHINE_LEARNING_QUESTIONS].map(item=>({...item,o:[...item.o]}));
+
 // Seven complete rounds provide 7 questions from every subject. COA and Data
 // Structures receive one additional question, producing exactly 100.
 const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,8);
@@ -453,3 +455,57 @@ Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
   }
   candidates.slice(0,3).forEach(index=>{ QUESTIONS[index].mode='fill'; });
 });
+
+const SET_ONE_QUESTIONS=QUESTIONS;
+const SUBJECT_ORDER=['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems','Operating Systems','Cryptography and Network Security','Software Engineering','Fundamentals of Computer Algorithms','HTML, XHTML, CSS and JavaScript','C Programming','Machine Learning'];
+const rawSubject=item=>item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':item.s.startsWith('DBMS')?'Database Management Systems':item.s.startsWith('Operating Systems')?'Operating Systems':item.s.startsWith('Cryptography')?'Cryptography and Network Security':item.s.startsWith('Software Engineering')?'Software Engineering':item.s.startsWith('Algorithms')?'Fundamentals of Computer Algorithms':item.s.startsWith('Web Development')?'HTML, XHTML, CSS and JavaScript':item.s.startsWith('C Programming')?'C Programming':'Machine Learning';
+const setOneTexts=new Set(SET_ONE_QUESTIONS.map(item=>item.q));
+const setTwoBySubject={};
+
+SUBJECT_ORDER.forEach((subject,subjectIndex)=>{
+  const required=subjectIndex<2?8:7;
+  const unused=RAW_TEXTBOOK_BANK.filter(item=>rawSubject(item)===subject&&!setOneTexts.has(item.q));
+  const source=RAW_TEXTBOOK_BANK.filter(item=>rawSubject(item)===subject);
+  const selected=unused.slice(0,required).map(item=>({...item,o:[...item.o]}));
+  for(let index=selected.length;index<required;index++){
+    const item=source[index%source.length];
+    selected.push({...item,o:[...item.o],q:`In a new ${item.t} application, which option gives the result governed by this principle: ${item.e}`});
+  }
+  setTwoBySubject[subject]=selected;
+});
+
+const SET_TWO_QUESTIONS=[];
+for(let round=0;round<7;round++) SUBJECT_ORDER.forEach(subject=>SET_TWO_QUESTIONS.push(setTwoBySubject[subject][round]));
+SET_TWO_QUESTIONS.push(setTwoBySubject.COA[7],setTwoBySubject['Data Structures'][7]);
+
+const SET_TWO_ANSWER_POSITIONS=Array.from({length:100},(_,index)=>index%4);
+for(let index=SET_TWO_ANSWER_POSITIONS.length-1;index>0;index--){
+  const swapIndex=Math.floor(Math.random()*(index+1));
+  [SET_TWO_ANSWER_POSITIONS[index],SET_TWO_ANSWER_POSITIONS[swapIndex]]=[SET_TWO_ANSWER_POSITIONS[swapIndex],SET_TWO_ANSWER_POSITIONS[index]];
+}
+SET_TWO_QUESTIONS.forEach((item,index)=>{
+  const subject=rawSubject(item);
+  item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
+  item.s=`Set 2 • ${item.level} • ${subject}`;
+  item.mode=undefined;
+  item.passage=undefined;
+  const position=SET_TWO_ANSWER_POSITIONS[index];
+  if(item.a!==position){
+    [item.o[item.a],item.o[position]]=[item.o[position],item.o[item.a]];
+    item.a=position;
+  }
+});
+[6,19,32,45,58,71,84,91,96,99].forEach(index=>{
+  SET_TWO_QUESTIONS[index].mode='paragraph';
+  SET_TWO_QUESTIONS[index].passage=`Apply the stated ${SET_TWO_QUESTIONS[index].t} conditions carefully. Select the conclusion that remains valid under the described textbook principle.`;
+});
+SUBJECT_ORDER.forEach(subject=>{
+  const candidates=SET_TWO_QUESTIONS.map((item,index)=>item.s.endsWith(subject)&&item.mode!=='paragraph'?index:-1).filter(index=>index>=0);
+  for(let index=candidates.length-1;index>0;index--){
+    const swapIndex=Math.floor(Math.random()*(index+1));
+    [candidates[index],candidates[swapIndex]]=[candidates[swapIndex],candidates[index]];
+  }
+  candidates.slice(0,3).forEach(index=>{ SET_TWO_QUESTIONS[index].mode='fill'; });
+});
+
+const QUESTION_SETS={1:SET_ONE_QUESTIONS,2:SET_TWO_QUESTIONS};
