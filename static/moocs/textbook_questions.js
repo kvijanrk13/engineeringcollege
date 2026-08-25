@@ -335,25 +335,58 @@ Object.assign(ALGORITHM_QUESTIONS[2],{img:'/static/moocs/diagrams/algo-merge-sor
 Object.assign(ALGORITHM_QUESTIONS[4],{img:'/static/moocs/diagrams/algo-dynamic-programming.svg',alt:'Dynamic programming table with reused subproblem values'});
 Object.assign(ALGORITHM_QUESTIONS[7],{img:'/static/moocs/diagrams/algo-branch-bound.svg',alt:'Branch and bound state space tree with a pruned node'});
 
-// Set 1 contains 10 COA questions and 9 questions from each other subject.
-const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,10);
-const MINING_QUESTIONS=QUESTIONS.slice(50,59);
+const WEB_DEVELOPMENT_QUESTIONS=[
+Q('Web Development 1','Document Structure','Which element contains metadata and the document title rather than visible page content?',['head','body','main','footer'],0,'The head contains document metadata, linked resources, and the title; visible content belongs in the body.'),
+Q('Web Development 2','Links and Navigation','In the diagrammed anchor, which attribute supplies the destination URL?',['href','src','alt','method'],0,'The href attribute identifies the resource or fragment to which an anchor links.'),
+Q('Web Development 3','Forms','For a form that changes server data and should not place values in the URL, the more appropriate HTTP method is:',['POST','GET','TRACE','HEAD'],0,'POST sends form data in the request body and is normally used for state-changing submissions.'),
+Q('Web Development 4','CSS Cascade','In the diagrammed cascade, two rules have equal importance and specificity. Which rule wins?',['The rule declared later','The rule declared first','Both are ignored','The shortest selector'],0,'Source order breaks a tie after origin, importance, and specificity have been compared.'),
+Q('Web Development 5','CSS Box Model','In the diagrammed box model, space between the content and border is called:',['Padding','Margin','Outline','Line height'],0,'Padding surrounds content inside the border; margin lies outside the border.'),
+Q('Web Development 6','JavaScript and DOM','Which DOM operation selects the first element matching the CSS selector .notice?',['document.querySelector(\'.notice\')','document.write(\'.notice\')','window.open(\'.notice\')','console.log(\'.notice\')'],0,'querySelector returns the first element matching a valid CSS selector.'),
+Q('Web Development 7','Events','A button click handler should be registered without overwriting other handlers by using:',['addEventListener','document.close','parseInt','setInterval only'],0,'addEventListener attaches an event listener while allowing other listeners on the same target.'),
+Q('Web Development 8','Form Validation','The diagrammed validation flow should prevent submission when:',['A required value fails its validation rule','Every field is valid','The DOM has loaded','CSS is stored externally'],0,'Client-side validation blocks the submit action when input does not satisfy the specified constraints.')
+];
+
+Object.assign(WEB_DEVELOPMENT_QUESTIONS[1],{img:'/static/moocs/diagrams/web-anchor.svg',alt:'HTML anchor element connecting one page to a destination URL'});
+Object.assign(WEB_DEVELOPMENT_QUESTIONS[3],{img:'/static/moocs/diagrams/web-cascade.svg',alt:'CSS cascade resolving two competing rules by source order'});
+Object.assign(WEB_DEVELOPMENT_QUESTIONS[4],{img:'/static/moocs/diagrams/web-box-model.svg',alt:'CSS box model showing content padding border and margin'});
+Object.assign(WEB_DEVELOPMENT_QUESTIONS[7],{img:'/static/moocs/diagrams/web-validation.svg',alt:'Client side form validation decision flow'});
+
+const C_PROGRAMMING_QUESTIONS=[
+Q('C Programming 1','Types and Operators','For integer variables a=7 and b=2, the value of a/b in C is:',['3','3.5','4','2'],0,'Integer division discards the fractional part when both operands have integer type.'),
+Q('C Programming 2','Control Flow','Which loop guarantees that its body executes at least once?',['do-while','while','for','No C loop'],0,'A do-while tests its condition after executing the loop body.'),
+Q('C Programming 3','Arrays and Pointers','In the diagrammed array, if p points to element a[0], the expression p+2 points to:',['a[2]','a[1]','The address two bytes later in every implementation','The entire array object'],0,'Pointer arithmetic advances in units of the pointed-to type, so p+2 addresses the third element.'),
+Q('C Programming 4','Pointers','The diagrammed declaration int *p means that p stores:',['The address of an int object','An int value only','A character array','A function result automatically'],0,'The asterisk in this declaration makes p a pointer to int.'),
+Q('C Programming 5','Functions and Recursion','In the diagrammed recursive call stack, each active function call has its own:',['Automatic local variables and return address','Global variables copied permanently','Source file','Preprocessor directives'],0,'Each activation record stores call-specific state such as parameters, locals, and the return address.'),
+Q('C Programming 6','Dynamic Memory','After the diagrammed malloc call succeeds, the allocated block should eventually be released with:',['free','fclose','return only','sizeof'],0,'Memory obtained from malloc remains allocated until it is passed to free or the process ends.'),
+Q('C Programming 7','File I/O','After fopen returns a non-null FILE pointer, which function closes that stream?',['fclose','free','close HTML','puts only'],0,'fclose flushes pending buffered output and closes a standard C FILE stream.')
+];
+
+Object.assign(C_PROGRAMMING_QUESTIONS[2],{img:'/static/moocs/diagrams/c-array-pointer.svg',alt:'C pointer arithmetic across consecutive integer array elements'});
+Object.assign(C_PROGRAMMING_QUESTIONS[3],{img:'/static/moocs/diagrams/c-pointer.svg',alt:'C pointer variable storing the address of an integer object'});
+Object.assign(C_PROGRAMMING_QUESTIONS[4],{img:'/static/moocs/diagrams/c-call-stack.svg',alt:'Recursive C function activation records on a call stack'});
+Object.assign(C_PROGRAMMING_QUESTIONS[5],{img:'/static/moocs/diagrams/c-dynamic-memory.svg',alt:'C pointer referencing a block allocated on the heap'});
+
+// Seven complete rounds provide 7 questions from every subject. The first
+// nine subjects receive one additional question, producing exactly 100.
+const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,8);
+const MINING_QUESTIONS=QUESTIONS.slice(50,58);
 const SET_ONE=[];
-for(let index=0;index<10;index++){
+for(let index=0;index<7;index++){
   SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
-  if(index<9){
-    SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
-    SET_ONE.push(MINING_QUESTIONS[index]);
-    SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
-    SET_ONE.push(DATA_COMMUNICATION_QUESTIONS[index]);
-    SET_ONE.push(JAVA_QUESTIONS[index]);
-    SET_ONE.push(DBMS_QUESTIONS[index]);
-    SET_ONE.push(OPERATING_SYSTEM_QUESTIONS[index]);
-    SET_ONE.push(CRYPTOGRAPHY_QUESTIONS[index]);
-    SET_ONE.push(SOFTWARE_ENGINEERING_QUESTIONS[index]);
-    SET_ONE.push(ALGORITHM_QUESTIONS[index]);
-  }
+  SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
+  SET_ONE.push(MINING_QUESTIONS[index]);
+  SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
+  SET_ONE.push(DATA_COMMUNICATION_QUESTIONS[index]);
+  SET_ONE.push(JAVA_QUESTIONS[index]);
+  SET_ONE.push(DBMS_QUESTIONS[index]);
+  SET_ONE.push(OPERATING_SYSTEM_QUESTIONS[index]);
+  SET_ONE.push(CRYPTOGRAPHY_QUESTIONS[index]);
+  SET_ONE.push(SOFTWARE_ENGINEERING_QUESTIONS[index]);
+  SET_ONE.push(ALGORITHM_QUESTIONS[index]);
+  SET_ONE.push(WEB_DEVELOPMENT_QUESTIONS[index]);
+  SET_ONE.push(C_PROGRAMMING_QUESTIONS[index]);
 }
+SET_ONE.push(ARCHITECTURE_QUESTIONS[7],DATA_STRUCTURE_QUESTIONS[7],MINING_QUESTIONS[7],DISCRETE_MATHEMATICS_QUESTIONS[7],DATA_COMMUNICATION_QUESTIONS[7],JAVA_QUESTIONS[7],DBMS_QUESTIONS[7],OPERATING_SYSTEM_QUESTIONS[7],CRYPTOGRAPHY_QUESTIONS[7]);
 QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
 
 // Randomize the answer-key positions on every exam load. The pool contains 25
@@ -365,7 +398,7 @@ for(let index=RANDOM_ANSWER_POSITIONS.length-1;index>0;index--){
 }
 
 QUESTIONS.forEach((item,index)=>{
-  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':item.s.startsWith('DBMS')?'Database Management Systems':item.s.startsWith('Operating Systems')?'Operating Systems':item.s.startsWith('Cryptography')?'Cryptography and Network Security':item.s.startsWith('Software Engineering')?'Software Engineering':'Fundamentals of Computer Algorithms';
+  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':item.s.startsWith('DBMS')?'Database Management Systems':item.s.startsWith('Operating Systems')?'Operating Systems':item.s.startsWith('Cryptography')?'Cryptography and Network Security':item.s.startsWith('Software Engineering')?'Software Engineering':item.s.startsWith('Algorithms')?'Fundamentals of Computer Algorithms':item.s.startsWith('Web Development')?'HTML, XHTML, CSS and JavaScript':'C Programming';
   item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
   item.s=`Set 1 • ${item.level} • ${subject}`;
   const randomPosition=RANDOM_ANSWER_POSITIONS[index];
@@ -379,15 +412,15 @@ QUESTIONS.forEach((item,index)=>{
 // applying the concept. They are distributed across all three levels.
 const PARAGRAPH_QUESTIONS={
   4:'A student sends a project file from a browser to a server. The data must reach the correct server process, be divided into manageable units, and—when reliability is requested—be reordered and recovered after loss.',
-  16:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
-  29:'Several worker threads belong to one process. Each has its own call stack and program counter, but they cooperate over common objects and open files.',
-  48:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
-  61:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
-  64:'A team reviews a module that performs one focused responsibility and communicates with other modules through a small, stable interface.',
-  92:'A sender treats a frame as a polynomial, appends zero bits, and performs modulo-2 division using a shared generator. The receiver repeats the calculation to detect transmission errors.',
-  96:'Two systems share a secret key. One system sends a message and an authentication tag; the receiver recomputes the tag to detect alteration and authenticate the source.',
-  97:'A tester converts a routine with decisions into a control-flow graph and wants a basis set that exercises every independent path.',
-  98:'A researcher proposes a polynomial-time transformation from a known NP-complete problem Y into a new decision problem X to establish the difficulty of X.'
+  18:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
+  33:'Several worker threads belong to one process. Each has its own call stack and program counter, but they cooperate over common objects and open files.',
+  43:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
+  58:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
+  74:'A team reviews a module that performs one focused responsibility and communicates with other modules through a small, stable interface.',
+  86:'Alice and Bob publish values derived from private exponents over an observable channel. Each combines the received public value with a private exponent and obtains the same key.',
+  87:'A tester studies a data-flow model whose arrows connect an external entity, a process, and a persistent store.',
+  89:'A page contains several independent scripts interested in a button click. Each script must react without replacing handlers registered by the others.',
+  90:'A program successfully opens a report through the standard C stream interface, reads it, and must release the stream and flush any pending buffered output.'
 };
 Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
   QUESTIONS[Number(index)].passage=passage;
@@ -396,7 +429,7 @@ Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
 
 // Convert three randomly chosen questions per subject into fill-in-the-blank
 // items for this attempt; all remaining items use selection buttons.
-['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems','Operating Systems','Cryptography and Network Security','Software Engineering','Fundamentals of Computer Algorithms'].forEach(subject=>{
+['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems','Operating Systems','Cryptography and Network Security','Software Engineering','Fundamentals of Computer Algorithms','HTML, XHTML, CSS and JavaScript','C Programming'].forEach(subject=>{
   const candidates=QUESTIONS.map((item,index)=>item.s.endsWith(subject)&&item.mode!=='paragraph'?index:-1).filter(index=>index>=0);
   for(let index=candidates.length-1;index>0;index--){
     const swapIndex=Math.floor(Math.random()*(index+1));

@@ -33,6 +33,8 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Operating Systems")
         self.assertContains(response, "Cryptography and Network Security")
         self.assertContains(response, "Fundamentals of Computer Algorithms")
+        self.assertContains(response, "HTML, XHTML, CSS and JavaScript")
+        self.assertContains(response, "C Programming")
         self.assertContains(response, "Software Engineering")
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertContains(response, "Question palette")
