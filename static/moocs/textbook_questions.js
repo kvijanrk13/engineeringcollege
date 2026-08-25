@@ -261,20 +261,97 @@ Object.assign(DBMS_QUESTIONS[8],{img:'/static/moocs/diagrams/dbms-bplus-tree.svg
 Object.assign(DBMS_QUESTIONS[10],{img:'/static/moocs/diagrams/dbms-query-plan.svg',alt:'Query plan with selection pushed below a join'});
 Object.assign(DBMS_QUESTIONS[13],{img:'/static/moocs/diagrams/dbms-two-phase-commit.svg',alt:'Two-phase commit messages between coordinator and participants'});
 
-// Set 1 alternates seven subjects: 15 each from COA and Data Structures,
-// and 14 from each remaining subject, producing exactly 100 questions.
-const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,15);
-const MINING_QUESTIONS=QUESTIONS.slice(50,64);
+const OPERATING_SYSTEM_QUESTIONS=[
+Q('Operating Systems 1','OS Services','Which mechanism lets a user program request a protected kernel service?',['System call','Cache hit','SQL view','Logic gate'],0,'A system call crosses the user-kernel boundary through a controlled interface.'),
+Q('Operating Systems 2','Processes','In the diagrammed lifecycle, a process waiting for I/O is in the:',['Running state','Waiting or blocked state','New state only','Terminated state'],1,'A process that cannot proceed until an event completes is blocked.'),
+Q('Operating Systems 3','Threads','Threads within one process normally share:',['Program counter values','Address space and open resources','Every stack frame','Thread identifiers'],1,'Threads have separate execution state but share their process resources and memory.'),
+Q('Operating Systems 4','CPU Scheduling','For the diagrammed ready queue, which nonpreemptive policy selects the shortest next CPU burst?',['FCFS','SJF','Round Robin','FIFO paging'],1,'Shortest-Job-First chooses the ready process with the smallest predicted CPU burst.'),
+Q('Operating Systems 5','Synchronization','A counting semaphore is changed atomically by:',['wait and signal operations','SQL SELECT and JOIN','compile and link','push and pop only'],0,'Atomic wait and signal operations coordinate access to a counted resource.'),
+Q('Operating Systems 6','Deadlocks','The diagrammed resource-allocation graph indicates deadlock when its cycle involves:',['Single-instance resource types','No processes','Only free resources','Acyclic dependencies'],0,'With one instance per resource type, a cycle is both necessary and sufficient for deadlock.'),
+Q('Operating Systems 7','Memory Management','Paging divides logical memory into fixed-size:',['Pages','Segments of arbitrary size','Files only','Processes'],0,'Logical pages map to equal-sized physical frames.'),
+Q('Operating Systems 8','Paging','In the diagrammed translation, the page-table entry supplies the:',['Frame number','Process priority','File name','CPU burst'],0,'The frame number combines with the page offset to form a physical address.'),
+Q('Operating Systems 9','Virtual Memory','A page fault occurs when the referenced page:',['Is not currently in physical memory','Is already in the TLB','Has offset zero','Belongs to the current process'],0,'The OS must bring a nonresident page into a frame before the access continues.'),
+Q('Operating Systems 10','Page Replacement','Belady’s anomaly can occur with:',['FIFO replacement','Optimal replacement','LRU stack property','Every stack algorithm'],0,'FIFO may produce more faults when more frames are allocated.'),
+Q('Operating Systems 11','File Systems','Which allocation method stores each file as a linked sequence of disk blocks?',['Linked allocation','Contiguous allocation only','Paging','Segmentation'],0,'Linked allocation lets each file block point to the next block.'),
+Q('Operating Systems 12','Protection','An access matrix associates subjects and objects with:',['Permitted access rights','CPU clock rates','Page sizes only','Network frequencies'],0,'Each matrix entry describes the operations a domain or subject may perform on an object.')
+];
+
+Object.assign(OPERATING_SYSTEM_QUESTIONS[1],{img:'/static/moocs/diagrams/os-process-states.svg',alt:'Operating system process state transition diagram'});
+Object.assign(OPERATING_SYSTEM_QUESTIONS[3],{img:'/static/moocs/diagrams/os-scheduling.svg',alt:'Ready queue with CPU burst lengths for scheduling'});
+Object.assign(OPERATING_SYSTEM_QUESTIONS[5],{img:'/static/moocs/diagrams/os-deadlock.svg',alt:'Cyclic resource allocation graph with two processes and resources'});
+Object.assign(OPERATING_SYSTEM_QUESTIONS[7],{img:'/static/moocs/diagrams/os-paging.svg',alt:'Logical address translated through a page table to physical memory'});
+
+const CRYPTOGRAPHY_QUESTIONS=[
+Q('Cryptography 1','Security Services','Which security property prevents unauthorized disclosure of information?',['Confidentiality','Availability','Nonrepudiation','Traffic routing'],0,'Confidentiality restricts information access to authorized parties.'),
+Q('Cryptography 2','Security Attacks','Passive eavesdropping primarily threatens:',['Confidentiality','Availability only','CPU scheduling','Database normalization'],0,'A passive listener attempts to learn message contents without modifying traffic.'),
+Q('Cryptography 3','Symmetric Encryption','In the diagrammed symmetric system, sender and receiver must share:',['The same secret key','Only public usernames','Different hash outputs','No cryptographic material'],0,'Symmetric encryption uses a shared secret for encryption and decryption.'),
+Q('Cryptography 4','Classical Ciphers','A Caesar cipher with shift 3 maps plaintext A to:',['A','B','C','D'],3,'Shifting A forward by three alphabet positions produces D.'),
+Q('Cryptography 5','Block Ciphers','The diagrammed AES structure repeatedly applies substitution, permutation, mixing, and:',['Round-key addition','SQL projection','Page replacement','Packet fragmentation'],0,'AES rounds transform state and combine it with round-key material.'),
+Q('Cryptography 6','Modes of Operation','Which block-cipher mode uses an unpredictable initialization vector and chains ciphertext blocks?',['ECB','CBC','Raw RSA','Caesar'],1,'CBC XORs each plaintext block with the previous ciphertext block and begins with an IV.'),
+Q('Cryptography 7','Public-Key Cryptography','To send confidential data to Bob using public-key encryption, Alice encrypts with:',['Alice’s private key','Bob’s public key','Bob’s private key','A public hash only'],1,'Only Bob should possess the private key that reverses encryption under his public key.'),
+Q('Cryptography 8','Key Exchange','The diagrammed Diffie–Hellman exchange enables two parties to derive:',['A shared secret over a public channel','Each other’s private exponent','An unencrypted password','A database foreign key'],0,'Each party combines its private exponent with the other party’s public value to obtain the same secret.'),
+Q('Cryptography 9','Hashes and MACs','A message authentication code provides integrity and:',['Source authentication using a shared secret','Confidentiality by itself','Disk allocation','Anonymous routing'],0,'A MAC lets parties sharing a key detect modification and authenticate the source.'),
+Q('Cryptography 10','Digital Signatures','In the diagrammed signature workflow, a verifier checks the signature using the signer’s:',['Public key','Private key','Symmetric session key only','Password database'],0,'The signer uses a private key and verifiers use the corresponding public key.'),
+Q('Cryptography 11','Firewalls','A firewall placed at a network boundary primarily enforces:',['Traffic access-control policy','Java inheritance','CPU burst prediction','Relational normalization'],0,'A firewall permits or blocks traffic according to configured security policy.')
+];
+
+Object.assign(CRYPTOGRAPHY_QUESTIONS[2],{img:'/static/moocs/diagrams/crypto-symmetric.svg',alt:'Symmetric encryption and decryption using one shared secret key'});
+Object.assign(CRYPTOGRAPHY_QUESTIONS[4],{img:'/static/moocs/diagrams/crypto-aes-rounds.svg',alt:'Simplified AES round transformation sequence'});
+Object.assign(CRYPTOGRAPHY_QUESTIONS[7],{img:'/static/moocs/diagrams/crypto-diffie-hellman.svg',alt:'Diffie Hellman public exchange producing a shared secret'});
+Object.assign(CRYPTOGRAPHY_QUESTIONS[9],{img:'/static/moocs/diagrams/crypto-signature.svg',alt:'Digital signature generation and public key verification'});
+
+const SOFTWARE_ENGINEERING_QUESTIONS=[
+Q('Software Engineering 1','Software Process','A software process provides a framework for:',['Organizing development activities and work products','Replacing every stakeholder','Encrypting network packets','Scheduling CPU bursts'],0,'A process structures activities, actions, tasks, milestones, and deliverables.'),
+Q('Software Engineering 2','Process Models','The diagrammed spiral model is explicitly driven by repeated:',['Risk analysis','Database normalization','Page replacement','Key exchange'],0,'Each spiral cycle evaluates objectives and risks before engineering the next increment.'),
+Q('Software Engineering 3','Requirements','A good software requirement should be testable and:',['Ambiguous','Verifiable','Implementation-dependent always','Secret from stakeholders'],1,'Clear, consistent, feasible, and verifiable requirements support validation.'),
+Q('Software Engineering 4','Use Cases','In the diagrammed use-case model, the external stick figure represents a:',['Database table','Actor','Software class only','Test stub'],1,'An actor is an external role that interacts with the system.'),
+Q('Software Engineering 5','Project Risk','Risk exposure is commonly estimated as probability multiplied by:',['Impact or loss','Lines of code only','Team size only','Number of passwords'],0,'Combining likelihood and consequence helps prioritize mitigation.'),
+Q('Software Engineering 6','Design Quality','Functional independence is encouraged by:',['High cohesion and low coupling','Low cohesion and high coupling','Global data everywhere','Duplicated modules'],0,'Focused modules with limited dependencies are easier to understand, test, and change.'),
+Q('Software Engineering 7','Analysis Modeling','In the diagrammed data-flow model, arrows represent:',['Data movement','Class inheritance','CPU interrupts','Encryption keys'],0,'DFD arrows show data flowing among processes, stores, and external entities.'),
+Q('Software Engineering 8','Testing','Boundary-value analysis concentrates tests:',['At and near input-domain limits','Only at average values','Only after deployment','On source comments'],0,'Defects often occur at boundaries, so tests include boundary and adjacent values.'),
+Q('Software Engineering 9','White-Box Testing','For the diagrammed flow graph, cyclomatic complexity estimates the number of:',['Independent execution paths','Database relations','Encryption rounds','Project stakeholders'],0,'Cyclomatic complexity provides an upper bound on basis paths for white-box testing.'),
+Q('Software Engineering 10','Configuration Management','After a baseline is established, a proposed change should first undergo:',['Formal change control','Untracked direct editing','Immediate production release','Deletion of version history'],0,'Change control evaluates, approves, records, and tracks modifications to baselined items.')
+];
+
+Object.assign(SOFTWARE_ENGINEERING_QUESTIONS[1],{img:'/static/moocs/diagrams/se-spiral.svg',alt:'Risk driven spiral software process model'});
+Object.assign(SOFTWARE_ENGINEERING_QUESTIONS[3],{img:'/static/moocs/diagrams/se-use-case.svg',alt:'Actor interacting with examination system use cases'});
+Object.assign(SOFTWARE_ENGINEERING_QUESTIONS[6],{img:'/static/moocs/diagrams/se-data-flow.svg',alt:'Data flow diagram with process data store and external entity'});
+Object.assign(SOFTWARE_ENGINEERING_QUESTIONS[8],{img:'/static/moocs/diagrams/se-flow-graph.svg',alt:'Control flow graph containing decisions and independent paths'});
+
+const ALGORITHM_QUESTIONS=[
+Q('Algorithms 1','Asymptotic Analysis','If T(n)=3n squared+7n+4, its tight asymptotic bound is:',['Theta(n squared)','Theta(n)','Theta(log n)','Theta(2 to the n)'],0,'The highest-order term dominates as n grows, so the running time is Theta(n squared).'),
+Q('Algorithms 2','Divide and Conquer','The diagrammed divide-and-conquer strategy solves a problem by:',['Splitting it into smaller subproblems and combining their solutions','Always examining every permutation','Using only a single loop','Discarding all recursive results'],0,'Divide-and-conquer recursively solves smaller instances and combines their results.'),
+Q('Algorithms 3','Merge Sort','In the diagrammed merge-sort tree, merging two sorted lists of total length n takes:',['Theta(n)','Theta(n squared)','Theta(log n)','Theta(1)'],0,'Each element is examined and copied a constant number of times during one merge.'),
+Q('Algorithms 4','Greedy Method','Kruskal\'s algorithm constructs a minimum spanning tree by repeatedly selecting:',['The lightest safe edge that does not form a cycle','The heaviest edge incident on the source','Every edge in input order','Only edges of equal weight'],0,'Kruskal adds a minimum-weight edge that connects different components.'),
+Q('Algorithms 5','Dynamic Programming','The diagrammed table is useful when subproblems overlap because it:',['Stores solutions so they are not recomputed','Forces exponential recursion','Removes the recurrence relation','Requires all edge weights to be negative'],0,'Dynamic programming records subproblem results and reuses them.'),
+Q('Algorithms 6','Shortest Paths','Dijkstra\'s standard greedy algorithm is guaranteed to find shortest paths when edge weights are:',['Nonnegative','All negative','Complex numbers only','Unknown and changing during execution'],0,'A negative edge can invalidate the settled-distance property used by Dijkstra\'s algorithm.'),
+Q('Algorithms 7','Backtracking','For the N-Queens problem, backtracking prunes a partial placement as soon as:',['Two placed queens attack one another','Every row has been filled successfully','The board size is even','The first queen is placed'],0,'A conflicting partial placement cannot lead to a valid complete arrangement.'),
+Q('Algorithms 8','Branch and Bound','In the diagrammed branch-and-bound tree, a live node may be pruned when its bound:',['Cannot improve the best feasible solution found so far','Is written as an integer','Has two children','Was generated before another node'],0,'A noncompetitive bound proves that no descendant can beat the incumbent solution.'),
+Q('Algorithms 9','NP-Completeness','To prove a new decision problem X is NP-hard using a known NP-complete problem Y, the required polynomial reduction direction is:',['Y reduces to X','X reduces to Y only','X equals Y syntactically','X and Y must use identical inputs'],0,'Reducing Y to X shows that an efficient solver for X would also solve the known hard problem Y.')
+];
+
+Object.assign(ALGORITHM_QUESTIONS[1],{img:'/static/moocs/diagrams/algo-divide-conquer.svg',alt:'Divide and conquer problem decomposition and combination tree'});
+Object.assign(ALGORITHM_QUESTIONS[2],{img:'/static/moocs/diagrams/algo-merge-sort.svg',alt:'Merge sort splitting and merging sequence'});
+Object.assign(ALGORITHM_QUESTIONS[4],{img:'/static/moocs/diagrams/algo-dynamic-programming.svg',alt:'Dynamic programming table with reused subproblem values'});
+Object.assign(ALGORITHM_QUESTIONS[7],{img:'/static/moocs/diagrams/algo-branch-bound.svg',alt:'Branch and bound state space tree with a pruned node'});
+
+// Set 1 contains 10 COA questions and 9 questions from each other subject.
+const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,10);
+const MINING_QUESTIONS=QUESTIONS.slice(50,59);
 const SET_ONE=[];
-for(let index=0;index<15;index++){
+for(let index=0;index<10;index++){
   SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
-  SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
-  if(index<14){
+  if(index<9){
+    SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
     SET_ONE.push(MINING_QUESTIONS[index]);
     SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
     SET_ONE.push(DATA_COMMUNICATION_QUESTIONS[index]);
     SET_ONE.push(JAVA_QUESTIONS[index]);
     SET_ONE.push(DBMS_QUESTIONS[index]);
+    SET_ONE.push(OPERATING_SYSTEM_QUESTIONS[index]);
+    SET_ONE.push(CRYPTOGRAPHY_QUESTIONS[index]);
+    SET_ONE.push(SOFTWARE_ENGINEERING_QUESTIONS[index]);
+    SET_ONE.push(ALGORITHM_QUESTIONS[index]);
   }
 }
 QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
@@ -288,7 +365,7 @@ for(let index=RANDOM_ANSWER_POSITIONS.length-1;index>0;index--){
 }
 
 QUESTIONS.forEach((item,index)=>{
-  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':'Database Management Systems';
+  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':item.s.startsWith('DBMS')?'Database Management Systems':item.s.startsWith('Operating Systems')?'Operating Systems':item.s.startsWith('Cryptography')?'Cryptography and Network Security':item.s.startsWith('Software Engineering')?'Software Engineering':'Fundamentals of Computer Algorithms';
   item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
   item.s=`Set 1 • ${item.level} • ${subject}`;
   const randomPosition=RANDOM_ANSWER_POSITIONS[index];
@@ -302,14 +379,15 @@ QUESTIONS.forEach((item,index)=>{
 // applying the concept. They are distributed across all three levels.
 const PARAGRAPH_QUESTIONS={
   4:'A student sends a project file from a browser to a server. The data must reach the correct server process, be divided into manageable units, and—when reliability is requested—be reordered and recovered after loss.',
-  12:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
-  32:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
-  46:'A provider must carry several continuous radio programs over one physical channel at the same time. Each program is shifted into a separate non-overlapping portion of the available spectrum.',
-  55:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
-  60:'A sender treats a frame as a polynomial, appends zero bits, and performs modulo-2 division using a shared generator. The receiver repeats the calculation to detect transmission errors.',
-  95:'During a routing fault, two routers repeatedly forward the same IPv4 datagram to each other. The protocol needs a header mechanism that eventually destroys the looping datagram.',
-  96:'A Java worker thread has called wait() while a shared queue is empty. Another thread later adds an item and signals waiting workers while holding the same monitor.',
-  97:'A coordinator must make one distributed transaction succeed everywhere or fail everywhere. It first asks each participant to make its decision durable and report whether it can commit.'
+  16:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
+  29:'Several worker threads belong to one process. Each has its own call stack and program counter, but they cooperate over common objects and open files.',
+  48:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
+  61:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
+  64:'A team reviews a module that performs one focused responsibility and communicates with other modules through a small, stable interface.',
+  92:'A sender treats a frame as a polynomial, appends zero bits, and performs modulo-2 division using a shared generator. The receiver repeats the calculation to detect transmission errors.',
+  96:'Two systems share a secret key. One system sends a message and an authentication tag; the receiver recomputes the tag to detect alteration and authenticate the source.',
+  97:'A tester converts a routine with decisions into a control-flow graph and wants a basis set that exercises every independent path.',
+  98:'A researcher proposes a polynomial-time transformation from a known NP-complete problem Y into a new decision problem X to establish the difficulty of X.'
 };
 Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
   QUESTIONS[Number(index)].passage=passage;
@@ -318,7 +396,7 @@ Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
 
 // Convert three randomly chosen questions per subject into fill-in-the-blank
 // items for this attempt; all remaining items use selection buttons.
-['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems'].forEach(subject=>{
+['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems','Operating Systems','Cryptography and Network Security','Software Engineering','Fundamentals of Computer Algorithms'].forEach(subject=>{
   const candidates=QUESTIONS.map((item,index)=>item.s.endsWith(subject)&&item.mode!=='paragraph'?index:-1).filter(index=>index>=0);
   for(let index=candidates.length-1;index>0;index--){
     const swapIndex=Math.floor(Math.random()*(index+1));
