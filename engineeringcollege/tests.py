@@ -26,6 +26,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Set 1")
         self.assertContains(response, "Set 2")
         self.assertContains(response, "New questions, no Set 1 repeats")
+        self.assertContains(response, "Computer Science &amp; Applications-II PYQ")
         self.assertContains(response, "Data Structures")
         self.assertContains(response, "Data Mining")
         self.assertContains(response, "Discrete Mathematics")
