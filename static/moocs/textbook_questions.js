@@ -554,12 +554,67 @@ Q('Set 3','Graph Theory','Every connected undirected graph with n vertices conta
 Q('Set 3','Data Structures','Data structures may be viewed at abstract, application, and implementation levels. Which option is correct?',['Abstract only','Application only','Implementation only','All of these'],3,'All three viewpoints are used to specify, apply, and realize a data structure.'),
 Q('Set 3','Graph Theory','A graph whose vertices split into two sets with no edge joining vertices within the same set is:',['Partite','Bipartite','Rooted','Weighted'],1,'That partition is the defining property of a bipartite graph.'),
 Q('Set 3','Linked Lists','Assuming the insertion position/node is already known, adding an element to a linked list takes:',['O(1)','O(n)','O(n²)','None of these'],0,'Insertion updates a constant number of links.'),
-Q('Set 3','Electronic Commerce','Smart cards are examples of:',['Electronic data interchange','ERP systems','Electronic data capture only','Electronic payment systems'],3,'Smart cards securely store credentials or value for electronic payment.'),
-Q('Set 3','Electronic Commerce','ATM stands for:',['Any Time Money','Automated Teller Machine','Automated Transfer of Money','All Time Monitoring'],1,'ATM expands to Automated Teller Machine.'),
+Q('Set 3','Artificial Intelligence','In A* search, the standard node evaluation function is:',['f(n)=g(n)+h(n)','f(n)=g(n)−h(n)','f(n)=h(n) only','f(n)=0'],0,'A* combines the known path cost g(n) with the estimated remaining cost h(n).'),
+Q('Set 3','Game Playing','Alpha–beta pruning applied to a minimax tree:',['Changes the optimal move','Returns the same minimax choice while examining fewer nodes','Works only without terminal utilities','Always expands every node'],1,'Alpha–beta pruning removes branches that cannot affect the final minimax decision.'),
 Q('Set 3','Data Warehousing','OLAP is fundamentally organized around:',['ER modeling','Data-cube structures','Only the relational model','Only hierarchical databases'],1,'OLAP presents measures across multiple dimensions as cubes.'),
 Q('Set 3','Data Warehousing','Which warehouse schema minimizes dimension-table redundancy through normalization?',['Star schema','Fact constellation','Snowflake schema','Star-cubing schema'],2,'A snowflake schema normalizes dimension hierarchies, reducing redundancy.'),
 Q('Set 3','Routing','Which historic network used dynamic or adaptive routing?',['TYMNET','SNA','DNA','ARPANET'],3,'ARPANET adopted adaptive routing techniques responsive to network conditions.')
 ];
-PYQ_2017_QUESTIONS.forEach((item,index)=>{item.s=`Set 3 • Paper II PYQ • ${item.t}`;item.level=index<17?'Level 1':index<34?'Level 2':'Level 3';item.mode='selection';});
+const priorSetTexts=new Set([...SET_ONE_QUESTIONS,...SET_TWO_QUESTIONS,...PYQ_2017_QUESTIONS].map(item=>item.q));
+const unusedSetThreeSources=RAW_TEXTBOOK_BANK.filter(item=>!priorSetTexts.has(item.q));
+const SET_THREE_ADDITIONS=[];
+for(let index=0;index<50;index++){
+  let item=unusedSetThreeSources[index];
+  if(!item){
+    const source=RAW_TEXTBOOK_BANK[index%RAW_TEXTBOOK_BANK.length];
+    item={...source,o:[...source.o],q:`Set 3 advanced application ${index+1}: Which option follows from this ${source.t} principle? ${source.e}`};
+  }else item={...item,o:[...item.o]};
+  while(priorSetTexts.has(item.q)) item.q=`Advanced ${item.q}`;
+  priorSetTexts.add(item.q);
+  SET_THREE_ADDITIONS.push(item);
+}
 
-const QUESTION_SETS={1:SET_ONE_QUESTIONS,2:SET_TWO_QUESTIONS,3:PYQ_2017_QUESTIONS};
+const SET_THREE_QUESTIONS=[];
+for(let index=0;index<50;index++) SET_THREE_QUESTIONS.push(PYQ_2017_QUESTIONS[index],SET_THREE_ADDITIONS[index]);
+const SET_THREE_ANSWER_POSITIONS=Array.from({length:100},(_,index)=>index%4);
+for(let index=SET_THREE_ANSWER_POSITIONS.length-1;index>0;index--){
+  const swapIndex=Math.floor(Math.random()*(index+1));
+  [SET_THREE_ANSWER_POSITIONS[index],SET_THREE_ANSWER_POSITIONS[swapIndex]]=[SET_THREE_ANSWER_POSITIONS[swapIndex],SET_THREE_ANSWER_POSITIONS[index]];
+}
+SET_THREE_QUESTIONS.forEach((item,index)=>{
+  const sourceLabel=PYQ_2017_QUESTIONS.includes(item)?'Paper II PYQ':'Textbook Extension';
+  item.s=`Set 3 • ${index<34?'Level 1':index<67?'Level 2':'Level 3'} • ${sourceLabel} • ${item.t}`;
+  item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
+  item.mode='selection';
+  item.passage=undefined;
+  const position=SET_THREE_ANSWER_POSITIONS[index];
+  if(item.a!==position){
+    [item.o[item.a],item.o[position]]=[item.o[position],item.o[item.a]];
+    item.a=position;
+  }
+});
+
+const QUESTION_SETS={1:SET_ONE_QUESTIONS,2:SET_TWO_QUESTIONS,3:SET_THREE_QUESTIONS};
+
+const UGC_NET_UNITS={
+  1:'Discrete Structures and Optimization',2:'Computer System Architecture',3:'Programming Languages and Computer Graphics',4:'Database Management Systems',5:'System Software and Operating System',6:'Software Engineering',7:'Data Structures and Algorithms',8:'Theory of Computation and Compilers',9:'Data Communication and Computer Networks',10:'Artificial Intelligence'
+};
+const syllabusUnitFor=item=>{
+  const text=`${item.s} ${item.t}`;
+  if(/Artificial Intelligence|Game Playing|Fuzzy|Genetic Algorithm|Expert System|Natural Language/i.test(text)) return 10;
+  if(/Formal Languages|Compiler Phases|Intermediate Code|Lexical|Parsing|Turing|Automata|Context.Free/i.test(text)) return 8;
+  if(/Data Structures|Algorithms|Trees|Linked Lists|Branch and Bound|Dynamic Programming|Greedy|Shortest Paths|Backtracking|NP.Completeness/i.test(text)) return 7;
+  if(/Software Engineering|Requirements|Software Metrics|Structured Design|Software Testing|Boundary Testing|Process Models|Design Quality|Project Risk|White.Box|Configuration Management/i.test(text)) return 6;
+  if(/Operating Systems|File Systems|System Calls|Assemblers|Linkers|Language Translation|Scheduling|Deadlock|Paging|Process|Virtual Memory|Memory Management/i.test(text)) return 5;
+  if(/Database|DBMS|Data Mining|Machine Learning|Normalization|Transactions|Concurrency Control|ER Modeling|Data Warehousing|OLAP|Classification|Clustering|Bayesian|Neural Networks|Concept Learning|Instance.Based|Reinforcement Learning|Frequent Patterns|Association Rules|Apriori|FP.Growth|Pattern Evaluation|Closed Patterns|Naive Bayes|Evaluation|Ensembles|Random Forests/i.test(text)) return 4;
+  if(/Java|C Programming|Web Development|HTML|JavaScript|Object.Oriented|C Declarations|Recursion|Bitwise Operators|Programming Languages|Polymorphism|Functions and Recursion/i.test(text)) return 3;
+  if(/Architecture|COA|Flip.Flops|Number Systems|Number Conversion|Registers|Digital Logic|Boolean Algebra|Computer Arithmetic|Pipelin|Cache|Multiprocessor|Basic Computer|Instruction Cycle|Instruction Format|Addressing Modes|Interrupts|Assembly Language|Subroutines|Microprogrammed Control|Control Unit|CPU Organization|I.O Organization|Interrupt Priority|Asynchronous Transfer|Memory Hierarchy|Memory Devices|Associative Memory|Synchronization/i.test(text)) return 2;
+  if(/Data Communications|Networking|Cryptography|Subnetting|Transport Protocols|Routing|Key Exchange|Firewalls|IP$|TCP|Network Security/i.test(text)) return 9;
+  if(/Discrete Mathematics|Relations|Combinatorics|Graph Theory|Logic|Counting|Sets|Group|Optimization/i.test(text)) return 1;
+  return 0;
+};
+Object.values(QUESTION_SETS).flat().forEach(item=>{
+  item.unit=syllabusUnitFor(item);
+  item.unitName=UGC_NET_UNITS[item.unit]||'Syllabus Review Required';
+  item.s=`${item.s} • Unit ${item.unit}`;
+});
