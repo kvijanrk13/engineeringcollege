@@ -28,6 +28,8 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Data Mining")
         self.assertContains(response, "Discrete Mathematics")
         self.assertContains(response, "Data Communications and Networking")
+        self.assertContains(response, "Java Programming")
+        self.assertContains(response, "Database Management Systems")
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertContains(response, "Question palette")
         self.assertContains(response, "/static/moocs/moocs.js")

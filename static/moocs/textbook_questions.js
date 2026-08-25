@@ -215,16 +215,67 @@ Object.assign(DATA_COMMUNICATION_QUESTIONS[8],{img:'/static/moocs/diagrams/crc-d
 Object.assign(DATA_COMMUNICATION_QUESTIONS[12],{img:'/static/moocs/diagrams/ipv4-subnet.svg',alt:'IPv4 address divided into a 26-bit network prefix and 6 host bits'});
 Object.assign(DATA_COMMUNICATION_QUESTIONS[16],{img:'/static/moocs/diagrams/tcp-handshake.svg',alt:'TCP three-way handshake between client and server'});
 
-// Set 1 alternates five subjects, with 20 questions from each subject.
-const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,20);
-const MINING_QUESTIONS=QUESTIONS.slice(50,70);
+const JAVA_QUESTIONS=[
+Q('Java 1','Java Platform','Java source code is normally compiled into:',['Native machine code only','Bytecode executed by the JVM','SQL statements','HTML elements'],1,'The Java compiler produces platform-neutral bytecode for a Java Virtual Machine.'),
+Q('Java 2','Java Platform','In the diagrammed Java execution flow, which component loads and runs bytecode?',['Text editor','JVM','Database server','Web browser DOM'],1,'The JVM loads, verifies, and executes compiled class bytecode.'),
+Q('Java 3','Data Types','Which Java primitive type stores a true or false value?',['char','int','boolean','String'],2,'boolean is the primitive logical type; String is a reference type.'),
+Q('Java 4','Operators','For int x=7, the expression x%3 evaluates to:',['0','1','2','3'],1,'The remainder after dividing 7 by 3 is 1.'),
+Q('Java 5','Control Flow','A break inside nested loops without a label terminates:',['All enclosing loops','Only the innermost loop','The JVM','The current method always'],1,'An unlabeled break exits the nearest enclosing loop or switch.'),
+Q('Java 6','Arrays','For int[] a=new int[5], the valid final index is:',['5','4','3 only','6'],1,'Java arrays are zero-indexed, so a five-element array uses indices 0 through 4.'),
+Q('Java 7','Classes','A constructor differs from an ordinary method because it:',['Must return int','Has the class name and no return type','Must be static','Cannot accept parameters'],1,'A constructor initializes a new object and has no declared return type.'),
+Q('Java 8','Methods','Method overloading requires methods to differ in their:',['Return type alone','Parameter lists','Access modifier only','Exception message'],1,'Overloaded methods share a name but have distinct parameter signatures.'),
+Q('Java 9','Inheritance','In the diagrammed hierarchy, class Dog inherits accessible members from:',['Object only, never Animal','Animal','Cat','No class'],1,'Dog extends Animal and inherits its accessible state and behavior.'),
+Q('Java 10','Interfaces','A concrete class implementing an interface must:',['Implement its abstract methods or remain abstract','Extend two concrete classes','Declare every field private','Avoid polymorphism'],0,'A non-abstract implementing class supplies implementations for required abstract methods.'),
+Q('Java 11','Exceptions','The diagrammed catch block runs when:',['No statement executes','A matching exception is thrown in try','The class is compiled only','The JVM starts normally'],1,'Control transfers from try to the first compatible catch handler.'),
+Q('Java 12','Exceptions','Which construct runs whether or not an exception is caught, barring abnormal termination?',['throw','finally','extends','import'],1,'A finally block is intended for cleanup after try/catch processing.'),
+Q('Java 13','Threads','Calling start() on a Thread normally causes the JVM to:',['Invoke run() on a new execution thread','Delete the object','Run the constructor again','Block forever immediately'],0,'start() schedules a new thread whose entry point is run().'),
+Q('Java 14','Threads','In the diagrammed lifecycle, a waiting thread becomes runnable after:',['Notification or its wait condition completes','Compilation fails','Its object is garbage-collected','The source file is deleted'],0,'Notification, timeout, or completion of the relevant condition allows the thread to contend again.'),
+Q('Java 15','Generics','The primary benefit of List<String> over a raw List is:',['Automatic network access','Compile-time type safety','Multiple inheritance','Faster CPU clock speed'],1,'Generic type arguments let the compiler detect incompatible element types.'),
+Q('Java 16','Collections and Lambdas','Which expression correctly represents a no-argument lambda returning 42?',['() -> 42','lambda = 42 only','return -> () 42','[] => 42'],0,'The empty parameter list is followed by the arrow and expression body.')
+];
+
+Object.assign(JAVA_QUESTIONS[1],{img:'/static/moocs/diagrams/java-execution.svg',alt:'Java source compiled to bytecode and executed by a JVM'});
+Object.assign(JAVA_QUESTIONS[8],{img:'/static/moocs/diagrams/java-inheritance.svg',alt:'Animal superclass with Dog and Cat subclasses'});
+Object.assign(JAVA_QUESTIONS[10],{img:'/static/moocs/diagrams/java-exception-flow.svg',alt:'Java try catch finally control flow'});
+Object.assign(JAVA_QUESTIONS[13],{img:'/static/moocs/diagrams/java-thread-states.svg',alt:'Simplified Java thread lifecycle states'});
+
+const DBMS_QUESTIONS=[
+Q('DBMS 1','Database Systems','Compared with separate application files, a DBMS most directly helps control:',['Data redundancy and inconsistent copies','CPU instruction length','Network signal frequency','Java bytecode'],0,'Centralized schemas and constraints reduce uncontrolled duplication and inconsistency.'),
+Q('DBMS 2','ER Modeling','In the diagrammed university model, the diamond labeled Enrolls represents a:',['Entity set','Relationship set','Attribute domain','Physical file'],1,'ER diamonds represent relationships between entity sets.'),
+Q('DBMS 3','Relational Model','A candidate key is a set of attributes that:',['May identify several tuples','Minimally and uniquely identifies each tuple','Must contain every attribute','Can contain only nulls'],1,'A candidate key is both unique and minimal.'),
+Q('DBMS 4','Integrity Constraints','A non-null foreign-key value must match:',['Any value in the same row','A referenced candidate or primary-key value','Only a view name','A disk page number'],1,'Referential integrity requires a corresponding referenced tuple.'),
+Q('DBMS 5','Relational Algebra','Which relational algebra operator selects columns?',['Selection','Projection','Cartesian product','Union'],1,'Projection retains specified attributes; selection retains qualifying rows.'),
+Q('DBMS 6','SQL','Which clause filters groups after aggregate computation?',['WHERE','HAVING','ORDER BY only','FROM'],1,'HAVING applies predicates to groups produced by GROUP BY.'),
+Q('DBMS 7','Normalization','A relation is in BCNF when every nontrivial functional dependency X→Y has X as a:',['Foreign key only','Superkey','Nullable attribute','Multivalued field'],1,'BCNF requires every determinant of a nontrivial dependency to be a superkey.'),
+Q('DBMS 8','SQL Aggregation','To report departments whose average salary exceeds 60000, the aggregate predicate belongs in:',['WHERE AVG(salary)>60000','HAVING AVG(salary)>60000','FROM AVG(salary)','ORDER BY only'],1,'Aggregate conditions over groups are expressed with HAVING.'),
+Q('DBMS 9','B+ Tree Indexes','In the diagrammed B+ tree, actual data entries or record references are stored at the:',['Root only','Leaf level','Every separator only','Buffer header'],1,'B+ tree leaves contain data entries and are typically linked for range scans.'),
+Q('DBMS 10','Hash Indexes','A hash index is especially effective for:',['Equality lookup','Ordered range scan','Sorting every row','Prefix hierarchy traversal'],0,'Hashing quickly locates a bucket for equality predicates but does not preserve order.'),
+Q('DBMS 11','Query Optimization','In the diagrammed plan, pushing a selective filter below a join usually:',['Increases intermediate rows','Reduces intermediate rows','Removes all indexes','Changes SQL semantics always'],1,'Early selection reduces the data processed by later operators when the rewrite is valid.'),
+Q('DBMS 12','Transactions','Atomicity means that a transaction:',['Executes completely or has no effect','Always runs alone','Never reads data','Must finish in one CPU instruction'],0,'Atomicity prevents a partially completed transaction from remaining visible.'),
+Q('DBMS 13','Concurrency Control','Strict two-phase locking holds exclusive locks until:',['The first read','Commit or abort','A second lock is requested','The query is parsed'],1,'Holding write locks to transaction end prevents cascading aborts and ensures strict schedules.'),
+Q('DBMS 14','Distributed Transactions','The diagrammed two-phase commit protocol first asks participants to:',['Delete their logs','Prepare and vote','Return query rows','Rebuild every index'],1,'The coordinator gathers prepare votes before announcing commit or abort.'),
+];
+
+Object.assign(DBMS_QUESTIONS[1],{img:'/static/moocs/diagrams/dbms-er.svg',alt:'ER diagram connecting Student and Course through Enrolls'});
+Object.assign(DBMS_QUESTIONS[8],{img:'/static/moocs/diagrams/dbms-bplus-tree.svg',alt:'B plus tree with internal separators and linked leaves'});
+Object.assign(DBMS_QUESTIONS[10],{img:'/static/moocs/diagrams/dbms-query-plan.svg',alt:'Query plan with selection pushed below a join'});
+Object.assign(DBMS_QUESTIONS[13],{img:'/static/moocs/diagrams/dbms-two-phase-commit.svg',alt:'Two-phase commit messages between coordinator and participants'});
+
+// Set 1 alternates seven subjects: 15 each from COA and Data Structures,
+// and 14 from each remaining subject, producing exactly 100 questions.
+const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,15);
+const MINING_QUESTIONS=QUESTIONS.slice(50,64);
 const SET_ONE=[];
-for(let index=0;index<20;index++){
+for(let index=0;index<15;index++){
   SET_ONE.push(ARCHITECTURE_QUESTIONS[index]);
   SET_ONE.push(DATA_STRUCTURE_QUESTIONS[index]);
-  SET_ONE.push(MINING_QUESTIONS[index]);
-  SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
-  SET_ONE.push(DATA_COMMUNICATION_QUESTIONS[index]);
+  if(index<14){
+    SET_ONE.push(MINING_QUESTIONS[index]);
+    SET_ONE.push(DISCRETE_MATHEMATICS_QUESTIONS[index]);
+    SET_ONE.push(DATA_COMMUNICATION_QUESTIONS[index]);
+    SET_ONE.push(JAVA_QUESTIONS[index]);
+    SET_ONE.push(DBMS_QUESTIONS[index]);
+  }
 }
 QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
 
@@ -237,7 +288,7 @@ for(let index=RANDOM_ANSWER_POSITIONS.length-1;index>0;index--){
 }
 
 QUESTIONS.forEach((item,index)=>{
-  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':'Data Communications and Networking';
+  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':'Database Management Systems';
   item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
   item.s=`Set 1 • ${item.level} • ${subject}`;
   const randomPosition=RANDOM_ANSWER_POSITIONS[index];
@@ -251,14 +302,14 @@ QUESTIONS.forEach((item,index)=>{
 // applying the concept. They are distributed across all three levels.
 const PARAGRAPH_QUESTIONS={
   4:'A student sends a project file from a browser to a server. The data must reach the correct server process, be divided into manageable units, and—when reliability is requested—be reordered and recovered after loss.',
-  9:'A message starts as application data. At the sender, each protocol layer adds control information needed by its peer layer. The receiver removes that information in reverse order.',
-  24:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
-  34:'A provider must carry several continuous radio programs over one physical channel at the same time. Each program is shifted into a separate non-overlapping portion of the available spectrum.',
-  44:'A sender treats a frame as a polynomial, appends zero bits, and performs modulo-2 division using a shared generator. The receiver repeats the calculation to detect transmission errors.',
-  62:'A retailer builds a multidimensional sales cube, but most combinations have negligible support. To reduce storage and computation, it materializes only cells whose aggregate count reaches a specified threshold.',
-  69:'During a routing fault, two routers repeatedly forward the same IPv4 datagram to each other. The protocol needs a header mechanism that eventually destroys the looping datagram.',
-  76:'Keys 50, 30, and 20 are inserted in that order into an initially empty AVL tree. The root becomes left-heavy, and the newly inserted key lies in the left subtree of the root’s left child.',
-  93:'A maintenance robot must traverse every corridor of a connected facility exactly once and return to its starting point. Corridors are modeled as edges and intersections as vertices.'
+  12:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
+  32:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
+  46:'A provider must carry several continuous radio programs over one physical channel at the same time. Each program is shifted into a separate non-overlapping portion of the available spectrum.',
+  55:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
+  60:'A sender treats a frame as a polynomial, appends zero bits, and performs modulo-2 division using a shared generator. The receiver repeats the calculation to detect transmission errors.',
+  95:'During a routing fault, two routers repeatedly forward the same IPv4 datagram to each other. The protocol needs a header mechanism that eventually destroys the looping datagram.',
+  96:'A Java worker thread has called wait() while a shared queue is empty. Another thread later adds an item and signals waiting workers while holding the same monitor.',
+  97:'A coordinator must make one distributed transaction succeed everywhere or fail everywhere. It first asks each participant to make its decision durable and report whether it can commit.'
 };
 Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
   QUESTIONS[Number(index)].passage=passage;
@@ -267,7 +318,7 @@ Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
 
 // Convert three randomly chosen questions per subject into fill-in-the-blank
 // items for this attempt; all remaining items use selection buttons.
-['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking'].forEach(subject=>{
+['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems'].forEach(subject=>{
   const candidates=QUESTIONS.map((item,index)=>item.s.endsWith(subject)&&item.mode!=='paragraph'?index:-1).filter(index=>index>=0);
   for(let index=candidates.length-1;index>0;index--){
     const swapIndex=Math.floor(Math.random()*(index+1));
