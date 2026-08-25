@@ -366,8 +366,23 @@ Object.assign(C_PROGRAMMING_QUESTIONS[3],{img:'/static/moocs/diagrams/c-pointer.
 Object.assign(C_PROGRAMMING_QUESTIONS[4],{img:'/static/moocs/diagrams/c-call-stack.svg',alt:'Recursive C function activation records on a call stack'});
 Object.assign(C_PROGRAMMING_QUESTIONS[5],{img:'/static/moocs/diagrams/c-dynamic-memory.svg',alt:'C pointer referencing a block allocated on the heap'});
 
-// Seven complete rounds provide 7 questions from every subject. The first
-// nine subjects receive one additional question, producing exactly 100.
+const MACHINE_LEARNING_QUESTIONS=[
+Q('Machine Learning 1','Learning Tasks','A well-defined learning problem specifies a task T, performance measure P, and:',['Experience E','Encryption key K','Database schema D','Compiler flag C'],0,'A program learns from experience E with respect to task T and performance measure P when its measured performance improves with E.'),
+Q('Machine Learning 2','Concept Learning','In the diagrammed version space, the candidate-elimination algorithm maintains:',['All hypotheses consistent with observed examples','Only the first positive example','Every syntactically possible program','A single random hypothesis regardless of data'],0,'The version space is the subset of hypotheses consistent with all training examples seen so far.'),
+Q('Machine Learning 3','Decision Trees','The diagrammed decision-tree learner prefers an attribute with high information gain because it:',['Produces a large expected reduction in entropy','Always has the most possible values','Guarantees a one-node tree','Ignores class labels'],0,'Information gain measures the expected decrease in class entropy after splitting on an attribute.'),
+Q('Machine Learning 4','Neural Networks','During backpropagation, the diagrammed network updates weights using error derivatives propagated:',['From output units toward earlier layers','Only from inputs directly to labels','Without a loss function','After deleting hidden units'],0,'Backpropagation applies the chain rule from the output error back through hidden layers.'),
+Q('Machine Learning 5','Bayesian Learning','For hypotheses h and evidence D, Bayes theorem makes the posterior P(h given D) proportional to:',['P(D given h) multiplied by P(h)','P(h given D) multiplied by itself','P(D) minus P(h)','Only the number of attributes'],0,'The posterior is likelihood times prior divided by the evidence probability.'),
+Q('Machine Learning 6','Instance-Based Learning','In k-nearest-neighbor classification, increasing k generally makes the decision boundary:',['Smoother but potentially more biased','Guaranteed perfectly accurate','Independent of the distance metric','More sensitive to a single neighbor'],0,'Voting over more neighbors reduces local variance but can smooth away useful detail.'),
+Q('Machine Learning 7','Reinforcement Learning','In the diagrammed reinforcement loop, Q-learning updates an action value using a reward and:',['The estimated value of the best next action','The true model parameters supplied by an oracle','Only the episode number','A supervised class label for every state'],0,'The temporal-difference target combines the immediate reward with the discounted best estimated next-state action value.')
+];
+
+Object.assign(MACHINE_LEARNING_QUESTIONS[1],{img:'/static/moocs/diagrams/ml-version-space.svg',alt:'Version space bounded by specific and general consistent hypotheses'});
+Object.assign(MACHINE_LEARNING_QUESTIONS[2],{img:'/static/moocs/diagrams/ml-decision-tree.svg',alt:'Decision tree splitting examples by outlook and humidity attributes'});
+Object.assign(MACHINE_LEARNING_QUESTIONS[3],{img:'/static/moocs/diagrams/ml-neural-network.svg',alt:'Feedforward neural network with backward error propagation arrows'});
+Object.assign(MACHINE_LEARNING_QUESTIONS[6],{img:'/static/moocs/diagrams/ml-reinforcement.svg',alt:'Agent environment reinforcement learning interaction loop'});
+
+// Seven complete rounds provide 7 questions from every subject. COA and Data
+// Structures receive one additional question, producing exactly 100.
 const ARCHITECTURE_QUESTIONS=QUESTIONS.slice(0,8);
 const MINING_QUESTIONS=QUESTIONS.slice(50,58);
 const SET_ONE=[];
@@ -385,8 +400,9 @@ for(let index=0;index<7;index++){
   SET_ONE.push(ALGORITHM_QUESTIONS[index]);
   SET_ONE.push(WEB_DEVELOPMENT_QUESTIONS[index]);
   SET_ONE.push(C_PROGRAMMING_QUESTIONS[index]);
+  SET_ONE.push(MACHINE_LEARNING_QUESTIONS[index]);
 }
-SET_ONE.push(ARCHITECTURE_QUESTIONS[7],DATA_STRUCTURE_QUESTIONS[7],MINING_QUESTIONS[7],DISCRETE_MATHEMATICS_QUESTIONS[7],DATA_COMMUNICATION_QUESTIONS[7],JAVA_QUESTIONS[7],DBMS_QUESTIONS[7],OPERATING_SYSTEM_QUESTIONS[7],CRYPTOGRAPHY_QUESTIONS[7]);
+SET_ONE.push(ARCHITECTURE_QUESTIONS[7],DATA_STRUCTURE_QUESTIONS[7]);
 QUESTIONS.splice(0,QUESTIONS.length,...SET_ONE);
 
 // Randomize the answer-key positions on every exam load. The pool contains 25
@@ -398,7 +414,7 @@ for(let index=RANDOM_ANSWER_POSITIONS.length-1;index>0;index--){
 }
 
 QUESTIONS.forEach((item,index)=>{
-  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':item.s.startsWith('DBMS')?'Database Management Systems':item.s.startsWith('Operating Systems')?'Operating Systems':item.s.startsWith('Cryptography')?'Cryptography and Network Security':item.s.startsWith('Software Engineering')?'Software Engineering':item.s.startsWith('Algorithms')?'Fundamentals of Computer Algorithms':item.s.startsWith('Web Development')?'HTML, XHTML, CSS and JavaScript':'C Programming';
+  const subject=item.s.startsWith('Architecture')?'COA':item.s.startsWith('Data Structures')?'Data Structures':item.s.startsWith('Data Mining')?'Data Mining':item.s.startsWith('Discrete Mathematics')?'Discrete Mathematics':item.s.startsWith('Data Communications')?'Data Communications and Networking':item.s.startsWith('Java')?'Java Programming':item.s.startsWith('DBMS')?'Database Management Systems':item.s.startsWith('Operating Systems')?'Operating Systems':item.s.startsWith('Cryptography')?'Cryptography and Network Security':item.s.startsWith('Software Engineering')?'Software Engineering':item.s.startsWith('Algorithms')?'Fundamentals of Computer Algorithms':item.s.startsWith('Web Development')?'HTML, XHTML, CSS and JavaScript':item.s.startsWith('C Programming')?'C Programming':'Machine Learning';
   item.level=index<34?'Level 1':index<67?'Level 2':'Level 3';
   item.s=`Set 1 • ${item.level} • ${subject}`;
   const randomPosition=RANDOM_ANSWER_POSITIONS[index];
@@ -412,15 +428,15 @@ QUESTIONS.forEach((item,index)=>{
 // applying the concept. They are distributed across all three levels.
 const PARAGRAPH_QUESTIONS={
   4:'A student sends a project file from a browser to a server. The data must reach the correct server process, be divided into manageable units, and—when reliability is requested—be reordered and recovered after loss.',
-  18:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
-  33:'Several worker threads belong to one process. Each has its own call stack and program counter, but they cooperate over common objects and open files.',
-  43:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
-  58:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
-  74:'A team reviews a module that performs one focused responsibility and communicates with other modules through a small, stable interface.',
-  86:'Alice and Bob publish values derived from private exponents over an observable channel. Each combines the received public value with a private exponent and obtains the same key.',
-  87:'A tester studies a data-flow model whose arrows connect an external entity, a process, and a persistent store.',
-  89:'A page contains several independent scripts interested in a button click. Each script must react without replacing handlers registered by the others.',
-  90:'A program successfully opens a report through the standard C stream interface, reads it, and must release the stream and flush any pending buffered output.'
+  19:'A learner saves Hello.java, compiles it into a class file, and moves that same class file from Windows to Linux. Each computer has a suitable runtime installed.',
+  35:'Several worker threads belong to one process. Each has its own call stack and program counter, but they cooperate over common objects and open files.',
+  46:'Two engineers compare links for a sensor network. Link X has greater bandwidth, while Link Y has the same bandwidth but a much stronger signal relative to noise. They use Shannon’s capacity relationship to compare the limits.',
+  62:'A payroll query groups employees by department and calculates AVG(salary). Management wants the output to contain only departments whose computed average exceeds 60000.',
+  79:'A team reviews a module that performs one focused responsibility and communicates with other modules through a small, stable interface.',
+  92:'Alice and Bob publish values derived from private exponents over an observable channel. Each combines the received public value with a private exponent and obtains the same key.',
+  93:'A tester studies a data-flow model whose arrows connect an external entity, a process, and a persistent store.',
+  95:'A page contains several independent scripts interested in a button click. Each script must react without replacing handlers registered by the others.',
+  97:'An agent repeatedly chooses an action, observes the next state, and receives a numerical reward without being given the correct action as a supervised label.'
 };
 Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
   QUESTIONS[Number(index)].passage=passage;
@@ -429,7 +445,7 @@ Object.entries(PARAGRAPH_QUESTIONS).forEach(([index,passage])=>{
 
 // Convert three randomly chosen questions per subject into fill-in-the-blank
 // items for this attempt; all remaining items use selection buttons.
-['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems','Operating Systems','Cryptography and Network Security','Software Engineering','Fundamentals of Computer Algorithms','HTML, XHTML, CSS and JavaScript','C Programming'].forEach(subject=>{
+['COA','Data Structures','Data Mining','Discrete Mathematics','Data Communications and Networking','Java Programming','Database Management Systems','Operating Systems','Cryptography and Network Security','Software Engineering','Fundamentals of Computer Algorithms','HTML, XHTML, CSS and JavaScript','C Programming','Machine Learning'].forEach(subject=>{
   const candidates=QUESTIONS.map((item,index)=>item.s.endsWith(subject)&&item.mode!=='paragraph'?index:-1).filter(index=>index>=0);
   for(let index=candidates.length-1;index>0;index--){
     const swapIndex=Math.floor(Math.random()*(index+1));
