@@ -30,7 +30,7 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const EXAM_CONFIG={1:{minutes:120,marks:200},2:{minutes:120,marks:200},3:{minutes:120,marks:200},4:{minutes:120,marks:200},5:{minutes:120,marks:200},6:{minutes:120,marks:200},7:{minutes:120,marks:200}};let current=0,seconds=7200,timer=null,selectedSet=1,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
+const $=id=>document.getElementById(id);const EXAM_CONFIG=Object.fromEntries(Array.from({length:10},(_,i)=>[i+1,{minutes:120,marks:200}]));let current=0,seconds=7200,timer=null,selectedSet=1,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
 const normalizeAnswer=value=>String(value??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
 const isCorrect=(q,answer)=>q.mode==='fill'?normalizeAnswer(answer)===normalizeAnswer(q.o[q.a]):q.mode==='multi'?answer===q.answers.join(','):answer===q.a;
 const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -60,11 +60,11 @@ render=function(){
   $('check-multiple').onclick=()=>{if(st.answer===null)return;st.multiChecked=true;render()};
 };
 
-// Guide candidates through the three 100-question papers in order.
+// Guide candidates through all ten 100-question papers in order.
 const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
 const updateNextSetPrompt=()=>{
   if($('result').hidden)return;
-  const hasNext=selectedSet>=1&&selectedSet<3;
+  const hasNext=selectedSet>=1&&selectedSet<10;
   nextSetPanel.hidden=!hasNext;
   if(!hasNext)return;
   const nextSet=selectedSet+1;
