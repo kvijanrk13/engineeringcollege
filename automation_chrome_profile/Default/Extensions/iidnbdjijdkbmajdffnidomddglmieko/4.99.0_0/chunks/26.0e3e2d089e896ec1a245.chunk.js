@@ -1,2 +1,0 @@
-var regeneratorRuntime;(self.webpackChunk=self.webpackChunk||[]).push([[26],{30026:(p,t,e)=>{e.d(t,{O9:()=>u,ht:()=>s,l:()=>a});const a="https://app.amplitude.com",s={US:a,EU:"https://app.eu.amplitude.com",STAGING:"https://apps.stag2.amplitude.com"},u=""}}]);
-//# sourceMappingURL=../sourceMap/chunks/26.0e3e2d089e896ec1a245.chunk.js.map
