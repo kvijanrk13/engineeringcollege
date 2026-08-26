@@ -120,6 +120,7 @@ MIDDLEWARE = [
     'dashboard.middleware.DatabaseConnectionRetryMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'engineeringcollege.moocs_middleware.MoocsExamLockMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

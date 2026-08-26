@@ -48,9 +48,46 @@ class MoocsPageTests(TestCase):
         session = self.client.session
         session["moocs_gmail_verified"] = True
         session["moocs_gmail_email"] = "student@gmail.com"
+        session["moocs_exam_lock"] = True
         session.save()
 
         response = self.client.get("/MOOCS/logout/")
 
         self.assertRedirects(response, "/MOOCS", fetch_redirect_response=False)
         self.assertNotIn("moocs_gmail_verified", self.client.session)
+        self.assertNotIn("moocs_exam_lock", self.client.session)
+
+    def test_moocs_lock_redirects_other_site_pages(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_exam_lock"] = True
+        session.save()
+
+        response = self.client.get("/")
+
+        self.assertRedirects(response, "/MOOCS", fetch_redirect_response=False)
+
+    def test_moocs_lock_allows_exam_and_static_assets(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_exam_lock"] = True
+        session.save()
+
+        self.assertEqual(self.client.get("/MOOCS").status_code, 200)
+        self.assertNotEqual(
+            self.client.get("/static/moocs/moocs.js").status_code,
+            302,
+        )
+
+    def test_moocs_lock_blocks_direct_static_page_navigation(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_exam_lock"] = True
+        session.save()
+
+        response = self.client.get(
+            "/static/moocs/moocs.js",
+            HTTP_SEC_FETCH_DEST="document",
+        )
+
+        self.assertRedirects(response, "/MOOCS", fetch_redirect_response=False)

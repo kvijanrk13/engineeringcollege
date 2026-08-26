@@ -3430,6 +3430,7 @@ def google_callback(request):
                 return redirect('/MOOCS')
             request.session['moocs_gmail_verified'] = True
             request.session['moocs_gmail_email'] = email
+            request.session['moocs_exam_lock'] = True
             request.session['google_oauth_email'] = email
             request.session['google_oauth_name'] = profile.get('name', '')
             audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
