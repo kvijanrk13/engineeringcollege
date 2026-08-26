@@ -30,11 +30,11 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const EXAM_CONFIG={1:{minutes:120,marks:200},2:{minutes:120,marks:200},3:{minutes:120,marks:200},4:{minutes:150,marks:150}};let current=0,seconds=7200,timer=null,selectedSet=1,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
+const $=id=>document.getElementById(id);const EXAM_CONFIG={1:{minutes:120,marks:200},2:{minutes:120,marks:200},3:{minutes:120,marks:200},4:{minutes:120,marks:200},5:{minutes:120,marks:200},6:{minutes:150,marks:150},7:{minutes:120,marks:188}};let current=0,seconds=7200,timer=null,selectedSet=1,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
 const normalizeAnswer=value=>String(value??'').trim().toLocaleLowerCase().replace(/\s+/g,' ');
-const isCorrect=(q,answer)=>q.mode==='fill'?normalizeAnswer(answer)===normalizeAnswer(q.o[q.a]):answer===q.a;
+const isCorrect=(q,answer)=>q.mode==='fill'?normalizeAnswer(answer)===normalizeAnswer(q.o[q.a]):q.mode==='multi'?answer===q.answers.join(','):answer===q.a;
 const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-function feedback(q,st){if(st.answer===null)return '';const ok=isCorrect(q,st.answer),correct=q.o[q.a];return `<div class="instant-feedback ${ok?'feedback-correct':'feedback-wrong'}"><strong>${ok?'Correct answer':'Incorrect answer'}</strong><span>${ok?'Well done.':`Correct answer: ${correct}`}</span><p>${q.e}</p></div>`}
+function feedback(q,st){if(st.answer===null||q.mode==='multi'&&!st.multiChecked)return '';const ok=isCorrect(q,st.answer),correct=q.mode==='multi'?q.answers.map(i=>q.o[i]).join('; '):q.o[q.a];return `<div class="instant-feedback ${ok?'feedback-correct':'feedback-wrong'}"><strong>${ok?'Correct answer':'Incorrect answer'}</strong><span>${ok?'Well done.':`Correct answer: ${correct}`}</span><p>${q.e}</p></div>`}
 function render(){const q=QUESTIONS[current],st=state[current];st.visited=true;$('section-label').textContent=q.s;$('question-number').textContent=current+1;$('question-total').textContent=QUESTIONS.length;$('topic').textContent=q.t;const passage=$('question-passage');passage.hidden=!q.passage;passage.textContent=q.passage||'';$('question-text').innerHTML=(q.img?`<img class="question-diagram" src="${q.img}" alt="${q.alt||'Question diagram'}">`:'')+`<span>${q.q}</span>`;if(q.mode==='fill'){$('options').innerHTML=`<div class="fill-answer-panel"><label for="fill-answer">Fill in the blank</label><div><input id="fill-answer" type="text" value="${st.answer===null?'':escapeHtml(st.answer)}" placeholder="Type the complete answer" autocomplete="off"><button id="check-fill" class="primary" type="button">Check answer</button></div></div>${feedback(q,st)}`;const check=()=>{const value=$('fill-answer').value.trim();if(!value)return;st.answer=value;st.review=false;render()};$('check-fill').onclick=check;$('fill-answer').onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();check()}}}else{$('options').innerHTML=q.o.map((x,i)=>`<button type="button" data-answer="${i}" class="option selection-button ${st.answer===i?'selected ':''}${st.answer!==null&&i===q.a?'correct-option':''}${st.answer===i&&i!==q.a?'wrong-option':''}"><span><b>${String.fromCharCode(65+i)}.</b> ${x}</span></button>`).join('')+feedback(q,st);document.querySelectorAll('[data-answer]').forEach(button=>button.onclick=()=>{st.answer=+button.dataset.answer;st.review=false;render()})}renderPalette()}
 function renderPalette(){$('palette-grid').innerHTML=state.map((s,i)=>`<button data-i="${i}" class="${i===current?'current ':''}${s.review?'reviewed':s.answer!==null?'answered':s.visited?'not-answered':'unseen'}">${i+1}</button>`).join('');document.querySelectorAll('#palette-grid button').forEach(b=>b.onclick=()=>{current=+b.dataset.i;render()});const answered=state.filter(x=>x.answer!==null).length,review=state.filter(x=>x.review).length;$('answered-count').textContent=answered;$('review-count').textContent=review;$('unanswered-count').textContent=QUESTIONS.length-answered}
 function move(n){current=Math.max(0,Math.min(QUESTIONS.length-1,current+n));render()}
@@ -42,15 +42,46 @@ function tick(){seconds--;const m=Math.floor(seconds/60),s=seconds%60;$('timer')
 function submit(auto=false){if(!auto&&!confirm('Submit the examination? You cannot change responses after submission.'))return;clearInterval(timer);let correct=0,incorrect=0;const topic={};QUESTIONS.forEach((q,i)=>{const ok=isCorrect(q,state[i].answer);if(ok)correct++;else if(state[i].answer!==null)incorrect++;topic[q.t]??={c:0,n:0};topic[q.t].n++;if(ok)topic[q.t].c++});const attempted=correct+incorrect;$('score').textContent=correct*2;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=(attempted?Math.round(correct*100/attempted):0)+'%';$('topic-analysis').innerHTML='<h2>Topic analysis</h2>'+Object.entries(topic).map(([k,v])=>`<div class="topic-row"><b>${k}</b><span class="topic-track"><i style="width:${v.c*100/v.n}%"></i></span><span>${v.c}/${v.n}</span></div>`).join('');$('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer),shown=answer===null?'Not attempted':q.mode==='fill'?escapeHtml(answer):q.o[answer];return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${q.q}</h3><p><b>Your answer:</b> ${shown}</p><p><b>Correct answer:</b> ${q.o[q.a]}</p><p>${q.e}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)}
 $('exam-set').onchange=e=>{selectedSet=Number(e.target.value);const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=()=>{QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};$('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
 
-// Keep navigation inside the authenticated examination. The server middleware
-// independently enforces the same rule for every same-origin request.
-history.replaceState({moocs:true},'',location.href);
-window.addEventListener('popstate',()=>location.replace('/MOOCS'));
-document.addEventListener('click',event=>{
-  const link=event.target.closest('a');
-  if(!link)return;
-  const destination=new URL(link.href,location.href);
-  const allowed=destination.origin===location.origin&&(destination.pathname.startsWith('/MOOCS'));
-  if(!allowed){event.preventDefault();location.replace('/MOOCS')}
-});
-window.open=()=>null;
+// Enhance the standard renderer with functional checkbox-based multi-selection.
+const renderSingleAnswerQuestion=render;
+render=function(){
+  renderSingleAnswerQuestion();
+  const q=QUESTIONS[current],st=state[current];
+  if(q.mode!=='multi')return;
+  const chosen=st.answer===null?[]:String(st.answer).split(',').filter(Boolean).map(Number);
+  $('options').innerHTML=q.o.map((option,index)=>`<label class="option multi-option ${chosen.includes(index)?'selected ':''}${st.answer!==null&&st.multiChecked&&q.answers.includes(index)?'correct-option':''}${st.answer!==null&&st.multiChecked&&chosen.includes(index)&&!q.answers.includes(index)?'wrong-option':''}"><input type="checkbox" data-multi-answer="${index}" ${chosen.includes(index)?'checked':''}><span><b>${String.fromCharCode(65+index)}.</b> ${option}</span></label>`).join('')+`<button id="check-multiple" class="primary check-multiple" type="button">Check selected answers</button>${feedback(q,st)}`;
+  document.querySelectorAll('[data-multi-answer]').forEach(box=>box.onchange=()=>{
+    const values=[...document.querySelectorAll('[data-multi-answer]:checked')].map(item=>Number(item.dataset.multiAnswer)).sort((a,b)=>a-b);
+    st.answer=values.length?values.join(','):null;
+    if(st.answer!==null)q.o[st.answer]=values.map(i=>q.o[i]).join('; ');
+    st.multiChecked=false;
+    renderPalette();
+  });
+  $('check-multiple').onclick=()=>{if(st.answer===null)return;st.multiChecked=true;render()};
+};
+
+// Guide candidates through the three 100-question papers in order.
+const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
+const updateNextSetPrompt=()=>{
+  if($('result').hidden)return;
+  const hasNext=selectedSet>=1&&selectedSet<3;
+  nextSetPanel.hidden=!hasNext;
+  if(!hasNext)return;
+  const nextSet=selectedSet+1;
+  $('next-set-message').textContent=`You completed Set ${selectedSet}. Continue to Set ${nextSet} for 100 new MCQs with no questions repeated from the earlier sets.`;
+  continueNextSet.textContent=`Continue to Set ${nextSet}`;
+  continueNextSet.dataset.nextSet=nextSet;
+};
+new MutationObserver(updateNextSetPrompt).observe($('result'),{attributes:true,attributeFilter:['hidden']});
+continueNextSet.onclick=()=>{
+  const nextSet=Number(continueNextSet.dataset.nextSet);
+  selectedSet=nextSet;
+  $('exam-set').value=String(nextSet);
+  $('exam-set').dispatchEvent(new Event('change'));
+  $('result').hidden=true;
+  $('welcome').hidden=false;
+  $('declaration').checked=false;
+  $('start-exam').disabled=true;
+  nextSetPanel.hidden=true;
+  window.scrollTo(0,0);
+};

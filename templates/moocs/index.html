@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>MOOCS — TS SET Computer Science Mock Examination</title>
-  <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}">
+  <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}?v=18">
   <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=6">
   <style>.set-picker{display:grid;gap:8px;margin:22px 0;padding:16px;border:1px solid #bfdbfe;border-radius:12px;background:#f7fbff}.set-picker span{color:#071b33;font-size:13px;font-weight:900}.set-picker select{width:100%;padding:12px;border:1px solid #9fc3e8;border-radius:9px;background:#fff;color:#172b4d;font:700 14px Inter,Segoe UI,Arial,sans-serif}</style>
 </head>
@@ -13,7 +13,7 @@
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
     <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
-    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="home-link" href="{% url 'moocs_logout' %}">Sign out</a>{% else %}<a class="home-link" href="/academics/">Academics</a>{% endif %}
+    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="home-link" href="/">Home</a><a class="home-link" href="/academics/">Academics</a><a class="home-link" href="{% url 'moocs_logout' %}">Sign out</a>{% else %}<a class="home-link" href="/academics/">Academics</a>{% endif %}
   </header>
 
   <main>
@@ -38,8 +38,8 @@
     <section id="welcome" class="welcome card">
       <p class="eyebrow">PYQ-informed computer-based examination</p>
       <h1><span id="selected-set-title">Set 1</span> — Computer Science Mock Examination</h1>
-      <p class="lead">Four syllabus-aligned papers, including dedicated Paper II and Paper III previous-question collections.</p>
-      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Original mixed paper (100)</option><option value="2">Set 2 — New questions, no Set 1 repeats (100)</option><option value="3">Set 3 — Paper II PYQ + unique textbook questions (100)</option><option value="4">Set 4 — Computer Science Paper III PYQ (75)</option></select></label>
+      <p class="lead">Seven syllabus-aligned papers, including dedicated Paper II and Paper III previous-question collections.</p>
+      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Original mixed paper (100)</option><option value="2">Set 2 — New questions, no Set 1 repeats (100)</option><option value="3">Set 3 — Paper II PYQ + unique textbook questions (100)</option><option value="4">Set 4 — Paper III PYQ + unique extensions (100)</option><option value="5">Set 5 — A-04-02 PYQ + unique extensions (100)</option><option value="6">Set 6 — A-04-03 Paper III PYQ (75)</option><option value="7">Set 7 — A-04-18 Computer Science scan (94 available)</option></select></label>
       <div class="pattern-grid">
         <div><strong id="pattern-questions">100</strong><span>Questions</span></div><div><strong id="pattern-minutes">120</strong><span>Minutes</span></div>
         <div><strong id="pattern-marks">200</strong><span>Maximum marks</span></div><div><strong>0</strong><span>Negative marks</span></div>
@@ -53,7 +53,7 @@
         <h2>UGC-NET syllabus coverage</h2>
         <div class="chips"><span>Unit 1: Discrete Structures</span><span>Unit 2: Architecture</span><span>Unit 3: Programming &amp; Graphics</span><span>Unit 4: DBMS &amp; Data Mining</span><span>Unit 5: System Software &amp; OS</span><span>Unit 6: Software Engineering</span><span>Unit 7: Data Structures &amp; Algorithms</span><span>Unit 8: TOC &amp; Compilers</span><span>Unit 9: Networks</span><span>Unit 10: Artificial Intelligence</span></div>
       </div>
-      <p class="course-sources">Question design is informed by the supplied UGC-NET syllabus, Paper II PYQs, and established computer-science textbooks. Examination lock is active until you sign out.</p>
+      <p class="course-sources">Question design is informed by the supplied UGC-NET syllabus, Paper II PYQs, and established computer-science textbooks. You may open Home, Academics, and other site pages while signed in.</p>
       <label class="declaration"><input id="declaration" type="checkbox"> I have read the instructions and am ready to begin.</label>
       <button id="start-exam" class="primary" disabled>Start examination</button>
     </section>
@@ -94,6 +94,11 @@
       <div class="result-grid"><div><strong id="correct">0</strong><span>Correct</span></div><div><strong id="incorrect">0</strong><span>Incorrect</span></div><div><strong id="unattempted">0</strong><span>Unattempted</span></div><div><strong id="accuracy">0%</strong><span>Accuracy</span></div></div>
       <div id="topic-analysis" class="topic-analysis"></div>
       <h2>Answer review and explanations</h2><div id="solutions" class="solutions"></div>
+      <div id="next-set-panel" class="next-set-panel" hidden>
+        <h2 id="next-set-heading">Ready for the next question paper?</h2>
+        <p id="next-set-message"></p>
+        <button id="continue-next-set" class="primary" type="button"></button>
+      </div>
       <button id="retry" class="primary">Take another attempt</button>
     </section>
     {% endif %}
@@ -101,7 +106,11 @@
   {% if moocs_gmail_verified %}
   <script src="{% static 'moocs/textbook_questions.js' %}?v=21"></script>
   <script src="{% static 'moocs/paper_three_questions.js' %}?v=1"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=17"></script>
+  <script src="{% static 'moocs/a0402_paper_two.js' %}?v=1"></script>
+  <script src="{% static 'moocs/a0403_paper_three.js' %}?v=1"></script>
+  <script src="{% static 'moocs/a0418_computer_science.js' %}?v=1"></script>
+  <script src="{% static 'moocs/question_enhancer.js' %}?v=2"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=24"></script>
   {% endif %}
 </body>
 </html>

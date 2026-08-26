@@ -78,4 +78,22 @@ const P3_RAW=[
 ];
 const p3Unit=t=>/Artificial|Logic Programming|Data Mining/i.test(t)?10:/Network|Protocol|Communicat|Coding|Line Coding|Error Control/i.test(t)?9:/Formal|Automata|Turing|Compiler|Parsing|SDT|Intermediate/i.test(t)?8:/Algorithm|Complexity|Optimization|Operations Research|Data Structure|Trees|AVL|Heaps|Expressions/i.test(t)?7:/Software|Testing|Metrics|UML/i.test(t)?6:/Operating|UNIX|Memory|Virtual/i.test(t)?5:/DBMS|SQL|ER Model|Relational|Warehouse|Database/i.test(t)?4:/C\+\+|Web|CSS|Windows|Graphics/i.test(t)?3:/Architecture|Cache|I\/O|Microprocessor/i.test(t)?2:1;
 const PAPER_THREE_QUESTIONS=P3_RAW.map((row,index)=>{const [t,q,correct,...wrong]=row;const pos=(index*3+1)%4,o=[...wrong];o.splice(pos,0,correct);const item={s:'',t,q,o,a:pos,e:`Correct answer: ${correct}.`,mode:'selection',level:index<25?'Level 1':index<50?'Level 2':'Level 3'};item.s=`Set 4 • ${item.level} • Paper III PYQ • ${t}`;item.unit=syllabusUnitFor(item)||p3Unit(t);item.unitName=UGC_NET_UNITS[item.unit];item.s+=` • Unit ${item.unit}`;return item});
-QUESTION_SETS[4]=PAPER_THREE_QUESTIONS;
+const SET_FOUR_PRIOR_TEXTS=new Set([...SET_ONE_QUESTIONS,...SET_TWO_QUESTIONS,...SET_THREE_QUESTIONS,...PAPER_THREE_QUESTIONS].map(item=>item.q));
+const SET_FOUR_SOURCE_POOL=RAW_TEXTBOOK_BANK.filter(item=>!SET_FOUR_PRIOR_TEXTS.has(item.q));
+const SET_FOUR_EXTENSIONS=Array.from({length:25},(_,index)=>{
+  const source=SET_FOUR_SOURCE_POOL[index]||RAW_TEXTBOOK_BANK[index%RAW_TEXTBOOK_BANK.length];
+  const item={...source,o:[...source.o]};
+  item.q=`Set 4 advanced syllabus application ${index+1}: ${source.q}`;
+  item.level=index<9?'Level 1':index<17?'Level 2':'Level 3';
+  item.mode='selection';
+  item.passage=source.passage;
+  const target=(index+2)%4;
+  if(item.a!==target){[item.o[item.a],item.o[target]]=[item.o[target],item.o[item.a]];item.a=target}
+  item.s=`Set 4 • ${item.level} • Unique Textbook Extension • ${item.t}`;
+  item.unit=syllabusUnitFor(item)||p3Unit(item.t);
+  item.unitName=UGC_NET_UNITS[item.unit];
+  item.s+=` • Unit ${item.unit}`;
+  return item;
+});
+const SET_FOUR_QUESTIONS=[...PAPER_THREE_QUESTIONS,...SET_FOUR_EXTENSIONS];
+QUESTION_SETS[4]=SET_FOUR_QUESTIONS;

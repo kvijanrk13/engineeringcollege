@@ -7,8 +7,6 @@ from django.urls import reverse
 
 def moocs_exam(request):
     verified = request.session.get("moocs_gmail_verified") is True
-    if verified:
-        request.session["moocs_exam_lock"] = True
     login_query = urlencode({"role": "student", "target": "moocs"})
     response = render(
         request,
@@ -31,5 +29,4 @@ def moocs_exam(request):
 def moocs_logout(request):
     request.session.pop("moocs_gmail_verified", None)
     request.session.pop("moocs_gmail_email", None)
-    request.session.pop("moocs_exam_lock", None)
     return redirect("moocs")
