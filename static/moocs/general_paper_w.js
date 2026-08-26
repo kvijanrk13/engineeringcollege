@@ -1,0 +1,60 @@
+/* Original practice adaptations based on the skills/topics in General Paper (W). */
+(function(){
+const R=[
+['Teaching','Which factor is least relevant to lesson planning?','Teacher political preference','Prior knowledge','Learning outcomes','Resources'],
+['Teaching','Choose the sound planning sequence.','Aims → learner needs → content → method → assessment','Method → assessment → aims → content → needs','Needs → method → aims → assessment → content','Assessment → content → method → aims → needs'],
+['Learners','Which variables directly affect learning outcomes?','Prior knowledge, development, ability and learning style','Only age and height','Only economic status','Physical appearance alone'],
+['Teaching','Which should not be used to judge teaching effectiveness?','Teacher physical appearance','Explanation clarity','Feedback quality','Outcome-assessment alignment'],
+['Methods','Many ideas must be generated without initial criticism. Use','Brainstorming','Lecture','Drill','Programmed instruction'],
+['Research','A sharper-than-normal distribution is','Leptokurtic','Platykurtic','Mesokurtic','Uniform'],
+['Research','A cross-sectional study observes mainly','Different subjects at one time','One subject for decades','Only post-intervention cases','Only archives'],
+['Research','Choose the empirical sequence.','Problem → hypothesis → data → analysis → conclusion','Conclusion → data → problem → hypothesis','Data → conclusion → hypothesis → problem','Hypothesis → conclusion → problem → data'],
+['Sampling','Stratified sampling is useful when a population','Has subgroups that must be represented','Has no variation','Has one member','Forbids probability'],
+['Measurement','A consistent test that misses its intended construct is','Reliable but not valid','Valid but not reliable','Both valid and unreliable','Neither measurable nor repeatable'],
+['Communication','Feedback primarily lets a sender','Check whether the message was understood','Increase noise','Eliminate the receiver','Avoid encoding'],
+['Communication','A semantic barrier occurs when','The same term has different meanings','A microphone fails','The room is warm','A cable is unplugged'],
+['Communication','Asking learners to paraphrase checks','Decoding and comprehension','Transmission power','Teacher appearance','Seating capacity'],
+['Reasoning','All secure systems are monitored; some monitored systems are distributed. What follows?','No secure–distributed relation necessarily follows','All distributed systems are secure','No secure system is distributed','All monitored systems are secure'],
+['Reasoning','Given P→Q and ¬Q, infer','¬P by modus tollens','P by affirming the consequent','Q','P∧Q'],
+['Reasoning','Negate: Every student submitted exactly one report.','Some student did not submit exactly one report','No student submitted','Every student submitted two','Some report was submitted'],
+['Aptitude','A value rises 20% then falls 20%. Net result?','4% decrease','No change','4% increase','40% decrease'],
+['Aptitude','Mean of five values is 18. Replace 12 by 22. New mean?','20','22','19','28'],
+['Aptitude','A takes 12 days and B 18 days. Together they take','36/5 days','30 days','15 days','6 days'],
+['Data Interpretation','Of 240 students, 35% study science. Non-science count?','156','84','120','204'],
+['Data Interpretation','A: 80 students, 75% pass; B: 120, 60% pass. Combined rate?','66%','67.5%','135%','60%'],
+['Data Interpretation','For 3,5,5,7,10, median and mode are','5 and 5','6 and 5','5 and 6','7 and 10'],
+['ICT','VoLTE expands to','Voice over Long-Term Evolution','Video over Local Transmission Equipment','Voice-oriented Line Transfer Exchange','Virtual Online Learning Environment'],
+['ICT','Software that retrieves and renders web pages is a','Browser','Firewall','Compiler','Spreadsheet'],
+['ICT','Unsolicited bulk electronic messages are','Spam','Cookies','Patches','Firewalls'],
+['ICT','A firewall primarily','Controls traffic using security rules','Writes source code','Replaces all protocols','Changes monitor resolution'],
+['ICT','Which statement is accurate?','ICT supports teaching but cannot replace pedagogical judgment','ICT always replaces teachers','ICT guarantees learning','ICT removes assessment'],
+['ICT','Which maps host names to IP addresses?','DNS','SMTP','Bluetooth','HTML'],
+['Environment','Yellow biomedical waste is commonly routed for','Incineration/deep burial as permitted','Untreated recycling','Food-waste storage','Water discharge'],
+['Environment','Order atmospheric layers upward.','Troposphere → stratosphere → mesosphere → thermosphere','Thermosphere → mesosphere → stratosphere → troposphere','Stratosphere → troposphere → thermosphere → mesosphere','Mesosphere → troposphere → stratosphere → thermosphere'],
+['Environment','Coral reefs flourish mainly in','Warm shallow clear tropical seas','Deep polar oceans','Turbid fresh water','Dry interiors'],
+['Environment','A classic EIA matrix is the','Leopold matrix','Pascal matrix','Hamming matrix','Markov matrix'],
+['Environment','National parks exemplify','In-situ conservation','Ex-situ conservation only','Industrial conservation','No conservation'],
+['Environment','Population doubles; per-capita use is fixed. Total demand is','Twice the original','Half','Unchanged','Four times'],
+['Higher Education','NIRF means','National Institutional Ranking Framework','National Institute Research Fund','New Indian Rating Formula','National Information Resource Federation'],
+['Higher Education','Accreditation primarily','Evaluates quality against criteria','Awards patents','Conducts school admissions','Replaces all examinations'],
+['Higher Education','A women-in-technical-education scholarship advances','Equity and access','Advertising','Secrecy','Invigilation'],
+['Higher Education','Which least supports a knowledge economy?','Preventing all knowledge sharing','Expanding access','Creating networks','Supporting research'],
+['Higher Education','Outcome-based assessment maps evidence to','Learning outcomes','Teacher seniority','Building size','Holidays'],
+['Higher Education','Choose the correct institute-location pair.','National Institute of Nutrition — Hyderabad','NIO — Manesar','NBRC — Dona Paula','UPES — Mumbai'],
+['Teaching','A rubric improves assessment by','Making criteria and levels explicit','Hiding criteria','Eliminating feedback','Giving identical marks'],
+['Research Ethics','Using another author’s ideas as one’s own is','Plagiarism','Triangulation','Randomization','Peer debriefing'],
+['Research Ethics','Best protection in a sensitive survey?','Consent, data minimization and confidentiality','Publish identifiers','Compel participation','Collect unrelated data'],
+['Statistics','Independent A,B: P(A)=0.4, P(B)=0.5. Find P(A∩B).','0.20','0.90','0.45','0.10'],
+['Statistics','Correlation −0.85 indicates','Strong negative linear association','Weak positive association','Proven causation','No linear association'],
+['Reasoning','Some algorithms are recursive; all recursive procedures use a stack. Therefore','Some algorithms use a stack','Every algorithm is recursive','No algorithm uses a stack','Every stack is an algorithm'],
+['Aptitude','120 km at 40 km/h then 120 km at 60 km/h. Average speed?','48 km/h','50 km/h','45 km/h','52 km/h'],
+['Data Interpretation','An index rises from 160 to 184. Percentage increase?','15%','24%','12%','18.4%'],
+['Communication','Noticing only evidence that supports an existing belief is','Confirmation bias','Redundancy','Channel capacity','Physical proximity'],
+['Higher Education','Peer review primarily','Assesses rigor and scholarly contribution','Guarantees truth','Replaces data collection','Conceals conflicts']];
+const P=R.map((r,i)=>{const[t,q,c,...w]=r,a=(i*3+2)%4,o=w.slice();o.splice(a,0,c);return{s:`General Paper (W) • ${t}`,t,q,o,a,e:`Correct answer: ${c}. Review the defining rule or calculation shown in the question and eliminate options that violate it.`,mode:i%13===7?'fill':'selection',unit:0,unitName:'General Paper: Teaching, Research and General Aptitude'}});
+P[14].img='/static/moocs/diagrams/set-intersection.svg';P[14].alt='Set relationship diagram for logical inference';
+P[20].img='/static/moocs/diagrams/general-data-bars.svg';P[20].alt='Pass-count comparison for two departments';
+P[45].img='/static/moocs/diagrams/stack.svg';P[45].alt='Call-stack diagram for a recursive procedure';
+const counts=[4,4,4,4,3,25,6];let at=0;
+counts.forEach((n,k)=>{const sn=k+1,set=QUESTION_SETS[sn],add=P.slice(at,at+n);at+=n;if(set.length>=100)set.splice(100-n,n,...add);else set.push(...add);set.length=100;set.forEach((x,i)=>{const l=i<34?'Level 1':i<67?'Level 2':'Level 3';x.level=l;x.s=x.s.replace(/Level [123]/,l);if(!/Level [123]/.test(x.s))x.s=`Set ${sn} • ${l} • ${x.s}`})});
+})();
