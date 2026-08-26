@@ -58,3 +58,7 @@ tools/node_modules/
 tools/eng.traineddata
 tools/coa-page-*
 tmp_coa_extraction/
+
+# Browser automation profiles
+automation_chrome_profile/
+automation_edge_profile/

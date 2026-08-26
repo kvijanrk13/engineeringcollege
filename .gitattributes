@@ -1,0 +1,5 @@
+# Git attributes to normalize line endings
+* text=auto
+
+# Ensure .gitignore always uses LF line endings in the repository
+.gitignore text eol=lf
