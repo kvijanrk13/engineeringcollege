@@ -40,10 +40,11 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Unit 10: Artificial Intelligence")
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertContains(response, "Question palette")
+        self.assertContains(response, "Sl.No.")
         self.assertContains(response, "/static/moocs/moocs.js")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
-        self.assertContains(response, "/static/moocs/moocs.js?v=27")
+        self.assertContains(response, "/static/moocs/moocs.js?v=28")
         self.assertContains(response, "/static/moocs/textbook_questions.js")
         self.assertContains(response, "/static/moocs/feedback.css")
 
