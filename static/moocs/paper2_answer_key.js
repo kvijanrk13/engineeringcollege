@@ -52,5 +52,6 @@ const rows=[
 ['Operating Systems','Which scheduling statements are correct? I. Windows uses priority-based pre-emptive scheduling. II. UNIX uses priority-based pre-emptive scheduling. III. Windows uses round-robin pre-emptive scheduling. IV. UNIX uses round-robin pre-emptive scheduling.',['I and II','III and IV','I and IV','II and III'],0],
 ['Mobile Networks','For GPRS, identify the correct statement(s): I. It is a third-generation mobile-telephony scheme. II. It is an overlay packet network on GSM.',['I and II only','I only','II only','None'],2]
 ];
-QUESTION_SETS[11]=rows.map((row,index)=>({s:`Set 11 • Paper II Answer Key • Question ${index+1}`,t:row[0],q:row[1],o:row[2],a:row[3],e:`The supplied Computer Science Paper II answer key marks option ${String.fromCharCode(65+row[3])} as correct.`,mode:'selection',level:'Paper II',unit:0,unitName:row[0]}));
+const generatedContinuation=(QUESTION_SETS[11]||[]).slice(50,100);
+QUESTION_SETS[11]=rows.map((row,index)=>({s:`Set 11 • Paper II Answer Key • Question ${index+1}`,t:row[0],q:row[1],o:row[2],a:row[3],e:`The supplied Computer Science Paper II answer key marks option ${String.fromCharCode(65+row[3])} as correct.`,mode:'selection',level:'Paper II',unit:0,unitName:row[0]})).concat(generatedContinuation);
 })();
