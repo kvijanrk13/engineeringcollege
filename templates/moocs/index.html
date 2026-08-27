@@ -104,6 +104,7 @@
     {% endif %}
   </main>
   {% if moocs_gmail_verified %}
+  {{ moocs_gmail_email|json_script:"moocs-profile-email" }}
   <script src="{% static 'moocs/textbook_questions.js' %}?v=21"></script>
   <script src="{% static 'moocs/paper_three_questions.js' %}?v=1"></script>
   <script src="{% static 'moocs/a0402_paper_two.js' %}?v=1"></script>
@@ -113,7 +114,7 @@
   <script src="{% static 'moocs/additional_paper_mix.js' %}?v=1"></script>
   <script src="{% static 'moocs/extended_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/question_enhancer.js' %}?v=2"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=26"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=27"></script>
   {% endif %}
 </body>
 </html>
