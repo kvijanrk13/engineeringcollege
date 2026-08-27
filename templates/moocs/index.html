@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}?v=19">
   <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=6">
   <style>.set-picker{display:grid;gap:8px;margin:22px 0;padding:16px;border:1px solid #bfdbfe;border-radius:12px;background:#f7fbff}.set-picker span{color:#071b33;font-size:13px;font-weight:900}.set-picker select{width:100%;padding:12px;border:1px solid #9fc3e8;border-radius:9px;background:#fff;color:#172b4d;font:700 14px Inter,Segoe UI,Arial,sans-serif}</style>
+  <style>.question-heading{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:8px;margin:18px 0}.question-number-prefix{padding-top:4px;color:#071b33;font-size:21px;font-weight:900;line-height:1.55}.question-number-prefix::after{content:"."}.question-heading h2{margin:0}</style>
 </head>
 <body>
   <header class="topbar">
@@ -65,10 +66,10 @@
       </div>
       <div class="exam-layout">
         <section class="question-card card">
-          <div class="question-meta"><span id="section-label">Set 1</span><span><b id="question-number">1</b> of <b id="question-total">100</b></span><span>Marks: +2 / 0</span></div>
+          <div class="question-meta"><span id="section-label">Set 1</span><span><b id="question-total">100</b> MCQs</span><span>Marks: +2 / 0</span></div>
           <div class="topic" id="topic"></div>
           <div id="question-passage" class="question-passage" hidden></div>
-          <h2 id="question-text"></h2>
+          <div class="question-heading"><b id="question-number" class="question-number-prefix">1</b><h2 id="question-text"></h2></div>
           <div id="options" class="options"></div>
           <div class="question-actions">
             <button id="mark-review" class="review">Mark for review &amp; next</button>
