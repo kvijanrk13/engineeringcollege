@@ -41,6 +41,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertContains(response, "Question palette")
         self.assertContains(response, "Sl.No.")
+        self.assertContains(response, 'class="question-slno"')
         self.assertContains(response, "/static/moocs/moocs.js")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
