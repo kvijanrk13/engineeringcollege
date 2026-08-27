@@ -30,7 +30,7 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const EXAM_CONFIG=Object.fromEntries(Array.from({length:10},(_,i)=>[i+1,{minutes:60,marks:200}]));let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
+const $=id=>document.getElementById(id);const EXAM_CONFIG=Object.fromEntries(Array.from({length:11},(_,i)=>[i+1,{minutes:i===10?30:60,marks:i===10?100:200}]));let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
 const profileEmail=JSON.parse($('moocs-profile-email')?.textContent||'""').trim().toLocaleLowerCase();
 const progressKey=`moocs-test-progress:${profileEmail}`;
 const readProgress=()=>{try{return profileEmail?JSON.parse(localStorage.getItem(progressKey)||'{}'):{}}catch(error){return {}}};
@@ -72,18 +72,18 @@ render=function(){
   $('check-multiple').onclick=()=>{if(st.answer===null)return;st.multiChecked=true;render()};
 };
 
-// Guide candidates through all ten 100-question papers in order.
+// Guide candidates through the ten 100-question papers and the Paper II continuation.
 const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
 const savedProgress=readProgress();
-const initialSet=savedProgress.active?.set||Math.min(10,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
+const initialSet=savedProgress.active?.set||Math.min(11,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
 selectedSet=initialSet;$('exam-set').value=String(initialSet);$('exam-set').dispatchEvent(new Event('change'));
 const updateNextSetPrompt=()=>{
   if($('result').hidden)return;
-  const hasNext=selectedSet>=1&&selectedSet<10;
+  const hasNext=selectedSet>=1&&selectedSet<11;
   nextSetPanel.hidden=!hasNext;
   if(!hasNext)return;
   const nextSet=selectedSet+1;
-  $('next-set-message').textContent=`You completed Set ${selectedSet}. Continue to Set ${nextSet} for 100 new MCQs with no questions repeated from the earlier sets.`;
+  $('next-set-message').textContent=`You completed Set ${selectedSet}. Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`;
   continueNextSet.textContent=`Continue to Set ${nextSet}`;
   continueNextSet.dataset.nextSet=nextSet;
 };
