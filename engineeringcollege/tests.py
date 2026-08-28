@@ -55,7 +55,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/content_lock.css")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
-        self.assertContains(response, "/static/moocs/moocs.js?v=35")
+        self.assertContains(response, "/static/moocs/moocs.js?v=36")
         self.assertContains(response, 'id="download-explanations"')
         self.assertContains(response, "Download explanations PDF")
         self.assertContains(response, 'id="reset-exam"')
@@ -66,6 +66,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/d8704_paper_two.js")
         self.assertContains(response, "/static/moocs/pdf_archive_sets.js")
         self.assertContains(response, "/static/moocs/assessment_pattern.js")
+        self.assertContains(response, "/static/moocs/gate_archive_sets.js")
         self.assertContains(response, "/static/moocs/feedback.css")
 
     def test_moocs_logout_closes_exam_session(self):

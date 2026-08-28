@@ -30,7 +30,7 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const MAX_EXAM_SET=40;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
+const $=id=>document.getElementById(id);const MAX_EXAM_SET=50;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
 const profileEmail=JSON.parse($('moocs-profile-email')?.textContent||'""').trim().toLocaleLowerCase();
 const progressKey=`moocs-test-progress:${profileEmail}`;
 const readProgress=()=>{try{return profileEmail?JSON.parse(localStorage.getItem(progressKey)||'{}'):{}}catch(error){return {}}};
