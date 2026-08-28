@@ -16,6 +16,7 @@ const sourceFiles = [
   'paper1_2014.js',
   'd8704_paper_two.js',
   'pdf_archive_sets.js',
+  'assessment_pattern.js',
 ];
 
 let source = sourceFiles
@@ -43,6 +44,13 @@ source += `
       if (!Number.isInteger(question.a) || question.a < 0 || question.a >= question.o.length) {
         errors.push(\`\${location} has an invalid answer key.\`);
       }
+      const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
+      if (question.mode !== expectedMode) {
+        errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);
+      }
+      if (expectedMode === 'multi' && (!Array.isArray(question.answers) || question.answers.length !== 2)) {
+        errors.push(\`\${location} must have exactly two multiple-selection answers.\`);
+      }
       const normalized = question.q.toLocaleLowerCase().replace(/\\s+/g, ' ').trim();
       if (seenQuestions.has(normalized)) {
         errors.push(\`\${location} repeats \${seenQuestions.get(normalized)}.\`);
@@ -57,7 +65,7 @@ source += `
     process.exitCode = 1;
     return;
   }
-  console.log(\`Validated 40 sets and \${total} unique MCQs.\`);
+  console.log(\`Validated 40 sets, \${total} unique MCQs, and the 8+1+1 assessment pattern.\`);
 })();
 `;
 

@@ -7,6 +7,7 @@
   <title>MOOCS — TS SET Computer Science Mock Examination</title>
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}?v=19">
   <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'moocs/content_lock.css' %}?v=1">
   <style>.set-picker{display:grid;gap:8px;margin:22px 0;padding:16px;border:1px solid #bfdbfe;border-radius:12px;background:#f7fbff}.set-picker span{color:#071b33;font-size:13px;font-weight:900}.set-picker select{width:100%;padding:12px;border:1px solid #9fc3e8;border-radius:9px;background:#fff;color:#172b4d;font:700 14px Inter,Segoe UI,Arial,sans-serif}</style>
   <style>.question-heading{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:8px;margin:18px 0}.question-number-prefix{padding-top:4px;color:#071b33;font-size:21px;font-weight:900;line-height:1.55}.question-number-prefix::after{content:"."}.question-heading h2{margin:0}</style>
 </head>
@@ -107,6 +108,7 @@
     </section>
     {% endif %}
   </main>
+  <script src="{% static 'moocs/content_lock.js' %}?v=1"></script>
   {% if moocs_gmail_verified %}
   {{ moocs_gmail_email|json_script:"moocs-profile-email" }}
   <script src="{% static 'moocs/textbook_questions.js' %}?v=21"></script>
@@ -117,11 +119,12 @@
   <script src="{% static 'moocs/general_paper_w.js' %}?v=1"></script>
   <script src="{% static 'moocs/additional_paper_mix.js' %}?v=1"></script>
   <script src="{% static 'moocs/extended_sets.js' %}?v=5"></script>
-  <script src="{% static 'moocs/question_enhancer.js' %}?v=2"></script>
+  <script src="{% static 'moocs/question_enhancer.js' %}?v=3"></script>
   <script src="{% static 'moocs/paper2_answer_key.js' %}?v=2"></script>
   <script src="{% static 'moocs/paper1_2014.js' %}?v=1"></script>
   <script src="{% static 'moocs/d8704_paper_two.js' %}?v=1"></script>
   <script src="{% static 'moocs/pdf_archive_sets.js' %}?v=1"></script>
+  <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
   <script src="{% static 'moocs/moocs.js' %}?v=34"></script>
   {% endif %}
 </body>

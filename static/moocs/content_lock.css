@@ -1,0 +1,21 @@
+html,body,body *{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-user-drag:none!important;
+  -webkit-touch-callout:none!important;
+}
+
+img,a{
+  -webkit-user-drag:none!important;
+}
+
+@media print{
+  body>*{display:none!important}
+  body::before{
+    content:"Printing MOOCS examination content is not permitted.";
+    display:block;
+    padding:40px;
+    color:#111;
+    font:700 18px Arial,sans-serif;
+  }
+}

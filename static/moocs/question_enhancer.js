@@ -33,11 +33,4 @@ Object.values(QUESTION_SETS).forEach((questions,setIndex)=>questions.forEach((qu
   const prompt=COMPLEXITY_PROMPTS[question.level]||COMPLEXITY_PROMPTS['Level 2'];
   question.q=`${prompt} ${question.q}`;
   question.e=`${question.e} Solution derivation: ${derivationFor(question)}`;
-  if(question.mode==='fill'||index%7!==setIndex%7)return;
-  const second=(question.a+2)%4;
-  question.o[second]=`The selected conclusion is also consistent with the standard ${question.t} principle described in the explanation.`;
-  question.answers=[question.a,second].sort((a,b)=>a-b);
-  question.mode='multi';
-  question.q+=` Select all statements that apply; exactly ${question.answers.length} options are correct.`;
-  question.e=`Both the substantive answer and its supporting ${question.t} principle must be selected. ${question.e}`;
 }));

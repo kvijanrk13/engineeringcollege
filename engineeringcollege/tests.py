@@ -14,6 +14,8 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "target=moocs")
         self.assertNotContains(response, "Question palette")
         self.assertNotContains(response, "/static/moocs/moocs.js")
+        self.assertContains(response, "/static/moocs/content_lock.js")
+        self.assertContains(response, "/static/moocs/content_lock.css")
 
     def test_moocs_exam_console_renders(self):
         session = self.client.session
@@ -49,6 +51,8 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, 'class="question-number-prefix"')
         self.assertNotContains(response, "Sl.No.")
         self.assertContains(response, "/static/moocs/moocs.js")
+        self.assertContains(response, "/static/moocs/content_lock.js")
+        self.assertContains(response, "/static/moocs/content_lock.css")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
         self.assertContains(response, "/static/moocs/moocs.js?v=34")
@@ -59,6 +63,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/paper1_2014.js")
         self.assertContains(response, "/static/moocs/d8704_paper_two.js")
         self.assertContains(response, "/static/moocs/pdf_archive_sets.js")
+        self.assertContains(response, "/static/moocs/assessment_pattern.js")
         self.assertContains(response, "/static/moocs/feedback.css")
 
     def test_moocs_logout_closes_exam_session(self):
