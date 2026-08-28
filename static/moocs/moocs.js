@@ -30,7 +30,7 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const EXAM_CONFIG=Object.fromEntries(Array.from({length:21},(_,i)=>[i+1,{minutes:60,marks:200}]));let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
+const $=id=>document.getElementById(id);const MAX_EXAM_SET=30;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
 const profileEmail=JSON.parse($('moocs-profile-email')?.textContent||'""').trim().toLocaleLowerCase();
 const progressKey=`moocs-test-progress:${profileEmail}`;
 const readProgress=()=>{try{return profileEmail?JSON.parse(localStorage.getItem(progressKey)||'{}'):{}}catch(error){return {}}};
@@ -47,6 +47,24 @@ function move(n){current=Math.max(0,Math.min(QUESTIONS.length-1,current+n));save
 function tick(){seconds--;if(seconds%10===0)saveAttempt();const m=Math.floor(seconds/60),s=seconds%60;$('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(seconds<=300)$('timer').style.color='#ff7b89';if(seconds<=0)submit(true)}
 function submit(auto=false){if(!auto&&!confirm('Submit the examination? You cannot change responses after submission.'))return;clearInterval(timer);examInProgress=false;markSetCompleted();let correct=0,incorrect=0;const topic={};QUESTIONS.forEach((q,i)=>{const ok=isCorrect(q,state[i].answer);if(ok)correct++;else if(state[i].answer!==null)incorrect++;topic[q.t]??={c:0,n:0};topic[q.t].n++;if(ok)topic[q.t].c++});const attempted=correct+incorrect;$('score').textContent=correct*2;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=(attempted?Math.round(correct*100/attempted):0)+'%';$('topic-analysis').innerHTML='<h2>Topic analysis</h2>'+Object.entries(topic).map(([k,v])=>`<div class="topic-row"><b>${k}</b><span class="topic-track"><i style="width:${v.c*100/v.n}%"></i></span><span>${v.c}/${v.n}</span></div>`).join('');$('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer),shown=answer===null?'Not attempted':q.mode==='fill'?escapeHtml(answer):q.o[answer];return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${q.q}</h3><p><b>Your answer:</b> ${shown}</p><p><b>Correct answer:</b> ${q.o[q.a]}</p><p>${q.e}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)}
 $('exam-set').onchange=e=>{selectedSet=Number(e.target.value);const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=()=>{QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};$('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
+$('reset-exam').onclick=()=>{
+  if(!confirm('Reset all saved MOOCS progress and start again from Set 1?'))return;
+  clearInterval(timer);
+  if(profileEmail){try{localStorage.removeItem(progressKey)}catch(error){/* Continue with the in-memory reset. */}}
+  selectedSet=1;
+  current=0;
+  seconds=EXAM_CONFIG[1].minutes*60;
+  state=QUESTION_SETS[1].map(()=>({answer:null,visited:false,review:false}));
+  examInProgress=false;
+  $('exam-set').value='1';
+  $('exam-set').dispatchEvent(new Event('change'));
+  $('declaration').checked=false;
+  $('start-exam').disabled=true;
+  $('exam').hidden=true;
+  $('result').hidden=true;
+  $('welcome').hidden=false;
+  window.scrollTo(0,0);
+};
 
 // Browsers show their own Leave/Stay wording for tab close and refresh. Save first so
 // choosing Leave always preserves this profile's attempt. Site links use an explicit prompt.
@@ -72,14 +90,14 @@ render=function(){
   $('check-multiple').onclick=()=>{if(st.answer===null)return;st.multiChecked=true;render()};
 };
 
-// Guide candidates through all twenty-one 100-question papers in order.
+// Guide candidates through all thirty 100-question papers in order.
 const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
 const savedProgress=readProgress();
-const initialSet=savedProgress.active?.set||Math.min(21,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
+const initialSet=savedProgress.active?.set||Math.min(MAX_EXAM_SET,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
 selectedSet=initialSet;$('exam-set').value=String(initialSet);$('exam-set').dispatchEvent(new Event('change'));
 const updateNextSetPrompt=()=>{
   if($('result').hidden)return;
-  const hasNext=selectedSet>=1&&selectedSet<21;
+  const hasNext=selectedSet>=1&&selectedSet<MAX_EXAM_SET;
   nextSetPanel.hidden=!hasNext;
   if(!hasNext)return;
   const nextSet=selectedSet+1;

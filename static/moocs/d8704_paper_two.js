@@ -1,0 +1,60 @@
+/* UGC-NET Computer Science and Applications, December 2004, Paper II (D-8704). */
+(function(){
+const rows=[
+['Discrete Mathematics','A ∨ A = A is called:',['Identity law','De Morgan’s law','Idempotent law','Complement law'],2],
+['Discrete Mathematics','If f(x) = x + 1 and g(x) = x + 3, then f ∘ f ∘ f ∘ f is:',['g','g + 1','g⁴','None of the above'],1],
+['Theory of Computation','Context-free languages are closed under: (i) intersection, (ii) union, (iii) complementation, and (iv) Kleene star.',['(i) and (iv)','(i) and (iii)','(ii) and (iv)','(ii) and (iii)'],2],
+['Graph Theory','Which of the following can be the degree sequence of a simple graph? (i) 1,2,3,4,5; (ii) 3,4,5,6,7; (iii) 1,4,5,8,6; (iv) 3,4,5,6.',['(i) and (ii)','(iii) and (iv)','(iii) and (ii)','None of these lists'],3],
+['Discrete Mathematics','If Zₘ denotes the integers modulo m, which are fields under addition and multiplication modulo m? (i) Z₂₃, (ii) Z₂₉, (iii) Z₃₁, (iv) Z₃₃.',['(i) only','(i) and (ii) only','(i), (ii) and (iii) only','(i), (ii), (iii) and (iv)'],2],
+['Digital Logic','Which 4-bit binary number is equal to its own two’s complement?',['1100','1001','1000','1111'],2],
+['Digital Logic','When a tri-state logic device is in its third state:',['It draws low current','It does not draw any current','It draws very high current','It presents a high impedance'],3],
+['Digital Logic','Which connective is not associative?',['AND','OR','EX-OR','NAND'],3],
+['Digital Logic','Essential hazards may occur in:',['Combinational logic circuits','Synchronous sequential logic circuits','Asynchronous sequential logic circuits working in fundamental mode','Asynchronous sequential logic circuits working in pulse mode'],2],
+['Digital Logic','The characteristic equation of a T flip-flop is:',['Qₙ₊₁ = TQ̅ₙ + T̅Qₙ','Qₙ₊₁ = T + Qₙ','Qₙ₊₁ = TQₙ','Qₙ₊₁ = T̅Q̅ₙ'],0],
+['Programming','Suppose integer variables x and y have hexadecimal values 0x5AB6 and 0x61CD. What is x bitwise-AND y in hexadecimal?',['0x5089','0x4084','0x78A4','0x3AD1'],1],
+['Programming','Given int i=4, j=3, k=0; after k = ++i - --j + i++ - --j + j++; what are i, j and k?',['7, 2, 8','5, 2, 10','6, 2, 8','4, 2, 8'],2],
+['Programming','In C integer arithmetic, what is the value of 2*3/4 - 3/4*2?',['0','1','1.5','None of the above'],1],
+['Object-Oriented Programming','A function object:',['Is an instance of a class for which operator() is a member function','Is an instance of a class for which operator→ is a member function','Is a pointer to any function','Is a member function of a class'],0],
+['Object-Oriented Programming','Polymorphism most directly permits:',['Only template functions','Runtime selection of behavior within a class hierarchy','Only another name for operator overloading','Only virtual inheritance'],1],
+['DBMS','The E-R model is expressed in terms of (i) entities, (ii) relationships among entities, and (iii) attributes of entities.',['(i) and (iii)','(i) and (ii)','(ii) and (iii)','All of (i), (ii) and (iii)'],3],
+['DBMS','Specialization is a ______ process.',['Top-down','Bottom-up','Both top-down and bottom-up','None of the above'],0],
+['DBMS','The completeness constraint has which rules?',['Supertype and subtype','Total specialization and partial specialization','Specialization and generalization','All of the above'],1],
+['DBMS','The entity type on which a ______ entity type depends is called the identifying owner.',['Strong','Relationship','Weak','E-R'],2],
+['DBMS','Match the normal forms: (i) 2NF, (ii) 3NF, (iii) 4NF, (iv) 5NF with (a) transitive dependencies eliminated, (b) multivalued dependencies removed, (c) no partial functional dependencies, (d) no join dependency.',['i-c, ii-a, iii-b, iv-d','i-d, ii-c, iii-a, iv-b','i-d, ii-c, iii-b, iv-a','i-a, ii-b, iii-c, iv-d'],0],
+['Data Structures','What item is at the root after inserting 1, 11, 3, 10, 8, 4, 6, 5, 7, 9, 2 into an empty splay tree?',['1','2','4','8'],1],
+['Data Structures','Quadratic probing uses h(y)=y mod 100. Key 4594 is inserted and the first three attempted locations are occupied. Which cell is tried next?',['2','3','9','97'],1],
+['Graph Theory','A weighted graph is:',['Necessarily bidirectional','Necessarily directed','A graph having a number associated with each edge or arc','A graph that eliminates the table method'],2],
+['Data Structures','Which operation is supported in constant time by a doubly linked list, but not by a singly linked list, given a current node?',['Advance','Backup','First','Retrieve'],1],
+['Algorithms','How much auxiliary space is used by in-place heapsort?',['O(1)','O(log n)','O(n)','O(n²)'],0],
+['Computer Networks','Transport-layer error control is needed because errors may occur:',['Only from transmission-line noise','In routers or intermediate network operation','Only from out-of-sequence delivery','Only from packet losses'],1],
+['Computer Networks','Making sure that all data packets of a message are delivered to the destination is ______ control.',['Error','Loss','Sequence','Duplication'],1],
+['Computer Networks','Which OSI transport classes are intended for a reliable, perfect network service?',['TP0 and TP2','TP1 and TP3','TP0, TP1 and TP3','TP0, TP1, TP2, TP3 and TP4'],0],
+['Computer Networks','Which OSI transport classes are intended for a residual-error network service?',['TP0 and TP2','TP1 and TP3','TP1, TP3 and TP4','TP0, TP1, TP2, TP3 and TP4'],2],
+['Computer Networks','A virtual circuit is associated with a ______ service.',['Connectionless','Error-free','Segmentation','Connection-oriented'],3],
+['Compiler Design','Which activity is not included in the first pass of a conventional two-pass assembler?',['Build the symbol table','Construct intermediate code','Separate mnemonic opcode and operand fields','None of the above'],3],
+['Data Structures','Which of the following is not a collision-resolution technique?',['Hash addressing','Chaining','Both hash addressing and chaining','Indexing'],3],
+['Compiler Design','Code optimization is primarily the responsibility of the:',['Application programmer','System programmer','Operating system','All of the above'],1],
+['Compiler Design','Which activity is included in the first pass of a two-pass assembler?',['Build the symbol table','Generate final object code','Resolve all forward references into machine addresses','None of these'],0],
+['Compiler Design','In a two-pass assembler, the symbol table stores:',['Labels and their values or addresses','Only values','Only mnemonics','Only memory locations without labels'],0],
+['Operating Systems','Semaphores are used to:',['Synchronize critical resources to prevent deadlock in every case','Synchronize access to critical resources to prevent contention','Perform I/O','Facilitate memory management'],1],
+['Operating Systems','Which placement strategy puts a program in the largest available memory hole?',['Best fit','First fit','Worst fit','Buddy'],2],
+['Operating Systems','A remote-computing system involves the use of time-sharing systems and:',['Real-time processing','Batch processing','Multiprocessing','All of the above'],1],
+['Operating Systems','Non-modifiable procedures that can safely be shared by concurrent processes are called:',['Serially usable procedures','Concurrent procedures','Reentrant procedures','Top-down procedures'],2],
+['Operating Systems','Match: (a) disk scheduling, (b) batch processing, (c) time sharing, (d) interrupt processing with (1) round robin, (2) SCAN, (3) LIFO, (4) FIFO.',['a-3, b-4, c-2, d-1','a-4, b-3, c-2, d-1','a-2, b-4, c-1, d-3','a-3, b-4, c-1, d-2'],2],
+['Software Engineering','The main objective when designing modules of a software system is:',['Decrease cohesion and increase coupling','Increase cohesion and decrease coupling','Increase coupling only','Increase cohesion only'],1],
+['Software Engineering','Three essential components of a software project plan are:',['Team structure, quality assurance plans and cost estimation','Cost estimation, time estimation and quality assurance plan','Cost estimation, time estimation and personnel estimation','Cost estimation, personnel estimation and team structure'],2],
+['Software Engineering','Software reliability is most directly dependent on the:',['Number of residual errors present in the software','Documentation volume','Number of testing suites','Development process name'],0],
+['Software Engineering','In transform analysis, the input portion is called the:',['Afferent branch','Efferent branch','Central transform','None of the above'],0],
+['Software Engineering','The Function Point metric is:',['Calculated from user requirements','Calculated directly from lines of code','Calculated only from a software complexity assessment','None of the above'],0],
+['Data Mining','Data mining can be used as a ______ tool.',['Software','Hardware','Research','Process'],2],
+['Computer Architecture','The processing speeds of pipeline segments are usually:',['Exactly equal','Unequal','Always increasing','None of these'],1],
+['Computer Architecture','The hardware cost of parallel processing is primarily determined by:',['Time complexity','Switching complexity','Circuit complexity','None of the above'],2],
+['Data Warehousing','A data warehouse is always:',['Subject-oriented','Object-oriented','Program-oriented','Compiler-oriented'],0],
+['Computer Fundamentals','The term “hacker” was originally associated with:',['A computer program','A virus','Computer professionals who solved complex computer problems','All of the above'],2]
+];
+const sourced=rows.map((row,index)=>({s:`Set 22 • December 2004 Paper II • Question ${index+1}`,t:row[0],q:`[D8704-Q${index+1}] ${row[1]}`,o:row[2],a:row[3],e:`The keyed answer is ${row[2][row[3]]}. This question is sourced from UGC-NET Computer Science and Applications, December 2004, Paper II (D-8704).`,mode:'selection',level:'Previous-year paper',unit:0,unitName:row[0]}));
+const generatedContinuation=(QUESTION_SETS[22]||[]).slice(50,100);
+QUESTION_SETS[22]=sourced.concat(generatedContinuation);
+const setOption=document.querySelector('#exam-set option[value="22"]');
+if(setOption)setOption.textContent='Set 22 — December 2004 Paper II + new MCQs (100)';
+})();

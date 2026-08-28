@@ -1,4 +1,4 @@
-/* Sets 8-21: deterministic, parameterized questions with globally unique stems. */
+/* Sets 8-30: deterministic, parameterized questions with globally unique stems. */
 (function(){
 const imgs={1:'set-intersection.svg',2:'cache.svg',3:'c-array-pointer.svg',4:'dbms-query-plan.svg',5:'os-paging.svg',6:'se-flow-graph.svg',7:'algo-dynamic-programming.svg',8:'graph-traversal.svg',9:'tcp-handshake.svg',10:'ml-decision-tree.svg'};
 const uniq=(correct,values)=>{const out=[String(correct)];for(const value of values){let v=String(value),step=1;while(out.includes(v)){const numeric=Number(v);v=Number.isFinite(numeric)?String(numeric+step):`Not ${v}`;step++}out.push(v)}return out.slice(0,4)};
@@ -31,5 +31,5 @@ case 22:t='Automata';u=8;const s1=2+(g%6),s2=2+((g*2)%7);c=String(s1*s2);q=`${ta
 case 23:t='Java Programming';u=3;const start=1+(g%12),len=4+(g%7);c=String(len*(2*start+len-1)/2);q=`${tag} A Java int array stores consecutive values ${start} through ${start+len-1}. What sum does a complete enhanced-for loop compute?`;w=[Number(c)+len,Number(c)-start,len*(start+len-1)];e=`Arithmetic-series sum=${len}(${start}+${start+len-1})/2=${c}.`;break;
 default:t='Web Technologies';u=3;const ids=1+(g%3),classes=1+((g*2)%4),elements=1+((g*3)%5);c=`(${ids}, ${classes}, ${elements})`;q=`${tag} A CSS selector contains ${ids} ID selector(s), ${classes} class selector(s), and ${elements} type selector(s). Its specificity tuple is`;w=[`(${classes}, ${ids}, ${elements})`,`(${ids}, ${elements}, ${classes})`,`(0, ${ids+classes}, ${elements})`];e=`Specificity is counted lexicographically as (IDs, classes, types), hence ${c}.`;}
 return mcq(set,i,t,u,q,c,w,e)}
-for(let set=8;set<=21;set++){QUESTION_SETS[set]=Array.from({length:100},(_,i)=>build(set,i));[3,9,14,19,20,22].forEach((i,j)=>{const q=QUESTION_SETS[set][i];q.img=`/static/moocs/diagrams/${imgs[q.unit]}`;q.alt=`${q.t} reference diagram`})}
+for(let set=8;set<=30;set++){QUESTION_SETS[set]=Array.from({length:100},(_,i)=>build(set,i));[3,9,14,19,20,22].forEach((i,j)=>{const q=QUESTION_SETS[set][i];q.img=`/static/moocs/diagrams/${imgs[q.unit]}`;q.alt=`${q.t} reference diagram`})}
 })();

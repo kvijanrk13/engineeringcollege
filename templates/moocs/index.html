@@ -39,8 +39,8 @@
     <section id="welcome" class="welcome card">
       <p class="eyebrow">PYQ-informed computer-based examination</p>
       <h1><span id="selected-set-title">Set 1</span> — Computer Science Mock Examination</h1>
-      <p class="lead">Twenty-one mixed, syllabus-aligned papers with 100 non-repeating questions in every set, including the supplied Paper II and Paper I source material.</p>
-      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Mixed syllabus + General Paper (100)</option><option value="2">Set 2 — Mixed syllabus + General Paper (100)</option><option value="3">Set 3 — Mixed syllabus + General Paper (100)</option><option value="4">Set 4 — Mixed syllabus + General Paper (100)</option><option value="5">Set 5 — Mixed syllabus + General Paper (100)</option><option value="6">Set 6 — Paper III + General Paper (100)</option><option value="7">Set 7 — Computer Science + General Paper (100)</option><option value="8">Set 8 — New mixed computer-science paper (100)</option><option value="9">Set 9 — New mixed computer-science paper (100)</option><option value="10">Set 10 — New mixed computer-science paper (100)</option><option value="11">Set 11 — Paper II answer key + new MCQs (100)</option><option value="12">Set 12 — New mixed computer-science paper (100)</option><option value="13">Set 13 — New mixed computer-science paper (100)</option><option value="14">Set 14 — New mixed computer-science paper (100)</option><option value="15">Set 15 — New mixed computer-science paper (100)</option><option value="16">Set 16 — New mixed computer-science paper (100)</option><option value="17">Set 17 — New mixed computer-science paper (100)</option><option value="18">Set 18 — New mixed computer-science paper (100)</option><option value="19">Set 19 — New mixed computer-science paper (100)</option><option value="20">Set 20 — New mixed computer-science paper (100)</option><option value="21">Set 21 — 2014 Paper I + new MCQs (100)</option></select></label>
+      <p class="lead">Thirty mixed, syllabus-aligned papers with 100 non-repeating questions in every set, including the supplied Paper II and Paper I source material.</p>
+      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Mixed syllabus + General Paper (100)</option><option value="2">Set 2 — Mixed syllabus + General Paper (100)</option><option value="3">Set 3 — Mixed syllabus + General Paper (100)</option><option value="4">Set 4 — Mixed syllabus + General Paper (100)</option><option value="5">Set 5 — Mixed syllabus + General Paper (100)</option><option value="6">Set 6 — Paper III + General Paper (100)</option><option value="7">Set 7 — Computer Science + General Paper (100)</option><option value="8">Set 8 — New mixed computer-science paper (100)</option><option value="9">Set 9 — New mixed computer-science paper (100)</option><option value="10">Set 10 — New mixed computer-science paper (100)</option><option value="11">Set 11 — Paper II answer key + new MCQs (100)</option><option value="12">Set 12 — New mixed computer-science paper (100)</option><option value="13">Set 13 — New mixed computer-science paper (100)</option><option value="14">Set 14 — New mixed computer-science paper (100)</option><option value="15">Set 15 — New mixed computer-science paper (100)</option><option value="16">Set 16 — New mixed computer-science paper (100)</option><option value="17">Set 17 — New mixed computer-science paper (100)</option><option value="18">Set 18 — New mixed computer-science paper (100)</option><option value="19">Set 19 — New mixed computer-science paper (100)</option><option value="20">Set 20 — New mixed computer-science paper (100)</option><option value="21">Set 21 — 2014 Paper I + new MCQs (100)</option><option value="22">Set 22 — New mixed computer-science paper (100)</option><option value="23">Set 23 — New mixed computer-science paper (100)</option><option value="24">Set 24 — New mixed computer-science paper (100)</option><option value="25">Set 25 — New mixed computer-science paper (100)</option><option value="26">Set 26 — New mixed computer-science paper (100)</option><option value="27">Set 27 — New mixed computer-science paper (100)</option><option value="28">Set 28 — New mixed computer-science paper (100)</option><option value="29">Set 29 — New mixed computer-science paper (100)</option><option value="30">Set 30 — New mixed computer-science paper (100)</option></select></label>
       <div class="pattern-grid">
         <div><strong id="pattern-questions">100</strong><span>Questions</span></div>        <div><strong id="pattern-minutes">60</strong><span>Minutes</span></div>
         <div><strong id="pattern-marks">200</strong><span>Maximum marks</span></div><div><strong>0</strong><span>Negative marks</span></div>
@@ -56,7 +56,10 @@
       </div>
       <p class="course-sources">Question design is informed by the supplied UGC-NET syllabus, Paper II PYQs, and established computer-science textbooks. You may open Home, Academics, and other site pages while signed in.</p>
       <label class="declaration"><input id="declaration" type="checkbox"> I have read the instructions and am ready to begin.</label>
-      <button id="start-exam" class="primary" disabled>Start examination</button>
+      <div class="welcome-actions">
+        <button id="start-exam" class="primary" disabled>Start examination</button>
+        <button id="reset-exam" class="secondary" type="button">Reset and start from Set 1</button>
+      </div>
     </section>
 
     <section id="exam" class="exam-shell" hidden>
@@ -113,11 +116,12 @@
   <script src="{% static 'moocs/a0418_computer_science.js' %}?v=1"></script>
   <script src="{% static 'moocs/general_paper_w.js' %}?v=1"></script>
   <script src="{% static 'moocs/additional_paper_mix.js' %}?v=1"></script>
-  <script src="{% static 'moocs/extended_sets.js' %}?v=3"></script>
+  <script src="{% static 'moocs/extended_sets.js' %}?v=4"></script>
   <script src="{% static 'moocs/question_enhancer.js' %}?v=2"></script>
   <script src="{% static 'moocs/paper2_answer_key.js' %}?v=2"></script>
   <script src="{% static 'moocs/paper1_2014.js' %}?v=1"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=31"></script>
+  <script src="{% static 'moocs/d8704_paper_two.js' %}?v=1"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=33"></script>
   {% endif %}
 </body>
 </html>
