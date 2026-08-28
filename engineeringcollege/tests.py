@@ -27,6 +27,8 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Set 2")
         self.assertContains(response, "Set 11")
         self.assertContains(response, "Set 20")
+        self.assertContains(response, "Set 21")
+        self.assertContains(response, "2014 Paper I + new MCQs (100)")
         self.assertContains(response, "Paper II answer key + new MCQs (100)")
         self.assertContains(response, "New questions, no Set 1 repeats")
         self.assertContains(response, "Paper II PYQ + unique textbook questions")
@@ -48,9 +50,10 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/moocs.js")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
-        self.assertContains(response, "/static/moocs/moocs.js?v=30")
+        self.assertContains(response, "/static/moocs/moocs.js?v=31")
         self.assertContains(response, "/static/moocs/textbook_questions.js")
         self.assertContains(response, "/static/moocs/paper2_answer_key.js")
+        self.assertContains(response, "/static/moocs/paper1_2014.js")
         self.assertContains(response, "/static/moocs/feedback.css")
 
     def test_moocs_logout_closes_exam_session(self):
