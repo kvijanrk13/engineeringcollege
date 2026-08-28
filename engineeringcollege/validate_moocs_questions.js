@@ -15,6 +15,7 @@ const sourceFiles = [
   'paper2_answer_key.js',
   'paper1_2014.js',
   'd8704_paper_two.js',
+  'pdf_archive_sets.js',
 ];
 
 let source = sourceFiles
@@ -28,7 +29,7 @@ source += `
   const seenQuestions = new Map();
   let total = 0;
 
-  for (let setNumber = 1; setNumber <= 30; setNumber += 1) {
+  for (let setNumber = 1; setNumber <= 40; setNumber += 1) {
     const questions = QUESTION_SETS[setNumber] || [];
     total += questions.length;
     if (questions.length !== 100) errors.push(\`Set \${setNumber} has \${questions.length} questions.\`);
@@ -56,7 +57,7 @@ source += `
     process.exitCode = 1;
     return;
   }
-  console.log(\`Validated 30 sets and \${total} unique MCQs.\`);
+  console.log(\`Validated 40 sets and \${total} unique MCQs.\`);
 })();
 `;
 
