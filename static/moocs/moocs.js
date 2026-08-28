@@ -45,6 +45,38 @@ function render(){const q=QUESTIONS[current],st=state[current];st.visited=true;$
 function renderPalette(){$('palette-grid').innerHTML=state.map((s,i)=>`<button data-i="${i}" class="${i===current?'current ':''}${s.review?'reviewed':s.answer!==null?'answered':s.visited?'not-answered':'unseen'}">${i+1}</button>`).join('');document.querySelectorAll('#palette-grid button').forEach(b=>b.onclick=()=>{current=+b.dataset.i;render()});const answered=state.filter(x=>x.answer!==null).length,review=state.filter(x=>x.review).length;$('answered-count').textContent=answered;$('review-count').textContent=review;$('unanswered-count').textContent=QUESTIONS.length-answered}
 function move(n){current=Math.max(0,Math.min(QUESTIONS.length-1,current+n));saveAttempt();render()}
 function tick(){seconds--;if(seconds%10===0)saveAttempt();const m=Math.floor(seconds/60),s=seconds%60;$('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(seconds<=300)$('timer').style.color='#ff7b89';if(seconds<=0)submit(true)}
+const pdfText=value=>String(value??'').normalize('NFKD').replace(/[–—]/g,'-').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[^\x20-\x7E]/g,' ').replace(/\s+/g,' ').trim();
+const pdfAnswer=(question,answer)=>{
+  if(answer===null||answer===undefined||answer==='')return 'Not attempted';
+  if(question.mode==='fill')return String(answer);
+  if(question.mode==='multi')return String(answer).split(',').map(index=>question.o[Number(index)]).filter(Boolean).join('; ');
+  return question.o[Number(answer)]||'Not attempted';
+};
+const wrapPdfLine=(value,width=88)=>{const words=pdfText(value).split(' '),lines=[];let line='';words.forEach(word=>{if(!word)return;const candidate=line?`${line} ${word}`:word;if(candidate.length>width&&line){lines.push(line);line=word}else line=candidate});if(line)lines.push(line);return lines.length?lines:['']};
+function createExplanationPdf(){
+  const lines=[`MOOCS Set ${selectedSet} - Performance Report`,`Candidate: ${profileEmail||'Verified candidate'}`,`Score: ${$('score').textContent} marks | Correct: ${$('correct').textContent} | Incorrect: ${$('incorrect').textContent} | Unattempted: ${$('unattempted').textContent} | Accuracy: ${$('accuracy').textContent}`,''];
+  QUESTIONS.forEach((question,index)=>{
+    const correct=question.mode==='multi'?question.answers.map(i=>question.o[i]).join('; '):question.o[question.a];
+    lines.push(...wrapPdfLine(`${index+1}. ${question.q}`),...wrapPdfLine(`Your answer: ${pdfAnswer(question,state[index].answer)}`),...wrapPdfLine(`Correct answer: ${correct}`),...wrapPdfLine(`Explanation: ${question.e}`),'');
+  });
+  const perPage=58,pages=[];for(let i=0;i<lines.length;i+=perPage)pages.push(lines.slice(i,i+perPage));
+  const fontObject=3+pages.length*2,objects=[];
+  objects[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  objects[2]=`<< /Type /Pages /Count ${pages.length} /Kids [${pages.map((_,i)=>`${3+i*2} 0 R`).join(' ')}] >>`;
+  pages.forEach((page,index)=>{
+    const pageObject=3+index*2,contentObject=pageObject+1;
+    const commands=page.map(line=>`(${line.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)')}) Tj T*`).join('\n');
+    const stream=`BT /F1 9 Tf 40 806 Td 12 TL\n${commands}\nET`;
+    objects[pageObject]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 ${fontObject} 0 R >> >> /Contents ${contentObject} 0 R >>`;
+    objects[contentObject]=`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`;
+  });
+  objects[fontObject]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+  let pdf='%PDF-1.4\n',offsets=[0];
+  for(let number=1;number<objects.length;number++){offsets[number]=pdf.length;pdf+=`${number} 0 obj\n${objects[number]}\nendobj\n`}
+  const xref=pdf.length;pdf+=`xref\n0 ${objects.length}\n0000000000 65535 f \n`;for(let number=1;number<objects.length;number++)pdf+=`${String(offsets[number]).padStart(10,'0')} 00000 n \n`;pdf+=`trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return new Blob([pdf],{type:'application/pdf'});
+}
+function downloadExplanations(){const url=URL.createObjectURL(createExplanationPdf()),link=document.createElement('a');link.href=url;link.download=`MOOCS_Set_${selectedSet}_explanations.pdf`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 function submit(auto=false){if(!auto&&!confirm('Submit the examination? You cannot change responses after submission.'))return;clearInterval(timer);examInProgress=false;markSetCompleted();let correct=0,incorrect=0;const topic={};QUESTIONS.forEach((q,i)=>{const ok=isCorrect(q,state[i].answer);if(ok)correct++;else if(state[i].answer!==null)incorrect++;topic[q.t]??={c:0,n:0};topic[q.t].n++;if(ok)topic[q.t].c++});const attempted=correct+incorrect;$('score').textContent=correct*2;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=(attempted?Math.round(correct*100/attempted):0)+'%';$('topic-analysis').innerHTML='<h2>Topic analysis</h2>'+Object.entries(topic).map(([k,v])=>`<div class="topic-row"><b>${k}</b><span class="topic-track"><i style="width:${v.c*100/v.n}%"></i></span><span>${v.c}/${v.n}</span></div>`).join('');$('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer),shown=answer===null?'Not attempted':q.mode==='fill'?escapeHtml(answer):q.o[answer];return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${q.q}</h3><p><b>Your answer:</b> ${shown}</p><p><b>Correct answer:</b> ${q.o[q.a]}</p><p>${q.e}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)}
 $('exam-set').onchange=e=>{selectedSet=Number(e.target.value);const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=()=>{QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};$('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
 $('reset-exam').onclick=()=>{
@@ -65,6 +97,7 @@ $('reset-exam').onclick=()=>{
   $('welcome').hidden=false;
   window.scrollTo(0,0);
 };
+$('download-explanations').onclick=downloadExplanations;
 
 // Browsers show their own Leave/Stay wording for tab close and refresh. Save first so
 // choosing Leave always preserves this profile's attempt. Site links use an explicit prompt.

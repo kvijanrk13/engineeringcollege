@@ -98,7 +98,11 @@
       <div class="score-ring"><strong id="score">0</strong><span>marks</span></div>
       <div class="result-grid"><div><strong id="correct">0</strong><span>Correct</span></div><div><strong id="incorrect">0</strong><span>Incorrect</span></div><div><strong id="unattempted">0</strong><span>Unattempted</span></div><div><strong id="accuracy">0%</strong><span>Accuracy</span></div></div>
       <div id="topic-analysis" class="topic-analysis"></div>
-      <h2>Answer review and explanations</h2><div id="solutions" class="solutions"></div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px">
+        <h2>Answer review and explanations</h2>
+        <button id="download-explanations" class="secondary" type="button">Download explanations PDF</button>
+      </div>
+      <div id="solutions" class="solutions"></div>
       <div id="next-set-panel" class="next-set-panel" hidden>
         <h2 id="next-set-heading">Ready for the next question paper?</h2>
         <p id="next-set-message"></p>
@@ -125,7 +129,7 @@
   <script src="{% static 'moocs/d8704_paper_two.js' %}?v=1"></script>
   <script src="{% static 'moocs/pdf_archive_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=34"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=35"></script>
   {% endif %}
 </body>
 </html>
