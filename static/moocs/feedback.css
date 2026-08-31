@@ -25,12 +25,3 @@
 .fill-answer-panel input { flex: 1; min-width: 0; padding: 13px 14px; border: 2px solid #b9c9da; border-radius: 9px; color: var(--ink); background: #fff; font: inherit; font-weight: 600; outline: none; }
 .fill-answer-panel input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #1267d622; }
 @media(max-width:520px){.level-guide{grid-template-columns:1fr}.fill-answer-panel > div{flex-direction:column}.fill-answer-panel button{width:100%}}
-.gmail-gate { max-width: 650px; margin: 60px auto; padding: clamp(28px,6vw,58px); text-align: center; }
-.google-mark { display: grid; place-items: center; width: 68px; height: 68px; margin: 0 auto 20px; border: 1px solid #d8e2ee; border-radius: 18px; background: #fff; box-shadow: 0 10px 28px #183b5b1c; }
-.google-mark span { font-size: 38px; font-weight: 900; color: #4285f4; }
-.google-login-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; margin-top: 18px; padding: 13px 22px; border: 1px solid #c8d4e1; border-radius: 10px; background: #fff; color: #24364b; box-shadow: 0 6px 18px #183b5b17; font-weight: 800; text-decoration: none; }
-.google-login-button:hover { border-color: #4285f4; background: #f8fbff; }
-.google-login-button svg { width: 25px; height: 25px; }
-.login-message { margin: 16px auto; padding: 12px 15px; border-radius: 9px; background: #fff4df; color: #805300; }
-.privacy-note { color: var(--muted); font-size: 12px; }
-.signed-in-email { margin-left: auto; color: #bcd2e8; font-size: 12px; }
