@@ -55,6 +55,11 @@ source += `
       if (String(question.e || '').trim().length < 100) {
         errors.push(\`\${location} does not have a detailed explanation.\`);
       }
+      if (!Array.isArray(question.optionReasons) || question.optionReasons.length !== question.o.length) {
+        errors.push(\`\${location} does not explain every answer option.\`);
+      } else if (question.optionReasons.some(reason => String(reason || '').trim().length < 80)) {
+        errors.push(\`\${location} has an answer option without detailed reasoning.\`);
+      }
       const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
       if (question.mode !== expectedMode) {
         errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);

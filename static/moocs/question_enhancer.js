@@ -78,6 +78,16 @@ function fallbackRationale(question){
   return `The stem asks specifically: ${quote(question.q)}. In ${question.t}, the applicable definition or computation leads to ${quote(correct)}. This choice satisfies every condition stated in the question. The alternatives ${wrong.map(quote).join(', ')} either describe different concepts or fail at least one stated condition, so they cannot complete this MCQ correctly.`;
 }
 
+function distractorRationale(question,option,correct){
+  const stem=String(question.q||''),choice=String(option||''),answer=String(correct||'');
+  const numeric=value=>/^-?\d+(?:\.\d+)?(?:\s*(?:ns|ms|bytes|bits|MB|KB|%))?$/i.test(value.trim());
+  if(numeric(choice)&&numeric(answer))return `${quote(choice)} is not the result obtained when the quantities and units in the stem are substituted into the required formula. It reflects a different arithmetic operation, conversion, or rounding step. Following the calculation described below produces ${quote(answer)} instead.`;
+  if(/\bonly\b|\balways\b|\bnever\b|\bevery\b/i.test(choice))return `${quote(choice)} makes a stronger absolute claim than the rule in the stem permits. A single excluded case is enough to reject an “only,” “always,” “never,” or “every” statement; the applicable rule supports ${quote(answer)} without that unsupported restriction.`;
+  if(/none|neither|cannot|invalid|unrelated/i.test(choice))return `${quote(choice)} denies the relationship or result tested by the stem, but the governing ${question.t} rule establishes that relationship directly. The evidence therefore supports ${quote(answer)}, not the negative distractor.`;
+  if(/all|both|either/i.test(choice)&&!/all|both|either/i.test(answer))return `${quote(choice)} incorrectly combines alternatives. The stem’s conditions identify one specific result—${quote(answer)}—and at least one claim bundled into ${quote(choice)} is not supported.`;
+  return `${quote(choice)} is a plausible distractor, but it does not match the precise definition, operation, layer, property, or result requested in the stem ${quote(stem)}. Applying the relevant ${question.t} principle leads to ${quote(answer)}; the detailed reasoning below shows the decisive distinction.`;
+}
+
 Object.values(QUESTION_SETS).forEach(questions=>questions.forEach(question=>{
   const original=String(question.e||'').replace(/\s*Solution derivation:.*$/is,'').trim();
   const specific=conceptRationale(question);
@@ -87,6 +97,9 @@ Object.values(QUESTION_SETS).forEach(questions=>questions.forEach(question=>{
   else explanation=fallbackRationale(question);
   const answer=question.o[question.a];
   question.e=`${explanation} Therefore, ${quote(answer)} is the correct option.`;
+  question.optionReasons=question.o.map((option,index)=>index===question.a
+    ? `${quote(option)} is correct because it is the result established by the rule or calculation explained below.`
+    : distractorRationale(question,option,answer));
   const prompt=prompts[question.level]||prompts['Level 2'];
   if(!question.q.startsWith(prompt))question.q=`${prompt} ${question.q}`;
 }));

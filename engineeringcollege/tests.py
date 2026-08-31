@@ -55,7 +55,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/content_lock.css")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
-        self.assertContains(response, "/static/moocs/moocs.js?v=38")
+        self.assertContains(response, "/static/moocs/moocs.js?v=39")
         self.assertContains(response, 'id="download-explanations"')
         self.assertContains(response, "Download explanations PDF")
         self.assertContains(response, 'id="reset-exam"')
