@@ -138,6 +138,15 @@
   <script src="{% static 'moocs/gate_archive_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/question_enhancer.js' %}?v=7"></script>
   <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
+  <script>
+    /* Template-level cleanup also covers stale static assets held by a CDN. */
+    (() => {
+      const obsoleteLead = ['Apply the governing definition', 'carefully before selecting.'].join(' ');
+      Object.values(QUESTION_SETS).forEach(questions => questions.forEach(question => {
+        if (question.q.startsWith(obsoleteLead)) question.q = question.q.slice(obsoleteLead.length).trimStart();
+      }));
+    })();
+  </script>
   <script src="{% static 'moocs/moocs.js' %}?v=39"></script>
   {% endif %}
 </body>
