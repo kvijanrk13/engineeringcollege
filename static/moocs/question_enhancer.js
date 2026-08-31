@@ -1,7 +1,7 @@
 /* Build the final explanation only after every source-bank overlay has loaded. */
 (function(){
 const prompts={
-  'Level 1':'Apply the governing definition carefully before selecting.',
+  'Level 1':'',
   'Level 2':'Analyze the conditions, rule out near-correct alternatives, and then answer.',
   'Level 3':'Evaluate every constraint and choose the most technically defensible conclusion.'
 };
@@ -101,6 +101,6 @@ Object.values(QUESTION_SETS).forEach(questions=>questions.forEach(question=>{
     ? `${quote(option)} is correct because it is the result established by the rule or calculation explained below.`
     : distractorRationale(question,option,answer));
   const prompt=prompts[question.level]||prompts['Level 2'];
-  if(!question.q.startsWith(prompt))question.q=`${prompt} ${question.q}`;
+  if(prompt&&!question.q.startsWith(prompt))question.q=`${prompt} ${question.q}`;
 }));
 })();
