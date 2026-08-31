@@ -48,6 +48,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "Unit 10: Artificial Intelligence")
         self.assertContains(response, "Computer Science Mock Examination")
         self.assertNotContains(response, "Apply the governing definition carefully before selecting.")
+        self.assertNotContains(response, "Analyze the conditions, rule out near-correct alternatives")
         self.assertContains(response, "Question palette")
         self.assertContains(response, 'class="question-number-prefix"')
         self.assertNotContains(response, "Sl.No.")

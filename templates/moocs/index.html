@@ -136,14 +136,19 @@
   <script src="{% static 'moocs/d8704_paper_two.js' %}?v=1"></script>
   <script src="{% static 'moocs/pdf_archive_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/gate_archive_sets.js' %}?v=1"></script>
-  <script src="{% static 'moocs/question_enhancer.js' %}?v=7"></script>
+  <script src="{% static 'moocs/question_enhancer.js' %}?v=8"></script>
   <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
   <script>
     /* Template-level cleanup also covers stale static assets held by a CDN. */
     (() => {
-      const obsoleteLead = ['Apply the governing definition', 'carefully before selecting.'].join(' ');
+      const obsoleteLeads = [
+        ['Apply the governing definition', 'carefully before selecting.'].join(' '),
+        ['Analyze the conditions,', 'rule out near-correct alternatives,', 'and then answer.'].join(' ')
+      ];
       Object.values(QUESTION_SETS).forEach(questions => questions.forEach(question => {
-        if (question.q.startsWith(obsoleteLead)) question.q = question.q.slice(obsoleteLead.length).trimStart();
+        obsoleteLeads.forEach(lead => {
+          if (question.q.startsWith(lead)) question.q = question.q.slice(lead.length).trimStart();
+        });
       }));
     })();
   </script>

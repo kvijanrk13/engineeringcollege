@@ -2,7 +2,7 @@
 (function(){
 const prompts={
   'Level 1':'',
-  'Level 2':'Analyze the conditions, rule out near-correct alternatives, and then answer.',
+  'Level 2':'',
   'Level 3':'Evaluate every constraint and choose the most technically defensible conclusion.'
 };
 const quote=value=>`“${String(value??'').trim()}”`;
