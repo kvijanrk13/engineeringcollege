@@ -32,5 +32,9 @@ const derivationFor=question=>{
 Object.values(QUESTION_SETS).forEach((questions,setIndex)=>questions.forEach((question,index)=>{
   const prompt=COMPLEXITY_PROMPTS[question.level]||COMPLEXITY_PROMPTS['Level 2'];
   question.q=`${prompt} ${question.q}`;
-  question.e=`${question.e} Solution derivation: ${derivationFor(question)}`;
+  /* Keep the authored explanation attached to this exact MCQ. The former
+     keyword-based derivation could select a rule that belonged to a different
+     concept merely because both stems contained a broad term such as
+     "memory", "graph", or "complexity". */
+  question.e=String(question.e||'').replace(/\s*Solution derivation:.*$/s,'').trim();
 }));

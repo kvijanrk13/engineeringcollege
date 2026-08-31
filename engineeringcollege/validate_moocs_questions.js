@@ -45,6 +45,12 @@ source += `
       if (!Number.isInteger(question.a) || question.a < 0 || question.a >= question.o.length) {
         errors.push(\`\${location} has an invalid answer key.\`);
       }
+      if (!String(question.e || '').trim()) {
+        errors.push(\`\${location} has no question-specific explanation.\`);
+      }
+      if (/Solution derivation:/i.test(String(question.e || ''))) {
+        errors.push(\`\${location} still contains a generic keyword-derived explanation.\`);
+      }
       const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
       if (question.mode !== expectedMode) {
         errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);
