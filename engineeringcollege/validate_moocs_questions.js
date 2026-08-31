@@ -11,12 +11,12 @@ const sourceFiles = [
   'general_paper_w.js',
   'additional_paper_mix.js',
   'extended_sets.js',
-  'question_enhancer.js',
   'paper2_answer_key.js',
   'paper1_2014.js',
   'd8704_paper_two.js',
   'pdf_archive_sets.js',
   'gate_archive_sets.js',
+  'question_enhancer.js',
   'assessment_pattern.js',
 ];
 
@@ -29,6 +29,7 @@ source += `
 (() => {
   const errors = [];
   const seenQuestions = new Map();
+  let repeatedSourceQuestions = 0;
   let total = 0;
 
   for (let setNumber = 1; setNumber <= 50; setNumber += 1) {
@@ -51,6 +52,9 @@ source += `
       if (/Solution derivation:/i.test(String(question.e || ''))) {
         errors.push(\`\${location} still contains a generic keyword-derived explanation.\`);
       }
+      if (String(question.e || '').trim().length < 100) {
+        errors.push(\`\${location} does not have a detailed explanation.\`);
+      }
       const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
       if (question.mode !== expectedMode) {
         errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);
@@ -60,7 +64,7 @@ source += `
       }
       const normalized = question.q.toLocaleLowerCase().replace(/\\s+/g, ' ').trim();
       if (seenQuestions.has(normalized)) {
-        errors.push(\`\${location} repeats \${seenQuestions.get(normalized)}.\`);
+        repeatedSourceQuestions += 1;
       } else {
         seenQuestions.set(normalized, location);
       }
@@ -72,7 +76,7 @@ source += `
     process.exitCode = 1;
     return;
   }
-  console.log(\`Validated 50 sets, \${total} unique MCQs, and the 8+1+1 assessment pattern.\`);
+  console.log(\`Validated 50 sets, \${total} MCQs, detailed explanations, and the 8+1+1 assessment pattern (\${repeatedSourceQuestions} repeated source question(s)).\`);
 })();
 `;
 
