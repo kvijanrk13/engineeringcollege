@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.urls import reverse
 
@@ -27,6 +28,7 @@ def moocs_exam(request):
 
 
 def moocs_logout(request):
-    request.session.pop("moocs_gmail_verified", None)
-    request.session.pop("moocs_gmail_email", None)
+    # Flush the complete authenticated session so no Google/dashboard state can
+    # immediately restore MOOC access after the two MOOC-specific keys are removed.
+    logout(request)
     return redirect("moocs")

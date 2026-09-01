@@ -11,12 +11,13 @@
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}?v=21">
   <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=7">
   <link rel="stylesheet" href="{% static 'moocs/content_lock.css' %}?v=1">
+  <style>.topbar::after{pointer-events:none!important}.moocs-signout-form{position:relative;z-index:20;margin:0}.moocs-signout-form .home-link{pointer-events:auto}</style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
     <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
-    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a id="moocs-signout" class="home-link" href="{% url 'moocs_logout' %}" data-bypass-exam-guard>Sign out</a>{% endif %}
+    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><form id="moocs-signout" class="moocs-signout-form" method="post" action="{% url 'moocs_logout' %}">{% csrf_token %}<button class="home-link" type="submit">Sign out</button></form>{% endif %}
   </header>
 
   <main>
@@ -156,11 +157,8 @@
   <script src="{% static 'moocs/moocs.js' %}?v=42"></script>
   <script>
     /* Keep logout functional even if a deployment serves a stale cached exam script. */
-    document.getElementById('moocs-signout')?.addEventListener('click', event => {
-      event.preventDefault();
-      event.stopPropagation();
+    document.getElementById('moocs-signout')?.addEventListener('submit', () => {
       allowNavigation = true;
-      window.location.assign(event.currentTarget.href);
     });
   </script>
   {% endif %}
