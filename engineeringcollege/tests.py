@@ -16,6 +16,7 @@ class MoocsPageTests(TestCase):
         self.assertNotContains(response, "/static/moocs/moocs.js")
         self.assertContains(response, "/static/moocs/content_lock.js")
         self.assertContains(response, "/static/moocs/content_lock.css")
+        self.assertContains(response, "/static/moocs/moocs.css?v=21")
 
     def test_moocs_exam_console_renders(self):
         session = self.client.session
