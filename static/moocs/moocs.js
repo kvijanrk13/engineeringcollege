@@ -30,7 +30,7 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const MAX_EXAM_SET=50;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));
+const $=id=>document.getElementById(id);const MAX_EXAM_SET=100;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));
 const removedQuestionLeads=[
   ['Apply the governing definition','carefully before selecting.'].join(' '),
   ['Analyze the conditions,','rule out near-correct alternatives,','and then answer.'].join(' ')
@@ -147,7 +147,7 @@ render=function(){
   $('check-multiple').onclick=()=>{if(st.answer===null)return;st.multiChecked=true;render()};
 };
 
-// Guide candidates through all forty 100-question papers in order.
+// Guide candidates through all one hundred 100-question papers in order.
 const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
 const savedProgress=readProgress();
 const initialSet=savedProgress.active?.set||Math.min(MAX_EXAM_SET,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
