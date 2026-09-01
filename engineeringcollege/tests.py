@@ -63,6 +63,8 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/moocs.js?v=42")
         self.assertContains(response, "/static/moocs/bloom_taxonomy.js?v=1")
         self.assertContains(response, "data-bypass-exam-guard")
+        self.assertContains(response, 'id="moocs-signout"')
+        self.assertContains(response, "allowNavigation = true")
         self.assertContains(response, 'id="download-explanations"')
         self.assertContains(response, "Download explanations PDF")
         self.assertContains(response, 'id="reset-exam"')

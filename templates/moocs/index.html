@@ -16,7 +16,7 @@
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
     <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
-    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="home-link" href="{% url 'moocs_logout' %}" data-bypass-exam-guard>Sign out</a>{% endif %}
+    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a id="moocs-signout" class="home-link" href="{% url 'moocs_logout' %}" data-bypass-exam-guard>Sign out</a>{% endif %}
   </header>
 
   <main>
@@ -154,6 +154,15 @@
   </script>
   <script src="{% static 'moocs/bloom_taxonomy.js' %}?v=1"></script>
   <script src="{% static 'moocs/moocs.js' %}?v=42"></script>
+  <script>
+    /* Keep logout functional even if a deployment serves a stale cached exam script. */
+    document.getElementById('moocs-signout')?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      allowNavigation = true;
+      window.location.assign(event.currentTarget.href);
+    });
+  </script>
   {% endif %}
 </body>
 </html>
