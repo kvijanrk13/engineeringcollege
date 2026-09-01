@@ -16,7 +16,7 @@
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
     <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
-    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="home-link" href="{% url 'moocs_logout' %}">Sign out</a>{% endif %}
+    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="home-link" href="{% url 'moocs_logout' %}" data-bypass-exam-guard>Sign out</a>{% endif %}
   </header>
 
   <main>
@@ -153,7 +153,7 @@
     })();
   </script>
   <script src="{% static 'moocs/bloom_taxonomy.js' %}?v=1"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=41"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=42"></script>
   {% endif %}
 </body>
 </html>

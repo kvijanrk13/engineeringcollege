@@ -126,7 +126,7 @@ $('download-explanations').onclick=downloadExplanations;
 // Browsers show their own Leave/Stay wording for tab close and refresh. Save first so
 // choosing Leave always preserves this profile's attempt. Site links use an explicit prompt.
 window.addEventListener('beforeunload',event=>{if(!examInProgress||allowNavigation)return;saveAttempt();event.preventDefault();event.returnValue=''});
-document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link||!examInProgress||allowNavigation)return;event.preventDefault();if(confirm(`Save your Set ${selectedSet} progress before leaving this page?`)){saveAttempt();allowNavigation=true;location.href=link.href}});
+document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link||link.hasAttribute('data-bypass-exam-guard')||!examInProgress||allowNavigation)return;event.preventDefault();if(confirm(`Save your Set ${selectedSet} progress before leaving this page?`)){saveAttempt();allowNavigation=true;location.href=link.href}});
 
 // Enhance the standard renderer with functional checkbox-based multi-selection.
 const renderSingleAnswerQuestion=render;
