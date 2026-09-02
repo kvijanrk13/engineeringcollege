@@ -1127,6 +1127,7 @@ Exam Branch
                     </div>
 
                     <div class="exam-table-wrap mb-4">
+                        <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 56 students, the aggregate percentage is Σ(MID-1 totals) ÷ (56 × 30) × 100.</p>
                         <div class="table-responsive" style="max-height: 520px; overflow: auto;">
                             <table class="table exam-table table-striped table-sm" id="internalMarksTable" style="min-width: 1360px;">
                                 <thead>
@@ -4272,9 +4273,28 @@ Exam Branch
             });
         }
 
+        function predictMid1DescriptiveMark(objectiveMark) {
+            const boundedObjective = Math.max(0, Math.min(10, parseScore(objectiveMark)));
+            const maximumMid1TotalBelow75Percent = Math.ceil((30 * 75) / 100) - 1;
+            const performanceBasedPrediction = boundedObjective * 2;
+            return Math.max(0, Math.min(20, performanceBasedPrediction, maximumMid1TotalBelow75Percent - boundedObjective));
+        }
+
         function recalculateEvaluationRow(row) {
-            const mid1ObjRaw = row.querySelector('.mid1-obj').value.trim();
-            const mid1DescRaw = row.querySelector('.mid1-desc').value.trim();
+            const mid1ObjInput = row.querySelector('.mid1-obj');
+            const mid1DescInput = row.querySelector('.mid1-desc');
+            let mid1ObjRaw = mid1ObjInput.value.trim();
+
+            if (mid1ObjRaw !== '') {
+                const boundedObjective = Math.max(0, Math.min(10, parseScore(mid1ObjRaw)));
+                mid1ObjInput.value = String(boundedObjective);
+                mid1DescInput.value = String(predictMid1DescriptiveMark(boundedObjective));
+                mid1ObjRaw = mid1ObjInput.value;
+            } else {
+                mid1DescInput.value = '';
+            }
+
+            const mid1DescRaw = mid1DescInput.value.trim();
             const mid2ObjRaw = row.querySelector('.mid2-obj').value.trim();
             const mid2DescRaw = row.querySelector('.mid2-desc').value.trim();
             const assignmentRaw = row.querySelector('.assignment').value.trim();
@@ -4319,8 +4339,8 @@ Exam Branch
                     + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
                     + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                     + '<td class="attendance-grade" data-grade="-">-</td>'
-                    + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '" pattern="[0-9]*"></td>'
-                    + '<td><input type="text" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" pattern="[0-9]*"></td>'
+                    + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
+                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted to keep MID-1 below 75%"></td>'
                     + '<td class="mid1-total">-</td>'
                     + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '" pattern="[0-9]*"></td>'
                     + '<td><input type="text" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" pattern="[0-9]*"></td>'
