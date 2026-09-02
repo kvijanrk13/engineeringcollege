@@ -358,7 +358,21 @@ Exam Branch
         text-align: center;
     }
 
-    #internalMarksTable th:nth-child(1), #internalMarksTable td:nth-child(1) { min-width: 165px; }
+    #internalMarksTable th:nth-child(1),
+    #internalMarksTable td:nth-child(1) {
+        width: 240px;
+        min-width: 240px;
+    }
+
+    #internalMarksTable td:nth-child(1) input.form-control {
+        width: 210px;
+        min-width: 210px;
+        padding-right: 0.85rem;
+        padding-left: 0.85rem;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+    }
     #internalMarksTable th:nth-child(2), #internalMarksTable td:nth-child(2) { min-width: 135px; }
     #internalMarksTable th:nth-child(3), #internalMarksTable td:nth-child(3) { min-width: 210px; }
     #internalMarksTable th:nth-child(4), #internalMarksTable td:nth-child(4),
