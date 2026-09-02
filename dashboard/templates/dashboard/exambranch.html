@@ -1132,6 +1132,11 @@ Exam Branch
                                     Create the sheet, work on the marks table, and save it whenever you
                                     want to revisit the same data later.
                                 </p>
+                                <label for="evaluationSheetSelect" class="form-label">Internal Evaluation</label>
+                                <select id="evaluationSheetSelect" class="form-select mb-3">
+                                    <option value="1">Internal Evaluation 1</option>
+                                    <option value="2">Internal Evaluation 2</option>
+                                </select>
                                 <label for="studentCount" class="form-label">Total Students</label>
                                 <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="56" />
 
@@ -1827,7 +1832,11 @@ Exam Branch
 <script>
     (function () {
         const lessonStorageKey = 'examBranchTeachingPlan';
-        const evaluationStorageKey = 'examBranchEvaluationData';
+        const evaluationStorageKeys = {
+            '1': 'examBranchEvaluationData',
+            '2': 'examBranchEvaluationDataSecond'
+        };
+        let activeEvaluationSheet = '1';
         const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19', 'examBranchTimeTableDataPinnedFixedLayoutsV20'];
         const timeTableStorageKey = 'examBranchTimeTableDataR22DataMiningLabV22';
         const subjectSelectionStorageKey = 'examBranchFacultySubjectSelection';
@@ -1861,6 +1870,7 @@ Exam Branch
         const lessonPlanBody = document.getElementById('teachingPlanBody');
         const lessonPlanStatus = document.getElementById('lessonPlanStatus');
         const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
+        const evaluationSheetSelect = document.getElementById('evaluationSheetSelect');
         const timeTableStatus = document.getElementById('timeTableStatus');
         const marksBody = document.getElementById('marksBody');
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
@@ -4268,14 +4278,40 @@ Exam Branch
             74, 82, 54, 69, 76, 57, 40, 66, 57, 27, 83, 65, 85, 73,
             44, 87, 12, 85, 55, 84, 74, 84, 16, 86, 60, 29, 67, 91
         ];
+        const secondEvaluationRollNumbers = [
+            '24C11A1222',
+            '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
+            '25C11A1206', '25C11A1207', '25C11A1208', '25C11A1209',
+            '25C11A1210', '25C11A1211', '25C11A1212', '25C11A1213',
+            '25C11A1214', '25C11A1215', '25C11A1216', '25C11A1217',
+            '25C11A1218', '25C11A1219', '25C11A1220', '25C11A1221',
+            '25C11A1222', '25C11A1223', '25C11A1224', '25C11A1225',
+            '25C11A1226', '25C11A1227', '25C11A1228', '25C11A1229',
+            '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
+            '25C11A1234', '25C11A1235', '26C15A1201'
+        ];
         const evaluationAttendanceVersion = 3;
+
+        function getActiveEvaluationStorageKey() {
+            return evaluationStorageKeys[activeEvaluationSheet];
+        }
+
+        function getActiveEvaluationRollNumbers() {
+            return activeEvaluationSheet === '2' ? secondEvaluationRollNumbers : defaultEvaluationRollNumbers;
+        }
+
+        function getActiveEvaluationAttendance() {
+            return activeEvaluationSheet === '2' ? [] : defaultEvaluationAttendance;
+        }
 
         function generateStudents(count) {
             const students = [];
+            const activeRollNumbers = getActiveEvaluationRollNumbers();
+            const activeAttendance = getActiveEvaluationAttendance();
             for (let index = 1; index <= count; index += 1) {
                 students.push({
-                    rollNo: defaultEvaluationRollNumbers[index - 1] || '',
-                    attendance: index <= defaultEvaluationAttendance.length ? String(defaultEvaluationAttendance[index - 1]) : '',
+                    rollNo: activeRollNumbers[index - 1] || '',
+                    attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
                     mid1Obj: '',
                     mid1Desc: '',
                     mid2Obj: '',
@@ -4666,27 +4702,35 @@ Exam Branch
                 rows: getEvaluationRows(),
                 savedAt: new Date().toISOString()
             };
-            localStorage.setItem(evaluationStorageKey, JSON.stringify(payload));
-            setStatus(evaluationSaveStatus, 'Evaluation saved at ' + formatSavedTime(payload.savedAt), 'success');
+            localStorage.setItem(getActiveEvaluationStorageKey(), JSON.stringify(payload));
+            setStatus(evaluationSaveStatus, 'Internal Evaluation ' + activeEvaluationSheet
+                + ' saved at ' + formatSavedTime(payload.savedAt), 'success');
         }
 
         function loadEvaluationData() {
-            const saved = localStorage.getItem(evaluationStorageKey);
-            const defaultCount = parseInt(document.getElementById('studentCount').value, 10) || 50;
+            const saved = localStorage.getItem(getActiveEvaluationStorageKey());
+            const activeRollNumbers = getActiveEvaluationRollNumbers();
+            const activeAttendance = getActiveEvaluationAttendance();
+            const defaultCount = activeRollNumbers.length;
 
             if (!saved) {
+                document.getElementById('studentCount').value = String(defaultCount);
                 renderStudents(generateStudents(defaultCount));
-                setStatus(evaluationSaveStatus, 'Starter sheet ready. Save after editing.', 'muted');
+                setStatus(evaluationSaveStatus, 'Internal Evaluation ' + activeEvaluationSheet
+                    + ' is ready. Save after editing.', 'muted');
                 return;
             }
 
             try {
                 const payload = JSON.parse(saved);
                 const savedRows = Array.isArray(payload.rows) ? payload.rows.map(function (student) {
-                    const rollIndex = defaultEvaluationRollNumbers.indexOf(String(student.rollNo || '').trim());
+                    const rollIndex = activeRollNumbers.indexOf(String(student.rollNo || '').trim());
                     if (rollIndex >= 0 && (payload.attendanceVersion !== evaluationAttendanceVersion
                             || student.attendance === undefined || student.attendance === '')) {
-                        return Object.assign({}, student, { attendance: String(defaultEvaluationAttendance[rollIndex]) });
+                        return Object.assign({}, student, {
+                            attendance: activeAttendance[rollIndex] === undefined
+                                ? '' : String(activeAttendance[rollIndex])
+                        });
                     }
                     return student;
                 }) : [];
@@ -4700,8 +4744,8 @@ Exam Branch
                 });
 
                 if (!hasEnteredMarks && !hasCustomRollNumbers) {
-                    document.getElementById('studentCount').value = String(defaultEvaluationRollNumbers.length);
-                    renderStudents(generateStudents(defaultEvaluationRollNumbers.length));
+                    document.getElementById('studentCount').value = String(activeRollNumbers.length);
+                    renderStudents(generateStudents(activeRollNumbers.length));
                     setStatus(evaluationSaveStatus, 'Evaluation roll numbers loaded. Save after editing.', 'success');
                     return;
                 }
@@ -4721,10 +4765,11 @@ Exam Branch
                 return;
             }
 
-            localStorage.removeItem(evaluationStorageKey);
-            const count = parseInt(document.getElementById('studentCount').value, 10) || 50;
+            localStorage.removeItem(getActiveEvaluationStorageKey());
+            const count = getActiveEvaluationRollNumbers().length;
+            document.getElementById('studentCount').value = String(count);
             renderStudents(generateStudents(count));
-            setStatus(evaluationSaveStatus, 'Evaluation cleared', 'muted');
+            setStatus(evaluationSaveStatus, 'Internal Evaluation ' + activeEvaluationSheet + ' cleared', 'muted');
         }
 
         function regenerateStudentSheet() {
@@ -8581,6 +8626,11 @@ Exam Branch
         document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
+        evaluationSheetSelect.addEventListener('change', function () {
+            saveEvaluationData();
+            activeEvaluationSheet = evaluationSheetSelect.value;
+            loadEvaluationData();
+        });
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
         document.getElementById('timeTableClearBtn').addEventListener('click', clearTimeTableData);
         document.getElementById('labTimeTableClearBtn').addEventListener('click', clearTimeTableData);
