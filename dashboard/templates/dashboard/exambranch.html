@@ -1186,54 +1186,178 @@ Exam Branch
                         </div>
                     </div>
 
-                    <div class="exam-table-wrap mb-4">
-                        <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 56 students, the aggregate percentage is Σ(MID-1 totals) ÷ (56 × 30) × 100.</p>
-                        <div class="table-responsive" style="max-height: 520px; overflow: auto;">
-                            <table class="table exam-table table-striped" id="internalMarksTable" style="min-width: 2100px;">
-                                <thead>
-                                    <tr>
-                                        <th>Roll No</th>
-                                        <th>ATTENDANCE</th>
-                                        <th>ATTENDANCE BASED MARKS GRADE</th>
-                                        <th>MID-1 Obj (10)</th>
-                                        <th>MID-1 Desc (20)</th>
-                                        <th>MID-1 Total</th>
-                                        <th>MID-2 Obj (10)</th>
-                                        <th>MID-2 Desc (20)</th>
-                                        <th>MID-2 Total</th>
-                                        <th>Average MID (30)</th>
-                                        <th>Assignment (5)</th>
-                                        <th>Viva (5)</th>
-                                        <th>Total (40)</th>
-                                        <th>Grade</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="marksBody"></tbody>
-                            </table>
+                    <!-- Internal Evaluation 1 Section -->
+                    <div class="evaluation-section" data-sheet="1" style="display: block;">
+                        <div class="exam-table-wrap mb-4">
+                            <div style="background: #e3f2fd; padding: 12px; border-left: 4px solid #1976d2; margin-bottom: 16px; border-radius: 4px;">
+                                <h5 style="margin: 0; color: #1976d2;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 1</h5>
+                            </div>
+                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 56 students, the aggregate percentage is Σ(MID-1 totals) ÷ (56 × 30) × 100.</p>
+                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                                <table class="table exam-table table-striped" id="internalMarksTable1" style="min-width: 2100px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Roll No</th>
+                                            <th>ATTENDANCE</th>
+                                            <th>ATTENDANCE BASED MARKS GRADE</th>
+                                            <th>MID-1 Obj (10)</th>
+                                            <th>MID-1 Desc (20)</th>
+                                            <th>MID-1 Total</th>
+                                            <th>MID-2 Obj (10)</th>
+                                            <th>MID-2 Desc (20)</th>
+                                            <th>MID-2 Total</th>
+                                            <th>Average MID (30)</th>
+                                            <th>Assignment (5)</th>
+                                            <th>Viva (5)</th>
+                                            <th>Total (40)</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="marksBody1"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xl-8">
+                                <div class="exam-card">
+                                    <h3 class="card-title">Grade Distribution Summary - Evaluation 1</h3>
+                                    <p class="card-copy mb-3">
+                                        Students are ranked by the attendance percentage derived above. Each student
+                                        is selected once within the prescribed grade-distribution limits.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table exam-table table-striped mb-0" id="gradeSummaryTable1">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th>Students Count out of Total Given %</th>
+                                                    <th>Can't Go Beyond</th>
+                                                    <th>Allocated % by Faculty</th>
+                                                    <th>Student Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="gradeSummaryBody1"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-xl-8">
-                            <div class="exam-card">
-                                <h3 class="card-title">Grade Distribution Summary</h3>
-                                <p class="card-copy mb-3">
-                                    Students are ranked by the attendance percentage derived above. Each student
-                                    is selected once within the prescribed grade-distribution limits.
-                                </p>
-                                <div class="table-responsive">
-                                    <table class="table exam-table table-striped mb-0" id="gradeSummaryTable">
-                                        <thead>
-                                            <tr>
-                                                <th>Grade</th>
-                                                <th>Students Count out of Total Given %</th>
-                                                <th>Can't Go Beyond</th>
-                                                <th>Allocated % by Faculty</th>
-                                                <th>Student Count</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="gradeSummaryBody"></tbody>
-                                    </table>
+                    <!-- Internal Evaluation 2 Section -->
+                    <div class="evaluation-section" data-sheet="2" style="display: none;">
+                        <div class="exam-table-wrap mb-4">
+                            <div style="background: #f3e5f5; padding: 12px; border-left: 4px solid #7b1fa2; margin-bottom: 16px; border-radius: 4px;">
+                                <h5 style="margin: 0; color: #7b1fa2;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 2</h5>
+                            </div>
+                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 35 students, the aggregate percentage is Σ(MID-1 totals) ÷ (35 × 30) × 100.</p>
+                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                                <table class="table exam-table table-striped" id="internalMarksTable2" style="min-width: 2100px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Roll No</th>
+                                            <th>ATTENDANCE</th>
+                                            <th>ATTENDANCE BASED MARKS GRADE</th>
+                                            <th>MID-1 Obj (10)</th>
+                                            <th>MID-1 Desc (20)</th>
+                                            <th>MID-1 Total</th>
+                                            <th>MID-2 Obj (10)</th>
+                                            <th>MID-2 Desc (20)</th>
+                                            <th>MID-2 Total</th>
+                                            <th>Average MID (30)</th>
+                                            <th>Assignment (5)</th>
+                                            <th>Viva (5)</th>
+                                            <th>Total (40)</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="marksBody2"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xl-8">
+                                <div class="exam-card">
+                                    <h3 class="card-title">Grade Distribution Summary - Evaluation 2</h3>
+                                    <p class="card-copy mb-3">
+                                        Students are ranked by the attendance percentage derived above. Each student
+                                        is selected once within the prescribed grade-distribution limits.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table exam-table table-striped mb-0" id="gradeSummaryTable2">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th>Students Count out of Total Given %</th>
+                                                    <th>Can't Go Beyond</th>
+                                                    <th>Allocated % by Faculty</th>
+                                                    <th>Student Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="gradeSummaryBody2"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Internal Evaluation 3 Section -->
+                    <div class="evaluation-section" data-sheet="3" style="display: none;">
+                        <div class="exam-table-wrap mb-4">
+                            <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px;">
+                                <h5 style="margin: 0; color: #388e3c;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 3</h5>
+                            </div>
+                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 37 students, the aggregate percentage is Σ(MID-1 totals) ÷ (37 × 30) × 100.</p>
+                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                                <table class="table exam-table table-striped" id="internalMarksTable3" style="min-width: 2100px;">
+                                    <thead>
+                                        <tr>
+                                            <th>Roll No</th>
+                                            <th>ATTENDANCE</th>
+                                            <th>ATTENDANCE BASED MARKS GRADE</th>
+                                            <th>MID-1 Obj (10)</th>
+                                            <th>MID-1 Desc (20)</th>
+                                            <th>MID-1 Total</th>
+                                            <th>MID-2 Obj (10)</th>
+                                            <th>MID-2 Desc (20)</th>
+                                            <th>MID-2 Total</th>
+                                            <th>Average MID (30)</th>
+                                            <th>Assignment (5)</th>
+                                            <th>Viva (5)</th>
+                                            <th>Total (40)</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="marksBody3"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xl-8">
+                                <div class="exam-card">
+                                    <h3 class="card-title">Grade Distribution Summary - Evaluation 3</h3>
+                                    <p class="card-copy mb-3">
+                                        Students are ranked by the attendance percentage derived above. Each student
+                                        is selected once within the prescribed grade-distribution limits.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table exam-table table-striped mb-0" id="gradeSummaryTable3">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th>Students Count out of Total Given %</th>
+                                                    <th>Can't Go Beyond</th>
+                                                    <th>Allocated % by Faculty</th>
+                                                    <th>Student Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="gradeSummaryBody3"></tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1874,7 +1998,29 @@ Exam Branch
         const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
         const evaluationSheetSelect = document.getElementById('evaluationSheetSelect');
         const timeTableStatus = document.getElementById('timeTableStatus');
-        const marksBody = document.getElementById('marksBody');
+        
+        // Get all three marks body elements
+        const marksBodyMap = {
+            '1': document.getElementById('marksBody1'),
+            '2': document.getElementById('marksBody2'),
+            '3': document.getElementById('marksBody3')
+        };
+        const marksBody = marksBodyMap['1']; // Default for backward compatibility
+        
+        // Get all evaluation sections
+        const evaluationSectionsMap = {
+            '1': document.querySelector('[data-sheet="1"]'),
+            '2': document.querySelector('[data-sheet="2"]'),
+            '3': document.querySelector('[data-sheet="3"]')
+        };
+        
+        // Get all grade summary tables
+        const gradeSummaryTableMap = {
+            '1': document.getElementById('gradeSummaryTable1'),
+            '2': document.getElementById('gradeSummaryTable2'),
+            '3': document.getElementById('gradeSummaryTable3')
+        };
+        const gradeSummaryTable = gradeSummaryTableMap['1']; // Default for backward compatibility
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
         const emptyTimeTableCards = Array.from(document.querySelectorAll('[data-empty-timetable-card]'));
         const timeTableMetaFields = Array.from(document.querySelectorAll('.timetable-meta-input'));
@@ -4375,8 +4521,9 @@ Exam Branch
         }
 
         function updateAttendanceGrades() {
+            const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
             const maximumAttendance = getMaximumAttendance();
-            marksBody.querySelectorAll('tr').forEach(function (row) {
+            currentMarksBody.querySelectorAll('tr').forEach(function (row) {
                 const attendanceRaw = row.querySelector('.attendance').value.trim();
                 const grade = attendanceRaw === '' ? '-' : getAttendanceGrade(parseScore(attendanceRaw), maximumAttendance);
                 setGradeCell(row.querySelector('.attendance-grade'), grade);
@@ -4441,7 +4588,8 @@ Exam Branch
         }
 
         function renderStudents(students) {
-            marksBody.innerHTML = '';
+            const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
+            currentMarksBody.innerHTML = '';
 
             students.forEach(function (student) {
                 const row = document.createElement('tr');
@@ -4460,7 +4608,7 @@ Exam Branch
                     + '<td><input type="text" class="form-control form-control-sm viva" value="' + (student.viva || '') + '" pattern="[0-9]*"></td>'
                     + '<td class="total">-</td>'
                     + '<td class="grade" data-grade="-">-</td>';
-                marksBody.appendChild(row);
+                currentMarksBody.appendChild(row);
                 recalculateEvaluationRow(row);
             });
 
@@ -4470,7 +4618,8 @@ Exam Branch
         }
 
         function getEvaluationRows() {
-            return Array.from(marksBody.querySelectorAll('tr')).map(function (row) {
+            const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
+            return Array.from(currentMarksBody.querySelectorAll('tr')).map(function (row) {
                 return {
                     rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
                     attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
@@ -4666,7 +4815,8 @@ Exam Branch
             const totalGraded = Object.keys(grades).reduce(function (total, grade) {
                 return total + grades[grade].students.length;
             }, 0);
-            const tbody = document.getElementById('gradeSummaryBody');
+            const currentGradeSummaryBody = document.getElementById('gradeSummaryBody' + activeEvaluationSheet);
+            const tbody = currentGradeSummaryBody;
             const gradeRows = [
                 { grade: 'O', label: 'O (>=90%)', expected: '10 - 15%', limit: '17%' },
                 { grade: 'A+', label: 'A+ (80-89%)', expected: '20 - 25%', limit: '28%' },
@@ -8649,6 +8799,14 @@ Exam Branch
         evaluationSheetSelect.addEventListener('change', function () {
             saveEvaluationData();
             activeEvaluationSheet = evaluationSheetSelect.value;
+            
+            // Show/hide evaluation sections
+            Object.keys(evaluationSectionsMap).forEach(function(sheetNum) {
+                if (evaluationSectionsMap[sheetNum]) {
+                    evaluationSectionsMap[sheetNum].style.display = (sheetNum === activeEvaluationSheet) ? 'block' : 'none';
+                }
+            });
+            
             loadEvaluationData();
         });
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
@@ -8666,13 +8824,18 @@ Exam Branch
             deleteFacultySubjectSelection(parseInt(deleteButton.dataset.index, 10));
         });
 
-        marksBody.addEventListener('input', function (event) {
-            if (event.target.closest('tr')) {
-                recalculateEvaluationRow(event.target.closest('tr'));
-                updateAttendanceGrades();
-                updateGradeSummary();
-                updateEvaluationMetrics();
-                markEvaluationDirty();
+        // Attach event listeners to all marks bodies
+        Object.keys(marksBodyMap).forEach(function(sheetNum) {
+            if (marksBodyMap[sheetNum]) {
+                marksBodyMap[sheetNum].addEventListener('input', function (event) {
+                    if (event.target.closest('tr')) {
+                        recalculateEvaluationRow(event.target.closest('tr'));
+                        updateAttendanceGrades();
+                        updateGradeSummary();
+                        updateEvaluationMetrics();
+                        markEvaluationDirty();
+                    }
+                });
             }
         });
 
