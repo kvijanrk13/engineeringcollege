@@ -4456,7 +4456,7 @@ Exam Branch
             '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
-        const evaluationAttendanceVersion = 5;
+        const evaluationAttendanceVersion = 6;
 
         function getActiveEvaluationStorageKey() {
             return evaluationStorageKeys[activeEvaluationSheet]
@@ -4527,7 +4527,8 @@ Exam Branch
         }
 
         function getMaximumAttendance() {
-            const values = Array.from(marksBody.querySelectorAll('.attendance'))
+            const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
+            const values = Array.from(currentMarksBody.querySelectorAll('.attendance'))
                 .map(function (input) { return input.value.trim(); })
                 .filter(Boolean)
                 .map(parseAttendance);
@@ -4907,7 +4908,7 @@ Exam Branch
 
             try {
                 const payload = JSON.parse(saved);
-                const savedRows = Array.isArray(payload.rows) ? payload.rows.map(function (student) {
+                let savedRows = Array.isArray(payload.rows) ? payload.rows.map(function (student) {
                     const rollIndex = activeRollNumbers.indexOf(String(student.rollNo || '').trim());
                     if (rollIndex >= 0 && (payload.attendanceVersion !== evaluationAttendanceVersion
                             || student.attendance === undefined || student.attendance === '')) {
@@ -4918,6 +4919,21 @@ Exam Branch
                     }
                     return student;
                 }) : [];
+                if (activeEvaluationSheet === '2') {
+                    const savedRowsByRollNumber = {};
+                    savedRows.forEach(function (student) {
+                        const rollNo = String(student.rollNo || '').trim();
+                        if (rollNo) savedRowsByRollNumber[rollNo] = student;
+                    });
+                    savedRows = secondEvaluationRollNumbers.map(function (rollNo, index) {
+                        return Object.assign({
+                            mid1Obj: '', mid1Desc: '', mid2Obj: '', mid2Desc: '', assignment: '', viva: ''
+                        }, savedRowsByRollNumber[rollNo] || {}, {
+                            rollNo: rollNo,
+                            attendance: String(secondEvaluationAttendance[index])
+                        });
+                    });
+                }
                 const hasEnteredMarks = savedRows.some(function (student) {
                     return [student.mid1Obj, student.mid1Desc, student.mid2Obj, student.mid2Desc, student.assignment, student.viva]
                         .some(function (value) { return String(value || '').trim(); });
