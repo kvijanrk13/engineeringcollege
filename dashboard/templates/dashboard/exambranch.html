@@ -1212,18 +1212,18 @@ Exam Branch
                             <div class="exam-card">
                                 <h3 class="card-title">Grade Distribution Summary</h3>
                                 <p class="card-copy mb-3">
-                                    Attendance grades and required mark ranges are calculated from
-                                    the highest attendance value in the current sheet.
+                                    Students are selected according to their attendance percentage and
+                                    grouped within the prescribed grade-distribution limits.
                                 </p>
                                 <div class="table-responsive">
                                     <table class="table exam-table table-striped mb-0" id="gradeSummaryTable">
                                         <thead>
                                             <tr>
                                                 <th>Grade</th>
+                                                <th>Students Count out of Total Given %</th>
+                                                <th>Can't Go Beyond</th>
+                                                <th>Allocated % by Faculty</th>
                                                 <th>Student Count</th>
-                                                <th>Percentage</th>
-                                                <th>Required Range</th>
-                                                <th>Roll Numbers</th>
                                             </tr>
                                         </thead>
                                         <tbody id="gradeSummaryBody"></tbody>
@@ -4536,41 +4536,47 @@ Exam Branch
             });
             const totalGraded = gradedStudents.length;
             const tbody = document.getElementById('gradeSummaryBody');
-            const gradeOrder = ['O', 'A+', 'A', 'B+', 'B', 'P', 'F'];
-            const maximumAttendance = getMaximumAttendance();
-            const minimumFor = function (percentage) { return Math.ceil(maximumAttendance * percentage / 100); };
-            const ranges = {
-                'O': minimumFor(90) + '-' + maximumAttendance,
-                'A+': minimumFor(80) + '-' + (minimumFor(90) - 1),
-                'A': minimumFor(70) + '-' + (minimumFor(80) - 1),
-                'B+': minimumFor(60) + '-' + (minimumFor(70) - 1),
-                'B': minimumFor(50) + '-' + (minimumFor(60) - 1),
-                'P': minimumFor(40) + '-' + (minimumFor(50) - 1),
-                'F': '0-' + (minimumFor(40) - 1)
-            };
+            const gradeRows = [
+                { grade: 'O', label: 'O (>=90%)', expected: '10 - 15%', limit: '17%' },
+                { grade: 'A+', label: 'A+ (80-89%)', expected: '20 - 25%', limit: '28%' },
+                { grade: 'A', label: 'A (70-79%)', expected: '20 - 25%', limit: '28%' },
+                { grade: 'B+', label: 'B+ (60-69%)', expected: '20 - 25%', limit: '28%' },
+                { grade: 'B', label: 'B (50-59%)', expected: '10 - 15%', limit: '17%', lowerBandStart: true },
+                { grade: 'P', label: 'P (40-49%)', lowerBandMember: true },
+                { grade: 'F', label: 'F (<40%)', lowerBandMember: true }
+            ];
 
             tbody.innerHTML = '';
 
-            gradeOrder.forEach(function (grade) {
+            gradeRows.forEach(function (gradeRow) {
+                const grade = gradeRow.grade;
                 const count = grades[grade].count;
-                const percentage = totalGraded ? Math.round((count / totalGraded) * 100) : 0;
+                const percentage = totalGraded ? ((count / totalGraded) * 100).toFixed(1) : '0.0';
+                const rollNumbers = grades[grade].rolls.map(escapeHtml).join(', ');
                 const row = document.createElement('tr');
-                row.innerHTML = ''
-                    + '<td><strong>' + grade + '</strong></td>'
-                    + '<td>' + count + '</td>'
-                    + '<td>' + percentage + '%</td>'
-                    + '<td>' + ranges[grade] + '</td>'
-                    + '<td style="font-size: 0.82rem;">' + (grades[grade].rolls.join(', ') || '-') + '</td>';
+                let distributionCells = '';
+                if (gradeRow.lowerBandStart) {
+                    distributionCells = '<td rowspan="3" class="align-middle">' + gradeRow.expected + '</td>'
+                        + '<td rowspan="3" class="align-middle">' + gradeRow.limit + '</td>';
+                } else if (!gradeRow.lowerBandMember) {
+                    distributionCells = '<td>' + gradeRow.expected + '</td><td>' + gradeRow.limit + '</td>';
+                }
+                row.innerHTML = '<td><strong>' + gradeRow.label + '</strong></td>'
+                    + distributionCells
+                    + '<td><strong>' + percentage + '%</strong></td>'
+                    + '<td><strong>' + count + '</strong>'
+                    + '<div class="small text-muted mt-1" style="white-space: normal; min-width: 180px;">'
+                    + (rollNumbers || 'No students') + '</div></td>';
                 tbody.appendChild(row);
             });
 
             const totalRow = document.createElement('tr');
             totalRow.innerHTML = ''
                 + '<td><strong>Total</strong></td>'
-                + '<td><strong>' + totalGraded + '</strong></td>'
-                + '<td><strong>' + (totalGraded ? '100%' : '0%') + '</strong></td>'
-                + '<td><strong>Attendance Rows</strong></td>'
-                + '<td></td>';
+                + '<td><strong>100%</strong></td>'
+                + '<td><strong>100%</strong></td>'
+                + '<td><strong>---</strong></td>'
+                + '<td><strong>' + totalGraded + '</strong></td>';
             tbody.appendChild(totalRow);
         }
 
