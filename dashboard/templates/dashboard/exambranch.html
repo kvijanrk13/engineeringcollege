@@ -1246,12 +1246,12 @@ Exam Branch
                     </div>
 
                     <!-- Internal Evaluation 2 Section -->
-                    <div class="evaluation-section" data-sheet="2" style="display: none;">
+                    <div class="evaluation-section mt-5" data-sheet="2" style="display: block;">
                         <div class="exam-table-wrap mb-4">
                             <div style="background: #f3e5f5; padding: 12px; border-left: 4px solid #7b1fa2; margin-bottom: 16px; border-radius: 4px;">
                                 <h5 style="margin: 0; color: #7b1fa2;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 2</h5>
                             </div>
-                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 35 students, the aggregate percentage is Σ(MID-1 totals) ÷ (35 × 30) × 100.</p>
+                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 36 students, the aggregate percentage is Σ(MID-1 totals) ÷ (36 × 30) × 100.</p>
                             <div class="table-responsive" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable2" style="min-width: 2100px;">
                                     <thead>
@@ -8799,14 +8799,6 @@ Exam Branch
         evaluationSheetSelect.addEventListener('change', function () {
             saveEvaluationData();
             activeEvaluationSheet = evaluationSheetSelect.value;
-            
-            // Show/hide evaluation sections
-            Object.keys(evaluationSectionsMap).forEach(function(sheetNum) {
-                if (evaluationSectionsMap[sheetNum]) {
-                    evaluationSectionsMap[sheetNum].style.display = (sheetNum === activeEvaluationSheet) ? 'block' : 'none';
-                }
-            });
-            
             loadEvaluationData();
         });
         document.getElementById('timeTableSaveBtn').addEventListener('click', saveTimeTableData);
@@ -8829,6 +8821,8 @@ Exam Branch
             if (marksBodyMap[sheetNum]) {
                 marksBodyMap[sheetNum].addEventListener('input', function (event) {
                     if (event.target.closest('tr')) {
+                        activeEvaluationSheet = sheetNum;
+                        evaluationSheetSelect.value = sheetNum;
                         recalculateEvaluationRow(event.target.closest('tr'));
                         updateAttendanceGrades();
                         updateGradeSummary();
@@ -9011,7 +9005,13 @@ Exam Branch
         }
 
         loadTeachingPlan();
-        loadEvaluationData();
+        ['1', '2', '3'].forEach(function (sheetNum) {
+            activeEvaluationSheet = sheetNum;
+            loadEvaluationData();
+        });
+        activeEvaluationSheet = '1';
+        evaluationSheetSelect.value = '1';
+        document.getElementById('studentCount').value = String(defaultEvaluationRollNumbers.length);
         loadTimeTableData();
         loadSubjectSelection();
 
