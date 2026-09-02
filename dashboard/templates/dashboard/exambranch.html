@@ -1136,6 +1136,7 @@ Exam Branch
                                 <select id="evaluationSheetSelect" class="form-select mb-3">
                                     <option value="1">Internal Evaluation 1</option>
                                     <option value="2">Internal Evaluation 2</option>
+                                    <option value="3">Internal Evaluation 3</option>
                                 </select>
                                 <label for="studentCount" class="form-label">Total Students</label>
                                 <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="56" />
@@ -1834,7 +1835,8 @@ Exam Branch
         const lessonStorageKey = 'examBranchTeachingPlan';
         const evaluationStorageKeys = {
             '1': 'examBranchEvaluationData',
-            '2': 'examBranchEvaluationDataSecond'
+            '2': 'examBranchEvaluationDataSecond',
+            '3': 'examBranchEvaluationDataThird'
         };
         let activeEvaluationSheet = '1';
         const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19', 'examBranchTimeTableDataPinnedFixedLayoutsV20'];
@@ -4290,6 +4292,18 @@ Exam Branch
             '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
+        const thirdEvaluationRollNumbers = [
+            '24C11A1222',
+            '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
+            '25C11A1206', '25C11A1207', '25C11A1208', '25C11A1209',
+            '25C11A1210', '25C11A1211', '25C11A1212', '25C11A1213',
+            '25C11A1214', '25C11A1215', '25C11A1216', '25C11A1217',
+            '25C11A1218', '25C11A1219', '25C11A1220', '25C11A1221',
+            '25C11A1222', '25C11A1223', '25C11A1224', '25C11A1225',
+            '25C11A1226', '25C11A1227', '25C11A1228', '25C11A1229',
+            '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
+            '25C11A1234', '25C11A1235', '26C15A1201'
+        ];
         const evaluationAttendanceVersion = 3;
 
         function getActiveEvaluationStorageKey() {
@@ -4297,7 +4311,12 @@ Exam Branch
         }
 
         function getActiveEvaluationRollNumbers() {
-            return activeEvaluationSheet === '2' ? secondEvaluationRollNumbers : defaultEvaluationRollNumbers;
+            if (activeEvaluationSheet === '2') {
+                return secondEvaluationRollNumbers;
+            } else if (activeEvaluationSheet === '3') {
+                return thirdEvaluationRollNumbers;
+            }
+            return defaultEvaluationRollNumbers;
         }
 
         function getActiveEvaluationAttendance() {
