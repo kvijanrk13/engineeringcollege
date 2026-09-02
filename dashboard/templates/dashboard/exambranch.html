@@ -4438,6 +4438,12 @@ Exam Branch
             '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
+        const secondEvaluationAttendance = [
+            6.45, 29.03, 48.39, 58.06, 58.06, 93.55, 45.16, 77.42, 54.84,
+            54.84, 67.74, 38.71, 54.84, 77.42, 48.39, 51.61, 29.03, 67.74,
+            67.74, 54.84, 64.52, 45.16, 70.97, 77.42, 87.10, 64.52, 83.87,
+            74.19, 61.29, 58.06, 58.06, 70.97, 51.61, 64.52, 77.42
+        ];
         const thirdEvaluationRollNumbers = [
             '24C11A1222',
             '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
@@ -4450,7 +4456,7 @@ Exam Branch
             '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
-        const evaluationAttendanceVersion = 3;
+        const evaluationAttendanceVersion = 4;
 
         function getActiveEvaluationStorageKey() {
             return evaluationStorageKeys[activeEvaluationSheet]
@@ -4468,7 +4474,9 @@ Exam Branch
         }
 
         function getActiveEvaluationAttendance() {
-            return activeEvaluationSheet === '1' ? defaultEvaluationAttendance : [];
+            if (activeEvaluationSheet === '1') return defaultEvaluationAttendance;
+            if (activeEvaluationSheet === '2') return secondEvaluationAttendance;
+            return [];
         }
 
         function generateStudents(count) {
@@ -4501,6 +4509,11 @@ Exam Branch
             return Number.isNaN(parsed) ? 0 : parsed;
         }
 
+        function parseAttendance(value) {
+            const parsed = parseFloat(value);
+            return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
         function getAttendanceGrade(attendance, maximumAttendance) {
             if (!maximumAttendance) return '-';
             const percentage = (attendance / maximumAttendance) * 100;
@@ -4517,7 +4530,7 @@ Exam Branch
             const values = Array.from(marksBody.querySelectorAll('.attendance'))
                 .map(function (input) { return input.value.trim(); })
                 .filter(Boolean)
-                .map(parseScore);
+                .map(parseAttendance);
             return values.length ? Math.max.apply(null, values) : 0;
         }
 
@@ -4526,7 +4539,7 @@ Exam Branch
             const maximumAttendance = getMaximumAttendance();
             currentMarksBody.querySelectorAll('tr').forEach(function (row) {
                 const attendanceRaw = row.querySelector('.attendance').value.trim();
-                const grade = attendanceRaw === '' ? '-' : getAttendanceGrade(parseScore(attendanceRaw), maximumAttendance);
+                const grade = attendanceRaw === '' ? '-' : getAttendanceGrade(parseAttendance(attendanceRaw), maximumAttendance);
                 setGradeCell(row.querySelector('.attendance-grade'), grade);
             });
         }
@@ -4720,7 +4733,7 @@ Exam Branch
             const rankedStudents = students
                 .filter(function (student) { return String(student.attendance || '').trim() !== ''; })
                 .map(function (student, index) {
-                    const attendance = parseScore(student.attendance);
+                    const attendance = parseAttendance(student.attendance);
                     return Object.assign({}, student, {
                         originalIndex: index,
                         attendanceValue: attendance,
