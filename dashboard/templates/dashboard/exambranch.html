@@ -327,6 +327,46 @@ Exam Branch
         color: #fff;
     }
 
+    #internalMarksTable {
+        width: 100%;
+        min-width: 2100px;
+        table-layout: auto;
+    }
+
+    #internalMarksTable th,
+    #internalMarksTable td {
+        min-width: 120px;
+        height: 62px;
+        padding: 0.75rem 0.85rem;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    #internalMarksTable thead th {
+        height: 72px;
+        padding: 0.9rem;
+        line-height: 1.35;
+        white-space: normal;
+    }
+
+    #internalMarksTable input.form-control {
+        width: 100%;
+        min-width: 96px;
+        min-height: 42px;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.95rem;
+        text-align: center;
+    }
+
+    #internalMarksTable th:nth-child(1), #internalMarksTable td:nth-child(1) { min-width: 165px; }
+    #internalMarksTable th:nth-child(2), #internalMarksTable td:nth-child(2) { min-width: 135px; }
+    #internalMarksTable th:nth-child(3), #internalMarksTable td:nth-child(3) { min-width: 210px; }
+    #internalMarksTable th:nth-child(4), #internalMarksTable td:nth-child(4),
+    #internalMarksTable th:nth-child(7), #internalMarksTable td:nth-child(7) { min-width: 135px; }
+    #internalMarksTable th:nth-child(5), #internalMarksTable td:nth-child(5),
+    #internalMarksTable th:nth-child(8), #internalMarksTable td:nth-child(8) { min-width: 150px; }
+    #internalMarksTable th:nth-child(10), #internalMarksTable td:nth-child(10) { min-width: 155px; }
+
     #teachingPlanTable textarea {
         min-height: 56px;
         resize: vertical;
@@ -1129,7 +1169,7 @@ Exam Branch
                     <div class="exam-table-wrap mb-4">
                         <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 56 students, the aggregate percentage is Σ(MID-1 totals) ÷ (56 × 30) × 100.</p>
                         <div class="table-responsive" style="max-height: 520px; overflow: auto;">
-                            <table class="table exam-table table-striped table-sm" id="internalMarksTable" style="min-width: 1360px;">
+                            <table class="table exam-table table-striped" id="internalMarksTable" style="min-width: 2100px;">
                                 <thead>
                                     <tr>
                                         <th>Roll No</th>
