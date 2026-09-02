@@ -4453,7 +4453,8 @@ Exam Branch
         const evaluationAttendanceVersion = 3;
 
         function getActiveEvaluationStorageKey() {
-            return evaluationStorageKeys[activeEvaluationSheet];
+            return evaluationStorageKeys[activeEvaluationSheet]
+                || ('examBranchEvaluationDataSheet' + activeEvaluationSheet);
         }
 
         function getActiveEvaluationRollNumbers() {
@@ -4463,11 +4464,11 @@ Exam Branch
             } else if (activeEvaluationSheet === '3') {
                 return thirdEvaluationRollNumbers;
             }
-            return defaultEvaluationRollNumbers;
+            return activeEvaluationSheet === '1' ? defaultEvaluationRollNumbers : [];
         }
 
         function getActiveEvaluationAttendance() {
-            return activeEvaluationSheet === '2' ? [] : defaultEvaluationAttendance;
+            return activeEvaluationSheet === '1' ? defaultEvaluationAttendance : [];
         }
 
         function generateStudents(count) {
@@ -4942,17 +4943,63 @@ Exam Branch
             setStatus(evaluationSaveStatus, 'Internal Evaluation ' + activeEvaluationSheet + ' cleared', 'muted');
         }
 
+        function createAdditionalEvaluationSheet(count, requestedSheetNumber) {
+            const existingNumbers = Object.keys(marksBodyMap).map(function (value) { return parseInt(value, 10); });
+            const sheetNumber = String(requestedSheetNumber || (Math.max.apply(null, existingNumbers) + 1));
+            if (marksBodyMap[sheetNumber]) return sheetNumber;
+
+            const sourceSection = evaluationSectionsMap['3'];
+            const section = sourceSection.cloneNode(true);
+            section.dataset.sheet = sheetNumber;
+            section.style.display = 'block';
+            section.classList.add('mt-5');
+            section.querySelector('h5').innerHTML = '<i class="fas fa-graduation-cap me-2"></i>Internal Evaluation ' + sheetNumber;
+            section.querySelector('.small.text-muted').textContent = 'A new independent internal evaluation sheet for '
+                + count + ' students. Existing evaluation sheets and marks are preserved.';
+            section.querySelector('.card-title').textContent = 'Grade Distribution Summary - Evaluation ' + sheetNumber;
+            section.querySelectorAll('[id]').forEach(function (element) {
+                element.id = element.id.replace(/3$/, sheetNumber);
+            });
+            section.querySelector('tbody[id^="marksBody"]').innerHTML = '';
+            section.querySelector('tbody[id^="gradeSummaryBody"]').innerHTML = '';
+            sourceSection.parentNode.appendChild(section);
+
+            marksBodyMap[sheetNumber] = document.getElementById('marksBody' + sheetNumber);
+            evaluationSectionsMap[sheetNumber] = section;
+            gradeSummaryTableMap[sheetNumber] = document.getElementById('gradeSummaryTable' + sheetNumber);
+            evaluationStorageKeys[sheetNumber] = 'examBranchEvaluationDataSheet' + sheetNumber;
+
+            const option = document.createElement('option');
+            option.value = sheetNumber;
+            option.textContent = 'Internal Evaluation ' + sheetNumber;
+            evaluationSheetSelect.appendChild(option);
+
+            marksBodyMap[sheetNumber].addEventListener('input', function (event) {
+                if (!event.target.closest('tr')) return;
+                activeEvaluationSheet = sheetNumber;
+                evaluationSheetSelect.value = sheetNumber;
+                recalculateEvaluationRow(event.target.closest('tr'));
+                updateAttendanceGrades();
+                updateGradeSummary();
+                updateEvaluationMetrics();
+                markEvaluationDirty();
+            });
+            return sheetNumber;
+        }
+
         function regenerateStudentSheet() {
-            const count = parseInt(document.getElementById('studentCount').value, 10) || 50;
+            const count = Math.max(1, parseInt(document.getElementById('studentCount').value, 10) || 50);
+            const sheetNumber = createAdditionalEvaluationSheet(count);
+            const savedDynamicSheets = JSON.parse(localStorage.getItem('examBranchDynamicEvaluationSheets') || '[]');
+            savedDynamicSheets.push({ sheetNumber: sheetNumber, count: count });
+            localStorage.setItem('examBranchDynamicEvaluationSheets', JSON.stringify(savedDynamicSheets));
 
-            if (hasEvaluationContent()) {
-                if (!confirm('This will replace the current marks sheet. Continue?')) {
-                    return;
-                }
-            }
-
+            activeEvaluationSheet = sheetNumber;
+            evaluationSheetSelect.value = sheetNumber;
             renderStudents(generateStudents(count));
             markEvaluationDirty();
+            saveEvaluationData();
+            evaluationSectionsMap[sheetNumber].scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function getTimeTablePayload() {
@@ -9005,7 +9052,16 @@ Exam Branch
         }
 
         loadTeachingPlan();
-        ['1', '2', '3'].forEach(function (sheetNum) {
+        let savedDynamicEvaluationSheets = [];
+        try {
+            savedDynamicEvaluationSheets = JSON.parse(localStorage.getItem('examBranchDynamicEvaluationSheets') || '[]');
+        } catch (error) {
+            console.error('Could not restore additional evaluation sheets', error);
+        }
+        savedDynamicEvaluationSheets.forEach(function (sheet) {
+            createAdditionalEvaluationSheet(sheet.count || 50, sheet.sheetNumber);
+        });
+        Object.keys(marksBodyMap).forEach(function (sheetNum) {
             activeEvaluationSheet = sheetNum;
             loadEvaluationData();
         });
