@@ -1212,8 +1212,8 @@ Exam Branch
                             <div class="exam-card">
                                 <h3 class="card-title">Grade Distribution Summary</h3>
                                 <p class="card-copy mb-3">
-                                    Students are selected according to their attendance percentage and
-                                    grouped within the prescribed grade-distribution limits.
+                                    Students are ranked by the attendance percentage derived above. Each student
+                                    is selected once within the prescribed grade-distribution limits.
                                 </p>
                                 <div class="table-responsive">
                                     <table class="table exam-table table-striped mb-0" id="gradeSummaryTable">
@@ -4500,6 +4500,82 @@ Exam Branch
             return grades;
         }
 
+        function calculateDistributedAttendanceGrades(students) {
+            const grades = {
+                'O': { students: [], allocatedPercentage: 0 },
+                'A+': { students: [], allocatedPercentage: 0 },
+                'A': { students: [], allocatedPercentage: 0 },
+                'B+': { students: [], allocatedPercentage: 0 },
+                'B': { students: [], allocatedPercentage: 0 },
+                'P': { students: [], allocatedPercentage: 0 },
+                'F': { students: [], allocatedPercentage: 0 }
+            };
+            const maximumAttendance = getMaximumAttendance();
+            const rankedStudents = students
+                .filter(function (student) { return String(student.attendance || '').trim() !== ''; })
+                .map(function (student, index) {
+                    const attendance = parseScore(student.attendance);
+                    return Object.assign({}, student, {
+                        originalIndex: index,
+                        attendanceValue: attendance,
+                        attendancePercentage: maximumAttendance ? (attendance / maximumAttendance) * 100 : 0
+                    });
+                })
+                .sort(function (first, second) {
+                    return second.attendancePercentage - first.attendancePercentage
+                        || first.originalIndex - second.originalIndex;
+                });
+
+            if (!rankedStudents.length) return grades;
+
+            const allocationGroups = [
+                { grade: 'O', percentage: 15 },
+                { grade: 'A+', percentage: 25 },
+                { grade: 'A', percentage: 25 },
+                { grade: 'B+', percentage: 25 },
+                { grade: 'LOWER', percentage: 10 }
+            ];
+            const exactCounts = allocationGroups.map(function (group) {
+                return rankedStudents.length * group.percentage / 100;
+            });
+            const allocatedCounts = exactCounts.map(Math.floor);
+            let unallocatedCount = rankedStudents.length - allocatedCounts.reduce(function (sum, count) {
+                return sum + count;
+            }, 0);
+            exactCounts
+                .map(function (exactCount, index) {
+                    return { index: index, remainder: exactCount - allocatedCounts[index] };
+                })
+                .sort(function (first, second) {
+                    return second.remainder - first.remainder || first.index - second.index;
+                })
+                .forEach(function (item) {
+                    if (unallocatedCount > 0) {
+                        allocatedCounts[item.index] += 1;
+                        unallocatedCount -= 1;
+                    }
+                });
+
+            let cursor = 0;
+            allocationGroups.forEach(function (group, index) {
+                const selectedStudents = rankedStudents.slice(cursor, cursor + allocatedCounts[index]);
+                cursor += allocatedCounts[index];
+                if (group.grade !== 'LOWER') {
+                    grades[group.grade].students = selectedStudents;
+                    return;
+                }
+                selectedStudents.forEach(function (student) {
+                    const lowerGrade = getAttendanceGrade(student.attendanceValue, maximumAttendance);
+                    grades[['B', 'P', 'F'].includes(lowerGrade) ? lowerGrade : 'B'].students.push(student);
+                });
+            });
+
+            Object.keys(grades).forEach(function (grade) {
+                grades[grade].allocatedPercentage = grades[grade].students.length / rankedStudents.length * 100;
+            });
+            return grades;
+        }
+
         function updateEvaluationMetrics() {
             const students = getEvaluationRows();
             const gradedStudents = students.filter(function (student) {
@@ -4530,11 +4606,10 @@ Exam Branch
 
         function updateGradeSummary() {
             const students = getEvaluationRows();
-            const grades = calculateAttendanceGradeDistribution(students);
-            const gradedStudents = students.filter(function (student) {
-                return student.attendanceGrade && student.attendanceGrade !== '-';
-            });
-            const totalGraded = gradedStudents.length;
+            const grades = calculateDistributedAttendanceGrades(students);
+            const totalGraded = Object.keys(grades).reduce(function (total, grade) {
+                return total + grades[grade].students.length;
+            }, 0);
             const tbody = document.getElementById('gradeSummaryBody');
             const gradeRows = [
                 { grade: 'O', label: 'O (>=90%)', expected: '10 - 15%', limit: '17%' },
@@ -4550,9 +4625,13 @@ Exam Branch
 
             gradeRows.forEach(function (gradeRow) {
                 const grade = gradeRow.grade;
-                const count = grades[grade].count;
-                const percentage = totalGraded ? ((count / totalGraded) * 100).toFixed(1) : '0.0';
-                const rollNumbers = grades[grade].rolls.map(escapeHtml).join(', ');
+                const selectedStudents = grades[grade].students;
+                const count = selectedStudents.length;
+                const percentage = grades[grade].allocatedPercentage.toFixed(1);
+                const selectedStudentLabels = selectedStudents.map(function (student) {
+                    return escapeHtml((student.rollNo || 'Student ' + (student.originalIndex + 1)).trim())
+                        + ' (' + student.attendancePercentage.toFixed(1) + '%)';
+                }).join(', ');
                 const row = document.createElement('tr');
                 let distributionCells = '';
                 if (gradeRow.lowerBandStart) {
@@ -4566,7 +4645,7 @@ Exam Branch
                     + '<td><strong>' + percentage + '%</strong></td>'
                     + '<td><strong>' + count + '</strong>'
                     + '<div class="small text-muted mt-1" style="white-space: normal; min-width: 180px;">'
-                    + (rollNumbers || 'No students') + '</div></td>';
+                    + (selectedStudentLabels || 'No students selected') + '</div></td>';
                 tbody.appendChild(row);
             });
 
