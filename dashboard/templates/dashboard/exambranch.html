@@ -4444,6 +4444,12 @@ Exam Branch
             67.74, 54.84, 64.52, 45.16, 70.97, 77.42, 87.10, 64.52, 83.87,
             74.19, 61.29, 58.06, 58.06, 70.97, 51.61, 64.52, 77.42, 77.78
         ];
+        const secondEvaluationObjectiveMarks = [
+            6, 10, 7, 8, 8, 8, 8, 6, 9, 7,
+            9, 9, 6, 8, 8, 8, 7, 8, 8, 9,
+            7, 5, 6, 2, 5, 8, 9, 10, 9, 4,
+            4, 8, 5, 8, 10, 7
+        ];
         const thirdEvaluationRollNumbers = [
             '24C11A1222',
             '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
@@ -4457,6 +4463,7 @@ Exam Branch
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
         const evaluationAttendanceVersion = 6;
+        const secondEvaluationObjectiveMarksVersion = 1;
 
         function getActiveEvaluationStorageKey() {
             return evaluationStorageKeys[activeEvaluationSheet]
@@ -4484,10 +4491,13 @@ Exam Branch
             const activeRollNumbers = getActiveEvaluationRollNumbers();
             const activeAttendance = getActiveEvaluationAttendance();
             for (let index = 1; index <= count; index += 1) {
+                const seedMid1Obj = activeEvaluationSheet === '2'
+                    && secondEvaluationObjectiveMarks[index - 1] !== undefined
+                    ? String(secondEvaluationObjectiveMarks[index - 1]) : '';
                 students.push({
                     rollNo: activeRollNumbers[index - 1] || '',
                     attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
-                    mid1Obj: '',
+                    mid1Obj: seedMid1Obj,
                     mid1Desc: '',
                     mid2Obj: '',
                     mid2Desc: '',
@@ -4891,6 +4901,7 @@ Exam Branch
             const payload = {
                 studentCount: document.getElementById('studentCount').value,
                 attendanceVersion: evaluationAttendanceVersion,
+                objectiveMarksVersion: secondEvaluationObjectiveMarksVersion,
                 rows: getEvaluationRows(),
                 savedAt: new Date().toISOString()
             };
@@ -4933,6 +4944,8 @@ Exam Branch
                         if (rollNo) savedRowsByRollNumber[rollNo] = student;
                     });
                     savedRows = secondEvaluationRollNumbers.map(function (rollNo, index) {
+                        const seededMid1Obj = secondEvaluationObjectiveMarks[index] === undefined
+                            ? '' : String(secondEvaluationObjectiveMarks[index]);
                         return Object.assign({
                             mid1Obj: '', mid1Desc: '', mid2Obj: '', mid2Desc: '', assignment: '', viva: ''
                         }, savedRowsByRollNumber[rollNo] || {}, {
@@ -4940,6 +4953,15 @@ Exam Branch
                             attendance: String(secondEvaluationAttendance[index])
                         });
                     });
+                    if (payload.objectiveMarksVersion !== secondEvaluationObjectiveMarksVersion) {
+                        savedRows = savedRows.map(function (student, index) {
+                            const seed = secondEvaluationObjectiveMarks[index];
+                            if (student.mid1Obj && String(student.mid1Obj).trim()) return student;
+                            return Object.assign({}, student, {
+                                mid1Obj: seed === undefined ? '' : String(seed)
+                            });
+                        });
+                    }
                 }
                 const hasEnteredMarks = savedRows.some(function (student) {
                     return [student.mid1Obj, student.mid1Desc, student.mid2Obj, student.mid2Desc, student.assignment, student.viva]
