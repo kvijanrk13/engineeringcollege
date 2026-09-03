@@ -4555,46 +4555,84 @@ Exam Branch
             });
         }
 
-        function predictMid1DescriptiveMark(objectiveMark) {
-            const boundedObjective = Math.max(0, Math.min(10, parseScore(objectiveMark)));
-            const maximumMid1TotalBelow75Percent = Math.ceil((30 * 75) / 100) - 1;
-            const performanceBasedPrediction = boundedObjective * 2;
-            return Math.max(0, Math.min(20, performanceBasedPrediction, maximumMid1TotalBelow75Percent - boundedObjective));
+        function predictAttendanceBasedDescriptiveMark(attendancePercentage, maximumDescription) {
+            const boundedAttendance = Math.max(0, Math.min(100, parseAttendance(attendancePercentage)));
+            return Math.max(0, Math.min(
+                maximumDescription,
+                Math.round(boundedAttendance * maximumDescription / 100)
+            ));
         }
 
-        function predictAttendanceBasedMid1DescriptiveMark(attendancePercentage) {
-            const boundedAttendance = Math.max(0, Math.min(100, parseAttendance(attendancePercentage)));
-            // Desc must depend only on attendance, not on the student's Obj mark.
-            // A maximum Desc of 16 guarantees the strict threshold for every Obj
-            // from 0 to 10: (10 + 16) / 36 = 72.22%, which is below 75%.
-            const maximumAttendanceBasedDescription = 16;
-            return Math.max(0, Math.min(
-                maximumAttendanceBasedDescription,
-                Math.round(boundedAttendance * maximumAttendanceBasedDescription / 100)
-            ));
+        function predictMidDescriptiveMarks(attendancePercentage, mid1Obj, mid2Obj, assignment, viva) {
+            // Evaluation 2 keeps the earlier MID-1 rule: even at Obj 10, Desc 16
+            // gives (10 + 16) / 36 = 72.22%, which is strictly below 75%.
+            const mid1Maximum = activeEvaluationSheet === '2' ? 16 : 20;
+            const mid2Maximum = 20;
+            let mid1Desc = predictAttendanceBasedDescriptiveMark(attendancePercentage, mid1Maximum);
+            let mid2Desc = predictAttendanceBasedDescriptiveMark(attendancePercentage, mid2Maximum);
+
+            function calculatedTotal() {
+                const midAverage = Math.round((mid1Obj + mid1Desc + mid2Obj + mid2Desc) / 2);
+                return Math.min(40, midAverage + assignment + viva);
+            }
+
+            // Preserve the attendance-based starting point, then add only the
+            // marks needed to reach 30/40 (75%) when the field maxima allow it.
+            while (calculatedTotal() < 30 && (mid1Desc < mid1Maximum || mid2Desc < mid2Maximum)) {
+                const mid1Fill = mid1Maximum ? mid1Desc / mid1Maximum : 1;
+                const mid2Fill = mid2Maximum ? mid2Desc / mid2Maximum : 1;
+                if (mid1Desc < mid1Maximum && (mid1Fill <= mid2Fill || mid2Desc >= mid2Maximum)) {
+                    mid1Desc += 1;
+                } else if (mid2Desc < mid2Maximum) {
+                    mid2Desc += 1;
+                }
+            }
+
+            return { mid1Desc: mid1Desc, mid2Desc: mid2Desc, targetReached: calculatedTotal() >= 30 };
         }
 
         function recalculateEvaluationRow(row) {
             const mid1ObjInput = row.querySelector('.mid1-obj');
             const mid1DescInput = row.querySelector('.mid1-desc');
+            const mid2ObjInput = row.querySelector('.mid2-obj');
+            const mid2DescInput = row.querySelector('.mid2-desc');
+            const assignmentInput = row.querySelector('.assignment');
+            const vivaInput = row.querySelector('.viva');
             let mid1ObjRaw = mid1ObjInput.value.trim();
+            let mid2ObjRaw = mid2ObjInput.value.trim();
+            let assignmentRaw = assignmentInput.value.trim();
+            let vivaRaw = vivaInput.value.trim();
 
-            if (mid1ObjRaw !== '') {
-                const boundedObjective = Math.max(0, Math.min(10, parseScore(mid1ObjRaw)));
-                mid1ObjInput.value = String(boundedObjective);
-                mid1DescInput.value = String(activeEvaluationSheet === '2'
-                    ? predictAttendanceBasedMid1DescriptiveMark(row.querySelector('.attendance').value)
-                    : predictMid1DescriptiveMark(boundedObjective));
-                mid1ObjRaw = mid1ObjInput.value;
+            if (mid1ObjRaw !== '') mid1ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid1ObjRaw))));
+            if (mid2ObjRaw !== '') mid2ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid2ObjRaw))));
+            if (assignmentRaw !== '') assignmentInput.value = String(Math.max(0, Math.min(5, parseScore(assignmentRaw))));
+            if (vivaRaw !== '') vivaInput.value = String(Math.max(0, Math.min(5, parseScore(vivaRaw))));
+
+            mid1ObjRaw = mid1ObjInput.value.trim();
+            mid2ObjRaw = mid2ObjInput.value.trim();
+            assignmentRaw = assignmentInput.value.trim();
+            vivaRaw = vivaInput.value.trim();
+            const hasAllPredictionInputs = [mid1ObjRaw, mid2ObjRaw, assignmentRaw, vivaRaw].every(Boolean);
+
+            if (hasAllPredictionInputs) {
+                const prediction = predictMidDescriptiveMarks(
+                    row.querySelector('.attendance').value,
+                    parseScore(mid1ObjRaw),
+                    parseScore(mid2ObjRaw),
+                    parseScore(assignmentRaw),
+                    parseScore(vivaRaw)
+                );
+                mid1DescInput.value = String(prediction.mid1Desc);
+                mid2DescInput.value = String(prediction.mid2Desc);
+                row.dataset.targetReached = prediction.targetReached ? 'true' : 'false';
             } else {
                 mid1DescInput.value = '';
+                mid2DescInput.value = '';
+                delete row.dataset.targetReached;
             }
 
             const mid1DescRaw = mid1DescInput.value.trim();
-            const mid2ObjRaw = row.querySelector('.mid2-obj').value.trim();
-            const mid2DescRaw = row.querySelector('.mid2-desc').value.trim();
-            const assignmentRaw = row.querySelector('.assignment').value.trim();
-            const vivaRaw = row.querySelector('.viva').value.trim();
+            const mid2DescRaw = mid2DescInput.value.trim();
 
             const hasAnyMarks = [mid1ObjRaw, mid1DescRaw, mid2ObjRaw, mid2DescRaw, assignmentRaw, vivaRaw].some(Boolean);
 
@@ -4622,7 +4660,19 @@ Exam Branch
             row.querySelector('.mid1-total').textContent = String(mid1Total);
             row.querySelector('.mid2-total').textContent = String(mid2Total);
             row.querySelector('.mid-avg').textContent = String(midAvg);
-            row.querySelector('.total').textContent = String(total);
+            const totalCell = row.querySelector('.total');
+            totalCell.textContent = String(total);
+            if (hasAllPredictionInputs) {
+                const targetReached = row.dataset.targetReached === 'true';
+                totalCell.title = targetReached
+                    ? 'Automatically calculated total; the 75% target is satisfied.'
+                    : 'The 75% target cannot be reached with these inputs, even at the allowed descriptive-mark maxima.';
+                totalCell.classList.toggle('text-danger', !targetReached);
+                totalCell.classList.toggle('fw-bold', !targetReached);
+            } else {
+                totalCell.removeAttribute('title');
+                totalCell.classList.remove('text-danger', 'fw-bold');
+            }
             setGradeCell(row.querySelector('.grade'), getGrade(total));
         }
 
@@ -4637,14 +4687,14 @@ Exam Branch
                     + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                     + '<td class="attendance-grade" data-grade="-">-</td>'
                     + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
-                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Predicted from attendance; maximum 16 guarantees (Obj + Desc) / 36 is below 75%"></td>'
+                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
                     + '<td class="mid1-total">-</td>'
-                    + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '" pattern="[0-9]*"></td>'
-                    + '<td><input type="text" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" pattern="[0-9]*"></td>'
+                    + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
+                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
                     + '<td class="mid2-total">-</td>'
                     + '<td class="mid-avg">-</td>'
-                    + '<td><input type="text" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '" pattern="[0-9]*"></td>'
-                    + '<td><input type="text" class="form-control form-control-sm viva" value="' + (student.viva || '') + '" pattern="[0-9]*"></td>'
+                    + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '"></td>'
+                    + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm viva" value="' + (student.viva || '') + '"></td>'
                     + '<td class="total">-</td>'
                     + '<td class="grade" data-grade="-">-</td>';
                 currentMarksBody.appendChild(row);
