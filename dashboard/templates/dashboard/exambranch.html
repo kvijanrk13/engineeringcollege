@@ -4564,7 +4564,14 @@ Exam Branch
 
         function predictAttendanceBasedMid1DescriptiveMark(attendancePercentage) {
             const boundedAttendance = Math.max(0, Math.min(100, parseAttendance(attendancePercentage)));
-            return Math.max(0, Math.min(20, Math.round(boundedAttendance * 20 / 100)));
+            // Desc must depend only on attendance, not on the student's Obj mark.
+            // A maximum Desc of 16 guarantees the strict threshold for every Obj
+            // from 0 to 10: (10 + 16) / 36 = 72.22%, which is below 75%.
+            const maximumAttendanceBasedDescription = 16;
+            return Math.max(0, Math.min(
+                maximumAttendanceBasedDescription,
+                Math.round(boundedAttendance * maximumAttendanceBasedDescription / 100)
+            ));
         }
 
         function recalculateEvaluationRow(row) {
@@ -4630,7 +4637,7 @@ Exam Branch
                     + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                     + '<td class="attendance-grade" data-grade="-">-</td>'
                     + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
-                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted to keep MID-1 below 75%"></td>'
+                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Predicted from attendance; maximum 16 guarantees (Obj + Desc) / 36 is below 75%"></td>'
                     + '<td class="mid1-total">-</td>'
                     + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '" pattern="[0-9]*"></td>'
                     + '<td><input type="text" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" pattern="[0-9]*"></td>'
