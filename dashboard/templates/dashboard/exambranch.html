@@ -381,6 +381,63 @@ Exam Branch
     #internalMarksTable th:nth-child(8), #internalMarksTable td:nth-child(8) { min-width: 150px; }
     #internalMarksTable th:nth-child(10), #internalMarksTable td:nth-child(10) { min-width: 155px; }
 
+    #internalMarksTable3 {
+        width: 100%;
+        min-width: 2400px;
+        table-layout: auto;
+    }
+
+    #internalMarksTable3 th,
+    #internalMarksTable3 td {
+        min-width: 120px;
+        height: 62px;
+        padding: 0.75rem 0.85rem;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    #internalMarksTable3 thead th {
+        height: 72px;
+        padding: 0.9rem;
+        line-height: 1.35;
+        white-space: normal;
+    }
+
+    #internalMarksTable3 input.form-control {
+        width: 100%;
+        min-width: 96px;
+        min-height: 42px;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.95rem;
+        text-align: center;
+    }
+
+    #internalMarksTable3 th:nth-child(1),
+    #internalMarksTable3 td:nth-child(1) {
+        width: 240px;
+        min-width: 240px;
+    }
+
+    #internalMarksTable3 td:nth-child(1) input.form-control {
+        width: 210px;
+        min-width: 210px;
+        padding-right: 0.85rem;
+        padding-left: 0.85rem;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+    }
+    #internalMarksTable3 th:nth-child(2), #internalMarksTable3 td:nth-child(2) { min-width: 135px; }
+    #internalMarksTable3 th:nth-child(3), #internalMarksTable3 td:nth-child(3) { min-width: 210px; }
+    #internalMarksTable3 th:nth-child(4), #internalMarksTable3 td:nth-child(4),
+    #internalMarksTable3 th:nth-child(8), #internalMarksTable3 td:nth-child(8) { min-width: 135px; }
+    #internalMarksTable3 th:nth-child(5), #internalMarksTable3 td:nth-child(5),
+    #internalMarksTable3 th:nth-child(9), #internalMarksTable3 td:nth-child(9) { min-width: 150px; }
+    #internalMarksTable3 th:nth-child(7), #internalMarksTable3 td:nth-child(7),
+    #internalMarksTable3 th:nth-child(11), #internalMarksTable3 td:nth-child(11) { min-width: 150px; }
+    #internalMarksTable3 th:nth-child(12), #internalMarksTable3 td:nth-child(12) { min-width: 155px; }
+    #internalMarksTable3 th:nth-child(14), #internalMarksTable3 td:nth-child(14) { min-width: 155px; }
+
     #teachingPlanTable textarea {
         min-height: 56px;
         resize: vertical;
@@ -1305,30 +1362,35 @@ Exam Branch
                     </div>
 
                     <!-- Internal Evaluation 3 Section -->
-                    <div class="evaluation-section" data-sheet="3" style="display: none;">
+                    <div class="evaluation-section mt-5" data-sheet="3" style="display: block;">
                         <div class="exam-table-wrap mb-4">
                             <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px;">
                                 <h5 style="margin: 0; color: #388e3c;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 3</h5>
                             </div>
-                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 37 students, the aggregate percentage is Σ(MID-1 totals) ÷ (37 × 30) × 100.</p>
+                            <p class="small text-muted mb-2">Evaluation 3 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 36 students, the aggregate is Σ(40-mark totals) ÷ (36 × 40) × 100.</p>
                             <div class="table-responsive" style="max-height: 520px; overflow: auto;">
-                                <table class="table exam-table table-striped" id="internalMarksTable3" style="min-width: 2100px;">
+                                <table class="table exam-table table-striped" id="internalMarksTable3" style="min-width: 2400px;">
                                     <thead>
                                         <tr>
-                                            <th>Roll No</th>
-                                            <th>ATTENDANCE</th>
-                                            <th>ATTENDANCE BASED MARKS GRADE</th>
-                                            <th>MID-1 Obj (10)</th>
-                                            <th>MID-1 Desc (20)</th>
-                                            <th>MID-1 Total</th>
-                                            <th>MID-2 Obj (10)</th>
-                                            <th>MID-2 Desc (20)</th>
-                                            <th>MID-2 Total</th>
-                                            <th>Average MID (30)</th>
-                                            <th>Assignment (5)</th>
-                                            <th>Viva (5)</th>
-                                            <th>Total (40)</th>
-                                            <th>Grade</th>
+                                            <th rowspan="2">Roll No</th>
+                                            <th rowspan="2">ATTENDANCE</th>
+                                            <th rowspan="2">ATTENDANCE BASED MARKS GRADE</th>
+                                            <th colspan="4">MID-1 (30)</th>
+                                            <th colspan="4">MID-2 (30)</th>
+                                            <th rowspan="2">Average MID (30)</th>
+                                            <th rowspan="2">PROJECT (10)</th>
+                                            <th rowspan="2">Total (40)</th>
+                                            <th rowspan="2">Grade</th>
+                                        </tr>
+                                        <tr>
+                                            <th>CIA (10)</th>
+                                            <th>VIVA (10)</th>
+                                            <th>EXAM (10)</th>
+                                            <th>TOTAL (30)</th>
+                                            <th>CIA (10)</th>
+                                            <th>VIVA (10)</th>
+                                            <th>EXAM (10)</th>
+                                            <th>TOTAL (30)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="marksBody3"></tbody>
@@ -4462,6 +4524,12 @@ Exam Branch
             '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
+        const thirdEvaluationAttendance = [
+            45, 62, 78, 30, 85, 90, 55, 72, 88, 65,
+            40, 58, 75, 92, 35, 68, 70, 80, 25, 87,
+            60, 74, 82, 50, 95, 42, 77, 69, 83, 57,
+            91, 38, 73, 66, 84, 48
+        ];
         const evaluationAttendanceVersion = 6;
         const secondEvaluationObjectiveMarksVersion = 1;
 
@@ -4483,6 +4551,7 @@ Exam Branch
         function getActiveEvaluationAttendance() {
             if (activeEvaluationSheet === '1') return defaultEvaluationAttendance;
             if (activeEvaluationSheet === '2') return secondEvaluationAttendance;
+            if (activeEvaluationSheet === '3') return thirdEvaluationAttendance;
             return [];
         }
 
@@ -4494,6 +4563,20 @@ Exam Branch
                 const seedMid1Obj = activeEvaluationSheet === '2'
                     && secondEvaluationObjectiveMarks[index - 1] !== undefined
                     ? String(secondEvaluationObjectiveMarks[index - 1]) : '';
+                if (activeEvaluationSheet === '3') {
+                    students.push({
+                        rollNo: activeRollNumbers[index - 1] || '',
+                        attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
+                        mid1Cia: '',
+                        mid1Viva: '',
+                        mid1Exam: '',
+                        mid2Cia: '',
+                        mid2Viva: '',
+                        mid2Exam: '',
+                        project: ''
+                    });
+                    continue;
+                }
                 students.push({
                     rollNo: activeRollNumbers[index - 1] || '',
                     attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
@@ -4592,6 +4675,10 @@ Exam Branch
         }
 
         function recalculateEvaluationRow(row) {
+            if (activeEvaluationSheet === '3') {
+                recalculateEvaluationThreeRow(row);
+                return;
+            }
             const mid1ObjInput = row.querySelector('.mid1-obj');
             const mid1DescInput = row.querySelector('.mid1-desc');
             const mid2ObjInput = row.querySelector('.mid2-obj');
@@ -4676,27 +4763,86 @@ Exam Branch
             setGradeCell(row.querySelector('.grade'), getGrade(total));
         }
 
+        function recalculateEvaluationThreeRow(row) {
+            const mid1CiaInput = row.querySelector('.mid1-cia');
+            const mid1VivaInput = row.querySelector('.mid1-viva');
+            const mid1ExamInput = row.querySelector('.mid1-exam');
+            const mid2CiaInput = row.querySelector('.mid2-cia');
+            const mid2VivaInput = row.querySelector('.mid2-viva');
+            const mid2ExamInput = row.querySelector('.mid2-exam');
+            const projectInput = row.querySelector('.project');
+
+            [mid1CiaInput, mid1VivaInput, mid1ExamInput, mid2CiaInput, mid2VivaInput, mid2ExamInput, projectInput].forEach(function (input) {
+                if (!input) return;
+                const raw = input.value.trim();
+                if (raw !== '') input.value = String(Math.max(0, Math.min(10, parseScore(raw))));
+            });
+
+            const mid1Cia = parseScore(mid1CiaInput ? mid1CiaInput.value : '');
+            const mid1Viva = parseScore(mid1VivaInput ? mid1VivaInput.value : '');
+            const mid1Exam = parseScore(mid1ExamInput ? mid1ExamInput.value : '');
+            const mid2Cia = parseScore(mid2CiaInput ? mid2CiaInput.value : '');
+            const mid2Viva = parseScore(mid2VivaInput ? mid2VivaInput.value : '');
+            const mid2Exam = parseScore(mid2ExamInput ? mid2ExamInput.value : '');
+            const project = parseScore(projectInput ? projectInput.value : '');
+
+            const mid1Total = Math.min(30, mid1Cia + mid1Viva + mid1Exam);
+            const mid2Total = Math.min(30, mid2Cia + mid2Viva + mid2Exam);
+            const midAvg = Math.round((mid1Total + mid2Total) / 2);
+            const total = Math.min(40, midAvg + project);
+
+            row.querySelector('.mid1-total').textContent = String(mid1Total);
+            row.querySelector('.mid2-total').textContent = String(mid2Total);
+            row.querySelector('.mid-avg').textContent = String(midAvg);
+            const totalCell = row.querySelector('.total');
+            totalCell.textContent = String(total);
+            totalCell.classList.remove('text-danger', 'fw-bold');
+            if (total < 14) {
+                totalCell.classList.add('text-danger', 'fw-bold');
+            }
+            setGradeCell(row.querySelector('.grade'), getGrade(total));
+        }
+
         function renderStudents(students) {
             const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
             currentMarksBody.innerHTML = '';
 
             students.forEach(function (student) {
                 const row = document.createElement('tr');
-                row.innerHTML = ''
-                    + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
-                    + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
-                    + '<td class="attendance-grade" data-grade="-">-</td>'
-                    + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
-                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
-                    + '<td class="mid1-total">-</td>'
-                    + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
-                    + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
-                    + '<td class="mid2-total">-</td>'
-                    + '<td class="mid-avg">-</td>'
-                    + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '"></td>'
-                    + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm viva" value="' + (student.viva || '') + '"></td>'
-                    + '<td class="total">-</td>'
-                    + '<td class="grade" data-grade="-">-</td>';
+                if (activeEvaluationSheet === '3') {
+                    row.innerHTML = ''
+                        + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
+                        + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
+                        + '<td class="attendance-grade" data-grade="-">-</td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-cia" value="' + (student.mid1Cia || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-viva" value="' + (student.mid1Viva || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-exam" value="' + (student.mid1Exam || '') + '"></td>'
+                        + '<td class="mid1-total">-</td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-cia" value="' + (student.mid2Cia || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-viva" value="' + (student.mid2Viva || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-exam" value="' + (student.mid2Exam || '') + '"></td>'
+                        + '<td class="mid2-total">-</td>'
+                        + '<td class="mid-avg">-</td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm project" value="' + (student.project || '') + '"></td>'
+                        + '<td class="total">-</td>'
+                        + '<td class="grade" data-grade="-">-</td>';
+                } else {
+                    row.innerHTML = ''
+                        + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
+                        + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
+                        + '<td class="attendance-grade" data-grade="-">-</td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
+                        + '<td class="mid1-total">-</td>'
+                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
+                        + '<td class="mid2-total">-</td>'
+                        + '<td class="mid-avg">-</td>'
+                        + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '"></td>'
+                        + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm viva" value="' + (student.viva || '') + '"></td>'
+                        + '<td class="total">-</td>'
+                        + '<td class="grade" data-grade="-">-</td>';
+                }
                 currentMarksBody.appendChild(row);
                 recalculateEvaluationRow(row);
             });
@@ -4709,6 +4855,25 @@ Exam Branch
         function getEvaluationRows() {
             const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
             return Array.from(currentMarksBody.querySelectorAll('tr')).map(function (row) {
+                if (activeEvaluationSheet === '3') {
+                    return {
+                        rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
+                        attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
+                        attendanceGrade: row.querySelector('.attendance-grade') ? row.querySelector('.attendance-grade').textContent : '-',
+                        mid1Cia: row.querySelector('.mid1-cia') ? row.querySelector('.mid1-cia').value : '',
+                        mid1Viva: row.querySelector('.mid1-viva') ? row.querySelector('.mid1-viva').value : '',
+                        mid1Exam: row.querySelector('.mid1-exam') ? row.querySelector('.mid1-exam').value : '',
+                        mid1Total: row.querySelector('.mid1-total') ? row.querySelector('.mid1-total').textContent : '-',
+                        mid2Cia: row.querySelector('.mid2-cia') ? row.querySelector('.mid2-cia').value : '',
+                        mid2Viva: row.querySelector('.mid2-viva') ? row.querySelector('.mid2-viva').value : '',
+                        mid2Exam: row.querySelector('.mid2-exam') ? row.querySelector('.mid2-exam').value : '',
+                        mid2Total: row.querySelector('.mid2-total') ? row.querySelector('.mid2-total').textContent : '-',
+                        midAvg: row.querySelector('.mid-avg') ? row.querySelector('.mid-avg').textContent : '-',
+                        project: row.querySelector('.project') ? row.querySelector('.project').value : '',
+                        total: row.querySelector('.total') ? row.querySelector('.total').textContent : '-',
+                        grade: row.querySelector('.grade') ? row.querySelector('.grade').textContent : '-'
+                    };
+                }
                 return {
                     rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
                     attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
@@ -4727,6 +4892,17 @@ Exam Branch
 
         function hasEvaluationContent() {
             return getEvaluationRows().some(function (student) {
+                if (activeEvaluationSheet === '3') {
+                    return student.rollNo.trim()
+                        || student.attendance.trim()
+                        || student.mid1Cia.trim()
+                        || student.mid1Viva.trim()
+                        || student.mid1Exam.trim()
+                        || student.mid2Cia.trim()
+                        || student.mid2Viva.trim()
+                        || student.mid2Exam.trim()
+                        || student.project.trim();
+                }
                 return student.rollNo.trim()
                     || student.attendance.trim()
                     || student.mid1Obj.trim()
@@ -5021,6 +5197,10 @@ Exam Branch
                     }
                 }
                 const hasEnteredMarks = savedRows.some(function (student) {
+                    if (activeEvaluationSheet === '3') {
+                        return [student.mid1Cia, student.mid1Viva, student.mid1Exam, student.mid2Cia, student.mid2Viva, student.mid2Exam, student.project]
+                            .some(function (value) { return String(value || '').trim(); });
+                    }
                     return [student.mid1Obj, student.mid1Desc, student.mid2Obj, student.mid2Desc, student.assignment, student.viva]
                         .some(function (value) { return String(value || '').trim(); });
                 });
