@@ -438,6 +438,63 @@ Exam Branch
     #internalMarksTable3 th:nth-child(12), #internalMarksTable3 td:nth-child(12) { min-width: 155px; }
     #internalMarksTable3 th:nth-child(14), #internalMarksTable3 td:nth-child(14) { min-width: 155px; }
 
+    #internalMarksTable4 {
+        width: 100%;
+        min-width: 2400px;
+        table-layout: auto;
+    }
+
+    #internalMarksTable4 th,
+    #internalMarksTable4 td {
+        min-width: 120px;
+        height: 62px;
+        padding: 0.75rem 0.85rem;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    #internalMarksTable4 thead th {
+        height: 72px;
+        padding: 0.9rem;
+        line-height: 1.35;
+        white-space: normal;
+    }
+
+    #internalMarksTable4 input.form-control {
+        width: 100%;
+        min-width: 96px;
+        min-height: 42px;
+        padding: 0.55rem 0.7rem;
+        font-size: 0.95rem;
+        text-align: center;
+    }
+
+    #internalMarksTable4 th:nth-child(1),
+    #internalMarksTable4 td:nth-child(1) {
+        width: 240px;
+        min-width: 240px;
+    }
+
+    #internalMarksTable4 td:nth-child(1) input.form-control {
+        width: 210px;
+        min-width: 210px;
+        padding-right: 0.85rem;
+        padding-left: 0.85rem;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+    }
+    #internalMarksTable4 th:nth-child(2), #internalMarksTable4 td:nth-child(2) { min-width: 135px; }
+    #internalMarksTable4 th:nth-child(3), #internalMarksTable4 td:nth-child(3) { min-width: 210px; }
+    #internalMarksTable4 th:nth-child(4), #internalMarksTable4 td:nth-child(4),
+    #internalMarksTable4 th:nth-child(8), #internalMarksTable4 td:nth-child(8) { min-width: 135px; }
+    #internalMarksTable4 th:nth-child(5), #internalMarksTable4 td:nth-child(5),
+    #internalMarksTable4 th:nth-child(9), #internalMarksTable4 td:nth-child(9) { min-width: 150px; }
+    #internalMarksTable4 th:nth-child(7), #internalMarksTable4 td:nth-child(7),
+    #internalMarksTable4 th:nth-child(11), #internalMarksTable4 td:nth-child(11) { min-width: 150px; }
+    #internalMarksTable4 th:nth-child(12), #internalMarksTable4 td:nth-child(12) { min-width: 155px; }
+    #internalMarksTable4 th:nth-child(14), #internalMarksTable4 td:nth-child(14) { min-width: 155px; }
+
     #teachingPlanTable textarea {
         min-height: 56px;
         resize: vertical;
@@ -1117,9 +1174,71 @@ Exam Branch
                             </button>
                         </div>
                     </div>
+                    <!-- Internal Evaluation 4 Section -->
+                    <div class="evaluation-section mt-5" data-sheet="4" style="display: block;">
+                        <div class="exam-table-wrap mb-4">
+                            <div style="background: #e8f5e9; padding: 12px; border-left: 4px solid #388e3c; margin-bottom: 16px; border-radius: 4px;">
+                                <h5 style="margin: 0; color: #388e3c;"><i class="fas fa-graduation-cap me-2"></i>Internal Evaluation 4</h5>
+                            </div>
+                            <p class="small text-muted mb-2">Evaluation 4 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 36 students, the aggregate is Σ(40-mark totals) ÷ (36 × 40) × 100.</p>
+                            <div class="table-responsive" style="max-height: 520px; overflow: auto;">
+                                <table class="table exam-table table-striped" id="internalMarksTable4" style="min-width: 2400px;">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2">Roll No</th>
+                                            <th rowspan="2">ATTENDANCE</th>
+                                            <th rowspan="2">ATTENDANCE BASED MARKS GRADE</th>
+                                            <th colspan="4">MID-1 (30)</th>
+                                            <th colspan="4">MID-2 (30)</th>
+                                            <th rowspan="2">Average MID (30)</th>
+                                            <th rowspan="2">PROJECT (10)</th>
+                                            <th rowspan="2">Total (40)</th>
+                                            <th rowspan="2">Grade</th>
+                                        </tr>
+                                        <tr>
+                                            <th>CIA (10)</th>
+                                            <th>VIVA (10)</th>
+                                            <th>EXAM (10)</th>
+                                            <th>TOTAL (30)</th>
+                                            <th>CIA (10)</th>
+                                            <th>VIVA (10)</th>
+                                            <th>EXAM (10)</th>
+                                            <th>TOTAL (30)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="marksBody4"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xl-8">
+                                <div class="exam-card">
+                                    <h3 class="card-title">Grade Distribution Summary - Evaluation 4</h3>
+                                    <p class="card-copy mb-3">
+                                        Students are ranked by the attendance percentage derived above. Each student
+                                        is selected once within the prescribed grade-distribution limits.
+                                    </p>
+                                    <div class="table-responsive">
+                                        <table class="table exam-table table-striped mb-0" id="gradeSummaryTable4">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grade</th>
+                                                    <th>Students Count out of Total Given %</th>
+                                                    <th>Can't Go Beyond</th>
+                                                    <th>Allocated % by Faculty</th>
+                                                    <th>Student Count</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="gradeSummaryBody4"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-                        </div>
                     </div>
 
                     <div class="exam-table-wrap">
@@ -1194,6 +1313,7 @@ Exam Branch
                                     <option value="1">Internal Evaluation 1</option>
                                     <option value="2">Internal Evaluation 2</option>
                                     <option value="3">Internal Evaluation 3</option>
+                                    <option value="4">Internal Evaluation 4</option>
                                 </select>
                                 <label for="studentCount" class="form-label">Total Students</label>
                                 <input type="text" id="studentCount" class="form-control" placeholder="Enter number of students" pattern="[0-9]*" value="56" />
@@ -2022,7 +2142,8 @@ Exam Branch
         const evaluationStorageKeys = {
             '1': 'examBranchEvaluationData',
             '2': 'examBranchEvaluationDataSecond',
-            '3': 'examBranchEvaluationDataThird'
+            '3': 'examBranchEvaluationDataThird',
+            '4': 'examBranchEvaluationDataFourth'
         };
         let activeEvaluationSheet = '1';
         const legacyTimeTableStorageKeys = ['examBranchTimeTableData', 'examBranchTimeTableDataNoSameHourRepeatsV2', 'examBranchTimeTableDataCompleteR22ThreeOneITV3', 'examBranchTimeTableDataCompleteR22ThreeOneITV4', 'examBranchTimeTableDataMainIndividualMatchV5', 'examBranchTimeTableDataR25FullLoadV6', 'examBranchTimeTableDataR25PowerBILoadV7', 'examBranchTimeTableDataAIMLOSLibraryV8', 'examBranchTimeTableDataActivitiesLastHourV9', 'examBranchTimeTableDataActivitiesLastHourV10', 'examBranchTimeTableDataSectionsProjectV11', 'examBranchTimeTableDataNoFourthYearProjectsV12', 'examBranchTimeTableDataAllowedContextsV13', 'examBranchTimeTableDataActivityPlacementV14', 'examBranchTimeTableDataNoLabClashesV15', 'examBranchTimeTableDataRequirementRepairV16', 'examBranchTimeTableDataRequiredLabsV17', 'examBranchTimeTableDataFixedLayoutsV18', 'examBranchTimeTableDataLoadSummaryV19', 'examBranchTimeTableDataPinnedFixedLayoutsV20'];
@@ -2065,7 +2186,8 @@ Exam Branch
         const marksBodyMap = {
             '1': document.getElementById('marksBody1'),
             '2': document.getElementById('marksBody2'),
-            '3': document.getElementById('marksBody3')
+            '3': document.getElementById('marksBody3'),
+            '4': document.getElementById('marksBody4')
         };
         const marksBody = marksBodyMap['1']; // Default for backward compatibility
         
@@ -2073,14 +2195,16 @@ Exam Branch
         const evaluationSectionsMap = {
             '1': document.querySelector('[data-sheet="1"]'),
             '2': document.querySelector('[data-sheet="2"]'),
-            '3': document.querySelector('[data-sheet="3"]')
+            '3': document.querySelector('[data-sheet="3"]'),
+            '4': document.querySelector('[data-sheet="4"]')
         };
         
         // Get all grade summary tables
         const gradeSummaryTableMap = {
             '1': document.getElementById('gradeSummaryTable1'),
             '2': document.getElementById('gradeSummaryTable2'),
-            '3': document.getElementById('gradeSummaryTable3')
+            '3': document.getElementById('gradeSummaryTable3'),
+            '4': document.getElementById('gradeSummaryTable4')
         };
         const gradeSummaryTable = gradeSummaryTableMap['1']; // Default for backward compatibility
         const timeTableSlots = Array.from(document.querySelectorAll('.timetable-slot'));
@@ -4530,6 +4654,24 @@ Exam Branch
             60, 74, 82, 50, 95, 42, 77, 69, 83, 57,
             91, 38, 73, 66, 84, 48
         ];
+        const fourthEvaluationRollNumbers = [
+            '24C11A1222',
+            '25C11A1202', '25C11A1203', '25C11A1204', '25C11A1205',
+            '25C11A1206', '25C11A1207', '25C11A1208', '25C11A1209',
+            '25C11A1210', '25C11A1211', '25C11A1212', '25C11A1213',
+            '25C11A1214', '25C11A1215', '25C11A1216', '25C11A1217',
+            '25C11A1218', '25C11A1219', '25C11A1220', '25C11A1221',
+            '25C11A1222', '25C11A1223', '25C11A1224', '25C11A1225',
+            '25C11A1226', '25C11A1227', '25C11A1228', '25C11A1229',
+            '25C11A1230', '25C11A1231', '25C11A1232', '25C11A1233',
+            '25C11A1234', '25C11A1235', '26C15A1201'
+        ];
+        const fourthEvaluationAttendance = [
+            50, 65, 80, 35, 88, 92, 60, 75, 90, 70,
+            45, 62, 78, 95, 40, 72, 74, 84, 30, 90,
+            65, 79, 86, 55, 98, 48, 82, 74, 88, 62,
+            94, 42, 78, 71, 89, 52
+        ];
         const evaluationAttendanceVersion = 6;
         const secondEvaluationObjectiveMarksVersion = 1;
 
@@ -4544,6 +4686,8 @@ Exam Branch
                 return secondEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '3') {
                 return thirdEvaluationRollNumbers;
+            } else if (activeEvaluationSheet === '4') {
+                return fourthEvaluationRollNumbers;
             }
             return activeEvaluationSheet === '1' ? defaultEvaluationRollNumbers : [];
         }
@@ -4552,6 +4696,7 @@ Exam Branch
             if (activeEvaluationSheet === '1') return defaultEvaluationAttendance;
             if (activeEvaluationSheet === '2') return secondEvaluationAttendance;
             if (activeEvaluationSheet === '3') return thirdEvaluationAttendance;
+            if (activeEvaluationSheet === '4') return fourthEvaluationAttendance;
             return [];
         }
 
@@ -4563,7 +4708,7 @@ Exam Branch
                 const seedMid1Obj = activeEvaluationSheet === '2'
                     && secondEvaluationObjectiveMarks[index - 1] !== undefined
                     ? String(secondEvaluationObjectiveMarks[index - 1]) : '';
-                if (activeEvaluationSheet === '3') {
+                if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     students.push({
                         rollNo: activeRollNumbers[index - 1] || '',
                         attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
@@ -4675,7 +4820,7 @@ Exam Branch
         }
 
         function recalculateEvaluationRow(row) {
-            if (activeEvaluationSheet === '3') {
+            if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                 recalculateEvaluationThreeRow(row);
                 return;
             }
@@ -4809,7 +4954,7 @@ Exam Branch
 
             students.forEach(function (student) {
                 const row = document.createElement('tr');
-                if (activeEvaluationSheet === '3') {
+                if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     row.innerHTML = ''
                         + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
                         + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
@@ -4855,7 +5000,7 @@ Exam Branch
         function getEvaluationRows() {
             const currentMarksBody = marksBodyMap[activeEvaluationSheet] || marksBodyMap['1'];
             return Array.from(currentMarksBody.querySelectorAll('tr')).map(function (row) {
-                if (activeEvaluationSheet === '3') {
+                if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     return {
                         rollNo: row.querySelector('.roll-no') ? row.querySelector('.roll-no').value : '',
                         attendance: row.querySelector('.attendance') ? row.querySelector('.attendance').value : '',
@@ -4892,7 +5037,7 @@ Exam Branch
 
         function hasEvaluationContent() {
             return getEvaluationRows().some(function (student) {
-                if (activeEvaluationSheet === '3') {
+                if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     return student.rollNo.trim()
                         || student.attendance.trim()
                         || student.mid1Cia.trim()
@@ -5197,7 +5342,7 @@ Exam Branch
                     }
                 }
                 const hasEnteredMarks = savedRows.some(function (student) {
-                    if (activeEvaluationSheet === '3') {
+                if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                         return [student.mid1Cia, student.mid1Viva, student.mid1Exam, student.mid2Cia, student.mid2Viva, student.mid2Exam, student.project]
                             .some(function (value) { return String(value || '').trim(); });
                     }
