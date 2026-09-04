@@ -2185,6 +2185,16 @@ Exam Branch
         const evaluationSaveStatus = document.getElementById('evaluationSaveStatus');
         const evaluationSheetSelect = document.getElementById('evaluationSheetSelect');
         const timeTableStatus = document.getElementById('timeTableStatus');
+
+        // Keep the Evaluation pane independent from Lesson Plan even if a browser
+        // repairs legacy malformed markup differently. Moving the pane also moves
+        // Internal Evaluations 1-4 as one unit under the Evaluation tab.
+        const examBranchTabsContent = document.getElementById('examBranchTabsContent');
+        const evaluationPane = document.getElementById('evaluation');
+        const subjectSelectionPane = document.getElementById('subject-selection');
+        if (examBranchTabsContent && evaluationPane && evaluationPane.parentElement !== examBranchTabsContent) {
+            examBranchTabsContent.insertBefore(evaluationPane, subjectSelectionPane || null);
+        }
         
         // Get all three marks body elements
         const marksBodyMap = {
