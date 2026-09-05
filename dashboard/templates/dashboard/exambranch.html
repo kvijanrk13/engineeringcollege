@@ -4668,10 +4668,10 @@ Exam Branch
             74.19, 61.29, 58.06, 58.06, 70.97, 51.61, 64.52, 77.42, 77.78
         ];
         const firstEvaluationObjectiveMarks = [
-            9, 10, 10, '', 10, 4, 8, 10, 10, 9,
-            7, 7, 10, 10, '', 8, 8, 8, 7, 10,
+            'AB', 9, 10, 'AB', 10, 4, 8, 10, 10, 9,
+            7, 7, 10, 10, 'AB', 8, 8, 8, 7, 10,
             10, 7, 5, 9, 9, 8, 9, 8, 10, 10,
-            8, 6, 7, 9, 9, 9, 8, 8, 8, '',
+            8, 6, 7, 9, 9, 9, 8, 8, 8, 'AB',
             10, 5, 8, 10, 10, 10, 10, 7, 10, 9,
             10, 10, 10, 10, 9, 9
         ];
@@ -4762,8 +4762,7 @@ Exam Branch
             const activeAttendance = getActiveEvaluationAttendance();
             for (let index = 1; index <= count; index += 1) {
                 const seedMid1Obj = (activeEvaluationSheet === '1'
-                    && firstEvaluationObjectiveMarks[index - 1] !== undefined
-                    && firstEvaluationObjectiveMarks[index - 1] !== '')
+                    && firstEvaluationObjectiveMarks[index - 1] !== undefined)
                     ? String(firstEvaluationObjectiveMarks[index - 1])
                     : (activeEvaluationSheet === '2'
                         && secondEvaluationObjectiveMarks[index - 1] !== undefined
@@ -4895,8 +4894,8 @@ Exam Branch
             let assignmentRaw = assignmentInput.value.trim();
             let vivaRaw = vivaInput.value.trim();
 
-            if (mid1ObjRaw !== '') mid1ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid1ObjRaw))));
-            if (mid2ObjRaw !== '') mid2ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid2ObjRaw))));
+            if (mid1ObjRaw !== '' && mid1ObjRaw !== 'AB') mid1ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid1ObjRaw))));
+            if (mid2ObjRaw !== '' && mid2ObjRaw !== 'AB') mid2ObjInput.value = String(Math.max(0, Math.min(10, parseScore(mid2ObjRaw))));
             if (assignmentRaw !== '') assignmentInput.value = String(Math.max(0, Math.min(5, parseScore(assignmentRaw))));
             if (vivaRaw !== '') vivaInput.value = String(Math.max(0, Math.min(5, parseScore(vivaRaw))));
 
@@ -5038,10 +5037,10 @@ Exam Branch
                         + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
                         + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                         + '<td class="attendance-grade" data-grade="-">-</td>'
-                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
+                        + '<td><input type="text" class="form-control form-control-sm mid1-obj" value="' + (student.mid1Obj || '') + '"></td>'
                         + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid1-desc" value="' + (student.mid1Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
                         + '<td class="mid1-total">-</td>'
-                        + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
+                        + '<td><input type="text" class="form-control form-control-sm mid2-obj" value="' + (student.mid2Obj || '') + '"></td>'
                         + '<td><input type="number" min="0" max="20" step="1" class="form-control form-control-sm mid2-desc" value="' + (student.mid2Desc || '') + '" readonly title="Automatically predicted from attendance when Obj, Assignment and Viva marks are entered"></td>'
                         + '<td class="mid2-total">-</td>'
                         + '<td class="mid-avg">-</td>'
