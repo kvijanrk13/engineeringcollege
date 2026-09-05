@@ -1268,6 +1268,9 @@ Exam Branch
                                     <button id="evalClearBtn" class="btn exam-btn exam-btn-danger">
                                         <i class="fas fa-broom me-2"></i>Clear Evaluation
                                     </button>
+                                    <button id="evalDownloadBtn" class="btn exam-btn exam-btn-warning">
+                                        <i class="fas fa-file-excel me-2"></i>Download Excel
+                                    </button>
                                 </div>
 
                                 <div id="evaluationSaveStatus" class="status-chip mt-3" data-tone="muted">
@@ -1286,6 +1289,10 @@ Exam Branch
                                 <div class="insight-card">
                                     <span>Average Internal</span>
                                     <strong id="evaluationAverageMark">0.0</strong>
+                                </div>
+                                <div class="insight-card">
+                                    <span>Class Avg %</span>
+                                    <strong id="evaluationClassAveragePercentage">0.0%</strong>
                                 </div>
                                 <div class="insight-card">
                                     <span>Pass Rate</span>
@@ -1313,7 +1320,7 @@ Exam Branch
                                 <label for="evaluationSubjectName1" class="form-label fw-bold">Subject Name / Lab Name</label>
                                 <input type="text" id="evaluationSubjectName1" class="form-control evaluation-subject-name" value="Data Mining" placeholder="Enter Subject Name or Lab Name">
                             </div>
-                            <p class="small text-muted mb-2">MID-1 descriptive marks are predicted automatically from the 0–10 objective mark. The prediction keeps each MID-1 total below 75% of 30 marks; for 56 students, the aggregate percentage is Σ(MID-1 totals) ÷ (56 × 30) × 100.</p>
+                            <p class="small text-muted mb-2">MID-1 and MID-2 descriptive marks (Desc) are predicted from attendance percentage, combined with the 0-10 objective and 0-5 assignment marks, to achieve a class average of at least 75% (32/40 target per student for Evaluation 1; 5 students with AB/blank marks are excluded). The percentage column shows each student's score out of 40. Download the table as Excel.</p>
                             <div class="table-responsive" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable1" style="min-width: 2100px;">
                                     <thead>
@@ -1331,10 +1338,8 @@ Exam Branch
                                             <th>Assignment (5)</th>
                                             <th>Viva (5)</th>
                                             <th>Total (40)</th>
+                                            <th>Percentage</th>
                                             <th>Grade</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="marksBody1"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -1394,6 +1399,7 @@ Exam Branch
                                             <th>Assignment (5)</th>
                                             <th>Viva (5)</th>
                                             <th>Total (40)</th>
+                                            <th>Percentage</th>
                                             <th>Grade</th>
                                         </tr>
                                     </thead>
@@ -4683,6 +4689,22 @@ Exam Branch
             5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
         ];
         const firstEvaluationAssignmentMarksVersion = 2;
+        const firstEvaluationMid2ObjectiveMarks = [
+            'AB', 9, 10, 'AB', 10, 4, 8, 10, 10, 9,
+            7, 7, 10, 10, 'AB', 8, 8, 8, 7, 10,
+            10, 7, 5, 9, 9, 8, 9, 8, 10, 10,
+            8, 6, 7, 9, 9, 9, 8, 8, 8, 'AB',
+            10, 5, 8, 10, 10, 10, 10, 7, 10, 9,
+            10, 10, 10, 10, 9, 9
+        ];
+        const firstEvaluationMid2ObjectiveMarksVersion = 1;
+        const firstEvaluationVivaMarks = [
+            '', 5, 5, '', 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+            '', 5, 5, 5, 5, 5, '', 5, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, '', 5,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
+        ];
+        const firstEvaluationVivaMarksVersion = 1;
         const secondEvaluationObjectiveMarks = [
             6, 10, 7, 8, 8, 8, 8, 6, 9, 7,
             9, 9, 6, 8, 8, 8, 7, 8, 8, 9,
@@ -4778,6 +4800,13 @@ Exam Branch
                     && firstEvaluationAssignmentMarks[index - 1] !== undefined
                     && firstEvaluationAssignmentMarks[index - 1] !== '')
                     ? String(firstEvaluationAssignmentMarks[index - 1]) : '';
+                const seedMid2Obj = (activeEvaluationSheet === '1'
+                    && firstEvaluationMid2ObjectiveMarks[index - 1] !== undefined)
+                    ? String(firstEvaluationMid2ObjectiveMarks[index - 1]) : '';
+                const seedViva = (activeEvaluationSheet === '1'
+                    && firstEvaluationVivaMarks[index - 1] !== undefined
+                    && firstEvaluationVivaMarks[index - 1] !== '')
+                    ? String(firstEvaluationVivaMarks[index - 1]) : '';
                 if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     students.push({
                         rollNo: activeRollNumbers[index - 1] || '',
@@ -4797,10 +4826,10 @@ Exam Branch
                     attendance: index <= activeAttendance.length ? String(activeAttendance[index - 1]) : '',
                     mid1Obj: seedMid1Obj,
                     mid1Desc: '',
-                    mid2Obj: '',
+                    mid2Obj: seedMid2Obj,
                     mid2Desc: '',
                     assignment: seedAssignment,
-                    viva: ''
+                    viva: seedViva
                 });
             }
             return students;
@@ -4874,9 +4903,11 @@ Exam Branch
                 return Math.min(40, midAverage + assignment + viva);
             }
 
+            const target = activeEvaluationSheet === '1' ? 32 : 30;
+
             // Preserve the attendance-based starting point, then add only the
-            // marks needed to reach 30/40 (75%) when the field maxima allow it.
-            while (calculatedTotal() < 30 && (mid1Desc < mid1Maximum || mid2Desc < mid2Maximum)) {
+            // marks needed to reach the target (75% class average) when the field maxima allow it.
+            while (calculatedTotal() < target && (mid1Desc < mid1Maximum || mid2Desc < mid2Maximum)) {
                 const mid1Fill = mid1Maximum ? mid1Desc / mid1Maximum : 1;
                 const mid2Fill = mid2Maximum ? mid2Desc / mid2Maximum : 1;
                 if (mid1Desc < mid1Maximum && (mid1Fill <= mid2Fill || mid2Desc >= mid2Maximum)) {
@@ -4886,7 +4917,7 @@ Exam Branch
                 }
             }
 
-            return { mid1Desc: mid1Desc, mid2Desc: mid2Desc, targetReached: calculatedTotal() >= 30 };
+            return { mid1Desc: mid1Desc, mid2Desc: mid2Desc, targetReached: calculatedTotal() >= target };
         }
 
         function recalculateEvaluationRow(row) {
@@ -4943,6 +4974,8 @@ Exam Branch
                 row.querySelector('.mid2-total').textContent = '-';
                 row.querySelector('.mid-avg').textContent = '-';
                 row.querySelector('.total').textContent = '-';
+                const pctCell = row.querySelector('.percentage');
+                if (pctCell) pctCell.textContent = '-';
                 setGradeCell(row.querySelector('.grade'), '-');
                 return;
             }
@@ -4970,12 +5003,20 @@ Exam Branch
                     ? 'Automatically calculated total; the 75% target is satisfied.'
                     : 'The 75% target cannot be reached with these inputs, even at the allowed descriptive-mark maxima.';
                 totalCell.classList.toggle('text-danger', !targetReached);
-                totalCell.classList.toggle('fw-bold', !targetReached);
+                 totalCell.classList.toggle('fw-bold', !targetReached);
             } else {
                 totalCell.removeAttribute('title');
                 totalCell.classList.remove('text-danger', 'fw-bold');
             }
             setGradeCell(row.querySelector('.grade'), getGrade(total));
+
+            const percentageCell = row.querySelector('.percentage');
+            if (percentageCell) {
+                const percentage = (total / 40 * 100).toFixed(1);
+                percentageCell.textContent = percentage + '%';
+                percentageCell.classList.toggle('text-success', total >= 30);
+                percentageCell.classList.toggle('text-danger', total < 30 && total !== 0);
+            }
         }
 
         function recalculateEvaluationThreeRow(row) {
@@ -5058,6 +5099,7 @@ Exam Branch
                         + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm assignment" value="' + (student.assignment || '') + '"></td>'
                         + '<td><input type="number" min="0" max="5" step="1" class="form-control form-control-sm viva" value="' + (student.viva || '') + '"></td>'
                         + '<td class="total">-</td>'
+                        + '<td class="percentage">-</td>'
                         + '<td class="grade" data-grade="-">-</td>';
                 }
                 currentMarksBody.appendChild(row);
@@ -5102,6 +5144,7 @@ Exam Branch
                     assignment: row.querySelector('.assignment') ? row.querySelector('.assignment').value : '',
                     viva: row.querySelector('.viva') ? row.querySelector('.viva').value : '',
                     total: row.querySelector('.total') ? row.querySelector('.total').textContent : '-',
+                    percentage: row.querySelector('.percentage') ? row.querySelector('.percentage').textContent : '-',
                     grade: row.querySelector('.grade') ? row.querySelector('.grade').textContent : '-'
                 };
             });
@@ -5289,6 +5332,17 @@ Exam Branch
             document.getElementById('evaluationAverageMark').textContent = averageTotal;
             document.getElementById('evaluationPassRate').textContent = passRate;
             document.getElementById('evaluationTopGrade').textContent = highestGrade;
+
+            var classAveragePercentageEl = document.getElementById('evaluationClassAveragePercentage');
+            if (classAveragePercentageEl && students.length) {
+                var totalAll = students.reduce(function (sum, student) { return sum + parseScore(student.total); }, 0);
+                var classAvgPercentage = (totalAll / (students.length * 40) * 100).toFixed(1);
+                classAveragePercentageEl.textContent = classAvgPercentage + '%';
+                classAveragePercentageEl.parentElement.classList.toggle('insight-card-success', parseFloat(classAvgPercentage) >= 75);
+                classAveragePercentageEl.parentElement.classList.toggle('insight-card-warning', parseFloat(classAvgPercentage) < 75);
+            } else if (classAveragePercentageEl) {
+                classAveragePercentageEl.textContent = '0.0%';
+            }
         }
 
         function updateGradeSummary() {
@@ -5356,6 +5410,8 @@ Exam Branch
                 objectiveMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationObjectiveMarksVersion
                     : (activeEvaluationSheet === '2' ? secondEvaluationObjectiveMarksVersion : 0),
                 assignmentMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationAssignmentMarksVersion : 0,
+                mid2ObjMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationMid2ObjectiveMarksVersion : 0,
+                vivaMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationVivaMarksVersion : 0,
                 rows: getEvaluationRows(),
                 savedAt: new Date().toISOString()
             };
@@ -5436,6 +5492,24 @@ Exam Branch
                         const seed = firstEvaluationAssignmentMarks[index];
                         return Object.assign({}, student, {
                             assignment: seed === undefined || seed === '' ? '' : String(seed)
+                        });
+                    });
+                }
+                if (activeEvaluationSheet === '1' && payload.mid2ObjMarksVersion !== firstEvaluationMid2ObjectiveMarksVersion) {
+                    savedRows = savedRows.map(function (student, index) {
+                        if (student.mid2Obj && String(student.mid2Obj).trim()) return student;
+                        const seed = firstEvaluationMid2ObjectiveMarks[index];
+                        return Object.assign({}, student, {
+                            mid2Obj: seed === undefined || seed === '' ? '' : String(seed)
+                        });
+                    });
+                }
+                if (activeEvaluationSheet === '1' && payload.vivaMarksVersion !== firstEvaluationVivaMarksVersion) {
+                    savedRows = savedRows.map(function (student, index) {
+                        if (student.viva && String(student.viva).trim()) return student;
+                        const seed = firstEvaluationVivaMarks[index];
+                        return Object.assign({}, student, {
+                            viva: seed === undefined || seed === '' ? '' : String(seed)
                         });
                     });
                 }
@@ -5800,28 +5874,50 @@ Exam Branch
             return '<html><head><meta charset="utf-8"></head><body>' + html + '</body></html>';
         }
 
-        function downloadMainTimeTableExcel(button) {
+        function buildEvaluationExcelHtml(table, title) {
+            const headerCells = table.querySelectorAll('thead th');
+            const colCount = headerCells.length || 15;
+            let html = '<table border="1">';
+            html += '<tr><th colspan="' + colCount + '">' + escapeExcelCell(title || 'Internal Evaluation') + '</th></tr>';
+            Array.from(table.rows).forEach(function (row) {
+                html += '<tr>';
+                Array.from(row.cells).forEach(function (cell) {
+                    if (cell.style.display === 'none') {
+                        return;
+                    }
+                    const tagName = cell.tagName && cell.tagName.toLowerCase() === 'th' ? 'th' : 'td';
+                    html += '<' + tagName + '>' + escapeExcelCell(getCellExportValue(cell).trim()) + '</' + tagName + '>';
+                });
+                html += '</tr>';
+            });
+            html += '</table>';
+            return '<html><head><meta charset="utf-8"></head><body>' + html + '</body></html>';
+        }
+
+        function downloadEvaluationExcel(button) {
             const table = button.dataset.tableSelector
                 ? document.querySelector(button.dataset.tableSelector)
-                : (button.closest('[data-empty-timetable-card]') ? button.closest('[data-empty-timetable-card]').querySelector('.time-table-grid') : null);
+                : (marksBodyMap[activeEvaluationSheet] || marksBodyMap['1']).closest('table');
             if (!table) {
-                setStatus(timeTableStatus, 'Could not find timetable to download', 'warning');
+                setStatus(evaluationSaveStatus, 'Could not find evaluation table to download', 'warning');
                 return;
             }
 
-            const title = button.dataset.tableTitle || 'Time Table';
-            const blob = new Blob([buildTableExcelHtml(table, title)], {
+            const title = button.dataset.tableTitle
+                || ('Internal Evaluation ' + activeEvaluationSheet + ' - ' + (evaluationSubjectNameMap[activeEvaluationSheet]
+                    ? evaluationSubjectNameMap[activeEvaluationSheet].value.trim() : ''));
+            const blob = new Blob([buildEvaluationExcelHtml(table, title)], {
                 type: 'application/vnd.ms-excel;charset=utf-8;'
             });
             const link = document.createElement('a');
-            const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'time-table';
+            const filename = (title || 'evaluation').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'evaluation';
             link.href = URL.createObjectURL(blob);
             link.download = filename + '.xls';
             document.body.appendChild(link);
             link.click();
             URL.revokeObjectURL(link.href);
             link.remove();
-            setStatus(timeTableStatus, title + ' Excel download started', 'success');
+            setStatus(evaluationSaveStatus, title + ' Excel download started', 'success');
         }
 
         function clearAllTimeTableSlotValues() {
@@ -9393,6 +9489,9 @@ Exam Branch
         document.getElementById('addStudentsBtn').addEventListener('click', regenerateStudentSheet);
         document.getElementById('evalSaveBtn').addEventListener('click', saveEvaluationData);
         document.getElementById('evalClearBtn').addEventListener('click', clearEvaluationData);
+        document.getElementById('evalDownloadBtn').addEventListener('click', function () {
+            downloadEvaluationExcel(this);
+        });
         Object.values(evaluationSubjectNameMap).forEach(function (input) {
             if (input) input.addEventListener('input', markEvaluationDirty);
         });
