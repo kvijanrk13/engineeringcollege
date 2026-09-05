@@ -1439,7 +1439,7 @@ Exam Branch
                                 <label for="evaluationSubjectName3" class="form-label fw-bold">Subject Name / Lab Name</label>
                                 <input type="text" id="evaluationSubjectName3" class="form-control evaluation-subject-name" value="Data Mining Lab" placeholder="Enter Subject Name or Lab Name">
                             </div>
-                            <p class="small text-muted mb-2">Evaluation 3 captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 36 students, the aggregate is Σ(40-mark totals) ÷ (36 × 40) × 100.</p>
+                            <p class="small text-muted mb-2">Evaluation 3 - Data Mining Lab captures CIA (10), VIVA (10) and EXAM (10) for each of MID-1 and MID-2, summed to a 30-mark MID total. The PROJECT (10) column contributes to the 40-mark total. For 56 students, the aggregate is Σ(40-mark totals) ÷ (56 × 40) × 100.</p>
                             <div class="table-responsive" style="max-height: 520px; overflow: auto;">
                                 <table class="table exam-table table-striped" id="internalMarksTable3" style="min-width: 2400px;">
                                     <thead>
@@ -4717,22 +4717,34 @@ Exam Branch
                 || ('examBranchEvaluationDataSheet' + activeEvaluationSheet);
         }
 
+        function getEvaluationOneRollNumbers() {
+            const evaluationOneBody = marksBodyMap['1'];
+            if (evaluationOneBody) {
+                const currentRollNumbers = Array.from(evaluationOneBody.querySelectorAll('.roll-no'))
+                    .map(function (input) { return input.value.trim(); });
+                if (currentRollNumbers.length) return currentRollNumbers;
+            }
+            return defaultEvaluationRollNumbers.slice();
+        }
+
         function getActiveEvaluationRollNumbers() {
             console.log('Active evaluation sheet:', activeEvaluationSheet);
             if (activeEvaluationSheet === '2') {
                 return secondEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '3') {
-                return thirdEvaluationRollNumbers;
+                return defaultEvaluationRollNumbers;
             } else if (activeEvaluationSheet === '4') {
                 return fourthEvaluationRollNumbers;
             }
+            return activeEvaluationSheet === '1' ? defaultEvaluationRollNumbers : [];
+        }
             return activeEvaluationSheet === '1' ? defaultEvaluationRollNumbers : [];
         }
 
         function getActiveEvaluationAttendance() {
             if (activeEvaluationSheet === '1') return defaultEvaluationAttendance;
             if (activeEvaluationSheet === '2') return secondEvaluationAttendance;
-            if (activeEvaluationSheet === '3') return thirdEvaluationAttendance;
+            if (activeEvaluationSheet === '3') return defaultEvaluationAttendance;
             if (activeEvaluationSheet === '4') return fourthEvaluationAttendance;
             return [];
         }
@@ -4992,8 +5004,10 @@ Exam Branch
             students.forEach(function (student) {
                 const row = document.createElement('tr');
                 if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
+                    const rollNumberAttributes = activeEvaluationSheet === '3'
+                        ? ' readonly title="Linked automatically from Internal Evaluation 1"' : '';
                     row.innerHTML = ''
-                        + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '" /></td>'
+                        + '<td><input type="text" class="form-control form-control-sm roll-no" value="' + (student.rollNo || '') + '"' + rollNumberAttributes + ' /></td>'
                         + '<td><input type="text" class="form-control form-control-sm attendance" value="' + (student.attendance ?? '') + '" pattern="[0-9]*"></td>'
                         + '<td class="attendance-grade" data-grade="-">-</td>'
                         + '<td><input type="number" min="0" max="10" step="1" class="form-control form-control-sm mid1-cia" value="' + (student.mid1Cia || '') + '"></td>'
@@ -5383,6 +5397,18 @@ Exam Branch
                             });
                         });
                     }
+                }
+                if (activeEvaluationSheet === '3') {
+                    savedRows = activeRollNumbers.map(function (rollNo, index) {
+                        const existing = savedRows[index] || {};
+                        return Object.assign({
+                            attendance: activeAttendance[index] === undefined ? '' : String(activeAttendance[index]),
+                            mid1Cia: '', mid1Viva: '', mid1Exam: '',
+                            mid2Cia: '', mid2Viva: '', mid2Exam: '', project: ''
+                        }, existing, {
+                            rollNo: rollNo
+                        });
+                    });
                 }
                 const hasEnteredMarks = savedRows.some(function (student) {
                 if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
@@ -9354,6 +9380,15 @@ Exam Branch
             if (marksBodyMap[sheetNum]) {
                 marksBodyMap[sheetNum].addEventListener('input', function (event) {
                     if (event.target.closest('tr')) {
+                        if (sheetNum === '1' && event.target.classList.contains('roll-no')) {
+                            const evaluationOneRows = Array.from(marksBodyMap['1'].querySelectorAll('tr'));
+                            const rowIndex = evaluationOneRows.indexOf(event.target.closest('tr'));
+                            const evaluationThreeRows = marksBodyMap['3']
+                                ? Array.from(marksBodyMap['3'].querySelectorAll('tr')) : [];
+                            const evaluationThreeRollInput = evaluationThreeRows[rowIndex]
+                                ? evaluationThreeRows[rowIndex].querySelector('.roll-no') : null;
+                            if (evaluationThreeRollInput) evaluationThreeRollInput.value = event.target.value;
+                        }
                         activeEvaluationSheet = sheetNum;
                         evaluationSheetSelect.value = sheetNum;
                         recalculateEvaluationRow(event.target.closest('tr'));
