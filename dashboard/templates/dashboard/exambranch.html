@@ -4686,10 +4686,10 @@ Exam Branch
             '25C11A1234', '25C11A1235', '26C15A1201'
         ];
         const thirdEvaluationAttendance = [
-            45, 62, 78, 30, 85, 90, 55, 72, 88, 65,
-            40, 58, 75, 92, 35, 68, 70, 80, 25, 87,
-            60, 74, 82, 50, 95, 42, 77, 69, 83, 57,
-            91, 38, 73, 66, 84, 48
+            33.33, 66.67, 77.78, 0, 88.89, 100, 55.56, 88.89, 88.89, 77.78, 11.11, 66.67, 77.78, 88.89,
+            0, 77.78, 66.67, 88.89, 11.11, 77.78, 11.11, 66.67, 66.67, 66.67, 77.78, 22.22, 88.89, 88.89,
+            88.89, 77.78, 66.67, 66.67, 88.89, 66.67, 66.67, 55.56, 88.89, 11.11, 88.89, 55.56, 77.78, 77.78,
+            66.67, 66.67, 11.11, 88.89, 88.89, 88.89, 77.78, 100, 22.22, 88.89, 77.78, 33.33, 55.56, 88.89
         ];
         const fourthEvaluationRollNumbers = [
             '24C11A1222',
@@ -4742,7 +4742,7 @@ Exam Branch
         function getActiveEvaluationAttendance() {
             if (activeEvaluationSheet === '1') return defaultEvaluationAttendance;
             if (activeEvaluationSheet === '2') return secondEvaluationAttendance;
-            if (activeEvaluationSheet === '3') return defaultEvaluationAttendance;
+            if (activeEvaluationSheet === '3') return thirdEvaluationAttendance;
             if (activeEvaluationSheet === '4') return fourthEvaluationAttendance;
             return [];
         }
