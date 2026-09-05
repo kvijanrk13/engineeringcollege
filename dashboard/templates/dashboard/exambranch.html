@@ -4676,6 +4676,13 @@ Exam Branch
             10, 10, 10, 10, 9, 9
         ];
         const firstEvaluationObjectiveMarksVersion = 2;
+        const firstEvaluationAssignmentMarks = [
+            5, '', '', 5, '', '', '', '', '', '', '', '', '', '',
+            5, '', '', '', '', 5, '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '', '', '', '', 5, '', '',
+            '', '', '', '', '', '', '', '', '', '', '', '', ''
+        ];
+        const firstEvaluationAssignmentMarksVersion = 1;
         const secondEvaluationObjectiveMarks = [
             6, 10, 7, 8, 8, 8, 8, 6, 9, 7,
             9, 9, 6, 8, 8, 8, 7, 8, 8, 9,
@@ -4767,6 +4774,10 @@ Exam Branch
                     : (activeEvaluationSheet === '2'
                         && secondEvaluationObjectiveMarks[index - 1] !== undefined
                         ? String(secondEvaluationObjectiveMarks[index - 1]) : '');
+                const seedAssignment = (activeEvaluationSheet === '1'
+                    && firstEvaluationAssignmentMarks[index - 1] !== undefined
+                    && firstEvaluationAssignmentMarks[index - 1] !== '')
+                    ? String(firstEvaluationAssignmentMarks[index - 1]) : '';
                 if (activeEvaluationSheet === '3' || activeEvaluationSheet === '4') {
                     students.push({
                         rollNo: activeRollNumbers[index - 1] || '',
@@ -4788,7 +4799,7 @@ Exam Branch
                     mid1Desc: '',
                     mid2Obj: '',
                     mid2Desc: '',
-                    assignment: '',
+                    assignment: seedAssignment,
                     viva: ''
                 });
             }
@@ -5344,6 +5355,7 @@ Exam Branch
                 attendanceVersion: evaluationAttendanceVersion,
                 objectiveMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationObjectiveMarksVersion
                     : (activeEvaluationSheet === '2' ? secondEvaluationObjectiveMarksVersion : 0),
+                assignmentMarksVersion: activeEvaluationSheet === '1' ? firstEvaluationAssignmentMarksVersion : 0,
                 rows: getEvaluationRows(),
                 savedAt: new Date().toISOString()
             };
@@ -5415,6 +5427,15 @@ Exam Branch
                         if (student.mid1Obj && String(student.mid1Obj).trim()) return student;
                         return Object.assign({}, student, {
                             mid1Obj: seed === undefined || seed === '' ? '' : String(seed)
+                        });
+                    });
+                }
+                if (activeEvaluationSheet === '1' && payload.assignmentMarksVersion !== firstEvaluationAssignmentMarksVersion) {
+                    savedRows = savedRows.map(function (student, index) {
+                        if (student.assignment && String(student.assignment).trim()) return student;
+                        const seed = firstEvaluationAssignmentMarks[index];
+                        return Object.assign({}, student, {
+                            assignment: seed === undefined || seed === '' ? '' : String(seed)
                         });
                     });
                 }
