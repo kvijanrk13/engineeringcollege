@@ -1350,7 +1350,12 @@ Exam Branch
                                                 <input type="text" id="evaluationOneMid1Average" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="MID-1 average achieved" />
                                                 <div id="evaluationOneMid1AverageNote" class="small text-muted mt-1">Must remain below 75%</div>
                                             </td>
-                                            <td colspan="9"></td>
+                                            <th colspan="2" class="text-end">MID-2 Average Achieved</th>
+                                            <td>
+                                                <input type="text" id="evaluationOneMid2Average" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="MID-2 average achieved" />
+                                                <div id="evaluationOneMid2AverageNote" class="small text-muted mt-1">Must remain below 75%</div>
+                                            </td>
+                                            <td colspan="6"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -5358,6 +5363,7 @@ Exam Branch
             }
 
             updateEvaluationOneMid1Average();
+            updateEvaluationOneMid2Average();
         }
 
         function updateEvaluationOneMid1Average() {
@@ -5387,6 +5393,35 @@ Exam Branch
             averageNote.classList.toggle('text-danger', isAtOrAboveLimit);
             averageNote.classList.toggle('text-success', completedMidOneTotals.length > 0 && !isAtOrAboveLimit);
             averageNote.classList.toggle('text-muted', !completedMidOneTotals.length);
+        }
+
+        function updateEvaluationOneMid2Average() {
+            const averageInput = document.getElementById('evaluationOneMid2Average');
+            const averageNote = document.getElementById('evaluationOneMid2AverageNote');
+            const evaluationOneMarksBody = marksBodyMap['1'];
+            if (!averageInput || !averageNote || !evaluationOneMarksBody) return;
+
+            const completedMidTwoTotals = Array.from(evaluationOneMarksBody.querySelectorAll('tr'))
+                .map(function (row) { return row.querySelector('.mid2-total').textContent.trim(); })
+                .filter(function (total) { return total !== '-' && total !== ''; })
+                .map(parseScore);
+            const averageAchieved = completedMidTwoTotals.length
+                ? completedMidTwoTotals.reduce(function (sum, total) { return sum + total; }, 0)
+                    / (completedMidTwoTotals.length * 30) * 100
+                : 0;
+            const isAtOrAboveLimit = averageAchieved >= 75;
+
+            averageInput.value = averageAchieved.toFixed(1) + '%';
+            averageInput.classList.toggle('is-invalid', isAtOrAboveLimit);
+            averageInput.classList.toggle('is-valid', completedMidTwoTotals.length > 0 && !isAtOrAboveLimit);
+            averageNote.textContent = !completedMidTwoTotals.length
+                ? 'No MID-2 totals entered yet'
+                : (isAtOrAboveLimit
+                    ? 'At or above 75% â€” reduce MID-2 marks'
+                    : 'Below 75% â€” requirement met');
+            averageNote.classList.toggle('text-danger', isAtOrAboveLimit);
+            averageNote.classList.toggle('text-success', completedMidTwoTotals.length > 0 && !isAtOrAboveLimit);
+            averageNote.classList.toggle('text-muted', !completedMidTwoTotals.length);
         }
 
         function updateGradeSummary() {
