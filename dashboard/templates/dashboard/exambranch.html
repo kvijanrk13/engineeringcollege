@@ -1355,7 +1355,12 @@ Exam Branch
                                                 <input type="text" id="evaluationOneMid2Average" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="MID-2 average achieved" />
                                                 <div id="evaluationOneMid2AverageNote" class="small text-muted mt-1">Must remain below 75%</div>
                                             </td>
-                                            <td colspan="6"></td>
+                                            <th colspan="3" class="text-end">Total Average Achieved</th>
+                                            <td>
+                                                <input type="text" id="evaluationOneTotalAverage" class="form-control form-control-sm fw-bold" value="0.0%" readonly aria-label="Total average achieved" />
+                                                <div id="evaluationOneTotalAverageNote" class="small text-muted mt-1">Must be at least 75%</div>
+                                            </td>
+                                            <td colspan="2"></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -5364,6 +5369,7 @@ Exam Branch
 
             updateEvaluationOneMid1Average();
             updateEvaluationOneMid2Average();
+            updateEvaluationOneTotalAverage();
         }
 
         function updateEvaluationOneMid1Average() {
@@ -5422,6 +5428,35 @@ Exam Branch
             averageNote.classList.toggle('text-danger', isAtOrAboveLimit);
             averageNote.classList.toggle('text-success', completedMidTwoTotals.length > 0 && !isAtOrAboveLimit);
             averageNote.classList.toggle('text-muted', !completedMidTwoTotals.length);
+        }
+
+        function updateEvaluationOneTotalAverage() {
+            const averageInput = document.getElementById('evaluationOneTotalAverage');
+            const averageNote = document.getElementById('evaluationOneTotalAverageNote');
+            const evaluationOneMarksBody = marksBodyMap['1'];
+            if (!averageInput || !averageNote || !evaluationOneMarksBody) return;
+
+            const completedTotals = Array.from(evaluationOneMarksBody.querySelectorAll('tr'))
+                .map(function (row) { return row.querySelector('.total').textContent.trim(); })
+                .filter(function (total) { return total !== '-' && total !== ''; })
+                .map(parseScore);
+            const averageAchieved = completedTotals.length
+                ? completedTotals.reduce(function (sum, total) { return sum + total; }, 0)
+                    / (completedTotals.length * 40) * 100
+                : 0;
+            const isBelowTarget = averageAchieved < 75;
+
+            averageInput.value = averageAchieved.toFixed(1) + '%';
+            averageInput.classList.toggle('is-invalid', completedTotals.length > 0 && isBelowTarget);
+            averageInput.classList.toggle('is-valid', completedTotals.length > 0 && !isBelowTarget);
+            averageNote.textContent = !completedTotals.length
+                ? 'No Total (40) values entered yet'
+                : (isBelowTarget
+                    ? 'Below 75% — increase total marks'
+                    : 'At or above 75% — requirement met');
+            averageNote.classList.toggle('text-danger', completedTotals.length > 0 && isBelowTarget);
+            averageNote.classList.toggle('text-success', completedTotals.length > 0 && !isBelowTarget);
+            averageNote.classList.toggle('text-muted', !completedTotals.length);
         }
 
         function updateGradeSummary() {
