@@ -3425,8 +3425,14 @@ def google_callback(request):
             return redirect('/etors/')
 
         if state_payload.get('target') == 'moocs':
-            if not email.endswith('@gmail.com'):
-                messages.error(request, 'MOOCS accepts verified Gmail accounts ending with @gmail.com.')
+            allowed_domains = getattr(
+                settings, 'MOOCS_GOOGLE_DOMAINS', ['anurag.ac.in', 'gmail.com']
+            )
+            if not any(email.endswith(f'@{domain}') for domain in allowed_domains):
+                messages.error(
+                    request,
+                    'MOOCS accepts verified accounts ending with @anurag.ac.in or @gmail.com.',
+                )
                 return redirect('/MOOCS')
             request.session['moocs_gmail_verified'] = True
             request.session['moocs_gmail_email'] = email
