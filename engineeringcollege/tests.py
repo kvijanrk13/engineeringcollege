@@ -1,4 +1,5 @@
 from django.test import TestCase, override_settings
+from dashboard.models import MoocsVisitor
 
 
 @override_settings(
@@ -82,6 +83,17 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/assessment_pattern.js")
         self.assertContains(response, "/static/moocs/gate_archive_sets.js")
         self.assertContains(response, "/static/moocs/feedback.css")
+
+    def test_verified_moocs_session_is_counted_as_a_unique_visitor(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "Student@Gmail.com"
+        session.save()
+
+        self.client.get("/MOOCS")
+        self.client.get("/MOOCS")
+
+        self.assertEqual(MoocsVisitor.objects.filter(email="student@gmail.com").count(), 1)
 
     def test_moocs_logout_closes_exam_session(self):
         session = self.client.session

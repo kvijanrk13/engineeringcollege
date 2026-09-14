@@ -1,4 +1,5 @@
 from urllib.parse import urlencode
+import logging
 
 from django.conf import settings
 from django.contrib.auth import logout
@@ -7,8 +8,19 @@ from django.urls import reverse
 from dashboard.models import MoocsVisitor
 
 
+logger = logging.getLogger(__name__)
+
+
 def moocs_exam(request):
     verified = request.session.get("moocs_gmail_verified") is True
+    email = request.session.get("moocs_gmail_email", "").strip().lower()
+    if verified and email:
+        try:
+            # Retry this on every verified visit so sessions created during a
+            # transient database error are still included in the unique count.
+            MoocsVisitor.objects.update_or_create(email=email, defaults={"email": email})
+        except Exception:
+            logger.exception("Unable to record verified MOOCS visitor")
     login_query = urlencode({"role": "student", "target": "moocs"})
     visitor_count = MoocsVisitor.objects.count()
     response = render(
@@ -16,7 +28,7 @@ def moocs_exam(request):
         "moocs/index.html",
         {
             "moocs_gmail_verified": verified,
-            "moocs_gmail_email": request.session.get("moocs_gmail_email", ""),
+            "moocs_gmail_email": email,
             "moocs_google_login_url": f"{reverse('dashboard:google_login')}?{login_query}",
             "google_signin_enabled": bool(
                 getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
