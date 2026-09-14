@@ -16,7 +16,7 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
-    <div class="exam-name"><strong>TS SET / NET</strong><span>Computer Science &amp; Applications</span></div>
+    <div class="exam-name"><strong>TS SET/NET/GATE</strong><span>Computer Science &amp; Applications</span></div>
     {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><form id="moocs-signout" class="moocs-signout-form" method="post" action="{% url 'moocs_logout' %}">{% csrf_token %}<button class="home-link" type="submit">Sign out</button></form>{% endif %}
   </header>
 
@@ -45,12 +45,12 @@
       </div>
       </div>
     </section>
-    {% else %}
-    <section id="welcome" class="welcome card">
+{% else %}
+    <section id="welcome" class="welcome card" hidden>
       <p class="eyebrow">PYQ-informed computer-based examination</p>
       <h1><span id="selected-set-title">Set 1</span> — Computer Science Mock Examination</h1>
       <p class="lead">Two hundred mixed, syllabus-aligned papers with 100 non-repeating questions in every set, including supplied previous-year papers and GATE source material.</p>
-      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Mixed syllabus + General Paper (100)</option><option value="2">Set 2 — Mixed syllabus + General Paper (100)</option><option value="3">Set 3 — Mixed syllabus + General Paper (100)</option><option value="4">Set 4 — Mixed syllabus + General Paper (100)</option><option value="5">Set 5 — Mixed syllabus + General Paper (100)</option><option value="6">Set 6 — Paper III + General Paper (100)</option><option value="7">Set 7 — Computer Science + General Paper (100)</option><option value="8">Set 8 — New mixed computer-science paper (100)</option><option value="9">Set 9 — New mixed computer-science paper (100)</option><option value="10">Set 10 — New mixed computer-science paper (100)</option><option value="11">Set 11 — Paper II answer key + new MCQs (100)</option><option value="12">Set 12 — New mixed computer-science paper (100)</option><option value="13">Set 13 — New mixed computer-science paper (100)</option><option value="14">Set 14 — New mixed computer-science paper (100)</option><option value="15">Set 15 — New mixed computer-science paper (100)</option><option value="16">Set 16 — New mixed computer-science paper (100)</option><option value="17">Set 17 — New mixed computer-science paper (100)</option><option value="18">Set 18 — New mixed computer-science paper (100)</option><option value="19">Set 19 — New mixed computer-science paper (100)</option><option value="20">Set 20 — New mixed computer-science paper (100)</option><option value="21">Set 21 — 2014 Paper I + new MCQs (100)</option><option value="22">Set 22 — New mixed computer-science paper (100)</option><option value="23">Set 23 — New mixed computer-science paper (100)</option><option value="24">Set 24 — New mixed computer-science paper (100)</option><option value="25">Set 25 — New mixed computer-science paper (100)</option><option value="26">Set 26 — New mixed computer-science paper (100)</option><option value="27">Set 27 — New mixed computer-science paper (100)</option><option value="28">Set 28 — New mixed computer-science paper (100)</option><option value="29">Set 29 — New mixed computer-science paper (100)</option><option value="30">Set 30 — New mixed computer-science paper (100)</option><option value="31">Set 31 — New mixed computer-science paper (100)</option><option value="32">Set 32 — New mixed computer-science paper (100)</option><option value="33">Set 33 — New mixed computer-science paper (100)</option><option value="34">Set 34 — New mixed computer-science paper (100)</option><option value="35">Set 35 — New mixed computer-science paper (100)</option><option value="36">Set 36 — New mixed computer-science paper (100)</option><option value="37">Set 37 — New mixed computer-science paper (100)</option><option value="38">Set 38 — New mixed computer-science paper (100)</option><option value="39">Set 39 — New mixed computer-science paper (100)</option><option value="40">Set 40 — New mixed computer-science paper (100)</option><option value="41">Set 41 — New unique computer-science MCQs (100)</option><option value="42">Set 42 — New unique computer-science MCQs (100)</option><option value="43">Set 43 — New unique computer-science MCQs (100)</option><option value="44">Set 44 — New unique computer-science MCQs (100)</option><option value="45">Set 45 — New unique computer-science MCQs (100)</option><option value="46">Set 46 — New unique computer-science MCQs (100)</option><option value="47">Set 47 — New unique computer-science MCQs (100)</option><option value="48">Set 48 — New unique computer-science MCQs (100)</option><option value="49">Set 49 — New unique computer-science MCQs (100)</option><option value="50">Set 50 — New unique computer-science MCQs (100)</option></select></label>
+      <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Mixed syllabus + General Paper (100)</option><option value="2">Set 2 — Mixed syllabus + General Paper (100)</option><option value="3">Set 3 — Mixed syllabus + General Paper (100)</option><option value="4">Set 4 — Mixed syllabus + General Paper (100)</option><option value="5">Set 5 — Mixed syllabus + General Paper (100)</option><option value="6">Set 6 — Paper III + General Paper (100)</option><option value="7">Set 7 — Computer Science + General Paper (100)</option><option value="8">Set 8 — New mixed computer-science paper (100)</option><option value="9">Set 9 — New mixed computer-science paper (100)</option><option value="10">Set 10 — New mixed computer-science paper (100)</option><option value="11">Set 11 — Paper II answer key + new MCQs (100)</option><option value="12">Set 12 — New mixed computer-science paper (100)</option><option value="13">Set 13 — New mixed computer-science paper (100)</option><option value="14">Set 14 — New mixed computer-science paper (100)</option><option value="15">Set 15 — New mixed computer-science paper (100)</option><option value="16">Set 16 — New mixed computer-science paper (100)</option><option value="17">Set 17 — New mixed computer-science paper (100)</option><option value="18">Set 18 — New mixed computer-science paper (100)</option><option value="19">Set 19 — New mixed computer-science paper (100)</option><option value="20">Set 20 — New mixed computer-science paper (100)</option><option value="21">Set 21 — 2014 Paper I + new MCQs (100)</option><option value="22">Set 22 — New mixed computer-science paper (100)</option><option value="23">Set 23 — New mixed computer-science paper (100)</option><option value="24">Set 24 — New mixed computer-science paper (100)</option><option value="25">Set 25 — New mixed computer-science paper (100)</option><option value="26">Set 26 — New mixed computer-science paper (100)</option><option value="27">Set 27 — New mixed computer-science paper (100)</option><option value="28">Set 28 — New mixed computer-science paper (100)</option><option value="29">Set 29 — New mixed computer-science paper (100)</option><option value="30">Set 30 — New mixed computer-science paper (100)</option><option value="31">Set 31 — New mixed computer-science paper (100)</option><option value="32">Set 32 — New mixed computer-science paper (100)</option><option value="33">Set 33 — New mixed computer-science paper (100)</option><option value="34">Set 34 — New mixed computer-science paper (100)</option><option value="35">Set 35 — New mixed computer-science paper (100)</option><option value="36">Set 36 — New mixed computer-science paper (100)</option><option value="37">Set 37 — New mixed computer-science paper (100)</option><option value="38">Set 38 — New mixed computer-science paper (100)</option><option value="39">Set 39 — New mixed computer-science paper (100)</option><option value="40">Set 40 — New mixed computer-science paper (100)</option><option value="41">Set 41 — New mixed computer-science paper (100)</option><option value="42">Set 42 — New mixed computer-science paper (100)</option><option value="43">Set 43 — New mixed computer-science paper (100)</option><option value="44">Set 44 — New mixed computer-science paper (100)</option><option value="45">Set 45 — New mixed computer-science paper (100)</option><option value="46">Set 46 — New mixed computer-science paper (100)</option><option value="47">Set 47 — New mixed computer-science paper (100)</option><option value="48">Set 48 — New mixed computer-science paper (100)</option><option value="49">Set 49 — New mixed computer-science paper (100)</option><option value="50">Set 50 — New mixed computer-science paper (100)</option></select></label>
       <script>
         (() => {
           const picker = document.getElementById('exam-set');
@@ -72,13 +72,13 @@
         <div><strong>Level 3</strong><span>Analytical questions</span></div>
       </div>
       <div class="syllabus">
-        <h2>UGC-NET syllabus coverage</h2>
-        <div class="chips"><span>Unit 1: Discrete Structures</span><span>Unit 2: Architecture</span><span>Unit 3: Programming &amp; Graphics</span><span>Unit 4: DBMS &amp; Data Mining</span><span>Unit 5: System Software &amp; OS</span><span>Unit 6: Software Engineering</span><span>Unit 7: Data Structures &amp; Algorithms</span><span>Unit 8: TOC &amp; Compilers</span><span>Unit 9: Networks</span><span>Unit 10: Artificial Intelligence</span></div>
+        <h2>Syllabus Coverage</h2>
+        <div class="chips"><span>Unit 1: Discrete Structures</span><span>Unit 2: Architecture</span><span>Unit 3: Programming & Graphics</span><span>Unit 4: DBMS & Data Mining</span><span>Unit 5: System Software & OS</span><span>Unit 6: Software Engineering</span><span>Unit 7: Data Structures & Algorithms</span><span>Unit 8: TOC & Compilers</span><span>Unit 9: Networks</span><span>Unit 10: Artificial Intelligence</span></div>
       </div>
       <p class="course-sources">Question design is informed by the supplied UGC-NET syllabus, Paper II PYQs, and established computer-science textbooks. You may open Home, Academics, and other site pages while signed in.</p>
-      <label class="declaration"><input id="declaration" type="checkbox"> I have read the instructions and am ready to begin.</label>
+      <label class="declaration"><input id="declaration" type="checkbox" checked> I have read the instructions and am ready to begin.</label>
       <div class="welcome-actions">
-        <button id="start-exam" class="primary" disabled>Start examination</button>
+        <button id="start-exam" class="primary">Start examination</button>
         <button id="reset-exam" class="secondary" type="button">Reset and start from Set 1</button>
       </div>
     </section>
@@ -112,6 +112,17 @@
         </aside>
       </div>
     </section>
+
+    <script>
+      (() => {
+        if (document.getElementById('welcome')) {
+          const declaration = document.getElementById('declaration');
+          const startBtn = document.getElementById('start-exam');
+          if (declaration) declaration.checked = true;
+          if (startBtn) startBtn.click();
+        }
+      })();
+    </script>
 
     <section id="result" class="result card" hidden>
       <p class="eyebrow">Examination submitted</p><h1>Performance report</h1>
