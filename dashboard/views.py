@@ -3406,11 +3406,13 @@ def google_callback(request):
             return redirect('/aeclibrary/')
 
         if state_payload.get('target') == 'etors':
-            allowed_domains = getattr(settings, 'ETORS_GOOGLE_DOMAINS', ['gmail.com'])
+            allowed_domains = getattr(
+                settings, 'ETORS_GOOGLE_DOMAINS', ['anurag.ac.in', 'gmail.com']
+            )
             if not any(email.endswith(f'@{domain}') for domain in allowed_domains):
                 messages.error(
                     request,
-                    'ETORS accepts verified Gmail accounts ending with @gmail.com.',
+                    'ETORS accepts verified accounts ending with @anurag.ac.in or @gmail.com.',
                 )
                 return redirect('/etors/')
 
