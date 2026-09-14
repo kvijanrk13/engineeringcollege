@@ -171,6 +171,18 @@
     })();
   </script>
   <script src="{% static 'moocs/bloom_taxonomy.js' %}?v=2"></script>
+  <script>
+    (() => {
+      const picker = document.getElementById('exam-set');
+      picker.replaceChildren(...Array.from({ length: 200 }, (_, index) => {
+        const set = index + 1;
+        const option = document.createElement('option');
+        option.value = String(set);
+        option.textContent = `Set ${set}`;
+        return option;
+      }));
+    })();
+  </script>
   <script src="{% static 'moocs/moocs.js' %}?v=43"></script>
   <script>
     /* Keep logout functional even if a deployment serves a stale cached exam script. */
