@@ -3324,6 +3324,7 @@ def google_login(request):
     }
     state = signing.dumps(state_payload, salt='google-oauth-state')
     request.session['google_oauth_state'] = state
+    request.session['google_oauth_target'] = target
 
     params = {
         'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
@@ -3340,8 +3341,11 @@ def google_login(request):
 def google_callback(request):
     state = request.GET.get('state', '')
     code = request.GET.get('code', '')
+    state_payload = {}
     if not state or not code:
         messages.error(request, 'Google sign-in was cancelled or incomplete.')
+        if request.session.get('google_oauth_target') == 'moocs':
+            return redirect('/MOOCS')
         return redirect('dashboard:admin_login')
 
     try:
@@ -3352,6 +3356,8 @@ def google_callback(request):
         )
     except signing.BadSignature:
         messages.error(request, 'Google sign-in session expired. Please try again.')
+        if request.session.get('google_oauth_target') == 'moocs':
+            return redirect('/MOOCS')
         return redirect('dashboard:admin_login')
 
     try:
@@ -3512,6 +3518,13 @@ def google_callback(request):
     except Exception as exc:
         logger.error(f"Google sign-in failed: {exc}", exc_info=True)
         messages.error(request, 'Google sign-in failed. Please try again.')
+        target = state_payload.get('target') or request.session.get('google_oauth_target')
+        if target == 'moocs':
+            return redirect('/MOOCS')
+        if target == 'aeclibrary':
+            return redirect('/aeclibrary/student/login/')
+        if target == 'etors':
+            return redirect('/etors/')
         return redirect('dashboard:admin_login')
 
 
