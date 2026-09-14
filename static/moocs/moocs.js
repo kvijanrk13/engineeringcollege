@@ -101,7 +101,58 @@ function createExplanationPdf(){
   return new Blob([pdf],{type:'application/pdf'});
 }
 function downloadExplanations(){const url=URL.createObjectURL(createExplanationPdf()),link=document.createElement('a');link.href=url;link.download=`MOOCS_Set_${selectedSet}_explanations.pdf`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-function submit(auto=false){if(!auto&&!confirm('Submit the examination? You cannot change responses after submission.'))return;clearInterval(timer);examInProgress=false;markSetCompleted();let correct=0,incorrect=0;const topic={};QUESTIONS.forEach((q,i)=>{const ok=isCorrect(q,state[i].answer);if(ok)correct++;else if(state[i].answer!==null)incorrect++;topic[q.t]??={c:0,n:0};topic[q.t].n++;if(ok)topic[q.t].c++});const attempted=correct+incorrect;$('score').textContent=correct*2;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=(attempted?Math.round(correct*100/attempted):0)+'%';$('topic-analysis').innerHTML='<h2>Topic analysis</h2>'+Object.entries(topic).map(([k,v])=>`<div class="topic-row"><b>${escapeHtml(k)}</b><span class="topic-track"><i style="width:${v.c*100/v.n}%"></i></span><span>${v.c}/${v.n}</span></div>`).join('');$('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)}
+const GATE_SUBJECTS=[
+  {name:'General Aptitude',colour:'#4f46e5'},
+  {name:'Engineering Mathematics',colour:'#0ea5e9'},
+  {name:'Digital Logic & COA',colour:'#f97316'},
+  {name:'Programming',colour:'#8b5cf6'},
+  {name:'DBMS',colour:'#14b8a6'},
+  {name:'Operating Systems',colour:'#ef4444'},
+  {name:'Software Engineering',colour:'#ec4899'},
+  {name:'Data Structures & Algorithms',colour:'#22c55e'},
+  {name:'TOC & Compiler Design',colour:'#eab308'},
+  {name:'Computer Networks',colour:'#06b6d4'},
+  {name:'AI & Machine Learning',colour:'#a855f7'}
+];
+function gateSubjectFor(question){
+  const unit=Number(question.unit),text=`${question.t||''} ${question.unitName||''} ${question.s||''} ${question.q||''}`;
+  if(unit===1||/Discrete Mathematics|Graph Theory|Combinatorics|Probability|Set Theory|Linear Algebra/i.test(text))return 1;
+  if(unit===2||/Digital Logic|Computer Architecture|Cache|Number Systems|Pipeline/i.test(text))return 2;
+  if(unit===3||/Programming|Java|C Programming|Web Technologies/i.test(text))return 3;
+  if(unit===4||/DBMS|Database|Data Mining/i.test(text))return 4;
+  if(unit===5||/Operating Systems|System Software/i.test(text))return 5;
+  if(unit===6||/Software Engineering/i.test(text))return 6;
+  if(unit===7||/Data Structures|Algorithms/i.test(text))return 7;
+  if(unit===8||/Theory of Computation|Automata|Compiler/i.test(text))return 8;
+  if(unit===9||/Networks|Cryptography|TCP|IP/i.test(text))return 9;
+  if(unit===10||/Artificial Intelligence|Machine Learning/i.test(text))return 10;
+  return 0;
+}
+function piePath(start,end){
+  const point=angle=>[50+50*Math.cos((angle-90)*Math.PI/180),50+50*Math.sin((angle-90)*Math.PI/180)];
+  const [x1,y1]=point(start),[x2,y2]=point(end),large=end-start>180?1:0;
+  return `M 50 50 L ${x1.toFixed(3)} ${y1.toFixed(3)} A 50 50 0 ${large} 1 ${x2.toFixed(3)} ${y2.toFixed(3)} Z`;
+}
+function renderGateAnalysis(subjects,totalCorrect){
+  const earned=subjects.reduce((sum,item)=>sum+item.correct,0),host=$('topic-analysis');
+  let angle=0;
+  const slices=earned?subjects.filter(item=>item.correct).map(item=>{
+    const next=angle+item.correct*360/earned,shape=next-angle>=359.999?'<circle class="gate-pie-slice" cx="50" cy="50" r="50" fill="'+item.colour+'"></circle>':`<path class="gate-pie-slice" d="${piePath(angle,next)}" fill="${item.colour}"><title>${escapeHtml(item.name)}: ${item.correct}/${item.total} correct</title></path>`;
+    angle=next;return shape;
+  }).join(''):'<circle cx="50" cy="50" r="50" fill="#dbe7f0"></circle>';
+  const legend=subjects.filter(item=>item.total).map(item=>`<div class="gate-subject-item"><i class="gate-subject-colour" style="background:${item.colour}"></i><span class="gate-subject-name">${escapeHtml(item.name)}</span><span class="gate-subject-score">${item.correct}/${item.total} · ${Math.round(item.correct*100/item.total)}%</span></div>`).join('');
+  host.innerHTML=`<section class="gate-analysis" aria-labelledby="gate-analysis-heading"><h2 id="gate-analysis-heading">GATE subject score analysis</h2><p class="gate-analysis-intro">Set ${selectedSet}: each colour is a GATE CS subject. Pie slices show the distribution of your correct answers; the legend shows your score in every subject included in this set.</p><div class="gate-analysis-layout"><div class="gate-pie-wrap"><svg class="gate-pie" viewBox="0 0 100 100" role="img" aria-label="GATE subject score distribution for Set ${selectedSet}">${slices}</svg><div class="gate-pie-center"><strong>${totalCorrect * 2}</strong><span>of ${QUESTIONS.length * 2} marks</span></div></div><div class="gate-subject-legend">${legend}</div></div></section>`;
+}
+function submit(auto=false){
+  if(!auto&&!confirm('Submit the examination? You cannot change responses after submission.'))return;
+  clearInterval(timer);examInProgress=false;markSetCompleted();
+  let correct=0,incorrect=0;const subjects=GATE_SUBJECTS.map(subject=>({...subject,correct:0,total:0}));
+  QUESTIONS.forEach((q,i)=>{const ok=isCorrect(q,state[i].answer),subject=subjects[gateSubjectFor(q)];subject.total++;if(ok){correct++;subject.correct++}else if(state[i].answer!==null)incorrect++});
+  const attempted=correct+incorrect;
+  $('score').textContent=correct*2;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=(attempted?Math.round(correct*100/attempted):0)+'%';
+  renderGateAnalysis(subjects,correct);
+  $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)
+}
 $('exam-set').onchange=e=>{selectedSet=Number(e.target.value);const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=()=>{QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};$('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
 $('reset-exam').onclick=()=>{
   if(!confirm('Reset all saved MOOCS progress and start again from Set 1?'))return;

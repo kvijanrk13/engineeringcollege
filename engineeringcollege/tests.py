@@ -64,7 +64,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/content_lock.css")
         self.assertContains(response, 'id="moocs-profile-email"')
         self.assertContains(response, "student@gmail.com")
-        self.assertContains(response, "/static/moocs/moocs.js?v=43")
+        self.assertContains(response, "/static/moocs/moocs.js?v=44")
         self.assertContains(response, "/static/moocs/extended_sets.js?v=7")
         self.assertContains(response, "/static/moocs/bloom_taxonomy.js?v=1")
         self.assertContains(response, 'id="moocs-signout"')
