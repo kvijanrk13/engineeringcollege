@@ -4,13 +4,11 @@ from django.conf import settings
 from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from dashboard.models import MoocsVisitor
 
 
 def moocs_exam(request):
     verified = request.session.get("moocs_gmail_verified") is True
     login_query = urlencode({"role": "student", "target": "moocs"})
-    visitor_count = MoocsVisitor.objects.count()
     response = render(
         request,
         "moocs/index.html",
@@ -22,7 +20,6 @@ def moocs_exam(request):
                 getattr(settings, "GOOGLE_OAUTH_CLIENT_ID", "")
                 and getattr(settings, "GOOGLE_OAUTH_CLIENT_SECRET", "")
             ),
-            "moocs_visitor_count": visitor_count,
         },
     )
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"

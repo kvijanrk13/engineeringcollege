@@ -860,15 +860,3 @@ class LabEnrollment(models.Model):
     class Meta:
         unique_together = ['lab_schedule', 'student']
         ordering = ['lab_schedule', 'student__student_name']
-
-
-class MoocsVisitor(models.Model):
-    email = models.EmailField(unique=True)
-    first_seen = models.DateTimeField(auto_now_add=True)
-    last_seen = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.email
-
-    class Meta:
-        ordering = ['-last_seen']
