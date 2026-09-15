@@ -153,7 +153,7 @@ function submit(auto=false){
   renderGateAnalysis(subjects,correct);
   $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)
 }
-$('exam-set').onchange=e=>{selectedSet=Number(e.target.value);const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=()=>{QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};$('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
+$('exam-set').onchange=e=>{const choice=Number(e.target.value);if(setRequiresPayment(choice)&&!isSetPaid(choice)){alert(`Set ${choice} requires a payment of ₹${MOCS_SET_3_FEE}. Select another set, or complete Set 2 and click "Continue to Set 3" to start the payment process.`);$('exam-set').value=String(selectedSet);return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=async()=>{if(setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet)){const paid=await handleSetAccess(selectedSet);if(!paid)return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};$('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
 $('reset-exam').onclick=()=>{
   if(!confirm('Reset all saved MOOCS progress and start again from Set 1?'))return;
   clearInterval(timer);
@@ -209,13 +209,18 @@ const updateNextSetPrompt=()=>{
   nextSetPanel.hidden=!hasNext;
   if(!hasNext)return;
   const nextSet=selectedSet+1;
-  $('next-set-message').textContent=`You completed Set ${selectedSet}. Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`;
-  continueNextSet.textContent=`Continue to Set ${nextSet}`;
+  const needsPayment=setRequiresPayment(nextSet)&&!isSetPaid(nextSet);
+  $('next-set-message').textContent=`You completed Set ${selectedSet}. ${needsPayment?`Set ${nextSet} requires a one-time payment of ₹${MOCS_SET_3_FEE} to unlock. Click below to proceed.`:`Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`}`;
+  continueNextSet.textContent=needsPayment?`Unlock Set ${nextSet} (₹${MOCS_SET_3_FEE})`:`Continue to Set ${nextSet}`;
   continueNextSet.dataset.nextSet=nextSet;
 };
 new MutationObserver(updateNextSetPrompt).observe($('result'),{attributes:true,attributeFilter:['hidden']});
-continueNextSet.onclick=()=>{
+continueNextSet.onclick=async()=>{
   const nextSet=Number(continueNextSet.dataset.nextSet);
+  if(setRequiresPayment(nextSet)&&!isSetPaid(nextSet)){
+    const paid=await handleSetAccess(nextSet);
+    if(!paid)return
+  }
   selectedSet=nextSet;
   $('exam-set').value=String(nextSet);
   $('exam-set').dispatchEvent(new Event('change'));

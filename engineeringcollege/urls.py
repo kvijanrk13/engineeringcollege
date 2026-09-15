@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from django.http import HttpResponse
 from django.views.static import serve
 from django.views.generic import TemplateView
-from .moocs_views import moocs_exam, moocs_logout
+from .moocs_views import moocs_exam, moocs_logout, moocs_create_order, moocs_verify_payment
 
 
 def health_check(request):
@@ -19,6 +19,8 @@ urlpatterns = [
     path('MOOCS', moocs_exam, name='moocs'),
     path('MOOCS/', moocs_exam),
     path('MOOCS/logout/', moocs_logout, name='moocs_logout'),
+    path('MOOCS/payment/create-order/', moocs_create_order, name='moocs_create_order'),
+    path('MOOCS/payment/verify/', moocs_verify_payment, name='moocs_verify_payment'),
     path('admin/', admin.site.urls),
     path('car-price/', include('car_price_app.urls')),
     path('aeclibrary/student/', include('student.urls')),

@@ -872,3 +872,30 @@ class MoocsVisitor(models.Model):
 
     class Meta:
         ordering = ['-last_seen']
+
+
+class MoocsPayment(models.Model):
+    PAYMENT_STATUS = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+
+    email = models.EmailField()
+    set_number = models.PositiveIntegerField(default=3)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=499.00)
+    razorpay_order_id = models.CharField(max_length=500, null=True, blank=True)
+    razorpay_payment_id = models.CharField(max_length=500, null=True, blank=True)
+    razorpay_signature = models.CharField(max_length=500, null=True, blank=True)
+    status = models.CharField(
+        max_length=20, choices=PAYMENT_STATUS, default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['email', 'set_number']
+
+    def __str__(self):
+        return f"{self.email} - Set {self.set_number} - {self.status}"
