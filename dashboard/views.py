@@ -3441,6 +3441,7 @@ def google_callback(request):
             request.session['google_oauth_email'] = email
             request.session['google_oauth_name'] = profile.get('name', '')
             audit_log(request, 'user_logged_in', status=AuditLog.STATUS_SUCCESS, user=email)
+            MoocsVisitor.objects.update_or_create(email=email, defaults={'email': email})
             messages.success(request, 'Gmail verified. You can now start the MOOCS examination.')
             return redirect('/MOOCS')
 
