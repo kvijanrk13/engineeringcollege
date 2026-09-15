@@ -46,7 +46,7 @@
       </div>
     </section>
 {% else %}
-    <section id="welcome" class="welcome card" hidden>
+    <section id="welcome" class="welcome card">
       <p class="eyebrow">PYQ-informed computer-based examination</p>
       <h1><span id="selected-set-title">Set 1</span> — Computer Science Mock Examination</h1>
       <p class="lead">Two hundred mixed, syllabus-aligned papers with 100 non-repeating questions in every set, including supplied previous-year papers and GATE source material.</p>
@@ -112,17 +112,6 @@
         </aside>
       </div>
     </section>
-
-    <script>
-      (() => {
-        if (document.getElementById('welcome')) {
-          const declaration = document.getElementById('declaration');
-          const startBtn = document.getElementById('start-exam');
-          if (declaration) declaration.checked = true;
-          if (startBtn) startBtn.click();
-        }
-      })();
-    </script>
 
     <section id="result" class="result card" hidden>
       <p class="eyebrow">Examination submitted</p><h1>Performance report</h1>
