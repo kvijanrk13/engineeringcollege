@@ -2,7 +2,7 @@
    This file must load BEFORE moocs.js so the helper functions are available
    when the exam engine assigns its click/change handlers. */
 
-const MOCS_SET_3_FEE = 499.00;
+const MOCS_SET_3_FEE = 200.00;
 const SETS_REQUIRING_PAYMENT = [3];
 const PAID_SETS_KEY_PREFIX = 'moocs-paid-sets:';
 

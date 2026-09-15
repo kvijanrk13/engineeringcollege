@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('email', models.EmailField(max_length=254)),
                 ('set_number', models.PositiveIntegerField(default=3)),
-                ('amount', models.DecimalField(decimal_places=2, default=499.0, max_digits=10)),
+                ('amount', models.DecimalField(decimal_places=2, default=200.0, max_digits=10)),
                 ('razorpay_order_id', models.CharField(blank=True, max_length=500, null=True)),
                 ('razorpay_payment_id', models.CharField(blank=True, max_length=500, null=True)),
                 ('razorpay_signature', models.CharField(blank=True, max_length=500, null=True)),

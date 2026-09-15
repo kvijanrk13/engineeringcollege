@@ -14,7 +14,7 @@ from dashboard.models import MoocsPayment, MoocsVisitor
 
 logger = logging.getLogger(__name__)
 
-MOCS_SET_3_ACCESS_FEE = getattr(settings, "MOOCS_SET_3_ACCESS_FEE", 499.00)
+MOCS_SET_3_ACCESS_FEE = getattr(settings, "MOOCS_SET_3_ACCESS_FEE", 200.00)
 
 
 def moocs_exam(request):
