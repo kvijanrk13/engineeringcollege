@@ -79,6 +79,7 @@
       <label class="declaration"><input id="declaration" type="checkbox" checked> I have read the instructions and am ready to begin.</label>
       <div class="welcome-actions">
         <button id="start-exam" class="primary">Start examination</button>
+        <button id="unlock-premium-set" class="secondary" type="button" hidden>Unlock Sets 3–200 (₹200)</button>
         <button id="reset-exam" class="secondary" type="button">Reset and start from Set 1</button>
       </div>
     </section>
@@ -183,8 +184,8 @@
       }));
     })();
   </script>
-  <script src="{% static 'moocs/moocs_payment.js' %}?v=1"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=45"></script>
+  <script src="{% static 'moocs/moocs_payment.js' %}?v=2"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=46"></script>
   <script>
     /* Keep logout functional even if a deployment serves a stale cached exam script. */
     document.getElementById('moocs-signout')?.addEventListener('submit', () => {

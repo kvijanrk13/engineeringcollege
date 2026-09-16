@@ -3,7 +3,7 @@
    when the exam engine assigns its click/change handlers. */
 
 const MOCS_SET_3_FEE = 200.00;
-const SETS_REQUIRING_PAYMENT = [3];
+const PREMIUM_SET_START = 3;
 const PAID_SETS_KEY_PREFIX = 'moocs-paid-sets:';
 
 const getCsrfToken = () => {
@@ -43,14 +43,16 @@ const writePaidSets = (sets) => {
   }
 };
 
-const isSetPaid = (setNumber) => readPaidSets().includes(setNumber);
+const isSetPaid = (setNumber) => (
+  !setRequiresPayment(setNumber) || readPaidSets().includes(PREMIUM_SET_START)
+);
 
 const markSetPaid = (setNumber) => {
   const sets = readPaidSets();
   if (!sets.includes(setNumber)) writePaidSets([...sets, setNumber]);
 };
 
-const setRequiresPayment = (setNumber) => SETS_REQUIRING_PAYMENT.includes(setNumber);
+const setRequiresPayment = (setNumber) => Number(setNumber) >= PREMIUM_SET_START;
 
 const canAccessSet = (setNumber) => !setRequiresPayment(setNumber) || isSetPaid(setNumber);
 
@@ -93,7 +95,7 @@ const handleSetAccess = async (setNumber) => {
         'X-CSRFToken': getCsrfToken(),
       },
       body: JSON.stringify({
-        set_number: setNumber,
+        set_number: PREMIUM_SET_START,
         email: email,
       }),
     });
@@ -109,7 +111,7 @@ const handleSetAccess = async (setNumber) => {
   }
 
   if (createData.already_paid) {
-    markSetPaid(setNumber);
+    markSetPaid(PREMIUM_SET_START);
     return true;
   }
 
@@ -126,7 +128,7 @@ const handleSetAccess = async (setNumber) => {
       amount: createData.amount,
       currency: createData.currency,
       name: 'MOOCS — TS SET/NET/GATE',
-      description: `Access to Set ${setNumber} mock examination`,
+      description: 'Access to Set 3 and all later MOOCS sets through Set 200',
       order_id: createData.order_id,
       handler: async (response) => {
         let verifyData;
@@ -138,7 +140,7 @@ const handleSetAccess = async (setNumber) => {
               'X-CSRFToken': getCsrfToken(),
             },
             body: JSON.stringify({
-              set_number: setNumber,
+              set_number: PREMIUM_SET_START,
               email: email,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
@@ -153,8 +155,8 @@ const handleSetAccess = async (setNumber) => {
         }
 
         if (verifyData.success) {
-          markSetPaid(setNumber);
-          alert(`Payment successful! Set ${setNumber} is now unlocked.`);
+          markSetPaid(PREMIUM_SET_START);
+          alert('Payment successful! Sets 3 through 200 are now unlocked.');
           resolve(true);
         } else {
           alert(verifyData.error || 'Payment verification failed. Please try again.');

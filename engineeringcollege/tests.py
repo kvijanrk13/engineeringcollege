@@ -1,5 +1,8 @@
+import json
+from unittest.mock import patch
+
 from django.test import TestCase, override_settings
-from dashboard.models import MoocsVisitor
+from dashboard.models import MoocsPayment, MoocsVisitor
 
 
 @override_settings(
@@ -115,3 +118,61 @@ class MoocsPageTests(TestCase):
         response = self.client.get("/")
 
         self.assertNotEqual(response.headers.get("Location"), "/MOOCS")
+
+
+class MoocsPaymentTests(TestCase):
+    def setUp(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "student@gmail.com"
+        session.save()
+
+    @patch("engineeringcollege.moocs_views._get_razorpay_client")
+    def test_set_3_order_uses_two_hundred_rupees(self, get_client):
+        get_client.return_value.order.create.return_value = {"id": "order_test_123"}
+
+        response = self.client.post(
+            "/MOOCS/payment/create-order/",
+            data=json.dumps({"set_number": 3, "email": "student@gmail.com"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["amount"], 20000)
+        self.assertEqual(payload["set_number"], 3)
+        payment = MoocsPayment.objects.get(email="student@gmail.com", set_number=3)
+        self.assertEqual(payment.amount, 200.00)
+        self.assertEqual(payment.razorpay_order_id, "order_test_123")
+
+    @patch("engineeringcollege.moocs_views._get_razorpay_client")
+    def test_set_3_verification_marks_premium_sets_paid(self, get_client):
+        get_client.return_value.utility.verify_payment_signature.return_value = None
+        get_client.return_value.payment.fetch.return_value = {
+            "order_id": "order_test_123",
+            "status": "captured",
+        }
+        MoocsPayment.objects.create(
+            email="student@gmail.com",
+            set_number=3,
+            amount=200.00,
+            razorpay_order_id="order_test_123",
+            status="pending",
+        )
+
+        response = self.client.post(
+            "/MOOCS/payment/verify/",
+            data=json.dumps({
+                "set_number": 3,
+                "email": "student@gmail.com",
+                "razorpay_payment_id": "pay_test_123",
+                "razorpay_order_id": "order_test_123",
+                "razorpay_signature": "signature_test",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payment = MoocsPayment.objects.get(email="student@gmail.com", set_number=3)
+        self.assertEqual(payment.status, "completed")
+        self.assertEqual(payment.razorpay_payment_id, "pay_test_123")

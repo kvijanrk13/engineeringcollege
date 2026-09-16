@@ -1,4 +1,5 @@
 from urllib.parse import urlencode
+from decimal import Decimal
 import json
 import logging
 
@@ -14,7 +15,10 @@ from dashboard.models import MoocsPayment, MoocsVisitor
 
 logger = logging.getLogger(__name__)
 
-MOCS_SET_3_ACCESS_FEE = getattr(settings, "MOOCS_SET_3_ACCESS_FEE", 200.00)
+MOOCS_SET_3_ACCESS_FEE = Decimal(
+    str(getattr(settings, "MOOCS_SET_3_ACCESS_FEE", "200.00") or "200.00")
+)
+MOCS_SET_3_ACCESS_FEE = MOOCS_SET_3_ACCESS_FEE
 
 
 def moocs_exam(request):
@@ -66,7 +70,13 @@ def moocs_create_order(request):
         return JsonResponse({"success": False, "error": "Invalid request body"}, status=400)
 
     email = body.get("email", "").strip().lower()
-    set_number = int(body.get("set_number", 3))
+    try:
+        set_number = int(body.get("set_number", 3))
+    except (TypeError, ValueError):
+        return JsonResponse({"success": False, "error": "Invalid set number"}, status=400)
+
+    if set_number != 3:
+        return JsonResponse({"success": False, "error": "Set 3 payment is required"}, status=400)
 
     if not verified or email != session_email:
         return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
@@ -126,13 +136,26 @@ def moocs_verify_payment(request):
         return JsonResponse({"success": False, "error": "Invalid request body"}, status=400)
 
     email = body.get("email", "").strip().lower()
-    set_number = int(body.get("set_number", 3))
+    try:
+        set_number = int(body.get("set_number", 3))
+    except (TypeError, ValueError):
+        return JsonResponse({"success": False, "error": "Invalid set number"}, status=400)
+
+    if set_number != 3:
+        return JsonResponse({"success": False, "error": "Set 3 payment is required"}, status=400)
+
     payment_id = body.get("razorpay_payment_id", "")
     order_id = body.get("razorpay_order_id", "")
     signature = body.get("razorpay_signature", "")
 
     if not verified or email != session_email:
         return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
+
+    payment_record = MoocsPayment.objects.filter(
+        email=email, set_number=set_number, razorpay_order_id=order_id
+    ).first()
+    if not payment_record:
+        return JsonResponse({"success": False, "error": "Payment order not found"}, status=400)
 
     params_dict = {
         "razorpay_payment_id": payment_id,
@@ -144,18 +167,24 @@ def moocs_verify_payment(request):
         result = _get_razorpay_client().utility.verify_payment_signature(params_dict)
         if result is not None:
             raise ValueError("Signature verification failed")
+        gateway_payment = _get_razorpay_client().payment.fetch(payment_id)
+        if gateway_payment.get("order_id") != order_id or gateway_payment.get("status") != "captured":
+            raise ValueError("Payment was not captured")
     except Exception:
-        logger.exception("Razorpay signature verification failed for MOOCS Set %s", set_number)
-        MoocsPayment.objects.filter(email=email, set_number=set_number).update(status="failed")
+        logger.exception("Razorpay payment verification failed for MOOCS Set %s", set_number)
+        payment_record.status = "failed"
+        payment_record.save(update_fields=["status", "updated_at"])
         return JsonResponse({"success": False, "error": "Payment verification failed"}, status=400)
 
-    MoocsPayment.objects.filter(
-        email=email, set_number=set_number, razorpay_order_id=order_id
-    ).update(
-        status="completed",
-        razorpay_payment_id=payment_id,
-        razorpay_signature=signature,
-    )
+    payment_record.status = "completed"
+    payment_record.razorpay_payment_id = payment_id
+    payment_record.razorpay_signature = signature
+    payment_record.save(update_fields=[
+        "status",
+        "razorpay_payment_id",
+        "razorpay_signature",
+        "updated_at",
+    ])
 
     return JsonResponse({"success": True, "set_number": set_number, "email": email})
 

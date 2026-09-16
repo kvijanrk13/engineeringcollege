@@ -883,7 +883,7 @@ class MoocsPayment(models.Model):
 
     email = models.EmailField()
     set_number = models.PositiveIntegerField(default=3)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=499.00)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=200.00)
     razorpay_order_id = models.CharField(max_length=500, null=True, blank=True)
     razorpay_payment_id = models.CharField(max_length=500, null=True, blank=True)
     razorpay_signature = models.CharField(max_length=500, null=True, blank=True)
