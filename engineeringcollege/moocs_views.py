@@ -56,6 +56,77 @@ def _get_razorpay_client():
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 
+def _create_moocs_order(email, set_number):
+    amount = int(MOCS_SET_3_ACCESS_FEE * 100)
+    razorpay_order = _get_razorpay_client().order.create(
+        dict(
+            amount=amount,
+            currency="INR",
+            receipt=f"moocs_set_{set_number}_{email}",
+        )
+    )
+    MoocsPayment.objects.update_or_create(
+        email=email,
+        set_number=set_number,
+        defaults={
+            "amount": MOCS_SET_3_ACCESS_FEE,
+            "razorpay_order_id": razorpay_order["id"],
+            "status": "pending",
+        },
+    )
+    return razorpay_order, amount
+
+
+def moocs_payment(request):
+    verified = request.session.get("moocs_gmail_verified") is True
+    email = request.session.get("moocs_gmail_email", "").strip().lower()
+    if not verified or not email:
+        login_query = urlencode({"role": "student", "target": "moocs"})
+        return redirect(f"{reverse('dashboard:google_login')}?{login_query}")
+
+    try:
+        set_number = int(request.GET.get("set", "3"))
+    except (TypeError, ValueError):
+        set_number = 3
+    if set_number != 3:
+        set_number = 3
+
+    existing_payment = MoocsPayment.objects.filter(
+        email=email, set_number=set_number
+    ).order_by("-updated_at").first()
+    if existing_payment and existing_payment.status == "completed":
+        return redirect("/MOOCS/?payment=success&next_set=3")
+
+    if existing_payment and existing_payment.status == "pending" and existing_payment.razorpay_order_id:
+        razorpay_order = {"id": existing_payment.razorpay_order_id}
+        amount = int(existing_payment.amount * 100)
+    else:
+        try:
+            razorpay_order, amount = _create_moocs_order(email, set_number)
+        except Exception:
+            logger.exception("Failed to create Razorpay order for MOOCS Set %s", set_number)
+            return JsonResponse(
+                {"success": False, "error": "Unable to create payment order"},
+                status=500,
+            )
+
+    response = render(
+        request,
+        "moocs/payment.html",
+        {
+            "moocs_gmail_email": email,
+            "moocs_set_number": set_number,
+            "moocs_amount": amount,
+            "moocs_amount_paise": amount,
+            "moocs_razorpay_key_id": settings.RAZORPAY_KEY_ID,
+            "moocs_razorpay_order_id": razorpay_order["id"],
+        },
+    )
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response["Pragma"] = "no-cache"
+    return response
+
+
 @csrf_exempt
 def moocs_create_order(request):
     if not request.method == "POST":
@@ -85,29 +156,11 @@ def moocs_create_order(request):
     if MoocsPayment.objects.filter(email=email, set_number=set_number, status="completed").exists():
         return JsonResponse({"success": True, "already_paid": True})
 
-    amount = int(MOCS_SET_3_ACCESS_FEE * 100)
-
     try:
-        razorpay_order = _get_razorpay_client().order.create(
-            dict(
-                amount=amount,
-                currency="INR",
-                receipt=f"moocs_set_{set_number}_{email}",
-            )
-        )
+        razorpay_order, amount = _create_moocs_order(email, set_number)
     except Exception:
         logger.exception("Failed to create Razorpay order for MOOCS Set %s", set_number)
         return JsonResponse({"success": False, "error": "Unable to create payment order"}, status=500)
-
-    MoocsPayment.objects.update_or_create(
-        email=email,
-        set_number=set_number,
-        defaults={
-            "amount": MOCS_SET_3_ACCESS_FEE,
-            "razorpay_order_id": razorpay_order["id"],
-            "status": "pending",
-        },
-    )
 
     return JsonResponse(
         {

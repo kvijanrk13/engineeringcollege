@@ -1,0 +1,116 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MOOCS Payment — Sets 3–200</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#172033; --muted:#667085; --line:#d8dee9; --brand:#4f46e5; --success:#15803d; --danger:#b42318; --panel:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:grid; place-items:center; padding:24px; color:var(--ink); background:linear-gradient(145deg,#eef2ff,#f8fafc); font-family:Manrope,Arial,sans-serif; }
+    main { width:min(100%,620px); }
+    .card { padding:32px; border:1px solid var(--line); border-radius:24px; background:var(--panel); box-shadow:0 24px 70px rgba(30,41,59,.14); }
+    .brand { display:inline-block; margin-bottom:24px; color:var(--brand); font-size:20px; font-weight:800; letter-spacing:.08em; text-decoration:none; }
+    h1 { margin:0 0 10px; font-family:"Playfair Display",Georgia,serif; font-size:clamp(32px,6vw,48px); }
+    .lead { margin:0 0 24px; color:var(--muted); line-height:1.65; }
+    .summary { display:grid; grid-template-columns:1fr auto; gap:12px; padding:14px 0; border-top:1px solid var(--line); }
+    .summary span { color:var(--muted); }
+    .summary strong { font-size:20px; }
+    .amount { color:var(--brand); font-size:32px; font-weight:800; }
+    .notice { margin:18px 0 0; padding:14px 16px; border-radius:12px; background:#eef2ff; color:#3730a3; line-height:1.5; }
+    .error { margin-top:16px; padding:14px 16px; border-radius:12px; background:#fff1f0; color:var(--danger); }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+    button, a.button { appearance:none; border:0; border-radius:999px; padding:13px 20px; cursor:pointer; font:inherit; font-weight:700; text-decoration:none; }
+    .primary { color:#fff; background:var(--brand); }
+    .secondary { color:var(--ink); background:#e9edf5; }
+    [hidden] { display:none !important; }
+    @media (max-width:520px) { body { padding:12px; } .card { padding:24px 18px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <a class="brand" href="/MOOCS">MOOCS</a>
+      <p>Secure examination access</p>
+      <h1>Unlock Sets 3–200</h1>
+      <p class="lead">Complete the one-time payment for Set 3 to continue through Set 200.</p>
+      <div class="summary"><span>Logged-in account</span><strong>{{ moocs_gmail_email }}</strong></div>
+      <div class="summary"><span>Access fee</span><strong class="amount">₹{{ moocs_amount|floatformat:2 }}</strong></div>
+      <div class="summary"><span>Payment provider</span><strong>Razorpay</strong></div>
+      <p class="notice">You will be returned to MOOCS after Razorpay confirms the payment.</p>
+      <div id="payment-error" class="error" hidden>Razorpay Checkout could not be loaded. Return to MOOCS and try again.</div>
+      <div class="actions">
+        <button id="open-payment" class="primary" type="button">Open Razorpay payment</button>
+        <a class="button secondary" href="/MOOCS">Return to MOOCS</a>
+      </div>
+    </section>
+  </main>
+  {% csrf_token %}
+  {{ moocs_gmail_email|json_script:"moocs-payment-email" }}
+  {{ moocs_razorpay_key_id|json_script:"moocs-payment-key" }}
+  {{ moocs_razorpay_order_id|json_script:"moocs-payment-order" }}
+  {{ moocs_amount_paise|json_script:"moocs-payment-amount" }}
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    (() => {
+      const email = JSON.parse(document.getElementById('moocs-payment-email').textContent);
+      const key = JSON.parse(document.getElementById('moocs-payment-key').textContent);
+      const orderId = JSON.parse(document.getElementById('moocs-payment-order').textContent);
+      const amount = JSON.parse(document.getElementById('moocs-payment-amount').textContent);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const finish = (path) => { window.location.href = path; };
+      const markPaid = () => {
+        const storageKey = `moocs-paid-sets:${email}`;
+        const paid = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        if (!paid.includes(3)) localStorage.setItem(storageKey, JSON.stringify([...paid, 3]));
+      };
+      const verifyPayment = async (response) => {
+        try {
+          const result = await fetch('/MOOCS/payment/verify/', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'X-CSRFToken': csrfToken},
+            body: JSON.stringify({
+              set_number: 3,
+              email,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const payload = await result.json();
+          if (!payload.success) throw new Error(payload.error || 'Payment verification failed');
+          markPaid();
+          finish('/MOOCS/?payment=success&next_set=3');
+        } catch (error) {
+          finish('/MOOCS/?payment=failed&next_set=3');
+        }
+      };
+      const openPayment = () => {
+        if (typeof window.Razorpay !== 'function') {
+          document.getElementById('payment-error').hidden = false;
+          return;
+        }
+        const checkout = new window.Razorpay({
+          key,
+          amount,
+          currency: 'INR',
+          name: 'MOOCS — TS SET/NET/GATE',
+          description: 'Access to Set 3 and all later MOOCS sets through Set 200',
+          order_id: orderId,
+          handler: verifyPayment,
+          modal: {ondismiss: () => finish('/MOOCS/?payment=cancelled&next_set=3')},
+          theme: {color: '#4f46e5'},
+        });
+        checkout.on('payment.failed', () => finish('/MOOCS/?payment=failed&next_set=3'));
+        checkout.open();
+      };
+      document.getElementById('open-payment').addEventListener('click', openPayment);
+      openPayment();
+    })();
+  </script>
+</body>
+</html>
