@@ -127,6 +127,7 @@ class MoocsPaymentTests(TestCase):
         session["moocs_gmail_email"] = "student@gmail.com"
         session.save()
 
+    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret")
     @patch("engineeringcollege.moocs_views._create_moocs_order")
     def test_set_3_payment_page_opens_razorpay(self, create_order):
         create_order.return_value = ({"id": "order_test_123"}, 20000)
@@ -138,6 +139,14 @@ class MoocsPaymentTests(TestCase):
         self.assertContains(response, "Open Razorpay payment")
         self.assertContains(response, "order_test_123")
 
+    @override_settings(RAZORPAY_KEY_ID="", RAZORPAY_KEY_SECRET="")
+    def test_payment_page_reports_missing_razorpay_configuration(self):
+        response = self.client.get("/MOOCS/payment/?set=3")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertContains(response, "Razorpay is not configured", status_code=503)
+
+    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret")
     @patch("engineeringcollege.moocs_views._get_razorpay_client")
     def test_set_3_order_uses_two_hundred_rupees(self, get_client):
         get_client.return_value.order.create.return_value = {"id": "order_test_123"}

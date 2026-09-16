@@ -35,6 +35,14 @@
   <main>
     <section class="card">
       <a class="brand" href="/MOOCS">MOOCS</a>
+      {% if payment_error %}
+      <p>Payment unavailable</p>
+      <h1>Unable to open Razorpay</h1>
+      <p class="lead">{{ payment_error }}</p>
+      <div class="actions">
+        <a class="button primary" href="/MOOCS">Return to MOOCS</a>
+      </div>
+      {% else %}
       <p>Secure examination access</p>
       <h1>Unlock Sets 3–200</h1>
       <p class="lead">Complete the one-time payment for Set 3 to continue through Set 200.</p>
@@ -42,13 +50,15 @@
       <div class="summary"><span>Access fee</span><strong class="amount">₹{{ moocs_amount|floatformat:2 }}</strong></div>
       <div class="summary"><span>Payment provider</span><strong>Razorpay</strong></div>
       <p class="notice">You will be returned to MOOCS after Razorpay confirms the payment.</p>
-      <div id="payment-error" class="error" hidden>Razorpay Checkout could not be loaded. Return to MOOCS and try again.</div>
+      <div id="payment-error" class="error" hidden>Razorpay Checkout could not be opened. Refresh the page or contact the administrator.</div>
       <div class="actions">
         <button id="open-payment" class="primary" type="button">Open Razorpay payment</button>
         <a class="button secondary" href="/MOOCS">Return to MOOCS</a>
       </div>
+      {% endif %}
     </section>
   </main>
+  {% if not payment_error %}
   {% csrf_token %}
   {{ moocs_gmail_email|json_script:"moocs-payment-email" }}
   {{ moocs_razorpay_key_id|json_script:"moocs-payment-key" }}
@@ -94,23 +104,28 @@
           document.getElementById('payment-error').hidden = false;
           return;
         }
-        const checkout = new window.Razorpay({
-          key,
-          amount,
-          currency: 'INR',
-          name: 'MOOCS — TS SET/NET/GATE',
-          description: 'Access to Set 3 and all later MOOCS sets through Set 200',
-          order_id: orderId,
-          handler: verifyPayment,
-          modal: {ondismiss: () => finish('/MOOCS/?payment=cancelled&next_set=3')},
-          theme: {color: '#4f46e5'},
-        });
-        checkout.on('payment.failed', () => finish('/MOOCS/?payment=failed&next_set=3'));
-        checkout.open();
+        try {
+          const checkout = new window.Razorpay({
+            key,
+            amount,
+            currency: 'INR',
+            name: 'MOOCS — TS SET/NET/GATE',
+            description: 'Access to Set 3 and all later MOOCS sets through Set 200',
+            order_id: orderId,
+            handler: verifyPayment,
+            modal: {ondismiss: () => finish('/MOOCS/?payment=cancelled&next_set=3')},
+            theme: {color: '#4f46e5'},
+          });
+          checkout.on('payment.failed', () => finish('/MOOCS/?payment=failed&next_set=3'));
+          checkout.open();
+        } catch (error) {
+          document.getElementById('payment-error').hidden = false;
+        }
       };
       document.getElementById('open-payment').addEventListener('click', openPayment);
       openPayment();
     })();
   </script>
+  {% endif %}
 </body>
 </html>

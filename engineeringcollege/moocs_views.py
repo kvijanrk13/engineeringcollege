@@ -56,7 +56,25 @@ def _get_razorpay_client():
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 
+def _razorpay_configured():
+    return bool(settings.RAZORPAY_KEY_ID and settings.RAZORPAY_KEY_SECRET)
+
+
+def _render_payment_error(request, email, error, status=500):
+    return render(
+        request,
+        "moocs/payment.html",
+        {
+            "moocs_gmail_email": email,
+            "payment_error": error,
+        },
+        status=status,
+    )
+
+
 def _create_moocs_order(email, set_number):
+    if not _razorpay_configured():
+        raise RuntimeError("Razorpay credentials are not configured")
     amount = int(MOCS_SET_3_ACCESS_FEE * 100)
     razorpay_order = _get_razorpay_client().order.create(
         dict(
@@ -97,6 +115,14 @@ def moocs_payment(request):
     if existing_payment and existing_payment.status == "completed":
         return redirect("/MOOCS/?payment=success&next_set=3")
 
+    if not _razorpay_configured():
+        return _render_payment_error(
+            request,
+            email,
+            "Razorpay is not configured on this deployment. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Render environment variables.",
+            status=503,
+        )
+
     if existing_payment and existing_payment.status == "pending" and existing_payment.razorpay_order_id:
         razorpay_order = {"id": existing_payment.razorpay_order_id}
         amount = int(existing_payment.amount * 100)
@@ -105,9 +131,10 @@ def moocs_payment(request):
             razorpay_order, amount = _create_moocs_order(email, set_number)
         except Exception:
             logger.exception("Failed to create Razorpay order for MOOCS Set %s", set_number)
-            return JsonResponse(
-                {"success": False, "error": "Unable to create payment order"},
-                status=500,
+            return _render_payment_error(
+                request,
+                email,
+                "Unable to create the Razorpay payment order. Please try again.",
             )
 
     response = render(
@@ -148,6 +175,12 @@ def moocs_create_order(request):
 
     if set_number != 3:
         return JsonResponse({"success": False, "error": "Set 3 payment is required"}, status=400)
+
+    if not _razorpay_configured():
+        return JsonResponse(
+            {"success": False, "error": "Razorpay is not configured on this deployment"},
+            status=503,
+        )
 
     if not verified or email != session_email:
         return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
