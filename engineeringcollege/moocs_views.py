@@ -123,15 +123,11 @@ def moocs_payment(request):
             status=503,
         )
 
-    if existing_payment and existing_payment.status == "pending" and existing_payment.razorpay_order_id:
-        razorpay_order = {"id": existing_payment.razorpay_order_id}
-        amount = int(existing_payment.amount * 100)
-    else:
-        try:
-            razorpay_order, amount = _create_moocs_order(email, set_number)
-        except Exception:
-            logger.exception("Failed to create Razorpay order for MOOCS Set %s", set_number)
-            return _render_payment_error(
+    try:
+        razorpay_order, amount = _create_moocs_order(email, set_number)
+    except Exception:
+        logger.exception("Failed to create Razorpay order for MOOCS Set %s", set_number)
+        return _render_payment_error(
                 request,
                 email,
                 "Unable to create the Razorpay payment order. Please try again.",
