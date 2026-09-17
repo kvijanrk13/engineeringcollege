@@ -152,6 +152,33 @@ class EtorsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"], "Enter a question about ETORS.")
 
+    def test_documentation_contains_all_weeks_and_uml_diagrams(self):
+        response = self.client.get(reverse("etors:documentation"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Week 1")
+        self.assertContains(response, "Week 2")
+        self.assertContains(response, "Week 3")
+        self.assertContains(response, "Week 4 and Week 5")
+        self.assertContains(response, "UML Design Models")
+        self.assertContains(response, "Class Diagram")
+        self.assertContains(response, "Use Case Diagram")
+        self.assertContains(response, "Sequence Diagram")
+        self.assertContains(response, "Collaboration Diagram")
+        self.assertContains(response, "Statechart Diagram")
+        self.assertContains(response, "Activity Diagram")
+        self.assertContains(response, "Component Diagram")
+        self.assertContains(response, "Deployment Diagram")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page1_uml_diagram.jpeg")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page2_uml_diagram.png")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page3_uml_diagram.jpeg")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page4_uml_diagram.jpeg")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page5_uml_diagram.jpeg")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page6_uml_diagram.jpeg")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page7_uml_diagram.jpeg")
+        self.assertContains(response, "/static/etors/images/uml_diagrams/page8_uml_diagram.jpeg")
+        self.assertContains(response, 'id="week-4"')
+        self.assertContains(response, "diagram-viewer")
+
     def test_documentation_button_links_to_week1_week2_and_week3(self):
         response = self.client.get(reverse("etors:home"))
         self.assertContains(response, "DOCUMENTATION")
@@ -170,6 +197,7 @@ class EtorsTests(TestCase):
         self.assertContains(docs_response, "System Architecture")
         self.assertContains(docs_response, 'href="#week-2"')
         self.assertContains(docs_response, 'href="#week-3"')
+        self.assertContains(docs_response, 'href="#week-4"')
 
     def test_srd_content_is_not_repeated_inside_week1(self):
         response = self.client.get(reverse("etors:documentation"))
