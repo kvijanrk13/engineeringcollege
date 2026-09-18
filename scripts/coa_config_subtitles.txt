@@ -1,0 +1,348 @@
+0.20	8.72	to our YouTube channel today we have to
+4.08	12.84	discuss about microprogram example in
+8.72	16.44	computer organization and architecture
+12.84	19.28	course first of all we have to know
+16.44	20.80	about what is
+19.28	24.80	microprogramming
+20.80	28.88	microprogramming is nothing but once the
+24.80	33.36	hardware configuration of a computer and
+28.88	37.24	its micro programed control unit is
+33.36	40.16	established now the designer's task is
+37.24	44.08	to generate the micro code for the
+40.16	47.56	control memory this code generation can
+44.08	51.76	be called as micr
+47.56	55.60	programming in micro program example
+51.76	59.52	there are five subtopics are there first
+55.60	64.20	one is computer configuration second one
+59.52	67.48	is micro instruction format third one is
+64.20	72.04	symbolic micro instructions fourth one
+67.48	76.00	is symbolic micro program fifth one is
+72.04	79.40	binary micro program in this video we
+76.00	82.24	have to discuss about computer
+79.40	85.96	configuration in the next videos we have
+82.24	88.68	to discuss about the remaining topics in
+85.96	92.92	the micro program
+88.68	98.44	example this this is the block diagram
+92.92	103.08	of a computer it mainly consists of two
+98.44	107.48	memory units first one is main memory
+103.08	112.20	and second one is control memory main
+107.48	117.04	memory is used for storing instructions
+112.20	120.68	and data whereas control memory is used
+117.04	124.76	for storing micro program
+120.68	128.04	micro program is nothing but sequence of
+124.76	130.44	micro instructions that are stored in
+128.04	134.32	the control
+130.44	136.96	memory here the capacity of the main
+134.32	143.32	memory is
+136.96	150.52	248 by 16 that means it consists of
+143.32	153.96	248 words each word contains 16 bits
+150.52	157.56	each and every word can be specified
+153.96	161.24	with a particular address how many
+157.56	164.08	number of bits that are present in that
+161.24	168.56	address for uniquely
+164.08	173.76	identify each and every word among the
+168.56	177.96	248 words that can be calculated
+173.76	181.88	248 can be written in terms of two
+177.96	186.32	Powers so we are getting 2 power 11 in
+181.88	190.56	the power 11 is there therefore 11 bits
+186.32	194.16	are required to uniquely identify each
+190.56	198.08	and every address that is present in the
+194.16	201.24	main memory whereas in the case of
+198.08	207.00	control memory the capacity of the
+201.24	213.40	control memory is 128 by 20 it consists
+207.00	216.36	of 128 words each word contains 20
+213.40	220.60	bits each word
+216.36	224.28	is identified with a particular
+220.60	227.60	address how many number of bits that are
+224.28	231.04	present in the address for uniquely
+227.60	235.00	identifying the every address in the
+231.04	238.20	control memory that can be calculated
+235.00	241.72	128 can be written in terms of two
+238.20	245.20	powers in the power seven is there
+241.72	249.40	therefore seven bits are required to
+245.20	252.92	uniquely identify each and
+249.40	254.56	every address that is present in the
+252.92	258.68	control
+254.56	262.40	memory and this is called as
+258.68	266.68	microprogrammed control unit the control
+262.40	271.76	memory associated with these two
+266.68	276.24	registers first register is C that means
+271.76	280.20	control address register it provides the
+276.24	283.80	addresses of micro instructions that are
+280.20	287.64	present in the control
+283.80	291.96	memory here the size of control address
+287.64	297.68	register is 7 bits starting with zero
+291.96	300.56	and ending with six total C is 7even
+297.68	305.04	bits next one is
+300.56	309.00	spr that is nothing but subin
+305.04	313.28	register whenever a sub protein is
+309.00	317.48	called in the main micro program the
+313.28	318.84	program control can immediately transfer
+317.48	324.20	from
+318.84	327.72	the main program to subin program once
+324.20	332.68	the micro instructions that are present
+327.72	336.20	in the sub routine is completed we have
+332.68	339.76	to return from the sub routine to main
+336.20	343.52	program for that purpose we require a
+339.76	347.20	written address that written address is
+343.52	351.20	stored in the sub routin
+347.20	355.28	register so it consists of seven bits
+351.20	358.92	starting with zero and ending with six
+355.28	361.96	these two registers associated with
+358.92	363.32	control member memory can be organized
+361.96	365.72	as
+363.32	370.40	microprogrammed control
+365.72	374.60	unit next one four registers are
+370.40	379.64	associated with processor unit first one
+374.60	384.28	is a AR stands for address register
+379.64	388.92	second one is PC PC stands for program
+384.28	393.04	counter third one is Dr Dr stands for
+388.92	395.60	data Reg register and fourth one is AC
+393.04	398.80	AC stands for
+395.60	404.00	accumulator address register provides
+398.80	408.96	the addresses of micro in addresses of
+404.00	413.00	instructions that are stored in the main
+408.96	416.44	memory program counter always contains
+413.00	420.88	the address of the first instruction
+416.44	424.52	that is stored in the main memory
+420.88	428.28	while executing the first instruction
+424.52	431.16	the control must determine the what is
+428.28	434.88	the next instruction to be
+431.16	438.84	executed that next address instruction
+434.88	443.72	can be monitored by the program
+438.84	448.28	counter next third one is data register
+443.72	452.08	data register contains the data that is
+448.28	455.88	coming from the main memory and out of
+452.08	459.72	the main memory that is used for storing
+455.88	463.12	the data that is read from the control
+459.72	466.72	memory whatever the data that is right
+463.12	469.96	into the main memory that data is
+466.72	473.04	contained by a register that register
+469.96	477.80	can be called as data
+473.04	480.20	register and fourth one is accumulator
+477.80	485.04	register this register
+480.20	489.08	is used for storing the operant after
+485.04	492.96	performing the operation by athematic
+489.08	496.40	Logic and shift unit whatever the result
+492.96	500.52	we are getting that result is stored in
+496.40	501.68	the accumulator so accumulator is used
+500.52	505.16	for two
+501.68	508.68	purposes the first purpose is to store
+505.16	511.68	the operant second purpose is after
+508.68	515.12	executing the operation whatever the
+511.68	517.16	result we are getting that result is
+515.12	521.80	stored in the
+517.16	525.12	accumulator so these four
+521.80	531.36	registers associated with the processor
+525.12	535.32	unit and Main memory can be organized as
+531.36	539.72	Hardware control unit so Hardware
+535.32	544.12	control unit consists of processor unit
+539.72	548.12	and memory unit main memory unit the
+544.12	549.84	processor unit is associated with these
+548.12	555.08	four
+549.84	559.28	registers among that four registers two
+555.08	562.64	registers associated with the addresses
+559.28	567.20	and two registers associated with the
+562.64	570.16	data that is present in the main
+567.20	574.04	memory so that
+570.16	577.20	these two registers are associated with
+574.04	581.08	addresses that are present in the main
+577.20	586.28	memory to uniquely identify each and
+581.08	590.04	every address we have to use 11 bits so
+586.28	593.52	that the size of the address register is
+590.04	597.60	11 bits the size of the program counter
+593.52	600.08	is also 11 bits starting with zero and
+597.60	604.48	ending with 10
+600.08	607.64	next these two registers are associated
+604.48	612.44	with the data that is present in the
+607.64	615.64	main memory so data contains uh 16 bits
+612.44	619.16	hence we can say that the size of the
+615.64	623.28	data register is 16 bits starting with
+619.16	627.04	zero and ending with 15 in the same way
+623.28	630.56	the size of the accumulator is 16 bits
+627.04	634.88	starting with zero and ending with
+630.56	639.96	15 next one aromatic logic and shift
+634.88	644.00	unit so this unit is used for performing
+639.96	645.60	aromatic operations logical operations
+644.00	649.60	and shift
+645.60	654.12	operations to perform that operations we
+649.60	657.80	require some data that data is taken
+654.12	660.84	from the data register after performing
+657.80	663.80	the operation whatever the result we are
+660.84	666.28	getting that result is transferred to
+663.80	670.64	the accumulator
+666.28	674.20	register next one the data orall
+670.64	678.04	information that can be transferred from
+674.20	682.68	one register to another register can be
+678.04	686.08	done through the common bus system and
+682.68	690.08	multiplexes in this concept we have to
+686.08	693.92	use only multiplexers for transferring
+690.08	697.96	the information from one register to
+693.92	702.16	another register instead of common bus
+697.96	705.48	system here we have to use two
+702.16	707.60	multiplexors this is multiplexor one and
+705.48	711.72	this is multiplexer
+707.60	715.92	2 this multiplexer can receive the
+711.72	719.96	information from two sources one source
+715.92	722.96	is coming from program counter and
+719.96	727.04	another source is coming
+722.96	730.52	from data register one source coming
+727.04	737.00	from program counter and another source
+730.52	741.24	coming from data register among that two
+737.00	742.48	Alternatives one alternative is selected
+741.24	745.44	through the
+742.48	748.84	multiplexer whatever the alternative
+745.44	752.96	that is selected whatever the data that
+748.84	756.20	is present in that uh register that can
+752.96	760.44	be transferred to a
+756.20	765.40	register next in the case of multiplexer
+760.44	769.40	2 it can receive the data from three
+765.40	773.04	sources one is coming from the program
+769.40	776.72	counter and another one is coming from
+773.04	780.72	the accumulator and another one is
+776.72	781.72	coming from the main memory among that
+780.72	785.08	three
+781.72	787.96	Alternatives one alternative is
+785.08	790.52	selected whatever the data that is
+787.96	793.72	present in the selected
+790.52	798.68	alternative that data can be transferred
+793.72	802.00	to data register okay in that way we
+798.68	805.32	have to transfer the data from one
+802.00	808.80	register to another register that are
+805.32	809.68	present in the processor unit for that
+808.80	812.64	purpose
+809.68	817.40	we have to use
+812.64	820.52	multiplexes next one is here address
+817.40	824.68	register the address register can
+820.52	830.80	receives the information from
+824.68	833.80	the program counter or data register
+830.80	838.00	okay the address register can receive
+833.80	840.92	the information from two sources one
+838.00	844.40	source is coming from the program
+840.92	846.96	counter and another source is coming
+844.40	850.40	from the data
+846.96	854.20	register whereas in the case of program
+850.40	858.76	counter program counter can receives the
+854.20	862.16	information only from the address
+858.76	864.48	register only one source that is
+862.16	868.40	providing the information for the
+864.48	870.16	program counter that source is address
+868.40	874.12	register
+870.16	877.60	next one is data register the data
+874.12	881.36	register can receive the information
+877.60	884.60	from three sources one source is coming
+881.36	887.60	from the program counter another source
+884.60	890.52	is coming from the main memory and
+887.60	894.60	another source coming from the
+890.52	897.52	accumulator so three sources are used
+894.60	899.72	for providing the information for the
+897.52	903.04	data register
+899.72	905.96	next one is accumulator register
+903.04	905.96	accumulator
+908.64	917.20	register receives the information only
+912.08	919.80	from the data register okay so the
+917.20	923.48	source of information for the
+919.80	927.40	accumulator register is only from the
+923.48	930.20	data register and automatic closing and
+927.40	932.52	shift unit
+930.20	937.16	next one
+932.52	941.44	is on that main memory we are performing
+937.16	946.00	two operations one is read operation
+941.44	949.08	second one is write operation suppose we
+946.00	952.00	want to read the information from a
+949.08	955.56	particular word that is present in the
+952.00	959.36	main memory for that purpose we require
+955.56	962.52	the address that address is provided by
+959.36	965.96	the address register whatever the
+962.52	969.52	address that is provided by the address
+965.96	973.12	register go to that address in the main
+969.52	976.52	memory from that address we are reading
+973.12	980.80	the information that information is
+976.52	985.08	sended to the Dr Register this can be
+980.80	987.92	called as read operation okay that means
+985.08	991.48	suppose we want to perform the read
+987.92	994.64	operation on the main memory from a
+991.48	996.88	particular address that address is
+994.64	1000.40	provided by the address
+996.88	1004.08	register go to that address in the main
+1000.40	1007.24	memory from that address whatever the
+1004.08	1011.00	data that is present in that address
+1007.24	1014.48	that data can be transferred to the data
+1011.00	1018.20	register this is called as read
+1014.48	1020.12	operation suppose we want to write some
+1018.20	1021.96	information
+1020.12	1025.20	into the main
+1021.96	1028.08	memory for that purpose the data
+1025.20	1032.44	register provides that
+1028.08	1035.60	data that data is right into the main
+1032.44	1039.16	memory in a particular address that
+1035.60	1042.72	address is provided by the address
+1039.16	1047.80	register in this way right operation can
+1042.72	1049.68	be performed so main memory can Rees the
+1047.80	1053.20	address information
+1049.68	1055.40	from the address register whatever the
+1053.20	1058.88	addresses we are getting from the
+1055.40	1063.04	address register from that address
+1058.88	1064.64	either read operation or write operation
+1063.04	1069.60	can be
+1064.64	1073.00	performed next one is it is not possible
+1069.60	1076.60	to directly transfer the data from
+1073.00	1080.16	accumulator to main memory okay there is
+1076.60	1082.64	no direct transfer between in the
+1080.16	1085.96	accumulator and Main
+1082.64	1090.44	memory so for that purpose we have to
+1085.96	1094.24	use the data register whatever the data
+1090.44	1099.04	that is present in the accumulator first
+1094.24	1103.00	that data can be transferred to the data
+1099.04	1107.48	register that data can be transferred to
+1103.00	1109.48	the main memory so in this way we have
+1107.48	1112.92	to
+1109.48	1116.32	transfer the data between accumulator
+1112.92	1119.68	and Main memory directly we do not
+1116.32	1122.84	transfer the data from accumulator to
+1119.68	1127.00	main memory so for that purpose we have
+1122.84	1129.72	to use data register in the same way we
+1127.00	1133.32	have to transfer the data from Main
+1129.72	1137.44	memory to accumulator for that purpose
+1133.32	1139.88	we have to use the data register first
+1137.44	1143.32	whatever the data that is to be
+1139.88	1146.48	transferred to the accumulator that data
+1143.32	1149.92	can be transferred to data register
+1146.48	1153.64	after that the the data that is present
+1149.92	1156.76	in the data register can be send it to
+1153.64	1161.04	the accumulator in this
+1156.76	1164.52	way we have to transfer the data between
+1161.04	1167.48	the various registers in the processor
+1164.52	1170.92	unit
+1167.48	1174.44	and and and data transfer between the
+1170.92	1177.60	registers and Main memory can be done by
+1174.44	1181.36	using this Hardware
+1177.60	1181.36	configuration next one
+1182.88	1190.44	is so this is the
+1185.64	1193.84	microprogrammed control unit okay so
+1190.44	1197.76	here the microprogrammed control unit
+1193.84	1199.16	can provide the control signals for
+1197.76	1202.12	executing the
+1199.16	1203.36	instructions that are present in the
+1202.12	1207.08	main
+1203.36	1210.24	memory for that purpose we require some
+1207.08	1212.96	control signals that control signals are
+1210.24	1216.80	provided by the control
+1212.96	1220.68	microprogrammed control
+1216.80	1224.68	unit so this is the simple description
+1220.68	1228.36	about computer configuration in micro
+1224.68	1231.64	program example I hope all of you
+1228.36	1234.60	understand this video if you have any
+1231.64	1237.52	doubts in this concept please put your
+1234.60	1241.12	doubts in the comment section I will try
+1237.52	1243.88	to clarify your doubts if you really
+1241.12	1247.00	understanding this video please click on
+1243.88	1250.48	the like button and share this video to
+1247.00	1255.60	your friends and classmates and please
+1250.48	1255.60	subscribe my YouTube channel so
+1263.76	1269.48	after subscribing my YouTube channel
+1266.32	1272.96	click on the Bell icon to get the future
+1269.48	1276.00	updates in the in my YouTube channel in
+1272.96	1279.24	the next video we can go for micro
+1276.00	1282.24	instruction format in micro program
+1279.24	1282.24	example

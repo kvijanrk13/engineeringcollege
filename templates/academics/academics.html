@@ -1170,11 +1170,107 @@
             <p><strong>Instruction cycle</strong> is the complete processing of one instruction. A <strong>machine cycle</strong> is one smaller operation—such as a memory read or write—within it. A <strong>clock cycle</strong> is a single timing interval. Therefore, one instruction cycle can contain several machine operations and several clock cycles.</p>
           </section>
 
-          <div class="coa-summary"><strong>Overall flow:</strong> check interrupt &#8594; fetch instruction &#8594; decode opcode &#8594; identify memory-reference, register-reference, or I/O instruction &#8594; obtain an indirect effective address if required &#8594; execute &#8594; clear SC &#8594; repeat.</div>
-        </section>
-      </article>
+        <div class="coa-summary"><strong>Overall flow:</strong> check interrupt &#8594; fetch instruction &#8594; decode opcode &#8594; identify memory-reference, register-reference, or I/O instruction &#8594; obtain an indirect effective address if required &#8594; execute &#8594; clear SC &#8594; repeat.</div>
+      </section>
 
-      <!-- COA lesson revision b: video-based architecture and organization text -->
+      <section class="video-text-card" aria-labelledby="microprogram-config-video-title">
+        <div class="topic-head">
+          <div>
+            <p class="eyebrow" style="color:var(--blue)">Video 4 converted to text</p>
+            <h2 id="microprogram-config-video-title">Computer Configuration in a Microprogrammed Control Unit</h2>
+            <div class="video-text-meta"><span>Start: 00:00</span><span>Cleaned from narration</span><span>COA</span></div>
+          </div>
+          <a class="video-link" href="https://www.youtube.com/watch?v=ZVN1ae-7UxE" target="_blank" rel="noopener noreferrer">Watch source &#8599;</a>
+        </div>
+
+        <p><strong>Microprogramming</strong> describes the phase that follows the hardware configuration of a computer. Once the physical hardware and its microprogrammed control unit are established, the designer’s task becomes generating the micro code stored in control memory. This code generation process is called microprogramming, and it is the subject of the microprogram example.</p>
+
+        <p>The microprogram example covers five subtopics. The current lesson covers <strong>computer configuration</strong> — the block-level layout of registers, memory, and data paths. The remaining topics (micro-instruction format, symbolic micro instructions, symbolic micro program, and binary micro program) are covered in the follow-up lessons.</p>
+
+        <div class="coa-summary"><strong>Key idea:</strong> every register in the configuration derives from the addressing capacity of the memory it connects to. The width of the control-memory address field (7 bits) determines the control-register sizes, while the width of the main-memory address field (11 bits) determines the processor-register sizes.</div>
+
+        <h3>Two-level memory organization</h3>
+        <p>A microprogrammed computer consists of two memory units: <strong>main memory</strong>, which stores program instructions and data, and <strong>control memory</strong>, which stores the micro program — the sequence of micro instructions that drive the control unit.</p>
+        <div style="overflow-x:auto">
+          <table class="register-table" aria-label="Memory units and their capacity in the microprogrammed configuration">
+            <thead><tr><th>Memory unit</th><th>Capacity</th><th>Address bits needed</th></tr></thead>
+            <tbody>
+              <tr><td>Main memory</td><td>2,048 words &times; 16 bits</td><td>11 (since 2<sup>11</sup> = 2,048)</td></tr>
+              <tr><td>Control memory</td><td>128 words &times; 20 bits</td><td>7 (since 2<sup>7</sup> = 128)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>With 2,048 addressable words, 11 bits are required to identify each location in main memory. Similarly, 128 words in control memory need 7 address bits. These two numbers propagate through the entire register set: every control-memory register is 7 bits wide, and every main-memory register is 11 bits wide (except data registers, which are 16 bits to match the full word width).</p>
+
+        <h3>Control-memory registers</h3>
+        <p>Two registers sit alongside the control memory and keep the microprogram execution flowing.</p>
+        <div style="overflow-x:auto">
+          <table class="register-table" aria-label="Control-memory associated registers">
+            <thead><tr><th>Register</th><th>Abbreviation</th><th>Width</th><th>Function</th></tr></thead>
+            <tbody>
+              <tr><td>Control Address Register</td><td>C</td><td>7 bits (0–6)</td><td>Holds the address of the next micro instruction to be fetched from control memory.</td></tr>
+              <tr><td>Subroutine Register</td><td>SPR</td><td>7 bits (0–6)</td><td>Saves the return address when a subroutine is called within the main micro program, so execution can resume in the calling sequence.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="coa-summary"><strong>C</strong> (Control Address Register) points to the current micro instruction; <strong>SPR</strong> remembers where to return after a sub-routine finishes.</div>
+
+        <h3>Processor-unit registers</h3>
+        <p>The processor unit houses four registers. Two deal with addresses, and two deal with data.</p>
+        <div style="overflow-x:auto">
+          <table class="register-table" aria-label="Processor unit registers and their sizes">
+            <thead><tr><th>Register</th><th>Width</th><th>Function</th></tr></thead>
+            <tbody>
+              <tr><td><strong>AR</strong> — Address Register</td><td>11 bits (0–10)</td><td>Holds memory addresses; receives data from the program counter or data register.</td></tr>
+              <tr><td><strong>PC</strong> — Program Counter</td><td>11 bits (0–10)</td><td>Points to the next instruction in main memory; loads new values only from the address register.</td></tr>
+              <tr><td><strong>DR</strong> — Data Register</td><td>16 bits (0–15)</td><td>Holds data read from main memory or data to be written back; receives data from the program counter, accumulator, or main memory.</td></tr>
+              <tr><td><strong>AC</strong> — Accumulator</td><td>16 bits (0–15)</td><td>Stores operands before an operation and the result after the Arithmetic Logic &amp; Shift Unit computes it; data enters only from the data register.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="coa-summary"><strong>AR</strong> and <strong>PC</strong> are 11-bit address registers; <strong>DR</strong> and <strong>AC</strong> are 16-bit data registers. The accumulator receives operands and holds ALU results; the data register is the only bridge between accumulator and main memory.</div>
+
+        <h3>Arithmetic Logic &amp; Shift Unit</h3>
+        <p>The <strong>ALSU</strong> (Arithmetic Logic and Shift Unit) performs arithmetic operations (such as addition), logical operations (AND, OR, NOT), and shift operations. It takes its operand data from the data register, and after the operation completes the result is transferred back to the accumulator.</p>
+
+        <h3>Data transfer through multiplexers</h3>
+        <p>All register-to-register transfers happen through multiplexer circuits instead of a shared common bus. Two multiplexers direct the flow:</p>
+        <div style="overflow-x:auto">
+          <table class="register-table" aria-label="Multiplexer input sources for data transfer">
+            <thead><tr><th>Multiplexer</th><th>Sources</th><th>Destination register</th></tr></thead>
+            <tbody>
+              <tr><td>Multiplexer 1</td><td>Program Counter, Data Register</td><td>Address Register</td></tr>
+              <tr><td>Multiplexer 2</td><td>Program Counter, Accumulator, Main Memory</td><td>Data Register</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="concept-tables">
+          <section class="concept-panel">
+            <h4>Address-register transfer paths</h4>
+            <p><strong>AR</strong> can accept data from the <strong>PC</strong> or the <strong>DR</strong>. <strong>PC</strong> can accept data only from <strong>AR</strong>.</p>
+          </section>
+          <section class="concept-panel">
+            <h4>Data-register transfer paths</h4>
+            <p><strong>DR</strong> can accept data from the <strong>PC</strong>, <strong>AC</strong>, or <strong>main memory</strong>. <strong>AC</strong> can accept data only from <strong>DR</strong>.</p>
+          </section>
+        </div>
+
+        <h3>Main memory read and write operations</h3>
+        <p>Main memory supports two operations: <strong>read</strong> and <strong>write</strong>. For a read, the address register supplies the memory address, the addressed word is read from main memory, and the data is transferred to the data register. For a write, the address register supplies the address and the data register supplies the data that is written into that location. A key rule applies: there is no direct transfer path between the accumulator and main memory. Any data moving from AC to main memory (or from main memory to AC) must pass through the data register.</p>
+
+        <section class="coa-example">
+          <h3>Example: read operation flow</h3>
+          <p>1. <strong>AR</strong> provides the address → 2. the memory location at that address is selected → 3. the stored data is placed on the bus → 4. <strong>DR</strong> receives the data. This is the read operation.</p>
+        </section>
+
+        <section class="coa-check">
+          <h3>Configuration summary</h3>
+          <p>The microprogrammed control unit’s <strong>control-memory</strong> (128 &times; 20) and its two 7-bit registers (C and SPR) generate control signals. The <strong>main memory</strong> (2,048 &times; 16) and its associated registers — AR (11 bits), PC (11 bits), DR (16 bits), and AC (16 bits) — handle program data. Data between registers is routed through two multiplexers, and the ALSU performs arithmetic, logic, and shift operations. The data register acts as the mandatory intermediary for every accumulator-to-memory or memory-to-accumulator transfer.</p>
+        </section>
+      </section>
+    </article>
+
+    <!-- COA lesson revision b: video-based architecture and organization text -->
       <article class="coa-video-lesson">
         <div class="topic-head">
           <div>
