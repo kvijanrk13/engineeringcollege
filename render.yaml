@@ -68,8 +68,8 @@ services:
       - key: DJANGO_SUPERUSER_PASSWORD
         sync: false
       - key: RAZORPAY_KEY_ID
-        value: rzp_test_Td8tOF0W5oXisZ
+        sync: false
       - key: RAZORPAY_KEY_SECRET
-        value: qKykcrAYvGd2WfGmw7pCMSjb
+        sync: false
       - key: MOOCS_SET_3_ACCESS_FEE
         value: "200"
