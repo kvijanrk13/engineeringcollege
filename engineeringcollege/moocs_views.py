@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 from decimal import Decimal
+import hashlib
 import json
 import logging
 
@@ -72,6 +73,11 @@ def _render_payment_error(request, email, error, status=500):
     )
 
 
+def _order_receipt(email, set_number):
+    email_hash = hashlib.sha256(email.encode("utf-8")).hexdigest()[:12]
+    return f"moocs_set{set_number}_{email_hash}"
+
+
 def _create_moocs_order(email, set_number):
     if not _razorpay_configured():
         raise RuntimeError("Razorpay credentials are not configured")
@@ -80,7 +86,7 @@ def _create_moocs_order(email, set_number):
         dict(
             amount=amount,
             currency="INR",
-            receipt=f"moocs_set_{set_number}_{email}",
+            receipt=_order_receipt(email, set_number),
         )
     )
     MoocsPayment.objects.update_or_create(
