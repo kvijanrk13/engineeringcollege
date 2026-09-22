@@ -1,4 +1,5 @@
 {% extends 'etors/base.html' %}
+{% load static %}
 {% block title %}ETORS · Documentation{% endblock %}
 {% block content %}
 <style>
@@ -39,6 +40,46 @@
   .doc-content .diagram-canvas img { width: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; transform-origin: top left; }
   .diagram-viewer:fullscreen { display: flex; flex-direction: column; width: 100vw; height: 100vh; margin: 0; border: 0; border-radius: 0; }
   .diagram-viewer:fullscreen .diagram-canvas { flex: 1; max-height: none; }
+  .uml-video-card {
+    margin: 24px 0 28px;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: linear-gradient(145deg, #f7faff, #fffdf5);
+    box-shadow: 0 16px 40px rgba(11,31,58,.08);
+  }
+  .uml-video-card h3 { margin: 0 0 6px; color: var(--navy); font-size: clamp(1.35rem, 2.5vw, 1.8rem); }
+  .uml-video-card > p { margin: 0 0 16px; color: var(--muted); }
+  .uml-video-shell {
+    position: relative;
+    overflow: hidden;
+    border: 3px solid var(--navy);
+    border-radius: 18px 8px 20px 8px;
+    background: #071a33;
+    box-shadow: 7px 8px 0 rgba(23,54,93,.16);
+  }
+  .uml-video-shell video { display: block; width: 100%; aspect-ratio: 16 / 10; background: #071a33; }
+  .uml-video-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    border: 2px solid white;
+    border-radius: 999px;
+    color: var(--navy);
+    background: #fffdf5;
+    font-weight: 850;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 10px 28px rgba(0,0,0,.28);
+  }
+  .uml-video-play:hover, .uml-video-play:focus-visible { background: #ffe48b; outline: 3px solid #ffb547; outline-offset: 3px; }
+  .uml-video-play[hidden] { display: none; }
+  .uml-video-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .uml-video-meta span { padding: 6px 10px; color: var(--navy); background: #eaf3ff; border: 1px solid #b9cee8; border-radius: 999px; font-size: .82rem; font-weight: 750; }
   .doc-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
   .doc-card { scroll-margin-top: 100px; }
   @media(max-width:700px) { .week-nav { grid-template-columns: 1fr; } }
@@ -72,6 +113,25 @@
       </article>
       <article class="doc-card" id="week-4">
         <h2>Week 4 and Week 5 · UML Design Models</h2>
+        <section class="uml-video-card" aria-labelledby="uml-video-title">
+          <h3 id="uml-video-title">Animated UML walkthrough</h3>
+          <p>Excaliframe-style Excalidraw animation showing every ETORS UML diagram being dragged from the StarUML Lite toolbox onto the canvas.</p>
+          <div class="uml-video-shell">
+            <video id="uml-walkthrough-video" controls playsinline preload="metadata" poster="{% static 'etors/videos/uml_walkthrough_poster.png' %}">
+              <source src="{% static 'etors/videos/uml_walkthrough.mp4' %}" type="video/mp4">
+              Your browser does not support embedded video.
+            </video>
+            <button class="uml-video-play" id="uml-video-play" type="button" aria-label="Play animated UML walkthrough">
+              <span aria-hidden="true">▶</span><span>Play walkthrough</span>
+            </button>
+          </div>
+          <div class="uml-video-meta" aria-label="Video details">
+            <span>8 UML diagrams</span>
+            <span>Excalidraw-style animation</span>
+            <span>StarUML Lite drag and drop</span>
+            <span>Week 4 &amp; Week 5</span>
+          </div>
+        </section>
         <div id="week4-doc" class="doc-content">{{ week4_text|safe }}</div>
       </article>
       <div class="doc-actions">
@@ -82,6 +142,22 @@
 </section>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    var video = document.getElementById("uml-walkthrough-video");
+    var playButton = document.getElementById("uml-video-play");
+    function setPlaying(playing) {
+      if (!video || !playButton) return;
+      playButton.hidden = playing;
+      playButton.setAttribute("aria-hidden", String(playing));
+    }
+    if (video && playButton) {
+      playButton.addEventListener("click", function () {
+        video.play();
+      });
+      video.addEventListener("play", function () { setPlaying(true); });
+      video.addEventListener("pause", function () { setPlaying(false); });
+      video.addEventListener("ended", function () { setPlaying(false); });
+    }
+
     document.querySelectorAll("#week4-doc img").forEach(function (image, index) {
       var viewer = document.createElement("div");
       viewer.className = "diagram-viewer";
