@@ -73,3 +73,5 @@ services:
         sync: false
       - key: MOOCS_SET_3_ACCESS_FEE
         value: "200"
+      - key: MOOCS_PAYMENT_WHITELIST
+        value: "vijaykumarit@anurag.ac.in"

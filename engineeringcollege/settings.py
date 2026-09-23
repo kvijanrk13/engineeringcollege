@@ -319,3 +319,15 @@ LOGGING = {
 # ================================
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "").strip()
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "").strip()
+
+# ================================
+# MOOCS Payment Whitelisting (bypass Razorpay for specific accounts)
+# ================================
+# Comma-separated list of email addresses that are exempt from the Set 3
+# Razorpay payment.  Each address is lower-cased before comparison so the
+# check is case-insensitive.
+MOOCS_PAYMENT_WHITELIST = frozenset(
+    addr.strip().lower()
+    for addr in os.getenv("MOOCS_PAYMENT_WHITELIST", "vijaykumarit@anurag.ac.in").split(",")
+    if addr.strip()
+)

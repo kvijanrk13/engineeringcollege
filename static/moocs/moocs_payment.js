@@ -6,6 +6,12 @@ const MOCS_SET_3_FEE = 200.00;
 const PREMIUM_SET_START = 3;
 const PAID_SETS_KEY_PREFIX = 'moocs-paid-sets:';
 
+const MOOCS_PAYMENT_EXEMPT_EMAILS = ['vijaykumarit@anurag.ac.in'];
+const isPaymentExempt = () =>
+  typeof profileEmail !== 'undefined' &&
+  profileEmail &&
+  MOOCS_PAYMENT_EXEMPT_EMAILS.includes(profileEmail);
+
 const getCsrfToken = () => {
   const name = 'csrftoken';
   const cookies = document.cookie.split(';');
@@ -44,7 +50,9 @@ const writePaidSets = (sets) => {
 };
 
 const isSetPaid = (setNumber) => (
-  !setRequiresPayment(setNumber) || readPaidSets().includes(PREMIUM_SET_START)
+  isPaymentExempt() ||
+  !setRequiresPayment(setNumber) ||
+  readPaidSets().includes(PREMIUM_SET_START)
 );
 
 const markSetPaid = (setNumber) => {
@@ -77,6 +85,7 @@ const loadRazorpayScript = () => {
 };
 
 const handleSetAccess = async (setNumber) => {
+  if (isPaymentExempt()) return true;
   if (!setRequiresPayment(setNumber)) return true;
   if (isSetPaid(setNumber)) return true;
 

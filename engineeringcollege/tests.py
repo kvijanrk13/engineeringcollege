@@ -196,3 +196,84 @@ class MoocsPaymentTests(TestCase):
         payment = MoocsPayment.objects.get(email="student@gmail.com", set_number=3)
         self.assertEqual(payment.status, "completed")
         self.assertEqual(payment.razorpay_payment_id, "pay_test_123")
+
+    @override_settings(
+        RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
+        SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_WHITELIST=frozenset({"vijaykumarit@anurag.ac.in"}),
+    )
+    def test_whitelisted_email_bypasses_payment_page(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "vijaykumarit@anurag.ac.in"
+        session.save()
+
+        response = self.client.get("/MOOCS/payment/?set=3")
+
+        self.assertRedirects(
+            response,
+            "/MOOCS/?payment=success&next_set=3",
+            fetch_redirect_response=False,
+        )
+
+    @override_settings(
+        RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
+        SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_WHITELIST=frozenset({"vijaykumarit@anurag.ac.in"}),
+    )
+    def test_whitelisted_email_gets_already_paid_on_create_order(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "vijaykumarit@anurag.ac.in"
+        session.save()
+
+        response = self.client.post(
+            "/MOOCS/payment/create-order/",
+            data=json.dumps({"set_number": 3, "email": "vijaykumarit@anurag.ac.in"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertTrue(payload["already_paid"])
+
+    @override_settings(
+        RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
+        SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_WHITELIST=frozenset({"vijaykumarit@anurag.ac.in"}),
+    )
+    def test_whitelisted_email_succeeds_on_verify(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "vijaykumarit@anurag.ac.in"
+        session.save()
+
+        response = self.client.post(
+            "/MOOCS/payment/verify/",
+            data=json.dumps({
+                "set_number": 3,
+                "email": "vijaykumarit@anurag.ac.in",
+                "razorpay_payment_id": "pay_test_123",
+                "razorpay_order_id": "order_test_123",
+                "razorpay_signature": "signature_test",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])
+
+    @override_settings(
+        RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
+        SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_WHITELIST=frozenset({"other@example.com"}),
+    )
+    @patch("engineeringcollege.moocs_views._create_moocs_order")
+    def test_non_whitelisted_email_still_requires_payment(self, create_order):
+        create_order.return_value = ({"id": "order_test_123"}, 20000)
+
+        response = self.client.get("/MOOCS/payment/?set=3")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Open Razorpay payment")

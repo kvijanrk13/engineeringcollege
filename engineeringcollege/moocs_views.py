@@ -22,6 +22,12 @@ MOOCS_SET_3_ACCESS_FEE = Decimal(
 MOCS_SET_3_ACCESS_FEE = MOOCS_SET_3_ACCESS_FEE
 
 
+def _is_payment_exempt(email):
+    """Return True when *email* is whitelisted — Razorpay should be skipped."""
+    whitelist = getattr(settings, "MOOCS_PAYMENT_WHITELIST", frozenset()) or frozenset()
+    return email.strip().lower() in whitelist
+
+
 def moocs_exam(request):
     verified = request.session.get("moocs_gmail_verified") is True
     email = request.session.get("moocs_gmail_email", "").strip().lower()
@@ -108,6 +114,9 @@ def moocs_payment(request):
         login_query = urlencode({"role": "student", "target": "moocs"})
         return redirect(f"{reverse('dashboard:google_login')}?{login_query}")
 
+    if _is_payment_exempt(email):
+        return redirect("/MOOCS/?payment=success&next_set=3")
+
     try:
         set_number = int(request.GET.get("set", "3"))
     except (TypeError, ValueError):
@@ -187,6 +196,9 @@ def moocs_create_order(request):
     if not verified or email != session_email:
         return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
 
+    if _is_payment_exempt(email):
+        return JsonResponse({"success": True, "already_paid": True})
+
     # Check if already paid
     if MoocsPayment.objects.filter(email=email, set_number=set_number, status="completed").exists():
         return JsonResponse({"success": True, "already_paid": True})
@@ -238,6 +250,9 @@ def moocs_verify_payment(request):
 
     if not verified or email != session_email:
         return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
+
+    if _is_payment_exempt(email):
+        return JsonResponse({"success": True, "set_number": set_number, "email": email})
 
     payment_record = MoocsPayment.objects.filter(
         email=email, set_number=set_number, razorpay_order_id=order_id
