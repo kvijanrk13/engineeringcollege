@@ -48,6 +48,8 @@ def documentation(request):
         "srd_text": "srd_week2.md",
         "sdd_text": "sdd_week3.md",
         "week4_text": "week4_uml_diagrams.md",
+        "week6_text": "week6_testing.md",
+        "week7_text": "week7_testing_techniques.md",
     }
     rendered_documents = {}
 

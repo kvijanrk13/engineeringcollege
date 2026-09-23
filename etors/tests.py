@@ -159,6 +159,8 @@ class EtorsTests(TestCase):
         self.assertContains(response, "Week 2")
         self.assertContains(response, "Week 3")
         self.assertContains(response, "Week 4 and Week 5")
+        self.assertContains(response, "Week 6")
+        self.assertContains(response, "Week 7")
         self.assertContains(response, "UML Design Models")
         self.assertContains(response, "Class Diagram")
         self.assertContains(response, "Use Case Diagram")
@@ -177,7 +179,26 @@ class EtorsTests(TestCase):
         self.assertContains(response, "/static/etors/images/uml_diagrams/page7_uml_diagram.jpeg")
         self.assertContains(response, "/static/etors/images/uml_diagrams/page8_uml_diagram.jpeg")
         self.assertContains(response, 'id="week-4"')
+        self.assertContains(response, 'id="week-6"')
+        self.assertContains(response, 'id="week-7"')
+        self.assertContains(response, "test-case-content")
         self.assertContains(response, "diagram-viewer")
+
+    def test_week6_and_week7_contain_etors_testing_documentation(self):
+        response = self.client.get(reverse("etors:documentation"))
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        week6 = content.split('id="week-6"', 1)[1].split('id="week-7"', 1)[0]
+        week7 = content.split('id="week-7"', 1)[1]
+
+        self.assertIn("ET_TC_101", week6)
+        self.assertIn("ET_UT_204", week6)
+        self.assertIn("ET_WB_106", week7)
+        self.assertIn("ET_BB_206", week7)
+        self.assertIn("White-Box Testing", week7)
+        self.assertIn("Black-Box Testing", week7)
+        self.assertNotIn("Library Management System", week6)
+        self.assertNotIn("BB_TC_", week6)
 
     def test_documentation_button_links_to_week1_week2_and_week3(self):
         response = self.client.get(reverse("etors:home"))

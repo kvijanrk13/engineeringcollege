@@ -6,7 +6,7 @@
   .doc-header { margin-bottom: 26px; text-align: center; }
   .doc-header h1 { margin: 12px 0 8px; color: var(--navy); font-size: clamp(2rem, 4vw, 3rem); }
   .doc-header p { max-width: 720px; margin: auto; color: var(--muted); }
-  .week-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 24px auto 0; max-width: 880px; }
+  .week-nav { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: 24px auto 0; max-width: 1180px; }
   .week-link { padding: 15px 18px; border: 1px solid #b9cee8; border-radius: 14px; color: var(--navy); background: white; box-shadow: 0 8px 22px rgba(11,31,58,.08); text-decoration: none; font-weight: 850; }
   .week-link span { display: block; margin-top: 3px; color: var(--muted); font-size: .8rem; font-weight: 650; }
   .week-link:hover, .week-link:focus-visible { border-color: var(--blue); color: var(--blue); transform: translateY(-2px); }
@@ -39,8 +39,32 @@
   .doc-content .diagram-canvas img { width: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; transform-origin: top left; }
   .diagram-viewer:fullscreen { display: flex; flex-direction: column; width: 100vw; height: 100vh; margin: 0; border: 0; border-radius: 0; }
   .diagram-viewer:fullscreen .diagram-canvas { flex: 1; max-height: none; }
+  .test-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    padding-bottom: 0.35rem;
+    scrollbar-color: var(--blue) #eaf1f8;
+  }
+  .test-table-scroll table {
+    min-width: 1120px;
+    table-layout: fixed;
+    margin: 0;
+  }
+  .test-case-content th:nth-child(1),
+  .test-case-content td:nth-child(1) { width: 12%; text-align: center; font-weight: 750; }
+  .test-case-content th:nth-child(2),
+  .test-case-content td:nth-child(2) { width: 36%; }
+  .test-case-content th:nth-child(3),
+  .test-case-content td:nth-child(3) { width: 24%; }
+  .test-case-content th:nth-child(4),
+  .test-case-content td:nth-child(4) { width: 18%; }
+  .test-case-content th:nth-child(5),
+  .test-case-content td:nth-child(5) { width: 10%; text-align: center; font-weight: 750; }
+  .test-case-content td { vertical-align: top; line-height: 1.55; }
   .doc-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
   .doc-card { scroll-margin-top: 100px; }
+  @media(max-width:1000px) { .week-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media(max-width:700px) { .week-nav { grid-template-columns: 1fr; } }
 </style>
 
@@ -55,6 +79,8 @@
         <a class="week-link" href="#week-2">WEEK 2<span>Software Requirements (SRD)</span></a>
         <a class="week-link" href="#week-3">WEEK 3<span>Software Design (SDD)</span></a>
         <a class="week-link" href="#week-4">WEEK 4 AND WEEK 5<span>UML Design Models</span></a>
+        <a class="week-link" href="#week-6">WEEK 6<span>Unit &amp; Integration Testing</span></a>
+        <a class="week-link" href="#week-7">WEEK 7<span>White-Box &amp; Black-Box Testing</span></a>
       </nav>
     </header>
     <div class="doc-grid">
@@ -73,6 +99,14 @@
       <article class="doc-card" id="week-4">
         <h2>Week 4 and Week 5 · UML Design Models</h2>
         <div id="week4-doc" class="doc-content">{{ week4_text|safe }}</div>
+      </article>
+      <article class="doc-card" id="week-6">
+        <h2>Week 6 · Unit Testing and Integration Testing</h2>
+        <div id="week6-doc" class="doc-content test-case-content">{{ week6_text|safe }}</div>
+      </article>
+      <article class="doc-card" id="week-7">
+        <h2>Week 7 · White-Box and Black-Box Testing Techniques</h2>
+        <div id="week7-doc" class="doc-content test-case-content">{{ week7_text|safe }}</div>
       </article>
       <div class="doc-actions">
         <a class="btn btn-secondary" href="{% url 'etors:home' %}">Back to ETORS</a>
@@ -139,6 +173,16 @@
       image.loading = index === 0 ? "eager" : "lazy";
       image.setAttribute("tabindex", "0");
       updateZoom(100);
+    });
+
+    document.querySelectorAll(".test-case-content table").forEach(function (table) {
+      var scrollArea = document.createElement("div");
+      scrollArea.className = "test-table-scroll";
+      scrollArea.setAttribute("role", "region");
+      scrollArea.setAttribute("aria-label", "Scrollable test case table");
+      scrollArea.setAttribute("tabindex", "0");
+      table.parentNode.insertBefore(scrollArea, table);
+      scrollArea.appendChild(table);
     });
   });
 </script>
