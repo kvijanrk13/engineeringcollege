@@ -330,6 +330,10 @@ MOOCS_DEPLOY_TIMESTAMP = "2026-09-23T09-45"
 # check is case-insensitive.
 MOOCS_PAYMENT_WHITELIST = frozenset(
     addr.strip().lower()
-    for addr in os.getenv("MOOCS_PAYMENT_WHITELIST", "vijaykumarit@anurag.ac.in").split(",")
+    for addr in os.getenv("MOOCS_PAYMENT_WHITELIST", "").split(",")
     if addr.strip()
 )
+
+# When True, ALL authenticated MOOCS users bypass the Razorpay payment and
+# gain immediate access to sets 3 through 200 without payment.
+MOOCS_PAYMENT_BYPASS_ALL = os.getenv("MOOCS_PAYMENT_BYPASS_ALL", "True") == "True"

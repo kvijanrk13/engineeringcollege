@@ -142,6 +142,7 @@
   <script src="{% static 'moocs/content_lock.js' %}?v=1"></script>
   {% if moocs_gmail_verified %}
   {{ moocs_gmail_email|json_script:"moocs-profile-email" }}
+  {{ moocs_payment_bypass_all|json_script:"moocs-payment-bypass-all" }}
   <script src="{% static 'moocs/textbook_questions.js' %}?v=21"></script>
   <script src="{% static 'moocs/paper_three_questions.js' %}?v=1"></script>
   <script src="{% static 'moocs/a0402_paper_two.js' %}?v=1"></script>
@@ -184,7 +185,7 @@
       }));
     })();
   </script>
-  <script src="{% static 'moocs/moocs_payment.js' %}?v=4"></script>
+  <script src="{% static 'moocs/moocs_payment.js' %}?v=5"></script>
   <script src="{% static 'moocs/moocs.js' %}?v=47"></script>
   <script>
     /* Keep logout functional even if a deployment serves a stale cached exam script. */

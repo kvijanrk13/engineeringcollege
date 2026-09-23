@@ -6,11 +6,15 @@ const MOCS_SET_3_FEE = 200.00;
 const PREMIUM_SET_START = 3;
 const PAID_SETS_KEY_PREFIX = 'moocs-paid-sets:';
 
+const MOOCS_PAYMENT_BYPASS_ALL = JSON.parse(
+  document.getElementById('moocs-payment-bypass-all')?.textContent || 'false'
+);
 const MOOCS_PAYMENT_EXEMPT_EMAILS = ['vijaykumarit@anurag.ac.in'];
 const isPaymentExempt = () =>
-  typeof profileEmail !== 'undefined' &&
-  profileEmail &&
-  MOOCS_PAYMENT_EXEMPT_EMAILS.includes(profileEmail);
+  MOOCS_PAYMENT_BYPASS_ALL ||
+  (typeof profileEmail !== 'undefined' &&
+   profileEmail &&
+   MOOCS_PAYMENT_EXEMPT_EMAILS.includes(profileEmail));
 
 const getCsrfToken = () => {
   const name = 'csrftoken';

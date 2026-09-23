@@ -1,6 +1,7 @@
 import json
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import TestCase, override_settings
 from dashboard.models import MoocsPayment, MoocsVisitor
 
@@ -127,7 +128,7 @@ class MoocsPaymentTests(TestCase):
         session["moocs_gmail_email"] = "student@gmail.com"
         session.save()
 
-    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret")
+    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret", MOOCS_PAYMENT_BYPASS_ALL=False, SECURE_SSL_REDIRECT=False)
     @patch("engineeringcollege.moocs_views._create_moocs_order")
     def test_set_3_payment_page_opens_razorpay(self, create_order):
         create_order.return_value = ({"id": "order_test_123"}, 20000)
@@ -139,14 +140,14 @@ class MoocsPaymentTests(TestCase):
         self.assertContains(response, "Open Razorpay payment")
         self.assertContains(response, "order_test_123")
 
-    @override_settings(RAZORPAY_KEY_ID="", RAZORPAY_KEY_SECRET="")
+    @override_settings(RAZORPAY_KEY_ID="", RAZORPAY_KEY_SECRET="", MOOCS_PAYMENT_BYPASS_ALL=False, SECURE_SSL_REDIRECT=False)
     def test_payment_page_reports_missing_razorpay_configuration(self):
         response = self.client.get("/MOOCS/payment/?set=3")
 
         self.assertEqual(response.status_code, 503)
         self.assertContains(response, "Razorpay is not configured", status_code=503)
 
-    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret")
+    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret", MOOCS_PAYMENT_BYPASS_ALL=False, SECURE_SSL_REDIRECT=False)
     @patch("engineeringcollege.moocs_views._get_razorpay_client")
     def test_set_3_order_uses_two_hundred_rupees(self, get_client):
         get_client.return_value.order.create.return_value = {"id": "order_test_123"}
@@ -165,6 +166,7 @@ class MoocsPaymentTests(TestCase):
         self.assertEqual(payment.amount, 200.00)
         self.assertEqual(payment.razorpay_order_id, "order_test_123")
 
+    @override_settings(MOOCS_PAYMENT_BYPASS_ALL=False, SECURE_SSL_REDIRECT=False)
     @patch("engineeringcollege.moocs_views._get_razorpay_client")
     def test_set_3_verification_marks_premium_sets_paid(self, get_client):
         get_client.return_value.utility.verify_payment_signature.return_value = None
@@ -200,6 +202,7 @@ class MoocsPaymentTests(TestCase):
     @override_settings(
         RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
         SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_BYPASS_ALL=False,
         MOOCS_PAYMENT_WHITELIST=frozenset({"vijaykumarit@anurag.ac.in"}),
     )
     def test_whitelisted_email_bypasses_payment_page(self):
@@ -219,6 +222,7 @@ class MoocsPaymentTests(TestCase):
     @override_settings(
         RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
         SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_BYPASS_ALL=False,
         MOOCS_PAYMENT_WHITELIST=frozenset({"vijaykumarit@anurag.ac.in"}),
     )
     def test_whitelisted_email_gets_already_paid_on_create_order(self):
@@ -241,6 +245,7 @@ class MoocsPaymentTests(TestCase):
     @override_settings(
         RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
         SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_BYPASS_ALL=False,
         MOOCS_PAYMENT_WHITELIST=frozenset({"vijaykumarit@anurag.ac.in"}),
     )
     def test_whitelisted_email_succeeds_on_verify(self):
@@ -267,6 +272,7 @@ class MoocsPaymentTests(TestCase):
     @override_settings(
         RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret",
         SECURE_SSL_REDIRECT=False,
+        MOOCS_PAYMENT_BYPASS_ALL=False,
         MOOCS_PAYMENT_WHITELIST=frozenset({"other@example.com"}),
     )
     @patch("engineeringcollege.moocs_views._create_moocs_order")
@@ -277,3 +283,64 @@ class MoocsPaymentTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Open Razorpay payment")
+
+    # ---- bypass-all tests (MOOCS_PAYMENT_BYPASS_ALL defaults to True) ----
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_bypass_all_is_enabled_by_default(self):
+        self.assertTrue(getattr(settings, "MOOCS_PAYMENT_BYPASS_ALL", False))
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_bypass_all_redirects_payment_page_for_any_email(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "anyuser@gmail.com"
+        session.save()
+
+        response = self.client.get("/MOOCS/payment/?set=3")
+
+        self.assertRedirects(
+            response,
+            "/MOOCS/?payment=success&next_set=3",
+            fetch_redirect_response=False,
+        )
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_bypass_all_create_order_returns_already_paid(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "anyuser@gmail.com"
+        session.save()
+
+        response = self.client.post(
+            "/MOOCS/payment/create-order/",
+            data=json.dumps({"set_number": 3, "email": "anyuser@gmail.com"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertTrue(payload["already_paid"])
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_bypass_all_verify_succeeds(self):
+        session = self.client.session
+        session["moocs_gmail_verified"] = True
+        session["moocs_gmail_email"] = "anyuser@gmail.com"
+        session.save()
+
+        response = self.client.post(
+            "/MOOCS/payment/verify/",
+            data=json.dumps({
+                "set_number": 3,
+                "email": "anyuser@gmail.com",
+                "razorpay_payment_id": "pay_test_123",
+                "razorpay_order_id": "order_test_123",
+                "razorpay_signature": "signature_test",
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["success"])

@@ -75,3 +75,5 @@ services:
         value: "200"
       - key: MOOCS_PAYMENT_WHITELIST
         value: "vijaykumarit@anurag.ac.in"
+      - key: MOOCS_PAYMENT_BYPASS_ALL
+        value: "True"

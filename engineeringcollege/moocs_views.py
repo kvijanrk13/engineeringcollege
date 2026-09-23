@@ -23,7 +23,13 @@ MOCS_SET_3_ACCESS_FEE = MOOCS_SET_3_ACCESS_FEE
 
 
 def _is_payment_exempt(email):
-    """Return True when *email* is whitelisted — Razorpay should be skipped."""
+    """Return True when *email* is exempt from Razorpay payment.
+
+    Exemption applies when MOOCS_PAYMENT_BYPASS_ALL is enabled (all users)
+    or when the email appears in the MOOCS_PAYMENT_WHITELIST.
+    """
+    if getattr(settings, "MOOCS_PAYMENT_BYPASS_ALL", False):
+        return True
     whitelist = getattr(settings, "MOOCS_PAYMENT_WHITELIST", frozenset()) or frozenset()
     return email.strip().lower() in whitelist
 
@@ -51,6 +57,9 @@ def moocs_exam(request):
             ),
             "moocs_visitor_count": visitor_count,
             "moocs_razorpay_key_id": getattr(settings, "RAZORPAY_KEY_ID", ""),
+            "moocs_payment_bypass_all": getattr(
+                settings, "MOOCS_PAYMENT_BYPASS_ALL", False
+            ),
         },
     )
     response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
