@@ -319,6 +319,8 @@ LOGGING = {
 # ================================
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "").strip()
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "").strip()
+# Force fresh render deploy to clear template/static cache.
+MOOCS_DEPLOY_TIMESTAMP = "2026-09-23T09-45"
 
 # ================================
 # MOOCS Payment Whitelisting (bypass Razorpay for specific accounts)
