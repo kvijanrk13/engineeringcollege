@@ -3,6 +3,7 @@
    question whose parameters vary with set number and index, so no two exams
    are identical. */
 (function () {
+  const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
   const UGC_NET_UNITS = {
     1: 'Discrete Structures and Optimization',
     2: 'Computer System Architecture',
@@ -165,7 +166,7 @@
         // Extended Euclidean to find d
         let d_val = 0;
         for (let d = 1; d < phi; d++) { if ((e_val * d) % phi === 1) { d_val = d; break; } }
-        const fixed = (((p-1)*(q-1)) % e_val === 0) ? 1 + 1 : 1 + (p-1)*(q-1) / Math.gcd(e_val, (p-1)*(q-1));
+        const fixed = (((p-1)*(q-1)) % e_val === 0) ? 1 + 1 : 1 + (p-1)*(q-1) / gcd(e_val, (p-1)*(q-1));
         const opts = [
           `d=${d_val}, 3 fixed points`,
           `d=${d_val}, ${1 + (p-1)*(q-1)/e_val} fixed points`,
@@ -211,7 +212,7 @@
           `Clock = ${cycle_time} ns, speedup = ${speedup}x`,
           `Clock = ${cycle_time-1} ns, speedup = ${(non_pipeline_time / ((1000+stall_cycles)*cycle_time)).toFixed(2)}x`,
           `Clock = ${cycles.reduce((a,b)=>a+b,0)} ns, speedup = 1.0x`,
-          `Clock = ${Math.max(...cycles)} ns, speedup = ${(non_pipeline_time / (1000*Math.max(...cycles)).toFixed(2)}x`,
+          `Clock = ${Math.max(...cycles)} ns, speedup = ${(non_pipeline_time / (1000 * Math.max(...cycles))).toFixed(2)}x`,
         ];
         return { pass, quest, opts, correct: 0, unit: 2 };
       },
