@@ -43,7 +43,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, 'id="welcome" class="welcome card"')
         self.assertNotContains(response, 'id="welcome" class="welcome card" hidden')
         self.assertContains(response, "Two hundred mixed, syllabus-aligned papers")
-        self.assertContains(response, "set <= 200")
+        self.assertContains(response, "set <= 300")
         self.assertContains(response, "2014 Paper I + new MCQs (100)")
         self.assertContains(response, "Paper II answer key + new MCQs (100)")
         self.assertContains(response, "New unique computer-science MCQs")
@@ -136,7 +136,7 @@ class MoocsPaymentTests(TestCase):
         response = self.client.get("/MOOCS/payment/?set=3")
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Unlock Sets 3–200")
+        self.assertContains(response, "Unlock Sets 3–300")
         self.assertContains(response, "Open Razorpay payment")
         self.assertContains(response, "order_test_123")
 

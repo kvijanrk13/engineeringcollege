@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>MOOCS Payment — Sets 3–200</title>
+  <title>MOOCS Payment — Sets 3–300</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet">
@@ -44,8 +44,8 @@
       </div>
       {% else %}
       <p>Secure examination access</p>
-      <h1>Unlock Sets 3–200</h1>
-      <p class="lead">Complete the one-time payment for Set 3 to continue through Set 200.</p>
+      <h1>Unlock Sets 3–300</h1>
+      <p class="lead">Complete the one-time payment for Set 3 to continue through Set 300.</p>
       <div class="summary"><span>Logged-in account</span><strong>{{ moocs_gmail_email }}</strong></div>
       <div class="summary"><span>Access fee</span><strong class="amount">₹{{ moocs_amount|floatformat:2 }}</strong></div>
       <div class="summary"><span>Payment provider</span><strong>Razorpay</strong></div>
@@ -110,7 +110,7 @@
             amount,
             currency: 'INR',
             name: 'MOOCS — TS SET/NET/GATE',
-            description: 'Access to Set 3 and all later MOOCS sets through Set 200',
+            description: 'Access to Set 3 and all later MOOCS sets through Set 300',
             order_id: orderId,
             handler: verifyPayment,
             modal: {ondismiss: () => finish('/MOOCS/?payment=cancelled&next_set=3')},

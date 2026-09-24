@@ -41,7 +41,7 @@
       {% endif %}
       <p class="privacy-note">Only your verified email address and basic profile are requested.</p>
       <div class="trust-strip" aria-label="Platform highlights">
-        <span><b>200</b> curated sets</span><span><b>100</b> questions per set</span><span><b>Secure</b> Google access</span>
+        <span><b>300</b> curated sets</span><span><b>100</b> questions per set</span><span><b>Secure</b> Google access</span>
       </div>
       </div>
     </section>
@@ -54,7 +54,7 @@
       <script>
         (() => {
           const picker = document.getElementById('exam-set');
-          for (let set = 51; set <= 200; set += 1) {
+          for (let set = 51; set <= 300; set += 1) {
             const option = document.createElement('option');
             option.value = String(set);
             option.textContent = `Set ${set} — New unique computer-science MCQs (100)`;
@@ -79,7 +79,7 @@
       <label class="declaration"><input id="declaration" type="checkbox" checked> I have read the instructions and am ready to begin.</label>
       <div class="welcome-actions">
         <button id="start-exam" class="primary">Start examination</button>
-        <button id="unlock-premium-set" class="secondary" type="button" hidden>Unlock Sets 3–200 (₹200)</button>
+        <button id="unlock-premium-set" class="secondary" type="button" hidden>Unlock Sets 3–300</button>
         <button id="reset-exam" class="secondary" type="button">Reset and start from Set 1</button>
       </div>
     </section>
@@ -155,9 +155,10 @@
   <script src="{% static 'moocs/paper1_2014.js' %}?v=1"></script>
   <script src="{% static 'moocs/d8704_paper_two.js' %}?v=1"></script>
   <script src="{% static 'moocs/pdf_archive_sets.js' %}?v=1"></script>
-  <script src="{% static 'moocs/gate_archive_sets.js' %}?v=1"></script>
-  <script src="{% static 'moocs/question_enhancer.js' %}?v=8"></script>
-  <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
+   <script src="{% static 'moocs/gate_archive_sets.js' %}?v=1"></script>
+   <script src="{% static 'moocs/advanced_sets.js' %}?v=1"></script>
+   <script src="{% static 'moocs/question_enhancer.js' %}?v=8"></script>
+   <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
   <script>
     /* Template-level cleanup also covers stale static assets held by a CDN. */
     (() => {
@@ -176,7 +177,7 @@
   <script>
     (() => {
       const picker = document.getElementById('exam-set');
-      picker.replaceChildren(...Array.from({ length: 200 }, (_, index) => {
+        picker.replaceChildren(...Array.from({ length: 300 }, (_, index) => {
         const set = index + 1;
         const option = document.createElement('option');
         option.value = String(set);
@@ -186,7 +187,7 @@
     })();
   </script>
   <script src="{% static 'moocs/moocs_payment.js' %}?v=5"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=47"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=48"></script>
   <script>
     /* Keep logout functional even if a deployment serves a stale cached exam script. */
     document.getElementById('moocs-signout')?.addEventListener('submit', () => {
