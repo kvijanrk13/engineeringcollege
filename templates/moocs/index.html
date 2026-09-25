@@ -157,6 +157,7 @@
   <script src="{% static 'moocs/pdf_archive_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/gate_archive_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/advanced_sets.js' %}?v=2"></script>
+  <script src="{% static 'moocs/diagram_sets.js' %}?v=1"></script>
   <script src="{% static 'moocs/question_enhancer.js' %}?v=8"></script>
   <script src="{% static 'moocs/assessment_pattern.js' %}?v=1"></script>
   <script>
@@ -174,10 +175,10 @@
     })();
   </script>
   <script src="{% static 'moocs/bloom_taxonomy.js' %}?v=2"></script>
-  <script>
+<script>
     (() => {
       const picker = document.getElementById('exam-set');
-        picker.replaceChildren(...Array.from({ length: 300 }, (_, index) => {
+        picker.replaceChildren(...Array.from({ length: 400 }, (_, index) => {
         const set = index + 1;
         const option = document.createElement('option');
         option.value = String(set);

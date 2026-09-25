@@ -30,7 +30,7 @@ const LEGACY_QUESTIONS=[
 {s:'Paper II',t:'Computer Architecture',q:'Cache memory improves performance mainly by exploiting:',o:['Encryption','Locality of reference','Process starvation','Packet switching'],a:1,e:'Temporal and spatial locality make recently/nearby accessed data likely to be reused.'},
 {s:'Paper II',t:'Programming',q:'Which traversal of a binary search tree produces keys in sorted order?',o:['Preorder','Inorder','Postorder','Level order'],a:1,e:'Inorder visits left subtree, root, then right subtree, yielding sorted BST keys.'}
 ];
-const $=id=>document.getElementById(id);const MAX_EXAM_SET=300;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));
+const $=id=>document.getElementById(id);const MAX_EXAM_SET=400;const EXAM_CONFIG=Object.fromEntries(Array.from({length:MAX_EXAM_SET},(_,i)=>[i+1,{minutes:60,marks:200}]));
 const removedQuestionLeads=[
   ['Apply the governing definition','carefully before selecting.'].join(' '),
   ['Analyze the conditions,','rule out near-correct alternatives,','and then answer.'].join(' ')
@@ -155,7 +155,7 @@ function submit(auto=false){
   $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)
 }
 $('exam-set').onchange=async e=>{const choice=Number(e.target.value);if(!suppressPaymentPrompt&&setRequiresPayment(choice)&&!isSetPaid(choice)){window.location.href=`/MOOCS/payment/?set=${PREMIUM_SET_START}&next_set=${choice}`;return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks;updatePremiumPaymentButton()};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=async()=>{if(setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet)){const paid=await handleSetAccess(selectedSet);if(!paid)return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};
-const updatePremiumPaymentButton=()=>{const needsPayment=setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet);$('unlock-premium-set').hidden=!needsPayment;$('unlock-premium-set').textContent=needsPayment?`Unlock Sets 3–300`:'Premium sets unlocked'};
+const updatePremiumPaymentButton=()=>{const needsPayment=setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet);$('unlock-premium-set').hidden=!needsPayment;$('unlock-premium-set').textContent=needsPayment?`Unlock Sets 3–400`:'Premium sets unlocked'};
 $('unlock-premium-set').onclick=async()=>{const paid=await handleSetAccess(selectedSet);if(paid)updatePremiumPaymentButton()};
 updatePremiumPaymentButton();
 $('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
@@ -216,8 +216,8 @@ const updateNextSetPrompt=()=>{
   if(!hasNext)return;
   const nextSet=selectedSet+1;
   const needsPayment=setRequiresPayment(nextSet)&&!isSetPaid(nextSet);
-  $('next-set-message').textContent=`You completed Set ${selectedSet}. ${needsPayment?`Pay once to unlock Sets 3 through 300. Click below to open the payment window.`:`Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`}`;
-  continueNextSet.textContent=needsPayment?`Unlock Sets 3–300`:`Continue to Set ${nextSet}`;
+  $('next-set-message').textContent=`You completed Set ${selectedSet}. ${needsPayment?`Pay once to unlock Sets 3 through 400. Click below to open the payment window.`:`Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`}`;
+  continueNextSet.textContent=needsPayment?`Unlock Sets 3–400`:`Continue to Set ${nextSet}`;
   continueNextSet.dataset.nextSet=nextSet;
 };
 new MutationObserver(updateNextSetPrompt).observe($('result'),{attributes:true,attributeFilter:['hidden']});
