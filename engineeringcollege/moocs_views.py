@@ -11,7 +11,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
-from dashboard.models import MoocsPayment, MoocsVisitor
+from dashboard.models import MoocsPayment, MoocsVisitor, MoocsExamResult
 
 
 logger = logging.getLogger(__name__)
@@ -304,3 +304,134 @@ def moocs_verify_payment(request):
 def moocs_logout(request):
     logout(request)
     return redirect("moocs")
+
+
+@csrf_exempt
+def moocs_save_result(request):
+    """Save exam result for a completed set."""
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "POST required"}, status=405)
+
+    verified = request.session.get("moocs_gmail_verified") is True
+    session_email = request.session.get("moocs_gmail_email", "").strip().lower()
+
+    if not verified or not session_email:
+        return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
+
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({"success": False, "error": "Invalid request body"}, status=400)
+
+    email = body.get("email", "").strip().lower()
+    if email != session_email:
+        return JsonResponse({"success": False, "error": "Email mismatch"}, status=403)
+
+    set_number = body.get("set_number")
+    score = body.get("score", 0)
+    correct = body.get("correct", 0)
+    incorrect = body.get("incorrect", 0)
+    unattempted = body.get("unattempted", 0)
+    accuracy = body.get("accuracy", 0.0)
+    total_questions = body.get("total_questions", 100)
+    max_marks = body.get("max_marks", 200)
+    subject_scores = body.get("subject_scores", {})
+
+    if not set_number or not isinstance(set_number, int):
+        return JsonResponse({"success": False, "error": "Invalid set number"}, status=400)
+
+    # Save or update the exam result
+    result, created = MoocsExamResult.objects.update_or_create(
+        email=email,
+        set_number=set_number,
+        defaults={
+            "score": score,
+            "correct": correct,
+            "incorrect": incorrect,
+            "unattempted": unattempted,
+            "accuracy": accuracy,
+            "total_questions": total_questions,
+            "max_marks": max_marks,
+            "subject_scores": subject_scores,
+        }
+    )
+
+    return JsonResponse({
+        "success": True,
+        "created": created,
+        "set_number": result.set_number,
+        "score": result.score,
+    })
+
+
+def moocs_scorecard(request):
+    """Retrieve all completed exam results for the authenticated user."""
+    verified = request.session.get("moocs_gmail_verified") is True
+    email = request.session.get("moocs_gmail_email", "").strip().lower()
+
+    if not verified or not email:
+        login_query = urlencode({"role": "student", "target": "moocs"})
+        return redirect(f"{reverse('dashboard:google_login')}?{login_query}")
+
+    results = MoocsExamResult.objects.filter(email=email).order_by('set_number')
+
+    # Prepare data for template
+    scorecard_data = []
+    for result in results:
+        scorecard_data.append({
+            'set_number': result.set_number,
+            'score': result.score,
+            'max_marks': result.max_marks,
+            'correct': result.correct,
+            'incorrect': result.incorrect,
+            'unattempted': result.unattempted,
+            'accuracy': result.accuracy,
+            'total_questions': result.total_questions,
+            'subject_scores': result.subject_scores,
+            'completed_at': result.completed_at,
+        })
+
+    return render(request, "moocs/scorecard.html", {
+        "moocs_gmail_email": email,
+        "moocs_gmail_verified": verified,
+        "scorecard_data": scorecard_data,
+        "total_sets_completed": len(scorecard_data),
+        "average_score": sum(r['score'] for r in scorecard_data) / len(scorecard_data) if scorecard_data else 0,
+        "highest_score": max((r['score'] for r in scorecard_data), default=0),
+    })
+
+
+@csrf_exempt
+def moocs_scorecard_api(request):
+    """API endpoint to get scorecard data as JSON."""
+    verified = request.session.get("moocs_gmail_verified") is True
+    email = request.session.get("moocs_gmail_email", "").strip().lower()
+
+    if not verified or not email:
+        return JsonResponse({"success": False, "error": "Authentication required"}, status=403)
+
+    results = MoocsExamResult.objects.filter(email=email).order_by('set_number')
+
+    scorecard_data = []
+    for result in results:
+        scorecard_data.append({
+            'set_number': result.set_number,
+            'score': result.score,
+            'max_marks': result.max_marks,
+            'correct': result.correct,
+            'incorrect': result.incorrect,
+            'unattempted': result.unattempted,
+            'accuracy': result.accuracy,
+            'total_questions': result.total_questions,
+            'subject_scores': result.subject_scores,
+            'completed_at': result.completed_at.isoformat() if result.completed_at else None,
+        })
+
+    return JsonResponse({
+        "success": True,
+        "email": email,
+        "results": scorecard_data,
+        "total_sets_completed": len(scorecard_data),
+        "average_score": sum(r['score'] for r in scorecard_data) / len(scorecard_data) if scorecard_data else 0,
+        "highest_score": max((r['score'] for r in scorecard_data), default=0),
+    })

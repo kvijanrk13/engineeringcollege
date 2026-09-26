@@ -1,0 +1,179 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MY SCORECARD — MOOCS Mock Examination</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}?v=22">
+  <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=7">
+  <link rel="stylesheet" href="{% static 'moocs/content_lock.css' %}?v=1">
+  <style>
+    .scorecard-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    .scorecard-table th, .scorecard-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    .scorecard-table th { background: var(--bg-elevated); font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .scorecard-table tr:hover { background: var(--bg-elevated); }
+    .scorecard-table .set-number { font-weight: 700; color: var(--accent); }
+    .scorecard-table .score-cell { font-weight: 600; }
+    .scorecard-table .score-cell.pass { color: var(--success); }
+    .scorecard-table .score-cell.fail { color: var(--danger); }
+    .scorecard-table .accuracy { font-family: 'Manrope', monospace; }
+    .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .summary-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+    .summary-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1.2; }
+    .summary-card .label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+    .subject-breakdown { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.85rem; }
+    .subject-breakdown summary { cursor: pointer; color: var(--text-muted); font-weight: 500; }
+    .subject-breakdown ul { list-style: none; padding: 8px 0 0 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+    .subject-breakdown li { display: flex; justify-content: space-between; padding: 4px 8px; background: var(--bg-elevated); border-radius: 6px; }
+    .subject-breakdown .subject-name { color: var(--text); }
+    .subject-breakdown .subject-score { font-family: 'Manrope', monospace; font-weight: 600; color: var(--accent); }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; color: var(--text-muted); text-decoration: none; font-weight: 500; }
+    .back-link:hover { color: var(--accent); }
+    .no-results { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .no-results h2 { margin-bottom: 8px; color: var(--text); }
+    @media (max-width: 640px) {
+      .scorecard-table th:nth-child(4), .scorecard-table td:nth-child(4),
+      .scorecard-table th:nth-child(5), .scorecard-table td:nth-child(5),
+      .scorecard-table th:nth-child(6), .scorecard-table td:nth-child(6) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
+    <div class="exam-name"><strong>TS SET/NET/GATE</strong><span>Computer Science & Applications</span></div>
+    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><form id="moocs-signout" class="moocs-signout-form" method="post" action="{% url 'moocs_logout' %}">{% csrf_token %}<button class="home-link" type="submit">Sign out</button></form>{% endif %}
+  </header>
+
+  <main>
+    <section class="welcome card">
+      <a class="back-link" href="/MOOCS/">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Examination
+      </a>
+
+      <p class="eyebrow">Performance Overview</p>
+      <h1>My Scorecard</h1>
+      <p class="lead">All your completed MOOCS examination sets with detailed scores and subject-wise breakdown.</p>
+
+      {% if scorecard_data %}
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="value">{{ total_sets_completed }}</div>
+          <div class="label">Sets Completed</div>
+        </div>
+        <div class="summary-card">
+          <div class="value">{{ average_score|floatformat:1 }}</div>
+          <div class="label">Average Score</div>
+        </div>
+        <div class="summary-card">
+          <div class="value">{{ highest_score }}</div>
+          <div class="label">Highest Score</div>
+        </div>
+        <div class="summary-card">
+          <div class="value">{{ scorecard_data|length }} / 400</div>
+          <div class="label">Total Sets</div>
+        </div>
+      </div>
+
+      <div class="scorecard-container" style="overflow-x: auto;">
+        <table class="scorecard-table" id="scorecard-table">
+          <thead>
+            <tr>
+              <th>Set</th>
+              <th>Score</th>
+              <th>Accuracy</th>
+              <th>Correct</th>
+              <th>Incorrect</th>
+              <th>Unattempted</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in scorecard_data %}
+            <tr data-set="{{ result.set_number }}">
+              <td class="set-number">Set {{ result.set_number }}</td>
+              <td class="score-cell {% if result.accuracy >= 50 %}pass{% else %}fail{% endif %}">
+                {{ result.score }} / {{ result.max_marks }}
+              </td>
+              <td class="accuracy">{{ result.accuracy|floatformat:1 }}%</td>
+              <td style="color: var(--success);">{{ result.correct }}</td>
+              <td style="color: var(--danger);">{{ result.incorrect }}</td>
+              <td style="color: var(--text-muted);">{{ result.unattempted }}</td>
+              <td>{{ result.completed_at|date:"M d, Y H:i" }}</td>
+            </tr>
+            <tr class="subject-breakdown-row" style="display: none;">
+              <td colspan="7">
+                <details class="subject-breakdown">
+                  <summary>Subject-wise Breakdown for Set {{ result.set_number }}</summary>
+                  <ul>
+                    {% for subject, data in result.subject_scores.items %}
+                      <li>
+                        <span class="subject-name">{{ subject }}</span>
+                        <span class="subject-score">{{ data.correct }}/{{ data.total }} ({{ data.correct|div:data.total|mul:100|floatformat:0 }}%)</span>
+                      </li>
+                    {% empty %}
+                      <li><span class="subject-name">No subject data available</span></li>
+                    {% endfor %}
+                  </ul>
+                </details>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+      <div class="no-results">
+        <h2>No completed sets yet</h2>
+        <p>Start taking examinations to see your scorecard here.</p>
+        <a href="/MOOCS/" class="primary" style="margin-top: 16px; display: inline-block;">Go to Examination</a>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+
+  <footer class="moocs-footer">
+    <div class="visitor-bar">
+      <span class="visitor-label">VISITORS</span>
+      <span class="visitor-count">{{ moocs_visitor_count|default:0 }}</span>
+    </div>
+  </footer>
+
+  <script>
+    // Toggle subject breakdown rows
+    document.querySelectorAll('#scorecard-table tbody tr:not(.subject-breakdown-row)').forEach(row => {
+      row.style.cursor = 'pointer';
+      row.addEventListener('click', () => {
+        const nextRow = row.nextElementSibling;
+        if (nextRow && nextRow.classList.contains('subject-breakdown-row')) {
+          const isHidden = nextRow.style.display === 'none' || nextRow.style.display === '';
+          nextRow.style.display = isHidden ? 'table-row' : 'none';
+          row.style.background = isHidden ? 'var(--bg-elevated)' : '';
+        }
+      });
+    });
+  </script>
+  {% if moocs_gmail_verified %}
+  <script src="{% static 'moocs/content_lock.js' %}?v=1"></script>
+  {{ moocs_gmail_email|json_script:"moocs-profile-email" }}
+  {{ moocs_payment_bypass_all|json_script:"moocs-payment-bypass-all" }}
+  <script src="{% static 'moocs/moocs_payment.js' %}?v=5"></script>
+  <script src="{% static 'moocs/moocs.js' %}?v=49"></script>
+  <script>
+    document.getElementById('moocs-signout')?.addEventListener('submit', () => {
+      allowNavigation = true;
+    });
+  </script>
+  {% endif %}
+</body>
+</html>

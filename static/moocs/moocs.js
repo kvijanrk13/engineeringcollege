@@ -150,9 +150,33 @@ function submit(auto=false){
   let correct=0,incorrect=0;const subjects=GATE_SUBJECTS.map(subject=>({...subject,correct:0,total:0}));
   QUESTIONS.forEach((q,i)=>{const ok=isCorrect(q,state[i].answer),subject=subjects[gateSubjectFor(q)];subject.total++;if(ok){correct++;subject.correct++}else if(state[i].answer!==null)incorrect++});
   const attempted=correct+incorrect;
-  $('score').textContent=correct*2;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=(attempted?Math.round(correct*100/attempted):0)+'%';
+  const score=correct*2;
+  const accuracy=attempted?Math.round(correct*100/attempted):0;
+  $('score').textContent=score;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=accuracy+'%';
   renderGateAnalysis(subjects,correct);
-  $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0)
+  $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0);
+
+  // Save result to server
+  if(profileEmail){
+    const subjectScores={};
+    subjects.forEach(s=>{if(s.total>0) subjectScores[s.name]={correct:s.correct,total:s.total,percentage:Math.round(s.correct*100/s.total)}});
+    fetch('/MOOCS/save-result/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
+      body:JSON.stringify({
+        email:profileEmail,
+        set_number:selectedSet,
+        score:score,
+        correct:correct,
+        incorrect:incorrect,
+        unattempted:QUESTIONS.length-attempted,
+        accuracy:accuracy,
+        total_questions:QUESTIONS.length,
+        max_marks:QUESTIONS.length*2,
+        subject_scores:subjectScores
+      })
+    }).catch(err=>console.warn('Failed to save exam result:',err));
+  }
 }
 $('exam-set').onchange=async e=>{const choice=Number(e.target.value);if(!suppressPaymentPrompt&&setRequiresPayment(choice)&&!isSetPaid(choice)){window.location.href=`/MOOCS/payment/?set=${PREMIUM_SET_START}&next_set=${choice}`;return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks;updatePremiumPaymentButton()};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=async()=>{if(setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet)){const paid=await handleSetAccess(selectedSet);if(!paid)return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};
 const updatePremiumPaymentButton=()=>{const needsPayment=setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet);$('unlock-premium-set').hidden=!needsPayment;$('unlock-premium-set').textContent=needsPayment?`Unlock Sets 3–400`:'Premium sets unlocked'};

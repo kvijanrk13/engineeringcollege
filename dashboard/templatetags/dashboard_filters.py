@@ -13,3 +13,17 @@ def get_item(dictionary, key):
     if isinstance(dictionary, dict):
         return dictionary.get(key)
     return None
+
+@register.filter(name='div')
+def div(value, arg):
+    try:
+        return float(value) / float(arg)
+    except (ValueError, ZeroDivisionError):
+        return 0
+
+@register.filter(name='mul')
+def mul(value, arg):
+    try:
+        return float(value) * float(arg)
+    except (ValueError, TypeError):
+        return 0

@@ -899,3 +899,27 @@ class MoocsPayment(models.Model):
 
     def __str__(self):
         return f"{self.email} - Set {self.set_number} - {self.status}"
+
+
+class MoocsExamResult(models.Model):
+    email = models.EmailField(db_index=True)
+    set_number = models.PositiveIntegerField()
+    score = models.IntegerField(default=0)
+    correct = models.PositiveIntegerField(default=0)
+    incorrect = models.PositiveIntegerField(default=0)
+    unattempted = models.PositiveIntegerField(default=0)
+    accuracy = models.FloatField(default=0.0)
+    total_questions = models.PositiveIntegerField(default=100)
+    max_marks = models.PositiveIntegerField(default=200)
+    subject_scores = models.JSONField(default=dict, blank=True)
+    completed_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-completed_at']
+        unique_together = ['email', 'set_number']
+        verbose_name = "MOOCS Exam Result"
+        verbose_name_plural = "MOOCS Exam Results"
+
+    def __str__(self):
+        return f"{self.email} - Set {self.set_number} - {self.score}/{self.max_marks}"
