@@ -21,13 +21,16 @@ const sourceFiles = [
   'diagram_sets.js',
   'question_enhancer.js',
   'assessment_pattern.js',
+  'bloom_taxonomy.js',
+  'varied_matching_bank.js',
+  'varied_sets.js',
 ];
 
 let source = sourceFiles
   .map(file => fs.readFileSync(path.join(moocsDirectory, file), 'utf8'))
   .join('\n');
 
-source = 'const document={querySelector:()=>null};\n' + source;
+source = 'const document={querySelector:()=>null};\nconst window=globalThis;\n' + source;
 source += `
 (() => {
   const errors = [];
@@ -84,11 +87,37 @@ source += `
       }
 
       const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
-      if (question.mode !== expectedMode) {
-        errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);
-      }
-      if (expectedMode === 'multi' && (!Array.isArray(question.answers) || question.answers.length !== 2)) {
-        errors.push(\`\${location} must have exactly two multiple-selection answers.\`);
+      /* Sets 12-100 deliberately break the 8+1+1 shape: the first 11 questions
+         are List-I / List-II matching tables and the rest rotate through
+         quantitative, series, substitution and component approaches. */
+      if (setNumber >= 12 && setNumber <= 100) {
+        if (question.mode !== 'selection') {
+          errors.push(\`\${location} should use selection mode, not \${question.mode}.\`);
+        }
+        delete question.answers;
+        delete question.multiChecked;
+        const isMatching = index < 11;
+        if (Boolean(question.isMatching) !== isMatching) {
+          errors.push(\`\${location} has the wrong matching flag for its position.\`);
+        }
+        if (isMatching) {
+          if (!Array.isArray(question.list1) || question.list1.length !== 4) {
+            errors.push(\`\${location} must show four List-I entries.\`);
+          }
+          if (!Array.isArray(question.list2) || question.list2.length !== 4) {
+            errors.push(\`\${location} must show four List-II entries.\`);
+          }
+          if (!/Match the entries of List-I with the entries of List-II/i.test(String(question.q))) {
+            errors.push(\`\${location} does not state the List-I / List-II instruction.\`);
+          }
+        }
+      } else {
+        if (question.mode !== expectedMode) {
+          errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);
+        }
+        if (expectedMode === 'multi' && (!Array.isArray(question.answers) || question.answers.length !== 2)) {
+          errors.push(\`\${location} must have exactly two multiple-selection answers.\`);
+        }
       }
 
       const normalized = String(question.q || '').toLocaleLowerCase().replace(/\\s+/g, ' ').trim();
