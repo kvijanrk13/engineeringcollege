@@ -8,7 +8,8 @@ from django.views.static import serve
 from django.views.generic import TemplateView
 from .moocs_views import (
     moocs_exam, moocs_logout, moocs_payment, moocs_create_order,
-    moocs_verify_payment, moocs_save_result, moocs_scorecard, moocs_scorecard_api
+    moocs_verify_payment, moocs_save_result, moocs_scorecard, moocs_scorecard_api,
+    moocs_formulas
 )
 
 
@@ -28,6 +29,7 @@ urlpatterns = [
     path('MOOCS/save-result/', moocs_save_result, name='moocs_save_result'),
     path('MOOCS/scorecard/', moocs_scorecard, name='moocs_scorecard'),
     path('MOOCS/scorecard/api/', moocs_scorecard_api, name='moocs_scorecard_api'),
+    path('MOOCS/formulas/', moocs_formulas, name='moocs_formulas'),
     path('admin/', admin.site.urls),
     path('car-price/', include('car_price_app.urls')),
     path('aeclibrary/student/', include('student.urls')),

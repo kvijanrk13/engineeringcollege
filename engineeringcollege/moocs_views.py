@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from dashboard.models import MoocsPayment, MoocsVisitor, MoocsExamResult
+from .moocs_formulas import build_formula_payload, formula_totals
 
 
 logger = logging.getLogger(__name__)
@@ -299,6 +300,35 @@ def moocs_verify_payment(request):
     ])
 
     return JsonResponse({"success": True, "set_number": set_number, "email": email})
+
+
+def moocs_formulas(request):
+    """Reference sheet of every formula for GATE, UGC NET and TS SET patterns."""
+    verified = request.session.get("moocs_gmail_verified") is True
+    email = request.session.get("moocs_gmail_email", "").strip().lower()
+
+    if not verified or not email:
+        login_query = urlencode({"role": "student", "target": "moocs"})
+        return redirect(f"{reverse('dashboard:google_login')}?{login_query}")
+
+    pattern_count, subject_count, formula_count = formula_totals()
+
+    response = render(
+        request,
+        "moocs/formulas.html",
+        {
+            "moocs_gmail_verified": True,
+            "moocs_gmail_email": email,
+            "moocs_formula_patterns": build_formula_payload(),
+            "moocs_pattern_count": pattern_count,
+            "moocs_subject_count": subject_count,
+            "moocs_formula_count": formula_count,
+            "active_pattern": request.GET.get("pattern", "gate"),
+        },
+    )
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response["Pragma"] = "no-cache"
+    return response
 
 
 def moocs_logout(request):

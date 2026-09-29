@@ -1,0 +1,382 @@
+/* Formula reference sheet for the MOOCS TS SET / UGC NET / GATE examination. */
+
+:root {
+  --fx-navy: #071a2f;
+  --fx-ink: #152a42;
+  --fx-muted: #64778b;
+  --fx-line: #d9e4ed;
+  --fx-paper: #f4f8fb;
+  --fx-cyan: #13b8c9;
+  --fx-blue: #1268d7;
+}
+
+.formulas-page main,
+.fx-main {
+  width: min(1320px, calc(100% - 30px));
+  margin: 30px auto 48px;
+}
+
+.fx-hero {
+  padding: clamp(24px, 4vw, 44px);
+  text-align: center;
+}
+
+.fx-hero h1 {
+  margin: 6px 0 10px;
+  color: var(--fx-navy);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(26px, 4.4vw, 40px);
+  line-height: 1.2;
+}
+
+.fx-hero .lead {
+  max-width: 780px;
+  margin: 0 auto;
+  color: var(--fx-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.fx-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.fx-stats div {
+  padding: 16px 10px;
+  border: 1px solid var(--fx-line);
+  border-radius: 14px;
+  background: linear-gradient(140deg, #f7fbff, #fff);
+}
+
+.fx-stats strong {
+  display: block;
+  color: var(--fx-navy);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.fx-stats span {
+  color: var(--fx-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Pattern tabs */
+
+.fx-pattern-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 26px 0 18px;
+}
+
+.fx-tab {
+  flex: 1 1 200px;
+  padding: 13px 18px;
+  border: 1px solid var(--fx-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--fx-ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.fx-tab:hover {
+  border-color: var(--fx-cyan);
+  transform: translateY(-1px);
+}
+
+.fx-tab.is-active {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--fx-navy), #0b4b6f);
+  color: #fff;
+  box-shadow: 0 10px 24px #071a2f2e;
+}
+
+/* Toolbar */
+
+.fx-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 0;
+  background: linear-gradient(var(--fx-paper) 78%, #f4f8fb00);
+}
+
+.fx-search {
+  display: flex;
+  flex: 1 1 320px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--fx-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--fx-muted);
+}
+
+.fx-search:focus-within {
+  border-color: var(--fx-cyan);
+  box-shadow: 0 0 0 3px #13b8c926;
+}
+
+.fx-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fx-ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.fx-btn {
+  padding: 10px 16px;
+  border: 1px solid var(--fx-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--fx-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.fx-btn:hover {
+  border-color: var(--fx-cyan);
+}
+
+.fx-btn-primary {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--fx-navy), #0b4b6f);
+  color: #fff;
+}
+
+.fx-result-count {
+  margin: 0 0 14px;
+  color: var(--fx-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Pattern panel */
+
+.fx-pattern-title {
+  margin: 26px 0 6px;
+  color: var(--fx-navy);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.fx-pattern-description {
+  margin: 0 0 18px;
+  color: var(--fx-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Subject accordion */
+
+.fx-subject {
+  margin-bottom: 14px;
+  border: 1px solid #c1d2e0bf;
+  border-radius: 18px;
+  background: #fffffff5;
+  box-shadow: 0 12px 34px #122f4814;
+  overflow: hidden;
+}
+
+.fx-subject > summary {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer;
+  list-style: none;
+  background: linear-gradient(120deg, #f7fbff, #fff);
+}
+
+.fx-subject > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fx-subject > summary::after {
+  margin-left: auto;
+  color: var(--fx-muted);
+  content: "▾";
+  font-size: 14px;
+  transition: transform 0.15s;
+}
+
+.fx-subject[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.fx-subject[hidden] {
+  display: none;
+}
+
+.fx-subject-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--subject-colour, var(--fx-blue));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+.fx-subject-name {
+  color: var(--fx-navy);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.fx-subject-count {
+  color: var(--fx-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Topics and formula cards */
+
+.fx-topic {
+  padding: 20px;
+  border-top: 1px solid var(--fx-line);
+}
+
+.fx-topic[hidden] {
+  display: none;
+}
+
+.fx-topic-title {
+  margin: 0 0 14px;
+  color: #33506d;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.fx-formula-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 13px;
+}
+
+.fx-formula {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 17px;
+  border: 1px solid #e2ecf4;
+  border-radius: 14px;
+  background: linear-gradient(140deg, #fbfdff, #fff);
+}
+
+.fx-formula[hidden] {
+  display: none;
+}
+
+.fx-formula-name {
+  margin: 0 0 9px;
+  color: var(--fx-navy);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fx-math {
+  overflow-x: auto;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: #f2f8fd;
+  color: #10314f;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.fx-math .katex {
+  font-size: 1.02em;
+}
+
+.fx-note {
+  margin: 10px 0 0;
+  color: var(--fx-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.fx-empty {
+  padding: 46px 20px;
+  border: 1px dashed var(--fx-line);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--fx-muted);
+  text-align: center;
+}
+
+.fx-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+@media (max-width: 850px) {
+  .fx-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .fx-formula-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fx-toolbar {
+    position: static;
+  }
+}
+
+@media print {
+  .topbar,
+  .fx-toolbar,
+  .fx-pattern-tabs,
+  .fx-footer,
+  .moocs-footer,
+  .fx-result-count {
+    display: none !important;
+  }
+
+  .fx-subject {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .fx-pattern[hidden] {
+    display: none !important;
+  }
+}

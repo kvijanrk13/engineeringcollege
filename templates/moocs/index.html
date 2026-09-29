@@ -11,13 +11,13 @@
   <link rel="stylesheet" href="{% static 'moocs/moocs.css' %}?v=22">
   <link rel="stylesheet" href="{% static 'moocs/feedback.css' %}?v=7">
   <link rel="stylesheet" href="{% static 'moocs/content_lock.css' %}?v=1">
-  <style>.topbar::after{pointer-events:none!important}.moocs-signout-form{position:relative;z-index:20;margin:0}.moocs-signout-form .home-link{pointer-events:auto}</style>
+  <style>.topbar::after{pointer-events:none!important}.moocs-signout-form{position:relative;z-index:20;margin:0}.moocs-signout-form .home-link{pointer-events:auto}.moocs-topbar-actions{display:flex;gap:10px;align-items:center;position:relative;z-index:20;margin-left:auto}.moocs-topbar-actions .signed-in-email{margin-left:0}.formulas-link{position:relative;border:1px solid #13b8c966;border-radius:10px;padding:9px 14px;background:#13b8c91f;color:#bff3fa;font-size:12px;font-weight:800;letter-spacing:.08em;text-decoration:none;white-space:nowrap}.formulas-link:hover{background:#13b8c933;color:#e2fbff}.moocs-topbar-actions .moocs-signout-form{margin:0}</style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="/MOOCS"><span>MOOCS</span><small>Mock Online Objective Computer System</small></a>
     <div class="exam-name"><strong>TS SET/NET/GATE</strong><span>Computer Science &amp; Applications</span></div>
-    {% if moocs_gmail_verified %}<span class="signed-in-email">{{ moocs_gmail_email }}</span><form id="moocs-signout" class="moocs-signout-form" method="post" action="{% url 'moocs_logout' %}">{% csrf_token %}<button class="home-link" type="submit">Sign out</button></form>{% endif %}
+    {% if moocs_gmail_verified %}<div class="moocs-topbar-actions"><span class="signed-in-email">{{ moocs_gmail_email }}</span><a class="formulas-link" href="{% url 'moocs_formulas' %}">FORMULAS</a><form id="moocs-signout" class="moocs-signout-form" method="post" action="{% url 'moocs_logout' %}">{% csrf_token %}<button class="home-link" type="submit">Sign out</button></form></div>{% endif %}
   </header>
 
   <main>
