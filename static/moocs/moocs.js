@@ -154,7 +154,7 @@ function renderGateAnalysis(subjects,totalCorrect){
   const legend=subjects.filter(item=>item.total).map(item=>`<div class="gate-subject-item"><i class="gate-subject-colour" style="background:${item.colour}"></i><span class="gate-subject-name">${escapeHtml(item.name)}</span><span class="gate-subject-score">${item.correct}/${item.total} · ${Math.round(item.correct*100/item.total)}%</span></div>`).join('');
   host.innerHTML=`<section class="gate-analysis" aria-labelledby="gate-analysis-heading"><h2 id="gate-analysis-heading">GATE subject score analysis</h2><p class="gate-analysis-intro">Set ${selectedSet}: each colour is a GATE CS subject. Pie slices show the distribution of your correct answers; the legend shows your score in every subject included in this set.</p><div class="gate-analysis-layout"><div class="gate-pie-wrap"><svg class="gate-pie" viewBox="0 0 100 100" role="img" aria-label="GATE subject score distribution for Set ${selectedSet}">${slices}</svg><div class="gate-pie-center"><strong>${totalCorrect * 2}</strong><span>of ${QUESTIONS.length * 2} marks</span></div></div><div class="gate-subject-legend">${legend}</div></div></section>`;
 }
-function submit(auto=false){
+async function submit(auto=false){
   if(!auto&&!confirm('Submit the examination? You cannot change responses after submission.'))return;
   clearInterval(timer);examInProgress=false;markSetCompleted();
   let correct=0,incorrect=0;const subjects=GATE_SUBJECTS.map(subject=>({...subject,correct:0,total:0}));
@@ -164,31 +164,44 @@ function submit(auto=false){
   const accuracy=attempted?Math.round(correct*100/attempted):0;
   $('score').textContent=score;$('correct').textContent=correct;$('incorrect').textContent=incorrect;$('unattempted').textContent=QUESTIONS.length-attempted;$('accuracy').textContent=accuracy+'%';
   renderGateAnalysis(subjects,correct);
-  $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');$('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0);
+  $('solutions').innerHTML=QUESTIONS.map((q,i)=>{const answer=state[i].answer,ok=isCorrect(q,answer);return `<article class="solution ${ok?'':'wrong'}"><h3>${i+1}. ${escapeHtml(q.q)}</h3><p><b>Your answer:</b> ${escapeHtml(selectedAnswerText(q,answer))}</p><p><b>Correct answer:</b> ${escapeHtml(correctAnswerText(q))}</p><p>${escapeHtml(answerExplanation(q,answer))}</p></article>`}).join('');
 
-  // Save result to server
+  let resultSaved=false;
   if(profileEmail){
     const subjectScores={};
     subjects.forEach(s=>{if(s.total>0) subjectScores[s.name]={correct:s.correct,total:s.total,percentage:Math.round(s.correct*100/s.total)}});
-    fetch('/MOOCS/save-result/',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
-      body:JSON.stringify({
-        email:profileEmail,
-        set_number:selectedSet,
-        score:score,
-        correct:correct,
-        incorrect:incorrect,
-        unattempted:QUESTIONS.length-attempted,
-        accuracy:accuracy,
-        total_questions:QUESTIONS.length,
-        max_marks:QUESTIONS.length*2,
-        subject_scores:subjectScores
-      })
-    }).catch(err=>console.warn('Failed to save exam result:',err));
+    try{
+      const response=await fetch('/MOOCS/save-result/',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-CSRFToken':getCsrfToken()},
+        body:JSON.stringify({
+          email:profileEmail,
+          set_number:selectedSet,
+          score:score,
+          correct:correct,
+          incorrect:incorrect,
+          unattempted:QUESTIONS.length-attempted,
+          accuracy:accuracy,
+          total_questions:QUESTIONS.length,
+          max_marks:QUESTIONS.length*2,
+          subject_scores:subjectScores
+        })
+      });
+      const payload=await response.json();
+      if(!response.ok||!payload.success)throw new Error(payload.error||'The server did not save this result.');
+      resultSaved=true;
+    }catch(error){
+      console.warn('Failed to save exam result:',error);
+    }
   }
+  $('result-save-error').hidden=selectedSet!==2||resultSaved;
+  if(selectedSet===2&&resultSaved){
+    MOOCS_SET_TWO_COMPLETED=true;
+    [...$('exam-set').options].forEach(option=>{option.disabled=Number(option.value)>=3&&!MOOCS_SET_TWO_COMPLETED});
+  }
+  $('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0);
 }
-$('exam-set').onchange=async e=>{const choice=Number(e.target.value);if(!suppressPaymentPrompt&&setRequiresPayment(choice)&&!isSetPaid(choice)){window.location.href=`/MOOCS/payment/?set=${PREMIUM_SET_START}&next_set=${choice}`;return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks;updatePremiumPaymentButton()};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=async()=>{if(setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet)){const paid=await handleSetAccess(selectedSet);if(!paid)return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};
+$('exam-set').onchange=async e=>{const choice=Number(e.target.value);if(setRequiresPayment(choice)&&!MOOCS_SET_TWO_COMPLETED){e.target.value='2';alert('Complete Set 2 before opening the remaining sets.');return}if(!suppressPaymentPrompt&&setRequiresPayment(choice)&&!isSetPaid(choice)){window.location.href=`/MOOCS/payment/?set=${PREMIUM_SET_START}&next_set=${choice}`;return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks;updatePremiumPaymentButton()};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=async()=>{if(!canAccessSet(selectedSet)){const paid=await handleSetAccess(selectedSet);if(!paid)return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};
 const updatePremiumPaymentButton=()=>{const needsPayment=setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet);$('unlock-premium-set').hidden=!needsPayment;$('unlock-premium-set').textContent=needsPayment?`Unlock Sets 3–400`:'Premium sets unlocked'};
 $('unlock-premium-set').onclick=async()=>{const paid=await handleSetAccess(selectedSet);if(paid)updatePremiumPaymentButton()};
 updatePremiumPaymentButton();
@@ -241,10 +254,12 @@ render=function(){
 const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
 const savedProgress=readProgress();
 const returnSet=Number(new URLSearchParams(window.location.search).get('next_set')||'0');
-const initialSet=Number.isInteger(returnSet)&&returnSet>=1&&returnSet<=MAX_EXAM_SET?returnSet:savedProgress.active?.set||Math.min(MAX_EXAM_SET,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
+const suggestedSet=Number.isInteger(returnSet)&&returnSet>=1&&returnSet<=MAX_EXAM_SET?returnSet:savedProgress.active?.set||Math.min(MAX_EXAM_SET,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
+const initialSet=!MOOCS_SET_TWO_COMPLETED&&setRequiresPayment(suggestedSet)?2:suggestedSet;
 selectedSet=initialSet;$('exam-set').value=String(initialSet);suppressPaymentPrompt=true;$('exam-set').dispatchEvent(new Event('change'));suppressPaymentPrompt=false;
 const updateNextSetPrompt=()=>{
   if($('result').hidden)return;
+  if(selectedSet===2&&!MOOCS_SET_TWO_COMPLETED){nextSetPanel.hidden=true;return}
   const hasNext=selectedSet>=1&&selectedSet<MAX_EXAM_SET;
   nextSetPanel.hidden=!hasNext;
   if(!hasNext)return;

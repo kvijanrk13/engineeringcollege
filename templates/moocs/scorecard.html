@@ -164,16 +164,6 @@
     });
   </script>
   {% if moocs_gmail_verified %}
-  <script src="{% static 'moocs/content_lock.js' %}?v=1"></script>
-  {{ moocs_gmail_email|json_script:"moocs-profile-email" }}
-  {{ moocs_payment_bypass_all|json_script:"moocs-payment-bypass-all" }}
-  <script src="{% static 'moocs/moocs_payment.js' %}?v=5"></script>
-  <script src="{% static 'moocs/moocs.js' %}?v=49"></script>
-  <script>
-    document.getElementById('moocs-signout')?.addEventListener('submit', () => {
-      allowNavigation = true;
-    });
-  </script>
   {% endif %}
 </body>
 </html>

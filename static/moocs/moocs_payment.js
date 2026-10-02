@@ -1,20 +1,14 @@
-/* MOOCS Payment Gateway — Razorpay integration for Set 3 access.
+/* MOOCS Payment Gateway — Razorpay integration for Sets 3–400.
    This file must load BEFORE moocs.js so the helper functions are available
    when the exam engine assigns its click/change handlers. */
 
-const MOCS_SET_3_FEE = 200.00;
 const PREMIUM_SET_START = 3;
-const PAID_SETS_KEY_PREFIX = 'moocs-paid-sets:';
-
-const MOOCS_PAYMENT_BYPASS_ALL = JSON.parse(
-  document.getElementById('moocs-payment-bypass-all')?.textContent || 'false'
+let MOOCS_SET_TWO_COMPLETED = JSON.parse(
+  document.getElementById('moocs-set-two-completed')?.textContent || 'false'
 );
-const MOOCS_PAYMENT_EXEMPT_EMAILS = ['vijaykumarit@anurag.ac.in'];
-const isPaymentExempt = () =>
-  MOOCS_PAYMENT_BYPASS_ALL ||
-  (typeof profileEmail !== 'undefined' &&
-   profileEmail &&
-   MOOCS_PAYMENT_EXEMPT_EMAILS.includes(profileEmail));
+let MOOCS_PREMIUM_ACCESS = JSON.parse(
+  document.getElementById('moocs-premium-access')?.textContent || 'false'
+);
 
 const getCsrfToken = () => {
   const name = 'csrftoken';
@@ -28,45 +22,13 @@ const getCsrfToken = () => {
   return '';
 };
 
-const getPaidSetsKey = () =>
-  typeof profileEmail !== 'undefined' && profileEmail
-    ? `${PAID_SETS_KEY_PREFIX}${profileEmail}`
-    : null;
-
-const readPaidSets = () => {
-  const key = getPaidSetsKey();
-  if (!key) return [];
-  try {
-    return JSON.parse(localStorage.getItem(key) || '[]');
-  } catch (e) {
-    return [];
-  }
-};
-
-const writePaidSets = (sets) => {
-  const key = getPaidSetsKey();
-  if (!key) return;
-  try {
-    localStorage.setItem(key, JSON.stringify(sets));
-  } catch (e) {
-    /* Silent — the exam remains usable when storage is unavailable. */
-  }
-};
-
-const isSetPaid = (setNumber) => (
-  isPaymentExempt() ||
-  !setRequiresPayment(setNumber) ||
-  readPaidSets().includes(PREMIUM_SET_START)
-);
-
-const markSetPaid = (setNumber) => {
-  const sets = readPaidSets();
-  if (!sets.includes(setNumber)) writePaidSets([...sets, setNumber]);
-};
-
+const isSetPaid = (setNumber) =>
+  !setRequiresPayment(setNumber) || MOOCS_PREMIUM_ACCESS;
 const setRequiresPayment = (setNumber) => Number(setNumber) >= PREMIUM_SET_START;
 
-const canAccessSet = (setNumber) => !setRequiresPayment(setNumber) || isSetPaid(setNumber);
+const canAccessSet = (setNumber) =>
+  !setRequiresPayment(setNumber) ||
+  (MOOCS_SET_TWO_COMPLETED && MOOCS_PREMIUM_ACCESS);
 
 let razorpayLoadingPromise = null;
 const loadRazorpayScript = () => {
@@ -89,9 +51,12 @@ const loadRazorpayScript = () => {
 };
 
 const handleSetAccess = async (setNumber) => {
-  if (isPaymentExempt()) return true;
   if (!setRequiresPayment(setNumber)) return true;
   if (isSetPaid(setNumber)) return true;
+  if (!MOOCS_SET_TWO_COMPLETED) {
+    alert('Complete Set 2 before paying to unlock the remaining sets.');
+    return false;
+  }
 
   const email = typeof profileEmail !== 'undefined' ? profileEmail : '';
   if (!email) {
@@ -124,7 +89,7 @@ const handleSetAccess = async (setNumber) => {
   }
 
   if (createData.already_paid) {
-    markSetPaid(PREMIUM_SET_START);
+    MOOCS_PREMIUM_ACCESS = true;
     return true;
   }
 
@@ -141,7 +106,7 @@ const handleSetAccess = async (setNumber) => {
       amount: createData.amount,
       currency: createData.currency,
       name: 'MOOCS — TS SET/NET/GATE',
-      description: 'Access to Set 3 and all later MOOCS sets through Set 200',
+      description: 'One-time access to all remaining MOOCS sets',
       order_id: createData.order_id,
       handler: async (response) => {
         let verifyData;
@@ -168,8 +133,8 @@ const handleSetAccess = async (setNumber) => {
         }
 
         if (verifyData.success) {
-          markSetPaid(PREMIUM_SET_START);
-          alert('Payment successful! Sets 3 through 200 are now unlocked.');
+          MOOCS_PREMIUM_ACCESS = true;
+          alert('Payment successful! All remaining MOOCS sets are now unlocked.');
           resolve(true);
         } else {
           alert(verifyData.error || 'Payment verification failed. Please try again.');
@@ -185,6 +150,10 @@ const handleSetAccess = async (setNumber) => {
     };
 
     const rzp = new Razorpay(options);
+    rzp.on('payment.failed', (response) => {
+      alert(response.error?.description || 'Payment failed. Please try again.');
+      resolve(false);
+    });
     rzp.open();
   });
 };

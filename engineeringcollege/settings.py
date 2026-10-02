@@ -320,20 +320,4 @@ LOGGING = {
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "").strip()
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "").strip()
 # Force fresh render deploy to clear template/static cache.
-MOOCS_DEPLOY_TIMESTAMP = "2026-09-23T09-45"
-
-# ================================
-# MOOCS Payment Whitelisting (bypass Razorpay for specific accounts)
-# ================================
-# Comma-separated list of email addresses that are exempt from the Set 3
-# Razorpay payment.  Each address is lower-cased before comparison so the
-# check is case-insensitive.
-MOOCS_PAYMENT_WHITELIST = frozenset(
-    addr.strip().lower()
-    for addr in os.getenv("MOOCS_PAYMENT_WHITELIST", "").split(",")
-    if addr.strip()
-)
-
-# When True, ALL authenticated MOOCS users bypass the Razorpay payment and
-# gain immediate access to sets 3 through 200 without payment.
-MOOCS_PAYMENT_BYPASS_ALL = os.getenv("MOOCS_PAYMENT_BYPASS_ALL", "True") == "True"
+MOOCS_DEPLOY_TIMESTAMP = "2026-10-02T20-37"
