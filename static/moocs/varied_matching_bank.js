@@ -286,31 +286,31 @@ window.VARIED_MATCHING_BANK = (function () {
       },
     ],
 
-    /* ---------------- 11. Software Engineering / Management ---------------- */
+    /* ---------------- 11. C++ Programming ---------------- */
     11: [
       {
-        left: ['Functional requirement', 'Non-functional requirement', 'Stakeholder', 'Risk'],
-        right: ['Specifies what the system must do', 'Specifies the quality attribute or constraint', 'Any party affected by or able to affect the system', 'An uncertain event whose occurrence would harm the objectives'],
+        left: ['Default constructor', 'Destructor', 'Copy constructor', 'Move constructor'],
+        right: ['Initialises a newly created object that has no source object', 'Ends the lifetime of an object and releases what it owns', 'Initialises a new object from an lvalue of the same class type', 'Steals the owned resource from a temporary into a new object'],
         pair: [0, 1, 2, 3],
-        why: 'The four requirements concepts are separated by what each one constrains: system behaviour, system quality, the parties consulted, and the uncertainty managed during the project.'
+        why: 'The four special member functions are separated by when they run and what they bind to. The default constructor initialises an object with no source, the destructor runs at the end of the lifetime, the copy constructor takes its state from an lvalue, and the move constructor takes ownership from a temporary so that no deep copy of the resource is needed.'
       },
       {
-        left: ['Gantt chart', 'PERT chart', 'Milestone', 'Critical path'],
-        right: ['A bar schedule over calendar time', 'A dependency network with three-point estimates', 'A zero-duration marker of a significant event', 'The longest dependency chain determining project duration'],
+        left: ['new expression', 'delete expression', 'std::unique_ptr', 'std::shared_ptr'],
+        right: ['Starts the lifetime of a dynamically allocated object under manual control', 'Ends the lifetime of an object that was started by new', 'An exclusive ownership handle that releases the object automatically', 'A reference-counted handle that permits shared ownership'],
         pair: [0, 1, 2, 3],
-        why: 'The four planning artefacts are distinguished by the model they use: calendar bars, a precedence network, an event marker, and the controlling chain of that network.'
+        why: 'The list runs from manual control to automated control. The new expression begins a lifetime that delete must end, a unique_ptr takes that duty over with exclusive ownership so two owners can never coexist, and a shared_ptr automates release for several owners by counting references instead of excluding them.'
       },
       {
-        left: ['Effort estimation', 'Schedule estimation', 'Defect density', 'Code churn'],
-        right: ['Man-hours required to complete the work', 'Calendar time required to complete the work', 'Defects per thousand lines of code', 'Lines added, removed and modified over a period'],
+        left: ['Function overloading', 'Operator overloading', 'Function template', 'Default argument'],
+        right: ['One name used with several parameter lists in the same scope', 'A built-in operator applied to operands of a user-defined type', 'One definition that the compiler specialises for each type it is called with', 'A value the caller may omit because the declaration supplies it'],
         pair: [0, 1, 2, 3],
-        why: 'The four process metrics measure different things. Effort and schedule are forward-looking project quantities, while defect density and churn are measured properties of delivered code.'
+        why: 'The four are separated by what the compiler varies. Overloading varies the parameter list at each call site, operator overloading extends operator syntax to user types, a template varies the generated code by type, and a default argument varies the argument count with no change to the parameter list itself.'
       },
       {
-        left: ['Availability', 'Reliability', 'Maintainability', 'Portability'],
-        right: ['Probability the service is up when required', 'Probability the service performs correctly over time', 'Effort required to correct a defect', 'Effort required to move the system to another environment'],
+        left: ['std::vector', 'std::list', 'std::map', 'std::unordered_map'],
+        right: ['Contiguous elements with random access and amortised constant-time append', 'Doubly linked nodes with constant-time insertion at a known position', 'An ordered tree keyed by the search key giving logarithmic lookup', 'A hash table keyed by the search key giving average constant-time lookup'],
         pair: [0, 1, 2, 3],
-        why: 'These four non-functional attributes are distinguished by the quantity each measures: uptime, failure-free operation, repair effort, and migration effort.'
+        why: 'The four standard containers are separated by the trade-off they make between locality, insertion cost and lookup cost. The vector wins on access and cache locality, the list wins on splicing and known-position insertion, the map keeps keys ordered for range scans, and the unordered map drops the ordering to gain average constant-time lookup.'
       },
     ],
 

@@ -87,16 +87,17 @@ source += `
       }
 
       const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
-      /* Sets 12-100 deliberately break the 8+1+1 shape: the first 11 questions
-         are List-I / List-II matching tables and the rest rotate through
-         quantitative, series, substitution and component approaches. */
+      /* Sets 12-100 deliberately break the 8+1+1 shape: the first 12 questions
+         are List-I / List-II matching tables, one per subject including C++,
+         and the rest rotate through quantitative, series, substitution and
+         component approaches. */
       if (setNumber >= 12 && setNumber <= 100) {
         if (question.mode !== 'selection') {
           errors.push(\`\${location} should use selection mode, not \${question.mode}.\`);
         }
         delete question.answers;
         delete question.multiChecked;
-        const isMatching = index < 11;
+        const isMatching = index < 12;
         if (Boolean(question.isMatching) !== isMatching) {
           errors.push(\`\${location} has the wrong matching flag for its position.\`);
         }
@@ -109,6 +110,9 @@ source += `
           }
           if (!/Match the entries of List-I with the entries of List-II/i.test(String(question.q))) {
             errors.push(\`\${location} does not state the List-I / List-II instruction.\`);
+          }
+          if (!/^A-[IV]+/.test(String(question.o[question.a]))) {
+            errors.push(\`\${location} is not keyed to a List-I / List-II mapping.\`);
           }
         }
       } else {
