@@ -476,18 +476,34 @@
       t: 'Discrete Structures', unit: 1,
       build: (g, r, n) => {
         const balls = 8 + (n % 5), colors = 3 + (g % 4);
-        const pass = `There are ${balls} indistinguishable balls placed into ${colors} distinguishable boxes. The balls are distributed such that no box is empty. A combinatorialist wants to compute the number of ways to do this, and also the number of ways to partition the balls if the boxes were also indistinguishable.`;
-        const quest = `What is the number of surjective (onto) distributions, and how does it compare to the number of partitions of ${balls} into exactly ${colors} parts?`;
-        // Stirling number of the second kind S(balls, colors) = surjective / colors!
-        // For the answer, we compute a general formula
-        const stirling = 42 + (balls * colors); // placeholder
+        const pass = `There are ${balls} distinct balls placed into ${colors} distinguishable boxes, with no box empty. Compare the number of such assignments with the number of partitions of the balls into ${colors} nonempty groups when box labels are ignored.`;
+        const stirling = Array.from({ length: balls + 1 }, () => Array(colors + 1).fill(0));
+        stirling[0][0] = 1;
+        for (let total = 1; total <= balls; total += 1) {
+          for (let groups = 1; groups <= Math.min(total, colors); groups += 1) {
+            stirling[total][groups] =
+              stirling[total - 1][groups - 1] + groups * stirling[total - 1][groups];
+          }
+        }
+        const partitions = stirling[balls][colors];
+        const surjections = partitions * Array.from(
+          { length: colors },
+          (_, index) => index + 1
+        ).reduce((product, value) => product * value, 1);
+        const quest = `How many onto distributions are there when the boxes are distinguishable, and how many partitions are there when the boxes are indistinguishable?`;
         const opts = [
-          `Surjective: S(${balls},${colors}) = ${stirling}; partitions into ${colors} parts: p(${balls},${colors}) < S(${balls},${colors})`,
-          `Surjective: ${balls}!/${colors}!; partitions: same`,
-          `Surjective: ${colors}^${balls}; partitions: ${balls}!`,
-          `Surjective: C(${balls},${colors}); partitions: P(${balls},${colors})`,
+          `Onto distributions: ${surjections}; indistinguishable-box partitions: ${partitions}`,
+          `Onto distributions: ${partitions}; indistinguishable-box partitions: ${surjections}`,
+          `Onto distributions: ${colors ** balls}; indistinguishable-box partitions: ${partitions}`,
+          `Onto distributions: ${surjections + 1}; indistinguishable-box partitions: ${partitions}`,
         ];
-        return { pass, quest, opts, correct: 0, unit: 1 };
+        return {
+          pass: `${pass} Use S(n,k)=S(n−1,k−1)+kS(n−1,k) and multiply S(n,k) by k! for distinguishable boxes.`,
+          quest,
+          opts,
+          correct: 0,
+          unit: 1,
+        };
       },
     },
   ];

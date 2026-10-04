@@ -73,6 +73,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/varied_sets.js")
         self.assertContains(response, "/static/moocs/extended_sets.js?v=7")
         self.assertContains(response, "/static/moocs/bloom_taxonomy.js?v=2")
+        self.assertContains(response, "/static/moocs/ebook_question_bank.js?v=1")
         self.assertContains(response, 'id="moocs-signout"')
         self.assertContains(response, 'method="post"')
         self.assertContains(response, "csrfmiddlewaretoken")
