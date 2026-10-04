@@ -66,6 +66,14 @@
     return svgData(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 280" role="img"><rect width="500" height="280" rx="18" fill="#f8fbff"/><text x="250" y="28" text-anchor="middle" font-family="Arial" font-size="19" font-weight="700" fill="#123">${title}</text>${edgeMarkup}${vertexMarkup}</svg>`);
   }
 
+  function graphicsTranslationDiagram() {
+    return svgData('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" role="img"><rect width="520" height="300" rx="18" fill="#f8fbff"/><text x="260" y="28" text-anchor="middle" font-family="Arial" font-size="19" font-weight="700" fill="#123">2D Translation by vector (3, 2)</text><path d="M100 230 180 230 180 150 100 150Z" fill="#dbeafe" stroke="#2563eb" stroke-width="4"/><text x="140" y="202" text-anchor="middle" font-family="Arial" font-size="17" font-weight="700" fill="#123">P(1,1)</text><path d="M260 150 340 150 340 70 260 70Z" fill="#dcfce7" stroke="#16a34a" stroke-width="4"/><text x="300" y="122" text-anchor="middle" font-family="Arial" font-size="17" font-weight="700" fill="#123">P′(4,3)</text><path d="M185 205 250 145" fill="none" stroke="#d97706" stroke-width="4"/><path d="m240 146 12-3-3 12" fill="none" stroke="#d97706" stroke-width="4"/><text x="225" y="195" font-family="Arial" font-size="15" fill="#92400e">(+3,+2)</text></svg>');
+  }
+
+  function itemsetLatticeDiagram() {
+    return svgData('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 300" role="img"><rect width="520" height="300" rx="18" fill="#f8fbff"/><text x="260" y="28" text-anchor="middle" font-family="Arial" font-size="19" font-weight="700" fill="#123">Frequent-itemset lattice</text><g stroke="#7890a8" stroke-width="3"><path d="M260 90 130 155M260 90 260 155M260 90 390 155M130 195v35M130 195 260 230M260 195 130 230M260 195 390 230M390 195 260 230M390 195v35"/></g><g fill="#dcfce7" stroke="#16a34a" stroke-width="3"><rect x="202" y="48" width="116" height="42" rx="10"/><rect x="83" y="145" width="94" height="50" rx="10"/><rect x="213" y="145" width="94" height="50" rx="10"/><rect x="343" y="145" width="94" height="50" rx="10"/></g><g fill="#dbeafe" stroke="#2563eb" stroke-width="2"><rect x="83" y="230" width="94" height="42" rx="9"/><rect x="213" y="230" width="94" height="42" rx="9"/><rect x="343" y="230" width="94" height="42" rx="9"/></g><g font-family="Arial" font-size="15" font-weight="700" text-anchor="middle" fill="#123"><text x="260" y="75">{A,B,C}</text><text x="130" y="176">{A,B}</text><text x="260" y="176">{A,C}</text><text x="390" y="176">{B,C}</text><text x="130" y="256">{A}</text><text x="260" y="256">{B}</text><text x="390" y="256">{C}</text></g></svg>');
+  }
+
   function uniqueOptions(correct, wrong) {
     return [...new Set([String(correct), ...wrong.map(String)])].slice(0, 4);
   }
@@ -224,6 +232,38 @@
         'The chart labels Department A at 75% and Department B at 60%. Their difference is 75 − 60 = 15 percentage points.',
         image('general-data-bars.svg'), 'Bar chart comparing Department A at 75% pass rate and Department B at 60%.',
         'A percentage-point difference is calculated by subtracting the two percentages.'),
+      question(set, 13, 'Digital Logic', 2,
+        'In the XOR truth-table diagram, what is the output for p = 1 and q = 0?',
+        '1', ['0', 'p AND q', 'p OR q'],
+        'XOR is true when its two inputs differ. The row p = 1, q = 0 therefore has output 1 in the table.',
+        image('xor-truth-table.svg'), 'Truth table for p exclusive OR q with the p=1, q=0 output row highlighted.',
+        'XOR outputs 1 exactly when its inputs differ.'),
+      question(set, 14, 'Computer Graphics', 3,
+        'The transformation diagram translates P(1,1) by vector (+3,+2). What are the coordinates of P′?',
+        '(4, 3)', ['(3, 2)', '(4, 2)', '(1, 3)'],
+        'A translation adds the vector components to the point: (1+3, 1+2) = (4,3), matching the translated square.',
+        graphicsTranslationDiagram(), 'A square moves by translation vector (+3,+2) from P(1,1) to P prime (4,3).',
+        'Translation adds the same displacement vector to every point.'),
+      question(set, 15, 'Data Mining', 4,
+        'The lattice marks {A,B,C} as frequent. What must be true of each of its non-empty subsets under the Apriori property?',
+        'Every non-empty subset is frequent',
+        ['At least one pair must be infrequent', 'Only the single-item subsets must be frequent', 'Subset frequency cannot be inferred'],
+        'Support is anti-monotone: every subset of a frequent itemset is frequent. Thus {A,B}, {A,C}, {B,C}, and all singleton subsets must be frequent.',
+        itemsetLatticeDiagram(), 'Frequent-itemset lattice showing a frequent three-item set and its pair and singleton subsets.',
+        'An infrequent subset lets Apriori prune every superset containing it.'),
+      question(set, 16, 'Cryptography', 9,
+        'In the Diffie–Hellman exchange diagram, why do Alice and Bob compute the same shared secret?',
+        'Both compute g^(ab) mod p',
+        ['They transmit their private exponents to each other', 'They use different public moduli', 'The public values A and B are themselves the private keys'],
+        'Alice computes B^a = (g^b)^a = g^(ab) mod p; Bob computes A^b = (g^a)^b = g^(ab) mod p. The private exponents remain local.',
+        image('crypto-diffie-hellman.svg'), 'Alice and Bob exchange public Diffie–Hellman values and derive the same secret.',
+        'The commutativity of exponent multiplication gives both parties the same shared value.'),
+      question(set, 17, 'Web Technologies', 3,
+        'Which layer lies directly outside CONTENT in the CSS box-model diagram?',
+        'PADDING', ['BORDER', 'MARGIN', 'The viewport'],
+        'The diagram nests the layers from inside to outside as content, padding, border, and margin. Padding is immediately outside the content box.',
+        image('web-box-model.svg'), 'Nested CSS box-model layers: content, padding, border and margin.',
+        'CSS box-model order from inner to outer is content, padding, border, then margin.'),
     ];
   }
 
