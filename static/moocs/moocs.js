@@ -67,7 +67,49 @@ function answerExplanation(q,answer){
   return `Why your answer is wrong: ${wrongReason} How the correct answer is obtained: ${reason}`;
 }
 function feedback(q,st){if(st.answer===null||q.mode==='multi'&&!st.multiChecked)return '';const ok=isCorrect(q,st.answer),correct=correctAnswerText(q);return `<div class="instant-feedback ${ok?'feedback-correct':'feedback-wrong'}"><strong>${ok?'Correct answer':'Incorrect answer'}</strong><span>${ok?'Your selected option matches the answer key.':`Correct answer: ${escapeHtml(correct)}`}</span><p>${escapeHtml(answerExplanation(q,st.answer))}</p></div>`}
-function render(){const q=QUESTIONS[current],st=state[current];q.q=cleanQuestionLead(q.q);st.visited=true;$('section-label').textContent=q.s;$('question-number').textContent=current+1;$('question-total').textContent=QUESTIONS.length;$('topic').textContent=q.t;const passage=$('question-passage');passage.hidden=!q.passage;passage.textContent=q.passage||'';$('question-text').innerHTML=(q.img?`<img class="question-diagram" src="${q.img}" alt="${q.alt||'Question diagram'}">`:'')+`<span>${q.q}</span>`;if(q.isMatching)$('options').insertAdjacentHTML('afterbegin',matchingTableHtml(q));if(q.mode==='fill'){$('options').innerHTML=`<div class="fill-answer-panel"><label for="fill-answer">Fill in the blank</label><div><input id="fill-answer" type="text" value="${st.answer===null?'':escapeHtml(st.answer)}" placeholder="Type the complete answer" autocomplete="off"><button id="check-fill" class="primary" type="button">Check answer</button></div></div>${feedback(q,st)}`;const check=()=>{const value=$('fill-answer').value.trim();if(!value)return;st.answer=value;st.review=false;saveAttempt();render()};$('check-fill').onclick=check;$('fill-answer').onkeydown=event=>{if(event.key==='Enter'){event.preventDefault();check()}}}else{$('options').innerHTML=q.o.map((x,i)=>`<button type="button" data-answer="${i}" class="option selection-button ${st.answer===i?'selected ':''}${st.answer!==null&&i===q.a?'correct-option':''}${st.answer===i&&i!==q.a?'wrong-option':''}"><span><b>${String.fromCharCode(65+i)}.</b> ${x}</span></button>`).join('')+feedback(q,st);document.querySelectorAll('[data-answer]').forEach(button=>button.onclick=()=>{st.answer=+button.dataset.answer;st.review=false;saveAttempt();render()})}renderPalette()}
+function render(){
+  const q=QUESTIONS[current],st=state[current];
+  q.q=cleanQuestionLead(q.q);
+  st.visited=true;
+  $('section-label').textContent=q.s;
+  $('question-number').textContent=current+1;
+  $('question-total').textContent=QUESTIONS.length;
+  $('topic').textContent=q.t;
+  const passage=$('question-passage');
+  passage.hidden=!q.passage;
+  passage.textContent=q.passage||'';
+  $('question-text').innerHTML=(q.img?`<img class="question-diagram" src="${q.img}" alt="${q.alt||'Question diagram'}">`:'')+`<span>${q.q}</span>`;
+
+  if(q.mode==='fill'){
+    $('options').innerHTML=`<div class="fill-answer-panel"><label for="fill-answer">Fill in the blank</label><div><input id="fill-answer" type="text" value="${st.answer===null?'':escapeHtml(st.answer)}" placeholder="Type the complete answer" autocomplete="off"><button id="check-fill" class="primary" type="button">Check answer</button></div></div>${feedback(q,st)}`;
+    const check=()=>{
+      const value=$('fill-answer').value.trim();
+      if(!value)return;
+      st.answer=value;
+      st.review=false;
+      saveAttempt();
+      render();
+    };
+    $('check-fill').onclick=check;
+    $('fill-answer').onkeydown=event=>{
+      if(event.key==='Enter'){
+        event.preventDefault();
+        check();
+      }
+    };
+  }else{
+    const matchingTable=q.isMatching?matchingTableHtml(q):'';
+    const options=q.o.map((option,index)=>`<button type="button" data-answer="${index}" class="option selection-button ${st.answer===index?'selected ':''}${st.answer!==null&&index===q.a?'correct-option':''}${st.answer===index&&index!==q.a?'wrong-option':''}"><span><b>${String.fromCharCode(65+index)}.</b> ${option}</span></button>`).join('');
+    $('options').innerHTML=matchingTable+options+feedback(q,st);
+    document.querySelectorAll('[data-answer]').forEach(button=>button.onclick=()=>{
+      st.answer=+button.dataset.answer;
+      st.review=false;
+      saveAttempt();
+      render();
+    });
+  }
+  renderPalette();
+}
 function renderPalette(){$('palette-grid').innerHTML=state.map((s,i)=>`<button data-i="${i}" class="${i===current?'current ':''}${s.review?'reviewed':s.answer!==null?'answered':s.visited?'not-answered':'unseen'}">${i+1}</button>`).join('');document.querySelectorAll('#palette-grid button').forEach(b=>b.onclick=()=>{current=+b.dataset.i;render()});const answered=state.filter(x=>x.answer!==null).length,review=state.filter(x=>x.review).length;$('answered-count').textContent=answered;$('review-count').textContent=review;$('unanswered-count').textContent=QUESTIONS.length-answered}
 function move(n){current=Math.max(0,Math.min(QUESTIONS.length-1,current+n));saveAttempt();render()}
 function tick(){seconds--;if(seconds%10===0)saveAttempt();const m=Math.floor(seconds/60),s=seconds%60;$('timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');if(seconds<=300)$('timer').style.color='#ff7b89';if(seconds<=0)submit(true)}
