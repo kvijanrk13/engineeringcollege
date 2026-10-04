@@ -66,7 +66,7 @@
 
   const formatMapping = mapping => mapping.map((value, index) => `${LETTERS[index]}-${ROMAN[value]}`).join(', ');
 
-  function matchingOptions(pair, seed) {
+  function matchingOptions(pair, seed, answerPosition) {
     const keyed = formatMapping(pair);
     const rotate = mapping => mapping.map((_, index) => mapping[(index + 1) % mapping.length]);
     const swap = mapping => {
@@ -90,15 +90,23 @@
       if (!options.includes(text)) options.push(text);
       step += 1;
     }
-    return options.slice(0, 4);
+    const distractors = options.slice(1, 4);
+    let state = seed >>> 0;
+    for (let index = distractors.length - 1; index > 0; index -= 1) {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+      const swapIndex = state % (index + 1);
+      [distractors[index], distractors[swapIndex]] = [distractors[swapIndex], distractors[index]];
+    }
+    distractors.splice(answerPosition, 0, keyed);
+    return distractors;
   }
 
   function buildMatching(set, index, subject) {
     const entries = BANK[subject.key] || [];
     const entry = entries[(set + index) % entries.length];
-    const options = matchingOptions(entry.pair, set * 7 + index * 3);
+    const answer = (set + index) % 4;
+    const options = matchingOptions(entry.pair, set * 7 + index * 3, answer);
     const keyed = formatMapping(entry.pair);
-    const answer = options.indexOf(keyed);
     const pairing = entry.pair.map((value, i) => `${LETTERS[i]} matches ${ROMAN[value]}`).join('; ');
 
     return {

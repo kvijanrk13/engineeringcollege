@@ -69,7 +69,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "student@gmail.com")
         self.assertContains(response, "/static/moocs/moocs.js?v=52")
         self.assertContains(response, "/static/moocs/varied_matching_bank.js")
-        self.assertContains(response, "/static/moocs/varied_sets.js")
+        self.assertContains(response, "/static/moocs/varied_sets.js?v=2")
         self.assertContains(response, "/static/moocs/extended_sets.js?v=7")
         self.assertContains(response, "/static/moocs/bloom_taxonomy.js?v=2")
         self.assertContains(response, "/static/moocs/ebook_question_bank.js?v=1")
