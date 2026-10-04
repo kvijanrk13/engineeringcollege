@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 190" role="img" aria-labelledby="title description">
+  <title id="title">Compiler phase pipeline</title>
+  <desc id="description">Source characters pass through lexical analysis, syntax analysis, semantic analysis, and code generation to produce target code.</desc>
+  <rect width="780" height="190" rx="18" fill="#f8fbff"/>
+  <g font-family="Arial" text-anchor="middle" font-size="15" font-weight="700" fill="#123">
+    <rect x="18" y="58" width="120" height="64" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+    <text x="78" y="86">Source</text><text x="78" y="106">characters</text>
+    <rect x="168" y="58" width="130" height="64" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="3"/>
+    <text x="233" y="86">Lexical</text><text x="233" y="106">analysis</text>
+    <rect x="328" y="58" width="130" height="64" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="3"/>
+    <text x="393" y="86">Syntax</text><text x="393" y="106">analysis</text>
+    <rect x="488" y="58" width="130" height="64" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/>
+    <text x="553" y="86">Semantic</text><text x="553" y="106">analysis</text>
+    <rect x="648" y="58" width="120" height="64" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+    <text x="708" y="86">Target</text><text x="708" y="106">code</text>
+  </g>
+  <g fill="none" stroke="#2563eb" stroke-width="4">
+    <path d="M140 90h24"/><path d="M300 90h24"/><path d="M460 90h24"/><path d="M620 90h24"/>
+  </g>
+  <g fill="#2563eb">
+    <path d="m164 84 8 6-8 6z"/><path d="m324 84 8 6-8 6z"/><path d="m484 84 8 6-8 6z"/><path d="m644 84 8 6-8 6z"/>
+  </g>
+</svg>
