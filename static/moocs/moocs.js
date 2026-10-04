@@ -38,7 +38,6 @@ const removedQuestionLeads=[
 const cleanQuestionLead=value=>{let text=String(value||'').trimStart();removedQuestionLeads.forEach(lead=>{while(text.startsWith(lead))text=text.slice(lead.length).trimStart()});return text};
 Object.values(QUESTION_SETS).forEach(questions=>questions.forEach(question=>{question.q=cleanQuestionLead(question.q)}));
 let current=0,seconds=3600,timer=null,selectedSet=1,examInProgress=false,allowNavigation=false,state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}));
-let suppressPaymentPrompt=false;
 const profileEmail=JSON.parse($('moocs-profile-email')?.textContent||'""').trim().toLocaleLowerCase();
 const progressKey=`moocs-test-progress:${profileEmail}`;
 const readProgress=()=>{try{return profileEmail?JSON.parse(localStorage.getItem(progressKey)||'{}'):{}}catch(error){return {}}};
@@ -201,10 +200,7 @@ async function submit(auto=false){
   }
   $('exam').hidden=true;$('result').hidden=false;window.scrollTo(0,0);
 }
-$('exam-set').onchange=async e=>{const choice=Number(e.target.value);if(setRequiresPayment(choice)&&!MOOCS_SET_TWO_COMPLETED){e.target.value='2';alert('Complete Set 2 before opening the remaining sets.');return}if(!suppressPaymentPrompt&&setRequiresPayment(choice)&&!isSetPaid(choice)){window.location.href=`/MOOCS/payment/?set=${PREMIUM_SET_START}&next_set=${choice}`;return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks;updatePremiumPaymentButton()};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=async()=>{if(!canAccessSet(selectedSet)){const paid=await handleSetAccess(selectedSet);if(!paid)return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};
-const updatePremiumPaymentButton=()=>{const needsPayment=setRequiresPayment(selectedSet)&&!isSetPaid(selectedSet);$('unlock-premium-set').hidden=!needsPayment;$('unlock-premium-set').textContent=needsPayment?`Unlock Sets 3–400`:'Premium sets unlocked'};
-$('unlock-premium-set').onclick=async()=>{const paid=await handleSetAccess(selectedSet);if(paid)updatePremiumPaymentButton()};
-updatePremiumPaymentButton();
+$('exam-set').onchange=e=>{const choice=Number(e.target.value);if(choice>=3&&!MOOCS_SET_TWO_COMPLETED){e.target.value='2';alert('Complete Set 2 before opening Sets 3–400.');return}selectedSet=choice;const config=EXAM_CONFIG[selectedSet];$('selected-set-title').textContent=`Set ${selectedSet}`;$('pattern-questions').textContent=QUESTION_SETS[selectedSet].length;$('pattern-minutes').textContent=config.minutes;$('pattern-marks').textContent=config.marks};$('declaration').onchange=e=>$('start-exam').disabled=!e.target.checked;$('start-exam').onclick=()=>{if(selectedSet>=3&&!MOOCS_SET_TWO_COMPLETED){alert('Complete Set 2 before opening Sets 3–400.');return}QUESTIONS.splice(0,QUESTIONS.length,...QUESTION_SETS[selectedSet]);const active=readProgress().active;if(active&&active.set===selectedSet&&Array.isArray(active.state)&&active.state.length===QUESTIONS.length){current=Math.max(0,Math.min(QUESTIONS.length-1,active.current||0));seconds=Math.max(1,active.seconds||EXAM_CONFIG[selectedSet].minutes*60);state=active.state}else{current=0;seconds=EXAM_CONFIG[selectedSet].minutes*60;state=QUESTIONS.map(()=>({answer:null,visited:false,review:false}))}examInProgress=true;saveAttempt();$('welcome').hidden=true;$('exam').hidden=false;render();timer=setInterval(tick,1000)};
 $('save-next').onclick=()=>move(1);$('previous').onclick=()=>move(-1);$('clear-response').onclick=()=>{state[current].answer=null;state[current].review=false;saveAttempt();render()};$('mark-review').onclick=()=>{state[current].review=true;move(1)};$('submit-exam').onclick=()=>submit(false);$('retry').onclick=()=>location.reload();
 $('reset-exam').onclick=()=>{
   if(!confirm('Reset all saved MOOCS progress and start again from Set 1?'))return;
@@ -255,8 +251,8 @@ const nextSetPanel=$('next-set-panel'),continueNextSet=$('continue-next-set');
 const savedProgress=readProgress();
 const returnSet=Number(new URLSearchParams(window.location.search).get('next_set')||'0');
 const suggestedSet=Number.isInteger(returnSet)&&returnSet>=1&&returnSet<=MAX_EXAM_SET?returnSet:savedProgress.active?.set||Math.min(MAX_EXAM_SET,Math.max(1,Math.max(0,...(savedProgress.completed||[]))+1));
-const initialSet=!MOOCS_SET_TWO_COMPLETED&&setRequiresPayment(suggestedSet)?2:suggestedSet;
-selectedSet=initialSet;$('exam-set').value=String(initialSet);suppressPaymentPrompt=true;$('exam-set').dispatchEvent(new Event('change'));suppressPaymentPrompt=false;
+const initialSet=!MOOCS_SET_TWO_COMPLETED&&suggestedSet>=3?2:suggestedSet;
+selectedSet=initialSet;$('exam-set').value=String(initialSet);$('exam-set').dispatchEvent(new Event('change'));
 const updateNextSetPrompt=()=>{
   if($('result').hidden)return;
   if(selectedSet===2&&!MOOCS_SET_TWO_COMPLETED){nextSetPanel.hidden=true;return}
@@ -264,17 +260,16 @@ const updateNextSetPrompt=()=>{
   nextSetPanel.hidden=!hasNext;
   if(!hasNext)return;
   const nextSet=selectedSet+1;
-  const needsPayment=setRequiresPayment(nextSet)&&!isSetPaid(nextSet);
-  $('next-set-message').textContent=`You completed Set ${selectedSet}. ${needsPayment?`Pay once to unlock Sets 3 through 400. Click below to open the payment window.`:`Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`}`;
-  continueNextSet.textContent=needsPayment?`Unlock Sets 3–400`:`Continue to Set ${nextSet}`;
+  $('next-set-message').textContent=`You completed Set ${selectedSet}. Continue to Set ${nextSet} for ${QUESTION_SETS[nextSet].length} MCQs with no questions repeated from the earlier sets.`;
+  continueNextSet.textContent=`Continue to Set ${nextSet}`;
   continueNextSet.dataset.nextSet=nextSet;
 };
 new MutationObserver(updateNextSetPrompt).observe($('result'),{attributes:true,attributeFilter:['hidden']});
 continueNextSet.onclick=async()=>{
   const nextSet=Number(continueNextSet.dataset.nextSet);
-  if(setRequiresPayment(nextSet)&&!isSetPaid(nextSet)){
-    const paid=await handleSetAccess(nextSet);
-    if(!paid)return
+  if(nextSet>=3&&!MOOCS_SET_TWO_COMPLETED){
+    alert('Complete Set 2 before opening Sets 3–400.');
+    return;
   }
   selectedSet=nextSet;
   $('exam-set').value=String(nextSet);

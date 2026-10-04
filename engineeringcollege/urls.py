@@ -7,8 +7,7 @@ from django.http import HttpResponse
 from django.views.static import serve
 from django.views.generic import TemplateView
 from .moocs_views import (
-    moocs_exam, moocs_logout, moocs_payment, moocs_create_order,
-    moocs_verify_payment, moocs_save_result, moocs_scorecard, moocs_scorecard_api,
+    moocs_exam, moocs_logout, moocs_payment, moocs_save_result, moocs_scorecard, moocs_scorecard_api,
     moocs_formulas
 )
 
@@ -24,8 +23,6 @@ urlpatterns = [
     path('MOOCS/', moocs_exam),
     path('MOOCS/payment/', moocs_payment, name='moocs_payment'),
     path('MOOCS/logout/', moocs_logout, name='moocs_logout'),
-    path('MOOCS/payment/create-order/', moocs_create_order, name='moocs_create_order'),
-    path('MOOCS/payment/verify/', moocs_verify_payment, name='moocs_verify_payment'),
     path('MOOCS/save-result/', moocs_save_result, name='moocs_save_result'),
     path('MOOCS/scorecard/', moocs_scorecard, name='moocs_scorecard'),
     path('MOOCS/scorecard/api/', moocs_scorecard_api, name='moocs_scorecard_api'),

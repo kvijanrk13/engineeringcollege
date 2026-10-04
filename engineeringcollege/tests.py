@@ -1,8 +1,7 @@
 import json
-from unittest.mock import patch
 
 from django.test import TestCase, override_settings
-from dashboard.models import MoocsExamResult, MoocsPayment, MoocsVisitor
+from dashboard.models import MoocsExamResult, MoocsVisitor
 
 
 @override_settings(
@@ -123,7 +122,7 @@ class MoocsPageTests(TestCase):
         self.assertNotEqual(response.headers.get("Location"), "/MOOCS")
 
 
-class MoocsPaymentTests(TestCase):
+class MoocsAccessTests(TestCase):
     def setUp(self):
         session = self.client.session
         session["moocs_gmail_verified"] = True
@@ -131,129 +130,36 @@ class MoocsPaymentTests(TestCase):
         session.save()
         MoocsExamResult.objects.create(email="student@gmail.com", set_number=2)
 
-    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret", SECURE_SSL_REDIRECT=False)
-    @patch("engineeringcollege.moocs_views._create_moocs_order")
-    def test_set_3_payment_page_opens_razorpay(self, create_order):
-        create_order.return_value = ({"id": "order_test_123"}, 20000)
-
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_legacy_payment_page_redirects_to_moocs(self):
         response = self.client.get("/MOOCS/payment/?set=3&next_set=5")
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Unlock the remaining sets")
-        self.assertContains(response, "Open Razorpay payment")
-        self.assertContains(response, "order_test_123")
-        self.assertContains(response, 'id="moocs-payment-next-set"')
-        self.assertContains(response, '>5</script>')
-
-    @override_settings(RAZORPAY_KEY_ID="", RAZORPAY_KEY_SECRET="", SECURE_SSL_REDIRECT=False)
-    def test_payment_page_reports_missing_razorpay_configuration(self):
-        response = self.client.get("/MOOCS/payment/?set=3")
-
-        self.assertEqual(response.status_code, 503)
-        self.assertContains(response, "Razorpay is not configured", status_code=503)
-
-    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret", SECURE_SSL_REDIRECT=False)
-    @patch("engineeringcollege.moocs_views._get_razorpay_client")
-    def test_set_3_order_uses_two_hundred_rupees(self, get_client):
-        get_client.return_value.order.create.return_value = {"id": "order_test_123"}
-
-        response = self.client.post(
-            "/MOOCS/payment/create-order/",
-            data=json.dumps({"set_number": 3, "email": "student@gmail.com"}),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        payload = response.json()
-        self.assertEqual(payload["amount"], 20000)
-        self.assertEqual(payload["set_number"], 3)
-        order_data = get_client.return_value.order.create.call_args.args[0]
-        self.assertEqual(order_data["amount"], 20000)
-        self.assertEqual(order_data["currency"], "INR")
-        self.assertRegex(order_data["receipt"], r"^moocs_set3_[0-9a-f]{12}$")
-        payment = MoocsPayment.objects.get(email="student@gmail.com", set_number=3)
-        self.assertEqual(payment.amount, 200.00)
-        self.assertEqual(payment.razorpay_order_id, "order_test_123")
+        self.assertRedirects(response, "/MOOCS")
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    @patch("engineeringcollege.moocs_views._get_razorpay_client")
-    def test_set_3_verification_marks_premium_sets_paid(self, get_client):
-        get_client.return_value.utility.verify_payment_signature.return_value = None
-        get_client.return_value.payment.fetch.return_value = {
-            "order_id": "order_test_123",
-            "status": "captured",
-            "amount": 20000,
-            "currency": "INR",
-        }
-        MoocsPayment.objects.create(
-            email="student@gmail.com",
-            set_number=3,
-            amount=200.00,
-            razorpay_order_id="order_test_123",
-            status="pending",
-        )
-
-        response = self.client.post(
-            "/MOOCS/payment/verify/",
-            data=json.dumps({
-                "set_number": 3,
-                "email": "student@gmail.com",
-                "razorpay_payment_id": "pay_test_123",
-                "razorpay_order_id": "order_test_123",
-                "razorpay_signature": "signature_test",
-            }),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        payment = MoocsPayment.objects.get(email="student@gmail.com", set_number=3)
-        self.assertEqual(payment.status, "completed")
-        self.assertEqual(payment.razorpay_payment_id, "pay_test_123")
-
-    @override_settings(SECURE_SSL_REDIRECT=False)
-    @patch("engineeringcollege.moocs_views._create_moocs_order")
-    def test_set_2_must_be_completed_before_payment(self, create_order):
-        MoocsExamResult.objects.filter(email="student@gmail.com", set_number=2).delete()
-
-        response = self.client.get("/MOOCS/payment/?set=3")
-
-        self.assertRedirects(
-            response, "/MOOCS/?payment=set-2-required", fetch_redirect_response=False
-        )
-        create_order.assert_not_called()
-
-    @override_settings(RAZORPAY_KEY_ID="test_key", RAZORPAY_KEY_SECRET="test_secret", SECURE_SSL_REDIRECT=False)
-    @patch("engineeringcollege.moocs_views._get_razorpay_client")
-    def test_create_order_is_rejected_until_set_2_completed(self, get_client):
-        MoocsExamResult.objects.filter(email="student@gmail.com", set_number=2).delete()
-
-        response = self.client.post(
-            "/MOOCS/payment/create-order/",
-            data=json.dumps({"set_number": 3, "email": "student@gmail.com"}),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 403)
-        get_client.assert_not_called()
-
-    @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_missing_signature_fields_are_rejected(self):
-        response = self.client.post(
-            "/MOOCS/payment/verify/",
-            data=json.dumps({"set_number": 3, "email": "student@gmail.com"}),
-            content_type="application/json",
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-    @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_later_set_results_require_completed_payment(self):
+    def test_later_sets_are_free_after_set_2_is_completed(self):
         response = self.client.post(
             "/MOOCS/save-result/",
             data=json.dumps({
                 "email": "student@gmail.com",
                 "set_number": 3,
+                "score": 120,
             }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            MoocsExamResult.objects.filter(email="student@gmail.com", set_number=3).exists()
+        )
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_later_sets_still_require_set_2_completion(self):
+        MoocsExamResult.objects.filter(email="student@gmail.com", set_number=2).delete()
+
+        response = self.client.post(
+            "/MOOCS/save-result/",
+            data=json.dumps({"set_number": 3, "email": "student@gmail.com"}),
             content_type="application/json",
         )
 
@@ -287,7 +193,7 @@ class MoocsPaymentTests(TestCase):
         self.assertContains(page, '>true</script>')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_set_2_requirement_is_rendered_for_unpaid_user(self):
+    def test_set_2_requirement_is_rendered_for_user_without_set_2_result(self):
         MoocsExamResult.objects.filter(email="student@gmail.com", set_number=2).delete()
 
         response = self.client.get("/MOOCS")
@@ -295,4 +201,4 @@ class MoocsPaymentTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="moocs-set-two-completed"')
         self.assertContains(response, '>false</script>')
-        self.assertContains(response, 'option.disabled = set >= 3 && !setTwoCompleted')
+        self.assertContains(response, 'option.disabled = set >= 3 && !MOOCS_SET_TWO_COMPLETED')

@@ -51,7 +51,7 @@
       <h1><span id="selected-set-title">Set 1</span> — Computer Science Mock Examination</h1>
       <p class="lead">Two hundred mixed, syllabus-aligned papers with 100 non-repeating questions in every set, including supplied previous-year papers and GATE source material.</p>
       <label class="set-picker" for="exam-set"><span>Choose question paper</span><select id="exam-set"><option value="1">Set 1 — Mixed syllabus + General Paper (100)</option><option value="2">Set 2 — Mixed syllabus + General Paper (100)</option><option value="3">Set 3 — Mixed syllabus + General Paper (100)</option><option value="4">Set 4 — Mixed syllabus + General Paper (100)</option><option value="5">Set 5 — Mixed syllabus + General Paper (100)</option><option value="6">Set 6 — Paper III + General Paper (100)</option><option value="7">Set 7 — Computer Science + General Paper (100)</option><option value="8">Set 8 — New mixed computer-science paper (100)</option><option value="9">Set 9 — New mixed computer-science paper (100)</option><option value="10">Set 10 — New mixed computer-science paper (100)</option><option value="11">Set 11 — Paper II answer key + new MCQs (100)</option><option value="12">Set 12 — New mixed computer-science paper (100)</option><option value="13">Set 13 — New mixed computer-science paper (100)</option><option value="14">Set 14 — New mixed computer-science paper (100)</option><option value="15">Set 15 — New mixed computer-science paper (100)</option><option value="16">Set 16 — New mixed computer-science paper (100)</option><option value="17">Set 17 — New mixed computer-science paper (100)</option><option value="18">Set 18 — New mixed computer-science paper (100)</option><option value="19">Set 19 — New mixed computer-science paper (100)</option><option value="20">Set 20 — New mixed computer-science paper (100)</option><option value="21">Set 21 — 2014 Paper I + new MCQs (100)</option><option value="22">Set 22 — New mixed computer-science paper (100)</option><option value="23">Set 23 — New mixed computer-science paper (100)</option><option value="24">Set 24 — New mixed computer-science paper (100)</option><option value="25">Set 25 — New mixed computer-science paper (100)</option><option value="26">Set 26 — New mixed computer-science paper (100)</option><option value="27">Set 27 — New mixed computer-science paper (100)</option><option value="28">Set 28 — New mixed computer-science paper (100)</option><option value="29">Set 29 — New mixed computer-science paper (100)</option><option value="30">Set 30 — New mixed computer-science paper (100)</option><option value="31">Set 31 — New mixed computer-science paper (100)</option><option value="32">Set 32 — New mixed computer-science paper (100)</option><option value="33">Set 33 — New mixed computer-science paper (100)</option><option value="34">Set 34 — New mixed computer-science paper (100)</option><option value="35">Set 35 — New mixed computer-science paper (100)</option><option value="36">Set 36 — New mixed computer-science paper (100)</option><option value="37">Set 37 — New mixed computer-science paper (100)</option><option value="38">Set 38 — New mixed computer-science paper (100)</option><option value="39">Set 39 — New mixed computer-science paper (100)</option><option value="40">Set 40 — New mixed computer-science paper (100)</option><option value="41">Set 41 — New mixed computer-science paper (100)</option><option value="42">Set 42 — New mixed computer-science paper (100)</option><option value="43">Set 43 — New mixed computer-science paper (100)</option><option value="44">Set 44 — New mixed computer-science paper (100)</option><option value="45">Set 45 — New mixed computer-science paper (100)</option><option value="46">Set 46 — New mixed computer-science paper (100)</option><option value="47">Set 47 — New mixed computer-science paper (100)</option><option value="48">Set 48 — New mixed computer-science paper (100)</option><option value="49">Set 49 — New mixed computer-science paper (100)</option><option value="50">Set 50 — New unique computer-science MCQs (100)</option></select></label>
-      <p id="payment-gate-notice" class="login-message" role="status"></p>
+      <p id="set-access-notice" class="login-message" role="status"></p>
       <script>
         (() => {
           const picker = document.getElementById('exam-set');
@@ -80,7 +80,6 @@
       <label class="declaration"><input id="declaration" type="checkbox" checked> I have read the instructions and am ready to begin.</label>
       <div class="welcome-actions">
         <button id="start-exam" class="primary">Start examination</button>
-        <button id="unlock-premium-set" class="secondary" type="button" hidden>Unlock Sets 3–400</button>
         <button id="reset-exam" class="secondary" type="button">Reset and start from Set 1</button>
         <a id="scorecard-link" class="scorecard-button" href="{% url 'moocs_scorecard' %}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -152,7 +151,11 @@
   {% if moocs_gmail_verified %}
   {{ moocs_gmail_email|json_script:"moocs-profile-email" }}
   {{ moocs_has_completed_set_2|json_script:"moocs-set-two-completed" }}
-  {{ moocs_has_premium_access|json_script:"moocs-premium-access" }}
+  <script>
+    let MOOCS_SET_TWO_COMPLETED = JSON.parse(
+      document.getElementById('moocs-set-two-completed').textContent
+    );
+  </script>
   {% csrf_token %}
   <script src="{% static 'moocs/textbook_questions.js' %}?v=21"></script>
   <script src="{% static 'moocs/paper_three_questions.js' %}?v=1"></script>
@@ -192,34 +195,23 @@
 <script>
     (() => {
       const picker = document.getElementById('exam-set');
-      const setTwoCompleted = JSON.parse(
-        document.getElementById('moocs-set-two-completed').textContent
-      );
-      const premiumAccess = JSON.parse(
-        document.getElementById('moocs-premium-access').textContent
-      );
-      const notice = document.getElementById('payment-gate-notice');
-      const paymentStatus = new URLSearchParams(window.location.search).get('payment');
-      if (!setTwoCompleted) {
-        notice.textContent = paymentStatus === 'set-2-required'
-          ? 'Complete and submit Set 2 before unlocking the remaining sets.'
-          : 'Complete and submit Set 2 first. Then pay ₹200 once to unlock Sets 3–400.';
-      } else if (!premiumAccess) {
-        notice.textContent = 'Set 2 completed. Pay ₹200 once to unlock Sets 3–400.';
-      } else {
-        notice.hidden = true;
-      }
+      const notice = document.getElementById('set-access-notice');
+      const accessStatus = new URLSearchParams(window.location.search).get('access');
+      notice.textContent = MOOCS_SET_TWO_COMPLETED
+        ? 'Set 2 completed. Sets 3–400 are now available at no charge.'
+        : accessStatus === 'set-2-required'
+          ? 'Complete and submit Set 2 before opening Sets 3–400.'
+          : 'Complete and submit Set 2 to unlock Sets 3–400 at no charge.';
       picker.replaceChildren(...Array.from({ length: 400 }, (_, index) => {
         const set = index + 1;
         const option = document.createElement('option');
         option.value = String(set);
         option.textContent = `Set ${set}`;
-        option.disabled = set >= 3 && !setTwoCompleted;
+        option.disabled = set >= 3 && !MOOCS_SET_TWO_COMPLETED;
         return option;
       }));
     })();
   </script>
-  <script src="{% static 'moocs/moocs_payment.js' %}?v=6"></script>
   <script src="{% static 'moocs/moocs.js' %}?v=50"></script>
   <script>
     /* Keep logout functional even if a deployment serves a stale cached exam script. */
