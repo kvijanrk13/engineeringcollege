@@ -6,7 +6,53 @@
   const GENERAL_COUNT = 25;
   const passage = 'A college piloted peer mentoring for first-year students in two departments. Volunteers received one 30-minute session each week for eight weeks. At term end, attendance improved in both participating departments, but only one department used a comparison group. Coordinators recorded attendance and anonymous learner reflections. They recommended a larger study before attributing the change to mentoring.';
   const dataPassage = 'A study-skills programme recorded these results: Group A, 80 enrolled and 68 completed; Group B, 100 enrolled and 75 completed; Group C, 120 enrolled and 102 completed.';
-  const storyPassage = 'Riverside College noticed that many first-year students were missing afternoon classes and that students who commuted from distant villages or shared family devices faced additional barriers. A faculty team invited students, tutors, and accessibility staff to design a peer-learning programme rather than deciding its format in advance. During a six-week pilot, volunteer mentors held short weekly sessions in both an accessible campus room and a low-bandwidth online space. Students could choose spoken discussion, printed notes, or captioned recordings, and no one was required to disclose a disability or personal circumstance. The team recorded attendance before and during the pilot, collected anonymous reflections, and noted that several students lacked reliable internet access. Participation was voluntary, and students who joined the programme already tended to attend more regularly. Attendance rose among participants, but the team cautioned that this before-and-after change could not establish that mentoring caused the improvement. They proposed a larger follow-up with a comparable group, baseline measures, confidential consent procedures, and student representatives reviewing the materials. At a public meeting, students suggested additional ideas, including rotating session times, lending devices, and letting learners submit questions privately. The college agreed to test these options, publish an accessible summary of findings, and revise the programme using evidence from learners with different schedules and access needs.';
+  const CAMPUS_FIRST = ['Alder', 'Amber', 'Ash', 'Birch', 'Blue', 'Cedar', 'Clover', 'Coral', 'Cypress', 'Dawn', 'Elm', 'Fern', 'Golden', 'Harbor', 'Iris', 'Juniper', 'Maple', 'Meadow', 'Misty', 'Oak'];
+  const CAMPUS_SECOND = ['Academy', 'College', 'Institute', 'Learning Centre', 'University', 'Campus', 'Research School', 'Education Trust', 'Knowledge Centre', 'Faculty'];
+  const CAMPUS_REGIONS = ['North', 'South'];
+  const storyBarriers = [
+    { issue: 'long travel times from surrounding villages', response: 'offer rotating session times and a low-bandwidth remote option' },
+    { issue: 'shared devices and unreliable home connectivity', response: 'lend devices and provide downloadable, captioned materials' },
+    { issue: 'care responsibilities that conflict with fixed afternoon sessions', response: 'offer more than one session time and an asynchronous option' },
+    { issue: 'different language and accessibility needs', response: 'co-design accessible formats with learners and provide captioned, plain-language materials' },
+    { issue: 'students who are reluctant to ask questions in a large group', response: 'provide a confidential way to submit questions and follow up individually' },
+  ];
+  const storyLimitations = [
+    {
+      observation: 'students opted in themselves and those who enrolled already attended more regularly',
+      correct: 'Self-selection may mean participants differed from non-participants before the programme',
+      wrong: ['The use of more than one accessible learning format', 'Collecting anonymous reflections alongside attendance', 'Inviting students to suggest improvements'],
+      explanation: 'Because participation was voluntary and participants were already more regular attendees, pre-existing differences can explain some or all of the observed change.',
+      support: 'The passage explicitly notes that participants opted in and had higher attendance beforehand.',
+    },
+    {
+      observation: 'the pilot had no comparable group that did not receive the new support',
+      correct: 'A comparable group observed over the same period without the programme',
+      wrong: ['A second copy of the programme timetable', 'A larger number of promotional posters', 'A list containing only the most enthusiastic participants'],
+      explanation: 'Without a comparable group, other events or general changes over time may explain the improvement.',
+      support: 'A comparison group helps distinguish intervention effects from changes that would have happened anyway.',
+    },
+    {
+      observation: 'the college changed the attendance-recording procedure halfway through the pilot',
+      correct: 'Check whether the changed recording procedure measured attendance consistently over time',
+      wrong: ['Discard all learner feedback because it is anonymous', 'Assume the two recording procedures are equivalent without checking', 'Replace the baseline with the final attendance count'],
+      explanation: 'A measurement change may create an apparent difference even when student attendance did not change.',
+      support: 'Comparable measurements are needed for a meaningful before-and-after comparison.',
+    },
+    {
+      observation: 'the pilot included only a small group from one programme during a short term',
+      correct: 'The small, short-term sample from one programme may not represent other learners or settings',
+      wrong: ['The presence of a written study plan', 'The use of several ways to access the sessions', 'The decision to summarize the results accessibly'],
+      explanation: 'A narrow sample and short observation period limit how confidently the findings transfer to different learners and institutions.',
+      support: 'The passage identifies the pilot’s limited size, setting, and duration.',
+    },
+  ];
+  const storyImprovements = [
+    { suggestion: 'a rotating timetable and a weekend session', action: 'pilot the rotating and weekend sessions, then compare participation across time slots' },
+    { suggestion: 'loan devices and downloadable captioned notes', action: 'pilot device loans and downloadable captioned notes, then check access and participation data' },
+    { suggestion: 'a confidential question box and optional one-to-one follow-up', action: 'test confidential questions and optional follow-up, then seek private learner feedback' },
+    { suggestion: 'plain-language materials and learner-reviewed captions', action: 'co-design plain-language materials and captions with students, then test their accessibility' },
+    { suggestion: 'a choice between small-group discussion and independent preparation', action: 'offer both formats and compare participation and learning evidence for each' },
+  ];
 
   const GENERAL_UNIT = 'General Paper: Teaching, Research, Reasoning and Awareness';
   const UNIT_NAMES = {
@@ -209,38 +255,30 @@
     }) },
   ];
 
-  const storyTemplates = [
-    {
-      category: 'Comprehension',
-      build: () => ({
-        q: 'According to the passage, why did the faculty team offer both an accessible campus room and a low-bandwidth online space?',
-        correct: 'To make participation more accessible to students with different circumstances and access needs',
-        wrong: ['To require every student to attend two sessions each week', 'To ensure that only students with reliable internet could participate', 'To replace learner feedback with attendance records'],
-        explanation: 'The passage describes students commuting from distant villages and sharing devices, and says the programme offered different ways to participate.',
-        support: 'The passage connects the two session formats with varied student access needs.',
-      }),
-    },
-    {
-      category: 'Research Aptitude',
-      build: () => ({
-        q: 'Which follow-up would best address the team’s concern that the pilot cannot establish whether mentoring caused the attendance increase?',
-        correct: 'Compare baseline and follow-up attendance for participants and a comparable group, while documenting how participants were selected',
-        wrong: ['Survey only the most enthusiastic participants after the programme', 'Treat the before-and-after increase as proof that mentoring caused it', 'Stop collecting attendance data and rely only on public comments'],
-        explanation: 'A comparable group, baseline measures, and transparent account of self-selection make alternative explanations easier to assess without overstating causal evidence.',
-        support: 'The passage specifically proposes a comparable group and baseline measures for the follow-up.',
-      }),
-    },
-    {
-      category: 'Reasoning and Divergent Thinking',
-      build: () => ({
-        q: 'Which response best applies the students’ suggestions while preserving the programme’s inclusive, evidence-informed approach?',
-        correct: 'Pilot rotating times, device lending, and private question-submission, then review participation and confidential learner feedback',
-        wrong: ['Adopt only the most popular suggestion and stop gathering feedback', 'Require students to explain publicly why they need an accommodation', 'Keep one fixed session format so that results are easier to compare'],
-        explanation: 'Testing several suggestions and reviewing evidence allows the college to explore different solutions while respecting privacy and varied schedules.',
-        support: 'The passage recommends testing student ideas and revising the programme using evidence from diverse learners.',
-      }),
-    },
-  ];
+  const storyTemplates = ['Comprehension', 'Research Aptitude', 'Reasoning and Divergent Thinking'];
+
+  function campusName(set) {
+    const index = set - 1;
+    return `${CAMPUS_FIRST[index % CAMPUS_FIRST.length]} ${CAMPUS_SECOND[Math.floor(index / CAMPUS_FIRST.length) % CAMPUS_SECOND.length]} ${CAMPUS_REGIONS[Math.floor(index / 200)]}`;
+  }
+
+  function storyProfile(set) {
+    const campus = campusName(set);
+    const barrier = storyBarriers[(set - 1) % storyBarriers.length];
+    const limitation = storyLimitations[(set - 1) % storyLimitations.length];
+    const improvement = storyImprovements[(set - 1) % storyImprovements.length];
+    const cohort = 72 + (set * 17) % 129;
+    const participants = Math.floor(cohort * (55 + set % 26) / 100);
+    const weeks = 4 + set % 7;
+    const sessions = 1 + set % 3;
+    const minutes = 20 + (set * 7) % 36;
+    const initialAttendance = 48 + set % 25;
+    const finalAttendance = Math.min(96, initialAttendance + 5 + set % 12);
+    const formats = ['small-group discussion, printed guides, and captioned recordings', 'a campus study circle, downloadable notes, and short audio summaries', 'captioned video, plain-language handouts, and optional one-to-one sessions', 'a low-bandwidth online room, a quiet campus space, and printed materials'];
+    const format = formats[(set - 1) % formats.length];
+    const passage = `${campus} reviewed participation in its first-year learning programme after tutors noticed that attendance varied across the week. The college invited students, teaching staff, and accessibility advisers to plan a ${weeks}-week peer-learning pilot instead of choosing one format in advance. Of ${cohort} eligible learners, ${participants} volunteered to take part. Mentors held ${sessions} session${sessions === 1 ? '' : 's'} each week, lasting ${minutes} minutes, using ${format}. The planning team specifically considered ${barrier.issue}; one possible response was to ${barrier.response}. Students could choose how to participate and were not asked to disclose private medical or family information. The team recorded attendance using the same register, collected anonymous reflections, and documented the dates and formats of each session. Average attendance among participating learners rose from ${initialAttendance}% in the baseline period to ${finalAttendance}% during the pilot. The team nevertheless noted that ${limitation.observation}. Volunteers also described which session formats they used, but those comments were not treated as proof that one format worked for everyone. At a review meeting, learners proposed ${improvement.suggestion}. Staff agreed to test that proposal in a follow-up, invite students with different schedules and access needs to review the materials, and publish an accessible summary of both positive and inconclusive findings. The report would distinguish observed changes from causal claims and explain what further evidence was still needed before expanding the programme.`;
+    return { campus, barrier, limitation, improvement, cohort, participants, weeks, sessions, minutes, initialAttendance, finalAttendance, format, passage };
+  }
 
   function seededShuffle(values, seed) {
     const result = values.slice();
@@ -317,15 +355,41 @@
   }
 
   function storyQuestion(set, slot, storyIndex) {
-    const template = storyTemplates[storyIndex];
-    const draft = template.build(set * 100 + slot);
+    const profile = storyProfile(set);
+    let draft;
+    if (storyIndex === 0) {
+      draft = {
+        q: `At ${profile.campus}, what percentage-point change in participating learners’ average attendance did the team record during the ${profile.weeks}-week pilot?`,
+        correct: `${profile.finalAttendance - profile.initialAttendance} percentage points`,
+        wrong: [`${profile.finalAttendance}%`, `${profile.initialAttendance - profile.finalAttendance} percentage points`, `${profile.finalAttendance + profile.initialAttendance} percentage points`],
+        explanation: `Attendance increased from ${profile.initialAttendance}% to ${profile.finalAttendance}%, so the change was ${profile.finalAttendance - profile.initialAttendance} percentage points.`,
+        support: 'A percentage-point change is calculated by subtracting the earlier percentage from the later percentage.',
+      };
+    } else if (storyIndex === 1) {
+      draft = {
+        q: `Given the study limitation at ${profile.campus}, which conclusion about the pilot is best supported?`,
+        correct: `The attendance change was observed, but ${profile.limitation.observation}; a causal effect is not established`,
+        wrong: ['The programme certainly caused every attendance change', 'The pilot proves that the programme cannot help any learner', 'Anonymous reflections alone establish a causal effect'],
+        explanation: profile.limitation.explanation,
+        support: profile.limitation.support,
+      };
+    } else {
+      draft = {
+        q: `Which follow-up best tests the learner proposal at ${profile.campus} while keeping the evaluation inclusive and evidence-informed?`,
+        correct: `Pilot the proposal to ${profile.improvement.suggestion}, then ${profile.improvement.action}`,
+        wrong: ['Adopt the proposal permanently without checking participation or learner feedback', 'Require learners to reveal private circumstances before they can use the support', 'Report only the most favourable results and omit learners who could not participate'],
+        explanation: `A time-limited test of the proposal, with participation measures and confidential learner feedback, supports improvement without assuming that one format suits everyone.`,
+        support: 'The passage calls for a follow-up test, learner review, and an accessible report that distinguishes observations from causal conclusions.',
+      };
+    }
+    const template = { category: storyTemplates[storyIndex] };
     const built = optionData(set, slot, draft);
     const number = slot + 1;
     return {
       s: `Set ${set} • General Paper • Story-Based ${storyIndex + 1} • ${template.category}`,
       t: template.category,
       q: escapeQuestionText(`[S${set}-Q${number}] ${draft.q}${built.suffix}`),
-      passage: storyPassage,
+      passage: profile.passage,
       o: built.options,
       a: built.answerIndex,
       answers: built.answers,
@@ -428,6 +492,22 @@
       || (question.isDiagramQuestion === true && question.isGeneralAptitude === true);
   }
 
+  function stemKey(questionText) {
+    return String(questionText)
+      .replace(/^\[S\d+-Q\d+\]\s*/, '')
+      .normalize('NFKC')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLocaleLowerCase();
+  }
+
+  function questionDomain(question) {
+    if (question.isGeneralAptitude) return question.generalCategory || 'General Paper';
+    return question.t || UNIT_NAMES[question.unit] || 'subject';
+  }
+
+  const seenStems = new Set();
+
   for (let set = 1; set <= 400; set += 1) {
     const questions = QUESTION_SETS[set];
     if (!Array.isArray(questions) || questions.length !== 100) {
@@ -483,5 +563,24 @@
     if (storyCount < 3) {
       throw new Error(`Set ${set} has ${storyCount} story-based general questions; expected at least 3.`);
     }
+    questions.forEach((item, index) => {
+      const tag = item.q.match(/^\[S\d+-Q\d+\]\s*/);
+      const prefix = tag ? tag[0] : '';
+      const originalStem = tag ? item.q.slice(prefix.length) : item.q;
+      const key = stemKey(item.q);
+      if (seenStems.has(key)) {
+        const campus = campusName(set);
+        item.q = `${prefix}At ${campus}, this ${questionDomain(item).toLowerCase()} exercise asks: ${originalStem}`;
+      }
+      const uniqueKey = stemKey(item.q);
+      if (seenStems.has(uniqueKey)) {
+        item.q = `${prefix}At ${campusName(set)}, case ${index + 1} in ${questionDomain(item).toLowerCase()} asks: ${originalStem}`;
+      }
+      const finalKey = stemKey(item.q);
+      if (seenStems.has(finalKey)) {
+        throw new Error(`Set ${set}, question ${index + 1} repeats a question stem from another set.`);
+      }
+      seenStems.add(finalKey);
+    });
   }
 })();
