@@ -72,7 +72,7 @@ class MoocsPageTests(TestCase):
         self.assertContains(response, "/static/moocs/varied_sets.js?v=2")
         self.assertContains(response, "/static/moocs/diagram_question_bank.js?v=3")
         self.assertContains(response, "/static/moocs/assessment_pattern.js?v=1")
-        self.assertContains(response, "/static/moocs/general_aptitude_question_bank.js?v=1")
+        self.assertContains(response, "/static/moocs/general_aptitude_question_bank.js?v=2")
         page = response.content.decode()
         self.assertLess(
             page.index("/static/moocs/diagram_question_bank.js?v=3"),
@@ -80,7 +80,7 @@ class MoocsPageTests(TestCase):
         )
         self.assertLess(
             page.index("/static/moocs/assessment_pattern.js?v=1"),
-            page.index("/static/moocs/general_aptitude_question_bank.js?v=1"),
+            page.index("/static/moocs/general_aptitude_question_bank.js?v=2"),
         )
         self.assertContains(response, "/static/moocs/extended_sets.js?v=7")
         self.assertContains(response, "/static/moocs/bloom_taxonomy.js?v=2")

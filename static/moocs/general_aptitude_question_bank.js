@@ -6,6 +6,7 @@
   const GENERAL_COUNT = 25;
   const passage = 'A college piloted peer mentoring for first-year students in two departments. Volunteers received one 30-minute session each week for eight weeks. At term end, attendance improved in both participating departments, but only one department used a comparison group. Coordinators recorded attendance and anonymous learner reflections. They recommended a larger study before attributing the change to mentoring.';
   const dataPassage = 'A study-skills programme recorded these results: Group A, 80 enrolled and 68 completed; Group B, 100 enrolled and 75 completed; Group C, 120 enrolled and 102 completed.';
+  const storyPassage = 'Riverside College noticed that many first-year students were missing afternoon classes and that students who commuted from distant villages or shared family devices faced additional barriers. A faculty team invited students, tutors, and accessibility staff to design a peer-learning programme rather than deciding its format in advance. During a six-week pilot, volunteer mentors held short weekly sessions in both an accessible campus room and a low-bandwidth online space. Students could choose spoken discussion, printed notes, or captioned recordings, and no one was required to disclose a disability or personal circumstance. The team recorded attendance before and during the pilot, collected anonymous reflections, and noted that several students lacked reliable internet access. Participation was voluntary, and students who joined the programme already tended to attend more regularly. Attendance rose among participants, but the team cautioned that this before-and-after change could not establish that mentoring caused the improvement. They proposed a larger follow-up with a comparable group, baseline measures, confidential consent procedures, and student representatives reviewing the materials. At a public meeting, students suggested additional ideas, including rotating session times, lending devices, and letting learners submit questions privately. The college agreed to test these options, publish an accessible summary of findings, and revise the programme using evidence from learners with different schedules and access needs.';
 
   const GENERAL_UNIT = 'General Paper: Teaching, Research, Reasoning and Awareness';
   const UNIT_NAMES = {
@@ -208,6 +209,39 @@
     }) },
   ];
 
+  const storyTemplates = [
+    {
+      category: 'Comprehension',
+      build: () => ({
+        q: 'According to the passage, why did the faculty team offer both an accessible campus room and a low-bandwidth online space?',
+        correct: 'To make participation more accessible to students with different circumstances and access needs',
+        wrong: ['To require every student to attend two sessions each week', 'To ensure that only students with reliable internet could participate', 'To replace learner feedback with attendance records'],
+        explanation: 'The passage describes students commuting from distant villages and sharing devices, and says the programme offered different ways to participate.',
+        support: 'The passage connects the two session formats with varied student access needs.',
+      }),
+    },
+    {
+      category: 'Research Aptitude',
+      build: () => ({
+        q: 'Which follow-up would best address the team’s concern that the pilot cannot establish whether mentoring caused the attendance increase?',
+        correct: 'Compare baseline and follow-up attendance for participants and a comparable group, while documenting how participants were selected',
+        wrong: ['Survey only the most enthusiastic participants after the programme', 'Treat the before-and-after increase as proof that mentoring caused it', 'Stop collecting attendance data and rely only on public comments'],
+        explanation: 'A comparable group, baseline measures, and transparent account of self-selection make alternative explanations easier to assess without overstating causal evidence.',
+        support: 'The passage specifically proposes a comparable group and baseline measures for the follow-up.',
+      }),
+    },
+    {
+      category: 'Reasoning and Divergent Thinking',
+      build: () => ({
+        q: 'Which response best applies the students’ suggestions while preserving the programme’s inclusive, evidence-informed approach?',
+        correct: 'Pilot rotating times, device lending, and private question-submission, then review participation and confidential learner feedback',
+        wrong: ['Adopt only the most popular suggestion and stop gathering feedback', 'Require students to explain publicly why they need an accommodation', 'Keep one fixed session format so that results are easier to compare'],
+        explanation: 'Testing several suggestions and reviewing evidence allows the college to explore different solutions while respecting privacy and varied schedules.',
+        support: 'The passage recommends testing student ideas and revising the programme using evidence from diverse learners.',
+      }),
+    },
+  ];
+
   function seededShuffle(values, seed) {
     const result = values.slice();
     let state = seed >>> 0;
@@ -280,6 +314,33 @@
       isGeneralAptitude: true,
     };
     return question;
+  }
+
+  function storyQuestion(set, slot, storyIndex) {
+    const template = storyTemplates[storyIndex];
+    const draft = template.build(set * 100 + slot);
+    const built = optionData(set, slot, draft);
+    const number = slot + 1;
+    return {
+      s: `Set ${set} • General Paper • Story-Based ${storyIndex + 1} • ${template.category}`,
+      t: template.category,
+      q: escapeQuestionText(`[S${set}-Q${number}] ${draft.q}${built.suffix}`),
+      passage: storyPassage,
+      o: built.options,
+      a: built.answerIndex,
+      answers: built.answers,
+      mode: built.mode,
+      e: draft.explanation,
+      optionReasons: built.options.map((option, index) => built.answers
+        ? `“${option}” ${built.answers.includes(index) ? 'is supported by the passage.' : 'is not supported by the passage.'}`
+        : `“${option}” ${index === built.answerIndex ? 'is supported by the passage and its stated evidence.' : 'is not supported by the passage.'}`),
+      level: number <= 34 ? 'Level 1' : number <= 67 ? 'Level 2' : 'Level 3',
+      unit: 0,
+      unitName: GENERAL_UNIT,
+      generalCategory: template.category,
+      isGeneralAptitude: true,
+      isStoryBased: true,
+    };
   }
 
   const SUBJECT_REPLACEMENTS = [
@@ -401,8 +462,10 @@
       }
     });
 
-    generalSlots.forEach(slot => {
-      questions[slot] = generalQuestion(set, slot);
+    generalSlots.forEach((slot, index) => {
+      questions[slot] = index < storyTemplates.length
+        ? storyQuestion(set, slot, index)
+        : generalQuestion(set, slot);
     });
 
     const generalCount = questions.filter(isGeneralQuestion).length;
@@ -415,6 +478,10 @@
     const subjectCount = questions.filter(item => item.isGeneralAptitude === false).length;
     if (subjectCount !== 75) {
       throw new Error(`Set ${set} has ${subjectCount} subject questions; expected 75.`);
+    }
+    const storyCount = questions.filter(item => item.isStoryBased === true).length;
+    if (storyCount < 3) {
+      throw new Error(`Set ${set} has ${storyCount} story-based general questions; expected at least 3.`);
     }
   }
 })();
