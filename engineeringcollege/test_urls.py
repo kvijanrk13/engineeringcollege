@@ -5,8 +5,10 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from engineeringcollege.moocs_views import (
     moocs_exam,
+    moocs_formulas,
     moocs_logout,
     moocs_payment,
+    moocs_scorecard,
 )
 
 
@@ -21,6 +23,8 @@ urlpatterns = [
     path("MOOCS/", moocs_exam),
     path("MOOCS/payment/", moocs_payment, name="moocs_payment"),
     path("MOOCS/logout/", moocs_logout, name="moocs_logout"),
+    path("MOOCS/scorecard/", moocs_scorecard, name="moocs_scorecard"),
+    path("MOOCS/formulas/", moocs_formulas, name="moocs_formulas"),
     path(
         "accounts/",
         include(

@@ -132,6 +132,9 @@
       unit,
       unitName: UNIT_NAMES[unit],
       level: questionNumber <= 34 ? 'Level 1' : questionNumber <= 67 ? 'Level 2' : 'Level 3',
+      isDiagramQuestion: true,
+      isGeneralAptitude: unit === 0,
+      generalCategory: unit === 0 ? 'Data Interpretation' : undefined,
     };
   }
 
