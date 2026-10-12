@@ -19,11 +19,12 @@ const sourceFiles = [
   'gate_archive_sets.js',
   'advanced_sets.js',
   'diagram_sets.js',
-  'question_enhancer.js',
   'assessment_pattern.js',
   'bloom_taxonomy.js',
   'varied_matching_bank.js',
   'varied_sets.js',
+  'general_aptitude_question_bank.js',
+  'question_enhancer.js',
 ];
 
 let source = sourceFiles
@@ -71,7 +72,7 @@ source += `
 
       /* Diagrammatic requirement for Sets 301-400: every question must
          reference a valid diagram (img + alt) that exists on disk. */
-      if (setNumber >= 301) {
+      if (setNumber >= 301 && index >= 25) {
         diagrammaticQuestionCount += 1;
         if (!question.img || !String(question.img).trim()) {
           errors.push(\`\${location} is missing a diagram image reference.\`);
@@ -86,42 +87,24 @@ source += `
         }
       }
 
-      const expectedMode = index % 10 === 8 ? 'multi' : index % 10 === 9 ? 'fill' : 'selection';
-      /* Sets 12-100 deliberately break the 8+1+1 shape: the first 12 questions
-         are List-I / List-II matching tables, one per subject including C++,
-         and the rest rotate through quantitative, series, substitution and
-         component approaches. */
-      if (setNumber >= 12 && setNumber <= 100) {
+      if (index < 25) {
+        if (question.isGeneralAptitude !== true) {
+          errors.push(\`\${location} is not marked as a general aptitude question.\`);
+        }
         if (question.mode !== 'selection') {
-          errors.push(\`\${location} should use selection mode, not \${question.mode}.\`);
+          errors.push(\`\${location} should be a single-choice general MCQ, not \${question.mode}.\`);
         }
-        delete question.answers;
-        delete question.multiChecked;
-        const isMatching = index < 12;
-        if (Boolean(question.isMatching) !== isMatching) {
-          errors.push(\`\${location} has the wrong matching flag for its position.\`);
+        if (!/teaching|research|reasoning|comprehension|general awareness|data interpretation|general aptitude/i.test(String(question.t || ''))) {
+          errors.push(\`\${location} does not cover a requested general aptitude area.\`);
         }
-        if (isMatching) {
-          if (!Array.isArray(question.list1) || question.list1.length !== 4) {
-            errors.push(\`\${location} must show four List-I entries.\`);
-          }
-          if (!Array.isArray(question.list2) || question.list2.length !== 4) {
-            errors.push(\`\${location} must show four List-II entries.\`);
-          }
-          if (!/Match the entries of List-I with the entries of List-II/i.test(String(question.q))) {
-            errors.push(\`\${location} does not state the List-I / List-II instruction.\`);
-          }
-          if (!/^A-[IV]+/.test(String(question.o[question.a]))) {
-            errors.push(\`\${location} is not keyed to a List-I / List-II mapping.\`);
-          }
-        }
-      } else {
-        if (question.mode !== expectedMode) {
-          errors.push(\`\${location} should use \${expectedMode} mode, not \${question.mode}.\`);
-        }
-        if (expectedMode === 'multi' && (!Array.isArray(question.answers) || question.answers.length !== 2)) {
-          errors.push(\`\${location} must have exactly two multiple-selection answers.\`);
-        }
+      } else if (question.isGeneralAptitude !== false) {
+        errors.push(\`\${location} is not marked as a subject question after the 25-question general section.\`);
+      }
+      if (question.o.length !== 4 || new Set(question.o).size !== 4) {
+        errors.push(\`\${location} must have four distinct answer options.\`);
+      }
+      if (question.difficulty !== (index < 25 ? 'General Aptitude' : index < 67 ? 'Advanced' : 'Expert')) {
+        errors.push(\`\${location} is not assigned the required advanced subject-question level.\`);
       }
 
       const normalized = String(question.q || '').toLocaleLowerCase().replace(/\\s+/g, ' ').trim();
@@ -141,7 +124,7 @@ source += `
   }
 
   const diagramSetCount = [...diagramSets].sort((a, b) => a - b).join(', ');
-  console.log(\`Validated 400 sets, \${total} MCQs, \${diagrammaticQuestionCount} diagrammatic (Sets 301-400), detailed explanations, the 8+1+1 assessment pattern, every Set 301-400 question referencing a valid existing diagram (\${[...diagramSets].length} sets), and unique stems across all 400 sets (\${repeatedSourceQuestions} repeated source question(s)).\`);
+  console.log(\`Validated 400 sets, \${total} MCQs, the first 25 general aptitude questions and final 75 advanced subject questions in every set, \${diagrammaticQuestionCount} diagrammatic subject questions (Sets 301-400), detailed explanations, all Set 301-400 subject questions referencing a valid existing diagram (\${[...diagramSets].length} sets), and unique stems across all 400 sets (\${repeatedSourceQuestions} repeated source question(s)).\`);
 })()
 `;
 

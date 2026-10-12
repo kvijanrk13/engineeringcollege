@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const FIRST_SLOT = 12;
+  const FIRST_SLOT = 0;
   const GENERAL_COUNT = 25;
   const passage = 'A college piloted peer mentoring for first-year students in two departments. Volunteers received one 30-minute session each week for eight weeks. At term end, attendance improved in both participating departments, but only one department used a comparison group. Coordinators recorded attendance and anonymous learner reflections. They recommended a larger study before attributing the change to mentoring.';
   const dataPassage = 'A study-skills programme recorded these results: Group A, 80 enrolled and 68 completed; Group B, 100 enrolled and 75 completed; Group C, 120 enrolled and 102 completed.';
@@ -295,7 +295,7 @@
     return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  function optionData(set, slot, draft) {
+  function optionData(set, slot, draft, selectionOnly = false) {
     const correct = String(draft.correct);
     const distractors = seededShuffle(
       [...new Set(draft.wrong.map(String))].filter(option => option !== correct),
@@ -307,13 +307,13 @@
     options.splice(answerIndex, 0, correct);
 
     const result = { options, answerIndex, mode: 'selection', answers: null, suffix: '' };
-    if (slot % 10 === 8) {
+    if (!selectionOnly && slot % 10 === 8) {
       const supportIndex = (answerIndex + 2) % 4;
       options[supportIndex] = draft.support || 'The calculation follows the stated definition.';
       result.mode = 'multi';
       result.answers = [answerIndex, supportIndex].sort((left, right) => left - right);
       result.suffix = ' Select both correct statements.';
-    } else if (slot % 10 === 9) {
+    } else if (!selectionOnly && slot % 10 === 9) {
       result.mode = 'fill';
       result.suffix = ' Enter the exact answer.';
     }
@@ -324,7 +324,7 @@
     const number = slot + 1;
     const template = templates[(set + slot - FIRST_SLOT) % templates.length];
     const draft = template.build(set * 100 + slot);
-    const built = optionData(set, slot, draft);
+    const built = optionData(set, slot, draft, true);
     const question = {
       s: `Set ${set} • General Paper • ${template.category}`,
       t: template.category,
@@ -345,7 +345,7 @@
           ? `“${option}” is the only choice supported by the stated evidence or governing principle.`
           : `“${option}” does not follow from the stated evidence or governing principle.`;
       }),
-      level: number <= 34 ? 'Level 1' : number <= 67 ? 'Level 2' : 'Level 3',
+      level: 'Level 3',
       unit: 0,
       unitName: GENERAL_UNIT,
       generalCategory: template.category,
@@ -383,7 +383,7 @@
       };
     }
     const template = { category: storyTemplates[storyIndex] };
-    const built = optionData(set, slot, draft);
+    const built = optionData(set, slot, draft, true);
     const number = slot + 1;
     return {
       s: `Set ${set} • General Paper • Story-Based ${storyIndex + 1} • ${template.category}`,
@@ -398,7 +398,7 @@
       optionReasons: built.options.map((option, index) => built.answers
         ? `“${option}” ${built.answers.includes(index) ? 'is supported by the passage.' : 'is not supported by the passage.'}`
         : `“${option}” ${index === built.answerIndex ? 'is supported by the passage and its stated evidence.' : 'is not supported by the passage.'}`),
-      level: number <= 34 ? 'Level 1' : number <= 67 ? 'Level 2' : 'Level 3',
+      level: 'Level 3',
       unit: 0,
       unitName: GENERAL_UNIT,
       generalCategory: template.category,
@@ -409,50 +409,86 @@
 
   const SUBJECT_REPLACEMENTS = [
     { t: 'Discrete Mathematics', unit: 1, build: seed => {
-      const n = 8 + seed % 9;
-      const answer = n * (n - 1) / 2;
-      return { q: `How many edges does the complete graph K${n} have?`, correct: String(answer), wrong: [String(n * (n + 1) / 2), String(n * (n - 1)), String(n * n)], e: `A complete graph has one edge per unordered vertex pair: n(n−1)/2 = ${n}×${n - 1}/2 = ${answer}.` };
+      const vertices = 8 + seed % 7;
+      const edges = 3 * vertices - 6;
+      const faces = edges - vertices + 2;
+      return { q: `A maximal simple planar graph has ${vertices} vertices. Using Euler's relation and the triangular-face condition, how many faces does its embedding have?`, correct: String(faces), wrong: [String(edges), String(faces + 1), String(2 * vertices - 4)], e: `A maximal simple planar graph has E=3V−6=${edges} edges. Euler's relation gives F=2−V+E=2−${vertices}+${edges}=${faces}; the value also satisfies 3F=2E.` };
     } },
     { t: 'Digital Logic', unit: 2, build: seed => {
-      const variables = 3 + seed % 4;
-      return { q: `How many rows are in a complete truth table for ${variables} Boolean inputs?`, correct: String(2 ** variables), wrong: [String(variables * 2), String(2 ** variables - 1), String(variables ** 2)], e: `Each input has two values, so the table has 2^${variables} = ${2 ** variables} rows.` };
+      const variables = 3 + seed % 3;
+      const minterms = 2 ** variables - 1 - (seed % 4);
+      const outputs = 2 ** variables;
+      return { q: `A ${variables}-input Boolean function is specified by ${minterms} minterms in its ON-set. How many input assignments belong to its OFF-set, and how many bits are required to encode the minimized truth-table output vector?`, correct: `${outputs - minterms} assignments; ${outputs} bits`, wrong: [`${minterms} assignments; ${variables} bits`, `${outputs - minterms - 1} assignments; ${outputs - 1} bits`, `${outputs} assignments; ${minterms} bits`], e: `There are 2^${variables}=${outputs} input assignments, so the OFF-set contains ${outputs}−${minterms}=${outputs - minterms} assignments. The complete output vector has one bit per assignment, requiring ${outputs} bits.` };
     } },
     { t: 'Programming Languages', unit: 3, build: seed => {
-      const start = 2 + seed % 5;
-      return { q: `A loop starts at i = 0 and executes while i < ${start * 4}, increasing i by 4 each time. How many iterations run?`, correct: String(start), wrong: [String(start + 1), String(start * 4), String(start - 1)], e: `The loop visits 0, 4, 8, …, ${start * 4 - 4}, giving ${start} iterations.` };
+      const bound = 24 + (seed % 5) * 6;
+      const stride = 2 + seed % 3;
+      const modulus = 3 + seed % 4;
+      let count = 0;
+      for (let i = 1; i < bound; i += stride) {
+        for (let j = i; j < bound; j += i) {
+          if ((i + j) % modulus === 0) count += 1;
+        }
+      }
+      return { q: `For positive integers, a program executes \`for (i=1; i<${bound}; i+=${stride})\` and, inside it, \`for (j=i; j<${bound}; j+=i)\`; the body runs only when (i+j) mod ${modulus} = 0. How many times does the body execute?`, correct: String(count), wrong: [String(bound - 1), String(count + modulus), String(Math.floor((bound - 1) / stride))], e: `For each outer value i, the inner loop visits j=ki for positive integers k with ki<${bound}. Count only those k satisfying (k+1)i ≡ 0 (mod ${modulus}); summing those qualifying iterations across i=1, ${1 + stride}, …, ${1 + Math.floor((bound - 2) / stride) * stride} gives ${count}.` };
     } },
     { t: 'Database Systems', unit: 4, build: seed => {
-      const rows = 12 + (seed % 20) * 4;
-      return { q: `A relation has ${rows} rows. A selection retains 25% of them. How many rows remain?`, correct: String(rows / 4), wrong: [String(rows / 2), String(rows - rows / 4), String(rows)], e: `Selection cardinality is 0.25×${rows} = ${rows / 4} rows.` };
+      const employees = 240 + (seed % 5) * 60;
+      const departments = 12 + seed % 7;
+      const selected = Math.floor(employees * 0.3);
+      const joined = Math.floor(selected * 0.8);
+      return { q: `Employee(emp_id, dept_id, salary) has ${employees} rows and Department(dept_id, region) has ${departments} rows; dept_id is a key in Department. A predicate retains 30% of employees, of whom 80% match a Department row in the requested region. Under uniformity and independence assumptions, estimate the cardinality of the filtered equijoin.`, correct: String(joined), wrong: [String(Math.floor(employees * 0.8)), String(selected), String(Math.floor(employees * 0.3 * 0.8 * departments))], e: `Apply the employee predicate first: ${employees}×0.30=${selected} rows. The stated match selectivity then gives ${selected}×0.80≈${joined} joined rows. Since Department.dept_id is unique, the join does not multiply matched employees.` };
     } },
     { t: 'Operating Systems', unit: 5, build: seed => {
-      const power = 10 + seed % 7;
-      return { q: `A page contains 2^${power} bytes. How many bits are needed for the page offset?`, correct: String(power), wrong: [String(power + 1), String(power - 1), String(2 * power)], e: `An offset selects one of 2^${power} bytes, requiring ${power} bits.` };
+      const pages = [1, 2, 3, 4, 1, 5, 2, 1, 3, 5, 4, 2, 5, 1, 3, 4, 2, 1, 5, 3].map(page => 1 + (page + seed) % 6);
+      const frames = 3 + seed % 2;
+      const resident = [];
+      let faults = 0;
+      pages.forEach(page => {
+        const existing = resident.indexOf(page);
+        if (existing === -1) {
+          faults += 1;
+          if (resident.length === frames) resident.shift();
+        } else {
+          resident.splice(existing, 1);
+        }
+        resident.push(page);
+      });
+      return { q: `A process has ${frames} frames, initially empty, and uses true LRU replacement. For the reference string ${pages.join(', ')}, how many page faults occur?`, correct: String(faults), wrong: [String(faults - 1), String(faults + 2), String(pages.length - new Set(pages).size)], e: `Track the ${frames} resident pages from least to most recently used. Each reference absent from the frames faults; a full frame set evicts its least-recently-used page, while a hit moves that page to the most-recently-used end. Applying this to all ${pages.length} references yields ${faults} faults.` };
     } },
     { t: 'Software Engineering', unit: 6, build: seed => {
-      const edges = 14 + seed % 12;
-      const nodes = 8 + seed % 7;
-      return { q: `A connected control-flow graph has E = ${edges} edges and N = ${nodes} nodes. What is V(G) = E − N + 2?`, correct: String(edges - nodes + 2), wrong: [String(edges - nodes), String(edges - nodes + 1), String(edges + nodes - 2)], e: `For one connected component, V(G)=E−N+2=${edges}−${nodes}+2=${edges - nodes + 2}.` };
+      const estimate = 12 + seed % 7;
+      const optimistic = estimate - 2;
+      const pessimistic = estimate + 4;
+      const variance = ((pessimistic - optimistic) / 6) ** 2;
+      return { q: `A critical-path activity has PERT estimates a=${optimistic}, m=${estimate}, b=${pessimistic} days. Its successor cannot start until it finishes. What are the activity's expected duration and variance, respectively?`, correct: `${estimate} days; ${variance.toFixed(2)} days²`, wrong: [`${estimate + 1} days; ${variance.toFixed(2)} days²`, `${estimate} days; ${(pessimistic - optimistic).toFixed(2)} days²`, `${estimate} days; ${(variance / 2).toFixed(2)} days²`], e: `PERT expected duration is (a+4m+b)/6=(${optimistic}+4×${estimate}+${pessimistic})/6=${estimate} days. Variance is ((b−a)/6)^2=((${pessimistic}−${optimistic})/6)^2=${variance.toFixed(2)} days²; the successor's earliest start includes this duration.` };
     } },
     { t: 'Data Structures and Algorithms', unit: 7, build: seed => {
-      const n = 16 * (1 + seed % 8);
-      return { q: `A sorted array has ${n} elements. What is the maximum number of comparisons in binary search?`, correct: String(Math.floor(Math.log2(n)) + 1), wrong: [String(Math.ceil(Math.log2(n))), String(n), String(Math.floor(Math.log2(n)))], e: `Binary search halves the remaining range; at most floor(log₂(${n}))+1 = ${Math.floor(Math.log2(n)) + 1} comparisons are needed.` };
+      const n = 2 ** (8 + seed % 5);
+      const exponent = 2 + seed % 4;
+      const coefficient = 1 + seed % 3;
+      return { q: `An algorithm has recurrence T(n)=${coefficient}T(n/${2 ** exponent})+n^${exponent}, with T(1)=1 and n a power of ${2 ** exponent}. Determine its asymptotic running time using a recursion-tree or Master-theorem argument.`, correct: `Theta(n^${exponent})`, wrong: [`Theta(n^${exponent} log n)`, `Theta(n^${Math.log2(coefficient) / exponent})`, `Theta(n log n)`], e: `Here a=${coefficient}, b=${2 ** exponent}, and f(n)=n^${exponent}. Since n^${Math.log2(coefficient).toFixed(2)} grows asymptotically slower than n^${exponent}, Master-theorem case 3 applies (the regularity condition holds), giving Theta(n^${exponent}). For n=${n}, the polynomial term dominates the recursively reduced subproblems.` };
+      return { q: `An algorithm has recurrence T(n)=${coefficient}T(n/${2 ** exponent})+n^${exponent}, with T(1)=1 and n a power of ${2 ** exponent}. Determine its asymptotic running time using a recursion-tree or Master-theorem argument.`, correct: `Theta(n^${exponent})`, wrong: [`Theta(n^${exponent} log n)`, `Theta(n^${Math.log2(coefficient) / exponent})`, `Theta(n log n)`], e: `Here a=${coefficient}, b=${2 ** exponent}, and f(n)=n^${exponent}. Since n^${Math.log2(coefficient).toFixed(2)} grows asymptotically slower than n^${exponent}, Master-theorem case 3 applies (the regularity condition holds), giving Theta(n^${exponent}). For n=${n}, the polynomial term dominates the recursively reduced subproblems.` };
     } },
     { t: 'Theory of Computation', unit: 8, build: seed => {
-      const first = 2 + seed % 5;
-      const second = 3 + seed % 6;
-      return { q: `The product construction combines DFAs with ${first} and ${second} states. What is the maximum number of product states?`, correct: String(first * second), wrong: [String(first + second), String(first * second - 1), String(Math.max(first, second))], e: `The product construction has at most ${first}×${second} = ${first * second} state pairs.` };
+      const states = 7 + seed % 5;
+      const alphabet = 2 + seed % 3;
+      const original = states;
+      const complete = states + 1;
+      return { q: `An ${states}-state DFA over a ${alphabet}-symbol alphabet has one missing transition from a reachable state. It is completed with a sink state and then complemented. What is the maximum number of states in the resulting DFA, and does complementation require another state?`, correct: `${complete}; no`, wrong: [`${original}; yes`, `${complete + 1}; yes`, `${2 ** complete}; no`], e: `Completion adds a single sink state because at least one transition is missing; thus the completed DFA has ${complete} states. Complementation only swaps accepting and non-accepting states in a complete DFA, so it requires no further states.` };
     } },
     { t: 'Computer Networks', unit: 9, build: seed => {
-      const payload = 500 + (seed % 25) * 20;
-      const rate = 2 + seed % 8;
-      const millis = (payload * 8 / (rate * 1000)).toFixed(2);
-      return { q: `How long does it take to transmit ${payload} bytes over a ${rate} Mbps link, ignoring overhead?`, correct: `${millis} ms`, wrong: [`${(payload / (rate * 1000)).toFixed(2)} ms`, `${(payload * 8 / rate).toFixed(2)} ms`, `${(payload * 8 / (rate * 100)).toFixed(2)} ms`], e: `Transmission time = bits/rate = ${payload}×8 / (${rate}×10^6) seconds = ${millis} ms.` };
+      const prefix = 16 + seed % 7;
+      const hosts = 2 ** (32 - prefix) - 2;
+      const subnets = 2 ** (prefix - 16);
+      return { q: `An organization receives a /16 IPv4 block and allocates fixed-length /${prefix} subnets. Excluding network and broadcast addresses, how many usable hosts are available per subnet, and how many such subnets fit in the block?`, correct: `${hosts}; ${subnets}`, wrong: [`${hosts + 2}; ${subnets}`, `${2 ** (32 - prefix)}; ${subnets - 1}`, `${subnets}; ${hosts}`], e: `Each /${prefix} subnet leaves ${32 - prefix} host bits, giving 2^${32 - prefix}−2=${hosts} usable host addresses. Borrowing ${prefix}−16=${prefix - 16} bits from the /16 block creates 2^${prefix - 16}=${subnets} subnets.` };
     } },
     { t: 'Artificial Intelligence', unit: 10, build: seed => {
-      const truePositive = 20 + seed % 25;
-      const falsePositive = 3 + seed % 7;
-      return { q: `A classifier has TP = ${truePositive} and FP = ${falsePositive}. What is its precision?`, correct: (truePositive / (truePositive + falsePositive)).toFixed(2), wrong: [(falsePositive / (truePositive + falsePositive)).toFixed(2), (truePositive / (truePositive + 1)).toFixed(2), (truePositive / falsePositive).toFixed(2)], e: `Precision = TP/(TP+FP) = ${truePositive}/(${truePositive}+${falsePositive}) = ${(truePositive / (truePositive + falsePositive)).toFixed(2)}.` };
+      const prior = 0.08 + (seed % 5) * 0.02;
+      const sensitivity = 0.82 + (seed % 4) * 0.03;
+      const specificity = 0.88 + (seed % 3) * 0.02;
+      const posterior = prior * sensitivity / (prior * sensitivity + (1 - prior) * (1 - specificity));
+      return { q: `A condition has prevalence ${(prior * 100).toFixed(0)}%. A classifier has sensitivity ${(sensitivity * 100).toFixed(0)}% and specificity ${(specificity * 100).toFixed(0)}%. Given a positive result, what is the posterior probability that the condition is present (to three decimal places)?`, correct: posterior.toFixed(3), wrong: [(prior * sensitivity).toFixed(3), (prior * sensitivity + (1 - prior) * (1 - specificity)).toFixed(3), (sensitivity / (sensitivity + 1 - specificity)).toFixed(3)], e: `Bayes' theorem gives P(condition|positive)=sensitivity×prevalence/[sensitivity×prevalence+(1−specificity)×(1−prevalence)] = ${sensitivity}×${prior}/(${sensitivity}×${prior}+${(1 - specificity).toFixed(2)}×${(1 - prior).toFixed(2)})=${posterior.toFixed(3)}. The base rate must be included; sensitivity alone is not the posterior.` };
     } },
   ];
 
@@ -552,9 +588,22 @@
     if (generalCount !== GENERAL_COUNT) {
       throw new Error(`Set ${set} has ${generalCount} general questions; expected ${GENERAL_COUNT}.`);
     }
-    questions.forEach(item => {
-      if (item.isGeneralAptitude !== true) item.isGeneralAptitude = false;
+    const generalQuestions = questions.filter(isGeneralQuestion);
+    const subjectQuestions = questions.filter(item => !isGeneralQuestion(item));
+    if (generalQuestions.length !== GENERAL_COUNT || subjectQuestions.length !== 75) {
+      throw new Error(`Set ${set} could not be separated into 25 general and 75 subject questions.`);
+    }
+    questions.splice(0, questions.length, ...generalQuestions, ...subjectQuestions);
+    questions.forEach((item, index) => {
+      item.isGeneralAptitude = index < GENERAL_COUNT;
+      item.difficulty = index < GENERAL_COUNT ? 'General Aptitude' : index < 67 ? 'Advanced' : 'Expert';
+      const tag = item.q.match(/^\[S\d+-Q\d+\]/);
+      if (tag) item.q = item.q.replace(tag[0], `[S${set}-Q${index + 1}]`);
     });
+    if (questions.slice(0, GENERAL_COUNT).some(item => !isGeneralQuestion(item))
+      || questions.slice(GENERAL_COUNT).some(isGeneralQuestion)) {
+      throw new Error(`Set ${set} does not place general questions before subject questions.`);
+    }
     const subjectCount = questions.filter(item => item.isGeneralAptitude === false).length;
     if (subjectCount !== 75) {
       throw new Error(`Set ${set} has ${subjectCount} subject questions; expected 75.`);
