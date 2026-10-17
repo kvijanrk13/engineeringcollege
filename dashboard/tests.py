@@ -370,6 +370,8 @@ class DashboardTests(TestCase):
         )
         self.assertContains(response, 'View Publisher Version')
         self.assertNotContains(response, '.pdf')
+        self.assertNotContains(response, 'Live Demo')
+        self.assertNotContains(response, '/car-price/')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_registered_project_detail_page_is_removed_but_source_remains(self):
