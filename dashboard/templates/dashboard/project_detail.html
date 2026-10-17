@@ -56,11 +56,53 @@
             margin-top: 18px;
             margin-right: 10px;
             padding: 11px 18px;
+            border: 0;
             border-radius: 6px;
             background: #1456A0;
             color: #FFFFFF;
+            font: inherit;
             font-weight: 700;
             text-decoration: none;
+            cursor: pointer;
+        }
+        .project-tabs {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+            border-bottom: 1px solid #D8E0EA;
+        }
+        .project-tab {
+            padding: 11px 16px;
+            border: 1px solid #D8E0EA;
+            border-bottom: 0;
+            border-radius: 6px 6px 0 0;
+            background: #EAF1F8;
+            color: #172033;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .project-tab[aria-selected="true"] {
+            background: #FFFFFF;
+            color: #1456A0;
+        }
+        .tab-panel {
+            padding: 18px;
+            border: 1px solid #D8E0EA;
+            border-top: 0;
+            background: #FFFFFF;
+        }
+        .tab-panel[hidden] { display: none; }
+        .execution-status { min-height: 24px; }
+        .execution-output {
+            overflow-x: auto;
+            margin-top: 12px;
+            padding: 14px;
+            border-radius: 6px;
+            background: #111827;
+            color: #F8FAFC;
+            font-size: 13px;
+            line-height: 1.5;
         }
         .execution {
             margin-top: 26px;
@@ -218,7 +260,37 @@
                     View Publisher Version
                 </a>
             {% endif %}
-            {% if project.source_code_path or project.datasets_path or project.github_reference %}
+            {% if project_execute_url %}
+                <div class="project-tabs" role="tablist" aria-label="Project actions">
+                    <button class="project-tab" id="execute-tab" type="button" role="tab"
+                            aria-selected="false" aria-controls="execute-panel"
+                            data-project-tab="execute">Execute</button>
+                    <button class="project-tab" id="source-code-tab" type="button" role="tab"
+                            aria-selected="true" aria-controls="source-code-panel"
+                            data-project-tab="source-code">Source Code</button>
+                </div>
+                <section class="tab-panel" id="execute-panel" role="tabpanel"
+                         aria-labelledby="execute-tab" hidden>
+                    <p>Run the reproducible synthetic federated-learning experiment. The report includes selected features, model metrics, and privacy limitations.</p>
+                    <form id="federated-execute-form" hidden>
+                        {% csrf_token %}
+                    </form>
+                    <p class="execution-status" id="execution-status" role="status" aria-live="polite"></p>
+                    <pre class="execution-output" id="execution-output" hidden></pre>
+                    <button class="action" id="run-project-again" type="button" hidden>Run Project Again</button>
+                </section>
+                <section class="tab-panel" id="source-code-panel" role="tabpanel"
+                         aria-labelledby="source-code-tab">
+                    <p><strong>Source Code:</strong> {{ project.source_code_path }}</p>
+                    {% if project.datasets_path %}
+                        <p><strong>Datasets:</strong> {{ project.datasets_path }}</p>
+                    {% endif %}
+                    {% if project.github_reference %}
+                        <p><strong>Reference:</strong> <a href="{{ project.github_reference }}" target="_blank" rel="noopener">{{ project.github_reference }}</a></p>
+                    {% endif %}
+                    <a class="action" href="{{ project_source_download_url }}">Download Executable Project ZIP</a>
+                </section>
+            {% elif project.source_code_path or project.datasets_path or project.github_reference %}
                 <dl>
                     {% if project.source_code_path %}
                         <dt>Source Code</dt>
@@ -234,9 +306,9 @@
                     {% endif %}
                 </dl>
             {% endif %}
-            {% if project_source_download_url %}
+            {% if project_source_download_url and not project_execute_url %}
                 <a class="action" href="{{ project_source_download_url }}">Download Executable Project ZIP</a>
-            {% elif project.source_code_path and not project.payment_enabled and not project.receipt_required %}
+            {% elif not project_execute_url and project.source_code_path and not project.payment_enabled and not project.receipt_required %}
                 {% if domain_slug == 'data-mining' and project.title_path %}
                     <a class="action" href="{% url 'dashboard:download_data_mining_project_source_code_by_title' project.title_path %}">
                 {% else %}
@@ -395,5 +467,72 @@
         </article>
     </main>
 {% include "dashboard/partials/project_support_chatbot.html" %}
+{% if project_execute_url %}
+<script>
+    (() => {
+        const tabs = document.querySelectorAll('[data-project-tab]');
+        const executePanel = document.getElementById('execute-panel');
+        const sourcePanel = document.getElementById('source-code-panel');
+        const status = document.getElementById('execution-status');
+        const output = document.getElementById('execution-output');
+        const runAgain = document.getElementById('run-project-again');
+        const csrfToken = document.querySelector(
+            '#federated-execute-form [name=csrfmiddlewaretoken]'
+        ).value;
+        let running = false;
+
+        async function runProject() {
+            if (running) return;
+            running = true;
+            status.textContent = 'Running the experiment...';
+            output.hidden = true;
+            runAgain.hidden = true;
+            try {
+                const response = await fetch('{{ project_execute_url }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    mode: 'same-origin'
+                });
+                let report;
+                try {
+                    report = await response.json();
+                } catch {
+                    throw new Error('The server returned an unreadable response.');
+                }
+                if (!response.ok) {
+                    throw new Error(report.error || 'The experiment could not be run.');
+                }
+                if (!report || typeof report !== 'object' || Array.isArray(report)) {
+                    throw new Error('The server returned an invalid experiment report.');
+                }
+                output.textContent = JSON.stringify(report, null, 2);
+                output.hidden = false;
+                status.textContent = 'Experiment completed successfully.';
+                runAgain.hidden = false;
+            } catch (error) {
+                status.textContent = error.message || 'The experiment could not be run.';
+            } finally {
+                running = false;
+            }
+        }
+
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const showExecute = tab.dataset.projectTab === 'execute';
+                tabs.forEach((item) => {
+                    item.setAttribute('aria-selected', String(item === tab));
+                });
+                executePanel.hidden = !showExecute;
+                sourcePanel.hidden = showExecute;
+                if (showExecute) runProject();
+            });
+        });
+        runAgain.addEventListener('click', runProject);
+    })();
+</script>
+{% endif %}
 </body>
 </html>

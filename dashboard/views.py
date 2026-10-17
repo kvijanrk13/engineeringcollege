@@ -16,6 +16,7 @@ import base64
 import binascii
 import secrets
 import mimetypes
+import subprocess
 from functools import lru_cache
 from pathlib import Path
 from datetime import datetime, date, timedelta
@@ -4975,6 +4976,69 @@ def download_project_source_code(request, domain_slug, project_slug):
     return response
 
 
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+@require_POST
+def execute_federated_project(request, project_slug):
+    domain_slug = 'federated-engineering-and-federated-learning'
+    project = _get_domain_project(domain_slug, project_slug)
+    source_root = _safe_project_domain_path(domain_slug, project.get('source_code_path', ''))
+    if not source_root or not source_root.is_dir():
+        raise Http404('Project executable not found.')
+
+    try:
+        result = subprocess.run(
+            [sys.executable, '-m', 'federated_feature_engineering.cli'],
+            cwd=source_root,
+            capture_output=True,
+            check=False,
+            encoding='utf-8',
+            text=True,
+            timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        logger.exception('Federated project execution exceeded its time limit.')
+        return JsonResponse(
+            {'error': 'The project took too long to execute. Please try again.'},
+            status=504,
+        )
+    except OSError:
+        logger.exception('Could not start the federated project executable.')
+        return JsonResponse(
+            {'error': 'The project could not be started. Please try again later.'},
+            status=500,
+        )
+
+    if result.returncode != 0:
+        logger.error(
+            'Federated project execution failed with exit code %s: %s',
+            result.returncode,
+            result.stderr[-2000:],
+        )
+        return JsonResponse(
+            {'error': 'The project failed while running. Please try again later.'},
+            status=500,
+        )
+
+    try:
+        report = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        logger.error(
+            'Federated project returned invalid JSON: %s',
+            result.stdout[:1000],
+        )
+        return JsonResponse(
+            {'error': 'The project returned an invalid result. Please try again later.'},
+            status=500,
+        )
+    if not isinstance(report, dict):
+        logger.error('Federated project returned an unexpected report type.')
+        return JsonResponse(
+            {'error': 'The project returned an invalid result. Please try again later.'},
+            status=500,
+        )
+    return JsonResponse(report)
+
+
 def download_data_mining_project_source_code_by_title(request, project_title):
     project = _get_data_mining_project_by_title(project_title)
     if project.get('payment_enabled'):
@@ -5655,6 +5719,9 @@ def project_detail(request, domain_slug, project_slug):
     if domain_slug != 'federated-engineering-and-federated-learning':
         return projects_removed(request)
     project = _get_domain_project(domain_slug, project_slug)
+    is_executable_project = (
+        project_slug == 'scalable-interpretable-privacy-preserving-feature-engineering'
+    )
     return render(request, 'dashboard/project_detail.html', {
         'domain_name': PROJECT_DOMAINS[domain_slug],
         'domain_slug': domain_slug,
@@ -5662,7 +5729,14 @@ def project_detail(request, domain_slug, project_slug):
         'academic_folders': [],
         'is_engineeringcollege_project': False,
         'project_modules': [],
-        'project_source_download_url': reverse('dashboard:federated_project_source_code'),
+        'project_source_download_url': (
+            reverse('dashboard:federated_project_source_code')
+            if is_executable_project else None
+        ),
+        'project_execute_url': (
+            reverse('dashboard:federated_project_execute')
+            if is_executable_project else None
+        ),
         **_receipt_support_context(request, domain_slug, project),
     })
 

@@ -14,7 +14,7 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import DatabaseError
 from django.http import HttpResponse
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -370,9 +370,98 @@ class DashboardTests(TestCase):
         )
         self.assertContains(response, 'View Publisher Version')
         self.assertContains(response, 'Download Executable Project ZIP')
+        content = response.content.decode()
+        self.assertLess(content.index('data-project-tab="execute"'),
+                        content.index('data-project-tab="source-code"'))
+        self.assertContains(response, 'Running the experiment...')
         self.assertNotContains(response, '.pdf')
         self.assertNotContains(response, 'Live Demo')
         self.assertNotContains(response, '/car-price/')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_execute_tab_runs_project_and_returns_report(self):
+        report = {
+            'experiment': 'synthetic-horizontal-federated-feature-engineering',
+            'metrics': {'accuracy': 0.75},
+        }
+        completed = Mock(returncode=0, stdout=json.dumps(report), stderr='')
+        with patch.object(
+            dashboard_views.subprocess,
+            'run',
+            return_value=completed,
+        ) as run:
+            response = self.client.post(reverse('dashboard:federated_project_execute'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), report)
+        command = run.call_args.args[0]
+        self.assertEqual(command[1:], ['-m', 'federated_feature_engineering.cli'])
+        self.assertTrue(
+            (Path(run.call_args.kwargs['cwd']) /
+             'federated_feature_engineering' / 'cli.py').is_file()
+        )
+        self.assertEqual(run.call_args.kwargs['timeout'], 30)
+        self.assertEqual(run.call_args.kwargs['capture_output'], True)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_execute_runs_cli_with_browser_csrf(self):
+        client = Client(enforce_csrf_checks=True)
+        page = client.get(
+            reverse(
+                'dashboard:project_detail',
+                args=[
+                    'federated-engineering-and-federated-learning',
+                    'scalable-interpretable-privacy-preserving-feature-engineering',
+                ],
+            )
+        )
+        self.assertEqual(page.status_code, 200)
+
+        csrf_token = client.cookies['csrftoken'].value
+        response = client.post(
+            reverse('dashboard:federated_project_execute'),
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        report = response.json()
+        self.assertEqual(
+            report['experiment'],
+            'synthetic-horizontal-federated-feature-engineering',
+        )
+        self.assertIn('accuracy', report['metrics'])
+        self.assertEqual(report['data']['kind'], 'synthetic')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_execute_handles_failed_project_run(self):
+        completed = Mock(returncode=1, stdout='', stderr='demo failed')
+        with patch.object(
+            dashboard_views.subprocess,
+            'run',
+            return_value=completed,
+        ):
+            response = self.client.post(reverse('dashboard:federated_project_execute'))
+
+        self.assertEqual(response.status_code, 500)
+        self.assertIn('error', response.json())
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_execute_rejects_get_requests(self):
+        response = self.client.get(reverse('dashboard:federated_project_execute'))
+
+        self.assertEqual(response.status_code, 405)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_execute_returns_timeout_error(self):
+        with patch.object(
+            dashboard_views.subprocess,
+            'run',
+            side_effect=dashboard_views.subprocess.TimeoutExpired('python', 30),
+        ):
+            response = self.client.post(reverse('dashboard:federated_project_execute'))
+
+        self.assertEqual(response.status_code, 504)
+        self.assertIn('error', response.json())
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_federated_project_source_download_contains_executable_code_and_docs(self):
