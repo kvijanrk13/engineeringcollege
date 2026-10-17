@@ -341,12 +341,35 @@ class DashboardTests(TestCase):
                         response,
                         'FEDERATED ENGINEERING AND FEDERATED LEARNING',
                     )
-                    self.assertContains(response, 'This folder is ready for')
+                    self.assertContains(
+                        response,
+                        'Scalable, interpretable, and privacy-preserving feature engineering',
+                    )
                 else:
                     self.assertEqual(response.status_code, 410)
 
                 root_response = self.client.get(f'/{domain_slug}/')
                 self.assertEqual(root_response.status_code, 404)
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_project_detail_shows_citation_and_publisher_link(self):
+        project_slug = 'scalable-interpretable-privacy-preserving-feature-engineering'
+        response = self.client.get(
+            reverse(
+                'dashboard:project_detail',
+                args=['federated-engineering-and-federated-learning', project_slug],
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '74 studies from 2020–2025')
+        self.assertContains(response, 'Evolving Systems 17, 92 (2026)')
+        self.assertContains(
+            response,
+            'href="https://doi.org/10.1007/s12530-026-09852-8"',
+        )
+        self.assertContains(response, 'View Publisher Version')
+        self.assertNotContains(response, '.pdf')
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_registered_project_detail_page_is_removed_but_source_remains(self):

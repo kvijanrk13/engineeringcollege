@@ -1,3 +1,11 @@
 {
-  "projects": []
+  "projects": [
+    {
+      "slug": "scalable-interpretable-privacy-preserving-feature-engineering",
+      "name": "Scalable, interpretable, and privacy-preserving feature engineering for federated learning: a systematic literature review",
+      "description": "This systematic review synthesizes 74 studies from 2020–2025 on feature engineering and feature selection across centralized, horizontal federated, vertical federated, and hybrid learning. It examines interpretability, privacy, fairness, compute and communication costs, and reproducibility, and identifies gaps in pipeline-level privacy accounting, end-to-end evaluation, and standardized benchmarks.",
+      "publication_citation": "Vijay Kumar Kambhampati and K. B. V. Brahma Rao. Scalable, interpretable, and privacy-preserving feature engineering for federated learning: a systematic literature review. Evolving Systems 17, 92 (2026). https://doi.org/10.1007/s12530-026-09852-8",
+      "publication_url": "https://doi.org/10.1007/s12530-026-09852-8"
+    }
+  ]
 }

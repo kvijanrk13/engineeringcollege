@@ -31,6 +31,12 @@ urlpatterns = [
         {'domain_slug': 'federated-engineering-and-federated-learning'},
         name='federated_engineering_and_federated_learning',
     ),
+    path(
+        'projects/federated-engineering-and-federated-learning/<slug:project_slug>/',
+        views.project_detail,
+        {'domain_slug': 'federated-engineering-and-federated-learning'},
+        name='federated_project_detail',
+    ),
     path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path('projects/kavach/', views.kavach_demo, name='kavach_demo'),
     path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),

@@ -4242,6 +4242,8 @@ def _load_domain_projects(domain_slug):
             'github_reference': str(project.get('github_reference') or '').strip(),
             'demo_url': _normalize_project_url(project.get('demo_url')),
             'local_demo_url': _normalize_project_url(project.get('local_demo_url')),
+            'publication_citation': str(project.get('publication_citation') or '').strip(),
+            'publication_url': _normalize_project_url(project.get('publication_url')),
             'zip_enabled': zip_enabled and amount_paise > 0,
             'payment_enabled': (
                 zip_enabled
@@ -5650,7 +5652,18 @@ def project_domain(request, domain_slug):
 
 
 def project_detail(request, domain_slug, project_slug):
-    return projects_removed(request)
+    if domain_slug != 'federated-engineering-and-federated-learning':
+        return projects_removed(request)
+    project = _get_domain_project(domain_slug, project_slug)
+    return render(request, 'dashboard/project_detail.html', {
+        'domain_name': PROJECT_DOMAINS[domain_slug],
+        'domain_slug': domain_slug,
+        'project': project,
+        'academic_folders': [],
+        'is_engineeringcollege_project': False,
+        'project_modules': [],
+        **_receipt_support_context(request, domain_slug, project),
+    })
 
 
 def data_mining_project_detail_by_title(request, project_title):

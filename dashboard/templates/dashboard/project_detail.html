@@ -210,6 +210,14 @@
         <article>
             <h1>{{ project.name }}</h1>
             <p>{{ project.description|default:"Project resources will be published here." }}</p>
+            {% if project.publication_citation %}
+                <p class="reference-note"><strong>Citation:</strong> {{ project.publication_citation }}</p>
+            {% endif %}
+            {% if project.publication_url %}
+                <a class="action" href="{{ project.publication_url }}" target="_blank" rel="noopener">
+                    View Publisher Version
+                </a>
+            {% endif %}
             {% if project.source_code_path or project.datasets_path or project.github_reference %}
                 <dl>
                     {% if project.source_code_path %}
