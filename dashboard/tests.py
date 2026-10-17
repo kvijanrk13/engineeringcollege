@@ -50,27 +50,38 @@ def make_test_pdf_bytes(label='Test PDF'):
 
 class DashboardTests(TestCase):
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_projects_page_links_to_public_policy_pdfs(self):
+    def test_project_catalog_page_is_removed(self):
         response = self.client.get(reverse('dashboard:projects'))
 
-        self.assertEqual(response.status_code, 200)
-        for policy_slug in dashboard_views.PROJECT_POLICY_FILES:
-            self.assertContains(
-                response,
-                reverse('dashboard:project_policy_pdf', args=[policy_slug]),
-            )
+        self.assertEqual(response.status_code, 410)
+        self.assertContains(response, 'The project catalog has been removed.', status_code=410)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_project_policy_pdfs_are_publicly_available(self):
-        for policy_slug, filename in dashboard_views.PROJECT_POLICY_FILES.items():
-            with self.subTest(policy=policy_slug):
-                response = self.client.get(
-                    reverse('dashboard:project_policy_pdf', args=[policy_slug])
-                )
+    @override_settings(ROOT_URLCONF='engineeringcollege.urls', SECURE_SSL_REDIRECT=False)
+    def test_all_project_and_domain_pages_are_removed(self):
+        urls = (
+            reverse('dashboard:projects'),
+            reverse('dashboard:project_domain', args=['ai']),
+            reverse('dashboard:project_detail', args=['ai', 'example-project']),
+            reverse('dashboard:kavach_demo'),
+            reverse('dashboard:project_policy_pdf', args=['privacy-policy']),
+            reverse(
+                'dashboard:download_engineeringcollege_project',
+            ),
+            reverse('dashboard:project_download_payment'),
+            reverse(
+                'dashboard:download_project_zip',
+                args=['machine-learning', 'example-project'],
+            ),
+            reverse(
+                'dashboard:project_zip_payment',
+                args=['machine-learning', 'example-project'],
+            ),
+        )
 
-                self.assertEqual(response.status_code, 200)
-                self.assertEqual(response['Content-Type'], 'application/pdf')
-                self.assertIn(filename, response['Content-Disposition'])
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 410)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_login_page(self):
@@ -313,23 +324,22 @@ class DashboardTests(TestCase):
         self.assertIn('photo-box', header.split('<body>', 1)[1])
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_project_domain_folders_are_available_only_under_projects(self):
+    def test_project_domain_pages_are_removed_but_source_folders_remain(self):
         domain_root = Path(dashboard_views.PROJECT_DOMAIN_ROOT)
 
-        for domain_slug, domain_name in dashboard_views.PROJECT_DOMAINS.items():
+        for domain_slug in dashboard_views.PROJECT_DOMAINS:
             with self.subTest(domain=domain_slug):
                 self.assertTrue((domain_root / domain_slug / 'projects.json').is_file())
 
                 canonical = reverse('dashboard:project_domain', args=[domain_slug])
                 response = self.client.get(canonical)
-                self.assertEqual(response.status_code, 200)
-                self.assertContains(response, domain_name)
+                self.assertEqual(response.status_code, 410)
 
                 root_response = self.client.get(f'/{domain_slug}/')
                 self.assertEqual(root_response.status_code, 404)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_registered_project_has_canonical_project_url(self):
+    def test_registered_project_detail_page_is_removed_but_source_remains(self):
         project_folder = (
             Path(dashboard_views.PROJECT_DOMAIN_ROOT)
             / 'software-engineering'
@@ -344,20 +354,12 @@ class DashboardTests(TestCase):
             )
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'EngineeringCollege Project')
-        self.assertContains(
-            response,
-            reverse(
-                'dashboard:project_zip_payment',
-                args=['software-engineering', 'engineeringcollege-project'],
-            ),
-        )
+        self.assertEqual(response.status_code, 410)
         root_response = self.client.get('/software-engineering/engineeringcollege-project/')
         self.assertEqual(root_response.status_code, 404)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_kavach_project_exposes_clean_local_demo_url(self):
+    def test_kavach_project_detail_page_is_removed(self):
         response = self.client.get(
             reverse(
                 'dashboard:project_detail',
@@ -365,12 +367,7 @@ class DashboardTests(TestCase):
             )
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Open Demo in New Tab')
-        self.assertContains(response, 'href="/projects/kavach/"')
-        self.assertNotContains(response, 'Open Local KAVACH')
-        self.assertNotContains(response, 'href="http://127.0.0.1:8010/accounts/register/"')
-        self.assertNotContains(response, 'http://[127.0.0.1]')
+        self.assertEqual(response.status_code, 410)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_kavach_demo_exposes_clean_local_standalone_url(self):
@@ -2553,7 +2550,7 @@ class PhonePeProjectDownloadTests(TestCase):
                     {'order': payment.merchant_order_id},
                 )
 
-        self.assertContains(detail_response, 'Pay INR 250 and Download ZIP')
+        self.assertEqual(detail_response.status_code, 410)
         self.assertEqual(zip_response.status_code, 200)
         with zipfile.ZipFile(io.BytesIO(zip_response.content)) as archive:
             self.assertIn('ML Demo/model.py', archive.namelist())

@@ -25,6 +25,7 @@ urlpatterns = [
     path('mobile-dashboard/', views.mobile_dashboard, name='mobile_dashboard'),
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
+    path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path('projects/kavach/', views.kavach_demo, name='kavach_demo'),
     path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),
     path('projects/kavach/admin-dashboard/', views.kavach_admin_dashboard, name='kavach_admin_dashboard'),

@@ -24,7 +24,7 @@ import qrcode
 from urllib.parse import quote, urlencode, unquote, urlparse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import (FileResponse, HttpResponse, JsonResponse, HttpResponseRedirect,
-                         HttpResponseBadRequest, Http404)
+                         HttpResponseBadRequest, HttpResponseGone, Http404)
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
@@ -3658,8 +3658,11 @@ def mobile_dashboard(request):
 
 
 def projects(request):
-    """Public icon-only project domain page matching the Android projects folder."""
-    return render(request, 'dashboard/projects.html', _receipt_support_context(request))
+    return projects_removed(request)
+
+
+def projects_removed(request, project_path=None):
+    return HttpResponseGone("The project catalog has been removed.")
 
 
 PROJECT_POLICY_FILES = {
@@ -5621,60 +5624,15 @@ def phonepe_payment_callback(request):
 
 
 def project_domain(request, domain_slug):
-    """Display the selected public project-domain folder."""
-    domain_name = PROJECT_DOMAINS.get(domain_slug)
-    if not domain_name:
-        raise Http404("Project domain not found")
-    domain_projects = _load_domain_projects(domain_slug)
-    support_project = domain_projects[0] if domain_projects else None
-    support_context = _receipt_support_context(request, domain_slug, support_project) if support_project else _receipt_support_context(request)
-    return render(request, 'dashboard/project_domain.html', {
-        'domain_name': domain_name,
-        'domain_slug': domain_slug,
-        'is_software_engineering': domain_slug == 'software-engineering',
-        'project_modules': [name for name, _ in PROJECT_MODULES],
-        'domain_projects': domain_projects,
-        **support_context,
-    })
+    return projects_removed(request)
 
 
 def project_detail(request, domain_slug, project_slug):
-    """Display one project registered inside a domain folder."""
-    domain_name = PROJECT_DOMAINS.get(domain_slug)
-    if not domain_name:
-        raise Http404("Project domain not found")
-    project = _get_domain_project(domain_slug, project_slug)
-    return render(request, 'dashboard/project_detail.html', {
-        'domain_name': domain_name,
-        'domain_slug': domain_slug,
-        'project': project,
-        'academic_folders': _project_academic_folders(domain_slug, project),
-        'is_engineeringcollege_project': (
-            domain_slug == 'software-engineering'
-            and project_slug == 'engineeringcollege-project'
-        ),
-        'project_modules': [name for name, _ in PROJECT_MODULES],
-        **_receipt_support_context(request, domain_slug, project),
-    })
+    return projects_removed(request)
 
 
 def data_mining_project_detail_by_title(request, project_title):
-    """Display a Data Mining project using its human-readable title URL."""
-    project = _get_data_mining_project_by_title(project_title)
-    canonical_title = project.get('title_path') or project['name']
-    if unquote(str(project_title or '')).strip().strip('/') != canonical_title:
-        return redirect('dashboard:data_mining_project_detail_by_title', canonical_title)
-    return render(request, 'dashboard/project_detail.html', {
-        'domain_name': PROJECT_DOMAINS['data-mining'],
-        'domain_slug': 'data-mining',
-        'project': project,
-        'execution': _run_car_apriori_execution(project),
-        'github_execution_templates': _car_price_github_execution_templates(),
-        'academic_folders': _project_academic_folders('data-mining', project),
-        'is_engineeringcollege_project': False,
-        'project_modules': [name for name, _ in PROJECT_MODULES],
-        **_receipt_support_context(request, 'data-mining', project),
-    })
+    return projects_removed(request)
 
 
 @login_required
