@@ -25,7 +25,7 @@ python -m federated_feature_engineering.cli --output results/example_run.json
 
 The command prints a JSON report and writes the same report to the requested output path. Re-run with the same seed to reproduce the result. Change `--epsilon`, `--clients`, `--samples`, or `--seed` to inspect the experiment settings.
 
-On the Engineering College project page, select the **Execute** tab to run the fixed default experiment on the server and display its JSON report. No uploaded data or user-provided code is executed.
+On the Engineering College project page, select the **Execute** tab, configure the generated sample count, client count, selected feature count, privacy epsilon, and random seed, then choose **Run Experiment**. The page displays model-quality cards, selected-feature coefficients, experiment settings, and privacy limitations, with the complete JSON available as a detail. Inputs are bounded by the server and no uploaded data or user-provided code is executed.
 
 Run the tests with:
 

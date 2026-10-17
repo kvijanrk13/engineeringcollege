@@ -373,7 +373,11 @@ class DashboardTests(TestCase):
         content = response.content.decode()
         self.assertLess(content.index('data-project-tab="execute"'),
                         content.index('data-project-tab="source-code"'))
-        self.assertContains(response, 'Running the experiment...')
+        self.assertContains(response, 'id="experiment-settings"')
+        self.assertContains(response, 'id="metric-grid"')
+        self.assertContains(response, 'Run Experiment')
+        self.assertContains(response, 'Synthetic records')
+        self.assertContains(response, 'Selected Features')
         self.assertNotContains(response, '.pdf')
         self.assertNotContains(response, 'Live Demo')
         self.assertNotContains(response, '/car-price/')
@@ -385,17 +389,38 @@ class DashboardTests(TestCase):
             'metrics': {'accuracy': 0.75},
         }
         completed = Mock(returncode=0, stdout=json.dumps(report), stderr='')
+        settings_payload = {
+            'samples': 600,
+            'clients': 3,
+            'selected_features': 5,
+            'epsilon': 2.5,
+            'seed': 42,
+        }
         with patch.object(
             dashboard_views.subprocess,
             'run',
             return_value=completed,
         ) as run:
-            response = self.client.post(reverse('dashboard:federated_project_execute'))
+            response = self.client.post(
+                reverse('dashboard:federated_project_execute'),
+                data=json.dumps(settings_payload),
+                content_type='application/json',
+            )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), report)
         command = run.call_args.args[0]
-        self.assertEqual(command[1:], ['-m', 'federated_feature_engineering.cli'])
+        self.assertEqual(
+            command[1:],
+            [
+                '-m', 'federated_feature_engineering.cli',
+                '--samples', '600',
+                '--clients', '3',
+                '--selected-features', '5',
+                '--epsilon', '2.5',
+                '--seed', '42',
+            ],
+        )
         self.assertTrue(
             (Path(run.call_args.kwargs['cwd']) /
              'federated_feature_engineering' / 'cli.py').is_file()
@@ -420,6 +445,8 @@ class DashboardTests(TestCase):
         csrf_token = client.cookies['csrftoken'].value
         response = client.post(
             reverse('dashboard:federated_project_execute'),
+            data=json.dumps({'samples': 400, 'clients': 4}),
+            content_type='application/json',
             HTTP_X_CSRFTOKEN=csrf_token,
         )
 
@@ -440,7 +467,11 @@ class DashboardTests(TestCase):
             'run',
             return_value=completed,
         ):
-            response = self.client.post(reverse('dashboard:federated_project_execute'))
+            response = self.client.post(
+                reverse('dashboard:federated_project_execute'),
+                data='{}',
+                content_type='application/json',
+            )
 
         self.assertEqual(response.status_code, 500)
         self.assertIn('error', response.json())
@@ -452,13 +483,35 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 405)
 
     @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_execute_rejects_invalid_gui_settings(self):
+        invalid_payloads = (
+            (b'{bad json', 'application/json', 'valid JSON'),
+            (json.dumps({'samples': 10000}), 'application/json', 'between 200 and 5,000'),
+            (json.dumps({'clients': 20}), 'application/json', 'between 2 and 16'),
+            (json.dumps({'unexpected': 1}), 'application/json', 'unsupported'),
+        )
+        for payload, content_type, expected_message in invalid_payloads:
+            with self.subTest(payload=payload):
+                response = self.client.post(
+                    reverse('dashboard:federated_project_execute'),
+                    data=payload,
+                    content_type=content_type,
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(expected_message, response.json()['error'])
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
     def test_federated_execute_returns_timeout_error(self):
         with patch.object(
             dashboard_views.subprocess,
             'run',
             side_effect=dashboard_views.subprocess.TimeoutExpired('python', 30),
         ):
-            response = self.client.post(reverse('dashboard:federated_project_execute'))
+            response = self.client.post(
+                reverse('dashboard:federated_project_execute'),
+                data='{}',
+                content_type='application/json',
+            )
 
         self.assertEqual(response.status_code, 504)
         self.assertIn('error', response.json())

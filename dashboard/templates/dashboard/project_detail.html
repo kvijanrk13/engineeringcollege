@@ -93,10 +93,67 @@
             background: #FFFFFF;
         }
         .tab-panel[hidden] { display: none; }
-        .execution-status { min-height: 24px; }
-        .execution-output {
+        .experiment-form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin: 20px 0;
+        }
+        .experiment-control label {
+            display: block;
+            margin-bottom: 6px;
+            color: #172033;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .experiment-control input,
+        .experiment-control select {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 10px;
+            border: 1px solid #C9D4E2;
+            border-radius: 6px;
+            background: #FFFFFF;
+            color: #172033;
+            font: inherit;
+        }
+        .experiment-control small { color: #526174; }
+        .execution-status {
+            min-height: 24px;
+            margin-bottom: 12px;
+        }
+        .execution-results { margin-top: 24px; }
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        }
+        .metric-value {
+            margin-top: 6px;
+            color: #1456A0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .metric-track {
+            height: 8px;
+            margin-top: 10px;
+            overflow: hidden;
+            border-radius: 99px;
+            background: #D8E0EA;
+        }
+        .metric-fill {
+            height: 100%;
+            border-radius: inherit;
+            background: #27815A;
+        }
+        .result-table { margin-bottom: 20px; }
+        .privacy-note {
+            margin-top: 18px;
+            padding: 14px;
+            border-left: 4px solid #D49A28;
+            background: #FFF8E8;
+        }
+        .report-details { margin-top: 16px; }
+        .report-details pre {
             overflow-x: auto;
-            margin-top: 12px;
             padding: 14px;
             border-radius: 6px;
             background: #111827;
@@ -243,6 +300,7 @@
         }
         @media (max-width: 680px) {
             .manual-payment-grid { grid-template-columns: 1fr; }
+            .experiment-form { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -271,13 +329,69 @@
                 </div>
                 <section class="tab-panel" id="execute-panel" role="tabpanel"
                          aria-labelledby="execute-tab" hidden>
-                    <p>Run the reproducible synthetic federated-learning experiment. The report includes selected features, model metrics, and privacy limitations.</p>
+                    <p>Configure and run the reproducible synthetic federated-learning experiment. Results include model quality, selected features, and the privacy boundary.</p>
                     <form id="federated-execute-form" hidden>
                         {% csrf_token %}
                     </form>
+                    <form class="experiment-form" id="experiment-settings">
+                        <div class="experiment-control">
+                            <label for="experiment-samples">Synthetic records</label>
+                            <input id="experiment-samples" name="samples" type="number"
+                                   min="200" max="5000" step="100" value="1200" required>
+                            <small>200–5,000 generated records</small>
+                        </div>
+                        <div class="experiment-control">
+                            <label for="experiment-clients">Federated clients</label>
+                            <input id="experiment-clients" name="clients" type="number"
+                                   min="2" max="16" step="1" value="4" required>
+                            <small>2–16 horizontal client partitions</small>
+                        </div>
+                        <div class="experiment-control">
+                            <label for="experiment-features">Features to select</label>
+                            <input id="experiment-features" name="selected_features" type="number"
+                                   min="1" max="13" step="1" value="8" required>
+                            <small>Choose from 13 named candidate features</small>
+                        </div>
+                        <div class="experiment-control">
+                            <label for="experiment-epsilon">Feature-selection epsilon</label>
+                            <input id="experiment-epsilon" name="epsilon" type="number"
+                                   min="0.1" max="10" step="0.1" value="1" required>
+                            <small>Applies only to the feature-selection score release</small>
+                        </div>
+                        <div class="experiment-control">
+                            <label for="experiment-seed">Random seed</label>
+                            <input id="experiment-seed" name="seed" type="number"
+                                   min="0" max="2147483647" step="1" value="17" required>
+                            <small>Reuse a seed to reproduce the same run</small>
+                        </div>
+                        <div>
+                            <button class="action" id="run-experiment" type="submit">Run Experiment</button>
+                        </div>
+                    </form>
                     <p class="execution-status" id="execution-status" role="status" aria-live="polite"></p>
-                    <pre class="execution-output" id="execution-output" hidden></pre>
-                    <button class="action" id="run-project-again" type="button" hidden>Run Project Again</button>
+                    <section class="execution-results" id="execution-results"
+                             aria-label="Experiment results" hidden>
+                        <h2>Model Performance</h2>
+                        <div class="metric-grid" id="metric-grid"></div>
+                        <h2>Selected Features</h2>
+                        <table class="result-table">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Model coefficient</th>
+                                    <th>Noisy ranking score</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feature-results"></tbody>
+                        </table>
+                        <div class="metric-grid" id="run-summary"></div>
+                        <p class="privacy-note" id="privacy-note"></p>
+                        <p><strong>Limitations:</strong> <span id="experiment-limitations"></span></p>
+                        <details class="report-details">
+                            <summary>View full experiment report (JSON)</summary>
+                            <pre id="execution-report"></pre>
+                        </details>
+                    </section>
                 </section>
                 <section class="tab-panel" id="source-code-panel" role="tabpanel"
                          aria-labelledby="source-code-tab">
@@ -474,26 +588,98 @@
         const executePanel = document.getElementById('execute-panel');
         const sourcePanel = document.getElementById('source-code-panel');
         const status = document.getElementById('execution-status');
-        const output = document.getElementById('execution-output');
-        const runAgain = document.getElementById('run-project-again');
+        const settingsForm = document.getElementById('experiment-settings');
+        const runButton = document.getElementById('run-experiment');
+        const results = document.getElementById('execution-results');
+        const metricGrid = document.getElementById('metric-grid');
+        const featureResults = document.getElementById('feature-results');
+        const runSummary = document.getElementById('run-summary');
+        const privacyNote = document.getElementById('privacy-note');
+        const limitations = document.getElementById('experiment-limitations');
+        const reportOutput = document.getElementById('execution-report');
         const csrfToken = document.querySelector(
             '#federated-execute-form [name=csrfmiddlewaretoken]'
         ).value;
         let running = false;
 
-        async function runProject() {
-            if (running) return;
+        function addMetric(container, label, value, percentage) {
+            const card = document.createElement('div');
+            card.className = 'metric';
+            const title = document.createElement('strong');
+            title.textContent = label;
+            const display = document.createElement('div');
+            display.className = 'metric-value';
+            display.textContent = value;
+            card.append(title, display);
+            if (percentage !== undefined) {
+                const track = document.createElement('div');
+                track.className = 'metric-track';
+                const fill = document.createElement('div');
+                fill.className = 'metric-fill';
+                fill.style.width = `${Math.max(0, Math.min(100, percentage))}%`;
+                track.append(fill);
+                card.append(track);
+            }
+            container.append(card);
+        }
+
+        function renderReport(report) {
+            metricGrid.replaceChildren();
+            featureResults.replaceChildren();
+            runSummary.replaceChildren();
+            const metrics = report.metrics;
+            [
+                ['Accuracy', metrics.accuracy],
+                ['Precision', metrics.precision],
+                ['Recall', metrics.recall],
+                ['F1 score', metrics.f1]
+            ].forEach(([label, value]) => {
+                addMetric(metricGrid, label, `${(value * 100).toFixed(1)}%`, value * 100);
+            });
+            addMetric(
+                metricGrid,
+                'Group recall gap',
+                metrics.group_recall_gap === null
+                    ? 'Not available'
+                    : `${(metrics.group_recall_gap * 100).toFixed(1)}%`
+            );
+            report.selected_features.forEach((feature) => {
+                const row = document.createElement('tr');
+                [feature.name, feature.coefficient.toFixed(4), feature.private_score.toFixed(4)]
+                    .forEach((value) => {
+                        const cell = document.createElement('td');
+                        cell.textContent = value;
+                        row.append(cell);
+                    });
+                featureResults.append(row);
+            });
+            addMetric(runSummary, 'Training records', String(report.data.train_samples));
+            addMetric(runSummary, 'Holdout records', String(report.data.test_samples));
+            addMetric(runSummary, 'Simulated clients', String(report.federation.clients));
+            addMetric(runSummary, 'Privacy epsilon', String(report.privacy.epsilon));
+            privacyNote.textContent =
+                `${report.privacy.scope} This simulation does not use secure aggregation.`;
+            limitations.textContent = report.limitations.join(' ');
+            reportOutput.textContent = JSON.stringify(report, null, 2);
+            results.hidden = false;
+        }
+
+        async function runExperiment(event) {
+            event.preventDefault();
+            if (running || !settingsForm.reportValidity()) return;
             running = true;
             status.textContent = 'Running the experiment...';
-            output.hidden = true;
-            runAgain.hidden = true;
+            runButton.disabled = true;
+            runButton.textContent = 'Running...';
             try {
                 const response = await fetch('{{ project_execute_url }}', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
+                        'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
+                    body: JSON.stringify(Object.fromEntries(new FormData(settingsForm))),
                     mode: 'same-origin'
                 });
                 let report;
@@ -508,14 +694,14 @@
                 if (!report || typeof report !== 'object' || Array.isArray(report)) {
                     throw new Error('The server returned an invalid experiment report.');
                 }
-                output.textContent = JSON.stringify(report, null, 2);
-                output.hidden = false;
+                renderReport(report);
                 status.textContent = 'Experiment completed successfully.';
-                runAgain.hidden = false;
             } catch (error) {
                 status.textContent = error.message || 'The experiment could not be run.';
             } finally {
                 running = false;
+                runButton.disabled = false;
+                runButton.textContent = 'Run Experiment';
             }
         }
 
@@ -527,10 +713,9 @@
                 });
                 executePanel.hidden = !showExecute;
                 sourcePanel.hidden = showExecute;
-                if (showExecute) runProject();
             });
         });
-        runAgain.addEventListener('click', runProject);
+        settingsForm.addEventListener('submit', runExperiment);
     })();
 </script>
 {% endif %}

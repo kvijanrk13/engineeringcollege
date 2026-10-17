@@ -4986,8 +4986,69 @@ def execute_federated_project(request, project_slug):
         raise Http404('Project executable not found.')
 
     try:
+        settings_payload = json.loads(request.body or b'{}')
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Experiment settings must be valid JSON.'}, status=400)
+    if not isinstance(settings_payload, dict):
+        return JsonResponse({'error': 'Experiment settings must be a JSON object.'}, status=400)
+
+    allowed_settings = {'samples', 'clients', 'selected_features', 'epsilon', 'seed'}
+    if set(settings_payload) - allowed_settings:
+        return JsonResponse({'error': 'One or more experiment settings are unsupported.'}, status=400)
+
+    defaults = {
+        'samples': 1200,
+        'clients': 4,
+        'selected_features': 8,
+        'epsilon': 1.0,
+        'seed': 17,
+    }
+    try:
+        samples = int(settings_payload.get('samples', defaults['samples']))
+        clients = int(settings_payload.get('clients', defaults['clients']))
+        selected_features = int(
+            settings_payload.get('selected_features', defaults['selected_features'])
+        )
+        epsilon = float(settings_payload.get('epsilon', defaults['epsilon']))
+        seed = int(settings_payload.get('seed', defaults['seed']))
+        if any(
+            isinstance(settings_payload.get(key), bool)
+            for key in ('samples', 'clients', 'selected_features', 'epsilon', 'seed')
+            if key in settings_payload
+        ):
+            raise ValueError
+    except (TypeError, ValueError, OverflowError):
+        return JsonResponse({'error': 'Experiment settings must be numeric.'}, status=400)
+
+    if not 200 <= samples <= 5000:
+        return JsonResponse({'error': 'Synthetic records must be between 200 and 5,000.'}, status=400)
+    if not 2 <= clients <= 16 or clients > samples:
+        return JsonResponse({'error': 'Federated clients must be between 2 and 16.'}, status=400)
+    if not 1 <= selected_features <= 13:
+        return JsonResponse({'error': 'Selected features must be between 1 and 13.'}, status=400)
+    if not 0.1 <= epsilon <= 10:
+        return JsonResponse({'error': 'Feature-selection epsilon must be between 0.1 and 10.'}, status=400)
+    if not 0 <= seed <= 2147483647:
+        return JsonResponse({'error': 'Random seed must be between 0 and 2,147,483,647.'}, status=400)
+
+    command = [
+        sys.executable,
+        '-m',
+        'federated_feature_engineering.cli',
+        '--samples',
+        str(samples),
+        '--clients',
+        str(clients),
+        '--selected-features',
+        str(selected_features),
+        '--epsilon',
+        str(epsilon),
+        '--seed',
+        str(seed),
+    ]
+    try:
         result = subprocess.run(
-            [sys.executable, '-m', 'federated_feature_engineering.cli'],
+            command,
             cwd=source_root,
             capture_output=True,
             check=False,
