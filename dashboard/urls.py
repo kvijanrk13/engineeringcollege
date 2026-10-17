@@ -25,6 +25,12 @@ urlpatterns = [
     path('mobile-dashboard/', views.mobile_dashboard, name='mobile_dashboard'),
     path('home/', views.home, name='home'),
     path('projects/', views.projects, name='projects'),
+    path(
+        'projects/federated-engineering-and-federated-learning/',
+        views.project_domain,
+        {'domain_slug': 'federated-engineering-and-federated-learning'},
+        name='federated_engineering_and_federated_learning',
+    ),
     path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path('projects/kavach/', views.kavach_demo, name='kavach_demo'),
     path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),

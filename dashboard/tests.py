@@ -50,17 +50,19 @@ def make_test_pdf_bytes(label='Test PDF'):
 
 class DashboardTests(TestCase):
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_project_catalog_page_is_removed(self):
+    def test_project_catalog_shows_only_federated_folder(self):
         response = self.client.get(reverse('dashboard:projects'))
 
-        self.assertEqual(response.status_code, 410)
-        self.assertContains(response, 'The project catalog has been removed.', status_code=410)
+        folder_url = reverse('dashboard:federated_engineering_and_federated_learning')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'FEDERATED ENGINEERING AND FEDERATED LEARNING')
+        self.assertContains(response, f'href="{folder_url}"')
+        self.assertNotContains(response, 'AI Domain')
+        self.assertNotContains(response, 'Machine Learning Domain')
 
-    @override_settings(SECURE_SSL_REDIRECT=False)
     @override_settings(ROOT_URLCONF='engineeringcollege.urls', SECURE_SSL_REDIRECT=False)
     def test_all_project_and_domain_pages_are_removed(self):
         urls = (
-            reverse('dashboard:projects'),
             reverse('dashboard:project_domain', args=['ai']),
             reverse('dashboard:project_detail', args=['ai', 'example-project']),
             reverse('dashboard:kavach_demo'),
@@ -324,7 +326,7 @@ class DashboardTests(TestCase):
         self.assertIn('photo-box', header.split('<body>', 1)[1])
 
     @override_settings(SECURE_SSL_REDIRECT=False)
-    def test_project_domain_pages_are_removed_but_source_folders_remain(self):
+    def test_only_federated_domain_folder_is_available(self):
         domain_root = Path(dashboard_views.PROJECT_DOMAIN_ROOT)
 
         for domain_slug in dashboard_views.PROJECT_DOMAINS:
@@ -333,7 +335,15 @@ class DashboardTests(TestCase):
 
                 canonical = reverse('dashboard:project_domain', args=[domain_slug])
                 response = self.client.get(canonical)
-                self.assertEqual(response.status_code, 410)
+                if domain_slug == 'federated-engineering-and-federated-learning':
+                    self.assertEqual(response.status_code, 200)
+                    self.assertContains(
+                        response,
+                        'FEDERATED ENGINEERING AND FEDERATED LEARNING',
+                    )
+                    self.assertContains(response, 'This folder is ready for')
+                else:
+                    self.assertEqual(response.status_code, 410)
 
                 root_response = self.client.get(f'/{domain_slug}/')
                 self.assertEqual(root_response.status_code, 404)

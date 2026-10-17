@@ -3658,7 +3658,11 @@ def mobile_dashboard(request):
 
 
 def projects(request):
-    return projects_removed(request)
+    return render(
+        request,
+        'dashboard/projects_catalog.html',
+        _receipt_support_context(request),
+    )
 
 
 def projects_removed(request, project_path=None):
@@ -3896,6 +3900,8 @@ PROJECT_DOMAINS = {
     'data-mining': 'Data Mining',
     'cloud-computing': 'Cloud Computing',
     'iot-edge': 'IoT and Edge Computing',
+    'federated-engineering-and-federated-learning':
+        'FEDERATED ENGINEERING AND FEDERATED LEARNING',
 }
 PROJECT_DOMAIN_ROOT = Path(settings.BASE_DIR) / 'project_domains'
 
@@ -5624,7 +5630,23 @@ def phonepe_payment_callback(request):
 
 
 def project_domain(request, domain_slug):
-    return projects_removed(request)
+    if domain_slug != 'federated-engineering-and-federated-learning':
+        return projects_removed(request)
+    domain_name = PROJECT_DOMAINS[domain_slug]
+    domain_projects = _load_domain_projects(domain_slug)
+    support_context = (
+        _receipt_support_context(request, domain_slug, domain_projects[0])
+        if domain_projects
+        else _receipt_support_context(request)
+    )
+    return render(request, 'dashboard/project_domain.html', {
+        'domain_name': domain_name,
+        'domain_slug': domain_slug,
+        'is_software_engineering': False,
+        'project_modules': [name for name, _ in PROJECT_MODULES],
+        'domain_projects': domain_projects,
+        **support_context,
+    })
 
 
 def project_detail(request, domain_slug, project_slug):

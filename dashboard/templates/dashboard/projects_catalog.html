@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #F7F9FC;
+            color: #172033;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        main {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 340px));
+            justify-content: center;
+            gap: 16px;
+            width: min(100%, 860px);
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .projects-logo {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            padding: 8px 0;
+        }
+        .projects-logo img {
+            display: block;
+            width: min(52vw, 200px);
+            height: auto;
+            border-radius: 50%;
+        }
+        h1 {
+            grid-column: 1 / -1;
+            margin: 0 0 8px;
+            font-size: 20px;
+            text-align: center;
+        }
+        .folder {
+            display: flex;
+            min-height: 170px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #FFFFFF;
+            color: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.4;
+            text-align: center;
+            text-decoration: none;
+        }
+        .folder:hover, .folder:focus-visible {
+            border-color: #1456A0;
+            background: #EAF1F8;
+        }
+        .folder svg { width: 48px; height: 48px; }
+    </style>
+</head>
+<body>
+    <main aria-label="Project folders">
+        <div class="projects-logo">
+            <img src="{% static 'images/ECPRJ2026.jpeg' %}" alt="Engineering College Projects">
+        </div>
+        <h1>WELCOME TO ENGINEERING COLLEGE PROJECTS</h1>
+        <a class="folder" href="{% url 'dashboard:federated_engineering_and_federated_learning' %}">
+            <svg viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#F2B705" d="M4 11a4 4 0 0 1 4-4h12l5 5h15a4 4 0 0 1 4 4v21a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/>
+                <path fill="#D99A00" d="M4 18h40v5H4z"/>
+            </svg>
+            <span>FEDERATED ENGINEERING AND FEDERATED LEARNING</span>
+        </a>
+    </main>
+    {% include "dashboard/partials/project_support_chatbot.html" %}
+</body>
+</html>
