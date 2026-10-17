@@ -46,9 +46,9 @@ class ExperimentConfig:
             )
         if self.rounds < 1:
             raise ValueError("rounds must be positive.")
-        if self.learning_rate <= 0:
+        if not np.isfinite(self.learning_rate) or self.learning_rate <= 0:
             raise ValueError("learning_rate must be positive.")
-        if self.epsilon <= 0:
+        if not np.isfinite(self.epsilon) or self.epsilon <= 0:
             raise ValueError("epsilon must be positive.")
         if not 0.1 <= self.test_fraction <= 0.5:
             raise ValueError("test_fraction must be between 0.1 and 0.5.")
@@ -135,17 +135,18 @@ def _private_feature_ranking(
     labels: IntArray,
     epsilon: float,
     seed: int,
-) -> tuple[FloatArray, float]:
-    """Release bounded mean feature-label scores using one Laplace query."""
+) -> tuple[FloatArray, float, float]:
+    """Release the bounded score vector using one calibrated Laplace query."""
     centered_labels = (2 * labels - 1).astype(np.float64)
     raw_mean_scores = features.T @ centered_labels / len(labels)
-    sensitivity = 2.0 / len(labels)
+    sensitivity = 2.0 * features.shape[1] / len(labels)
+    laplace_scale = sensitivity / epsilon
     noise = np.random.default_rng(seed).laplace(
         loc=0.0,
-        scale=sensitivity / epsilon,
+        scale=laplace_scale,
         size=features.shape[1],
     )
-    return raw_mean_scores + noise, sensitivity / epsilon
+    return raw_mean_scores + noise, sensitivity, laplace_scale
 
 
 def _client_gradient(features: FloatArray, labels: IntArray, weights: FloatArray) -> FloatArray:
@@ -183,8 +184,10 @@ def _federated_fit(
 def _group_recall_gap(
     labels: IntArray,
     predictions: IntArray,
-    groups: IntArray,
+    groups: IntArray | None,
 ) -> float | None:
+    if groups is None:
+        return None
     recalls: list[float] = []
     for group in (0, 1):
         positive = (groups == group) & (labels == 1)
@@ -194,11 +197,13 @@ def _group_recall_gap(
     return abs(recalls[0] - recalls[1])
 
 
-def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
-    """Run a deterministic synthetic feature-selection and federated-fit study."""
-    settings = config or ExperimentConfig()
-    settings.validate()
-    inputs, labels, groups = _make_synthetic_data(settings.samples, settings.seed)
+def _run_labeled_experiment(
+    inputs: FloatArray,
+    labels: IntArray,
+    groups: IntArray | None,
+    settings: ExperimentConfig,
+    data_kind: str,
+) -> dict[str, Any]:
     train_indices, test_indices = _stratified_split(
         labels,
         settings.test_fraction,
@@ -212,7 +217,7 @@ def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
         settings.clients,
         settings.seed + 2,
     )
-    noisy_scores, laplace_scale = _private_feature_ranking(
+    noisy_scores, sensitivity, laplace_scale = _private_feature_ranking(
         train_features,
         train_labels,
         settings.epsilon,
@@ -235,13 +240,18 @@ def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
     probabilities = 1.0 / (1.0 + np.exp(-logits))
     predictions = (probabilities >= 0.5).astype(np.int64)
     test_labels = labels[test_indices]
-    test_groups = groups[test_indices]
+    test_groups = groups[test_indices] if groups is not None else None
 
     return {
-        "experiment": "synthetic-horizontal-federated-feature-engineering",
+        "experiment": (
+            "synthetic-horizontal-federated-feature-engineering"
+            if data_kind == "synthetic"
+            else "horizontal-federated-feature-engineering"
+        ),
         "config": asdict(settings),
         "data": {
-            "kind": "synthetic",
+            "kind": data_kind,
+            "total_samples": int(len(inputs)),
             "train_samples": int(len(train_indices)),
             "test_samples": int(len(test_indices)),
             "client_samples": [int(len(indices)) for indices in client_partitions],
@@ -253,7 +263,7 @@ def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
             "adjacency": "replace-one training record",
             "epsilon": settings.epsilon,
             "delta": 0.0,
-            "sensitivity": 2.0 / len(train_indices),
+            "sensitivity": sensitivity,
             "laplace_scale": laplace_scale,
             "scope": (
                 "The guarantee applies only to the feature-selection score release. "
@@ -266,6 +276,11 @@ def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
             "training": "weighted full-batch gradient aggregation in one process",
             "raw_records_shared": False,
             "secure_aggregation": False,
+        },
+        "model": {
+            "algorithm": "L2-regularized logistic regression",
+            "decision_threshold": 0.5,
+            "bias": float(weights[-1]),
         },
         "selected_features": [
             {
@@ -295,3 +310,110 @@ def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
             "The group recall gap is descriptive and is not a fairness guarantee.",
         ],
     }
+
+
+def _validate_labeled_data(
+    inputs: FloatArray,
+    labels: IntArray,
+    groups: IntArray | None,
+    settings: ExperimentConfig,
+) -> tuple[FloatArray, IntArray, IntArray | None]:
+    inputs = np.asarray(inputs, dtype=np.float64)
+    raw_labels = np.asarray(labels)
+    if raw_labels.ndim != 1 or not np.all(np.isin(raw_labels, (0, 1))):
+        raise ValueError("Labels must be binary values 0 or 1.")
+    labels = raw_labels.astype(np.int64)
+    if groups is not None:
+        raw_groups = np.asarray(groups)
+        if raw_groups.ndim != 1 or not np.all(np.isin(raw_groups, (0, 1))):
+            raise ValueError("Protected groups must be binary values 0 or 1.")
+        groups = raw_groups.astype(np.int64)
+    if inputs.ndim != 2 or inputs.shape[1] != len(BASE_FEATURE_NAMES):
+        raise ValueError("Input data must have exactly six feature columns.")
+    if len(inputs) != settings.samples or len(labels) != len(inputs):
+        raise ValueError("Input rows, labels, and configured sample count must match.")
+    if not np.all(np.isfinite(inputs)) or np.any(np.abs(inputs) > 3.0):
+        raise ValueError("Feature values must be finite and between -3 and 3.")
+    if groups is not None and len(groups) != len(inputs):
+        raise ValueError("Protected groups must be binary values 0 or 1.")
+    if np.count_nonzero(labels == 0) < 2 or np.count_nonzero(labels == 1) < 2:
+        raise ValueError("At least two records for each label class are required.")
+    settings.validate()
+    return inputs, labels, groups
+
+
+def run_experiment(config: ExperimentConfig | None = None) -> dict[str, Any]:
+    """Run a deterministic synthetic feature-selection and federated-fit study."""
+    settings = config or ExperimentConfig()
+    settings.validate()
+    inputs, labels, groups = _make_synthetic_data(settings.samples, settings.seed)
+    return _run_labeled_experiment(
+        inputs,
+        labels,
+        groups,
+        settings,
+        data_kind="synthetic",
+    )
+
+
+def run_dataset_experiment(
+    inputs: FloatArray,
+    labels: IntArray,
+    groups: IntArray | None = None,
+    config: ExperimentConfig | None = None,
+) -> dict[str, Any]:
+    """Fit and evaluate the pipeline on caller-provided labeled tabular data."""
+    settings = config or ExperimentConfig(samples=len(labels))
+    inputs, labels, groups = _validate_labeled_data(inputs, labels, groups, settings)
+    return _run_labeled_experiment(
+        inputs,
+        labels,
+        groups,
+        settings,
+        data_kind="uploaded_csv",
+    )
+
+
+def predict_record(
+    values: FloatArray,
+    config: ExperimentConfig | None = None,
+) -> dict[str, Any]:
+    """Classify one record using a model trained on generated synthetic data."""
+    settings = config or ExperimentConfig()
+    settings.validate()
+    inputs, labels, groups = _make_synthetic_data(settings.samples, settings.seed)
+    training_report = _run_labeled_experiment(
+        inputs,
+        labels,
+        groups,
+        settings,
+        data_kind="synthetic_training_for_single_prediction",
+    )
+    record = np.asarray(values, dtype=np.float64)
+    if record.shape != (len(BASE_FEATURE_NAMES),):
+        raise ValueError("A single prediction requires exactly six feature values.")
+    if not np.all(np.isfinite(record)) or np.any(np.abs(record) > 3.0):
+        raise ValueError("Feature values must be finite and between -3 and 3.")
+
+    engineered = _engineer_features(record.reshape(1, -1))[0]
+    selected = training_report["selected_features"]
+    selected_indices = [FEATURE_NAMES.index(feature["name"]) for feature in selected]
+    selected_values = engineered[selected_indices]
+    coefficients = np.asarray(
+        [feature["coefficient"] for feature in selected],
+        dtype=np.float64,
+    )
+    logit = float(selected_values @ coefficients + training_report["model"]["bias"])
+    probability = float(1.0 / (1.0 + np.exp(-np.clip(logit, -30.0, 30.0))))
+    training_report["prediction"] = {
+        "label": int(probability >= 0.5),
+        "positive_probability": probability,
+        "decision_threshold": 0.5,
+        "input_features": {
+            name: float(value)
+            for name, value in zip(BASE_FEATURE_NAMES, record)
+        },
+        "training_data": "synthetic",
+    }
+    training_report["experiment"] = "single-record-prediction-with-synthetic-training"
+    return training_report

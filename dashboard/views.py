@@ -9,6 +9,7 @@ import logging
 import zipfile
 import traceback
 import io
+import math
 import re
 import hashlib
 import hmac
@@ -4976,6 +4977,31 @@ def download_project_source_code(request, domain_slug, project_slug):
     return response
 
 
+@require_GET
+def download_federated_sample_csv(request):
+    domain_slug = 'federated-engineering-and-federated-learning'
+    project_slug = 'scalable-interpretable-privacy-preserving-feature-engineering'
+    project = _get_domain_project(domain_slug, project_slug)
+    source_root = _safe_project_domain_path(domain_slug, project.get('source_code_path', ''))
+    if not source_root or not source_root.is_dir():
+        raise Http404('Project sample CSV not found.')
+    sample_path = (source_root.parent / 'Test Cases' / 'sample_training.csv').resolve()
+    try:
+        sample_path.relative_to((PROJECT_DOMAIN_ROOT / domain_slug).resolve())
+    except ValueError as exc:
+        raise Http404('Project sample CSV not found.') from exc
+    if not sample_path.is_file():
+        raise Http404('Project sample CSV not found.')
+    response = FileResponse(
+        sample_path.open('rb'),
+        content_type='text/csv; charset=utf-8',
+        as_attachment=True,
+        filename='federated-feature-engineering-sample.csv',
+    )
+    response['Cache-Control'] = 'no-store'
+    return response
+
+
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 @require_POST
 def execute_federated_project(request, project_slug):
@@ -4985,16 +5011,43 @@ def execute_federated_project(request, project_slug):
     if not source_root or not source_root.is_dir():
         raise Http404('Project executable not found.')
 
-    try:
-        settings_payload = json.loads(request.body or b'{}')
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return JsonResponse({'error': 'Experiment settings must be valid JSON.'}, status=400)
+    uploaded_dataset = None
+    if request.content_type == 'multipart/form-data':
+        settings_payload = request.POST.dict()
+        if set(request.FILES) - {'dataset'}:
+            return JsonResponse({'error': 'Only a CSV dataset file is accepted.'}, status=400)
+        uploaded_dataset = request.FILES.get('dataset')
+    elif request.content_type == 'application/json':
+        try:
+            settings_payload = json.loads(request.body or b'{}')
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({'error': 'Experiment settings must be valid JSON.'}, status=400)
+    else:
+        return JsonResponse({'error': 'Use the experiment GUI form to submit data.'}, status=400)
     if not isinstance(settings_payload, dict):
         return JsonResponse({'error': 'Experiment settings must be a JSON object.'}, status=400)
 
-    allowed_settings = {'samples', 'clients', 'selected_features', 'epsilon', 'seed'}
+    mode = settings_payload.get('mode', 'synthetic')
+    allowed_settings = {
+        'mode',
+        'samples',
+        'clients',
+        'selected_features',
+        'epsilon',
+        'seed',
+        *(f'x{index}' for index in range(6)),
+        'csrfmiddlewaretoken',
+    }
     if set(settings_payload) - allowed_settings:
         return JsonResponse({'error': 'One or more experiment settings are unsupported.'}, status=400)
+    if mode not in {'synthetic', 'uploaded_csv', 'record'}:
+        return JsonResponse({'error': 'Select a supported input mode.'}, status=400)
+    if mode == 'uploaded_csv' and (
+        request.content_type != 'multipart/form-data' or uploaded_dataset is None
+    ):
+        return JsonResponse({'error': 'Choose a labeled CSV dataset to process.'}, status=400)
+    if mode != 'uploaded_csv' and uploaded_dataset is not None:
+        return JsonResponse({'error': 'Upload a dataset only in CSV dataset mode.'}, status=400)
 
     defaults = {
         'samples': 1200,
@@ -5004,6 +5057,10 @@ def execute_federated_project(request, project_slug):
         'seed': 17,
     }
     try:
+        for key in ('samples', 'clients', 'selected_features', 'seed'):
+            value = settings_payload.get(key, defaults[key])
+            if isinstance(value, float) and not value.is_integer():
+                raise ValueError
         samples = int(settings_payload.get('samples', defaults['samples']))
         clients = int(settings_payload.get('clients', defaults['clients']))
         selected_features = int(
@@ -5028,8 +5085,112 @@ def execute_federated_project(request, project_slug):
         return JsonResponse({'error': 'Selected features must be between 1 and 13.'}, status=400)
     if not 0.1 <= epsilon <= 10:
         return JsonResponse({'error': 'Feature-selection epsilon must be between 0.1 and 10.'}, status=400)
+    if not math.isfinite(epsilon):
+        return JsonResponse({'error': 'Feature-selection epsilon must be finite.'}, status=400)
     if not 0 <= seed <= 2147483647:
         return JsonResponse({'error': 'Random seed must be between 0 and 2,147,483,647.'}, status=400)
+
+    gui_input = None
+    if mode == 'uploaded_csv':
+        if uploaded_dataset.size > 1_048_576:
+            return JsonResponse({'error': 'CSV files must be 1 MB or smaller.'}, status=400)
+        try:
+            csv_text = uploaded_dataset.read().decode('utf-8-sig')
+        except UnicodeDecodeError:
+            return JsonResponse({'error': 'The CSV file must use UTF-8 encoding.'}, status=400)
+        try:
+            reader = csv.DictReader(io.StringIO(csv_text, newline=''))
+            required_columns = {*(f'x{index}' for index in range(6)), 'label'}
+            optional_columns = {'protected_group'}
+            columns = reader.fieldnames or []
+            if len(columns) != len(set(columns)):
+                return JsonResponse({'error': 'CSV column names must be unique.'}, status=400)
+            if not required_columns.issubset(columns) or set(columns) - required_columns - optional_columns:
+                return JsonResponse(
+                    {
+                        'error': (
+                            'CSV needs x0, x1, x2, x3, x4, x5, and label columns. '
+                            'An optional protected_group column is also supported.'
+                        )
+                    },
+                    status=400,
+                )
+            feature_rows = []
+            labels = []
+            groups = []
+            has_groups = 'protected_group' in columns
+            for row_number, row in enumerate(reader, start=2):
+                if None in row:
+                    return JsonResponse(
+                        {'error': f'CSV row {row_number} has more values than the header.'},
+                        status=400,
+                    )
+                if not row or all(not (value or '').strip() for value in row.values()):
+                    continue
+                values = [float(row[f'x{index}']) for index in range(6)]
+                if any(not math.isfinite(value) or not -3 <= value <= 3 for value in values):
+                    return JsonResponse(
+                        {'error': f'CSV row {row_number} feature values must be finite and between -3 and 3.'},
+                        status=400,
+                    )
+                label = int(row['label'])
+                if str(label) != (row['label'] or '').strip() or label not in (0, 1):
+                    return JsonResponse(
+                        {'error': f'CSV row {row_number} label must be 0 or 1.'},
+                        status=400,
+                    )
+                feature_rows.append(values)
+                labels.append(label)
+                if has_groups:
+                    group = int(row['protected_group'])
+                    if str(group) != (row['protected_group'] or '').strip() or group not in (0, 1):
+                        return JsonResponse(
+                            {'error': f'CSV row {row_number} protected_group must be 0 or 1.'},
+                            status=400,
+                        )
+                    groups.append(group)
+                if len(feature_rows) > 5000:
+                    return JsonResponse({'error': 'CSV files may contain at most 5,000 data rows.'}, status=400)
+        except (ValueError, TypeError, csv.Error):
+            return JsonResponse(
+                {'error': 'CSV data rows must contain valid numeric values.'},
+                status=400,
+            )
+        if len(feature_rows) < 80:
+            return JsonResponse({'error': 'CSV files need at least 80 data rows.'}, status=400)
+        if any(labels.count(label) < 2 for label in (0, 1)):
+            return JsonResponse({'error': 'CSV needs at least two rows for each binary label.'}, status=400)
+        training_rows = len(feature_rows) - sum(
+            max(1, int(round(labels.count(label) * 0.25)))
+            for label in (0, 1)
+        )
+        if training_rows < clients:
+            return JsonResponse(
+                {'error': 'Use fewer clients or provide more CSV rows for training.'},
+                status=400,
+            )
+        samples = len(feature_rows)
+        gui_input = {
+            'mode': 'uploaded_csv',
+            'features': feature_rows,
+            'labels': labels,
+            'groups': groups if has_groups else None,
+        }
+    elif mode == 'record':
+        try:
+            if any(
+                isinstance(settings_payload.get(f'x{index}'), bool)
+                for index in range(6)
+            ):
+                raise ValueError
+            record = [float(settings_payload[f'x{index}']) for index in range(6)]
+        except (KeyError, TypeError, ValueError):
+            return JsonResponse({'error': 'Enter a numeric value for each of x0 through x5.'}, status=400)
+        if any(not math.isfinite(value) or not -3 <= value <= 3 for value in record):
+            return JsonResponse({'error': 'Feature inputs must be finite and between -3 and 3.'}, status=400)
+        gui_input = {'mode': 'record', 'features': record}
+    elif request.content_type == 'multipart/form-data':
+        return JsonResponse({'error': 'Select synthetic-data mode or submit an uploaded CSV.'}, status=400)
 
     command = [
         sys.executable,
@@ -5046,6 +5207,22 @@ def execute_federated_project(request, project_slug):
         '--seed',
         str(seed),
     ]
+    if gui_input is not None:
+        command.append('--request-json-stdin')
+        gui_input['settings'] = {
+            'samples': samples,
+            'clients': clients,
+            'selected_features': selected_features,
+            'epsilon': epsilon,
+            'seed': seed,
+        }
+        gui_input = {
+            **gui_input,
+            'mode': gui_input['mode'],
+        }
+        stdin_payload = json.dumps(gui_input, allow_nan=False)
+    else:
+        stdin_payload = None
     try:
         result = subprocess.run(
             command,
@@ -5054,6 +5231,7 @@ def execute_federated_project(request, project_slug):
             check=False,
             encoding='utf-8',
             text=True,
+            input=stdin_payload,
             timeout=30,
         )
     except subprocess.TimeoutExpired:
@@ -5796,6 +5974,10 @@ def project_detail(request, domain_slug, project_slug):
         ),
         'project_execute_url': (
             reverse('dashboard:federated_project_execute')
+            if is_executable_project else None
+        ),
+        'project_sample_csv_url': (
+            reverse('dashboard:federated_project_sample_csv')
             if is_executable_project else None
         ),
         **_receipt_support_context(request, domain_slug, project),

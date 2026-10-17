@@ -58,6 +58,13 @@ urlpatterns = [
         },
         name='federated_project_execute',
     ),
+    path(
+        'projects/federated-engineering-and-federated-learning/'
+        'scalable-interpretable-privacy-preserving-feature-engineering/'
+        'sample-dataset.csv',
+        views.download_federated_sample_csv,
+        name='federated_project_sample_csv',
+    ),
     path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path('projects/kavach/', views.kavach_demo, name='kavach_demo'),
     path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),

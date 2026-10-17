@@ -378,11 +378,14 @@ class DashboardTests(TestCase):
         self.assertContains(response, 'Run Experiment')
         self.assertContains(response, 'Synthetic records')
         self.assertContains(response, 'Selected Features')
+        self.assertContains(response, 'What the review covers')
+        self.assertContains(response, 'Upload my labeled CSV dataset')
+        self.assertContains(response, 'Enter one record and predict')
         self.assertNotContains(response, '.pdf')
         self.assertNotContains(response, 'Live Demo')
         self.assertNotContains(response, '/car-price/')
 
-    @override_settings(SECURE_SSL_REDIRECT=False)
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
     def test_federated_execute_tab_runs_project_and_returns_report(self):
         report = {
             'experiment': 'synthetic-horizontal-federated-feature-engineering',
@@ -428,7 +431,7 @@ class DashboardTests(TestCase):
         self.assertEqual(run.call_args.kwargs['timeout'], 30)
         self.assertEqual(run.call_args.kwargs['capture_output'], True)
 
-    @override_settings(SECURE_SSL_REDIRECT=False)
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
     def test_federated_execute_runs_cli_with_browser_csrf(self):
         client = Client(enforce_csrf_checks=True)
         page = client.get(
@@ -459,7 +462,130 @@ class DashboardTests(TestCase):
         self.assertIn('accuracy', report['metrics'])
         self.assertEqual(report['data']['kind'], 'synthetic')
 
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
+    def test_federated_execute_processes_uploaded_labeled_csv(self):
+        project_root = (
+            Path(dashboard_views.PROJECT_DOMAIN_ROOT)
+            / 'federated-engineering-and-federated-learning'
+            / 'scalable-interpretable-privacy-preserving-feature-engineering'
+        )
+        csv_bytes = (
+            project_root / 'Test Cases' / 'sample_training.csv'
+        ).read_bytes()
+        completed = Mock(
+            returncode=0,
+            stdout=json.dumps({'experiment': 'horizontal-federated-feature-engineering'}),
+            stderr='',
+        )
+        form_data = {
+            'mode': 'uploaded_csv',
+            'samples': '1200',
+            'clients': '3',
+            'selected_features': '5',
+            'epsilon': '2.5',
+            'seed': '42',
+            'dataset': SimpleUploadedFile(
+                'training.csv',
+                csv_bytes,
+                content_type='text/csv',
+            ),
+        }
+        with patch.object(
+            dashboard_views.subprocess,
+            'run',
+            return_value=completed,
+        ) as run:
+            response = self.client.post(
+                reverse('dashboard:federated_project_execute'),
+                data=form_data,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        request_payload = json.loads(run.call_args.kwargs['input'])
+        self.assertEqual(request_payload['mode'], 'uploaded_csv')
+        self.assertEqual(len(request_payload['features']), 200)
+        self.assertEqual(len(request_payload['labels']), 200)
+        self.assertEqual(len(request_payload['groups']), 200)
+        self.assertEqual(request_payload['settings']['samples'], 200)
+        self.assertEqual(request_payload['settings']['clients'], 3)
+
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
+    def test_federated_uploaded_csv_runs_end_to_end(self):
+        project_root = (
+            Path(dashboard_views.PROJECT_DOMAIN_ROOT)
+            / 'federated-engineering-and-federated-learning'
+            / 'scalable-interpretable-privacy-preserving-feature-engineering'
+        )
+        csv_bytes = (project_root / 'Test Cases' / 'sample_training.csv').read_bytes()
+
+        response = self.client.post(
+            reverse('dashboard:federated_project_execute'),
+            data={
+                'mode': 'uploaded_csv',
+                'clients': '3',
+                'selected_features': '5',
+                'epsilon': '2.5',
+                'seed': '42',
+                'dataset': SimpleUploadedFile(
+                    'training.csv',
+                    csv_bytes,
+                    content_type='text/csv',
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200, response.content.decode())
+        report = response.json()
+        self.assertEqual(report['data']['kind'], 'uploaded_csv')
+        self.assertEqual(report['data']['total_samples'], 200)
+        self.assertIn('accuracy', report['metrics'])
+        self.assertEqual(report['federation']['clients'], 3)
+
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
+    def test_federated_execute_processes_single_record_inputs(self):
+        completed = Mock(
+            returncode=0,
+            stdout=json.dumps({'prediction': {'label': 1}}),
+            stderr='',
+        )
+        form_data = {
+            'mode': 'record',
+            'samples': '400',
+            'clients': '4',
+            'selected_features': '5',
+            'epsilon': '1',
+            'seed': '17',
+            **{f'x{index}': str(index / 2) for index in range(6)},
+        }
+        with patch.object(
+            dashboard_views.subprocess,
+            'run',
+            return_value=completed,
+        ) as run:
+            response = self.client.post(
+                reverse('dashboard:federated_project_execute'),
+                data=form_data,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        request_payload = json.loads(run.call_args.kwargs['input'])
+        self.assertEqual(request_payload['mode'], 'record')
+        self.assertEqual(request_payload['features'], [index / 2 for index in range(6)])
+
     @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_sample_csv_download_is_synthetic_and_valid(self):
+        response = self.client.get(reverse('dashboard:federated_project_sample_csv'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/csv; charset=utf-8')
+        self.assertIn('attachment;', response['Content-Disposition'])
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertTrue(
+            content.startswith('x0,x1,x2,x3,x4,x5,label,protected_group\r\n')
+        )
+        self.assertEqual(len(content.splitlines()), 201)
+
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
     def test_federated_execute_handles_failed_project_run(self):
         completed = Mock(returncode=1, stdout='', stderr='demo failed')
         with patch.object(
@@ -476,13 +602,13 @@ class DashboardTests(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertIn('error', response.json())
 
-    @override_settings(SECURE_SSL_REDIRECT=False)
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
     def test_federated_execute_rejects_get_requests(self):
         response = self.client.get(reverse('dashboard:federated_project_execute'))
 
         self.assertEqual(response.status_code, 405)
 
-    @override_settings(SECURE_SSL_REDIRECT=False)
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
     def test_federated_execute_rejects_invalid_gui_settings(self):
         invalid_payloads = (
             (b'{bad json', 'application/json', 'valid JSON'),
@@ -500,7 +626,7 @@ class DashboardTests(TestCase):
                 self.assertEqual(response.status_code, 400)
                 self.assertIn(expected_message, response.json()['error'])
 
-    @override_settings(SECURE_SSL_REDIRECT=False)
+    @override_settings(SECURE_SSL_REDIRECT=False, RATELIMIT_ENABLE=False)
     def test_federated_execute_returns_timeout_error(self):
         with patch.object(
             dashboard_views.subprocess,
@@ -536,6 +662,9 @@ class DashboardTests(TestCase):
         )
         self.assertTrue(
             any(name.endswith('/Documentation/PROJECT_DESIGN.md') for name in names)
+        )
+        self.assertTrue(
+            any(name.endswith('/Test Cases/sample_training.csv') for name in names)
         )
         self.assertFalse(any(name.lower().endswith('.pdf') for name in names))
 

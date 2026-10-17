@@ -118,6 +118,35 @@
             font: inherit;
         }
         .experiment-control small { color: #526174; }
+        .experiment-control[hidden] { display: none; }
+        .record-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+        .record-feature-grid label {
+            align-self: center;
+            color: #526174;
+            font-size: 13px;
+        }
+        .prediction-card {
+            margin-top: 14px;
+            padding: 16px;
+            border: 1px solid #B7D8C4;
+            border-radius: 8px;
+            background: #EFF8F2;
+            color: #174F35;
+        }
+        .prediction-card strong { font-size: 20px; }
+        .article-context {
+            margin: 20px 0;
+            padding: 16px 18px;
+            border: 1px solid #D8E0EA;
+            border-radius: 8px;
+            background: #F7F9FC;
+        }
+        .article-context h2 { margin-top: 0; }
+        .article-context ul { margin-bottom: 0; color: #526174; line-height: 1.6; }
         .execution-status {
             min-height: 24px;
             margin-bottom: 12px;
@@ -168,7 +197,7 @@
         }
         .metric-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
             gap: 10px;
             margin-top: 14px;
         }
@@ -319,6 +348,17 @@
                 </a>
             {% endif %}
             {% if project_execute_url %}
+                <section class="article-context" aria-labelledby="review-context-title">
+                    <h2 id="review-context-title">What the review covers</h2>
+                    <p>The cited systematic review synthesizes 74 studies published from 2020–2025 on feature engineering and selection in centralized and federated-learning settings. This original summary connects its reported themes to the demonstrator without reproducing the publisher’s article.</p>
+                    <ul>
+                        <li><strong>Feature design and interpretability:</strong> feature construction can improve a model while making its decisions harder to explain. This demo makes its six input fields, square terms, and pairwise interactions explicit and shows selected-feature coefficients.</li>
+                        <li><strong>Federated settings:</strong> horizontal learning partitions records among clients, while vertical settings partition attributes. The executable example simulates horizontal clients only; it does not claim to implement vertical or hybrid federation.</li>
+                        <li><strong>Privacy and security:</strong> privacy mechanisms, secure aggregation, and threat assumptions apply at different stages. Here, Laplace noise protects only the feature-ranking score; training gradients and the final model are not differentially private, and secure aggregation is absent.</li>
+                        <li><strong>Fairness and evaluation:</strong> utility, subgroup outcomes, reproducibility, and resource cost all matter when evaluating a pipeline. The GUI reports holdout metrics and, when group labels are available, a recall gap; it does not measure communication cost or guarantee fairness.</li>
+                        <li><strong>Open evaluation needs:</strong> results across papers are difficult to compare when datasets, privacy accounting, and end-to-end evaluation differ. This small reproducible experiment is educational and synthetic—not a benchmark or evidence of real-world performance.</li>
+                    </ul>
+                </section>
                 <div class="project-tabs" role="tablist" aria-label="Project actions">
                     <button class="project-tab" id="execute-tab" type="button" role="tab"
                             aria-selected="false" aria-controls="execute-panel"
@@ -329,16 +369,45 @@
                 </div>
                 <section class="tab-panel" id="execute-panel" role="tabpanel"
                          aria-labelledby="execute-tab" hidden>
-                    <p>Configure and run the reproducible synthetic federated-learning experiment. Results include model quality, selected features, and the privacy boundary.</p>
+                    <p>Choose generated data, a labeled CSV, or a single record. The pipeline builds named transformations, privately ranks features, simulates horizontal client training, and returns a readable report.</p>
                     <form id="federated-execute-form" hidden>
                         {% csrf_token %}
                     </form>
-                    <form class="experiment-form" id="experiment-settings">
+                    <form class="experiment-form" id="experiment-settings" enctype="multipart/form-data">
                         <div class="experiment-control">
+                            <label for="experiment-mode">Input mode</label>
+                            <select id="experiment-mode" name="mode">
+                                <option value="synthetic">Generate synthetic dataset and evaluate</option>
+                                <option value="uploaded_csv">Upload my labeled CSV dataset</option>
+                                <option value="record">Enter one record and predict</option>
+                            </select>
+                            <small>CSV processing is temporary; uploaded rows are not saved.</small>
+                        </div>
+                        <div class="experiment-control" data-mode-section="synthetic,record">
                             <label for="experiment-samples">Synthetic records</label>
                             <input id="experiment-samples" name="samples" type="number"
                                    min="200" max="5000" step="100" value="1200" required>
-                            <small>200–5,000 generated records</small>
+                            <small>Training records generated for evaluation or the single-record model</small>
+                        </div>
+                        <div class="experiment-control" data-mode-section="uploaded_csv" hidden>
+                            <label for="experiment-dataset">Labeled CSV dataset</label>
+                            <input id="experiment-dataset" name="dataset" type="file"
+                                   accept=".csv,text/csv">
+                            <small>
+                                UTF-8, 80–5,000 rows; columns x0–x5 and label, plus optional protected_group.
+                                <a href="{{ project_sample_csv_url }}">Download synthetic sample CSV</a>
+                            </small>
+                        </div>
+                        <div class="experiment-control" data-mode-section="record" hidden>
+                            <label>Enter record feature values (each from -3 to 3)</label>
+                            <div class="record-feature-grid">
+                                {% for index in "012345" %}
+                                    <label for="record-x{{ index }}">x{{ index }}</label>
+                                    <input id="record-x{{ index }}" name="x{{ index }}" type="number"
+                                           min="-3" max="3" step="any" value="0" required>
+                                {% endfor %}
+                            </div>
+                            <small>The model is trained on generated synthetic data, not on this one record.</small>
                         </div>
                         <div class="experiment-control">
                             <label for="experiment-clients">Federated clients</label>
@@ -373,6 +442,7 @@
                              aria-label="Experiment results" hidden>
                         <h2>Model Performance</h2>
                         <div class="metric-grid" id="metric-grid"></div>
+                        <div class="prediction-card" id="prediction-result" hidden></div>
                         <h2>Selected Features</h2>
                         <table class="result-table">
                             <thead>
@@ -589,6 +659,8 @@
         const sourcePanel = document.getElementById('source-code-panel');
         const status = document.getElementById('execution-status');
         const settingsForm = document.getElementById('experiment-settings');
+        const modeSelect = document.getElementById('experiment-mode');
+        const modeSections = document.querySelectorAll('[data-mode-section]');
         const runButton = document.getElementById('run-experiment');
         const results = document.getElementById('execution-results');
         const metricGrid = document.getElementById('metric-grid');
@@ -597,10 +669,24 @@
         const privacyNote = document.getElementById('privacy-note');
         const limitations = document.getElementById('experiment-limitations');
         const reportOutput = document.getElementById('execution-report');
+        const predictionResult = document.getElementById('prediction-result');
+        const datasetInput = document.getElementById('experiment-dataset');
         const csrfToken = document.querySelector(
             '#federated-execute-form [name=csrfmiddlewaretoken]'
         ).value;
         let running = false;
+
+        function updateModeControls() {
+            const mode = modeSelect.value;
+            modeSections.forEach((section) => {
+                const visible = section.dataset.modeSection.split(',').includes(mode);
+                section.hidden = !visible;
+                section.querySelectorAll('input').forEach((input) => {
+                    input.required = visible && input.type !== 'file';
+                });
+            });
+            datasetInput.disabled = mode !== 'uploaded_csv';
+        }
 
         function addMetric(container, label, value, percentage) {
             const card = document.createElement('div');
@@ -627,22 +713,35 @@
             metricGrid.replaceChildren();
             featureResults.replaceChildren();
             runSummary.replaceChildren();
+            predictionResult.hidden = !report.prediction;
+            if (report.prediction) {
+                predictionResult.replaceChildren();
+                const title = document.createElement('strong');
+                title.textContent = `Predicted label: ${report.prediction.label}`;
+                const detail = document.createElement('p');
+                detail.textContent =
+                    `Estimated positive-class probability: ${(report.prediction.positive_probability * 100).toFixed(1)}%. ` +
+                    'This prediction uses a model trained only on synthetic data.';
+                predictionResult.append(title, detail);
+            }
             const metrics = report.metrics;
-            [
-                ['Accuracy', metrics.accuracy],
-                ['Precision', metrics.precision],
-                ['Recall', metrics.recall],
-                ['F1 score', metrics.f1]
-            ].forEach(([label, value]) => {
-                addMetric(metricGrid, label, `${(value * 100).toFixed(1)}%`, value * 100);
-            });
-            addMetric(
-                metricGrid,
-                'Group recall gap',
-                metrics.group_recall_gap === null
-                    ? 'Not available'
-                    : `${(metrics.group_recall_gap * 100).toFixed(1)}%`
-            );
+            if (metrics) {
+                [
+                    ['Accuracy', metrics.accuracy],
+                    ['Precision', metrics.precision],
+                    ['Recall', metrics.recall],
+                    ['F1 score', metrics.f1]
+                ].forEach(([label, value]) => {
+                    addMetric(metricGrid, label, `${(value * 100).toFixed(1)}%`, value * 100);
+                });
+                addMetric(
+                    metricGrid,
+                    'Group recall gap',
+                    metrics.group_recall_gap === null
+                        ? 'Not available'
+                        : `${(metrics.group_recall_gap * 100).toFixed(1)}%`
+                );
+            }
             report.selected_features.forEach((feature) => {
                 const row = document.createElement('tr');
                 [feature.name, feature.coefficient.toFixed(4), feature.private_score.toFixed(4)]
@@ -657,6 +756,7 @@
             addMetric(runSummary, 'Holdout records', String(report.data.test_samples));
             addMetric(runSummary, 'Simulated clients', String(report.federation.clients));
             addMetric(runSummary, 'Privacy epsilon', String(report.privacy.epsilon));
+            addMetric(runSummary, 'Input data', report.data.kind);
             privacyNote.textContent =
                 `${report.privacy.scope} This simulation does not use secure aggregation.`;
             limitations.textContent = report.limitations.join(' ');
@@ -672,14 +772,14 @@
             runButton.disabled = true;
             runButton.textContent = 'Running...';
             try {
+                const requestBody = new FormData(settingsForm);
                 const response = await fetch('{{ project_execute_url }}', {
                     method: 'POST',
                     headers: {
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
-                    body: JSON.stringify(Object.fromEntries(new FormData(settingsForm))),
+                    body: requestBody,
                     mode: 'same-origin'
                 });
                 let report;
@@ -715,7 +815,9 @@
                 sourcePanel.hidden = showExecute;
             });
         });
+        modeSelect.addEventListener('change', updateModeControls);
         settingsForm.addEventListener('submit', runExperiment);
+        updateModeControls();
     })();
 </script>
 {% endif %}
