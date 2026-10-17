@@ -369,9 +369,33 @@ class DashboardTests(TestCase):
             'href="https://doi.org/10.1007/s12530-026-09852-8"',
         )
         self.assertContains(response, 'View Publisher Version')
+        self.assertContains(response, 'Download Executable Project ZIP')
         self.assertNotContains(response, '.pdf')
         self.assertNotContains(response, 'Live Demo')
         self.assertNotContains(response, '/car-price/')
+
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_federated_project_source_download_contains_executable_code_and_docs(self):
+        response = self.client.get(
+            reverse('dashboard:federated_project_source_code')
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            names = archive.namelist()
+
+        self.assertTrue(
+            any(name.endswith('/Source Code/README.md') for name in names)
+        )
+        self.assertTrue(
+            any(name.endswith('/Source Code/federated_feature_engineering/experiment.py')
+                for name in names)
+        )
+        self.assertTrue(
+            any(name.endswith('/Documentation/PROJECT_DESIGN.md') for name in names)
+        )
+        self.assertFalse(any(name.lower().endswith('.pdf') for name in names))
 
     @override_settings(SECURE_SSL_REDIRECT=False)
     def test_registered_project_detail_page_is_removed_but_source_remains(self):

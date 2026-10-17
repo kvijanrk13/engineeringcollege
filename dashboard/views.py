@@ -5662,6 +5662,7 @@ def project_detail(request, domain_slug, project_slug):
         'academic_folders': [],
         'is_engineeringcollege_project': False,
         'project_modules': [],
+        'project_source_download_url': reverse('dashboard:federated_project_source_code'),
         **_receipt_support_context(request, domain_slug, project),
     })
 

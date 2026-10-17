@@ -37,6 +37,17 @@ urlpatterns = [
         {'domain_slug': 'federated-engineering-and-federated-learning'},
         name='federated_project_detail',
     ),
+    path(
+        'projects/federated-engineering-and-federated-learning/'
+        'scalable-interpretable-privacy-preserving-feature-engineering/'
+        'source-code/download/',
+        views.download_project_source_code,
+        {
+            'domain_slug': 'federated-engineering-and-federated-learning',
+            'project_slug': 'scalable-interpretable-privacy-preserving-feature-engineering',
+        },
+        name='federated_project_source_code',
+    ),
     path('projects/<path:project_path>', views.projects_removed, name='projects_removed'),
     path('projects/kavach/', views.kavach_demo, name='kavach_demo'),
     path('projects/kavach/dashboard/', views.kavach_user_dashboard, name='kavach_user_dashboard'),
