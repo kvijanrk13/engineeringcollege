@@ -65,16 +65,12 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '.onrender.com',
     'kvkprojects.onrender.com',
-    'kvkprojects.com',
-    'www.kvkprojects.com',
     'anrkitdept.onrender.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
     'https://kvkprojects.onrender.com',
-    'https://kvkprojects.com',
-    'https://www.kvkprojects.com',
     'https://anrkitdept.onrender.com',
 ]
 
