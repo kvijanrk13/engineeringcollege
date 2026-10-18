@@ -56,9 +56,9 @@ services:
       - key: PHONEPE_CALLBACK_PASSWORD
         sync: false
       - key: ALLOWED_HOSTS
-        value: "kvkprojects.onrender.com,anrkitdept.onrender.com"
+        value: "kvkprojects.onrender.com,kvkprojects.com,www.kvkprojects.com,anrkitdept.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://kvkprojects.onrender.com,https://anrkitdept.onrender.com"
+        value: "https://kvkprojects.onrender.com,https://kvkprojects.com,https://www.kvkprojects.com,https://anrkitdept.onrender.com"
       - key: PYTHON_VERSION
         value: "3.10.11"
       - key: DJANGO_SUPERUSER_USERNAME
