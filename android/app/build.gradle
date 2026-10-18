@@ -43,7 +43,7 @@ android {
         versionCode 1
         versionName "1.0.0"
 
-        buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
+        buildConfigField "String", "WEB_APP_URL", "\"https://kvkprojects.onrender.com/\""
     }
 
     buildTypes {
@@ -51,11 +51,11 @@ android {
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
 
-            buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
+            buildConfigField "String", "WEB_APP_URL", "\"https://kvkprojects.onrender.com/\""
         }
 
         release {
-            buildConfigField "String", "WEB_APP_URL", "\"https://engineeringcollege.onrender.com/\""
+            buildConfigField "String", "WEB_APP_URL", "\"https://kvkprojects.onrender.com/\""
 
             minifyEnabled true
             shrinkResources true

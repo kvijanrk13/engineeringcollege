@@ -3841,7 +3841,7 @@ def cloudattend_parent_messaging_demo(request):
         'absent_students': absent_students,
         'template_pages': _cloudattend_template_links(),
         'local_url': 'http://127.0.0.1:8000/projects/cloudattend-parent-messaging/demo/',
-        'render_url': 'https://engineeringcollege.onrender.com/projects/cloudattend-parent-messaging/demo/',
+        'render_url': 'https://kvkprojects.onrender.com/projects/cloudattend-parent-messaging/demo/',
         'project_detail_url': reverse(
             'dashboard:project_detail',
             args=['cloud-computing', 'cloudattend-parent-messaging'],
@@ -4703,7 +4703,7 @@ def kavach_demo(request):
             f"{reverse('dashboard:google_login')}?role=student&continue=1&next={quote('/projects/kavach/')}"
         ),
         'kavach_url': request.build_absolute_uri(reverse('dashboard:kavach_demo')),
-        'render_url': 'https://engineeringcollege.onrender.com/projects/kavach/',
+        'render_url': 'https://kvkprojects.onrender.com/projects/kavach/',
         'kavach_supported_formats': ', '.join(KAVACH_SUPPORTED_FORMAT_LABELS),
         'kavach_max_upload_size': _format_file_size(KAVACH_MAX_UPLOAD_SIZE),
         'uploaded_transfer': uploaded_transfer,

@@ -1,5 +1,5 @@
 param(
-    [string]$BaseUrl = "https://engineeringcollege.onrender.com"
+    [string]$BaseUrl = "https://kvkprojects.onrender.com"
 )
 
 $ErrorActionPreference = "Stop"

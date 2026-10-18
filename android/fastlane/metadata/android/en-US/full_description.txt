@@ -1,6 +1,6 @@
 Welcome to ECPRJ, the official mobile companion for the Engineering College department portal. This app provides students and faculty with fast, streamlined access to essential academic and administrative resources right from their Android devices.
 
-Our app connects directly to the live web portal at engineeringcollege.onrender.com, ensuring you always have the most up-to-date information.
+Our app connects directly to the live web portal at kvkprojects.onrender.com, ensuring you always have the most up-to-date information.
 
 KEY FEATURES:
 *   **Instant Dashboard Access**: Jump straight to your personalized student or faculty dashboard.

@@ -3,7 +3,7 @@
 
 ### 1. System Overview
 
-AEC Library is a standalone Django web application deployed on Render at `https://engineeringcollege.onrender.com/aeclibrary/`. It provides a complete library management solution including textbook/reference book cataloging, student authentication, book issue/return workflows, fine management with Razorpay payments, and an integrated Lorem Ipsum generator tool.
+AEC Library is a standalone Django web application deployed on Render at `https://kvkprojects.onrender.com/aeclibrary/`. It provides a complete library management solution including textbook/reference book cataloging, student authentication, book issue/return workflows, fine management with Razorpay payments, and an integrated Lorem Ipsum generator tool.
 
 ### 2. High-Level Architecture
 
@@ -497,5 +497,5 @@ Test Cases/
 
 *Document Version: 1.0*
 *Project: AEC Library Management System*
-*Live URL: https://engineeringcollege.onrender.com/aeclibrary/*
+*Live URL: https://kvkprojects.onrender.com/aeclibrary/*
 *Last Updated: 2026-07-23*

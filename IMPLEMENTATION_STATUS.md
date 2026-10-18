@@ -308,13 +308,13 @@ New Student 25 (ID: 29, HT No: 23C11A1225)
 New students can access:
 
 Student 15 (ID 26):
-  Dashboard: https://engineeringcollege.onrender.com/student/26/
+  Dashboard: https://kvkprojects.onrender.com/student/26/
   
 Student 16 (ID 27):
-  Dashboard: https://engineeringcollege.onrender.com/student/27/
+  Dashboard: https://kvkprojects.onrender.com/student/27/
   
 Student 17 (ID 28):
-  Dashboard: https://engineeringcollege.onrender.com/student/28/
+  Dashboard: https://kvkprojects.onrender.com/student/28/
 
 Format: /student/<DATABASE_ID>/
 

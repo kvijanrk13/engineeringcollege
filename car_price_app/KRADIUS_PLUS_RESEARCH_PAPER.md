@@ -3,7 +3,7 @@
 **Authors:** [Your Name / Project Team]  
 **Affiliation:** [Your College / Institution]  
 **Date:** June 2026  
-**Project URL:** https://engineeringcollege.onrender.com/car-price/maruti-prices/
+**Project URL:** https://kvkprojects.onrender.com/car-price/maruti-prices/
 
 ---
 

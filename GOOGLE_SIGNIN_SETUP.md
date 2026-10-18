@@ -9,7 +9,7 @@ Create an OAuth 2.0 Client ID for a web application.
 Authorized redirect URI:
 
 ```text
-https://engineeringcollege.onrender.com/google/callback/
+https://kvkprojects.onrender.com/google/callback/
 ```
 
 If you also use the second Render domain, add:

@@ -12,7 +12,7 @@ ETORS automates train enquiry, berth-availability calculation, passenger booking
 
 ### 1.2 Scope
 
-ETORS is a responsive web application within the Engineering College project. It is intended for academic demonstration and is hosted at `https://engineeringcollege.onrender.com/etors/`.
+ETORS is a responsive web application within the Engineering College project. It is intended for academic demonstration and is hosted at `https://kvkprojects.onrender.com/etors/`.
 
 The application enables a passenger to:
 

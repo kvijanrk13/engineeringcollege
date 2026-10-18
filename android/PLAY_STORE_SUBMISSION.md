@@ -12,7 +12,7 @@
 
 1. Confirm the Django app is deployed and reachable over HTTPS:
 
-   `https://engineeringcollege.onrender.com/`
+   `https://kvkprojects.onrender.com/`
 
 2. Open `android` in Android Studio.
 3. Let Android Studio sync the Gradle project.
@@ -42,7 +42,7 @@ The app icon for Play Console is available at `store-assets/play-store-icon.png`
 
 Privacy policy URL:
 
-`https://engineeringcollege.onrender.com/projects/policies/privacy-policy/`
+`https://kvkprojects.onrender.com/projects/policies/privacy-policy/`
 
 ## Suggested Listing Text
 

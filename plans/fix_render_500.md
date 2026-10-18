@@ -8,4 +8,4 @@
 6. Run `python -m py_compile dashboard/views.py` plus `manage.py check` to catch syntax/config issues.
 7. Deploy to Render, watch live logs while hitting `/dashboard/dashboard/` to catch runtime errors.
 8. If PostgreSQL errors appear (e.g., missing tables), run migrations against Render DB.
-9. Confirm https://engineeringcollege.onrender.com loads login (public) and `/dashboard/dashboard/` after admin login.
+9. Confirm https://kvkprojects.onrender.com loads login (public) and `/dashboard/dashboard/` after admin login.

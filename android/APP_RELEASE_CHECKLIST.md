@@ -2,8 +2,8 @@
 
 ## Before Building
 
-- Confirm the Django site is live at `https://engineeringcollege.onrender.com/`.
-- Confirm the privacy policy opens at `https://engineeringcollege.onrender.com/projects/policies/privacy-policy/`.
+- Confirm the Django site is live at `https://kvkprojects.onrender.com/`.
+- Confirm the privacy policy opens at `https://kvkprojects.onrender.com/projects/policies/privacy-policy/`.
 - Test admin login, student login, Gmail login, file upload, and PDF download on the website.
 - Open the `android` folder in Android Studio and let Gradle sync.
 - Or build from the `android` folder with `.\gradlew.bat bundleRelease`.
@@ -20,7 +20,7 @@
 
 - App name: `ECPRJ`
 - Package name: `com.anrkit.engineeringcollegeprojects`
-- Privacy policy: `https://engineeringcollege.onrender.com/privacy-policy/`
+- Privacy policy: `https://kvkprojects.onrender.com/privacy-policy/`
 - Category: Education
 - Data safety: declare account/profile data, student/faculty records, files/documents, and app activity as applicable.
 - Target SDK: 35

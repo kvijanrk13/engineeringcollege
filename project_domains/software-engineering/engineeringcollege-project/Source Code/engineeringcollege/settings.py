@@ -63,13 +63,13 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.onrender.com',
-    'engineeringcollege.onrender.com',
+    'kvkprojects.onrender.com',
     'anrkitdept.onrender.com',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
-    'https://engineeringcollege.onrender.com',
+    'https://kvkprojects.onrender.com',
     'https://anrkitdept.onrender.com',
 ]
 
