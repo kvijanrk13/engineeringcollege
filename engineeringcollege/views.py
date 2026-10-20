@@ -2835,7 +2835,6 @@ def admin_dashboard(request):
 
         if not request.user.is_superuser:
             logger.warning(f"User {request.user} is not superuser, access denied")
-            messages.error(request, 'Access denied. Admin privileges required.')
             return redirect('dashboard:admin_login')
 
         # Test progressively more complex database queries
