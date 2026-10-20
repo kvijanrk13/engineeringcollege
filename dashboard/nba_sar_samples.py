@@ -50,6 +50,10 @@ ANURAG = {
     'scope': 'Complete criterion sections split from the filed e-SAR',
     'source_url': 'https://enba.nbaind.org/SARTemplates/eSARUGTierICycle1V1Print.aspx?Appid=11458&Progid=558',
     'source_label': 'enba.nbaind.org · App 11458 · UG CSE e-SAR',
+    'extra_sources': [
+        {'label': 'anurag.ac.in · e-NBA data-capture report, CSE', 'url': 'https://anurag.ac.in/wp-content/uploads/2026/03/CSE_DCS.pdf'},
+        {'label': 'anurag.ac.in · e-NBA data-capture report, ECE', 'url': 'https://anurag.ac.in/wp-content/uploads/2026/03/ECE_DCS.pdf'},
+    ],
     'note': 'An autonomous institute accredited by NBA since 2009, filing the current Tier I format for a 180-seat CSE programme. Its criterion 5 shows the faculty cadre and student-faculty ratio workings for a self-financing college, criterion 8 records the continuous-improvement actions taken on the previous evaluation round, and the institute also publishes the e-NBA data-capture report for both CSE and ECE.',
     'criteria': {
         1: {'pdf': 'nba-sar/tier1/anurag/criterion-1.pdf', 'preview': 'nba-sar/tier1/anurag/criterion-1.jpg', 'pages': 31, 'source_pages': '8-38'},

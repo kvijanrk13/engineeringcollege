@@ -60,6 +60,13 @@
           <a class="btn btn-sm btn-outline-primary mt-3" href="{{ sample.source_url }}" target="_blank" rel="noopener">
             <i class="fas fa-external-link-alt me-1"></i>{{ sample.source_label }}
           </a>
+          {% if sample.extra_sources %}
+          <div class="mt-2">
+            {% for extra in sample.extra_sources %}
+            <a class="d-block small" href="{{ extra.url }}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt me-1"></i>{{ extra.label }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
