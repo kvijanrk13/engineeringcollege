@@ -3660,11 +3660,7 @@ def mobile_dashboard(request):
 
 
 def projects(request):
-    return render(
-        request,
-        'dashboard/projects_catalog.html',
-        _receipt_support_context(request),
-    )
+    return HttpResponseGone("The project catalog has been removed.")
 
 
 def projects_removed(request, project_path=None):
@@ -8046,8 +8042,10 @@ def generate_student_pdf_view(request, student_id):
             return redirect(student_dashboard_redirect_route(request))
 
     try:
-        # Generate student PDF with merged certificates
-        pdf_bytes = generate_student_pdf(student, return_bytes=True)
+        # Generate and persist the merged PDF, including its Cloudinary copy
+        # when Cloudinary is configured. The generator still returns bytes for
+        # this download response after completing persistence.
+        pdf_bytes = generate_student_pdf(student, return_bytes=True, persist_cloudinary=True)
         if not pdf_bytes:
             messages.error(request, "Failed to generate PDF.")
             return redirect('dashboard:students_data' if user_authenticated else student_dashboard_redirect_route(request))
@@ -8097,6 +8095,7 @@ def generate_student_pdf(
     return_bytes=False,
     photo_override_path=None,
     certificate_override_assets=None,
+    persist_cloudinary=False,
 ):
     print(f"\n{'='*60}\nSTUDENT PDF: {student.student_name} ({student.ht_no})\n{'='*60}")
     print(f"  [DEBUG] cert_achieve: {student.cert_achieve}, cert_achieve_url: {student.cert_achieve_url}")
@@ -8539,7 +8538,7 @@ def generate_student_pdf(
 
                 # Upload to Cloudinary
             # Upload to Cloudinary
-            if is_cloudinary_configured():
+            if is_cloudinary_configured() and (not return_bytes or persist_cloudinary):
                 try:
                     cloud_result = cloudinary.uploader.upload(
                         merged_tmp.name,
