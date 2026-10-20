@@ -2959,12 +2959,6 @@ def laboratory(request):
     return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
 
 
-def nba_accreditation(request):
-    t1_criteria = ['Criterion 1', 'Criterion 2', 'Criterion 3', 'Criterion 4', 'Criterion 5', 'Criterion 6', 'Criterion 7', 'Criterion 8', 'Criterion 9']
-    t2_criteria = ['Criterion 1', 'Criterion 2', 'Criterion 3', 'Criterion 4', 'Criterion 5', 'Criterion 6', 'Criterion 7', 'Criterion 8', 'Criterion 9']
-    return render(request, 'dashboard/nba.html', {'title': 'NBA Accreditation', 't1_criteria': t1_criteria, 't2_criteria': t2_criteria})
-
-
 def gallery(request):
     return render(request, 'dashboard/gallery.html', {'title': 'Gallery'})
 
@@ -3671,6 +3665,7 @@ def mobile_dashboard(request):
         'departments': departments,
         'recent_logs': recent_logs,
         'suspicious_alerts': open_suspicious_alerts(),
+        'nba_tiers': NBA_UG_CRITERIA,
     })
 
 

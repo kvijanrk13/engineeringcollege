@@ -75,7 +75,7 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard:dashboard' %}">
+            <a class="navbar-brand" href="{% if user.is_authenticated and user.is_superuser %}{% url 'dashboard:dashboard' %}{% else %}{% url 'dashboard:mobile_dashboard' %}{% endif %}">
                 <i class="fas fa-university me-2"></i>
                 ENGINEERING COLLEGE - INFORMATION TECHNOLOGY
             </a>
@@ -84,6 +84,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'admin_dashboard' or request.resolver_match.url_name == 'mobile_dashboard' %}active{% endif %}" href="{% if user.is_authenticated and user.is_superuser %}{% url 'dashboard:dashboard' %}{% else %}{% url 'dashboard:mobile_dashboard' %}{% endif %}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'gallery' %}active{% endif %}" href="{% if user.is_authenticated %}{% url 'dashboard:gallery' %}{% else %}{% url 'dashboard:login' %}{% endif %}">
                             <i class="fas fa-images me-1"></i>Gallery
@@ -100,7 +105,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'nba_accreditation' %}active{% endif %}" href="{% url 'dashboard:nba_accreditation' %}">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'nba_accreditation' or request.resolver_match.url_name == 'nba' %}active{% endif %}" href="{% url 'dashboard:nba_accreditation' %}">
                             <i class="fas fa-award me-1"></i>NBA
                         </a>
                     </li>

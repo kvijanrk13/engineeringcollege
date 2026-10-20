@@ -774,6 +774,11 @@
                     <i class="fas fa-images me-2"></i>Gallery
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="nba-tab" data-bs-toggle="tab" data-bs-target="#nba" type="button" role="tab" aria-controls="nba" aria-selected="false">
+                    <i class="fas fa-award me-2"></i>NBA Accreditation
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content" id="dashboardTabContent">
@@ -1221,6 +1226,38 @@
                                 Download PDF
                             </a>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="nba" role="tabpanel" aria-labelledby="nba-tab">
+                <div class="dashboard-panel">
+                    <div class="section-header">
+                        <div>
+                            <div class="section-kicker">Accreditation readiness</div>
+                            <h2 class="section-title">NBA accreditation criteria for this program</h2>
+                            <p class="section-copy">
+                                Tier-wise official NBA criteria for an autonomous institute or university (Tier I)
+                                and for an affiliated non-autonomous institution (Tier II). Pick a tier, then open any
+                                criterion to see the focus, what the program should demonstrate, the evidence file to
+                                prepare and the accountable team.
+                            </p>
+                        </div>
+                        <div class="section-pill">
+                            <i class="fas fa-award"></i>
+                            NBA UG Engineering
+                        </div>
+                    </div>
+
+                    <div class="container-fluid p-0">
+                        {% include 'dashboard/_nba_criteria.html' %}
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'dashboard:nba_accreditation' %}" class="hero-btn">
+                            <i class="fas fa-arrow-right"></i>
+                            Open the full NBA Accreditation Criteria Guide
+                        </a>
                     </div>
                 </div>
             </div>

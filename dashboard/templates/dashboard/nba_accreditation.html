@@ -1,20 +1,6 @@
 {% extends 'dashboard/base.html' %}
 {% block title %}NBA Accreditation Criteria Guide{% endblock %}
 {% block extra_css %}
-<style>
-  .nba-page { max-width: 1440px; }
-  .nba-hero { background: linear-gradient(120deg,#102b54,#176b87); color:#fff; border-radius:18px; }
-  .nba-tier-nav .nav-link { border:1px solid #d9e2ec; color:#234; font-weight:600; }
-  .nba-tier-nav .nav-link.active { background:#153e69; border-color:#153e69; }
-  .criteria-nav { max-height:72vh; overflow:auto; }
-  .criteria-nav .nav-link { text-align:left; white-space:normal; color:#26384a; border-radius:8px; margin-bottom:5px; }
-  .criteria-nav .nav-link.active { background:#e7f1fa; color:#103e68; font-weight:700; border-left:4px solid #1672ad; }
-  .criterion-card { border:0; border-radius:14px; }
-  .criterion-mark { min-width:82px; }
-  .evidence-box { background:#f3f7fa; border-radius:10px; }
-  .nba-source a { overflow-wrap:anywhere; }
-  @media(max-width:767px) { .criteria-nav { max-height:300px; } }
-</style>
 {% endblock %}
 {% block content %}
 <div class="container-fluid nba-page py-4">
@@ -29,60 +15,6 @@
     </div>
   </section>
 
-  <div class="alert alert-warning border-0 shadow-sm">
-    <strong>Use the manual that applies to your visit.</strong> NBA has revised its framework. The Tier I tab below follows the May 2026 UG Engineering manual (visits from May 2026 onward); Tier II follows the January 2025 manual. Always confirm the live e-NBA SAR, pre-qualifier and current NBA notices before submitting. This guide summarizes and organizes the official requirements; it is not an NBA decision or a substitute for the complete manual.
-  </div>
-
-  <ul class="nav nav-pills nba-tier-nav gap-2 mb-3" id="nbaTierTabs" role="tablist">
-    {% for tier_key, tier in nba_tiers.items %}
-    <li class="nav-item" role="presentation"><button class="nav-link {% if forloop.first %}active{% endif %}" id="{{ tier_key }}-tab" data-bs-toggle="pill" data-bs-target="#{{ tier_key }}-pane" type="button" role="tab" aria-controls="{{ tier_key }}-pane" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">{{ tier.label }}</button></li>
-    {% endfor %}
-  </ul>
-
-  <div class="tab-content" id="nbaTierContent">
-    {% for tier_key, tier in nba_tiers.items %}
-    <section class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ tier_key }}-pane" role="tabpanel" aria-labelledby="{{ tier_key }}-tab" tabindex="0">
-      <div class="card border-0 shadow-sm mb-3"><div class="card-body d-flex flex-column flex-lg-row justify-content-between gap-3">
-        <div><span class="badge bg-primary mb-2">{{ tier.manual }}</span><h2 class="h4 mb-1">{{ tier.label }}</h2><p class="text-muted mb-0">{{ tier.criteria|length }} criteria · {{ tier.total }} total marks · Program-level and institution-level evaluation</p></div>
-        <div class="nba-source text-lg-end"><div class="small text-muted">Official source documents</div>
-          {% if tier_key == 'tier1' %}
-          <a href="https://www.nbaind.org/accreditation" target="_blank" rel="noopener">NBA Accreditation — current manual and effective date</a><br><a href="https://www.nbaind.org/files/Manual%20for%20UG%20Engineering%20Tier%20I-%202026%20Edition_Format_20260521165316.pdf" target="_blank" rel="noopener">UG Engineering Tier I Manual, May 2026 (PDF)</a>
-          {% else %}
-          <a href="https://www.nbaind.org/Accreditation/AccreditationDocuments" target="_blank" rel="noopener">NBA Accreditation Documents</a><br><a href="https://nbaind.org/files/Publication/PublicationTitles/NBA_UGEngg_Tier_II_Manual_Format_20250121123952.pdf" target="_blank" rel="noopener">UG Engineering Tier II Manual, January 2025 (PDF)</a>
-          {% endif %}
-        </div>
-      </div></div>
-
-      <div class="row g-3">
-        <aside class="col-lg-3"><div class="card border-0 shadow-sm"><div class="card-header bg-white fw-bold">Criteria navigation</div><div class="list-group list-group-flush criteria-nav p-2" role="tablist">
-          {% for criterion in tier.criteria %}<button class="list-group-item list-group-item-action nav-link {% if forloop.first %}active{% endif %}" id="{{ tier_key }}-criterion-{{ forloop.counter }}-tab" data-bs-toggle="pill" data-bs-target="#{{ tier_key }}-criterion-{{ forloop.counter }}-pane" type="button" role="tab" aria-controls="{{ tier_key }}-criterion-{{ forloop.counter }}-pane" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"><span class="badge bg-secondary me-2">{{ forloop.counter }}</span>{{ criterion.name }}<span class="badge bg-light text-dark float-end">{{ criterion.marks }}</span></button>{% endfor %}
-        </div></div></aside>
-
-        <div class="col-lg-9"><div class="tab-content">
-          {% for criterion in tier.criteria %}
-          <article class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ tier_key }}-criterion-{{ forloop.counter }}-pane" role="tabpanel" aria-labelledby="{{ tier_key }}-criterion-{{ forloop.counter }}-tab" tabindex="0">
-            <div class="card criterion-card shadow-sm"><div class="card-body p-4 p-lg-5">
-              <div class="d-flex justify-content-between align-items-start gap-3 mb-3"><div><div class="text-uppercase small text-primary fw-bold">Criterion {{ forloop.counter }}</div><h2 class="h3 mb-0">{{ criterion.name }}</h2></div><span class="badge bg-primary fs-6 p-2 criterion-mark">{{ criterion.marks }} marks</span></div>
-              <p class="lead fs-5">{{ criterion.focus }}</p>
-              <h3 class="h5 mt-4">What the program should demonstrate</h3><ol class="ps-3">{% for item in criterion.requirements %}<li class="mb-2">{{ item }}</li>{% endfor %}</ol>
-              <div class="evidence-box p-3 mt-4"><h3 class="h6"><i class="fas fa-folder-open me-2 text-primary"></i>Evidence file to prepare</h3><p class="mb-0">{{ criterion.evidence }}</p></div>
-              <div class="mt-3 small text-muted"><strong>Suggested accountable team:</strong> {{ criterion.owner }}. Assign a named owner and evidence custodian in the institution’s NBA preparation plan.</div>
-            </div></div>
-          </article>
-          {% endfor %}
-        </div></div>
-      </div>
-      <div class="accordion mt-4" id="{{ tier_key }}-readiness">
-        <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{ tier_key }}-readiness-check" aria-expanded="false">Readiness and submission checklist</button></h2><div id="{{ tier_key }}-readiness-check" class="accordion-collapse collapse" data-bs-parent="#{{ tier_key }}-readiness"><div class="accordion-body"><ol class="mb-0">
-          <li>Confirm program eligibility, continuous operation, required graduating batches, approvals and the correct tier using NBA’s current accreditation page and e-NBA pre-qualifier.</li>
-          <li>Freeze the assessment years and source-of-truth datasets used in the current SAR; reconcile institutional, affiliating-university and regulatory records.</li>
-          <li>Use the live SAR structure and the current evaluation guidelines. Keep each claim traceable to dated, signed primary evidence and a responsible owner.</li>
-          <li>Run an internal mock review: verify formulas, sample student/faculty/course files, physical facilities, website disclosures and stakeholder awareness.</li>
-          <li>Record gaps, actions, deadlines, approvals and impact. Update evidence through the visit and keep the submitted SAR version controlled.</li>
-        </ol></div></div></div>
-      </div>
-    </section>
-    {% endfor %}
-  </div>
+  {% include 'dashboard/_nba_criteria.html' %}
 </div>
 {% endblock %}
