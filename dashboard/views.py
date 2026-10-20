@@ -87,6 +87,7 @@ from .utils import (
     calculate_experience,
     validate_pdf_file, validate_image_file, parse_date
 )
+from .nba_content import NBA_UG_CRITERIA
 
 logger = logging.getLogger(__name__)
 DECRYPTION_FAILURE_ALERT_LIMIT = 3
@@ -3614,6 +3615,14 @@ def home(request):
         'title': 'Admin Login - ANURAG ENGINEERING COLLEGE',
         'admin_login': True,
         'google_signin_enabled': google_signin_enabled(),
+    })
+
+
+def nba_accreditation(request):
+    """Public criteria-wise NBA UG engineering accreditation guide."""
+    return render(request, 'dashboard/nba_accreditation.html', {
+        'title': 'NBA Accreditation Criteria Guide',
+        'nba_tiers': NBA_UG_CRITERIA,
     })
 
 
