@@ -1,0 +1,57 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}NBA Accreditation{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:1200px;margin:40px auto;padding:30px;background:#fff;border-radius:10px;box-shadow:0 5px 15px rgba(0,0,0,.2);">
+  <h1 style="text-align:center;color:#1e293b;margin-bottom:30px;">NBA Accreditation - Criteria Documentation</h1>
+
+  <ul class="nav nav-tabs" id="tierTabs" role="tablist">
+    <li class="nav-item"><a class="nav-link active" id="tier1-tab" data-toggle="tab" href="#tier1" role="tab">Tier - 1 (Autonomous)</a></li>
+    <li class="nav-item"><a class="nav-link" id="tier2-tab" data-toggle="tab" href="#tier2" role="tab">Tier - 2 (Affiliated)</a></li>
+  </ul>
+
+  <div class="tab-content" id="tierContent" style="margin-top:20px;">
+
+    <!-- TIER 1 -->
+    <div class="tab-pane fade show active" id="tier1" role="tabpanel">
+      <h3>Tier - 1 (Autonomous Institute) Criteria</h3>
+      <ul class="nav nav-pills" id="t1Criteria" role="tablist" style="flex-wrap:wrap;gap:5px;margin-bottom:15px;">
+        {% for c in t1_criteria %}<li class="nav-item"><a class="nav-link{% if forloop.first %} active{% endif %}" data-toggle="pill" href="#t1c{{ forloop.counter }}" role="tab">{{ c }}</a></li>{% endfor %}
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="t1c1" role="tabpanel"><h4>Criterion 1: Vision, Mission and Program Educational Objectives (PEOs)</h4><p>The program must have a documented vision, mission and PEOs. PEOs must be consistent with the mission of the institution and must be reviewed periodically with stakeholder (employers, alumni, faculty, students) involvement. Evidence: documented PEOs, stakeholder feedback, review records.</p></div>
+        <div class="tab-pane fade" id="t1c2" role="tabpanel"><h4>Criterion 2: Program Curriculum and Teaching-Learning Processes</h4><p>The curriculum must be designed to achieve POs/PSOs. Teaching-learning processes must be effective, with innovative pedagogies, industry interaction, and continuous evaluation. Evidence: syllabus, lesson plans, industry MoUs, teaching records.</p></div>
+        <div class="tab-pane fade" id="t1c3" role="tabpanel"><h4>Criterion 3: Course Outcomes and Program Outcomes</h4><p>Course Outcomes (COs) and Program Outcomes (POs) must be defined, mapped, and assessed. Attainment levels must be computed and used for continuous improvement. Evidence: CO-PO mapping, attainment reports, action taken.</p></div>
+        <div class="tab-pane fade" id="t1c4" role="tabpanel"><h4>Criterion 4: Students' Performance</h4><p>Student performance in terms of results, placements, higher studies, entrepreneurship and competitive exams must be tracked. Evidence: result analysis, placement records, alumni data.</p></div>
+        <div class="tab-pane fade" id="t1c5" role="tabpanel"><h4>Criterion 5: Faculty Information and Contributions</h4><p>Faculty must be qualified (Ph.D. preferred), with adequate numbers. Contributions in teaching, research, publications, consultancy and FDPs must be documented. Evidence: faculty profiles, publications list, FDP records.</p></div>
+        <div class="tab-pane fade" id="t1c6" role="tabpanel"><h4>Criterion 6: Facilities and Technical Support</h4><p>Adequate infrastructure: classrooms, laboratories, library, computing facilities, internet, and technical support. Evidence: lab inventories, library holdings, infrastructure audit.</p></div>
+        <div class="tab-pane fade" id="t1c7" role="tabpanel"><h4>Criterion 7: Continuous Improvement</h4><p>Evidence of continuous improvement through feedback, assessment, and action plans. Quality assurance processes must be in place. Evidence: IQAC records, feedback analysis, action taken reports.</p></div>
+        <div class="tab-pane fade" id="t1c8" role="tabpanel"><h4>Criterion 8: First Year Academics</h4><p>First-year (basic sciences/engineering) academics must be well structured with adequate faculty and facilities. Evidence: first-year curriculum, faculty, lab records.</p></div>
+        <div class="tab-pane fade" id="t1c9" role="tabpanel"><h4>Criterion 9: Student Support Systems</h4><p>Counselling, mentoring, scholarships, and extracurricular support for students. Evidence: mentoring records, scholarship data, student activity logs.</p></div>
+      </div>
+    </div>
+
+    <!-- TIER 2 -->
+    <div class="tab-pane fade" id="tier2" role="tabpanel">
+      <h3>Tier - 2 (Affiliated Institute) Criteria</h3>
+      <ul class="nav nav-pills" id="t2Criteria" role="tablist" style="flex-wrap:wrap;gap:5px;margin-bottom:15px;">
+        {% for c in t2_criteria %}<li class="nav-item"><a class="nav-link{% if forloop.first %} active{% endif %}" data-toggle="pill" href="#t2c{{ forloop.counter }}" role="tab">{{ c }}</a></li>{% endfor %}
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="t2c1" role="tabpanel"><h4>Criterion 1: Vision, Mission and PEOs</h4><p>Same as Tier-1 but evaluated for affiliated programs following university curriculum. PEOs aligned with institutional mission.</p></div>
+        <div class="tab-pane fade" id="t2c2" role="tabpanel"><h4>Criterion 2: Program Curriculum and Teaching-Learning</h4><p>Curriculum delivery and teaching-learning processes assessed; must meet university syllabus with effective pedagogy.</p></div>
+        <div class="tab-pane fade" id="t2c3" role="tabpanel"><h4>Criterion 3: Course Outcomes and Program Outcomes</h4><p>CO-PO mapping and attainment; continuous improvement based on assessment.</p></div>
+        <div class="tab-pane fade" id="t2c4" role="tabpanel"><h4>Criterion 4: Students' Performance</h4><p>Results, placements, higher studies tracked.</p></div>
+        <div class="tab-pane fade" id="t2c5" role="tabpanel"><h4>Criterion 5: Faculty Information and Contributions</h4><p>Faculty qualification and contributions documented.</p></div>
+        <div class="tab-pane fade" id="t2c6" role="tabpanel"><h4>Criterion 6: Facilities and Technical Support</h4><p>Adequate labs, library, computing facilities.</p></div>
+        <div class="tab-pane fade" id="t2c7" role="tabpanel"><h4>Criterion 7: Continuous Improvement</h4><p>Feedback and action plans for quality improvement.</p></div>
+        <div class="tab-pane fade" id="t2c8" role="tabpanel"><h4>Criterion 8: First Year Academics</h4><p>First-year academics structure and resources.</p></div>
+        <div class="tab-pane fade" id="t2c9" role="tabpanel"><h4>Criterion 9: Student Support Systems</h4><p>Counselling, mentoring, scholarships.</p></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
