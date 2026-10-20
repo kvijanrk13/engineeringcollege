@@ -88,6 +88,7 @@ from .utils import (
     validate_pdf_file, validate_image_file, parse_date
 )
 from .nba_content import NBA_UG_CRITERIA
+from .nba_sar_samples import NBA_SAR_SAMPLES
 
 logger = logging.getLogger(__name__)
 DECRYPTION_FAILURE_ALERT_LIMIT = 3
@@ -3623,6 +3624,7 @@ def nba_accreditation(request):
     return render(request, 'dashboard/nba_accreditation.html', {
         'title': 'NBA Accreditation Criteria Guide',
         'nba_tiers': NBA_UG_CRITERIA,
+        'nba_sar_samples': NBA_SAR_SAMPLES,
     })
 
 
@@ -3666,6 +3668,7 @@ def mobile_dashboard(request):
         'recent_logs': recent_logs,
         'suspicious_alerts': open_suspicious_alerts(),
         'nba_tiers': NBA_UG_CRITERIA,
+        'nba_sar_samples': NBA_SAR_SAMPLES,
     })
 
 
