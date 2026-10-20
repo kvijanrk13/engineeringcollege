@@ -182,7 +182,7 @@ urlpatterns = [
     path('exam-branch/save-attendance/', views.save_attendance, name='save_attendance'),
     path('exam-branch/attendance-report/', views.attendance_report, name='attendance_report'),
     path('gallery/', views.gallery, name='gallery'),
-    path('nba/', views.nba, name='nba'),
+    path('nba/', views.nba_accreditation, name='nba_accreditation'),
 
     # System routes
     path('system/session-info/', views.session_info, name='session_info'),

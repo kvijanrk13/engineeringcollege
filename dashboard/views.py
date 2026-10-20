@@ -2959,7 +2959,7 @@ def laboratory(request):
     return render(request, 'dashboard/laboratory.html', {'title': 'Laboratory'})
 
 
-def nba(request):
+def nba_accreditation(request):
     t1_criteria = ['Criterion 1', 'Criterion 2', 'Criterion 3', 'Criterion 4', 'Criterion 5', 'Criterion 6', 'Criterion 7', 'Criterion 8', 'Criterion 9']
     t2_criteria = ['Criterion 1', 'Criterion 2', 'Criterion 3', 'Criterion 4', 'Criterion 5', 'Criterion 6', 'Criterion 7', 'Criterion 8', 'Criterion 9']
     return render(request, 'dashboard/nba.html', {'title': 'NBA Accreditation', 't1_criteria': t1_criteria, 't2_criteria': t2_criteria})
